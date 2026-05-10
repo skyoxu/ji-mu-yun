@@ -160,6 +160,8 @@ public sealed class BrowserUiRenderer
                       <label>TDD slug <input id="tddSlug" placeholder="demo-prototype"></label>
                       <label>Scene root <input id="sceneRoot" value="Node2D"></label>
                     </div>
+                    <label>Dotnet target, one per line <textarea id="dotnetTarget">Game.Core.Tests/Game.Core.Tests.csproj</textarea></label>
+                    <label>Optional test filter <input id="testFilter" placeholder="optional"></label>
                     <div class="split-actions">
                       <button data-stage="red" class="runTdd">TDD Red</button>
                       <button data-stage="green" class="runTdd">TDD Green</button>
@@ -290,7 +292,14 @@ public sealed class BrowserUiRenderer
                 async function runTdd(stage) {
                   if (!state.projectId) return out("Select a project first.");
                   try {
-                    const payload = { slug: $("tddSlug").value.trim(), stage, expect: "auto", timeoutSec: 300 };
+                    const payload = {
+                      slug: $("tddSlug").value.trim(),
+                      stage,
+                      expect: "auto",
+                      filter: $("testFilter").value.trim() || null,
+                      timeoutSec: 300,
+                      dotnetTarget: $("dotnetTarget").value.split("\n").map(x => x.trim()).filter(Boolean)
+                    };
                     const result = await api(`/api/projects/${state.projectId}/prototype-tdd`, { method: "POST", body: JSON.stringify(payload) });
                     out(result);
                     await loadRuns();

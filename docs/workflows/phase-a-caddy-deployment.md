@@ -70,12 +70,21 @@ Run before public exposure:
 & "C:\Program Files\dotnet\dotnet.exe" test Game.sln
 py -3 scripts/python/dev_cli.py run-local-hard-checks-preflight --delivery-profile fast-ship
 py -3 scripts/python/dev_cli.py phase-a-runtime-smoke --dotnet "C:\Program Files\dotnet\dotnet.exe"
+py -3 scripts/python/dev_cli.py phase-a-prototype-e2e --dotnet "C:\Program Files\dotnet\dotnet.exe" --stop-after-day 4
 py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-domain.example" --admin-token "<admin-token>"
 ```
 
 `phase-a-runtime-smoke` starts `PhaseA.Platform` with a temporary SQLite database and workspace under `logs/ci/<date>/phase-a-runtime-smoke/<run_id>/`. It verifies `/healthz`, auth rejection, authenticated project creation, browser Git URL rejection, and the default two-project quota.
 
+`phase-a-prototype-e2e` starts `PhaseA.Platform` against a temporary repository copy by default. It creates a project, runs Chapter 2 bootstrap, runs the hosted prototype route through Day 4, creates a prototype scene, runs hosted prototype TDD refactor, and verifies run/artifact readback. Day 5 remains gated by a real `GODOT_BIN` and GdUnit path.
+
 `phase-a-public-smoke` verifies the deployed public endpoint through Caddy: `/healthz`, unauthenticated `401`, and authenticated project-list access. Add `--create-project` only when you intentionally want the smoke to consume one project slot on the deployed account. Non-local public endpoints must use HTTPS unless `--allow-http` is passed for a local-only check.
+
+Runtime PATH requirements:
+
+- The service process must be able to launch `py`.
+- The service process must be able to launch `dotnet` because prototype TDD invokes `dotnet test`.
+- Set `GODOT_BIN` before enabling Day 5 or any GdUnit-backed prototype checks.
 
 Manual checks:
 

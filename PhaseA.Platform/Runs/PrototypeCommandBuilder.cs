@@ -43,6 +43,24 @@ public sealed class PrototypeCommandBuilder
             arguments.Add(request.Filter);
         }
 
+        foreach (var target in request.DotnetTarget ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                arguments.Add("--dotnet-target");
+                arguments.Add(target);
+            }
+        }
+
+        foreach (var path in request.GdunitPath ?? [])
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                arguments.Add("--gdunit-path");
+                arguments.Add(path);
+            }
+        }
+
         if (request.TimeoutSec is not null)
         {
             arguments.Add("--timeout-sec");

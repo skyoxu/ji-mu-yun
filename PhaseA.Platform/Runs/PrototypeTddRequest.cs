@@ -6,4 +6,6 @@ public sealed record PrototypeTddRequest(
     string? Expect = null,
     string? RecordPath = null,
     string? Filter = null,
-    int? TimeoutSec = null);
+    int? TimeoutSec = null,
+    IReadOnlyList<string>? DotnetTarget = null,
+    IReadOnlyList<string>? GdunitPath = null);

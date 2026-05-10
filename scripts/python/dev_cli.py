@@ -46,6 +46,7 @@ from dev_cli_builders import (
     build_smoke_strict_cmd,
     build_phase_a_runtime_smoke_cmd,
     build_phase_a_public_smoke_cmd,
+    build_phase_a_prototype_e2e_cmd,
 )
 from local_hard_checks_harness import run_local_hard_checks
 from solution_resolver import resolve_solution_path, resolve_test_solution_path
@@ -228,6 +229,12 @@ def cmd_phase_a_public_smoke(args: argparse.Namespace) -> int:
     """Run Phase A public endpoint smoke checks."""
 
     return run(build_phase_a_public_smoke_cmd(args))
+
+
+def cmd_phase_a_prototype_e2e(args: argparse.Namespace) -> int:
+    """Run Phase A hosted prototype lane end-to-end checks."""
+
+    return run(build_phase_a_prototype_e2e_cmd(args))
 
 
 def cmd_new_execution_plan(args: argparse.Namespace) -> int:
@@ -456,6 +463,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_public.add_argument("--create-project", action="store_true")
     p_phase_a_public.add_argument("--timeout-seconds", type=float, default=15.0)
     p_phase_a_public.set_defaults(func=cmd_phase_a_public_smoke)
+
+    # phase-a-prototype-e2e
+    p_phase_a_e2e = sub.add_parser(
+        "phase-a-prototype-e2e",
+        help="run Phase A hosted prototype lane end-to-end checks in a temporary repo copy by default",
+    )
+    p_phase_a_e2e.add_argument("--repository-root", default=".")
+    p_phase_a_e2e.add_argument("--dotnet", default="")
+    p_phase_a_e2e.add_argument("--admin-token", default="")
+    p_phase_a_e2e.add_argument("--timeout-seconds", type=int, default=90)
+    p_phase_a_e2e.add_argument("--stop-after-day", type=int, default=4, choices=[2, 3, 4, 5])
+    p_phase_a_e2e.add_argument("--use-current-repo", action="store_true")
+    p_phase_a_e2e.add_argument("--skip-chapter2", action="store_true")
+    p_phase_a_e2e.set_defaults(func=cmd_phase_a_prototype_e2e)
 
     # generate-image
     p_img = sub.add_parser(

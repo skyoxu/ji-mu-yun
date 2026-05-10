@@ -20,7 +20,14 @@ public sealed class PrototypeCommandTests
         });
         var builder = new PrototypeCommandBuilder(options);
 
-        var command = builder.BuildTdd(new PrototypeTddRequest("demo", "red", Expect: "fail", TimeoutSec: 30));
+        var command = builder.BuildTdd(new PrototypeTddRequest(
+            "demo",
+            "red",
+            Expect: "fail",
+            Filter: "DemoFilter",
+            TimeoutSec: 30,
+            DotnetTarget: ["Game.Core.Tests/Game.Core.Tests.csproj"],
+            GdunitPath: ["tests/Prototype/Demo"]));
 
         command.Arguments.Should().ContainInOrder(
             "-3",
@@ -32,6 +39,12 @@ public sealed class PrototypeCommandTests
             "red",
             "--expect",
             "fail",
+            "--filter",
+            "DemoFilter",
+            "--dotnet-target",
+            "Game.Core.Tests/Game.Core.Tests.csproj",
+            "--gdunit-path",
+            "tests/Prototype/Demo",
             "--timeout-sec",
             "30",
             "--godot-bin",
