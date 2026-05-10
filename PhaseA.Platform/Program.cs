@@ -1,3 +1,4 @@
+using PhaseA.Platform.Browser;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -41,6 +42,7 @@ builder.Services.AddSingleton<PrototypeCommandService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<LlmBindingService>();
 builder.Services.AddSingleton<LlmStopLossService>();
+builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
 var metadataStore = app.Services.GetRequiredService<PhaseAMetadataStore>();
@@ -48,7 +50,9 @@ var adminAccountId = await metadataStore.EnsureSingleAdminAsync();
 
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path == "/healthz")
+    if (context.Request.Path == "/healthz" ||
+        context.Request.Path == "/" ||
+        context.Request.Path == "/ui")
     {
         await next(context);
         return;
@@ -71,14 +75,16 @@ app.MapGet("/healthz", () => Results.Ok(new
     service = "phase-a-platform"
 }));
 
-app.MapGet("/", async (
-    [FromServices] ArtifactReadbackService readback,
-    CancellationToken cancellationToken) =>
+app.MapGet("/", (
+    [FromServices] BrowserUiRenderer ui) =>
 {
-    var projects = await readback.ListProjectsAsync(adminAccountId, cancellationToken);
-    var links = string.Join("", projects.Select(project =>
-        $"<li><a href=\"/projects/{project.ProjectId}\">{System.Net.WebUtility.HtmlEncode(project.Name)}</a> - {System.Net.WebUtility.HtmlEncode(project.GameName)}</li>"));
-    return Results.Content($"<html><body><h1>Phase A Projects</h1><ul>{links}</ul></body></html>", "text/html; charset=utf-8");
+    return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/ui", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/api/projects", async (
@@ -100,6 +106,7 @@ app.MapGet("/api/projects/{projectId}/runs", async (
 app.MapGet("/projects/{projectId}", async (
     string projectId,
     [FromServices] ArtifactReadbackService readback,
+    [FromServices] BrowserUiRenderer ui,
     CancellationToken cancellationToken) =>
 {
     var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
@@ -108,9 +115,7 @@ app.MapGet("/projects/{projectId}", async (
         return Results.NotFound(new { error = "project_not_found" });
     }
 
-    var runs = string.Join("", result.Runs.Select(run =>
-        $"<li><a href=\"/runs/{run.RunId}\">{System.Net.WebUtility.HtmlEncode(run.RunType)}</a> - {System.Net.WebUtility.HtmlEncode(run.Status)}</li>"));
-    return Results.Content($"<html><body><h1>{System.Net.WebUtility.HtmlEncode(result.Project.Name)}</h1><ul>{runs}</ul></body></html>", "text/html; charset=utf-8");
+    return Results.Content(ui.RenderProject(result.Project, result.Runs), "text/html; charset=utf-8");
 });
 
 app.MapGet("/api/runs/{runId}", async (
@@ -131,6 +136,7 @@ app.MapGet("/api/runs/{runId}", async (
 app.MapGet("/runs/{runId}", async (
     string runId,
     [FromServices] ArtifactReadbackService readback,
+    [FromServices] BrowserUiRenderer ui,
     CancellationToken cancellationToken) =>
 {
     var run = await readback.GetRunAsync(runId, cancellationToken);
@@ -140,18 +146,7 @@ app.MapGet("/runs/{runId}", async (
     }
 
     var artifacts = await readback.ListArtifactsForRunAsync(runId, cancellationToken);
-    var artifactLinks = string.Join("", artifacts.Select(artifact =>
-        $"<li><a href=\"/artifacts/{artifact.ArtifactId}\">{System.Net.WebUtility.HtmlEncode(artifact.ArtifactType)}</a> - {System.Net.WebUtility.HtmlEncode(artifact.RelativePath)}</li>"));
-    var body = $"""
-        <html><body>
-        <h1>Run {System.Net.WebUtility.HtmlEncode(run.RunId)}</h1>
-        <p>Status: {System.Net.WebUtility.HtmlEncode(run.Status)}</p>
-        <p>Type: {System.Net.WebUtility.HtmlEncode(run.RunType)}</p>
-        <pre>{System.Net.WebUtility.HtmlEncode(run.StdoutText ?? "")}</pre>
-        <ul>{artifactLinks}</ul>
-        </body></html>
-        """;
-    return Results.Content(body, "text/html; charset=utf-8");
+    return Results.Content(ui.RenderRun(run, artifacts), "text/html; charset=utf-8");
 });
 
 app.MapGet("/api/artifacts/{artifactId}", async (

@@ -44,6 +44,12 @@ def main() -> int:
             raise AssertionError(f"healthz returned unexpected payload: {payload}")
         events.append({"event": "healthz_ok", "status": status})
 
+        status, payload = request_text("GET", f"{base_url}/", timeout=args.timeout_seconds)
+        assert_status(status, 200, payload, "browser console")
+        if "Phase A Prototype Console" not in payload:
+            raise AssertionError("browser console did not include expected title")
+        events.append({"event": "browser_console_ok", "status": status})
+
         status, payload = request_json("GET", f"{base_url}/api/projects", timeout=args.timeout_seconds)
         assert_status(status, 401, payload, "unauthorized project list")
         if payload.get("error") != "authentication_required":
@@ -144,6 +150,21 @@ def request_json(
         except json.JSONDecodeError:
             payload = {"raw": raw}
         return ex.code, payload
+
+
+def request_text(
+    method: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    timeout: float,
+) -> tuple[int, str]:
+    request = urllib.request.Request(url, headers=dict(headers or {}), method=method)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as ex:
+        return ex.code, ex.read().decode("utf-8")
 
 
 def assert_status(status: int, expected: int, payload: Any, label: str) -> None:
