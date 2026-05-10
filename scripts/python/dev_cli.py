@@ -45,6 +45,7 @@ from dev_cli_builders import (
     build_serve_project_health_cmd,
     build_smoke_strict_cmd,
     build_phase_a_runtime_smoke_cmd,
+    build_phase_a_public_smoke_cmd,
 )
 from local_hard_checks_harness import run_local_hard_checks
 from solution_resolver import resolve_solution_path, resolve_test_solution_path
@@ -221,6 +222,12 @@ def cmd_phase_a_runtime_smoke(args: argparse.Namespace) -> int:
     """Run Phase A platform runtime smoke checks."""
 
     return run(build_phase_a_runtime_smoke_cmd(args))
+
+
+def cmd_phase_a_public_smoke(args: argparse.Namespace) -> int:
+    """Run Phase A public endpoint smoke checks."""
+
+    return run(build_phase_a_public_smoke_cmd(args))
 
 
 def cmd_new_execution_plan(args: argparse.Namespace) -> int:
@@ -436,6 +443,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a.add_argument("--admin-token", default="")
     p_phase_a.add_argument("--timeout-seconds", type=int, default=45)
     p_phase_a.set_defaults(func=cmd_phase_a_runtime_smoke)
+
+    # phase-a-public-smoke
+    p_phase_a_public = sub.add_parser(
+        "phase-a-public-smoke",
+        help="run Phase A public endpoint smoke checks after Caddy/public URL deployment",
+    )
+    p_phase_a_public.add_argument("--base-url", default="")
+    p_phase_a_public.add_argument("--admin-token", default="")
+    p_phase_a_public.add_argument("--repository-root", default=".")
+    p_phase_a_public.add_argument("--allow-http", action="store_true")
+    p_phase_a_public.add_argument("--create-project", action="store_true")
+    p_phase_a_public.add_argument("--timeout-seconds", type=float, default=15.0)
+    p_phase_a_public.set_defaults(func=cmd_phase_a_public_smoke)
 
     # generate-image
     p_img = sub.add_parser(

@@ -203,6 +203,28 @@ def build_phase_a_runtime_smoke_cmd(args) -> list[str]:
     return cmd
 
 
+def build_phase_a_public_smoke_cmd(args) -> list[str]:
+    cmd = [
+        "py",
+        "-3",
+        "scripts/python/phase_a_public_smoke.py",
+    ]
+    if getattr(args, "base_url", ""):
+        cmd += ["--base-url", args.base_url]
+    if getattr(args, "admin_token", ""):
+        cmd += ["--admin-token", args.admin_token]
+    if getattr(args, "repository_root", ""):
+        cmd += ["--repository-root", args.repository_root]
+    if getattr(args, "allow_http", False):
+        cmd.append("--allow-http")
+    if getattr(args, "create_project", False):
+        cmd.append("--create-project")
+    timeout_seconds = float(getattr(args, "timeout_seconds", 0) or 0)
+    if timeout_seconds > 0:
+        cmd += ["--timeout-seconds", str(timeout_seconds)]
+    return cmd
+
+
 def build_run_prototype_tdd_cmd(args) -> list[str]:
     cmd = [
         "py",

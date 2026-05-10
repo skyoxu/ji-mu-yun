@@ -70,9 +70,12 @@ Run before public exposure:
 & "C:\Program Files\dotnet\dotnet.exe" test Game.sln
 py -3 scripts/python/dev_cli.py run-local-hard-checks-preflight --delivery-profile fast-ship
 py -3 scripts/python/dev_cli.py phase-a-runtime-smoke --dotnet "C:\Program Files\dotnet\dotnet.exe"
+py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-domain.example" --admin-token "<admin-token>"
 ```
 
 `phase-a-runtime-smoke` starts `PhaseA.Platform` with a temporary SQLite database and workspace under `logs/ci/<date>/phase-a-runtime-smoke/<run_id>/`. It verifies `/healthz`, auth rejection, authenticated project creation, browser Git URL rejection, and the default two-project quota.
+
+`phase-a-public-smoke` verifies the deployed public endpoint through Caddy: `/healthz`, unauthenticated `401`, and authenticated project-list access. Add `--create-project` only when you intentionally want the smoke to consume one project slot on the deployed account. Non-local public endpoints must use HTTPS unless `--allow-http` is passed for a local-only check.
 
 Manual checks:
 
