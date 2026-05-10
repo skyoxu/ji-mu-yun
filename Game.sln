@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Core", "Game.Core\Game
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Core.Tests", "Game.Core.Tests\Game.Core.Tests.csproj", "{521CDF14-544F-4765-8451-840EE574A22B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhaseA.Platform", "PhaseA.Platform\PhaseA.Platform.csproj", "{82EAD7FB-9F16-4AE3-821B-B1B39DFE482C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhaseA.Platform.Tests", "PhaseA.Platform.Tests\PhaseA.Platform.Tests.csproj", "{90514569-FEFB-47F2-9C92-213900E150B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{521CDF14-544F-4765-8451-840EE574A22B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{521CDF14-544F-4765-8451-840EE574A22B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{521CDF14-544F-4765-8451-840EE574A22B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82EAD7FB-9F16-4AE3-821B-B1B39DFE482C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82EAD7FB-9F16-4AE3-821B-B1B39DFE482C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82EAD7FB-9F16-4AE3-821B-B1B39DFE482C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82EAD7FB-9F16-4AE3-821B-B1B39DFE482C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90514569-FEFB-47F2-9C92-213900E150B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90514569-FEFB-47F2-9C92-213900E150B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90514569-FEFB-47F2-9C92-213900E150B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90514569-FEFB-47F2-9C92-213900E150B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

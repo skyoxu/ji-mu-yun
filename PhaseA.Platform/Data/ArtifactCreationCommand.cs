@@ -1,0 +1,8 @@
+namespace PhaseA.Platform.Data;
+
+public sealed record ArtifactCreationCommand(
+    string RunId,
+    string ProjectId,
+    string ArtifactType,
+    string RelativePath,
+    string Summary);

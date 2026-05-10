@@ -1,0 +1,308 @@
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
+using PhaseA.Platform.Projects;
+using PhaseA.Platform.Readback;
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
+using Microsoft.Data.Sqlite;
+using System.Text.Json;
+
+var builder = WebApplication.CreateBuilder(args);
+var options = PhaseAPlatformOptionsLoader.FromEnvironment();
+var metadataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
+if (!string.IsNullOrWhiteSpace(metadataDirectory))
+{
+    Directory.CreateDirectory(metadataDirectory);
+}
+var connectionString = new SqliteConnectionStringBuilder
+{
+    DataSource = options.MetadataDatabasePath
+}.ToString();
+
+await SqliteMetadataSchema.InitializeAsync(connectionString);
+
+builder.Services.AddSingleton(options);
+builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
+builder.Services.AddSingleton<ProjectRuleCatalog>();
+builder.Services.AddSingleton<ProjectCreationService>();
+builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
+builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
+builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
+builder.Services.AddSingleton<Chapter2BootstrapService>();
+builder.Services.AddSingleton<PrototypeRecordWriter>();
+builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
+builder.Services.AddSingleton<PrototypeArtifactIndexer>();
+builder.Services.AddSingleton<PrototypeWorkflowService>();
+builder.Services.AddSingleton<PrototypeCommandBuilder>();
+builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
+builder.Services.AddSingleton<PrototypeCommandService>();
+builder.Services.AddSingleton<ArtifactReadbackService>();
+builder.Services.AddSingleton<LlmBindingService>();
+builder.Services.AddSingleton<LlmStopLossService>();
+
+var app = builder.Build();
+var metadataStore = app.Services.GetRequiredService<PhaseAMetadataStore>();
+var adminAccountId = await metadataStore.EnsureSingleAdminAsync();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/healthz")
+    {
+        await next(context);
+        return;
+    }
+
+    var authOptions = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
+    if (!PhaseAAuth.IsAuthorized(context.Request, authOptions))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode });
+        return;
+    }
+
+    await next(context);
+});
+
+app.MapGet("/healthz", () => Results.Ok(new
+{
+    status = "ok",
+    service = "phase-a-platform"
+}));
+
+app.MapGet("/", async (
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var projects = await readback.ListProjectsAsync(adminAccountId, cancellationToken);
+    var links = string.Join("", projects.Select(project =>
+        $"<li><a href=\"/projects/{project.ProjectId}\">{System.Net.WebUtility.HtmlEncode(project.Name)}</a> - {System.Net.WebUtility.HtmlEncode(project.GameName)}</li>"));
+    return Results.Content($"<html><body><h1>Phase A Projects</h1><ul>{links}</ul></body></html>", "text/html; charset=utf-8");
+});
+
+app.MapGet("/api/projects", async (
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    return Results.Ok(await readback.ListProjectsAsync(adminAccountId, cancellationToken));
+});
+
+app.MapGet("/api/projects/{projectId}/runs", async (
+    string projectId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapGet("/projects/{projectId}", async (
+    string projectId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var runs = string.Join("", result.Runs.Select(run =>
+        $"<li><a href=\"/runs/{run.RunId}\">{System.Net.WebUtility.HtmlEncode(run.RunType)}</a> - {System.Net.WebUtility.HtmlEncode(run.Status)}</li>"));
+    return Results.Content($"<html><body><h1>{System.Net.WebUtility.HtmlEncode(result.Project.Name)}</h1><ul>{runs}</ul></body></html>", "text/html; charset=utf-8");
+});
+
+app.MapGet("/api/runs/{runId}", async (
+    string runId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var run = await readback.GetRunAsync(runId, cancellationToken);
+    if (run is null)
+    {
+        return Results.NotFound(new { error = "run_not_found" });
+    }
+
+    var artifacts = await readback.ListArtifactsForRunAsync(runId, cancellationToken);
+    return Results.Ok(new { run, artifacts });
+});
+
+app.MapGet("/runs/{runId}", async (
+    string runId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var run = await readback.GetRunAsync(runId, cancellationToken);
+    if (run is null)
+    {
+        return Results.NotFound(new { error = "run_not_found" });
+    }
+
+    var artifacts = await readback.ListArtifactsForRunAsync(runId, cancellationToken);
+    var artifactLinks = string.Join("", artifacts.Select(artifact =>
+        $"<li><a href=\"/artifacts/{artifact.ArtifactId}\">{System.Net.WebUtility.HtmlEncode(artifact.ArtifactType)}</a> - {System.Net.WebUtility.HtmlEncode(artifact.RelativePath)}</li>"));
+    var body = $"""
+        <html><body>
+        <h1>Run {System.Net.WebUtility.HtmlEncode(run.RunId)}</h1>
+        <p>Status: {System.Net.WebUtility.HtmlEncode(run.Status)}</p>
+        <p>Type: {System.Net.WebUtility.HtmlEncode(run.RunType)}</p>
+        <pre>{System.Net.WebUtility.HtmlEncode(run.StdoutText ?? "")}</pre>
+        <ul>{artifactLinks}</ul>
+        </body></html>
+        """;
+    return Results.Content(body, "text/html; charset=utf-8");
+});
+
+app.MapGet("/api/artifacts/{artifactId}", async (
+    string artifactId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
+    return artifact is null ? Results.NotFound(new { error = "artifact_not_found" }) : Results.Ok(artifact);
+});
+
+app.MapGet("/artifacts/{artifactId}", async (
+    string artifactId,
+    ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
+    if (artifact is null)
+    {
+        return Results.NotFound(new { error = "artifact_not_found" });
+    }
+
+    return Results.Content(artifact.Content, artifact.ContentType);
+});
+
+app.MapGet("/project-health/latest.html", (
+    ArtifactReadbackService readback) =>
+{
+    var artifact = readback.ReadProjectHealth("logs/ci/project-health/latest.html");
+    return artifact is null ? Results.NotFound(new { error = "project_health_not_found" }) : Results.Content(artifact.Content, artifact.ContentType);
+});
+
+app.MapGet("/project-health/latest.json", (
+    ArtifactReadbackService readback) =>
+{
+    var artifact = readback.ReadProjectHealth("logs/ci/project-health/latest.json");
+    return artifact is null ? Results.NotFound(new { error = "project_health_not_found" }) : Results.Content(artifact.Content, "application/json; charset=utf-8");
+});
+
+app.MapGet("/api/admin/llm-binding", async (
+    LlmBindingService llmBinding,
+    CancellationToken cancellationToken) =>
+{
+    var binding = await llmBinding.GetAsync(adminAccountId, cancellationToken);
+    return binding is null ? Results.NotFound(new { error = "llm_binding_not_found" }) : Results.Ok(binding);
+});
+
+app.MapPost("/api/admin/llm-binding", async (
+    LlmBindingRequest request,
+    LlmBindingService llmBinding,
+    CancellationToken cancellationToken) =>
+{
+    var result = await llmBinding.BindAsync(adminAccountId, request, cancellationToken);
+    return result.Succeeded ? Results.Ok(result.Binding) : Results.BadRequest(result);
+});
+
+app.MapPost("/api/projects", async (
+    JsonElement payload,
+    ProjectCreationService projects,
+    CancellationToken cancellationToken) =>
+{
+    if (ProjectCreationRequestJsonPolicy.ContainsForbiddenGitUrl(payload))
+    {
+        return Results.BadRequest(new { error = "git_url_not_allowed" });
+    }
+
+    var request = payload.Deserialize<ProjectCreationRequest>(new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    });
+
+    if (request is null)
+    {
+        return Results.BadRequest(new { error = "invalid_project_request" });
+    }
+
+    var result = await projects.CreateProjectAsync(adminAccountId, request, cancellationToken);
+    return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+});
+
+app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
+    string projectId,
+    Chapter2BootstrapService chapter2,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await chapter2.RunAsync(projectId, cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
+    string projectId,
+    PrototypeWorkflowRequest request,
+    PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeWorkflow.RunAsync(projectId, request, cancellationToken);
+        if (result.Status == "missing_required_fields")
+        {
+            return Results.BadRequest(result);
+        }
+
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
+    string projectId,
+    PrototypeTddRequest request,
+    PrototypeCommandService prototypeCommands,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeCommands.RunTddAsync(projectId, request, cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-scene", async (
+    string projectId,
+    PrototypeSceneRequest request,
+    PrototypeCommandService prototypeCommands,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeCommands.CreateSceneAsync(projectId, request, cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.Run(options.AppBindUrl);
+
+public partial class Program;
