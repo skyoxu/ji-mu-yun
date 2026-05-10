@@ -44,6 +44,7 @@ from dev_cli_builders import (
     build_run_gdunit_hard_cmd,
     build_serve_project_health_cmd,
     build_smoke_strict_cmd,
+    build_phase_a_runtime_smoke_cmd,
 )
 from local_hard_checks_harness import run_local_hard_checks
 from solution_resolver import resolve_solution_path, resolve_test_solution_path
@@ -214,6 +215,12 @@ def cmd_run_smoke_strict(args: argparse.Namespace) -> int:
     """Run strict headless smoke against Main scene."""
 
     return run(build_smoke_strict_cmd(godot_bin=args.godot_bin, timeout_sec=args.timeout_sec))
+
+
+def cmd_phase_a_runtime_smoke(args: argparse.Namespace) -> int:
+    """Run Phase A platform runtime smoke checks."""
+
+    return run(build_phase_a_runtime_smoke_cmd(args))
 
 
 def cmd_new_execution_plan(args: argparse.Namespace) -> int:
@@ -418,6 +425,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_sm.add_argument("--godot-bin", required=True)
     p_sm.add_argument("--timeout-sec", type=int, default=5)
     p_sm.set_defaults(func=cmd_run_smoke_strict)
+
+    # phase-a-runtime-smoke
+    p_phase_a = sub.add_parser(
+        "phase-a-runtime-smoke",
+        help="run Phase A platform runtime smoke checks with a temporary db/workspace",
+    )
+    p_phase_a.add_argument("--repository-root", default=".")
+    p_phase_a.add_argument("--dotnet", default="")
+    p_phase_a.add_argument("--admin-token", default="")
+    p_phase_a.add_argument("--timeout-seconds", type=int, default=45)
+    p_phase_a.set_defaults(func=cmd_phase_a_runtime_smoke)
 
     # generate-image
     p_img = sub.add_parser(

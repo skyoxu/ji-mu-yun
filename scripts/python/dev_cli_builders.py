@@ -185,6 +185,24 @@ def build_smoke_strict_cmd(*, godot_bin: str, timeout_sec: int) -> list[str]:
     ]
 
 
+def build_phase_a_runtime_smoke_cmd(args) -> list[str]:
+    cmd = [
+        "py",
+        "-3",
+        "scripts/python/phase_a_runtime_smoke.py",
+    ]
+    if getattr(args, "repository_root", ""):
+        cmd += ["--repository-root", args.repository_root]
+    if getattr(args, "dotnet", ""):
+        cmd += ["--dotnet", args.dotnet]
+    if getattr(args, "admin_token", ""):
+        cmd += ["--admin-token", args.admin_token]
+    timeout_seconds = int(getattr(args, "timeout_seconds", 0) or 0)
+    if timeout_seconds > 0:
+        cmd += ["--timeout-seconds", str(timeout_seconds)]
+    return cmd
+
+
 def build_run_prototype_tdd_cmd(args) -> list[str]:
     cmd = [
         "py",

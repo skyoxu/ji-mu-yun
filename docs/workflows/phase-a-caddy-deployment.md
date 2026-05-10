@@ -67,9 +67,12 @@ Use Windows Service, NSSM, or the host process supervisor. The process must inhe
 Run before public exposure:
 
 ```powershell
-dotnet test Game.sln
+& "C:\Program Files\dotnet\dotnet.exe" test Game.sln
 py -3 scripts/python/dev_cli.py run-local-hard-checks-preflight --delivery-profile fast-ship
+py -3 scripts/python/dev_cli.py phase-a-runtime-smoke --dotnet "C:\Program Files\dotnet\dotnet.exe"
 ```
+
+`phase-a-runtime-smoke` starts `PhaseA.Platform` with a temporary SQLite database and workspace under `logs/ci/<date>/phase-a-runtime-smoke/<run_id>/`. It verifies `/healthz`, auth rejection, authenticated project creation, browser Git URL rejection, and the default two-project quota.
 
 Manual checks:
 

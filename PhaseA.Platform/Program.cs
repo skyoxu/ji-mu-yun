@@ -6,6 +6,7 @@ using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -71,7 +72,7 @@ app.MapGet("/healthz", () => Results.Ok(new
 }));
 
 app.MapGet("/", async (
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var projects = await readback.ListProjectsAsync(adminAccountId, cancellationToken);
@@ -81,7 +82,7 @@ app.MapGet("/", async (
 });
 
 app.MapGet("/api/projects", async (
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     return Results.Ok(await readback.ListProjectsAsync(adminAccountId, cancellationToken));
@@ -89,7 +90,7 @@ app.MapGet("/api/projects", async (
 
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
@@ -98,7 +99,7 @@ app.MapGet("/api/projects/{projectId}/runs", async (
 
 app.MapGet("/projects/{projectId}", async (
     string projectId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
@@ -114,7 +115,7 @@ app.MapGet("/projects/{projectId}", async (
 
 app.MapGet("/api/runs/{runId}", async (
     string runId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var run = await readback.GetRunAsync(runId, cancellationToken);
@@ -129,7 +130,7 @@ app.MapGet("/api/runs/{runId}", async (
 
 app.MapGet("/runs/{runId}", async (
     string runId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var run = await readback.GetRunAsync(runId, cancellationToken);
@@ -155,7 +156,7 @@ app.MapGet("/runs/{runId}", async (
 
 app.MapGet("/api/artifacts/{artifactId}", async (
     string artifactId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
@@ -164,7 +165,7 @@ app.MapGet("/api/artifacts/{artifactId}", async (
 
 app.MapGet("/artifacts/{artifactId}", async (
     string artifactId,
-    ArtifactReadbackService readback,
+    [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
     var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
@@ -177,21 +178,21 @@ app.MapGet("/artifacts/{artifactId}", async (
 });
 
 app.MapGet("/project-health/latest.html", (
-    ArtifactReadbackService readback) =>
+    [FromServices] ArtifactReadbackService readback) =>
 {
     var artifact = readback.ReadProjectHealth("logs/ci/project-health/latest.html");
     return artifact is null ? Results.NotFound(new { error = "project_health_not_found" }) : Results.Content(artifact.Content, artifact.ContentType);
 });
 
 app.MapGet("/project-health/latest.json", (
-    ArtifactReadbackService readback) =>
+    [FromServices] ArtifactReadbackService readback) =>
 {
     var artifact = readback.ReadProjectHealth("logs/ci/project-health/latest.json");
     return artifact is null ? Results.NotFound(new { error = "project_health_not_found" }) : Results.Content(artifact.Content, "application/json; charset=utf-8");
 });
 
 app.MapGet("/api/admin/llm-binding", async (
-    LlmBindingService llmBinding,
+    [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
     var binding = await llmBinding.GetAsync(adminAccountId, cancellationToken);
@@ -200,7 +201,7 @@ app.MapGet("/api/admin/llm-binding", async (
 
 app.MapPost("/api/admin/llm-binding", async (
     LlmBindingRequest request,
-    LlmBindingService llmBinding,
+    [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
     var result = await llmBinding.BindAsync(adminAccountId, request, cancellationToken);
@@ -209,7 +210,7 @@ app.MapPost("/api/admin/llm-binding", async (
 
 app.MapPost("/api/projects", async (
     JsonElement payload,
-    ProjectCreationService projects,
+    [FromServices] ProjectCreationService projects,
     CancellationToken cancellationToken) =>
 {
     if (ProjectCreationRequestJsonPolicy.ContainsForbiddenGitUrl(payload))
@@ -233,7 +234,7 @@ app.MapPost("/api/projects", async (
 
 app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
     string projectId,
-    Chapter2BootstrapService chapter2,
+    [FromServices] Chapter2BootstrapService chapter2,
     CancellationToken cancellationToken) =>
 {
     try
@@ -250,7 +251,7 @@ app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
 app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
     string projectId,
     PrototypeWorkflowRequest request,
-    PrototypeWorkflowService prototypeWorkflow,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
     try
@@ -272,7 +273,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
 app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
     string projectId,
     PrototypeTddRequest request,
-    PrototypeCommandService prototypeCommands,
+    [FromServices] PrototypeCommandService prototypeCommands,
     CancellationToken cancellationToken) =>
 {
     try
@@ -289,7 +290,7 @@ app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
 app.MapPost("/api/projects/{projectId}/prototype-scene", async (
     string projectId,
     PrototypeSceneRequest request,
-    PrototypeCommandService prototypeCommands,
+    [FromServices] PrototypeCommandService prototypeCommands,
     CancellationToken cancellationToken) =>
 {
     try
