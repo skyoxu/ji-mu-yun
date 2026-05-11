@@ -21,11 +21,15 @@ EXCLUDED_COPY_DIRS = {
     ".git",
     ".vs",
     ".godot",
-    "bin",
-    "obj",
     "logs",
     ".pytest_cache",
     "__pycache__",
+}
+DOTNET_BUILD_OUTPUT_PARENTS = {
+    "PhaseA.Platform",
+    "PhaseA.Platform.Tests",
+    "Game.Core",
+    "Game.Core.Tests",
 }
 
 
@@ -34,7 +38,7 @@ def main() -> int:
     parser.add_argument("--repository-root", default=str(Path.cwd()))
     parser.add_argument("--dotnet", default=None)
     parser.add_argument("--admin-token", default=DEFAULT_ADMIN_TOKEN)
-    parser.add_argument("--timeout-seconds", type=int, default=90)
+    parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--stop-after-day", type=int, default=4, choices=[2, 3, 4, 5])
     parser.add_argument("--use-current-repo", action="store_true")
     parser.add_argument("--skip-chapter2", action="store_true")
@@ -68,6 +72,7 @@ def main() -> int:
             repository_root=work_root,
             admin_token=args.admin_token,
             dotnet=dotnet,
+            godot_bin=os.environ.get("GODOT_BIN", ""),
         )
 
         command = [
@@ -90,7 +95,7 @@ def main() -> int:
             events.append({"event": "project_created", "project_id": project_id})
 
             if not args.skip_chapter2:
-                chapter2 = post_json(base_url, f"/api/projects/{project_id}/chapter2-bootstrap", headers, {})
+                chapter2 = post_json(base_url, f"/api/projects/{project_id}/chapter2-bootstrap", headers, {}, timeout=args.timeout_seconds)
                 events.append(assert_run_result(chapter2, "chapter2-bootstrap"))
 
             prototype = post_json(
@@ -98,6 +103,7 @@ def main() -> int:
                 f"/api/projects/{project_id}/prototype-7day-playable",
                 headers,
                 prototype_payload(stop_after_day=args.stop_after_day),
+                timeout=args.timeout_seconds,
             )
             events.append(assert_run_result(prototype, "prototype-7day-playable"))
 
@@ -106,6 +112,7 @@ def main() -> int:
                 f"/api/projects/{project_id}/prototype-scene",
                 headers,
                 {"slug": "phase-a-e2e-loop", "sceneRoot": "Node2D"},
+                timeout=args.timeout_seconds,
             )
             events.append(assert_run_result(scene, "prototype-scene"))
 
@@ -120,10 +127,11 @@ def main() -> int:
                     "timeoutSec": 300,
                     "dotnetTarget": ["Game.Core.Tests/Game.Core.Tests.csproj"],
                 },
+                timeout=args.timeout_seconds,
             )
             events.append(assert_run_result(tdd, "prototype-tdd-refactor"))
 
-            runs = get_json(base_url, f"/api/projects/{project_id}/runs", headers)
+            runs = get_json(base_url, f"/api/projects/{project_id}/runs", headers, timeout=args.timeout_seconds)
             run_types = [str(item.get("runType")) for item in runs.get("runs", [])]
             required = {"prototype-7day-playable", "prototype-scene", "prototype-tdd-refactor"}
             if not args.skip_chapter2:
@@ -133,7 +141,7 @@ def main() -> int:
                 raise AssertionError(f"missing run types: {missing}; got {run_types}")
             events.append({"event": "run_readback_ok", "run_types": run_types})
 
-            artifact_count = sum(len(get_json(base_url, f"/api/runs/{item['runId']}", headers).get("artifacts", [])) for item in runs.get("runs", []))
+            artifact_count = sum(len(get_json(base_url, f"/api/runs/{item['runId']}", headers, timeout=args.timeout_seconds).get("artifacts", [])) for item in runs.get("runs", []))
             if artifact_count < 1:
                 raise AssertionError("expected at least one indexed artifact")
             events.append({"event": "artifact_readback_ok", "artifact_count": artifact_count})
@@ -170,9 +178,12 @@ def main() -> int:
 def copy_repo(source_root: Path, target_root: Path) -> None:
     def ignore(directory: str, names: list[str]) -> set[str]:
         ignored: set[str] = set()
+        directory_path = Path(directory)
         for name in names:
             path = Path(directory) / name
             if name in EXCLUDED_COPY_DIRS:
+                ignored.add(name)
+            elif name in {"bin", "obj"} and directory_path.name in DOTNET_BUILD_OUTPUT_PARENTS:
                 ignored.add(name)
             elif path.is_file() and name.lower().endswith((".exe", ".zip", ".7z")):
                 ignored.add(name)
@@ -201,7 +212,7 @@ def find_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def build_server_env(*, base_url: str, workspace_root: Path, metadata_db: Path, repository_root: Path, admin_token: str, dotnet: str) -> dict[str, str]:
+def build_server_env(*, base_url: str, workspace_root: Path, metadata_db: Path, repository_root: Path, admin_token: str, dotnet: str, godot_bin: str) -> dict[str, str]:
     env = os.environ.copy()
     dotnet_parent = str(Path(dotnet).resolve().parent) if Path(dotnet).exists() else ""
     if dotnet_parent:
@@ -221,6 +232,8 @@ def build_server_env(*, base_url: str, workspace_root: Path, metadata_db: Path, 
             "DELIVERY_PROFILE": "fast-ship",
         }
     )
+    if godot_bin:
+        env["GODOT_BIN"] = godot_bin
     return env
 
 
@@ -231,7 +244,7 @@ def wait_for_health(base_url: str, process: subprocess.Popen[bytes], timeout_sec
         if process.poll() is not None:
             raise RuntimeError(f"server exited before health check, exit_code={process.returncode}")
         try:
-            payload = get_json(base_url, "/healthz", {})
+            payload = get_json(base_url, "/healthz", {}, timeout=5)
             if payload.get("status") == "ok":
                 return
         except Exception as ex:
@@ -285,15 +298,15 @@ def assert_run_result(payload: dict[str, Any], label: str) -> dict[str, Any]:
     }
 
 
-def get_json(base_url: str, path: str, headers: dict[str, str]) -> dict[str, Any]:
-    status, payload = request_json("GET", f"{base_url}{path}", headers=headers)
+def get_json(base_url: str, path: str, headers: dict[str, str], *, timeout: int) -> dict[str, Any]:
+    status, payload = request_json("GET", f"{base_url}{path}", headers=headers, timeout=timeout)
     if status < 200 or status >= 300:
         raise AssertionError(f"GET {path} failed: HTTP {status}, payload={payload}")
     return payload
 
 
-def post_json(base_url: str, path: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
-    status, payload = request_json("POST", f"{base_url}{path}", headers=headers, body=body)
+def post_json(base_url: str, path: str, headers: dict[str, str], body: dict[str, Any], *, timeout: int = 20) -> dict[str, Any]:
+    status, payload = request_json("POST", f"{base_url}{path}", headers=headers, body=body, timeout=timeout)
     if status < 200 or status >= 300:
         raise AssertionError(f"POST {path} failed: HTTP {status}, payload={payload}")
     return payload
@@ -305,6 +318,7 @@ def request_json(
     *,
     headers: dict[str, str] | None = None,
     body: dict[str, Any] | None = None,
+    timeout: int = 20,
 ) -> tuple[int, dict[str, Any]]:
     data = None
     request_headers = dict(headers or {})
@@ -313,7 +327,7 @@ def request_json(
         request_headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=data, headers=request_headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             raw = response.read().decode("utf-8")
             return response.status, json.loads(raw) if raw else {}
     except urllib.error.HTTPError as ex:

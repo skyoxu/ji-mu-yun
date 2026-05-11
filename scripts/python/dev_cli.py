@@ -493,7 +493,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_e2e.add_argument("--repository-root", default=".")
     p_phase_a_e2e.add_argument("--dotnet", default="")
     p_phase_a_e2e.add_argument("--admin-token", default="")
-    p_phase_a_e2e.add_argument("--timeout-seconds", type=int, default=90)
+    p_phase_a_e2e.add_argument("--timeout-seconds", type=int, default=300)
     p_phase_a_e2e.add_argument("--stop-after-day", type=int, default=4, choices=[2, 3, 4, 5])
     p_phase_a_e2e.add_argument("--use-current-repo", action="store_true")
     p_phase_a_e2e.add_argument("--skip-chapter2", action="store_true")
