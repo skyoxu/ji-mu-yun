@@ -46,6 +46,31 @@ your-domain.example {
 }
 ```
 
+## Admin Token
+
+Generate a strong token before first deployment:
+
+```powershell
+py -3 scripts/python/dev_cli.py phase-a-generate-admin-token
+```
+
+Set the generated value as `PHASEA_ADMIN_TOKEN_HASH` in the host service environment. Phase A currently treats this configured value as the bearer-token verifier, so rotate it by changing the service environment and restarting the process. Do not commit the generated token, and do not put it in Caddyfile or git-tracked docs.
+
+## Operations Preflight
+
+Before publishing or restarting the service, run:
+
+```powershell
+py -3 scripts/python/dev_cli.py phase-a-ops-check `
+  --repository-root "C:\jimuyun" `
+  --workspace-root "C:\workspaces" `
+  --metadata-db "C:\phase-a\phase-a-platform.sqlite3" `
+  --app-bind-url "http://127.0.0.1:8080" `
+  --public-base-url "https://your-domain.example"
+```
+
+This validates absolute paths, creates missing deployment directories where safe, checks `py` and `dotnet` on `PATH`, verifies localhost binding behind Caddy, and records evidence under `logs/ci/<date>/phase-a-ops-check/summary.json`. A missing `GODOT_BIN` is a warning until Day 5/GdUnit checks are enabled.
+
 ## Windows Service Shape
 
 Publish:
@@ -60,7 +85,30 @@ Service command:
 C:\phase-a\app\PhaseA.Platform.exe
 ```
 
-Use Windows Service, NSSM, or the host process supervisor. The process must inherit the required environment variables above.
+Use Windows Service, NSSM, or the host process supervisor. The process must inherit the required environment variables above. The service account must have read/write access to `PHASEA_METADATA_DB_PATH`, `HOSTED_WORKSPACE_ROOT`, `PHASEA_REPOSITORY_ROOT`, and `logs/`.
+
+## Backup And Restore
+
+Create a backup while the service is stopped or during a quiet maintenance window:
+
+```powershell
+py -3 scripts/python/dev_cli.py phase-a-backup `
+  --metadata-db "C:\phase-a\phase-a-platform.sqlite3" `
+  --workspace-root "C:\workspaces" `
+  --out-dir "C:\phase-a\backups"
+```
+
+The backup command uses SQLite's backup API for the metadata database and zips the workspace root. Add `--include-logs --logs-root logs` when logs must be retained for incident investigation.
+
+Restore shape:
+
+1. Stop the Phase A service.
+2. Copy the backed-up SQLite file to `PHASEA_METADATA_DB_PATH`.
+3. Extract the workspace zip back to `HOSTED_WORKSPACE_ROOT`.
+4. Confirm permissions for the service account.
+5. Start the service and run `phase-a-runtime-smoke`.
+
+Keep at least one off-host copy of the latest SQLite and workspace backup before public launch.
 
 ## Deployment Checks
 

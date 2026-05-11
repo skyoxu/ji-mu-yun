@@ -47,6 +47,9 @@ from dev_cli_builders import (
     build_phase_a_runtime_smoke_cmd,
     build_phase_a_public_smoke_cmd,
     build_phase_a_prototype_e2e_cmd,
+    build_phase_a_ops_check_cmd,
+    build_phase_a_backup_cmd,
+    build_phase_a_generate_admin_token_cmd,
 )
 from local_hard_checks_harness import run_local_hard_checks
 from solution_resolver import resolve_solution_path, resolve_test_solution_path
@@ -235,6 +238,24 @@ def cmd_phase_a_prototype_e2e(args: argparse.Namespace) -> int:
     """Run Phase A hosted prototype lane end-to-end checks."""
 
     return run(build_phase_a_prototype_e2e_cmd(args))
+
+
+def cmd_phase_a_ops_check(args: argparse.Namespace) -> int:
+    """Run Phase A deployment operations prerequisite checks."""
+
+    return run(build_phase_a_ops_check_cmd(args))
+
+
+def cmd_phase_a_backup(args: argparse.Namespace) -> int:
+    """Create a Phase A backup bundle."""
+
+    return run(build_phase_a_backup_cmd(args))
+
+
+def cmd_phase_a_generate_admin_token(args: argparse.Namespace) -> int:
+    """Generate a Phase A admin token."""
+
+    return run(build_phase_a_generate_admin_token_cmd(args))
 
 
 def cmd_new_execution_plan(args: argparse.Namespace) -> int:
@@ -477,6 +498,32 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_e2e.add_argument("--use-current-repo", action="store_true")
     p_phase_a_e2e.add_argument("--skip-chapter2", action="store_true")
     p_phase_a_e2e.set_defaults(func=cmd_phase_a_prototype_e2e)
+
+    # phase-a-ops-check
+    p_phase_a_ops = sub.add_parser("phase-a-ops-check", help="check Phase A deployment operations prerequisites")
+    p_phase_a_ops.add_argument("--repository-root", default="")
+    p_phase_a_ops.add_argument("--workspace-root", default="")
+    p_phase_a_ops.add_argument("--metadata-db", default="")
+    p_phase_a_ops.add_argument("--app-bind-url", default="")
+    p_phase_a_ops.add_argument("--public-base-url", default="")
+    p_phase_a_ops.add_argument("--https-termination", default="")
+    p_phase_a_ops.add_argument("--godot-bin", default="")
+    p_phase_a_ops.add_argument("--out", default="")
+    p_phase_a_ops.set_defaults(func=cmd_phase_a_ops_check)
+
+    # phase-a-backup
+    p_phase_a_backup = sub.add_parser("phase-a-backup", help="create a Phase A SQLite/workspace backup bundle")
+    p_phase_a_backup.add_argument("--metadata-db", default="")
+    p_phase_a_backup.add_argument("--workspace-root", default="")
+    p_phase_a_backup.add_argument("--out-dir", default="")
+    p_phase_a_backup.add_argument("--include-logs", action="store_true")
+    p_phase_a_backup.add_argument("--logs-root", default="")
+    p_phase_a_backup.set_defaults(func=cmd_phase_a_backup)
+
+    # phase-a-generate-admin-token
+    p_phase_a_token = sub.add_parser("phase-a-generate-admin-token", help="generate a strong Phase A admin token")
+    p_phase_a_token.add_argument("--bytes", type=int, default=32)
+    p_phase_a_token.set_defaults(func=cmd_phase_a_generate_admin_token)
 
     # generate-image
     p_img = sub.add_parser(

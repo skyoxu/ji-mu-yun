@@ -250,6 +250,48 @@ def build_phase_a_prototype_e2e_cmd(args) -> list[str]:
     return cmd
 
 
+def build_phase_a_ops_check_cmd(args) -> list[str]:
+    cmd = ["py", "-3", "scripts/python/phase_a_ops_check.py"]
+    for attr, option in [
+        ("repository_root", "--repository-root"),
+        ("workspace_root", "--workspace-root"),
+        ("metadata_db", "--metadata-db"),
+        ("app_bind_url", "--app-bind-url"),
+        ("public_base_url", "--public-base-url"),
+        ("https_termination", "--https-termination"),
+        ("godot_bin", "--godot-bin"),
+        ("out", "--out"),
+    ]:
+        value = getattr(args, attr, "")
+        if value:
+            cmd += [option, value]
+    return cmd
+
+
+def build_phase_a_backup_cmd(args) -> list[str]:
+    cmd = ["py", "-3", "scripts/python/phase_a_backup.py"]
+    for attr, option in [
+        ("metadata_db", "--metadata-db"),
+        ("workspace_root", "--workspace-root"),
+        ("out_dir", "--out-dir"),
+        ("logs_root", "--logs-root"),
+    ]:
+        value = getattr(args, attr, "")
+        if value:
+            cmd += [option, value]
+    if getattr(args, "include_logs", False):
+        cmd.append("--include-logs")
+    return cmd
+
+
+def build_phase_a_generate_admin_token_cmd(args) -> list[str]:
+    cmd = ["py", "-3", "scripts/python/phase_a_generate_admin_token.py"]
+    token_bytes = int(getattr(args, "bytes", 0) or 0)
+    if token_bytes > 0:
+        cmd += ["--bytes", str(token_bytes)]
+    return cmd
+
+
 def build_run_prototype_tdd_cmd(args) -> list[str]:
     cmd = [
         "py",
