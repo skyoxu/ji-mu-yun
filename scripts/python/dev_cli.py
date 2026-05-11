@@ -50,6 +50,8 @@ from dev_cli_builders import (
     build_phase_a_ops_check_cmd,
     build_phase_a_backup_cmd,
     build_phase_a_generate_admin_token_cmd,
+    build_phase_a_restore_drill_cmd,
+    build_phase_a_token_rotation_drill_cmd,
 )
 from local_hard_checks_harness import run_local_hard_checks
 from solution_resolver import resolve_solution_path, resolve_test_solution_path
@@ -256,6 +258,18 @@ def cmd_phase_a_generate_admin_token(args: argparse.Namespace) -> int:
     """Generate a Phase A admin token."""
 
     return run(build_phase_a_generate_admin_token_cmd(args))
+
+
+def cmd_phase_a_restore_drill(args: argparse.Namespace) -> int:
+    """Run a Phase A backup/restore drill."""
+
+    return run(build_phase_a_restore_drill_cmd(args))
+
+
+def cmd_phase_a_token_rotation_drill(args: argparse.Namespace) -> int:
+    """Run a Phase A admin token rotation drill."""
+
+    return run(build_phase_a_token_rotation_drill_cmd(args))
 
 
 def cmd_new_execution_plan(args: argparse.Namespace) -> int:
@@ -524,6 +538,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_token = sub.add_parser("phase-a-generate-admin-token", help="generate a strong Phase A admin token")
     p_phase_a_token.add_argument("--bytes", type=int, default=32)
     p_phase_a_token.set_defaults(func=cmd_phase_a_generate_admin_token)
+
+    # phase-a-restore-drill
+    p_phase_a_restore = sub.add_parser("phase-a-restore-drill", help="run a Phase A backup/restore drill")
+    p_phase_a_restore.add_argument("--repository-root", default=".")
+    p_phase_a_restore.add_argument("--dotnet", default="")
+    p_phase_a_restore.add_argument("--timeout-seconds", type=int, default=90)
+    p_phase_a_restore.set_defaults(func=cmd_phase_a_restore_drill)
+
+    # phase-a-token-rotation-drill
+    p_phase_a_rotation = sub.add_parser("phase-a-token-rotation-drill", help="run a Phase A admin token rotation drill")
+    p_phase_a_rotation.add_argument("--repository-root", default=".")
+    p_phase_a_rotation.add_argument("--dotnet", default="")
+    p_phase_a_rotation.add_argument("--timeout-seconds", type=int, default=45)
+    p_phase_a_rotation.set_defaults(func=cmd_phase_a_token_rotation_drill)
 
     # generate-image
     p_img = sub.add_parser(

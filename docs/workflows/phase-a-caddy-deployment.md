@@ -119,12 +119,20 @@ Run before public exposure:
 py -3 scripts/python/dev_cli.py run-local-hard-checks-preflight --delivery-profile fast-ship
 py -3 scripts/python/dev_cli.py phase-a-runtime-smoke --dotnet "C:\Program Files\dotnet\dotnet.exe"
 py -3 scripts/python/dev_cli.py phase-a-prototype-e2e --dotnet "C:\Program Files\dotnet\dotnet.exe" --stop-after-day 5
+py -3 scripts/python/dev_cli.py phase-a-restore-drill --dotnet "C:\Program Files\dotnet\dotnet.exe"
+py -3 scripts/python/dev_cli.py phase-a-token-rotation-drill --dotnet "C:\Program Files\dotnet\dotnet.exe"
 py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-domain.example" --admin-token "<admin-token>"
 ```
 
 `phase-a-runtime-smoke` starts `PhaseA.Platform` with a temporary SQLite database and workspace under `logs/ci/<date>/phase-a-runtime-smoke/<run_id>/`. It verifies `/healthz`, auth rejection, authenticated project creation, browser Git URL rejection, and the default two-project quota.
 
 `phase-a-prototype-e2e` starts `PhaseA.Platform` against a temporary repository copy by default. It creates a project, runs Chapter 2 bootstrap, runs the hosted prototype route through Day 4, creates a prototype scene, runs hosted prototype TDD refactor, and verifies run/artifact readback. With `GODOT_BIN` configured, the same command can run through Day 5 and verify the GdUnit-backed Godot path.
+
+`phase-a-restore-drill` creates a fixture SQLite/workspace pair, backs it up, restores it to a new location, starts `PhaseA.Platform` against the restored files, and verifies project readback through the API.
+
+`phase-a-token-rotation-drill` starts the service with an old token, restarts with a new token, then verifies old-token rejection and new-token acceptance.
+
+Run service-starting drills serially. Parallel `dotnet run` invocations can lock `PhaseA.Platform` build outputs.
 
 `phase-a-public-smoke` verifies the deployed public endpoint through Caddy: `/healthz`, unauthenticated `401`, and authenticated project-list access. Add `--create-project` only when you intentionally want the smoke to consume one project slot on the deployed account. Non-local public endpoints must use HTTPS unless `--allow-http` is passed for a local-only check.
 
