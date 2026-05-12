@@ -38,6 +38,20 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "projects",
+            "bootstrap_status",
+            "ALTER TABLE projects ADD COLUMN bootstrap_status TEXT NOT NULL DEFAULT 'initial';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "projects",
+            "bootstrap_error",
+            "ALTER TABLE projects ADD COLUMN bootstrap_error TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "runs",
             "exit_code",
             "ALTER TABLE runs ADD COLUMN exit_code INTEGER NULL;",
@@ -62,6 +76,34 @@ public static class SqliteMetadataSchema
             "runs",
             "evidence_json",
             "ALTER TABLE runs ADD COLUMN evidence_json TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "runs",
+            "progress_step",
+            "ALTER TABLE runs ADD COLUMN progress_step TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "runs",
+            "progress_substep",
+            "ALTER TABLE runs ADD COLUMN progress_substep TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "runs",
+            "progress_label",
+            "ALTER TABLE runs ADD COLUMN progress_label TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "runs",
+            "progress_updated_utc",
+            "ALTER TABLE runs ADD COLUMN progress_updated_utc TEXT NULL;",
             cancellationToken);
 
         await ExecuteAsync(connection, "PRAGMA user_version = 1;", transaction, cancellationToken);
@@ -105,6 +147,26 @@ public static class SqliteMetadataSchema
 
         await reader.DisposeAsync();
         await ExecuteAsync(connection, alterSql, transaction, cancellationToken);
+        if (tableName == "projects" && columnName == "bootstrap_status")
+        {
+            await ExecuteAsync(
+                connection,
+                """
+                UPDATE projects
+                SET bootstrap_status = CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status = 'succeeded'
+                    ) THEN 'succeeded'
+                    ELSE 'initial'
+                END;
+                """,
+                transaction,
+                cancellationToken);
+        }
     }
 
     private static readonly string[] SchemaStatements =
@@ -138,6 +200,23 @@ public static class SqliteMetadataSchema
             template_rule_id TEXT NOT NULL,
             llm_binding_required INTEGER NOT NULL DEFAULT 0,
             allowed_workflows_json TEXT NOT NULL DEFAULT '[]',
+            bootstrap_status TEXT NOT NULL DEFAULT 'initial',
+            bootstrap_error TEXT NULL,
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_creation_failures (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            project_name TEXT NOT NULL,
+            game_name TEXT NOT NULL,
+            game_type_source TEXT NOT NULL,
+            template_rule_id TEXT NOT NULL,
+            workspace_root_path TEXT NOT NULL,
+            failure_error TEXT NOT NULL,
             created_utc TEXT NOT NULL,
             FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
         );
@@ -168,6 +247,10 @@ public static class SqliteMetadataSchema
             stdout_text TEXT NULL,
             stderr_text TEXT NULL,
             evidence_json TEXT NULL,
+            progress_step TEXT NOT NULL DEFAULT '',
+            progress_substep TEXT NOT NULL DEFAULT '',
+            progress_label TEXT NOT NULL DEFAULT '',
+            progress_updated_utc TEXT NULL,
             llm_gateway TEXT NULL,
             llm_request_id TEXT NULL,
             llm_model TEXT NULL,
@@ -225,6 +308,7 @@ public static class SqliteMetadataSchema
         );
         """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
+        "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);"
     ];

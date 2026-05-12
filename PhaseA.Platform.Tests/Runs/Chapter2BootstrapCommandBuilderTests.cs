@@ -19,10 +19,10 @@ public sealed class Chapter2BootstrapCommandBuilderTests
         });
         var builder = new Chapter2BootstrapCommandBuilder(options);
 
-        var command = builder.BuildLocalHardChecksCommand();
+        var command = builder.BuildLocalHardChecksCommand(@"C:\project-repo");
 
         command.FileName.Should().Be("py");
-        command.WorkingDirectory.Should().Be(Path.GetFullPath(@"C:\repo").TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        command.WorkingDirectory.Should().Be(@"C:\project-repo");
         command.Arguments.Should().ContainInOrder(
             "-3",
             "scripts/python/dev_cli.py",
@@ -34,17 +34,4 @@ public sealed class Chapter2BootstrapCommandBuilderTests
         command.Environment["GODOT_BIN"].Should().Be(@"C:\Godot\Godot.exe");
     }
 
-    [Fact]
-    public void BuildProjectHealthScanCommand_UsesProjectHealthEntrypoint()
-    {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
-        {
-            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo"
-        });
-        var builder = new Chapter2BootstrapCommandBuilder(options);
-
-        var command = builder.BuildProjectHealthScanCommand();
-
-        command.Arguments.Should().Equal("-3", "scripts/python/dev_cli.py", "project-health-scan", "--repo-root", options.RepositoryRoot);
-    }
 }

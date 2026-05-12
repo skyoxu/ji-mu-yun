@@ -19,4 +19,5 @@ public sealed record PhaseAPlatformOptions(
     string DeliveryProfile,
     string AdminUsername,
     string? AdminPasswordHash,
-    string? AdminTokenHash);
+    string? AdminTokenHash,
+    string? UserTokenHash);

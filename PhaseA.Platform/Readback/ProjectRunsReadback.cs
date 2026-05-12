@@ -4,4 +4,5 @@ namespace PhaseA.Platform.Readback;
 
 public sealed record ProjectRunsReadback(
     ProjectSnapshot Project,
-    IReadOnlyList<RunSnapshot> Runs);
+    IReadOnlyList<RunReadbackItem> Runs,
+    ProjectHealthSummary? ProjectHealth);

@@ -16,21 +16,19 @@ public sealed class Chapter2BootstrapServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
-        WriteProjectHealthArtifacts(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
         var runner = new FakeHostedProcessRunner([
-            new HostedProcessResult(0, "hard checks ok\n", ""),
-            new HostedProcessResult(0, "project health ok\n", "")
-        ]);
+            new HostedProcessResult(0, "hard checks ok\n", "")
+        ], writeProjectHealth: true);
         var service = Service(store, options, runner);
 
         var result = await service.RunAsync(projectId);
 
         result.Status.Should().Be("succeeded");
         result.ExitCode.Should().Be(0);
-        result.Stdout.Should().Contain("hard checks ok").And.Contain("project health ok");
+        result.Stdout.Should().Contain("hard checks ok");
         result.Artifacts.Select(a => a.RelativePath).Should().Contain([
             "logs/ci/project-health/latest.html",
             "logs/ci/project-health/latest.json",
@@ -44,6 +42,7 @@ public sealed class Chapter2BootstrapServiceTests
         run.ExitCode.Should().Be(0);
         run.StdoutText.Should().Contain("hard checks ok");
         run.EvidenceJson.Should().Contain("project_health_artifacts");
+        runner.CallCount.Should().Be(1);
     }
 
     [Fact]
@@ -56,8 +55,7 @@ public sealed class Chapter2BootstrapServiceTests
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
         var runner = new FakeHostedProcessRunner([
-            new HostedProcessResult(7, "", "hard checks failed\n"),
-            new HostedProcessResult(0, "project health ok\n", "")
+            new HostedProcessResult(7, "", "hard checks failed\n")
         ]);
         var service = Service(store, options, runner);
 
@@ -69,6 +67,57 @@ public sealed class Chapter2BootstrapServiceTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.Status.Should().Be("failed");
         run.StderrText.Should().Contain("hard checks failed");
+        runner.CallCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsExistingSuccess_WhenChapter2AlreadySucceeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteProjectHealthArtifacts(repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner([
+            new HostedProcessResult(0, "hard checks ok\n", "")
+        ]);
+        var service = Service(store, options, runner);
+        var first = await service.RunAsync(projectId);
+
+        var second = await service.RunAsync(projectId);
+
+        second.Status.Should().Be("already_succeeded");
+        second.RunId.Should().Be(first.RunId);
+        runner.CallCount.Should().Be(1);
+        var runs = await store.ListRunsForProjectAsync(projectId);
+        runs.Where(run => run.RunType == "chapter2-bootstrap").Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsBlocked_WhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
+        (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner([
+            new HostedProcessResult(0, "hard checks ok\n", "")
+        ]);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId);
+
+        result.Status.Should().Be("blocked");
+        result.ExitCode.Should().Be(423);
+        runner.CallCount.Should().Be(0);
+        var runs = await store.ListRunsForProjectAsync(projectId);
+        runs.Should().Contain(run => run.RunType == "chapter2-bootstrap" && run.Status == "blocked");
     }
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
@@ -119,14 +168,24 @@ public sealed class Chapter2BootstrapServiceTests
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
         private readonly Queue<HostedProcessResult> _results;
+        private readonly bool _writeProjectHealth;
 
-        public FakeHostedProcessRunner(IEnumerable<HostedProcessResult> results)
+        public FakeHostedProcessRunner(IEnumerable<HostedProcessResult> results, bool writeProjectHealth = false)
         {
             _results = new Queue<HostedProcessResult>(results);
+            _writeProjectHealth = writeProjectHealth;
         }
+
+        public int CallCount { get; private set; }
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            CallCount++;
+            if (_writeProjectHealth)
+            {
+                WriteProjectHealthArtifacts(command.WorkingDirectory);
+            }
+
             return Task.FromResult(_results.Dequeue());
         }
     }

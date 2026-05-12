@@ -11,9 +11,10 @@ public sealed class PrototypeCommandBuilder
         _options = options;
     }
 
-    public HostedProcessCommand BuildTdd(PrototypeTddRequest request)
+    public HostedProcessCommand BuildTdd(PrototypeTddRequest request, string repositoryRoot)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         var arguments = new List<string>
         {
             "-3",
@@ -73,12 +74,13 @@ public sealed class PrototypeCommandBuilder
             arguments.Add(_options.GodotBin);
         }
 
-        return Build(arguments);
+        return Build(arguments, repositoryRoot);
     }
 
-    public HostedProcessCommand BuildScene(PrototypeSceneRequest request)
+    public HostedProcessCommand BuildScene(PrototypeSceneRequest request, string repositoryRoot)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         var arguments = new List<string>
         {
             "-3",
@@ -100,10 +102,10 @@ public sealed class PrototypeCommandBuilder
             arguments.Add(request.PrototypeRoot);
         }
 
-        return Build(arguments);
+        return Build(arguments, repositoryRoot);
     }
 
-    private HostedProcessCommand Build(IReadOnlyList<string> arguments)
+    private HostedProcessCommand Build(IReadOnlyList<string> arguments, string repositoryRoot)
     {
         var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (!string.IsNullOrWhiteSpace(_options.GodotBin))
@@ -111,6 +113,6 @@ public sealed class PrototypeCommandBuilder
             environment["GODOT_BIN"] = _options.GodotBin;
         }
 
-        return new HostedProcessCommand(_options.PythonCommand, arguments, _options.RepositoryRoot, environment);
+        return new HostedProcessCommand(_options.PythonCommand, arguments, repositoryRoot, environment);
     }
 }

@@ -58,11 +58,13 @@ public sealed class SqliteMetadataSchemaTests
         var accountId = await store.EnsureSingleAdminAsync();
 
         var first = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+        first.Succeeded.Should().BeTrue();
+        await store.SetProjectBootstrapStatusAsync(first.ProjectId!, "succeeded", null);
         var second = await store.CreateProjectAsync(CreateCommand(accountId, "project-two", "Game Two"));
+        second.Succeeded.Should().BeTrue();
+        await store.SetProjectBootstrapStatusAsync(second.ProjectId!, "succeeded", null);
         var third = await store.CreateProjectAsync(CreateCommand(accountId, "project-three", "Game Three"));
 
-        first.Succeeded.Should().BeTrue();
-        second.Succeeded.Should().BeTrue();
         third.Succeeded.Should().BeFalse();
         third.FailureCode.Should().Be("project_quota_exceeded");
         third.ProjectLimit.Should().Be(2);

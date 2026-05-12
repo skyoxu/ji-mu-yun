@@ -60,6 +60,45 @@ public sealed class PhaseAMetadataStore
         return accountId;
     }
 
+    public async Task ReconcileProjectBootstrapStatusAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE projects
+            SET bootstrap_status = CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status = 'succeeded'
+                    ) THEN 'succeeded'
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status = 'failed'
+                    ) THEN 'failed'
+                    ELSE bootstrap_status
+                END,
+                bootstrap_error = CASE
+                    WHEN bootstrap_status = 'initial' AND EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status = 'failed'
+                    ) THEN 'Chapter 2 initialization failed.'
+                    ELSE bootstrap_error
+                END
+            WHERE bootstrap_status = 'initial';
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task UpsertLlmBindingAsync(LlmBindingCommand create, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(create);
@@ -169,6 +208,18 @@ public sealed class PhaseAMetadataStore
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         var limit = await GetProjectLimitInsideTransactionAsync(connection, create.AccountId, cancellationToken);
+        var initializingCount = await ExecuteScalarLongAsync(
+            connection,
+            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id AND bootstrap_status = 'running';",
+            cancellationToken,
+            ("$account_id", create.AccountId)) ?? 0;
+
+        if (initializingCount > 0)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return ProjectCreationResult.Failure("project_initialization_in_progress");
+        }
+
         var count = await ExecuteScalarLongAsync(
             connection,
             "SELECT COUNT(*) FROM projects WHERE account_id = $account_id;",
@@ -196,6 +247,8 @@ public sealed class PhaseAMetadataStore
                     template_rule_id,
                     llm_binding_required,
                     allowed_workflows_json,
+                    bootstrap_status,
+                    bootstrap_error,
                     created_utc)
                 VALUES (
                     $id,
@@ -206,6 +259,8 @@ public sealed class PhaseAMetadataStore
                     $template_rule_id,
                     $llm_binding_required,
                     $allowed_workflows_json,
+                    'running',
+                    NULL,
                     $created_utc);
                 """;
             command.Parameters.AddWithValue("$id", create.ProjectId);
@@ -264,6 +319,8 @@ public sealed class PhaseAMetadataStore
                 p.template_rule_id,
                 p.llm_binding_required,
                 p.allowed_workflows_json,
+                p.bootstrap_status,
+                p.bootstrap_error,
                 w.id,
                 w.root_path,
                 w.repo_path,
@@ -291,10 +348,12 @@ public sealed class PhaseAMetadataStore
             reader.GetInt64(6) == 1,
             reader.GetString(7),
             reader.GetString(8),
-            reader.GetString(9),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
             reader.GetString(10),
             reader.GetString(11),
-            reader.GetString(12));
+            reader.GetString(12),
+            reader.GetString(13),
+            reader.GetString(14));
     }
 
     public async Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
@@ -305,7 +364,7 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT p.id, p.account_id, p.name, p.game_name, p.game_type_source, p.template_rule_id, w.root_path
+            SELECT p.id, p.account_id, p.name, p.game_name, p.game_type_source, p.template_rule_id, p.bootstrap_status, p.bootstrap_error, w.root_path
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
             WHERE p.account_id = $account_id
@@ -324,10 +383,161 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(3),
                 reader.GetString(4),
                 reader.GetString(5),
-                reader.GetString(6)));
+                reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.GetString(8)));
         }
 
         return projects;
+    }
+
+    public async Task SetProjectBootstrapStatusAsync(
+        string projectId,
+        string status,
+        string? error,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE projects
+            SET bootstrap_status = $status,
+                bootstrap_error = $error
+            WHERE id = $project_id;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$error", (object?)error ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasRunnerLockAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var count = await ExecuteScalarLongAsync(
+            connection,
+            "SELECT COUNT(*) FROM runner_locks WHERE project_id = $project_id;",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+        return count > 0;
+    }
+
+    public async Task DeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM projects WHERE id = $project_id;";
+        command.Parameters.AddWithValue("$project_id", projectId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task RecordProjectCreationFailureAsync(
+        ProjectCreationFailureCommand failure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(failure);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.AccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.ProjectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.ProjectName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.GameName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.GameTypeSource);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.TemplateRuleId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.WorkspaceRootPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.FailureError);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_creation_failures (
+                id,
+                account_id,
+                project_id,
+                project_name,
+                game_name,
+                game_type_source,
+                template_rule_id,
+                workspace_root_path,
+                failure_error,
+                created_utc)
+            VALUES (
+                $id,
+                $account_id,
+                $project_id,
+                $project_name,
+                $game_name,
+                $game_type_source,
+                $template_rule_id,
+                $workspace_root_path,
+                $failure_error,
+                $created_utc);
+            """;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$account_id", failure.AccountId);
+        command.Parameters.AddWithValue("$project_id", failure.ProjectId);
+        command.Parameters.AddWithValue("$project_name", failure.ProjectName);
+        command.Parameters.AddWithValue("$game_name", failure.GameName);
+        command.Parameters.AddWithValue("$game_type_source", failure.GameTypeSource);
+        command.Parameters.AddWithValue("$template_rule_id", failure.TemplateRuleId);
+        command.Parameters.AddWithValue("$workspace_root_path", failure.WorkspaceRootPath);
+        command.Parameters.AddWithValue("$failure_error", failure.FailureError);
+        command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<ProjectCreationFailureSnapshot?> GetLatestProjectCreationFailureAsync(
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                id,
+                account_id,
+                project_id,
+                project_name,
+                game_name,
+                game_type_source,
+                template_rule_id,
+                workspace_root_path,
+                failure_error,
+                created_utc
+            FROM project_creation_failures
+            WHERE account_id = $account_id
+            ORDER BY created_utc DESC, rowid DESC
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectCreationFailureSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.GetString(5),
+            reader.GetString(6),
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.GetString(9));
     }
 
     public async Task<string> CreateRunAsync(
@@ -371,6 +581,34 @@ public sealed class PhaseAMetadataStore
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$started_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task UpdateRunProgressAsync(
+        string runId,
+        string step,
+        string substep,
+        string label,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE runs
+            SET progress_step = $progress_step,
+                progress_substep = $progress_substep,
+                progress_label = $progress_label,
+                progress_updated_utc = $progress_updated_utc
+            WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", runId);
+        command.Parameters.AddWithValue("$progress_step", step);
+        command.Parameters.AddWithValue("$progress_substep", substep);
+        command.Parameters.AddWithValue("$progress_label", label);
+        command.Parameters.AddWithValue("$progress_updated_utc", DateTimeOffset.UtcNow.ToString("O"));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -453,6 +691,10 @@ public sealed class PhaseAMetadataStore
                 stdout_text,
                 stderr_text,
                 evidence_json,
+                progress_step,
+                progress_substep,
+                progress_label,
+                progress_updated_utc,
                 llm_gateway,
                 llm_request_id,
                 llm_model,
@@ -478,10 +720,14 @@ public sealed class PhaseAMetadataStore
             reader.IsDBNull(6) ? null : reader.GetString(6),
             reader.IsDBNull(7) ? null : reader.GetString(7),
             reader.IsDBNull(8) ? null : reader.GetString(8),
-            reader.IsDBNull(9) ? null : reader.GetString(9),
-            reader.IsDBNull(10) ? null : reader.GetString(10),
-            reader.IsDBNull(11) ? null : reader.GetString(11),
-            reader.IsDBNull(12) ? null : reader.GetString(12));
+            reader.GetString(9),
+            reader.GetString(10),
+            reader.GetString(11),
+            reader.IsDBNull(12) ? null : reader.GetString(12),
+            reader.IsDBNull(13) ? null : reader.GetString(13),
+            reader.IsDBNull(14) ? null : reader.GetString(14),
+            reader.IsDBNull(15) ? null : reader.GetString(15),
+            reader.IsDBNull(16) ? null : reader.GetString(16));
     }
 
     public async Task<IReadOnlyList<RunSnapshot>> ListRunsForProjectAsync(string projectId, CancellationToken cancellationToken = default)
@@ -502,6 +748,10 @@ public sealed class PhaseAMetadataStore
                 stdout_text,
                 stderr_text,
                 evidence_json,
+                progress_step,
+                progress_substep,
+                progress_label,
+                progress_updated_utc,
                 llm_gateway,
                 llm_request_id,
                 llm_model,
@@ -526,10 +776,14 @@ public sealed class PhaseAMetadataStore
                 reader.IsDBNull(6) ? null : reader.GetString(6),
                 reader.IsDBNull(7) ? null : reader.GetString(7),
                 reader.IsDBNull(8) ? null : reader.GetString(8),
-                reader.IsDBNull(9) ? null : reader.GetString(9),
-                reader.IsDBNull(10) ? null : reader.GetString(10),
-                reader.IsDBNull(11) ? null : reader.GetString(11),
-                reader.IsDBNull(12) ? null : reader.GetString(12)));
+                reader.GetString(9),
+                reader.GetString(10),
+                reader.GetString(11),
+                reader.IsDBNull(12) ? null : reader.GetString(12),
+                reader.IsDBNull(13) ? null : reader.GetString(13),
+                reader.IsDBNull(14) ? null : reader.GetString(14),
+                reader.IsDBNull(15) ? null : reader.GetString(15),
+                reader.IsDBNull(16) ? null : reader.GetString(16)));
         }
 
         return runs;

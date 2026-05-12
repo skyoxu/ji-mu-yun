@@ -11,4 +11,5 @@ public sealed record PrototypeWorkflowRequest(
     string? WinFailConditions,
     bool Confirm = false,
     int? StopAfterDay = null,
-    string? ScoreEngine = null);
+    string? ScoreEngine = null,
+    string? Model = null);

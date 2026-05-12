@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Runs;
 
@@ -11,6 +12,7 @@ public sealed class PrototypeCommandService
     private readonly IHostedProcessRunner _processRunner;
     private readonly PrototypeCommandBuilder _commandBuilder;
     private readonly PrototypeTddArtifactIndexer _artifactIndexer;
+    private readonly IProjectWorkspaceSeeder _workspaceSeeder;
 
     public PrototypeCommandService(
         PhaseAMetadataStore metadataStore,
@@ -18,12 +20,24 @@ public sealed class PrototypeCommandService
         IHostedProcessRunner processRunner,
         PrototypeCommandBuilder commandBuilder,
         PrototypeTddArtifactIndexer artifactIndexer)
+        : this(metadataStore, options, processRunner, commandBuilder, artifactIndexer, new ProjectWorkspaceSeeder(options))
+    {
+    }
+
+    public PrototypeCommandService(
+        PhaseAMetadataStore metadataStore,
+        PhaseAPlatformOptions options,
+        IHostedProcessRunner processRunner,
+        PrototypeCommandBuilder commandBuilder,
+        PrototypeTddArtifactIndexer artifactIndexer,
+        IProjectWorkspaceSeeder workspaceSeeder)
     {
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
+        _workspaceSeeder = workspaceSeeder;
     }
 
     public async Task<HostedCommandResult> RunTddAsync(string projectId, PrototypeTddRequest request, CancellationToken cancellationToken = default)
@@ -34,7 +48,12 @@ public sealed class PrototypeCommandService
             return new HostedCommandResult("", "missing_required_fields", 2, "", "", [], missing);
         }
 
-        return await RunLockedAsync(projectId, $"prototype-tdd-{request.Stage!.ToLowerInvariant()}", PrototypeRecordWriter.SanitizeSlug(request.Slug!), _commandBuilder.BuildTdd(request), cancellationToken);
+        return await RunLockedAsync(
+            projectId,
+            $"prototype-tdd-{request.Stage!.ToLowerInvariant()}",
+            PrototypeRecordWriter.SanitizeSlug(request.Slug!),
+            project => _commandBuilder.BuildTdd(request, project.RepoPath),
+            cancellationToken);
     }
 
     public async Task<HostedCommandResult> CreateSceneAsync(string projectId, PrototypeSceneRequest request, CancellationToken cancellationToken = default)
@@ -45,14 +64,19 @@ public sealed class PrototypeCommandService
             return new HostedCommandResult("", "missing_required_fields", 2, "", "", [], missing);
         }
 
-        return await RunLockedAsync(projectId, "prototype-scene", PrototypeRecordWriter.SanitizeSlug(request.Slug!), _commandBuilder.BuildScene(request), cancellationToken);
+        return await RunLockedAsync(
+            projectId,
+            "prototype-scene",
+            PrototypeRecordWriter.SanitizeSlug(request.Slug!),
+            project => _commandBuilder.BuildScene(request, project.RepoPath),
+            cancellationToken);
     }
 
     private async Task<HostedCommandResult> RunLockedAsync(
         string projectId,
         string runType,
         string slug,
-        HostedProcessCommand command,
+        Func<ProjectSnapshot, HostedProcessCommand> commandFactory,
         CancellationToken cancellationToken)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
@@ -72,9 +96,11 @@ public sealed class PrototypeCommandService
         try
         {
             await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+            _workspaceSeeder.EnsureSeeded(project.RepoPath);
+            var command = commandFactory(project);
             var process = await _processRunner.RunAsync(command, cancellationToken);
             var status = process.ExitCode == 0 ? "succeeded" : "failed";
-            var artifacts = _artifactIndexer.Discover(_options.RepositoryRoot, runId, project.ProjectId, slug);
+            var artifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug);
             foreach (var artifact in artifacts)
             {
                 await _metadataStore.AddArtifactAsync(artifact, cancellationToken);

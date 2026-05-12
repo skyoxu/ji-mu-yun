@@ -27,8 +27,9 @@ public sealed class PrototypeCommandTests
             Filter: "DemoFilter",
             TimeoutSec: 30,
             DotnetTarget: ["Game.Core.Tests/Game.Core.Tests.csproj"],
-            GdunitPath: ["tests/Prototype/Demo"]));
+            GdunitPath: ["tests/Prototype/Demo"]), @"C:\project-repo");
 
+        command.WorkingDirectory.Should().Be(@"C:\project-repo");
         command.Arguments.Should().ContainInOrder(
             "-3",
             "scripts/python/dev_cli.py",
@@ -72,7 +73,7 @@ public sealed class PrototypeCommandTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var runner = new FakeHostedProcessRunner(repoRoot.Path, "demo");
+        var runner = new FakeHostedProcessRunner("demo");
         var service = Service(store, options, runner);
 
         var result = await service.RunTddAsync(projectId, new PrototypeTddRequest("demo", "green"));
@@ -95,7 +96,7 @@ public sealed class PrototypeCommandTests
         var projectId = await CreateProjectAsync(store, options);
         var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
-        var service = Service(store, options, new FakeHostedProcessRunner(repoRoot.Path, "demo"));
+        var service = Service(store, options, new FakeHostedProcessRunner("demo"));
 
         var result = await service.RunTddAsync(projectId, new PrototypeTddRequest("demo", "red"));
 
@@ -143,22 +144,20 @@ public sealed class PrototypeCommandTests
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
-        private readonly string _repoRoot;
         private readonly string _slug;
 
-        public FakeHostedProcessRunner(string repoRoot, string slug)
+        public FakeHostedProcessRunner(string slug)
         {
-            _repoRoot = repoRoot;
             _slug = slug;
         }
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            var tddDir = Path.Combine(_repoRoot, "logs", "ci", "2026-05-11", $"prototype-tdd-{_slug}-green");
+            var tddDir = Path.Combine(command.WorkingDirectory, "logs", "ci", "2026-05-11", $"prototype-tdd-{_slug}-green");
             Directory.CreateDirectory(tddDir);
             File.WriteAllText(Path.Combine(tddDir, "summary.json"), "{}");
             File.WriteAllText(Path.Combine(tddDir, "report.md"), "report");
-            var sidecar = Path.Combine(_repoRoot, "docs", "prototypes", $"{_slug}.prototype.json");
+            var sidecar = Path.Combine(command.WorkingDirectory, "docs", "prototypes", $"{_slug}.prototype.json");
             Directory.CreateDirectory(Path.GetDirectoryName(sidecar)!);
             File.WriteAllText(sidecar, "{}");
             return Task.FromResult(new HostedProcessResult(0, "command ok\n", ""));

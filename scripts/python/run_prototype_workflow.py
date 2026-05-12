@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -835,6 +836,17 @@ def _resolve_codex_command() -> str:
     return shutil.which("codex") or "codex"
 
 
+def _codex_model_args() -> list[str]:
+    args: list[str] = []
+    model = str(os.environ.get("PHASEA_CODEX_DEFAULT_MODEL") or "").strip()
+    reasoning_effort = str(os.environ.get("PHASEA_CODEX_REASONING_EFFORT") or "").strip()
+    if model:
+        args.extend(["-m", model])
+    if reasoning_effort:
+        args.extend(["-c", f'model_reasoning_effort="{reasoning_effort}"'])
+    return args
+
+
 def build_prototype_intake_llm_review(
     payload: dict[str, Any],
     *,
@@ -853,6 +865,7 @@ def build_prototype_intake_llm_review(
     cmd = [
         _resolve_codex_command(),
         "exec",
+        *_codex_model_args(),
         "-s",
         "read-only",
         "-C",

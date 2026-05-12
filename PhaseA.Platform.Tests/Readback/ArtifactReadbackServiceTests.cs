@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.IO.Compression;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
@@ -19,9 +20,10 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
         var runId = await store.CreateRunAsync(projectId, null, "prototype-tdd-green");
         await store.CompleteRunAsync(runId, "succeeded", 0, "stdout", "", "{}", CancellationToken.None);
-        Write(repoRoot.Path, "logs/ci/sample-artifact.txt", "artifact text");
+        Write(project!.RepoPath, "logs/ci/sample-artifact.txt", "artifact text");
         await store.AddArtifactAsync(new ArtifactCreationCommand(runId, projectId, "sample", "logs/ci/sample-artifact.txt", "Sample artifact"));
         var service = new ArtifactReadbackService(store, options);
 
@@ -57,6 +59,36 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ReadArtifactAsync_ResolvesArtifactsInsideOwningProjectRepo()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectOne = await CreateProjectAsync(store, options, accountId, "Game One");
+        await store.SetProjectBootstrapStatusAsync(projectOne, "succeeded", null);
+        var projectTwo = await CreateProjectAsync(store, options, accountId, "Game Two");
+        var one = await store.GetProjectSnapshotAsync(projectOne);
+        var two = await store.GetProjectSnapshotAsync(projectTwo);
+        var runOne = await store.CreateRunAsync(projectOne, one!.WorkspaceId, "artifact-test");
+        var runTwo = await store.CreateRunAsync(projectTwo, two!.WorkspaceId, "artifact-test");
+        Write(one.RepoPath, "logs/ci/shared.txt", "project one");
+        Write(two.RepoPath, "logs/ci/shared.txt", "project two");
+        await store.AddArtifactAsync(new ArtifactCreationCommand(runOne, projectOne, "sample", "logs/ci/shared.txt", "Project one artifact"));
+        await store.AddArtifactAsync(new ArtifactCreationCommand(runTwo, projectTwo, "sample", "logs/ci/shared.txt", "Project two artifact"));
+        var service = new ArtifactReadbackService(store, options);
+
+        var artifactOne = await service.ReadArtifactAsync((await store.ListArtifactsForRunAsync(runOne))[0].ArtifactId);
+        var artifactTwo = await service.ReadArtifactAsync((await store.ListArtifactsForRunAsync(runTwo))[0].ArtifactId);
+
+        one.RepoPath.Should().NotBe(two.RepoPath);
+        artifactOne!.Content.Should().Be("project one");
+        artifactTwo!.Content.Should().Be("project two");
+    }
+
+    [Fact]
     public void ReadProjectHealth_ReturnsHtmlAndJson()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -73,6 +105,71 @@ public sealed class ArtifactReadbackServiceTests
         html!.Content.Should().Contain("health");
         html.ContentType.Should().Be("text/html; charset=utf-8");
         json!.Content.Should().Contain("\"status\"");
+    }
+
+    [Fact]
+    public void ReadProjectHealthSummary_ExtractsCurrentProjectCardFields()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        Write(repoRoot.Path, "logs/ci/project-health/latest.json", """
+            {
+              "status": "warn",
+              "generated_at": "2026-05-11T15:17:27+08:00",
+              "records": [
+                { "kind": "detect-project-stage", "status": "warn", "stage": "triplet-missing", "summary": "real task triplet is missing" },
+                { "kind": "doctor-project", "status": "warn", "summary": "doctor checks: fail=0 warn=1 ok=10" },
+                { "kind": "check-directory-boundaries", "status": "ok", "summary": "boundary checks: fail=0 warn=0" }
+              ],
+              "report_catalog_summary": { "total_json": 12, "invalid_json": 1 },
+              "active_task_summary": { "total": 2 }
+            }
+            """);
+        Write(repoRoot.Path, "logs/ci/project-health/project-health-scan.latest.json", """
+            {
+              "kind": "project-health-scan",
+              "status": "warn",
+              "results": [
+                {
+                  "kind": "detect-project-stage",
+                  "stage": "triplet-missing",
+                  "signals": { "overlay_indexes": 3, "contract_files": 4, "unit_test_files": 5 }
+                },
+                {
+                  "kind": "doctor-project",
+                  "counts": { "fail": 0, "warn": 1, "ok": 10 },
+                  "checks": [
+                    { "id": "task-triplet-real", "status": "warn", "recommendation": "create real task triplet" }
+                  ]
+                },
+                {
+                  "kind": "check-directory-boundaries",
+                  "violations": [],
+                  "warnings": [ { "id": "sample" } ]
+                }
+              ]
+            }
+            """);
+        var service = new ArtifactReadbackService(new PhaseAMetadataStore(database.ConnectionString, options), options);
+
+        var summary = service.ReadProjectHealthSummary();
+
+        summary.Should().NotBeNull();
+        summary!.Status.Should().Be("warn");
+        summary.Stage.Should().Be("triplet-missing");
+        summary.DoctorWarnCount.Should().Be(1);
+        summary.DoctorOkCount.Should().Be(10);
+        summary.BoundaryStatus.Should().Be("ok");
+        summary.BoundaryWarnCount.Should().Be(1);
+        summary.ActiveTaskTotal.Should().Be(2);
+        summary.JsonReportTotal.Should().Be(12);
+        summary.InvalidJsonReportTotal.Should().Be(1);
+        summary.OverlayIndexCount.Should().Be(3);
+        summary.ContractFileCount.Should().Be(4);
+        summary.UnitTestFileCount.Should().Be(5);
+        summary.TopRecommendation.Should().Be("create real task triplet");
     }
 
     [Fact]
@@ -94,6 +191,71 @@ public sealed class ArtifactReadbackServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    [Fact]
+    public async Task ProjectPackage_CreatesVersionedZip_WithProjectFilesOnly()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        Write(project.RepoPath, "Game.Core/Domain/Combat.cs", "public sealed class Combat {}");
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
+        Write(project.RepoPath, "docs/prototypes/demo.md", "prototype");
+        Write(project.RepoPath, "PhaseA.Platform/Program.cs", "platform");
+        Write(project.RepoPath, "scripts/python/dev_cli.py", "script");
+        Write(project.RepoPath, "logs/ci/run.log", "log");
+        Write(project.RepoPath, ".agents/skills/demo/SKILL.md", "skill");
+        var service = new ProjectPackageService(store, options);
+
+        var first = await service.CreatePackageAsync(accountId, projectId);
+        var second = await service.CreatePackageAsync(accountId, projectId);
+        var download = await service.ReadPackageAsync(accountId, projectId, first.FileName);
+
+        first.Status.Should().Be("succeeded");
+        first.Version.Should().MatchRegex(@"^v0\.1\.\d{8}\.001$");
+        first.FileName.Should().EndWith($"{first.Version}.zip");
+        second.Version.Should().MatchRegex(@"^v0\.1\.\d{8}\.002$");
+        download.Should().NotBeNull();
+        download!.FileName.Should().Be(first.FileName);
+        var names = ZipEntryNames(download.Content);
+        names.Should().Contain("PACKAGE-MANIFEST.json");
+        names.Should().Contain("Game.Core/Domain/Combat.cs");
+        names.Should().Contain("Game.Godot/Scenes/Main.tscn");
+        names.Should().Contain("docs/prototypes/demo.md");
+        names.Should().NotContain(name => name.StartsWith("PhaseA.Platform/", StringComparison.OrdinalIgnoreCase));
+        names.Should().NotContain(name => name.StartsWith("scripts/", StringComparison.OrdinalIgnoreCase));
+        names.Should().NotContain(name => name.StartsWith("logs/", StringComparison.OrdinalIgnoreCase));
+        names.Should().NotContain(name => name.StartsWith(".agents/", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksWhileProjectHasActiveRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var activeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(activeRunId);
+        var service = new ProjectPackageService(store, options);
+
+        var result = await service.CreatePackageAsync(accountId, projectId);
+
+        result.Status.Should().Be("project_busy");
+        result.FailureCode.Should().Be("project_busy");
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -105,8 +267,17 @@ public sealed class ArtifactReadbackServiceTests
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
     {
         var accountId = await store.EnsureSingleAdminAsync();
+        return await CreateProjectAsync(store, options, accountId, "Demo Game");
+    }
+
+    private static async Task<string> CreateProjectAsync(
+        PhaseAMetadataStore store,
+        PhaseAPlatformOptions options,
+        string accountId,
+        string gameName)
+    {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, "manual", null, null, null, null));
         return result.ProjectId!;
     }
 
@@ -125,6 +296,13 @@ public sealed class ArtifactReadbackServiceTests
         var path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
+    }
+
+    private static IReadOnlyList<string> ZipEntryNames(byte[] content)
+    {
+        using var memory = new MemoryStream(content);
+        using var archive = new ZipArchive(memory, ZipArchiveMode.Read);
+        return archive.Entries.Select(entry => entry.FullName).ToArray();
     }
 
     private sealed class TempDirectory : IDisposable

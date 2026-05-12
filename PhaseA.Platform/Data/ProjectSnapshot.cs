@@ -9,6 +9,8 @@ public sealed record ProjectSnapshot(
     string TemplateRuleId,
     bool LlmBindingRequired,
     string AllowedWorkflowsJson,
+    string BootstrapStatus,
+    string? BootstrapError,
     string WorkspaceId,
     string WorkspaceRootPath,
     string RepoPath,

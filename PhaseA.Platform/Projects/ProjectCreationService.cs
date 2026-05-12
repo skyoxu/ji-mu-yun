@@ -9,15 +9,26 @@ public sealed class ProjectCreationService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ProjectRuleCatalog _ruleCatalog;
+    private readonly IProjectWorkspaceSeeder _workspaceSeeder;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog)
+        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options))
+    {
+    }
+
+    public ProjectCreationService(
+        PhaseAMetadataStore metadataStore,
+        PhaseAPlatformOptions options,
+        ProjectRuleCatalog ruleCatalog,
+        IProjectWorkspaceSeeder workspaceSeeder)
     {
         _metadataStore = metadataStore;
         _options = options;
         _ruleCatalog = ruleCatalog;
+        _workspaceSeeder = workspaceSeeder;
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -77,7 +88,44 @@ public sealed class ProjectCreationService
         Directory.CreateDirectory(layout.RepoPath);
         Directory.CreateDirectory(layout.RuntimePath);
         Directory.CreateDirectory(layout.MetaPath);
+        _workspaceSeeder.EnsureSeeded(layout.RepoPath);
 
         return result;
+    }
+
+    public async Task<ProjectDeletionResult> DeleteProjectAsync(
+        string accountId,
+        string projectId,
+        ProjectDeletionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (!string.Equals(request.ConfirmOne, "delete", StringComparison.Ordinal) ||
+            !string.Equals(request.ConfirmTwo, "delete", StringComparison.Ordinal))
+        {
+            return ProjectDeletionResult.Failure("delete_confirmation_required");
+        }
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            return ProjectDeletionResult.Failure("project_not_found");
+        }
+
+        if (project.BootstrapStatus == "running" || await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken))
+        {
+            return ProjectDeletionResult.Failure("project_busy");
+        }
+
+        await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
+        if (Directory.Exists(project.WorkspaceRootPath))
+        {
+            Directory.Delete(project.WorkspaceRootPath, recursive: true);
+        }
+
+        return ProjectDeletionResult.Deleted(projectId);
     }
 }

@@ -11,10 +11,11 @@ public sealed class PrototypeWorkflowCommandBuilder
         _options = options;
     }
 
-    public HostedProcessCommand Build(PrototypeWorkflowRequest request, string prototypeRecordPath)
+    public HostedProcessCommand Build(PrototypeWorkflowRequest request, string prototypeRecordPath, string repositoryRoot)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentException.ThrowIfNullOrWhiteSpace(prototypeRecordPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
 
         var arguments = new List<string>
         {
@@ -49,11 +50,13 @@ public sealed class PrototypeWorkflowCommandBuilder
         }
 
         var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        environment["PHASEA_CODEX_DEFAULT_MODEL"] = PrototypeModelPolicy.Normalize(request.Model);
+        environment["PHASEA_CODEX_REASONING_EFFORT"] = PrototypeModelPolicy.DefaultReasoningEffort;
         if (!string.IsNullOrWhiteSpace(_options.GodotBin))
         {
             environment["GODOT_BIN"] = _options.GodotBin;
         }
 
-        return new HostedProcessCommand(_options.PythonCommand, arguments, _options.RepositoryRoot, environment);
+        return new HostedProcessCommand(_options.PythonCommand, arguments, repositoryRoot, environment);
     }
 }

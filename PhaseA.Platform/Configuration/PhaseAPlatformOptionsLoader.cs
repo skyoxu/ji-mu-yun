@@ -39,6 +39,7 @@ public static class PhaseAPlatformOptionsLoader
         var adminUsername = GetString(get, "PHASEA_ADMIN_USERNAME", "admin");
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
+        var userTokenHash = GetOptionalString(get, "PHASEA_USER_TOKEN_HASH");
 
         return new PhaseAPlatformOptions(
             workspaceRoot,
@@ -59,7 +60,8 @@ public static class PhaseAPlatformOptionsLoader
             deliveryProfile,
             adminUsername,
             adminPasswordHash,
-            adminTokenHash);
+            adminTokenHash,
+            userTokenHash);
     }
 
     private static string GetString(Func<string, string?> get, string name, string defaultValue)

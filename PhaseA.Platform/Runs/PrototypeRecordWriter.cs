@@ -14,10 +14,16 @@ public sealed class PrototypeRecordWriter
 
     public string Write(PrototypeWorkflowRequest request)
     {
+        return Write(request, _options.RepositoryRoot);
+    }
+
+    public string Write(PrototypeWorkflowRequest request, string repositoryRoot)
+    {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         var slug = SanitizeSlug(request.Slug!);
         var relativePath = $"docs/prototypes/{DateTime.UtcNow:yyyy-MM-dd}-{slug}.md";
-        var absolutePath = Path.Combine(_options.RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var absolutePath = Path.Combine(repositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
         File.WriteAllText(absolutePath, BuildMarkdown(request, slug), System.Text.Encoding.UTF8);
         return relativePath;

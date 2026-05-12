@@ -51,7 +51,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["DELIVERY_PROFILE"] = "playable-ea",
             ["PHASEA_ADMIN_USERNAME"] = "root",
             ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-hash",
-            ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash"
+            ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
+            ["PHASEA_USER_TOKEN_HASH"] = "user-token-hash"
         };
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(values);
@@ -70,6 +71,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.AdminUsername.Should().Be("root");
         options.AdminPasswordHash.Should().Be("password-hash");
         options.AdminTokenHash.Should().Be("token-hash");
+        options.UserTokenHash.Should().Be("user-token-hash");
     }
 
     [Theory]

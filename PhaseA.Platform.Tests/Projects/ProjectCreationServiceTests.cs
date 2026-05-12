@@ -40,6 +40,8 @@ public sealed class ProjectCreationServiceTests
         snapshot!.WorkspaceId.Should().Be(result.WorkspaceId);
         snapshot.TemplateRuleId.Should().Be("godot-prototype-default");
         snapshot.LlmBindingRequired.Should().BeTrue();
+        snapshot.BootstrapStatus.Should().Be("running");
+        snapshot.BootstrapError.Should().BeNull();
         JsonSerializer.Deserialize<string[]>(snapshot.AllowedWorkflowsJson).Should().Equal(result.AllowedWorkflows);
         Directory.Exists(snapshot.RepoPath).Should().BeTrue();
         Directory.Exists(snapshot.RuntimePath).Should().BeTrue();
@@ -83,12 +85,98 @@ public sealed class ProjectCreationServiceTests
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
 
         await service.CreateProjectAsync(accountId, Request("Game One"));
+        var first = (await store.ListProjectsAsync(accountId)).Single();
+        await store.SetProjectBootstrapStatusAsync(first.ProjectId, "succeeded", null);
         await service.CreateProjectAsync(accountId, Request("Game Two"));
+        var secondProject = (await store.ListProjectsAsync(accountId)).Single(p => p.GameName == "Game Two");
+        await store.SetProjectBootstrapStatusAsync(secondProject.ProjectId, "succeeded", null);
         var third = await service.CreateProjectAsync(accountId, Request("Game Three"));
 
         third.Succeeded.Should().BeFalse();
         third.FailureCode.Should().Be("project_quota_exceeded");
         Directory.GetDirectories(Path.Combine(workspaceRoot.Path, accountId)).Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_BlocksWhileInitializationIsRunning()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+
+        var first = await service.CreateProjectAsync(accountId, Request("Game One"));
+        var second = await service.CreateProjectAsync(accountId, Request("Game Two"));
+
+        first.Succeeded.Should().BeTrue();
+        second.Succeeded.Should().BeFalse();
+        second.FailureCode.Should().Be("project_initialization_in_progress");
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_RequiresTwoDeleteConfirmations_AndDeletesWorkspace()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
+
+        var rejected = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "DELETE"));
+        var deleted = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        rejected.Succeeded.Should().BeFalse();
+        rejected.FailureCode.Should().Be("delete_confirmation_required");
+        deleted.Succeeded.Should().BeTrue();
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_BlocksRunningProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        var deleted = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        deleted.Succeeded.Should().BeFalse();
+        deleted.FailureCode.Should().Be("project_busy");
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_AllowsFailedProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "failed", "hard checks failed");
+        var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
+
+        var deleted = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        deleted.Succeeded.Should().BeTrue();
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
     }
 
     private static ProjectCreationRequest Request(string gameName)

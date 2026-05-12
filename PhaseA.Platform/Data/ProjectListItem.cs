@@ -7,4 +7,6 @@ public sealed record ProjectListItem(
     string GameName,
     string GameTypeSource,
     string TemplateRuleId,
+    string BootstrapStatus,
+    string? BootstrapError,
     string WorkspaceRootPath);

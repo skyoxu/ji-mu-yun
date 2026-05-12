@@ -10,4 +10,5 @@ public sealed record PrototypeWorkflowResult(
     string Stdout,
     string Stderr,
     IReadOnlyList<ArtifactSnapshot> Artifacts,
-    IReadOnlyList<string> MissingRequiredFields);
+    IReadOnlyList<string> MissingRequiredFields,
+    PrototypeWorkflowProgress? Progress = null);

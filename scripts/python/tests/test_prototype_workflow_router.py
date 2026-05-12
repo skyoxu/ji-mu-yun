@@ -266,6 +266,42 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual(31, review["review"]["total_score"])
         self.assertEqual("market-cautious", review["review"]["recommendation"])
 
+    def test_codex_score_engine_should_forward_model_and_reasoning_effort(self) -> None:
+        module = _load_module("prototype_workflow_router_codex_args", "scripts/python/run_prototype_workflow.py")
+        payload = module.normalize_prototype_payload(
+            {
+                "slug": "combat-loop",
+                "hypothesis": "test hypothesis",
+                "core_player_fantasy": "test fantasy",
+                "minimum_playable_loop": "test loop",
+                "success_criteria": ["test criteria"],
+            },
+            today="2026-04-21",
+        )
+        calls = []
+
+        def fake_run_with_input(cmd, *, cwd, input_text, timeout_sec):
+            calls.append(cmd)
+            return 0, '{"total_score": 30, "max_score": 50, "recommendation": "market-cautious", "dimensions": [], "top_gaps": []}'
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with mock.patch.dict(os.environ, {"PHASEA_CODEX_DEFAULT_MODEL": "gpt-5.5", "PHASEA_CODEX_REASONING_EFFORT": "high"}):
+                with mock.patch.object(module, "_run_with_input", side_effect=fake_run_with_input):
+                    review = module.build_prototype_intake_llm_review(
+                        payload,
+                        root=root,
+                        score_engine="codex",
+                        timeout_sec=120,
+                    )
+
+        self.assertEqual("ok", review["status"])
+        self.assertTrue(calls)
+        self.assertIn("-m", calls[0])
+        self.assertIn("gpt-5.5", calls[0])
+        self.assertIn("-c", calls[0])
+        self.assertIn('model_reasoning_effort="high"', calls[0])
+
     def test_resolve_codex_command_should_prefer_windows_cmd_wrapper(self) -> None:
         module = _load_module("prototype_workflow_router_codex_cmd", "scripts/python/run_prototype_workflow.py")
 

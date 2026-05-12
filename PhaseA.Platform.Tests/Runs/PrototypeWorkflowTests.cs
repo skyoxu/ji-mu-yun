@@ -39,8 +39,9 @@ public sealed class PrototypeWorkflowTests
         });
         var builder = new PrototypeWorkflowCommandBuilder(options);
 
-        var command = builder.Build(ValidRequest(confirm: true), "docs/prototypes/2026-05-11-demo.md");
+        var command = builder.Build(ValidRequest(confirm: true), "docs/prototypes/2026-05-11-demo.md", @"C:\project-repo");
 
+        command.WorkingDirectory.Should().Be(@"C:\project-repo");
         command.Arguments.Should().ContainInOrder(
             "-3",
             "scripts/python/dev_cli.py",
@@ -51,6 +52,8 @@ public sealed class PrototypeWorkflowTests
             "--godot-bin",
             @"C:\Godot\Godot.exe");
         command.Environment["GODOT_BIN"].Should().Be(@"C:\Godot\Godot.exe");
+        command.Environment["PHASEA_CODEX_DEFAULT_MODEL"].Should().Be("gpt-5.5");
+        command.Environment["PHASEA_CODEX_REASONING_EFFORT"].Should().Be("high");
     }
 
     [Fact]
@@ -62,16 +65,21 @@ public sealed class PrototypeWorkflowTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var runner = new FakeHostedProcessRunner(repoRoot.Path);
+        var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
         var result = await service.RunAsync(projectId, ValidRequest(confirm: false));
 
         result.Status.Should().Be("succeeded");
         result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
-        File.Exists(Path.Combine(repoRoot.Path, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
-        runner.Commands.Should().ContainSingle();
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        File.Exists(Path.Combine(project!.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        runner.Commands.Should().HaveCount(2);
+        runner.Commands[0].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[0].Arguments.Should().Contain("run-prototype-workflow");
+        runner.Commands[1].WorkingDirectory.Should().Be(project.RepoPath);
+        runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands[1].Arguments.Should().Contain(["--strict"]);
         result.Artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-record",
             "prototype-sidecar-json",
@@ -81,7 +89,103 @@ public sealed class PrototypeWorkflowTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.RunType.Should().Be("prototype-7day-playable");
         run.Status.Should().Be("succeeded");
+        run.ProgressStep.Should().Be("succeeded");
         run.EvidenceJson.Should().Contain("prototype_artifacts");
+        run.EvidenceJson.Should().Contain("godot_smoke");
+        run.StdoutText.Should().Contain("SMOKE PASS");
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_ReturnsLatestPrototypeWorkflowProgress()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+
+        var idle = await service.GetProgressAsync(projectId);
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: false));
+        var finished = await service.GetProgressAsync(projectId);
+
+        idle.Status.Should().Be("idle");
+        finished.Status.Should().Be("succeeded");
+        finished.Step.Should().Be("succeeded");
+        finished.RunId.Should().Be(result.RunId);
+    }
+
+    [Fact]
+    public async Task RepairAsync_QueuesRepairFromLatestFailedPrototypeRecord()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            1,
+            "",
+            "first failure",
+            "{\"prototype_record\":\"docs/prototypes/2026-05-12-demo-prototype.md\",\"slug\":\"demo-prototype\"}");
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 2);
+        var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        result.PrototypeRecordPath.Should().Be("docs/prototypes/2026-05-12-demo-prototype.md");
+        runner.Commands[0].Arguments.Should().Contain("run-prototype-workflow");
+        runner.Commands[0].Arguments.Should().Contain("docs/prototypes/2026-05-12-demo-prototype.md");
+        runner.Commands[0].Environment["PHASEA_CODEX_DEFAULT_MODEL"].Should().Be("gpt-5.4");
+        repairRun!.Status.Should().Be("succeeded");
+        repairRun.EvidenceJson.Should().Contain("\"repair\":true");
+    }
+
+    [Fact]
+    public async Task RepairAsync_RequiresLatestPrototypeRunToBeFailed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            1,
+            "",
+            "first failure",
+            "{\"prototype_record\":\"docs/prototypes/2026-05-12-demo-prototype.md\",\"slug\":\"demo-prototype\"}");
+        var succeededRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(succeededRunId);
+        await store.CompleteRunAsync(
+            succeededRunId,
+            "succeeded",
+            0,
+            "ok",
+            "",
+            "{\"prototype_record\":\"docs/prototypes/2026-05-12-demo-prototype.md\",\"slug\":\"demo-prototype\"}");
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+
+        result.Status.Should().Be("prototype_repair_not_available");
+        runner.Commands.Should().BeEmpty();
     }
 
     [Fact]
@@ -93,7 +197,7 @@ public sealed class PrototypeWorkflowTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var service = Service(store, options, new FakeHostedProcessRunner(repoRoot.Path));
+        var service = Service(store, options, new FakeHostedProcessRunner());
 
         var result = await service.RunAsync(projectId, ValidRequest() with { ScoreEngine = "codex" });
 
@@ -116,7 +220,7 @@ public sealed class PrototypeWorkflowTests
             "https://new-api.example.com/v1",
             "new-api-user-1",
             "host-secret:new-api-user-1"));
-        var service = Service(store, options, new FakeHostedProcessRunner(repoRoot.Path));
+        var service = Service(store, options, new FakeHostedProcessRunner());
 
         var result = await service.RunAsync(projectId, ValidRequest() with { ScoreEngine = "codex" });
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -178,30 +282,70 @@ public sealed class PrototypeWorkflowTests
             new LlmStopLossService(store, options));
     }
 
+    private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(50);
+        }
+
+        runner.Commands.Should().HaveCount(expectedCount);
+    }
+
+    private static async Task<RunSnapshot> WaitForRunStatusAsync(
+        PhaseAMetadataStore store,
+        string runId,
+        string expectedStatus,
+        string? expectedProgressStep = null)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        RunSnapshot? run = null;
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            run = await store.GetRunSnapshotAsync(runId);
+            if (run?.Status == expectedStatus &&
+                (expectedProgressStep is null || run.ProgressStep == expectedProgressStep))
+            {
+                return run;
+            }
+
+            await Task.Delay(50);
+        }
+
+        run.Should().NotBeNull();
+        run!.Status.Should().Be(expectedStatus);
+        if (expectedProgressStep is not null)
+        {
+            run.ProgressStep.Should().Be(expectedProgressStep);
+        }
+
+        return run;
+    }
+
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-            ["PHASEA_REPOSITORY_ROOT"] = repoRoot
+            ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
         });
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
-        private readonly string _repoRoot;
-
-        public FakeHostedProcessRunner(string repoRoot)
-        {
-            _repoRoot = repoRoot;
-        }
-
         public List<HostedProcessCommand> Commands { get; } = [];
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (marker)\n", ""));
+            }
+
             Write("docs/prototypes/demo-prototype.prototype.json", "{}");
             Write("logs/ci/active-prototypes/demo-prototype.active.json", "{}");
             Write("logs/ci/project-health/latest.html", "<html></html>");
@@ -211,7 +355,7 @@ public sealed class PrototypeWorkflowTests
 
         private void Write(string relativePath, string text)
         {
-            var path = Path.Combine(_repoRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var path = Path.Combine(Commands[^1].WorkingDirectory, relativePath.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, text);
         }

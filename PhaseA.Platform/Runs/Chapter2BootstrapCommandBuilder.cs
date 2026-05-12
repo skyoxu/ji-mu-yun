@@ -11,8 +11,10 @@ public sealed class Chapter2BootstrapCommandBuilder
         _options = options;
     }
 
-    public HostedProcessCommand BuildLocalHardChecksCommand()
+    public HostedProcessCommand BuildLocalHardChecksCommand(string repositoryRoot)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+
         var arguments = new List<string>
         {
             "-3",
@@ -34,15 +36,6 @@ public sealed class Chapter2BootstrapCommandBuilder
             environment["GODOT_BIN"] = _options.GodotBin;
         }
 
-        return new HostedProcessCommand(_options.PythonCommand, arguments, _options.RepositoryRoot, environment);
-    }
-
-    public HostedProcessCommand BuildProjectHealthScanCommand()
-    {
-        return new HostedProcessCommand(
-            _options.PythonCommand,
-            ["-3", "scripts/python/dev_cli.py", "project-health-scan", "--repo-root", _options.RepositoryRoot],
-            _options.RepositoryRoot,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+        return new HostedProcessCommand(_options.PythonCommand, arguments, repositoryRoot, environment);
     }
 }

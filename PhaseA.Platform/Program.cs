@@ -6,6 +6,8 @@ using PhaseA.Platform.Projects;
 using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Skills;
+using PhaseA.Platform.Workspaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -27,7 +29,9 @@ await SqliteMetadataSchema.InitializeAsync(connectionString);
 builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
 builder.Services.AddSingleton<ProjectRuleCatalog>();
+builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectCreationService>();
+builder.Services.AddSingleton<ProjectInitializationService>();
 builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
@@ -36,17 +40,25 @@ builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
+builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
+builder.Services.AddSingleton<SkillActionCatalog>();
+builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
+builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<LlmBindingService>();
 builder.Services.AddSingleton<LlmStopLossService>();
+builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
+builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
+builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
 var metadataStore = app.Services.GetRequiredService<PhaseAMetadataStore>();
 var adminAccountId = await metadataStore.EnsureSingleAdminAsync();
+await metadataStore.ReconcileProjectBootstrapStatusAsync();
 
 app.Use(async (context, next) =>
 {
@@ -59,13 +71,15 @@ app.Use(async (context, next) =>
     }
 
     var authOptions = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
-    if (!PhaseAAuth.IsAuthorized(context.Request, authOptions))
+    var role = PhaseAAuth.GetRole(context.Request, authOptions);
+    if (role is null)
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode });
         return;
     }
 
+    context.Items["phasea.role"] = role;
     await next(context);
 });
 
@@ -94,6 +108,20 @@ app.MapGet("/api/projects", async (
     return Results.Ok(await readback.ListProjectsAsync(adminAccountId, cancellationToken));
 });
 
+app.MapGet("/api/project-creation-failures/latest", async (
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    var failure = await readback.GetLatestProjectCreationFailureAsync(adminAccountId, cancellationToken);
+    return failure is null ? Results.NotFound(new { error = "project_creation_failure_not_found" }) : Results.Ok(failure);
+});
+
+app.MapGet("/api/session", (HttpContext context) => Results.Ok(new
+{
+    authenticated = true,
+    role = context.Items.TryGetValue("phasea.role", out var role) ? role?.ToString() ?? "user" : "user"
+}));
+
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
     [FromServices] ArtifactReadbackService readback,
@@ -101,6 +129,27 @@ app.MapGet("/api/projects/{projectId}/runs", async (
 {
     var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/packages", async (
+    string projectId,
+    [FromServices] ProjectPackageService packages,
+    CancellationToken cancellationToken) =>
+{
+    var result = await packages.CreatePackageAsync(adminAccountId, projectId, cancellationToken);
+    return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+});
+
+app.MapGet("/projects/{projectId}/packages/{fileName}", async (
+    string projectId,
+    string fileName,
+    [FromServices] ProjectPackageService packages,
+    CancellationToken cancellationToken) =>
+{
+    var result = await packages.ReadPackageAsync(adminAccountId, projectId, fileName, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "project_package_not_found" })
+        : Results.File(result.Content, result.ContentType, result.FileName);
 });
 
 app.MapGet("/projects/{projectId}", async (
@@ -203,9 +252,83 @@ app.MapPost("/api/admin/llm-binding", async (
     return result.Succeeded ? Results.Ok(result.Binding) : Results.BadRequest(result);
 });
 
+app.MapPost("/api/projects/{projectId}/chat", async (
+    string projectId,
+    ChatRequest request,
+    [FromServices] ChatService chat,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await chat.SendAsync(projectId, request, cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" => Results.Ok(result),
+            "llm_binding_required" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
+            "llm_token_unresolved" => Results.Json(result, statusCode: StatusCodes.Status424FailedDependency),
+            "missing_message" or "message_too_long" => Results.BadRequest(result),
+            _ when result.FailureCode is "llm_run_stop_loss_exceeded" or "llm_daily_stop_loss_exceeded" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
+            _ => Results.BadRequest(result)
+        };
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
+    string projectId,
+    PrototypeFeedbackRequest request,
+    [FromServices] PrototypeFeedbackIterationService feedbackIterations,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
+        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/skill-actions", (
+    HttpContext context,
+    [FromServices] SkillActionService skillActions) =>
+{
+    var role = context.Items.TryGetValue("phasea.role", out var value) ? value?.ToString() ?? "user" : "user";
+    return Results.Ok(new { actions = skillActions.ListAllowed(role) });
+});
+
+app.MapPost("/api/projects/{projectId}/skill-actions/{actionId}", async (
+    string projectId,
+    string actionId,
+    SkillActionRunRequest request,
+    [FromServices] SkillActionService skillActions,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await skillActions.RunAsync(projectId, actionId, request, cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" => Results.Ok(result),
+            "skill_action_not_allowed" => Results.NotFound(result),
+            _ => Results.BadRequest(result)
+        };
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects", async (
     JsonElement payload,
     [FromServices] ProjectCreationService projects,
+    [FromServices] ProjectInitializationService initialization,
     CancellationToken cancellationToken) =>
 {
     if (ProjectCreationRequestJsonPolicy.ContainsForbiddenGitUrl(payload))
@@ -224,7 +347,32 @@ app.MapPost("/api/projects", async (
     }
 
     var result = await projects.CreateProjectAsync(adminAccountId, request, cancellationToken);
-    return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+    if (!result.Succeeded)
+    {
+        return result.FailureCode == "project_initialization_in_progress"
+            ? Results.Json(result, statusCode: StatusCodes.Status409Conflict)
+            : Results.BadRequest(result);
+    }
+
+    initialization.StartChapter2Bootstrap(result.ProjectId!);
+    return Results.Ok(result);
+});
+
+app.MapDelete("/api/projects/{projectId}", async (
+    string projectId,
+    [FromBody] ProjectDeletionRequest request,
+    [FromServices] ProjectCreationService projects,
+    CancellationToken cancellationToken) =>
+{
+    var result = await projects.DeleteProjectAsync(adminAccountId, projectId, request, cancellationToken);
+    return result.Succeeded
+        ? Results.Ok(result)
+        : result.FailureCode switch
+        {
+            "project_not_found" => Results.NotFound(result),
+            "project_busy" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            _ => Results.BadRequest(result)
+        };
 });
 
 app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
@@ -235,7 +383,12 @@ app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
     try
     {
         var result = await chapter2.RunAsync(projectId, cancellationToken);
-        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status switch
+        {
+            "succeeded" or "already_succeeded" => Results.Ok(result),
+            "blocked" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
+            _ => Results.BadRequest(result)
+        };
     }
     catch (InvalidOperationException ex)
     {
@@ -251,13 +404,45 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
 {
     try
     {
-        var result = await prototypeWorkflow.RunAsync(projectId, request, cancellationToken);
+        var result = await prototypeWorkflow.QueueAsync(projectId, request, cancellationToken);
         if (result.Status == "missing_required_fields")
         {
             return Results.BadRequest(result);
         }
 
-        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/projects/{projectId}/prototype-7day-playable/progress", async (
+    string projectId,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        return Results.Ok(await prototypeWorkflow.GetProgressAsync(projectId, cancellationToken));
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-7day-playable/repair", async (
+    string projectId,
+    PrototypeRepairRequest request,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeWorkflow.RepairAsync(projectId, request, cancellationToken);
+        return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {
