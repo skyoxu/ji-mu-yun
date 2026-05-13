@@ -59,6 +59,29 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_ReturnsAccountActiveRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
+        await store.MarkRunStartedAsync(runId);
+        await store.UpdateRunProgressAsync(runId, "analyzing", "", "正在分析草稿。");
+        var service = new ArtifactReadbackService(store, options);
+
+        var active = await service.GetActiveRunAsync(project.AccountId);
+
+        active.Busy.Should().BeTrue();
+        active.RunId.Should().Be(runId);
+        active.RunType.Should().Be("prototype-draft-analysis");
+        active.ProgressLabel.Should().Be("正在分析草稿。");
+    }
+
+    [Fact]
     public async Task ReadArtifactAsync_ResolvesArtifactsInsideOwningProjectRepo()
     {
         using var database = TempSqliteDatabase.Create();
@@ -203,7 +226,9 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.RepoPath, "Game.Core/Domain/Combat.cs", "public sealed class Combat {}");
         Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
         Write(project.RepoPath, "docs/prototypes/demo.md", "prototype");
@@ -216,11 +241,16 @@ public sealed class ArtifactReadbackServiceTests
         var first = await service.CreatePackageAsync(accountId, projectId);
         var second = await service.CreatePackageAsync(accountId, projectId);
         var download = await service.ReadPackageAsync(accountId, projectId, first.FileName);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
 
         first.Status.Should().Be("succeeded");
         first.Version.Should().MatchRegex(@"^v0\.1\.\d{8}\.001$");
         first.FileName.Should().EndWith($"{first.Version}.zip");
         second.Version.Should().MatchRegex(@"^v0\.1\.\d{8}\.002$");
+        packages!.CanCreatePackage.Should().BeTrue();
+        packages.Packages.Should().HaveCount(2);
+        packages.Packages[0].Version.Should().Be(second.Version);
+        packages.Packages[1].Version.Should().Be(first.Version);
         download.Should().NotBeNull();
         download!.FileName.Should().Be(first.FileName);
         var names = ZipEntryNames(download.Content);
@@ -232,6 +262,27 @@ public sealed class ArtifactReadbackServiceTests
         names.Should().NotContain(name => name.StartsWith("scripts/", StringComparison.OrdinalIgnoreCase));
         names.Should().NotContain(name => name.StartsWith("logs/", StringComparison.OrdinalIgnoreCase));
         names.Should().NotContain(name => name.StartsWith(".agents/", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksBeforePrototypeSucceeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var service = new ProjectPackageService(store, options);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("prototype_not_created");
+        packages!.CanCreatePackage.Should().BeFalse();
+        packages.DisabledReason.Should().Be("prototype_not_created");
     }
 
     [Fact]
@@ -254,6 +305,25 @@ public sealed class ArtifactReadbackServiceTests
 
         result.Status.Should().Be("project_busy");
         result.FailureCode.Should().Be("project_busy");
+    }
+
+    [Fact]
+    public void ProjectPackageDownloadTicketService_CreatesBoundExpiringTicket()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
+            ["PHASEA_ADMIN_TOKEN_HASH"] = "test-secret"
+        });
+        var service = new ProjectPackageDownloadTicketService(options);
+
+        var ticket = service.CreateTicket("project-a", "package.zip");
+
+        service.IsValid(ticket, "project-a", "package.zip").Should().BeTrue();
+        service.IsValid(ticket, "project-b", "package.zip").Should().BeFalse();
+        service.IsValid(ticket, "project-a", "other.zip").Should().BeFalse();
     }
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)

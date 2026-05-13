@@ -307,9 +307,23 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_chat_messages (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+            content TEXT NOT NULL,
+            kind TEXT NULL,
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
-        "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);"
+        "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
+        "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);"
     ];
 }

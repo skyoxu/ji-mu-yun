@@ -163,6 +163,11 @@ public sealed class PrototypeWorkflowService
             throw new InvalidOperationException("Project not found.");
         }
 
+        if (await _metadataStore.HasRunnerLockAsync(project.ProjectId, cancellationToken))
+        {
+            return new PrototypeWorkflowResult("", "project_busy", 423, "", "", "Project runner is busy.", [], []);
+        }
+
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
@@ -202,6 +207,11 @@ public sealed class PrototypeWorkflowService
         if (project is null)
         {
             throw new InvalidOperationException("Project not found.");
+        }
+
+        if (await _metadataStore.HasRunnerLockAsync(project.ProjectId, cancellationToken))
+        {
+            return new PrototypeWorkflowResult("", "project_busy", 423, "", "", "Project runner is busy.", [], []);
         }
 
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);

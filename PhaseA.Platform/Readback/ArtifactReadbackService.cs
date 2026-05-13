@@ -21,6 +21,21 @@ public sealed class ArtifactReadbackService
         return _metadataStore.ListProjectsAsync(accountId, cancellationToken);
     }
 
+    public async Task<ActiveRunReadback> GetActiveRunAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        var run = await _metadataStore.GetActiveRunForAccountAsync(accountId, cancellationToken);
+        return run is null
+            ? new ActiveRunReadback(false, null, null, null, null, null, null)
+            : new ActiveRunReadback(
+                true,
+                run.RunId,
+                run.ProjectId,
+                run.RunType,
+                run.Status,
+                run.ProgressStep,
+                run.ProgressLabel);
+    }
+
     public Task<ProjectCreationFailureSnapshot?> GetLatestProjectCreationFailureAsync(
         string accountId,
         CancellationToken cancellationToken = default)

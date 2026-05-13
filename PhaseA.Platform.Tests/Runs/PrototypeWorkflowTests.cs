@@ -117,6 +117,28 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueAsync_BlocksWhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
+        (await store.TryAcquireRunnerLockAsync(projectId, lockRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueAsync(projectId, ValidRequest(confirm: true));
+
+        result.Status.Should().Be("project_busy");
+        result.ExitCode.Should().Be(423);
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task RepairAsync_QueuesRepairFromLatestFailedPrototypeRecord()
     {
         using var database = TempSqliteDatabase.Create();

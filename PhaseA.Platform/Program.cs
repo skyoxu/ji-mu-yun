@@ -31,6 +31,7 @@ builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options)
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectCreationService>();
+builder.Services.AddSingleton<ProjectDraftImportService>();
 builder.Services.AddSingleton<ProjectInitializationService>();
 builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
@@ -48,11 +49,13 @@ builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<ProjectPackageService>();
+builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
 builder.Services.AddSingleton<LlmBindingService>();
 builder.Services.AddSingleton<LlmStopLossService>();
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 builder.Services.AddTransient<ChatService>();
+builder.Services.AddSingleton<ProjectChatHistoryService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
@@ -64,7 +67,11 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/healthz" ||
         context.Request.Path == "/" ||
-        context.Request.Path == "/ui")
+        context.Request.Path == "/ui" ||
+        context.Request.Path == "/downloads" ||
+        (context.Request.Path.StartsWithSegments("/projects") &&
+         context.Request.Path.Value?.Contains("/packages/", StringComparison.Ordinal) == true &&
+         context.Request.Query.ContainsKey("ticket")))
     {
         await next(context);
         return;
@@ -122,6 +129,13 @@ app.MapGet("/api/session", (HttpContext context) => Results.Ok(new
     role = context.Items.TryGetValue("phasea.role", out var role) ? role?.ToString() ?? "user" : "user"
 }));
 
+app.MapGet("/api/account/active-run", async (
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    return Results.Ok(await readback.GetActiveRunAsync(adminAccountId, cancellationToken));
+});
+
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
     [FromServices] ArtifactReadbackService readback,
@@ -140,16 +154,50 @@ app.MapPost("/api/projects/{projectId}/packages", async (
     return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
 });
 
-app.MapGet("/projects/{projectId}/packages/{fileName}", async (
+app.MapGet("/api/projects/{projectId}/packages", async (
     string projectId,
-    string fileName,
     [FromServices] ProjectPackageService packages,
     CancellationToken cancellationToken) =>
 {
+    var result = await packages.ListPackagesAsync(adminAccountId, projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapGet("/projects/{projectId}/packages/{fileName}", async (
+    string projectId,
+    string fileName,
+    HttpRequest request,
+    [FromServices] ProjectPackageService packages,
+    [FromServices] ProjectPackageDownloadTicketService tickets,
+    CancellationToken cancellationToken) =>
+{
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, projectId, fileName))
+    {
+        return Results.Unauthorized();
+    }
+
     var result = await packages.ReadPackageAsync(adminAccountId, projectId, fileName, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "project_package_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
+});
+
+app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", (
+    string projectId,
+    string fileName,
+    [FromServices] ProjectPackageDownloadTicketService tickets) =>
+{
+    return Results.Ok(new
+    {
+        downloadUrl = $"/projects/{projectId}/packages/{Uri.EscapeDataString(fileName)}?ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, fileName))}"
+    });
+});
+
+app.MapGet("/downloads", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderDownloads(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/projects/{projectId}", async (
@@ -256,11 +304,18 @@ app.MapPost("/api/projects/{projectId}/chat", async (
     string projectId,
     ChatRequest request,
     [FromServices] ChatService chat,
+    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var result = await chat.SendAsync(projectId, request, cancellationToken);
+        if (result.Status == "succeeded")
+        {
+            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Message, null, cancellationToken);
+            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, null, cancellationToken);
+        }
+
         return result.Status switch
         {
             "succeeded" => Results.Ok(result),
@@ -277,15 +332,31 @@ app.MapPost("/api/projects/{projectId}/chat", async (
     }
 });
 
+app.MapGet("/api/projects/{projectId}/chat-history", async (
+    string projectId,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    var result = await chatHistory.ListAsync(adminAccountId, projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
 app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     string projectId,
     PrototypeFeedbackRequest request,
     [FromServices] PrototypeFeedbackIterationService feedbackIterations,
+    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
+        if (result.Status == "completed")
+        {
+            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
+            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, "formal-feedback-result", cancellationToken);
+        }
+
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -356,6 +427,43 @@ app.MapPost("/api/projects", async (
 
     initialization.StartChapter2Bootstrap(result.ProjectId!);
     return Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
+    string projectId,
+    HttpRequest request,
+    [FromServices] ProjectDraftImportService draftImport,
+    CancellationToken cancellationToken) =>
+{
+    if (!request.HasFormContentType)
+    {
+        return Results.BadRequest(new { error = "form_content_type_required" });
+    }
+
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("draftFile");
+    if (file is null)
+    {
+        return Results.BadRequest(new { error = "draft_file_required" });
+    }
+
+    await using var stream = file.OpenReadStream();
+    using var memory = new MemoryStream();
+    await stream.CopyToAsync(memory, cancellationToken);
+    try
+    {
+        var result = await draftImport.AnalyzeAsync(projectId, file.FileName, memory.ToArray(), form["model"].FirstOrDefault(), cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" => Results.Ok(result),
+            "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
+            _ => Results.BadRequest(result)
+        };
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
 });
 
 app.MapDelete("/api/projects/{projectId}", async (

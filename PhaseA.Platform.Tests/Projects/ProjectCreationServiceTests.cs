@@ -159,6 +159,27 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
+    public async Task DeleteProjectAsync_BlocksActiveRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var runId = await store.CreateRunAsync(created.ProjectId!, created.WorkspaceId, "prototype-draft-analysis");
+        await store.MarkRunStartedAsync(runId);
+
+        var deleted = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        deleted.Succeeded.Should().BeFalse();
+        deleted.FailureCode.Should().Be("project_busy");
+    }
+
+    [Fact]
     public async Task DeleteProjectAsync_AllowsFailedProject()
     {
         using var database = TempSqliteDatabase.Create();

@@ -271,18 +271,23 @@ public sealed class PrototypeFeedbackIterationService
         var result = !string.IsNullOrWhiteSpace(codexOutput)
             ? codexOutput.Trim()
             : FirstNonEmpty(codexResult.Stdout, codexResult.Stderr, "Codex did not return a final message.");
-        return $"""
-            本轮正式反馈已由 Codex 执行并记录。
-            项目：{project.Name}
-            RunId：{runId}
-            Model：{model}
-            能力模式：{SkillModeLabel(skillAction)}
+        var publicResult = PublicChatSanitizer.Sanitize(result);
+        if (string.IsNullOrWhiteSpace(publicResult))
+        {
+            publicResult = "本轮优化已完成，但没有可展示的公开摘要。";
+        }
 
-            已记录的反馈：
+        return $"""
+            本轮继续优化已完成。
+
+            本轮目标：
             {feedback}
 
-            Codex 执行结果：
-            {result}
+            完成报告：
+            {publicResult}
+
+            下一步建议：
+            请试玩当前原型，重点检查首分钟是否知道目标、操作反馈是否清晰、节奏是否顺畅、胜负条件是否明确。如果仍有明显问题，可以继续点击“同意继续优化”，我会把这些方向作为下一轮正式反馈继续交给 Codex 处理。
             """;
     }
 
@@ -302,6 +307,8 @@ public sealed class PrototypeFeedbackIterationService
             - 保持 Prototype lane 范围，不进入 Chapter 3-7 正式交付流程。
             - 不要执行破坏性 git 操作。
             - 完成后总结：用户反馈、主要改动、验证结果、建议下一步。
+            - 面向浏览器用户输出公开摘要，不要包含路径、命令、脚本名、日志名、环境变量或内部实现细节。
+            - 如果还有值得继续优化的事项，请在结尾明确写“下一步建议：...”。如果没有明显建议，请写“下一步建议：暂无，建议进入试玩验收。”
 
             Project:
             - ProjectId: {project.ProjectId}

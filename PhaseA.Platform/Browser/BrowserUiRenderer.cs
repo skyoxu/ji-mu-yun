@@ -80,6 +80,7 @@ public sealed class BrowserUiRenderer
                 button.secondary { background: var(--accent-2); }
                 button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
                 button.danger-button { background: var(--danger); }
+                button:disabled { cursor: not-allowed; opacity: 0.45; }
                 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
                 .card-list { display: grid; gap: 0.6rem; }
                 .card {
@@ -104,11 +105,13 @@ public sealed class BrowserUiRenderer
                 .health-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
                 .metric { border: 1px solid var(--line); border-radius: 0.8rem; background: #fffdf8; padding: 0.7rem; }
                 .metric strong { display: block; font-size: 1.15rem; }
-                .chat-frame { max-height: 34rem; overflow: hidden; }
-                .chat-scroll { max-height: 18rem; overflow-y: auto; padding-right: 0.25rem; }
+                .chat-frame { overflow: visible; }
+                .chat-scroll { min-height: 16rem; max-height: 24rem; overflow-y: auto; padding-right: 0.25rem; }
+                .feedback-scroll { max-height: 14rem; overflow-y: auto; padding-right: 0.25rem; }
                 .status-ok { color: var(--accent); }
                 .status-warn { color: var(--accent-2); }
                 .status-fail { color: var(--danger); }
+                .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
                 .hidden { display: none !important; }
                 @media (max-width: 920px) {
                   main, .grid, .health-grid { grid-template-columns: 1fr; }
@@ -119,6 +122,7 @@ public sealed class BrowserUiRenderer
               <header>
                 <h1>积木云 Phase A 原型控制台</h1>
                 <p>Phase A Prototype Console：用于创建项目、运行云端原型路线、查看运行日志和产物的单管理员控制台。</p>
+                <div id="activeRunBanner" class="busy-banner hidden"></div>
               </header>
               <main>
                 <aside class="stack">
@@ -143,7 +147,7 @@ public sealed class BrowserUiRenderer
                     <label>项目名 <input id="projectName" placeholder="可选，不填会自动生成"></label>
                     <label>游戏名 <input id="gameName" placeholder="例如：Demo Game"></label>
                     <label>游戏类型/玩法方向 <input id="gameTypeSource" placeholder="例如：RPG、塔防、Roguelike、平台跳跃、解谜冒险"></label>
-                    <button id="createProject">创建项目</button>
+                    <button id="createProject" data-global-action="true">创建项目</button>
                   </section>
                   <section id="codexConfigPanel" class="stack hidden">
                     <h2>Codex 配置</h2>
@@ -168,13 +172,17 @@ public sealed class BrowserUiRenderer
                     <p id="selectedProject" class="muted">尚未选择项目。</p>
                     <button id="loadRuns" class="ghost">加载运行记录</button>
                     <button id="refreshPrototypeProgress" class="ghost">刷新原型进度</button>
-                    <button id="createProjectPackage" class="secondary">打包下载项目文件</button>
+                    <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
+                    <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
                     <div id="prototypeProgress" class="card muted">尚未开始 7 步可玩原型。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                   </section>
-                  <section class="stack">
+                  <section id="prototypeWorkflowPanel" class="stack">
                     <h2>7 步可玩原型</h2>
+                    <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
+                    <button id="importDraft" class="ghost" data-global-action="true">分析草稿并回填</button>
+                    <div id="draftImportStatus" class="card muted">可选：创建项目后上传 txt 草稿，由后端模型分析后回填原型表单。</div>
                     <label>原型标识 Slug <input id="protoSlug" placeholder="demo-prototype"></label>
                     <label>原型假设 <textarea id="hypothesis" placeholder="这个原型要验证什么？"></textarea></label>
                     <label>核心玩家幻想 <textarea id="corePlayerFantasy" placeholder="玩家应该感受到什么？"></textarea></label>
@@ -183,8 +191,8 @@ public sealed class BrowserUiRenderer
                     <label>游戏功能 <textarea id="gameFeature" placeholder="本次要实现或验证的核心功能"></textarea></label>
                     <label>核心玩法循环 <textarea id="coreGameplayLoop" placeholder="输入、反馈、奖励、升级或失败的循环"></textarea></label>
                     <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
-                    <button id="repairPrototype" class="ghost hidden">修复原型</button>
-                    <button id="runPrototype" class="secondary">运行原型路线</button>
+                    <button id="repairPrototype" class="ghost hidden" data-global-action="true">修复原型</button>
+                    <button id="runPrototype" class="secondary" data-global-action="true">运行原型路线</button>
                   </section>
                   <section id="prototypeCommandPanel" class="stack hidden">
                     <h2>原型命令</h2>
@@ -195,23 +203,24 @@ public sealed class BrowserUiRenderer
                     <label>.NET 测试目标，每行一个 <textarea id="dotnetTarget">Game.Core.Tests/Game.Core.Tests.csproj</textarea></label>
                     <label>可选测试过滤器 <input id="testFilter" placeholder="可选"></label>
                     <div class="split-actions">
-                      <button data-stage="red" class="runTdd">TDD 红灯</button>
-                      <button data-stage="green" class="runTdd">TDD 绿灯</button>
-                      <button data-stage="refactor" class="runTdd">TDD 重构</button>
+                      <button data-stage="red" class="runTdd" data-global-action="true">TDD 红灯</button>
+                      <button data-stage="green" class="runTdd" data-global-action="true">TDD 绿灯</button>
+                      <button data-stage="refactor" class="runTdd" data-global-action="true">TDD 重构</button>
                     </div>
-                    <button id="createScene" class="ghost">创建原型场景</button>
+                    <button id="createScene" class="ghost" data-global-action="true">创建原型场景</button>
                   </section>
                   <section id="chatPanel" class="stack hidden chat-frame">
                     <h2>自由对话</h2>
                     <p class="muted">选择项目后即可聊天。后端会映射到服务器本机 Codex CLI 配置；需要执行工作流时仍使用上方固定按钮。</p>
                     <label>能力模式 <select id="chatSkillMode"><option value="normal">普通模式</option></select></label>
                     <div id="chatSkillDescription" class="card muted">普通模式：不激活 skills。</div>
-                    <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
-                    <button id="sendChat" class="secondary">发送消息</button>
-                    <button id="submitFormalFeedback" class="ghost">提交反馈并继续优化原型</button>
+                    <h2>聊天记录</h2>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
+                    <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
+                    <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
+                    <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈并继续优化原型</button>
                     <h2>正式反馈记录</h2>
-                    <div id="feedbackRecords" class="card-list chat-scroll"></div>
+                    <div id="feedbackRecords" class="card-list feedback-scroll"></div>
                   </section>
                   <section>
                     <h2>运行记录</h2>
@@ -225,8 +234,17 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
+                const chatStorageVersion = "v2";
+                const maxStoredChatMessages = 30;
+                const chatThinkingPrompts = [
+                  "正在理解你的问题...",
+                  "正在结合当前项目上下文...",
+                  "Codex CLI 正在生成回复...",
+                  "正在整理可读答案...",
+                  "还在处理中，请稍等..."
+                ];
                 const $ = id => document.getElementById(id);
                 const out = value => $("output").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
                 const token = () => $("token").value.trim();
@@ -237,16 +255,134 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderChatHistory() {
-                  $("chatHistory").innerHTML = state.chatHistory.map(message => `
+                  state.chatHistory.forEach(message => {
+                    if (typeof message.content === "string") message.content = sanitizePublicChatContent(message.content);
+                  });
+                  $("chatHistory").innerHTML = state.chatHistory.map((message, index) => `
                     <div class="card">
-                      <strong>${message.role === "assistant" ? "助手" : "我"}</strong>
+                      <strong>${message.role === "assistant" ? "助手" : "我"}${message.pending ? " · 生成中" : ""}</strong>
                       <span>${escapeHtml(message.content)}</span>
+                      ${renderInlineContinueAction(message, index)}
                     </div>
                   `).join("") || "<p class='muted'>还没有对话。</p>";
+                  document.querySelectorAll("[data-continue-suggestion]").forEach(button => {
+                    button.onclick = () => continueSuggestedFeedback(Number(button.dataset.continueSuggestion));
+                  });
+                }
+
+                function renderInlineContinueAction(message, index) {
+                  if (message.role !== "assistant" || message.pending || message.continueConsumed || !message.suggestedFeedback) return "";
+                  if (!state.prototypeReadyForFeedback) return "";
+                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">同意继续优化</button>`;
+                }
+
+                function chatStorageKey(projectId = state.projectId) {
+                  return `phaseAChatHistory:${chatStorageVersion}:${projectId || "none"}`;
+                }
+
+                function loadChatHistoryForProject(projectId) {
+                  try {
+                    const raw = localStorage.getItem(chatStorageKey(projectId));
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    state.chatHistory = Array.isArray(parsed)
+                      ? parsed.filter(isStoredChatMessage).slice(-maxStoredChatMessages)
+                      : [];
+                    state.chatHistory.forEach(message => message.content = sanitizePublicChatContent(message.content));
+                  } catch {
+                    state.chatHistory = [];
+                  }
+                  renderChatHistory();
+                }
+
+                async function loadServerChatHistoryForProject(projectId) {
+                  if (!projectId) return;
+                  try {
+                    const result = await api(`/api/projects/${projectId}/chat-history`);
+                    state.chatHistory = (result.messages || [])
+                      .map(message => ({
+                        role: message.role,
+                        content: sanitizePublicChatContent(message.content),
+                        kind: message.kind || null
+                      }))
+                      .filter(isStoredChatMessage)
+                      .slice(-maxStoredChatMessages);
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
+                  } catch {
+                    renderChatHistory();
+                  }
+                }
+
+                function saveChatHistoryForProject() {
+                  if (!state.projectId) return;
+                  const compact = state.chatHistory.filter(isStoredChatMessage).slice(-maxStoredChatMessages);
+                  compact.forEach(message => message.content = sanitizePublicChatContent(message.content));
+                  compact.forEach(message => {
+                    if (message.suggestedFeedback) message.suggestedFeedback = sanitizePublicChatContent(message.suggestedFeedback);
+                  });
+                  state.chatHistory = compact;
+                  localStorage.setItem(chatStorageKey(), JSON.stringify(compact));
+                }
+
+                function isStoredChatMessage(message) {
+                  return message &&
+                    !message.pending &&
+                    (message.role === "user" || message.role === "assistant") &&
+                    typeof message.content === "string" &&
+                    message.content.trim().length > 0;
+                }
+
+                function sanitizePublicChatContent(value) {
+                  return String(value || "")
+                    .replace(/[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
+                    .replace(/(?<![\w.])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
+                    .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
+                    .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
+                    .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
+                    .replace(/[ \t]{2,}/g, " ")
+                    .replace(/\n{3,}/g, "\n\n")
+                    .trim();
+                }
+
+                function startChatThinkingMessage() {
+                  const id = `pending-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+                  let index = 0;
+                  const message = { role: "assistant", content: chatThinkingPrompts[index], pending: true, pendingId: id };
+                  state.chatHistory.push(message);
+                  renderChatHistory();
+                  const timer = setInterval(() => {
+                    const pending = state.chatHistory.find(item => item.pendingId === id);
+                    if (!pending) {
+                      clearInterval(timer);
+                      return;
+                    }
+                    index = (index + 1) % chatThinkingPrompts.length;
+                    pending.content = chatThinkingPrompts[index];
+                    renderChatHistory();
+                  }, 5000);
+                  return {
+                    complete(content, failed = false) {
+                      clearInterval(timer);
+                      const pending = state.chatHistory.find(item => item.pendingId === id);
+                      if (pending) {
+                        pending.content = content;
+                        pending.pending = false;
+                        delete pending.pendingId;
+                        if (failed) pending.failed = true;
+                      } else {
+                        state.chatHistory.push({ role: "assistant", content, failed });
+                      }
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                  };
                 }
 
                 function showLoggedOut() {
                   state.authenticated = false;
+                  state.activeRun = null;
+                  state.localBusy = false;
                   $("stepsPanel").classList.remove("hidden");
                   $("sessionPanel").classList.remove("hidden");
                   $("adminPanel").classList.add("hidden");
@@ -255,7 +391,9 @@ public sealed class BrowserUiRenderer
                   $("codexConfigPanel").classList.add("hidden");
                   $("prototypeCommandPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
+                  state.nextSuggestedFeedback = "";
                   $("projectListPanel").classList.add("hidden");
+                  applyGlobalBusyState();
                   $("sessionStatus").textContent = "请粘贴 Admin token 后验证。";
                 }
 
@@ -273,6 +411,7 @@ public sealed class BrowserUiRenderer
                   $("projectDetailPanel").classList.add("hidden");
                   $("initStatusPanel").classList.add("hidden");
                   loadSkillActions();
+                  refreshActiveRun();
                 }
 
                 function showInitialization(status, error) {
@@ -316,9 +455,11 @@ public sealed class BrowserUiRenderer
 
 
                 async function sendChat() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const message = $("chatMessage").value.trim();
                   if (!message) return out("请输入消息。");
+                  setLocalBusy(true);
                   $("sendChat").disabled = true;
                   $("sendChat").textContent = "发送中...";
                   try {
@@ -330,31 +471,70 @@ public sealed class BrowserUiRenderer
                     };
                     state.chatHistory.push({ role: "user", content: message });
                     renderChatHistory();
+                    saveChatHistoryForProject();
                     $("chatMessage").value = "";
+                    const thinking = startChatThinkingMessage();
                     const result = await api(`/api/projects/${state.projectId}/chat`, { method: "POST", body: JSON.stringify(payload) });
                     if (result.assistantMessage) {
-                      state.chatHistory.push({ role: "assistant", content: result.assistantMessage });
-                      renderChatHistory();
+                      thinking.complete(result.assistantMessage);
+                    } else {
+                      thinking.complete("本次没有生成回复。");
                     }
+                    await loadServerChatHistoryForProject(state.projectId);
                     out(result);
                     await loadRuns();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    const message = error?.payload?.failureCode || error?.payload?.error || "unknown_error";
+                    const pending = state.chatHistory.find(item => item.pending);
+                    if (pending) {
+                      pending.content = `本次回复失败：${message}。可以稍后重试。`;
+                      pending.pending = false;
+                      delete pending.pendingId;
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                    showError(error);
+                  }
                   finally {
+                    setLocalBusy(false);
                     $("sendChat").disabled = false;
                     $("sendChat").textContent = "发送消息";
+                    await refreshActiveRun();
                   }
                 }
 
                 async function submitFormalFeedback() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
                   const feedback = $("chatMessage").value.trim();
                   if (!feedback) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
+                  await submitFormalFeedbackText(feedback, "正式提交中...");
+                }
+
+                async function continueSuggestedFeedback(messageIndex) {
+                  const message = state.chatHistory[messageIndex];
+                  const suggestion = message?.suggestedFeedback || state.nextSuggestedFeedback;
+                  if (!suggestion) return out("当前没有可继续执行的建议。");
+                  if (message) {
+                    message.continueConsumed = true;
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                  }
+                  await submitFormalFeedbackText(suggestion, "继续优化中...");
+                }
+
+                async function submitFormalFeedbackText(feedback, busyText) {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
+                  setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
-                  $("submitFormalFeedback").textContent = "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
+                  $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
                   try {
                     state.chatHistory.push({ role: "user", content: feedback });
                     renderChatHistory();
+                    saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/prototype-feedback-iterations`, {
                       method: "POST",
@@ -362,11 +542,16 @@ public sealed class BrowserUiRenderer
                     });
                     state.chatHistory.push({ role: "assistant", content: result.assistantMessage || "\u672c\u8f6e\u6b63\u5f0f\u53cd\u9988\u5df2\u5b8c\u6210\u3002" });
                     renderChatHistory();
+                    saveChatHistoryForProject();
+                    await loadServerChatHistoryForProject(state.projectId);
                     out(result);
                     await loadRuns();
+                    updateContinueSuggestionFromText(result.assistantMessage);
                   } catch (error) { showError(error); }
                   finally {
+                    setLocalBusy(false);
                     setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    await refreshActiveRun();
                   }
                 }
 
@@ -425,8 +610,8 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     const failed = failedProject(projects);
-                    const latestFailure = await loadLatestProjectCreationFailure();
                     const visibleProjects = listableProjects(projects);
+                    const latestFailure = failed || visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
                     $("projectListPanel").classList.toggle("hidden", visibleProjects.length === 0);
                     const health = await loadProjectHealthSummary();
                     $("projects").innerHTML = visibleProjects.map(p => `
@@ -441,7 +626,7 @@ public sealed class BrowserUiRenderer
                           <label>删除确认 1 <input data-delete-one="${p.projectId}" placeholder="输入 delete"></label>
                           <label>删除确认 2 <input data-delete-two="${p.projectId}" placeholder="再次输入 delete"></label>
                         </div>
-                        <button class="danger-button" data-delete-project="${p.projectId}">删除项目</button>
+                        <button class="danger-button" data-delete-project="${p.projectId}" data-global-action="true">删除项目</button>
                       </div>
                     `).join("");
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
@@ -490,15 +675,18 @@ public sealed class BrowserUiRenderer
 
                 function selectProject(projectId) {
                   state.projectId = projectId;
+                  loadChatHistoryForProject(projectId);
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
                   loadProjectRuntimeState();
+                  loadServerChatHistoryForProject(projectId);
                 }
 
                 async function loadProjectRuntimeState() {
                   await loadRuns();
                   await loadPrototypeProgress();
+                  await loadProjectPackages();
                 }
 
                 function renderProjectHealth(summary) {
@@ -524,6 +712,8 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function createProject() {
+                  if (!guardGlobalAction()) return;
+                  setLocalBusy(true, "创建项目中，请等待当前任务执行完毕。");
                   $("createProject").disabled = true;
                   $("createProject").textContent = "创建中...";
                   try {
@@ -538,17 +728,26 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     showError(error);
                   } finally {
+                    setLocalBusy(false);
                     $("createProject").disabled = false;
                     $("createProject").textContent = "创建项目";
+                    await refreshActiveRun();
                   }
                 }
 
                 async function deleteProject(projectId) {
+                  if (!guardGlobalAction()) return;
                   const confirmOne = document.querySelector(`[data-delete-one="${projectId}"]`)?.value.trim() || "";
                   const confirmTwo = document.querySelector(`[data-delete-two="${projectId}"]`)?.value.trim() || "";
                   if (confirmOne !== "delete" || confirmTwo !== "delete") {
                     out("删除项目需要在两个确认框都输入 delete。");
                     return;
+                  }
+                  const deleteButton = document.querySelector(`[data-delete-project="${projectId}"]`);
+                  setLocalBusy(true, "删除项目中，请等待当前任务执行完毕。");
+                  if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.textContent = "删除中...";
                   }
                   try {
                     const result = await api(`/api/projects/${projectId}`, {
@@ -562,6 +761,14 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await refreshProjects();
                   } catch (error) { showError(error); }
+                  finally {
+                    if (deleteButton) {
+                      deleteButton.disabled = false;
+                      deleteButton.textContent = "删除项目";
+                    }
+                    setLocalBusy(false);
+                    await refreshActiveRun();
+                  }
                 }
 
                 async function loadRuns() {
@@ -614,75 +821,276 @@ public sealed class BrowserUiRenderer
                   } catch (error) { showError(error); }
                 }
 
+                function isGlobalBusy() {
+                  return state.localBusy || !!state.activeRun?.busy;
+                }
+
+                function activeRunText(run) {
+                  if (!run?.busy) return "";
+                  const label = run.progressLabel || run.progressStep || run.status || "";
+                  return `当前任务执行中：${run.runType || "unknown"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
+                }
+
+                function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
+                  state.localBusy = busy;
+                  applyGlobalBusyState(message);
+                }
+
+                function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
+                  const busy = isGlobalBusy();
+                  document.querySelectorAll("[data-global-action]").forEach(button => {
+                    button.disabled = busy;
+                    if (busy) button.title = message;
+                    else button.removeAttribute("title");
+                  });
+                  if (!busy && state.packageList) {
+                    renderProjectPackages(state.packageList);
+                  }
+                  if (busy) {
+                    $("activeRunBanner").classList.remove("hidden");
+                    $("activeRunBanner").textContent = state.activeRun?.busy ? activeRunText(state.activeRun) : message;
+                  } else {
+                    $("activeRunBanner").classList.add("hidden");
+                    $("activeRunBanner").textContent = "";
+                  }
+                }
+
+                async function refreshActiveRun() {
+                  if (!state.authenticated) return;
+                  try {
+                    state.activeRun = await api("/api/account/active-run");
+                    applyGlobalBusyState();
+                    if (!state.activeRun?.busy && state.projectId) {
+                      await loadPrototypeProgress();
+                    }
+                  } catch {
+                    state.activeRun = null;
+                    applyGlobalBusyState();
+                  }
+                }
+
+                function guardGlobalAction() {
+                  if (!isGlobalBusy()) return true;
+                  out("有任务正在执行，请等待当前任务执行完毕。");
+                  applyGlobalBusyState();
+                  return false;
+                }
+
+                function applyDraftToForm(draft) {
+                  if (draft.prototypeSlug) $("protoSlug").value = draft.prototypeSlug;
+                  if (draft.hypothesis) $("hypothesis").value = draft.hypothesis;
+                  if (draft.corePlayerFantasy) $("corePlayerFantasy").value = draft.corePlayerFantasy;
+                  if (draft.minimumPlayableLoop) $("minimumPlayableLoop").value = draft.minimumPlayableLoop;
+                  if (draft.successCriteria?.length) $("successCriteria").value = draft.successCriteria.join("\n");
+                  if (draft.gameFeature) $("gameFeature").value = draft.gameFeature;
+                  if (draft.coreGameplayLoop) $("coreGameplayLoop").value = draft.coreGameplayLoop;
+                  if (draft.winFailConditions) $("winFailConditions").value = draft.winFailConditions;
+                }
+
+                async function importDraft() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先创建并选择项目。");
+                  const file = $("draftFile").files?.[0];
+                  if (!file) return out("请先选择一个 txt 文件。");
+                  setLocalBusy(true, "草稿分析中，请等待当前任务执行完毕。");
+                  $("importDraft").textContent = "模型分析中...";
+                  $("runPrototype").textContent = "草稿分析中..暂不可启动原型.";
+                  $("draftImportStatus").className = "card muted";
+                  $("draftImportStatus").textContent = "后端正在调用模型分析 txt 草稿，完成前不能启动原型创建。";
+                  try {
+                    const form = new FormData();
+                    form.append("draftFile", file);
+                    form.append("model", $("globalModel").value || "gpt-5.4");
+                    const response = await fetch(`/api/projects/${state.projectId}/prototype-drafts/analyze`, { method: "POST", body: form, headers: { "Authorization": `Bearer ${token()}` } });
+                    const payload = await response.json();
+                    if (!response.ok) throw payload;
+                    applyDraftToForm(payload);
+                    $("draftImportStatus").className = "card";
+                    $("draftImportStatus").innerHTML = `
+                      <strong>草稿已分析并回填</strong>
+                      <p class="muted">${escapeHtml(payload.fileName)} · ${payload.lineCount} 行 · ${payload.byteCount} bytes</p>
+                      <p class="muted">命中字段：${escapeHtml((payload.matchedFields || []).join(" · ") || "无")}</p>
+                      <p class="muted">警告：${escapeHtml((payload.warnings || []).join(" · ") || "无")}</p>
+                    `;
+                    out(payload);
+                    await loadRuns();
+                  } catch (error) {
+                    $("draftImportStatus").className = "card muted";
+                    $("draftImportStatus").textContent = `草稿分析失败：${error?.error || error?.failureCode || "unknown_error"}`;
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    $("importDraft").disabled = false;
+                    $("importDraft").textContent = "分析草稿并回填";
+                    await refreshActiveRun();
+                  }
+                }
+
                 async function createProjectPackage() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, "打包项目文件中，请等待当前任务执行完毕。");
                   $("createProjectPackage").disabled = true;
                   $("createProjectPackage").textContent = "打包中...";
                   $("projectPackageStatus").className = "card muted";
                   $("projectPackageStatus").textContent = "正在生成只包含项目相关文件的压缩包。";
                   try {
                     const result = await api(`/api/projects/${state.projectId}/packages`, { method: "POST" });
-                    $("projectPackageStatus").className = "card";
-                    $("projectPackageStatus").innerHTML = `
-                      <strong>项目包已生成：${escapeHtml(result.version)}</strong>
-                      <p class="muted">${escapeHtml(result.fileName)} · ${result.includedFileCount} files · ${result.sizeBytes} bytes</p>
-                      <button class="ghost" id="downloadLatestProjectPackage">下载压缩包</button>
-                    `;
-                    $("downloadLatestProjectPackage").onclick = () => downloadProjectPackage(result.downloadUrl, result.fileName);
                     out(result);
-                    await downloadProjectPackage(result.downloadUrl, result.fileName);
                     await loadRuns();
+                    await loadProjectPackages();
                   } catch (error) { showError(error); }
                   finally {
-                    $("createProjectPackage").disabled = false;
-                    $("createProjectPackage").textContent = "打包下载项目文件";
+                    setLocalBusy(false);
+                    $("createProjectPackage").textContent = "打包项目文件";
+                    await loadProjectPackages();
+                    await refreshActiveRun();
                   }
                 }
 
-                async function downloadProjectPackage(downloadUrl, fileName) {
-                  const response = await fetch(downloadUrl, { headers: { "Authorization": `Bearer ${token()}` } });
-                  if (!response.ok) throw { status: response.status, payload: { error: "project_package_download_failed" } };
-                  const blob = await response.blob();
-                  const url = URL.createObjectURL(blob);
-                  const anchor = document.createElement("a");
-                  anchor.href = url;
-                  anchor.download = fileName;
-                  document.body.appendChild(anchor);
-                  anchor.click();
-                  anchor.remove();
-                  URL.revokeObjectURL(url);
+                async function loadProjectPackages() {
+                  if (!state.projectId) {
+                    renderProjectPackages({ canCreatePackage: false, disabledReason: "project_not_selected", packages: [] });
+                    return;
+                  }
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/packages`);
+                    state.packageList = result;
+                    renderProjectPackages(result);
+                  } catch (error) {
+                    $("projectPackageStatus").className = "card muted";
+                    $("projectPackageStatus").textContent = "项目文件包列表暂不可用。";
+                  }
+                }
+
+                function renderProjectPackages(result) {
+                  const packages = result?.packages || [];
+                  const canCreate = !!result?.canCreatePackage && !isGlobalBusy();
+                  $("createProjectPackage").disabled = !canCreate;
+                  $("createProjectPackage").title = canCreate ? "" : projectPackageDisabledText(result?.disabledReason);
+                  $("openProjectDownloads").disabled = !state.projectId;
+                  $("openProjectDownloads").onclick = () => {
+                    if (state.projectId) window.open(`/downloads?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                  };
+                  if (!state.projectId) {
+                    $("projectPackageStatus").className = "card muted";
+                    $("projectPackageStatus").textContent = "选择项目后显示项目文件包。";
+                    return;
+                  }
+                  if (!result?.canCreatePackage && result?.disabledReason === "prototype_not_created") {
+                    $("projectPackageStatus").className = "card muted";
+                    $("projectPackageStatus").textContent = "尚未成功运行原型创建，暂不能打包项目文件。";
+                    return;
+                  }
+                  $("projectPackageStatus").className = "card";
+                  $("projectPackageStatus").innerHTML = packages.length
+                    ? `<strong>已生成 ${packages.length} 个项目文件包</strong><p class="muted">请进入下载页按版本号/时间戳下载。</p>${packages.slice(0, 3).map(renderPackageSummary).join("")}`
+                    : "<strong>还没有项目文件包。</strong><p class=\"muted\">点击“打包项目文件”后会生成一个版本化 zip。</p>";
+                }
+
+                function renderPackageSummary(item) {
+                  return `<p class="muted">${escapeHtml(item.version)} · ${escapeHtml(item.createdUtc || "")} · ${escapeHtml(item.fileName)}</p>`;
+                }
+
+                function projectPackageDisabledText(reason) {
+                  if (reason === "prototype_not_created") return "成功运行原型创建后才可以打包项目文件。";
+                  if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
+                  if (reason === "project_not_selected") return "请先选择一个项目。";
+                  return "暂不可打包项目文件。";
                 }
 
                 async function runPrototype() {
-                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) {
+                    showPrototypeNotice("请先选择一个项目。", "warn");
+                    return out("请先选择一个项目。");
+                  }
+                  const payload = buildPrototypePayload();
+                  const missing = missingPrototypeFields(payload);
+                  if (missing.length) {
+                    showPrototypeNotice(`缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型路线。`, "warn");
+                    return out({ status: "missing_required_fields", missingRequiredFields: missing });
+                  }
+                  showPrototypeNotice("正在提交原型创建请求，请不要重复点击。", "info");
+                  setLocalBusy(true, "原型创建中，请等待当前任务执行完毕。");
                   setPrototypeFormLocked(true);
                   try {
-                    const payload = {
-                      slug: $("protoSlug").value.trim(),
-                      hypothesis: $("hypothesis").value.trim(),
-                      corePlayerFantasy: $("corePlayerFantasy").value.trim(),
-                      minimumPlayableLoop: $("minimumPlayableLoop").value.trim(),
-                      successCriteria: $("successCriteria").value.split("\n").map(x => x.trim()).filter(Boolean),
-                      gameFeature: $("gameFeature").value.trim(),
-                      coreGameplayLoop: $("coreGameplayLoop").value.trim(),
-                      winFailConditions: $("winFailConditions").value.trim(),
-                      confirm: true,
-                      scoreEngine: "deterministic",
-                      model: $("globalModel").value
-                    };
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable`, { method: "POST", body: JSON.stringify(payload) });
                     out(result);
+                    showPrototypeNotice(`原型创建请求已提交，状态：${result.status || "queued"}。刷新页面可继续查看创建进度。`, "info");
                     await loadRuns();
                     await loadPrototypeProgress();
+                    setLocalBusy(false);
+                    await refreshActiveRun();
                   } catch (error) {
+                    setLocalBusy(false);
                     setPrototypeFormLocked(false);
+                    showPrototypeError(error);
                     showError(error);
                   }
                 }
 
+                function buildPrototypePayload() {
+                  return {
+                    slug: $("protoSlug").value.trim(),
+                    hypothesis: $("hypothesis").value.trim(),
+                    corePlayerFantasy: $("corePlayerFantasy").value.trim(),
+                    minimumPlayableLoop: $("minimumPlayableLoop").value.trim(),
+                    successCriteria: $("successCriteria").value.split("\n").map(x => x.trim()).filter(Boolean),
+                    gameFeature: $("gameFeature").value.trim(),
+                    coreGameplayLoop: $("coreGameplayLoop").value.trim(),
+                    winFailConditions: $("winFailConditions").value.trim(),
+                    confirm: true,
+                    scoreEngine: "deterministic",
+                    model: $("globalModel").value
+                  };
+                }
+
+                function missingPrototypeFields(payload) {
+                  const missing = [];
+                  if (!payload.slug) missing.push("slug");
+                  if (!payload.hypothesis) missing.push("hypothesis");
+                  if (!payload.corePlayerFantasy) missing.push("core_player_fantasy");
+                  if (!payload.minimumPlayableLoop) missing.push("minimum_playable_loop");
+                  if (!payload.successCriteria?.length) missing.push("success_criteria");
+                  if (!payload.gameFeature) missing.push("game_feature");
+                  if (!payload.coreGameplayLoop) missing.push("core_gameplay_loop");
+                  if (!payload.winFailConditions) missing.push("win_fail_conditions");
+                  return missing;
+                }
+
+                function prototypeFieldLabel(field) {
+                  return ({
+                    slug: "原型标识",
+                    hypothesis: "原型假设",
+                    core_player_fantasy: "核心玩家幻想",
+                    minimum_playable_loop: "最小可玩循环",
+                    success_criteria: "成功标准",
+                    game_feature: "游戏功能",
+                    core_gameplay_loop: "核心玩法循环",
+                    win_fail_conditions: "胜利/失败条件"
+                  })[field] || field;
+                }
+
+                function showPrototypeNotice(message, level = "info") {
+                  $("prototypeProgress").className = level === "warn" ? "card muted" : "card";
+                  $("prototypeProgress").innerHTML = `<strong>${escapeHtml(message)}</strong>`;
+                }
+
+                function showPrototypeError(error) {
+                  const payload = error?.payload || {};
+                  const missing = payload.missingRequiredFields || payload.MissingRequiredFields || [];
+                  const message = missing.length
+                    ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型路线。`
+                    : `原型创建请求失败：${payload.status || payload.error || payload.failureCode || error?.status || "unknown_error"}`;
+                  showPrototypeNotice(message, "warn");
+                }
+
 
                 async function repairPrototype() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, "原型修复中，请等待当前任务执行完毕。");
                   setPrototypeFormLocked(true);
                   $("repairPrototype").classList.add("hidden");
                   try {
@@ -693,7 +1101,10 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                     await loadPrototypeProgress();
+                    setLocalBusy(false);
+                    await refreshActiveRun();
                   } catch (error) {
+                    setLocalBusy(false);
                     setPrototypeFormLocked(false);
                     showError(error);
                   }
@@ -731,6 +1142,7 @@ public sealed class BrowserUiRenderer
 
                 function updateChatPanelVisibility(progress) {
                   const status = progress?.status || "idle";
+                  $("prototypeWorkflowPanel").classList.toggle("hidden", status === "succeeded");
                   $("chatPanel").classList.remove("hidden");
                   setFormalFeedbackAvailability(status === "succeeded");
                   if (status === "succeeded") {
@@ -742,30 +1154,49 @@ public sealed class BrowserUiRenderer
                   state.prototypeReadyForFeedback = canSubmit;
                   $("submitFormalFeedback").disabled = !canSubmit;
                   $("submitFormalFeedback").textContent = canSubmit ? "\u63d0\u4ea4\u53cd\u9988\u5e76\u7ee7\u7eed\u4f18\u5316\u539f\u578b" : "\u9700\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\u540e\u624d\u80fd\u63d0\u4ea4\u53cd\u9988";
+                  renderChatHistory();
                 }
 
                 function seedChatFromPrototypeProgress(progress) {
                   if (state.chatHistory.some(message => message.role === "assistant" && message.kind === "prototype-seed")) return;
-                  const terminalOutput = latestPrototypeTerminalOutput(progress?.runId);
+                  const seedContent = prototypeSeedMessage(progress);
                   state.chatHistory.unshift({
                     role: "assistant",
                     kind: "prototype-seed",
-                    content: terminalOutput || `7 步可玩原型已完成。当前 runId：${progress.runId || "未知"}。`
+                    content: seedContent,
+                    suggestedFeedback: state.nextSuggestedFeedback || defaultNextSuggestedFeedback()
                   });
                   renderChatHistory();
+                  saveChatHistoryForProject();
                 }
 
-                function latestPrototypeTerminalOutput(runId) {
-                  const run = state.runs.find(item => item.runId === runId) ||
-                    state.runs.find(item => item.runType === "prototype-7day-playable" && item.status === "succeeded");
-                  if (!run) return "";
-                  const text = String(run.stdoutText || run.stderrText || "").trim();
-                  if (!text) return "";
-                  return tailText(text, 6000);
+                function prototypeSeedMessage(progress) {
+                  const status = progress?.status || "succeeded";
+                  if (status === "succeeded") {
+                    const suggestion = defaultNextSuggestedFeedback();
+                    state.nextSuggestedFeedback = suggestion;
+                    setFormalFeedbackAvailability(true);
+                    return `原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“同意继续优化”，系统会把这条建议作为正式反馈提交给 Codex 继续实现。`;
+                  }
+                  if (status === "failed") {
+                    return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
+                  }
+                  return "原型流程已有进度。你可以继续说明目标或补充需求，我会按当前项目上下文协助梳理。";
                 }
 
-                function tailText(text, maxLength) {
-                  return text.length <= maxLength ? text : text.slice(text.length - maxLength);
+                function defaultNextSuggestedFeedback() {
+                  return "请继续优化这个半成品原型：优先检查首分钟体验、操作反馈、目标提示、胜负条件和基础手感；如果发现明显短板，请直接改进并在完成后给出新的下一步建议。";
+                }
+
+                function updateContinueSuggestionFromText(text) {
+                  const sanitized = sanitizePublicChatContent(text || "");
+                  const match = sanitized.match(/下一步建议[：:]\s*([\s\S]{1,800})/);
+                  state.nextSuggestedFeedback = match ? match[1].trim() : defaultNextSuggestedFeedback();
+                  const lastAssistant = state.chatHistory.filter(message => message.role === "assistant" && !message.pending).slice(-1)[0];
+                  if (lastAssistant && !lastAssistant.continueConsumed) {
+                    lastAssistant.suggestedFeedback = state.nextSuggestedFeedback;
+                  }
+                  setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
                 }
 
                 function isPrototypeCreationLocked(progress) {
@@ -775,14 +1206,16 @@ public sealed class BrowserUiRenderer
 
                 function setPrototypeFormLocked(locked) {
                   prototypeInputIds.forEach(id => $(id).disabled = locked);
-                  $("runPrototype").disabled = locked;
+                  $("runPrototype").disabled = locked || isGlobalBusy();
                   $("runPrototype").textContent = locked ? "原型创建中..刷新页面查阅创建进度." : "运行原型路线";
-                  $("repairPrototype").disabled = locked;
+                  $("repairPrototype").disabled = locked || isGlobalBusy();
                   $("repairPrototype").textContent = locked ? "原型修复中..刷新页面查阅修复进度." : "修复原型";
                 }
 
                 async function runTdd(stage) {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, "TDD 命令执行中，请等待当前任务执行完毕。");
                   try {
                     const payload = {
                       slug: $("tddSlug").value.trim(),
@@ -796,16 +1229,26 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                   } catch (error) { showError(error); }
+                  finally {
+                    setLocalBusy(false);
+                    await refreshActiveRun();
+                  }
                 }
 
                 async function createScene() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, "原型场景创建中，请等待当前任务执行完毕。");
                   try {
                     const payload = { slug: $("tddSlug").value.trim(), sceneRoot: $("sceneRoot").value.trim() || "Node2D" };
                     const result = await api(`/api/projects/${state.projectId}/prototype-scene`, { method: "POST", body: JSON.stringify(payload) });
                     out(result);
                     await loadRuns();
                   } catch (error) { showError(error); }
+                  finally {
+                    setLocalBusy(false);
+                    await refreshActiveRun();
+                  }
                 }
 
                 function showError(error) {
@@ -830,6 +1273,7 @@ public sealed class BrowserUiRenderer
                 };
                 $("refreshProjects").onclick = refreshProjects;
                 $("createProject").onclick = createProject;
+                $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
@@ -843,6 +1287,7 @@ public sealed class BrowserUiRenderer
                 document.querySelectorAll(".runTdd").forEach(button => button.onclick = () => runTdd(button.dataset.stage));
                 setTokenFromStorage();
                 if (token()) refreshProjects(); else showLoggedOut();
+                setInterval(refreshActiveRun, 5000);
               </script>
             </body>
             </html>
@@ -871,6 +1316,120 @@ public sealed class BrowserUiRenderer
             <ul>{artifactLinks}</ul>
             """;
         return WrapSimplePage($"Run {Encode(run.RunId)}", body);
+    }
+
+    public string RenderDownloads()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>项目文件下载</title>
+              <style>
+                :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --danger: #a2342f; }
+                body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
+                main { max-width: 64rem; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 1rem; }
+                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.06em; }
+                p { color: var(--muted); }
+                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
+                .package { display: grid; gap: 0.45rem; }
+                button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                button:disabled { cursor: not-allowed; opacity: 0.45; }
+                .danger { color: var(--danger); }
+                .muted { color: var(--muted); }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <h1>项目文件下载</h1>
+                  <p>按版本号/时间戳从近到远列出所有已打包的项目文件。压缩包只包含项目相关文件，不包含平台工程代码。</p>
+                </header>
+                <section id="status" class="card muted">正在读取项目文件包列表...</section>
+                <section id="packages" class="card"></section>
+              </main>
+              <script>
+                const params = new URLSearchParams(location.search);
+                const projectId = params.get("projectId") || "";
+                const token = () => localStorage.getItem("phaseAAdminToken") || "";
+                const $ = id => document.getElementById(id);
+                const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+                async function loadPackages() {
+                  if (!projectId) {
+                    $("status").textContent = "缺少 projectId。请从控制台打开下载页。";
+                    return;
+                  }
+                  if (!token()) {
+                    $("status").textContent = "当前浏览器没有 token。请先在控制台登录。";
+                    return;
+                  }
+                  const response = await fetch(`/api/projects/${projectId}/packages`, { headers: { "Authorization": `Bearer ${token()}` } });
+                  const payload = await response.json();
+                  if (!response.ok) {
+                    $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(payload.error || "unknown_error")}</span>`;
+                    return;
+                  }
+                  $("status").textContent = payload.canCreatePackage ? "可以继续生成新的项目文件包。" : disabledText(payload.disabledReason);
+                  $("packages").innerHTML = (payload.packages || []).map(item => `
+                    <article class="package card">
+                      <strong>${escapeHtml(item.version)}</strong>
+                      <span class="muted">${escapeHtml(item.createdUtc || "未知时间")} · ${escapeHtml(item.fileName)} · ${item.sizeBytes} bytes</span>
+                      <button data-download-url="${escapeHtml(item.downloadUrl)}" data-file-name="${escapeHtml(item.fileName)}">下载此版本</button>
+                    </article>
+                  `).join("") || "<p class='muted'>还没有已打包的项目文件。</p>";
+                  document.querySelectorAll("[data-download-url]").forEach(button => {
+                    button.onclick = () => downloadPackage(button, button.dataset.downloadUrl, button.dataset.fileName);
+                  });
+                }
+                function disabledText(reason) {
+                  if (reason === "prototype_not_created") return "尚未成功运行原型创建，暂不能打包项目文件。";
+                  if (reason === "project_busy") return "项目有后台任务正在执行。";
+                  return "当前暂不能生成新的项目文件包。";
+                }
+                async function downloadPackage(button, downloadUrl, fileName) {
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "下载准备中...";
+                  $("status").textContent = "正在准备项目文件下载，请稍等。";
+                  try {
+                    const ticketUrl = `/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(fileName)}/download-ticket`;
+                    const response = await fetch(ticketUrl, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, cache: "no-store" });
+                    if (!response.ok) {
+                      let detail = "unknown_error";
+                      try {
+                        const payload = await response.json();
+                        detail = payload.error || payload.status || detail;
+                      } catch {}
+                      $("status").innerHTML = `<span class="danger">下载失败：${escapeHtml(detail)}</span>`;
+                      return;
+                    }
+                    const payload = await response.json();
+                    if (!payload.downloadUrl) {
+                      $("status").innerHTML = "<span class='danger'>下载失败：没有获得下载链接。</span>";
+                      return;
+                    }
+                    const anchor = document.createElement("a");
+                    anchor.href = payload.downloadUrl;
+                    anchor.download = fileName || "project-package.zip";
+                    anchor.style.display = "none";
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    $("status").textContent = "下载已提交给浏览器。如果没有看到下载，请检查浏览器下载拦截或下载目录。";
+                  } catch {
+                    $("status").innerHTML = "<span class='danger'>下载失败：浏览器未能读取项目文件。</span>";
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
+                }
+                loadPackages();
+              </script>
+            </body>
+            </html>
+            """;
     }
 
     private static string WrapSimplePage(string title, string body)

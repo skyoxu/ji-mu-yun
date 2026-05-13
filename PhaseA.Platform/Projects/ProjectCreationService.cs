@@ -115,7 +115,9 @@ public sealed class ProjectCreationService
             return ProjectDeletionResult.Failure("project_not_found");
         }
 
-        if (project.BootstrapStatus == "running" || await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken))
+        if (project.BootstrapStatus == "running" ||
+            await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
+            await _metadataStore.HasActiveRunAsync(projectId, cancellationToken))
         {
             return ProjectDeletionResult.Failure("project_busy");
         }

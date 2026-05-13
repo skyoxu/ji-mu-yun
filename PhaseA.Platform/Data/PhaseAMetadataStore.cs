@@ -428,6 +428,19 @@ public sealed class PhaseAMetadataStore
         return count > 0;
     }
 
+    public async Task<bool> HasActiveRunAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var count = await ExecuteScalarLongAsync(
+            connection,
+            "SELECT COUNT(*) FROM runs WHERE project_id = $project_id AND status IN ('queued', 'running');",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+        return count > 0;
+    }
+
     public async Task DeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
@@ -789,6 +802,67 @@ public sealed class PhaseAMetadataStore
         return runs;
     }
 
+    public async Task<RunSnapshot?> GetActiveRunForAccountAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                r.id,
+                r.project_id,
+                r.workspace_id,
+                r.run_type,
+                r.status,
+                r.exit_code,
+                r.stdout_text,
+                r.stderr_text,
+                r.evidence_json,
+                r.progress_step,
+                r.progress_substep,
+                r.progress_label,
+                r.progress_updated_utc,
+                r.llm_gateway,
+                r.llm_request_id,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            WHERE p.account_id = $account_id
+              AND r.status IN ('queued', 'running')
+            ORDER BY r.created_utc DESC, r.id DESC
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new RunSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.IsDBNull(2) ? null : reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.IsDBNull(5) ? null : reader.GetInt32(5),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.IsDBNull(7) ? null : reader.GetString(7),
+            reader.IsDBNull(8) ? null : reader.GetString(8),
+            reader.GetString(9),
+            reader.GetString(10),
+            reader.GetString(11),
+            reader.IsDBNull(12) ? null : reader.GetString(12),
+            reader.IsDBNull(13) ? null : reader.GetString(13),
+            reader.IsDBNull(14) ? null : reader.GetString(14),
+            reader.IsDBNull(15) ? null : reader.GetString(15),
+            reader.IsDBNull(16) ? null : reader.GetString(16));
+    }
+
     public async Task RecordRunLlmAuditAsync(
         string runId,
         string llmGateway,
@@ -953,6 +1027,118 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$project_id", projectId);
         command.Parameters.AddWithValue("$run_id", runId);
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectChatMessageSnapshot>> ListProjectChatMessagesAsync(
+        string accountId,
+        string projectId,
+        int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        limit = Math.Clamp(limit, 1, 100);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, account_id, project_id, role, content, kind, created_utc
+            FROM (
+                SELECT id, account_id, project_id, role, content, kind, created_utc
+                FROM project_chat_messages
+                WHERE account_id = $account_id
+                  AND project_id = $project_id
+                ORDER BY created_utc DESC
+                LIMIT $limit
+            )
+            ORDER BY created_utc ASC;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$limit", limit);
+
+        var messages = new List<ProjectChatMessageSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            messages.Add(new ProjectChatMessageSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.GetString(6)));
+        }
+
+        return messages;
+    }
+
+    public async Task AddProjectChatMessageAsync(
+        string accountId,
+        string projectId,
+        string role,
+        string content,
+        string? kind = null,
+        int retainLatest = 50,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        ArgumentException.ThrowIfNullOrWhiteSpace(content);
+        retainLatest = Math.Clamp(retainLatest, 1, 100);
+
+        if (role is not ("user" or "assistant"))
+        {
+            throw new ArgumentOutOfRangeException(nameof(role), "Chat role must be user or assistant.");
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = (SqliteTransaction)transaction;
+            command.CommandText =
+                """
+                INSERT INTO project_chat_messages (id, account_id, project_id, role, content, kind, created_utc)
+                VALUES ($id, $account_id, $project_id, $role, $content, $kind, $created_utc);
+                """;
+            command.Parameters.AddWithValue("$id", NewId());
+            command.Parameters.AddWithValue("$account_id", accountId);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$role", role);
+            command.Parameters.AddWithValue("$content", content);
+            command.Parameters.AddWithValue("$kind", (object?)kind ?? DBNull.Value);
+            command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = (SqliteTransaction)transaction;
+            command.CommandText =
+                """
+                DELETE FROM project_chat_messages
+                WHERE account_id = $account_id
+                  AND project_id = $project_id
+                  AND id NOT IN (
+                    SELECT id
+                    FROM project_chat_messages
+                    WHERE account_id = $account_id
+                      AND project_id = $project_id
+                    ORDER BY created_utc DESC
+                    LIMIT $retain_latest
+                  );
+                """;
+            command.Parameters.AddWithValue("$account_id", accountId);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$retain_latest", retainLatest);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private async Task<int> GetProjectLimitInsideTransactionAsync(SqliteConnection connection, string accountId, CancellationToken cancellationToken)

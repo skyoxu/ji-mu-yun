@@ -120,7 +120,8 @@ public sealed class ChatService
         var completion = await _chatClient.CompleteAsync(binding, token, model, messages, cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var exitCode = completion.Succeeded ? 0 : 1;
-        var stdout = completion.AssistantMessage ?? "";
+        var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
+        var stdout = sanitizedAssistantMessage ?? "";
         var stderr = completion.RawError ?? completion.FailureCode ?? "";
         var evidenceJson = JsonSerializer.Serialize(new
         {
@@ -140,7 +141,7 @@ public sealed class ChatService
             LlmStopLossService.BuildCostJson(estimate, stopLoss),
             cancellationToken);
 
-        return new ChatResult(runId, status, exitCode, completion.AssistantMessage, completion.FailureCode, model);
+        return new ChatResult(runId, status, exitCode, sanitizedAssistantMessage, completion.FailureCode, model);
     }
 
     private async Task<ChatResult> CompleteWithCodexAsync(
@@ -157,7 +158,8 @@ public sealed class ChatService
         var prompt = BuildCodexPrompt(project, request, skillAction);
         var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
-        var stdout = completion.AssistantMessage ?? completion.Stdout;
+        var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
+        var stdout = sanitizedAssistantMessage ?? "";
         var stderr = completion.Succeeded ? completion.Stderr : completion.Stderr + completion.Stdout;
         var evidenceJson = JsonSerializer.Serialize(new
         {
@@ -185,7 +187,7 @@ public sealed class ChatService
             }),
             cancellationToken);
 
-        return new ChatResult(runId, status, completion.ExitCode, completion.AssistantMessage, completion.FailureCode, model);
+        return new ChatResult(runId, status, completion.ExitCode, sanitizedAssistantMessage, completion.FailureCode, model);
     }
 
     private async Task<ChatResult> CompleteDeterministicAsync(
@@ -197,7 +199,7 @@ public sealed class ChatService
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
-        var reply = BuildDeterministicReply(request.Message!.Trim());
+        var reply = PublicChatSanitizer.Sanitize(BuildDeterministicReply(request.Message!.Trim()));
         var evidenceJson = JsonSerializer.Serialize(new
         {
             run_type = RunType,
@@ -303,26 +305,26 @@ public sealed class ChatService
             : $"能力模式：{skillAction.Label}。请按白名单 skill ${skillAction.SkillName} 的职责与语气回答，但保持只读建议，不要声称已经修改文件或执行命令。";
 
         return $"""
-            你是积木云 Phase A 浏览器自由对话助手，运行在服务器本机 Codex CLI 中。
-            请使用中文回答。
-            {skillInstruction}
+            请直接回答这个网页聊天用户的问题：{request.Message!.Trim()}
 
-            当前项目：
+            输出必须就是要显示给用户看的最终回答。
+            不要写“可以这样回复”“建议这样回复”“如果你想更像网页聊天”等元话术。
+            不要回复“已读取仓库指引/约束”，不要总结 AGENTS.md，不要确认你会遵守规则，不要输出开场白。
+            不得暴露任何本机路径、项目路径、脚本名、文件名、命令行、工具调用、环境变量名或内部日志位置。
+            这是聊天答复，不是仓库执行任务；除非用户明确要求读取项目文件，否则不要读取仓库、不要运行命令、不要声称已经修改文件。
+            如果用户消息过短或含糊，请用一句话询问他想做什么，并给出 2-3 个可选方向。
+            请使用中文，回答要短而具体。
+
+            当前项目上下文仅供理解，不要主动复述：
             - project_id: {project.ProjectId}
             - project_name: {project.Name}
             - game_name: {project.GameName}
             - workspace_id: {project.WorkspaceId}
 
-            安全边界：
-            - 当前通过网页聊天调用，只允许给出建议、解释、拆解需求、指导用户使用 Phase A 控制台。
-            - 不要声称你已经执行了服务器命令或修改了文件。
-            - 如果用户需要执行工作流，请让用户使用页面上的固定按钮，或说明需要走“提交反馈并继续优化原型”。
+            {skillInstruction}
 
-            对话历史：
+            最近对话历史仅供语义参考，不要回答历史里的旧问题：
             {history}
-
-            用户消息：
-            {request.Message!.Trim()}
             """;
     }
 
@@ -332,7 +334,7 @@ public sealed class ChatService
         {
             new(
                 "system",
-                "You are the Phase A prototype assistant for Ji Mu Yun. Reply in Chinese. Help the user clarify requirements, prototype ideas, and console usage. Do not claim that you can execute server commands from chat. If execution is needed, tell the user to use the fixed workflow buttons or ask for a confirmed workflow feature.")
+                "You are the Phase A prototype assistant for Ji Mu Yun. Reply in Chinese. Help the user clarify requirements, prototype ideas, and console usage. Do not claim that you can execute server commands from chat. Never reveal local paths, project paths, script names, file names, command lines, tool calls, environment variable names, or internal log locations. If execution is needed, tell the user to use the fixed workflow buttons or ask for a confirmed workflow feature.")
         };
 
         foreach (var message in (request.History ?? []).TakeLast(MaxHistoryMessages))
@@ -347,4 +349,5 @@ public sealed class ChatService
         messages.Add(new ChatMessage("user", request.Message!.Trim()));
         return messages;
     }
+
 }

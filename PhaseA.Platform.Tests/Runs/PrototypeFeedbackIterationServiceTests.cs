@@ -30,8 +30,9 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var project = await store.GetProjectSnapshotAsync(projectId);
 
         result.Status.Should().Be("completed");
-        result.AssistantMessage.Should().Contain("本轮正式反馈已由 Codex 执行并记录");
+        result.AssistantMessage.Should().Contain("本轮继续优化已完成");
         result.AssistantMessage.Should().Contain("Codex changed prototype.");
+        result.AssistantMessage.Should().Contain("下一步建议");
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
         runner.Commands[0].Arguments.Should().Contain(["-c", "model_reasoning_effort=\"high\""]);

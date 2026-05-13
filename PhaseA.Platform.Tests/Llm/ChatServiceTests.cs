@@ -132,9 +132,40 @@ public sealed class ChatServiceTests
         result.Model.Should().Be("gpt-5.4-mini");
         codex.LastModel.Should().Be("gpt-5.4-mini");
         codex.LastPrompt.Should().Contain("hello codex");
+        codex.LastPrompt.Should().Contain("请直接回答这个网页聊天用户的问题：hello codex");
+        codex.LastPrompt.Should().Contain("输出必须就是要显示给用户看的最终回答");
+        codex.LastPrompt.Should().Contain("不要写“可以这样回复”");
+        codex.LastPrompt.Should().Contain("不要回复“已读取仓库指引/约束”");
+        codex.LastPrompt.Should().Contain("不得暴露任何本机路径、项目路径、脚本名、文件名、命令行");
+        codex.LastPrompt.Should().Contain("这是聊天答复，不是仓库执行任务");
+        codex.LastPrompt.Should().NotContain("你是积木云 Phase A 浏览器自由对话助手");
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.LlmGateway.Should().Be("codex-cli");
         run.LlmModel.Should().Be("gpt-5.4-mini");
+    }
+
+    [Fact]
+    public async Task SendAsync_RedactsSensitivePathsScriptsAndCommands_FromCodexReply()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var binding = new LlmBindingService(store, options);
+        var codex = new FakeCodexChatClient(
+            "请查看 C:\\jimuyun\\secret\\repo\\scripts\\python\\dev_cli.py，然后运行 dotnet test PhaseA.Platform.Tests\\PhaseA.Platform.Tests.csproj --no-restore。");
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+
+        var result = await service.SendAsync(projectId, new ChatRequest("怎么验证？", "gpt-5.4"));
+
+        result.AssistantMessage.Should().NotContain("C:\\");
+        result.AssistantMessage.Should().NotContain("dev_cli.py");
+        result.AssistantMessage.Should().NotContain("dotnet test");
+        result.AssistantMessage.Should().NotContain("[已隐藏]");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.StdoutText.Should().Be(result.AssistantMessage);
     }
 
     [Fact]

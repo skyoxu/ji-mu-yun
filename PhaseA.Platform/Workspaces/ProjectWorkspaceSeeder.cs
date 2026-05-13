@@ -9,6 +9,8 @@ public interface IProjectWorkspaceSeeder
 
 public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 {
+    private const FileAttributes ReparsePointAttribute = (FileAttributes)0x400;
+
     private static readonly string[] ExcludedDirectoryNames =
     [
         ".git",
@@ -76,6 +78,11 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
     private static bool ShouldSkipDirectory(string name, string fullPath)
     {
+        if (IsReparsePoint(fullPath))
+        {
+            return true;
+        }
+
         if (ExcludedDirectoryNames.Contains(name, StringComparer.OrdinalIgnoreCase))
         {
             return true;
@@ -92,5 +99,10 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
                name.Equals("phase-a-platform.sqlite3", StringComparison.OrdinalIgnoreCase) ||
                name.Equals("phase-a-platform.sqlite3-shm", StringComparison.OrdinalIgnoreCase) ||
                name.Equals("phase-a-platform.sqlite3-wal", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsReparsePoint(string fullPath)
+    {
+        return (File.GetAttributes(fullPath) & ReparsePointAttribute) != 0;
     }
 }

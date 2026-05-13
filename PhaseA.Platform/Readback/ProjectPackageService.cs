@@ -91,9 +91,14 @@ public sealed class ProjectPackageService
 
         if (project.BootstrapStatus == "running" ||
             await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
-            await HasActiveRunAsync(project.ProjectId, cancellationToken))
+            await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken))
         {
             return Failure(projectId, "project_busy");
+        }
+
+        if (!await HasSucceededPrototypeRunAsync(project.ProjectId, cancellationToken))
+        {
+            return Failure(projectId, "prototype_not_created");
         }
 
         var projectRoot = Path.GetFullPath(project.RepoPath);
@@ -121,6 +126,7 @@ public sealed class ProjectPackageService
 
             var includedFileCount = CreateZip(projectRoot, packagePath, project, version);
             var sizeBytes = new FileInfo(packagePath).Length;
+            var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
             await _metadataStore.AddArtifactAsync(
                 new ArtifactCreationCommand(
                     runId,
@@ -134,6 +140,7 @@ public sealed class ProjectPackageService
             {
                 run_type = RunType,
                 version,
+                generated_utc = generatedUtc,
                 file_name = fileName,
                 relative_path = relativePath,
                 size_bytes = sizeBytes,
@@ -161,6 +168,70 @@ public sealed class ProjectPackageService
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), "{}", CancellationToken.None);
             return new ProjectPackageResult(projectId, runId, "failed", "", "", "", "", 0, 0, [], "package_failed");
         }
+    }
+
+    public async Task<ProjectPackageListResult?> ListPackagesAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var projectRoot = Path.GetFullPath(project.RepoPath);
+        if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
+        {
+            throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
+        }
+
+        var hasPrototype = await HasSucceededPrototypeRunAsync(project.ProjectId, cancellationToken);
+        var isBusy = project.BootstrapStatus == "running" ||
+                     await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
+                     await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken);
+        var disabledReason = !hasPrototype
+            ? "prototype_not_created"
+            : isBusy
+                ? "project_busy"
+                : null;
+
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        var packages = new List<ProjectPackageListItem>();
+        foreach (var run in runs.Where(run => run.RunType == RunType && run.Status == "succeeded"))
+        {
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken);
+            foreach (var artifact in artifacts.Where(artifact => artifact.ArtifactType == PackageArtifactType))
+            {
+                var fileName = Path.GetFileName(artifact.RelativePath);
+                var packagePath = ResolveUnderProject(projectRoot, artifact.RelativePath);
+                if (!File.Exists(packagePath))
+                {
+                    continue;
+                }
+
+                packages.Add(new ProjectPackageListItem(
+                    ExtractVersion(fileName),
+                    fileName,
+                    artifact.RelativePath,
+                    $"/projects/{project.ProjectId}/packages/{Uri.EscapeDataString(fileName)}",
+                    new FileInfo(packagePath).Length,
+                    ReadGeneratedUtc(run.EvidenceJson)));
+            }
+        }
+
+        return new ProjectPackageListResult(
+            project.ProjectId,
+            hasPrototype && !isBusy,
+            disabledReason,
+            packages
+                .OrderByDescending(package => package.CreatedUtc, StringComparer.Ordinal)
+                .ThenByDescending(package => package.Version, StringComparer.Ordinal)
+                .ToArray());
     }
 
     public async Task<ProjectPackageReadResult?> ReadPackageAsync(
@@ -202,10 +273,10 @@ public sealed class ProjectPackageService
         return runs.Count(run => run.RunType == RunType && run.Status == "succeeded") + 1;
     }
 
-    private async Task<bool> HasActiveRunAsync(string projectId, CancellationToken cancellationToken)
+    private async Task<bool> HasSucceededPrototypeRunAsync(string projectId, CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(projectId, cancellationToken);
-        return runs.Any(run => run.Status is "queued" or "running");
+        return runs.Any(run => run.RunType == "prototype-7day-playable" && run.Status == "succeeded");
     }
 
     private static int CreateZip(string projectRoot, string packagePath, ProjectSnapshot project, string version)
@@ -305,6 +376,34 @@ public sealed class ProjectPackageService
     private static string CreateVersion(int ordinal)
     {
         return $"v0.1.{DateTimeOffset.UtcNow:yyyyMMdd}.{ordinal:000}";
+    }
+
+    private static string ExtractVersion(string fileName)
+    {
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        var marker = "-v0.1.";
+        var index = name.LastIndexOf(marker, StringComparison.Ordinal);
+        return index < 0 ? name : name[(index + 1)..];
+    }
+
+    private static string ReadGeneratedUtc(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return "";
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(evidenceJson);
+            return doc.RootElement.TryGetProperty("generated_utc", out var generatedUtc)
+                ? generatedUtc.GetString() ?? ""
+                : "";
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
     }
 
     private static string SafeFileName(string value)
