@@ -9,6 +9,21 @@ DEFAULT_GATE_BUNDLE_TASK_FILES = [
     ".taskmaster/tasks/tasks_gameplay.json",
 ]
 
+_PROTOTYPE_TDD_PLACEHOLDERS = {
+    "TODO: describe the prototype hypothesis.",
+    "TODO: describe what the player should feel or understand in the first minute.",
+    "TODO: describe the smallest end-to-end loop the player must complete.",
+    "TODO: describe the gameplay uniqueness.",
+    "TODO: describe the repeated gameplay loop.",
+    "TODO: define win and fail conditions.",
+    "Decide discard | archive | promote after the prototype result is clear.",
+}
+
+
+def _is_meaningful_prototype_tdd_value(value: str) -> bool:
+    text = str(value or "").strip()
+    return bool(text) and text not in _PROTOTYPE_TDD_PLACEHOLDERS
+
 
 def build_gate_bundle_hard_cmd(
     *,
@@ -338,17 +353,17 @@ def build_run_prototype_tdd_cmd(args) -> list[str]:
         cmd += ["--owner", args.owner]
     for item in args.related_task_id:
         cmd += ["--related-task-id", item]
-    if args.hypothesis:
+    if _is_meaningful_prototype_tdd_value(args.hypothesis):
         cmd += ["--hypothesis", args.hypothesis]
-    if args.core_player_fantasy:
+    if _is_meaningful_prototype_tdd_value(args.core_player_fantasy):
         cmd += ["--core-player-fantasy", args.core_player_fantasy]
-    if args.minimum_playable_loop:
+    if _is_meaningful_prototype_tdd_value(args.minimum_playable_loop):
         cmd += ["--minimum-playable-loop", args.minimum_playable_loop]
-    if args.game_feature:
+    if _is_meaningful_prototype_tdd_value(args.game_feature):
         cmd += ["--game-feature", args.game_feature]
-    if args.core_gameplay_loop:
+    if _is_meaningful_prototype_tdd_value(args.core_gameplay_loop):
         cmd += ["--core-gameplay-loop", args.core_gameplay_loop]
-    if args.win_fail_conditions:
+    if _is_meaningful_prototype_tdd_value(args.win_fail_conditions):
         cmd += ["--win-fail-conditions", args.win_fail_conditions]
     if args.game_type_specific_game_type:
         cmd += ["--game-type-specific-game-type", args.game_type_specific_game_type]
@@ -380,7 +395,7 @@ def build_run_prototype_tdd_cmd(args) -> list[str]:
         cmd += ["--success-criteria", item]
     for item in args.evidence:
         cmd += ["--evidence", item]
-    if args.next_step:
+    if _is_meaningful_prototype_tdd_value(args.next_step):
         cmd += ["--next-step", args.next_step]
     if args.create_record_only:
         cmd.append("--create-record-only")

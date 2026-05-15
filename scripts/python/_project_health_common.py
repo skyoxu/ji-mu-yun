@@ -2074,6 +2074,12 @@ def build_project_overview(root: Path) -> dict[str, Any]:
     spec_core = latest_spec.get("prototype_core") if isinstance(latest_spec.get("prototype_core"), dict) else {}
     spec_specifics = latest_spec.get("game_type_specifics") if isinstance(latest_spec.get("game_type_specifics"), dict) else {}
     spec_type_kit = latest_spec.get("prototype_type_kit") if isinstance(latest_spec.get("prototype_type_kit"), dict) else {}
+    overview_type_kit = dict(spec_type_kit or _extract_prototype_type_kit(root, documents["prototype"]))
+    overview_type_kit.setdefault("game_type", "")
+    overview_type_kit.setdefault("kit_path", "")
+    overview_type_kit.setdefault("manifest_path", "")
+    if not isinstance(overview_type_kit.get("manifest"), dict):
+        overview_type_kit["manifest"] = {}
     return {
         "game_name": metadata["game_name"] or str(latest_spec.get("game_name") or ""),
         "game_type": metadata["game_type"] or str(latest_spec.get("game_type") or ""),
@@ -2084,7 +2090,7 @@ def build_project_overview(root: Path) -> dict[str, Any]:
             "win_fail_conditions": str(spec_core.get("win_fail_conditions") or _extract_prototype_core(root, documents["prototype"]).get("win_fail_conditions") or ""),
         },
         "game_type_specifics": spec_specifics or _extract_game_type_specifics(root, documents["prototype"]),
-        "prototype_type_kit": spec_type_kit or _extract_prototype_type_kit(root, documents["prototype"]),
+        "prototype_type_kit": overview_type_kit,
         "prototype_blueprint": _prototype_blueprint_from_spec(latest_spec) if latest_spec else {
             "prototype_spec": "",
             "prototype_file": "",

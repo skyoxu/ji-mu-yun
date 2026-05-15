@@ -7,4 +7,12 @@ public sealed record PrototypeWorkflowProgress(
     string Label,
     string? UpdatedUtc,
     string? RunId,
-    string? Failure);
+    string? Failure,
+    string? CompletionSummary = null,
+    string? DefaultScene = null,
+    string? DefaultSceneLabel = null,
+    int? TddSummaryCount = null,
+    int? TddRedCount = null,
+    int? TddGreenCount = null,
+    int? TddRefactorCount = null,
+    IReadOnlyList<string>? PlaytestFocusPoints = null);

@@ -33,6 +33,7 @@ builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>()
 builder.Services.AddSingleton<ProjectCreationService>();
 builder.Services.AddSingleton<ProjectDraftImportService>();
 builder.Services.AddSingleton<ProjectInitializationService>();
+builder.Services.AddHostedService<ProjectInitializationRecoveryService>();
 builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
@@ -61,7 +62,21 @@ builder.Services.AddSingleton<BrowserUiRenderer>();
 var app = builder.Build();
 var metadataStore = app.Services.GetRequiredService<PhaseAMetadataStore>();
 var adminAccountId = await metadataStore.EnsureSingleAdminAsync();
+var initializationService = app.Services.GetRequiredService<ProjectInitializationService>();
+await initializationService.ReconcileInterruptedInitializationsAsync();
+var interruptedRunCount = await metadataStore.ReconcileInterruptedRunsAsync(
+    "Run was interrupted because the service restarted before completion.");
 await metadataStore.ReconcileProjectBootstrapStatusAsync();
+await initializationService.ReconcileStaleInitializationsAsync();
+var workspaceSeeder = app.Services.GetRequiredService<IProjectWorkspaceSeeder>();
+foreach (var project in await metadataStore.ListProjectSnapshotsAsync())
+{
+    workspaceSeeder.EnsureSeeded(project.RepoPath);
+}
+if (interruptedRunCount > 0)
+{
+    app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
+}
 
 app.Use(async (context, next) =>
 {
@@ -464,6 +479,15 @@ app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
     {
         return Results.NotFound(new { error = ex.Message });
     }
+});
+
+app.MapGet("/api/projects/{projectId}/prototype-drafts/latest", async (
+    string projectId,
+    [FromServices] ProjectDraftImportService draftImport,
+    CancellationToken cancellationToken) =>
+{
+    var result = await draftImport.GetLatestAsync(adminAccountId, projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "prototype_draft_not_found" }) : Results.Ok(result);
 });
 
 app.MapDelete("/api/projects/{projectId}", async (

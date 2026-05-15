@@ -782,7 +782,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_proto_workflow.add_argument("--set", action="append", default=[])
     p_proto_workflow.add_argument("--confirm", action="store_true")
     p_proto_workflow.add_argument("--godot-bin", default="")
-    p_proto_workflow.add_argument("--stop-after-day", type=int, default=5, choices=[1, 2, 3, 4, 5])
+    p_proto_workflow.add_argument("--stop-after-day", type=int, default=7, choices=[1, 2, 3, 4, 5, 6, 7])
     p_proto_workflow.add_argument("--resume-active", default="")
     p_proto_workflow.add_argument("--score-engine", default="deterministic", choices=["deterministic", "codex", "hybrid"])
     p_proto_workflow.add_argument("--score-timeout-sec", type=int, default=180)

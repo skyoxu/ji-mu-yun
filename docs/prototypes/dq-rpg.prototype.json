@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "kind": "prototype-spec",
+  "slug": "dq-rpg",
+  "status": "active",
+  "date": "2026-05-15",
+  "game_name": "",
+  "game_type": "rpg",
+  "game_type_source": "",
+  "game_type_guide": "docs/game-type-guides/rpg.md",
+  "game_type_specifics": {
+    "game_type": "rpg",
+    "guide_path": "docs/game-type-guides/rpg.md",
+    "selected_sections": [
+      {
+        "id": "character_system",
+        "title": "Character System",
+        "prompt": "Stats (Strength, Dexterity, Intelligence, etc.); Classes/roles; Leveling system; Skill trees",
+        "answer": "Single playable hero with only core combat stats for the prototype: HP and attack. No class split, no leveling tree, no long-term progression."
+      },
+      {
+        "id": "world_and_exploration",
+        "title": "World and Exploration",
+        "prompt": "Map structure (open world, hub-based, linear); Towns and safe zones; Dungeons and combat zones; Fast travel system",
+        "answer": "One compact map scene for short exploration with movement, encounter trigger, and clear return flow after battle."
+      },
+      {
+        "id": "combat_system",
+        "title": "Combat System",
+        "prompt": "Combat style (real-time, turn-based, tactical); Ability system; Magic/skill system; Status effects",
+        "answer": "Small-scale RPG combat loop with direct damage exchange, visible HP changes, and explicit win or fail resolution."
+      }
+    ],
+    "needs_narrative": false
+  },
+  "prototype_file": "docs/prototypes/2026-05-15-dq-rpg.md",
+  "prototype_spec": "docs/prototypes/dq-rpg.prototype.json",
+  "prototype_type_kit": {
+    "game_type": "rpg",
+    "kit_path": "docs/prototype-type-kits/rpg.md",
+    "manifest_path": "docs/prototype-type-kits/default-rpg-template.manifest.json",
+    "gameplay_flow": [
+      {
+        "id": "gameplay_flow_1",
+        "question": "使用随机遇怪、地图撞怪，还是二者都支持？",
+        "answer": "Support both map collision encounter and light random encounter hints, with map collision as the main visible trigger."
+      },
+      {
+        "id": "gameplay_flow_2",
+        "question": "战斗是回合制指令，还是即时碰撞/自动战斗？",
+        "answer": "Use a simple turn-based combat command flow with at least Attack as the primary action."
+      },
+      {
+        "id": "gameplay_flow_3",
+        "question": "胜利后回到地图，还是进入结算后结束 prototype？",
+        "answer": "After victory, return to the map so the player can immediately feel the loop is connected."
+      },
+      {
+        "id": "gameplay_flow_4",
+        "question": "玩家失败后是直接 Game Over、Retry 当前战斗，还是回到地图？",
+        "answer": "After failure, allow retry so the prototype can be validated quickly without restarting the whole project."
+      },
+      {
+        "id": "gameplay_flow_5",
+        "question": "是否需要战后奖励或肉鸽三选一来验证流派感？",
+        "answer": "Skip post-battle roguelike reward for the minimum version unless later iteration specifically asks for it."
+      }
+    ],
+    "prototype_scene_ui": [
+      {
+        "id": "prototype_scene_ui_1",
+        "question": "战斗场景需要哪些 UI：HP、指令按钮、战斗日志、技能栏？",
+        "answer": "Battle scene should show player HP, enemy HP, one Attack action, and a short battle log."
+      },
+      {
+        "id": "prototype_scene_ui_2",
+        "question": "地图场景需要哪些 UI：HP、任务提示、小地图、遇怪提示？",
+        "answer": "Map scene should show player HP, movement hint, and a clear encounter or objective hint."
+      },
+      {
+        "id": "prototype_scene_ui_3",
+        "question": "失败后是直接 Game Over，还是允许 Retry？",
+        "answer": "Failure should offer Retry directly."
+      },
+      {
+        "id": "prototype_scene_ui_4",
+        "question": "结算 UI 需要哪些按钮：Continue、Retry、Back to Map、End Prototype？",
+        "answer": "Result UI should provide Continue or Back to Map, plus Retry on failure."
+      },
+      {
+        "id": "prototype_scene_ui_5",
+        "question": "是否需要保留调试 UI 帮助快速验证 prototype？",
+        "answer": "Keep a small debug text area visible if it helps verify encounter and battle state quickly."
+      }
+    ],
+    "default_route": [
+      "遇敌方式：地图撞怪更直观；随机遇怪更接近传统 RPG。如果时间允许，二者都可支持。",
+      "战斗方式：默认回合制指令；如果想验证被动流派或肉鸽构筑，可用自动战斗。",
+      "地图规模：一个小房间、一条短路径或 12x12 网格即可。",
+      "怪物数量：最小版 1 个；增强版可用小怪 -> 精英 -> boss 短流程。",
+      "属性：最小版只需 HP / Attack；增强版可加 Defense / Crit / Passive。"
+    ],
+    "default_ui": [
+      "Player HP：显示玩家当前 HP。",
+      "Input Hint：显示 `WASD Move` 或中文操作提示。",
+      "Quest / Goal Hint：显示极简目标，如「找到敌人」或「击败 boss」。",
+      "Encounter Hint / Progress：显示遇敌状态、遇敌概率或接近敌人提示。",
+      "Optional Reward Hint：如果有肉鸽奖励或宝箱，显示奖励触发信息。",
+      "Optional Debug Text：可显示坐标、当前格子、遇敌状态，只用于 prototype 调试。",
+      "Player HP / Enemy HP：必须可见。",
+      "Actor Presentation：至少有玩家和敌人的代替形象或 sprite。",
+      "Command Panel：如果是指令战斗，至少包含 `Attack`。",
+      "Auto Battle State：如果是自动战斗，显示当前回合、战斗演算状态和关键被动触发。",
+      "Battle Log：显示最近行动反馈。",
+      "Result Panel：显示 Victory / Defeat / Game Over。",
+      "Continue / Retry / End Prototype：结算后至少有一个明确下一步操作。"
+    ],
+    "manifest": {
+      "schema_version": 1,
+      "game_type": "rpg",
+      "slug": "default-rpg-template",
+      "label": "Default RPG Template",
+      "description": "Neutral reusable RPG prototype template metadata for the repo-local prototype lane.",
+      "paths": {
+        "asset_pack_root": "Game.Godot/Prototypes/DefaultRpgTemplate/Assets/",
+        "scene_template_root": "Game.Godot/Prototypes/DefaultRpgTemplate/",
+        "default_scene": "Game.Godot/Prototypes/DefaultRpgTemplate/DefaultRpgPrototype.tscn",
+        "default_script": "Game.Godot/Prototypes/DefaultRpgTemplate/Scripts/DefaultRpgPrototype.cs",
+        "prototype_record_example": "docs/prototypes/2026-05-04-default-rpg-template.md",
+        "skill_path": ".agents/skills/prototype-rpg-godot-zh/SKILL.md",
+        "contract_path": ".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md"
+      }
+    }
+  },
+  "implementation_skill": {
+    "name": "prototype-rpg-godot-zh",
+    "path": ".agents/skills/prototype-rpg-godot-zh/SKILL.md",
+    "contract_path": ".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md"
+  },
+  "prototype_core": {
+    "hypothesis": "复古rpg加肉鸽成长",
+    "core_player_fantasy": "成长的不确定性和可选择性，是否能过boss",
+    "minimum_playable_loop": "地图移动，概率撞怪，打赢怪物，选择成长",
+    "game_feature": "（1.地图场景用wsad自由连续移动；2.地图场景有宝箱，移动上去可以选择奖励3选1；3.地图场景概率撞怪进入战斗场景；4.战斗场景由玩家先手进行回合制的自动攻击，显示战斗日志；5.战斗胜利选择奖励3选1；6.选择后回到地图场景；7.打赢15场战斗赢得游戏胜利。）",
+    "core_gameplay_loop": "（1.地图场景玩家可以自由移动；2.地图场景有宝箱，移动上去可以选择奖励3选1；3.地图场景概率撞怪进入战斗场景；4.战斗场景由玩家先手进行回合制的自动攻击；5.战斗胜利选择奖励3选1；6.选择后回到地图场景；7.打赢15场战斗赢得游戏胜利。）",
+    "win_fail_conditions": "（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）",
+    "success_criteria": [
+      "奖励3选1可以正确理解"
+    ]
+  },
+  "tdd": {
+    "red": "unexpected_green",
+    "green": "ok",
+    "refactor": "pending",
+    "red_summary": "logs/ci/2026-05-15/prototype-tdd-dq-rpg-red/summary.json",
+    "green_summary": "logs/ci/2026-05-15/prototype-tdd-dq-rpg-green/summary.json"
+  }
+}

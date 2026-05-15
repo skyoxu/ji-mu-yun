@@ -25,7 +25,7 @@ public sealed class PhaseAMetadataStore
         await using var connection = await OpenConnectionAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow.ToString("O");
 
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
         var existingId = await ExecuteScalarStringAsync(
             connection,
@@ -97,6 +97,245 @@ public sealed class PhaseAMetadataStore
             WHERE bootstrap_status = 'initial';
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StaleProjectInitializationSnapshot>> ListStaleProjectInitializationsAsync(
+        TimeSpan maxAge,
+        CancellationToken cancellationToken = default)
+    {
+        var thresholdUtc = DateTimeOffset.UtcNow.Subtract(maxAge).ToString("O");
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                p.id,
+                p.account_id,
+                p.name,
+                p.game_name,
+                p.game_type_source,
+                p.template_rule_id,
+                w.root_path,
+                r.id,
+                r.status,
+                r.created_utc,
+                r.started_utc
+            FROM projects p
+            INNER JOIN workspaces w ON w.project_id = p.id
+            INNER JOIN runs r ON r.project_id = p.id
+            WHERE p.bootstrap_status = 'running'
+              AND r.run_type = 'chapter2-bootstrap'
+              AND r.status IN ('queued', 'running')
+              AND COALESCE(r.started_utc, r.created_utc) < $threshold_utc
+            ORDER BY r.created_utc ASC;
+            """;
+        command.Parameters.AddWithValue("$threshold_utc", thresholdUtc);
+
+        var stale = new List<StaleProjectInitializationSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            stale.Add(new StaleProjectInitializationSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.IsDBNull(10) ? null : reader.GetString(10)));
+        }
+
+        return stale;
+    }
+
+    public async Task<IReadOnlyList<InterruptedRunSnapshot>> ListInterruptedRunsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, project_id, run_type, status, created_utc, started_utc, progress_updated_utc
+            FROM runs
+            WHERE status IN ('queued', 'running')
+            ORDER BY created_utc ASC, id ASC;
+            """;
+
+        var runs = new List<InterruptedRunSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            runs.Add(new InterruptedRunSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6)));
+        }
+
+        return runs;
+    }
+
+    public async Task<int> ReconcileInterruptedRunsAsync(
+        string failureMessage,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failureMessage);
+
+        var interruptedRuns = await ListInterruptedRunsAsync(cancellationToken);
+        if (interruptedRuns.Count == 0)
+        {
+            return 0;
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var finishedUtc = DateTimeOffset.UtcNow.ToString("O");
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            failure_code = "interrupted_by_service_restart",
+            reason = "service_restart_recovery"
+        });
+
+        foreach (var run in interruptedRuns)
+        {
+            await using (var command = connection.CreateCommand())
+            {
+                command.Transaction = transaction;
+                command.CommandText =
+                    """
+                    UPDATE runs
+                    SET status = 'failed',
+                        finished_utc = $finished_utc,
+                        exit_code = COALESCE(exit_code, 500),
+                        stderr_text = CASE
+                            WHEN stderr_text IS NULL OR stderr_text = '' THEN $stderr_text
+                            ELSE stderr_text || char(10) || $stderr_text
+                        END,
+                        evidence_json = CASE
+                            WHEN evidence_json IS NULL OR evidence_json = '' THEN $evidence_json
+                            ELSE evidence_json
+                        END
+                    WHERE id = $id
+                      AND status IN ('queued', 'running');
+                    """;
+                command.Parameters.AddWithValue("$id", run.RunId);
+                command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+                command.Parameters.AddWithValue("$stderr_text", failureMessage);
+                command.Parameters.AddWithValue("$evidence_json", evidenceJson);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await using (var lockCommand = connection.CreateCommand())
+            {
+                lockCommand.Transaction = transaction;
+                lockCommand.CommandText =
+                    """
+                    DELETE FROM runner_locks
+                    WHERE project_id = $project_id
+                       OR run_id = $run_id;
+                    """;
+                lockCommand.Parameters.AddWithValue("$project_id", run.ProjectId);
+                lockCommand.Parameters.AddWithValue("$run_id", run.RunId);
+                await lockCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return interruptedRuns.Count;
+    }
+
+    public async Task<int> ReconcileAbandonedRunsAsync(
+        Func<InterruptedRunSnapshot, TimeSpan?> maxAgeSelector,
+        Func<InterruptedRunSnapshot, string> failureMessageSelector,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(maxAgeSelector);
+        ArgumentNullException.ThrowIfNull(failureMessageSelector);
+
+        var now = DateTimeOffset.UtcNow;
+        var interruptedRuns = await ListInterruptedRunsAsync(cancellationToken);
+        var abandonedRuns = interruptedRuns
+            .Where(run =>
+            {
+                var maxAge = maxAgeSelector(run);
+                if (maxAge is null)
+                {
+                    return false;
+                }
+
+                var heartbeatUtc = ParseRunHeartbeatUtc(run);
+                return heartbeatUtc <= now.Subtract(maxAge.Value);
+            })
+            .ToList();
+
+        if (abandonedRuns.Count == 0)
+        {
+            return 0;
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var finishedUtc = now.ToString("O");
+
+        foreach (var run in abandonedRuns)
+        {
+            var failureMessage = failureMessageSelector(run);
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                failure_code = "abandoned_run_recovered",
+                reason = "heartbeat_timeout_recovery"
+            });
+
+            await using (var command = connection.CreateCommand())
+            {
+                command.Transaction = transaction;
+                command.CommandText =
+                    """
+                    UPDATE runs
+                    SET status = 'failed',
+                        finished_utc = $finished_utc,
+                        exit_code = COALESCE(exit_code, 500),
+                        stderr_text = CASE
+                            WHEN stderr_text IS NULL OR stderr_text = '' THEN $stderr_text
+                            ELSE stderr_text || char(10) || $stderr_text
+                        END,
+                        evidence_json = CASE
+                            WHEN evidence_json IS NULL OR evidence_json = '' THEN $evidence_json
+                            ELSE evidence_json
+                        END
+                    WHERE id = $id
+                      AND status IN ('queued', 'running');
+                    """;
+                command.Parameters.AddWithValue("$id", run.RunId);
+                command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+                command.Parameters.AddWithValue("$stderr_text", failureMessage);
+                command.Parameters.AddWithValue("$evidence_json", evidenceJson);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await using (var lockCommand = connection.CreateCommand())
+            {
+                lockCommand.Transaction = transaction;
+                lockCommand.CommandText =
+                    """
+                    DELETE FROM runner_locks
+                    WHERE project_id = $project_id
+                       OR run_id = $run_id;
+                    """;
+                lockCommand.Parameters.AddWithValue("$project_id", run.ProjectId);
+                lockCommand.Parameters.AddWithValue("$run_id", run.RunId);
+                await lockCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return abandonedRuns.Count;
     }
 
     public async Task UpsertLlmBindingAsync(LlmBindingCommand create, CancellationToken cancellationToken = default)
@@ -386,6 +625,58 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(6),
                 reader.IsDBNull(7) ? null : reader.GetString(7),
                 reader.GetString(8)));
+        }
+
+        return projects;
+    }
+
+    public async Task<IReadOnlyList<ProjectSnapshot>> ListProjectSnapshotsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                p.id,
+                p.account_id,
+                p.name,
+                p.game_name,
+                p.game_type_source,
+                p.template_rule_id,
+                p.llm_binding_required,
+                p.allowed_workflows_json,
+                p.bootstrap_status,
+                p.bootstrap_error,
+                w.id,
+                w.root_path,
+                w.repo_path,
+                w.runtime_path,
+                w.meta_path
+            FROM projects p
+            INNER JOIN workspaces w ON w.project_id = p.id
+            ORDER BY p.created_utc, p.id;
+            """;
+
+        var projects = new List<ProjectSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            projects.Add(new ProjectSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetInt64(6) == 1,
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.GetString(10),
+                reader.GetString(11),
+                reader.GetString(12),
+                reader.GetString(13),
+                reader.GetString(14)));
         }
 
         return projects;
@@ -1029,6 +1320,27 @@ public sealed class PhaseAMetadataStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    private static DateTimeOffset ParseRunHeartbeatUtc(InterruptedRunSnapshot run)
+    {
+        var candidates = new[]
+        {
+            run.ProgressUpdatedUtc,
+            run.StartedUtc,
+            run.CreatedUtc
+        };
+
+        foreach (var candidate in candidates)
+        {
+            if (!string.IsNullOrWhiteSpace(candidate) &&
+                DateTimeOffset.TryParse(candidate, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return DateTimeOffset.MinValue;
+    }
+
     public async Task<IReadOnlyList<ProjectChatMessageSnapshot>> ListProjectChatMessagesAsync(
         string accountId,
         string projectId,
@@ -1139,6 +1451,172 @@ public sealed class PhaseAMetadataStore
         }
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<ProjectPrototypeDraftSnapshot?> GetProjectPrototypeDraftAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                project_id,
+                status,
+                run_id,
+                file_name,
+                prototype_slug,
+                hypothesis,
+                core_player_fantasy,
+                minimum_playable_loop,
+                success_criteria_json,
+                game_feature,
+                core_gameplay_loop,
+                win_fail_conditions,
+                matched_fields_json,
+                warnings_json,
+                failure_code,
+                line_count,
+                byte_count,
+                updated_utc
+            FROM project_prototype_drafts
+            WHERE project_id = $project_id;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectPrototypeDraftSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.IsDBNull(2) ? null : reader.GetString(2),
+            reader.IsDBNull(3) ? null : reader.GetString(3),
+            reader.IsDBNull(4) ? null : reader.GetString(4),
+            reader.IsDBNull(5) ? null : reader.GetString(5),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.IsDBNull(7) ? null : reader.GetString(7),
+            reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.IsDBNull(10) ? null : reader.GetString(10),
+            reader.IsDBNull(11) ? null : reader.GetString(11),
+            reader.GetString(12),
+            reader.GetString(13),
+            reader.IsDBNull(14) ? null : reader.GetString(14),
+            reader.GetInt32(15),
+            reader.GetInt32(16),
+            reader.GetString(17));
+    }
+
+    public async Task UpsertProjectPrototypeDraftAsync(
+        string projectId,
+        string status,
+        string? runId,
+        string? fileName,
+        string? prototypeSlug,
+        string? hypothesis,
+        string? corePlayerFantasy,
+        string? minimumPlayableLoop,
+        string successCriteriaJson,
+        string? gameFeature,
+        string? coreGameplayLoop,
+        string? winFailConditions,
+        string matchedFieldsJson,
+        string warningsJson,
+        string? failureCode,
+        int lineCount,
+        int byteCount,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_prototype_drafts (
+                project_id,
+                status,
+                run_id,
+                file_name,
+                prototype_slug,
+                hypothesis,
+                core_player_fantasy,
+                minimum_playable_loop,
+                success_criteria_json,
+                game_feature,
+                core_gameplay_loop,
+                win_fail_conditions,
+                matched_fields_json,
+                warnings_json,
+                failure_code,
+                line_count,
+                byte_count,
+                updated_utc)
+            VALUES (
+                $project_id,
+                $status,
+                $run_id,
+                $file_name,
+                $prototype_slug,
+                $hypothesis,
+                $core_player_fantasy,
+                $minimum_playable_loop,
+                $success_criteria_json,
+                $game_feature,
+                $core_gameplay_loop,
+                $win_fail_conditions,
+                $matched_fields_json,
+                $warnings_json,
+                $failure_code,
+                $line_count,
+                $byte_count,
+                $updated_utc)
+            ON CONFLICT(project_id) DO UPDATE SET
+                status = excluded.status,
+                run_id = excluded.run_id,
+                file_name = excluded.file_name,
+                prototype_slug = excluded.prototype_slug,
+                hypothesis = excluded.hypothesis,
+                core_player_fantasy = excluded.core_player_fantasy,
+                minimum_playable_loop = excluded.minimum_playable_loop,
+                success_criteria_json = excluded.success_criteria_json,
+                game_feature = excluded.game_feature,
+                core_gameplay_loop = excluded.core_gameplay_loop,
+                win_fail_conditions = excluded.win_fail_conditions,
+                matched_fields_json = excluded.matched_fields_json,
+                warnings_json = excluded.warnings_json,
+                failure_code = excluded.failure_code,
+                line_count = excluded.line_count,
+                byte_count = excluded.byte_count,
+                updated_utc = excluded.updated_utc;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$run_id", (object?)runId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$file_name", (object?)fileName ?? DBNull.Value);
+        command.Parameters.AddWithValue("$prototype_slug", (object?)prototypeSlug ?? DBNull.Value);
+        command.Parameters.AddWithValue("$hypothesis", (object?)hypothesis ?? DBNull.Value);
+        command.Parameters.AddWithValue("$core_player_fantasy", (object?)corePlayerFantasy ?? DBNull.Value);
+        command.Parameters.AddWithValue("$minimum_playable_loop", (object?)minimumPlayableLoop ?? DBNull.Value);
+        command.Parameters.AddWithValue("$success_criteria_json", successCriteriaJson);
+        command.Parameters.AddWithValue("$game_feature", (object?)gameFeature ?? DBNull.Value);
+        command.Parameters.AddWithValue("$core_gameplay_loop", (object?)coreGameplayLoop ?? DBNull.Value);
+        command.Parameters.AddWithValue("$win_fail_conditions", (object?)winFailConditions ?? DBNull.Value);
+        command.Parameters.AddWithValue("$matched_fields_json", matchedFieldsJson);
+        command.Parameters.AddWithValue("$warnings_json", warningsJson);
+        command.Parameters.AddWithValue("$failure_code", (object?)failureCode ?? DBNull.Value);
+        command.Parameters.AddWithValue("$line_count", lineCount);
+        command.Parameters.AddWithValue("$byte_count", byteCount);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private async Task<int> GetProjectLimitInsideTransactionAsync(SqliteConnection connection, string accountId, CancellationToken cancellationToken)

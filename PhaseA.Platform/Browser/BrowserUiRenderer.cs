@@ -30,6 +30,7 @@ public sealed class BrowserUiRenderer
                 * { box-sizing: border-box; }
                 body {
                   margin: 0;
+                  overflow-x: hidden;
                   font-family: Georgia, "Times New Roman", serif;
                   color: var(--ink);
                   background:
@@ -47,10 +48,13 @@ public sealed class BrowserUiRenderer
                 p { color: var(--muted); }
                 main {
                   display: grid;
-                  grid-template-columns: minmax(18rem, 24rem) 1fr;
+                  grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr);
                   gap: 1rem;
                   padding: 1rem clamp(1rem, 4vw, 4rem) 4rem;
+                  width: 100%;
+                  max-width: 100%;
                 }
+                main > *, .stack, section, aside { min-width: 0; }
                 section, aside {
                   background: var(--panel);
                   border: 1px solid var(--line);
@@ -59,6 +63,7 @@ public sealed class BrowserUiRenderer
                   padding: 1rem;
                 }
                 .stack { display: grid; gap: 1rem; align-content: start; }
+                .stack > * { min-width: 0; }
                 label { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.9rem; }
                 input, textarea, select, button {
                   width: 100%;
@@ -88,6 +93,9 @@ public sealed class BrowserUiRenderer
                   border-radius: 0.9rem;
                   background: #fffdf8;
                   padding: 0.8rem;
+                  min-width: 0;
+                  overflow-wrap: anywhere;
+                  word-break: break-word;
                 }
                 .card strong { display: block; }
                 .muted { color: var(--muted); }
@@ -101,10 +109,11 @@ public sealed class BrowserUiRenderer
                   border-radius: 0.9rem;
                   padding: 1rem;
                 }
-                .split-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-                .health-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
+                .split-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.5rem; }
+                .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.6rem; }
                 .metric { border: 1px solid var(--line); border-radius: 0.8rem; background: #fffdf8; padding: 0.7rem; }
                 .metric strong { display: block; font-size: 1.15rem; }
+                .metric span, .metric strong { overflow-wrap: anywhere; word-break: break-word; }
                 .chat-frame { overflow: visible; }
                 .chat-scroll { min-height: 16rem; max-height: 24rem; overflow-y: auto; padding-right: 0.25rem; }
                 .feedback-scroll { max-height: 14rem; overflow-y: auto; padding-right: 0.25rem; }
@@ -175,6 +184,7 @@ public sealed class BrowserUiRenderer
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
                     <div id="prototypeProgress" class="card muted">尚未开始 7 步可玩原型。</div>
+                    <div id="prototypeAcceptanceSummary" class="card muted">原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                   </section>
@@ -234,7 +244,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -297,6 +307,11 @@ public sealed class BrowserUiRenderer
                 async function loadServerChatHistoryForProject(projectId) {
                   if (!projectId) return;
                   try {
+                    const localByKey = new Map(
+                      (state.chatHistory || [])
+                        .filter(isStoredChatMessage)
+                        .map(message => [chatMessageKey(message), message])
+                    );
                     const result = await api(`/api/projects/${projectId}/chat-history`);
                     state.chatHistory = (result.messages || [])
                       .map(message => ({
@@ -304,6 +319,12 @@ public sealed class BrowserUiRenderer
                         content: sanitizePublicChatContent(message.content),
                         kind: message.kind || null
                       }))
+                      .map(message => {
+                        const local = localByKey.get(chatMessageKey(message));
+                        if (local?.continueConsumed) message.continueConsumed = true;
+                        if (local?.suggestedFeedback) message.suggestedFeedback = sanitizePublicChatContent(local.suggestedFeedback);
+                        return message;
+                      })
                       .filter(isStoredChatMessage)
                       .slice(-maxStoredChatMessages);
                     renderChatHistory();
@@ -323,6 +344,10 @@ public sealed class BrowserUiRenderer
                   });
                   state.chatHistory = compact;
                   localStorage.setItem(chatStorageKey(), JSON.stringify(compact));
+                }
+
+                function chatMessageKey(message) {
+                  return `${message?.role || ""}|${message?.kind || ""}|${sanitizePublicChatContent(message?.content || "")}`;
                 }
 
                 function isStoredChatMessage(message) {
@@ -685,8 +710,26 @@ public sealed class BrowserUiRenderer
 
                 async function loadProjectRuntimeState() {
                   await loadRuns();
+                  await loadLatestPrototypeDraft();
                   await loadPrototypeProgress();
                   await loadProjectPackages();
+                }
+
+                async function loadLatestPrototypeDraft(forceVisibleNotice = false) {
+                  if (!state.projectId) return;
+                  try {
+                    const draft = await api(`/api/projects/${state.projectId}/prototype-drafts/latest`);
+                    applyDraftToForm(draft);
+                    renderDraftImportStatus(draft);
+                    if (forceVisibleNotice && draft.status === "succeeded") {
+                      showPrototypeNotice("已同步最近一次草稿分析结果，表单已自动补全到最新状态。", "info");
+                    }
+                    return draft;
+                  } catch {
+                    $("draftImportStatus").className = "card muted";
+                    $("draftImportStatus").textContent = "可选：创建项目后上传 txt 草稿，由后端模型分析后回填原型表单。";
+                    return null;
+                  }
                 }
 
                 function renderProjectHealth(summary) {
@@ -725,6 +768,7 @@ public sealed class BrowserUiRenderer
                     const result = await api("/api/projects", { method: "POST", body: JSON.stringify(payload) });
                     out(result);
                     showInitialization("running", "");
+                    await pollProjectInitializationResult();
                   } catch (error) {
                     showError(error);
                   } finally {
@@ -732,6 +776,32 @@ public sealed class BrowserUiRenderer
                     $("createProject").disabled = false;
                     $("createProject").textContent = "创建项目";
                     await refreshActiveRun();
+                  }
+                }
+
+                async function pollProjectInitializationResult(maxAttempts = 24, delayMs = 5000) {
+                  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+                    await new Promise(resolve => setTimeout(resolve, delayMs));
+                    try {
+                      const projects = await api("/api/projects");
+                      state.projects = projects;
+                      if (hasInitializingProject(projects)) {
+                        continue;
+                      }
+                      const visibleProjects = listableProjects(projects);
+                      const latestFailure = await loadLatestProjectCreationFailure();
+                      if (visibleProjects.length > 0) {
+                        $("initStatusPanel").classList.add("hidden");
+                        await refreshProjects();
+                        return;
+                      }
+                      if (latestFailure?.failureError) {
+                        showCreationFailure(latestFailure.failureError);
+                        return;
+                      }
+                    } catch {
+                      return;
+                    }
                   }
                 }
 
@@ -887,6 +957,29 @@ public sealed class BrowserUiRenderer
                   if (draft.winFailConditions) $("winFailConditions").value = draft.winFailConditions;
                 }
 
+                function renderDraftImportStatus(draft) {
+                  if (!draft || draft.status === "failed") {
+                    $("draftImportStatus").className = "card muted";
+                    $("draftImportStatus").textContent = draft?.failureCode ? `草稿分析失败：${draft.failureCode}` : "尚未分析草稿。";
+                    return;
+                  }
+                  if (draft.status === "running") {
+                    state.draftAnalysisRunning = true;
+                    $("draftImportStatus").className = "card muted";
+                    $("draftImportStatus").textContent = "草稿分析中...完成前不能启动原型创建，刷新页面后会自动恢复状态。";
+                    setPrototypeFormLocked(true);
+                    return;
+                  }
+                  state.draftAnalysisRunning = false;
+                  $("draftImportStatus").className = "card";
+                  $("draftImportStatus").innerHTML = `
+                    <strong>草稿已分析并回填</strong>
+                    <p class="muted">${escapeHtml(draft.fileName || "")} · ${draft.lineCount || 0} 行 · ${draft.byteCount || 0} bytes</p>
+                    <p class="muted">命中字段：${escapeHtml((draft.matchedFields || []).join(" · ") || "无")}</p>
+                    <p class="muted">警告：${escapeHtml((draft.warnings || []).join(" · ") || "无")}</p>
+                  `;
+                }
+
                 async function importDraft() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先创建并选择项目。");
@@ -905,13 +998,7 @@ public sealed class BrowserUiRenderer
                     const payload = await response.json();
                     if (!response.ok) throw payload;
                     applyDraftToForm(payload);
-                    $("draftImportStatus").className = "card";
-                    $("draftImportStatus").innerHTML = `
-                      <strong>草稿已分析并回填</strong>
-                      <p class="muted">${escapeHtml(payload.fileName)} · ${payload.lineCount} 行 · ${payload.byteCount} bytes</p>
-                      <p class="muted">命中字段：${escapeHtml((payload.matchedFields || []).join(" · ") || "无")}</p>
-                      <p class="muted">警告：${escapeHtml((payload.warnings || []).join(" · ") || "无")}</p>
-                    `;
+                    renderDraftImportStatus(payload);
                     out(payload);
                     await loadRuns();
                   } catch (error) {
@@ -979,7 +1066,9 @@ public sealed class BrowserUiRenderer
                   }
                   if (!result?.canCreatePackage && result?.disabledReason === "prototype_not_created") {
                     $("projectPackageStatus").className = "card muted";
-                    $("projectPackageStatus").textContent = "尚未成功运行原型创建，暂不能打包项目文件。";
+                    $("projectPackageStatus").textContent = state.prototypeFailure === "没有创建有效的godot场景文件"
+                      ? "没有创建有效的godot场景文件，暂不能打包项目文件。"
+                      : "尚未成功运行原型创建，暂不能打包项目文件。";
                     return;
                   }
                   $("projectPackageStatus").className = "card";
@@ -993,7 +1082,11 @@ public sealed class BrowserUiRenderer
                 }
 
                 function projectPackageDisabledText(reason) {
-                  if (reason === "prototype_not_created") return "成功运行原型创建后才可以打包项目文件。";
+                  if (reason === "prototype_not_created") {
+                    return state.prototypeFailure === "没有创建有效的godot场景文件"
+                      ? "没有创建有效的godot场景文件，成功修复后才可以打包项目文件。"
+                      : "成功运行原型创建后才可以打包项目文件。";
+                  }
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
@@ -1005,10 +1098,15 @@ public sealed class BrowserUiRenderer
                     showPrototypeNotice("请先选择一个项目。", "warn");
                     return out("请先选择一个项目。");
                   }
+                  await loadLatestPrototypeDraft(true);
+                  if (state.draftAnalysisRunning) {
+                    showPrototypeNotice("草稿分析仍在进行中，完成前不能启动原型创建。", "warn");
+                    return out("草稿分析仍在进行中。");
+                  }
                   const payload = buildPrototypePayload();
                   const missing = missingPrototypeFields(payload);
                   if (missing.length) {
-                    showPrototypeNotice(`缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型路线。`, "warn");
+                    showPrototypeNotice(`当前还不能启动：缺少必填项 ${missing.map(prototypeFieldLabel).join("、")}。如果你刚分析过 txt 草稿，请先刷新或等待草稿回填完成。`, "warn");
                     return out({ status: "missing_required_fields", missingRequiredFields: missing });
                   }
                   showPrototypeNotice("正在提交原型创建请求，请不要重复点击。", "info");
@@ -1082,7 +1180,11 @@ public sealed class BrowserUiRenderer
                   const missing = payload.missingRequiredFields || payload.MissingRequiredFields || [];
                   const message = missing.length
                     ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型路线。`
-                    : `原型创建请求失败：${payload.status || payload.error || payload.failureCode || error?.status || "unknown_error"}`;
+                    : payload.status === "project_busy"
+                      ? "当前项目已有后台任务在执行，请等待顶部状态条消失后再启动原型路线。"
+                    : payload.failureCode === "prototype_valid_godot_scene_missing"
+                      ? "没有创建有效的godot场景文件"
+                      : `原型创建请求失败：${payload.status || payload.error || payload.failureCode || error?.status || "unknown_error"}`;
                   showPrototypeNotice(message, "warn");
                 }
 
@@ -1112,15 +1214,20 @@ public sealed class BrowserUiRenderer
 
                 async function loadPrototypeProgress() {
                   if (!state.projectId) {
+                    state.prototypeFailure = "";
                     $("prototypeProgress").className = "card muted";
                     $("prototypeProgress").textContent = "尚未选择项目。";
+                    $("prototypeAcceptanceSummary").className = "card muted";
+                    $("prototypeAcceptanceSummary").textContent = "尚未选择项目。";
                     $("chatPanel").classList.add("hidden");
                     setFormalFeedbackAvailability(false);
                     return;
                   }
                   try {
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
+                    state.prototypeFailure = progress?.status === "failed" ? (progress.failure || "") : "";
                     renderPrototypeProgress(progress);
+                    renderPrototypeAcceptanceSummary(progress);
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
                     updateChatPanelVisibility(progress);
                   } catch (error) { showError(error); }
@@ -1138,6 +1245,38 @@ public sealed class BrowserUiRenderer
                     ${progress.failure ? `<p class="danger">${escapeHtml(progress.failure)}</p><p class="danger">可以点击“修复原型”继续修复；修复期间页面会锁定，刷新后查看最终成功或新的失败原因。</p>` : ""}
                   `;
                   $("repairPrototype").classList.toggle("hidden", status !== "failed");
+                }
+
+                function renderPrototypeAcceptanceSummary(progress) {
+                  const status = progress?.status || "idle";
+                  if (status === "failed") {
+                    const failure = progress?.failure || "原型验收未通过。";
+                    $("prototypeAcceptanceSummary").className = "card";
+                    $("prototypeAcceptanceSummary").innerHTML = `
+                      <strong>原型验收摘要</strong>
+                      <p class="danger">${escapeHtml(failure)}</p>
+                      <p class="muted">当前项目尚未满足原型成功标准，暂不展示默认场景、验证摘要和试玩重点。</p>
+                    `;
+                    return;
+                  }
+                  if (status !== "succeeded") {
+                    $("prototypeAcceptanceSummary").className = "card muted";
+                    $("prototypeAcceptanceSummary").textContent = "原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。";
+                    return;
+                  }
+                  const defaultScene = progress?.defaultSceneLabel || progress?.defaultScene || "未识别";
+                  const tddSummaryCount = Number(progress?.tddSummaryCount || 0);
+                  const redCount = Number(progress?.tddRedCount || 0);
+                  const greenCount = Number(progress?.tddGreenCount || 0);
+                  const refactorCount = Number(progress?.tddRefactorCount || 0);
+                  const focusPoints = Array.isArray(progress?.playtestFocusPoints) ? progress.playtestFocusPoints.filter(Boolean) : [];
+                  $("prototypeAcceptanceSummary").className = "card";
+                  $("prototypeAcceptanceSummary").innerHTML = `
+                    <strong>原型验收摘要</strong>
+                    <p class="muted">默认场景：${escapeHtml(defaultScene)}</p>
+                    <p class="muted">验证摘要：共 ${escapeHtml(String(tddSummaryCount))} 份 · 红灯 ${escapeHtml(String(redCount))} · 绿灯 ${escapeHtml(String(greenCount))} · 重构 ${escapeHtml(String(refactorCount))}</p>
+                    ${focusPoints.length ? `<div><strong>建议试玩重点</strong><ul>${focusPoints.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : "<p class='muted'>暂无试玩重点建议。</p>"}
+                  `;
                 }
 
                 function updateChatPanelVisibility(progress) {
@@ -1173,6 +1312,12 @@ public sealed class BrowserUiRenderer
                 function prototypeSeedMessage(progress) {
                   const status = progress?.status || "succeeded";
                   if (status === "succeeded") {
+                    const realSummary = sanitizePublicChatContent(progress?.completionSummary || "");
+                    if (realSummary) {
+                      updateContinueSuggestionFromText(realSummary);
+                      setFormalFeedbackAvailability(true);
+                      return realSummary;
+                    }
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
@@ -1384,7 +1529,7 @@ public sealed class BrowserUiRenderer
                   });
                 }
                 function disabledText(reason) {
-                  if (reason === "prototype_not_created") return "尚未成功运行原型创建，暂不能打包项目文件。";
+                  if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
                   return "当前暂不能生成新的项目文件包。";
                 }

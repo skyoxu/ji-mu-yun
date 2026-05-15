@@ -14,7 +14,7 @@ public sealed class PrototypeWorkflowTests
     [Fact]
     public void MissingRequiredFields_TracksPrototypeLaneIntakeFields()
     {
-        var request = new PrototypeWorkflowRequest(null, null, null, null, null, null, null, null);
+        var request = new PrototypeWorkflowRequest(null, null, null, null, null, null, null, null, null, null, null);
 
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
 
@@ -49,6 +49,8 @@ public sealed class PrototypeWorkflowTests
             "--prototype-file",
             "docs/prototypes/2026-05-11-demo.md",
             "--confirm",
+            "--stop-after-day",
+            "7",
             "--godot-bin",
             @"C:\Godot\Godot.exe");
         command.Environment["GODOT_BIN"].Should().Be(@"C:\Godot\Godot.exe");
@@ -73,17 +75,25 @@ public sealed class PrototypeWorkflowTests
         result.Status.Should().Be("succeeded");
         result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
         var project = await store.GetProjectSnapshotAsync(projectId);
-        File.Exists(Path.Combine(project!.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        var recordPath = Path.Combine(project!.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar));
+        File.Exists(recordPath).Should().BeTrue();
+        var record = File.ReadAllText(recordPath);
+        record.Should().Contain("- Game Name: Demo Game");
+        record.Should().Contain("- Game Type: rpg");
+        record.Should().Contain("- Game Type Source: 勇者斗恶龙");
         runner.Commands.Should().HaveCount(2);
         runner.Commands[0].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[0].Arguments.Should().Contain("run-prototype-workflow");
         runner.Commands[1].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands[1].Arguments.Should().Contain(["--strict"]);
+        runner.Commands[1].Arguments.Should().Contain("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
         result.Artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-record",
             "prototype-sidecar-json",
-            "active-prototype-json"
+            "active-prototype-json",
+            "prototype-packaging-summary",
+            "prototype-completion-report"
         ]);
 
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -93,6 +103,180 @@ public sealed class PrototypeWorkflowTests
         run.EvidenceJson.Should().Contain("prototype_artifacts");
         run.EvidenceJson.Should().Contain("godot_smoke");
         run.StdoutText.Should().Contain("SMOKE PASS");
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsWhenCompletionStateIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(writeActiveState: false);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("prototype_completion_state_missing");
+    }
+
+    [Fact]
+    public async Task RunAsync_DoesNotMaskWorkflowFailure_WithMissingCompletionStateNoise()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            workflowExitCode: 1,
+            writeActiveState: false,
+            workflowStderrOverride: "PROTOTYPE_TDD status=unexpected_red stage=green expected=pass");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("unexpected_red");
+        run.StderrText.Should().NotContain("prototype_completion_state_missing");
+    }
+
+    [Fact]
+    public async Task RunAsync_MapsUnexpectedGreenRedStageToStrictTddFailureMessage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            workflowExitCode: 1,
+            writeActiveState: false,
+            workflowStdoutOverride: "PROTOTYPE_TDD status=unexpected_green stage=red expected=fail out=logs/ci/demo");
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var progress = await service.GetProgressAsync(projectId);
+
+        progress.Status.Should().Be("failed");
+        progress.Failure.Should().Be("TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。");
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsWhenStep03SkippedBecausePrototypeRedIsAlreadyGreen()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(skippedDays: [3]);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        var progress = await service.GetProgressAsync(projectId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("prototype_completion_step_not_ok:3:skipped");
+        progress.Failure.Should().Be("TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。");
+        runner.Commands.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_AllowsStep02SkippedWhenPrototypeScaffoldAlreadyExists()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(skippedDays: [2]);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        run!.Status.Should().Be("succeeded");
+        run.StderrText.Should().NotContain("prototype_completion_step_not_ok:2:skipped");
+    }
+
+    [Fact]
+    public async Task RunAsync_AllowsPrototypeSmokeNonZeroExit_WhenOutputContainsSmokePass()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(smokeExitCode: 1, smokeStdoutOverride: "SMOKE PASS (any output)\n");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        run!.Status.Should().Be("succeeded");
+        run.StdoutText.Should().Contain("SMOKE PASS");
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsWhenResolvedPrototypeSceneIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(writePrototypeScene: false);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var progress = await service.GetProgressAsync(projectId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("prototype_valid_godot_scene_missing");
+        progress.Status.Should().Be("failed");
+        progress.Failure.Should().Be("没有创建有效的godot场景文件");
+        runner.Commands.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsWhenStep06Or07ArtifactsAreMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(writePackagingArtifacts: false);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("prototype_packaging_summary_missing");
     }
 
     [Fact]
@@ -114,6 +298,14 @@ public sealed class PrototypeWorkflowTests
         finished.Status.Should().Be("succeeded");
         finished.Step.Should().Be("succeeded");
         finished.RunId.Should().Be(result.RunId);
+        finished.CompletionSummary.Should().Contain("下一步建议");
+        finished.DefaultScene.Should().Be("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
+        finished.DefaultSceneLabel.Should().Be("DemoPrototypePrototype 场景");
+        finished.TddSummaryCount.Should().Be(1);
+        finished.TddRedCount.Should().Be(0);
+        finished.TddGreenCount.Should().Be(1);
+        finished.TddRefactorCount.Should().Be(0);
+        finished.PlaytestFocusPoints.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
@@ -136,6 +328,62 @@ public sealed class PrototypeWorkflowTests
         result.Status.Should().Be("project_busy");
         result.ExitCode.Should().Be(423);
         runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task QueueAsync_UsesLatestDraftToRepairMissingOrCorruptedFields()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var draftRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
+        await store.UpsertProjectPrototypeDraftAsync(
+            projectId,
+            "succeeded",
+            draftRunId,
+            "rpg.txt",
+            "dq-rpg",
+            "复古rpg加肉鸽成长",
+            "成长的不确定性和可选择性，是否能过boss",
+            "地图移动，概率撞怪，打赢怪物，选择成长",
+            "[\"奖励3选1可以正确理解\"]",
+            "地图场景用wsad自由连续移动",
+            "地图场景玩家可以自由移动",
+            "打赢15场战斗赢得游戏胜利",
+            "[]",
+            "[]",
+            null,
+            10,
+            100);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueAsync(projectId, new PrototypeWorkflowRequest(
+            Slug: "",
+            GameName: null,
+            GameType: null,
+            GameTypeSource: null,
+            Hypothesis: "??rpg?????",
+            CorePlayerFantasy: "",
+            MinimumPlayableLoop: "",
+            SuccessCriteria: ["30?????"],
+            GameFeature: "????????????",
+            CoreGameplayLoop: "",
+            WinFailConditions: "",
+            Confirm: true));
+
+        await WaitForCommandsAsync(runner, 2);
+        var queuedRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+        result.Status.Should().Be("queued");
+        var record = File.ReadAllText(Path.Combine(project!.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar)), System.Text.Encoding.UTF8);
+        record.Should().Contain("复古rpg加肉鸽成长");
+        record.Should().Contain("奖励3选1可以正确理解");
+        record.Should().NotContain("??");
+        queuedRun.Status.Should().Be("succeeded");
     }
 
     [Fact]
@@ -171,6 +419,40 @@ public sealed class PrototypeWorkflowTests
         runner.Commands[0].Environment["PHASEA_CODEX_DEFAULT_MODEL"].Should().Be("gpt-5.4");
         repairRun!.Status.Should().Be("succeeded");
         repairRun.EvidenceJson.Should().Contain("\"repair\":true");
+    }
+
+    [Fact]
+    public async Task RepairAsync_UsesSlugFromPrototypeRecordContent_WhenPathSlugDiffers()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRecordPath = "docs/prototypes/2026-05-14-rpgdemo1.md";
+        WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
+        var failedRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            1,
+            "",
+            "first failure",
+            $"{{\"prototype_record\":\"{prototypeRecordPath}\",\"slug\":\"rpgdemo1\"}}");
+        var runner = new FakeHostedProcessRunner(completedThroughDay: 7);
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 2);
+        var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        runner.Commands[0].Arguments.Should().Contain(["--prototype-file", prototypeRecordPath]);
+        repairRun!.Status.Should().Be("succeeded");
+        repairRun.EvidenceJson.Should().Contain("\"slug\":\"dq-rpg\"");
     }
 
     [Fact]
@@ -265,6 +547,9 @@ public sealed class PrototypeWorkflowTests
     {
         return new PrototypeWorkflowRequest(
             Slug: "demo-prototype",
+            GameName: "Demo Game",
+            GameType: null,
+            GameTypeSource: null,
             Hypothesis: "A tiny loop can prove the combat fantasy.",
             CorePlayerFantasy: "Player feels tactical pressure in one minute.",
             MinimumPlayableLoop: "Enter room, fight one enemy, win or fail.",
@@ -287,7 +572,7 @@ public sealed class PrototypeWorkflowTests
     {
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "勇者斗恶龙", null, null, null, null));
         return result.ProjectId!;
     }
 
@@ -358,6 +643,44 @@ public sealed class PrototypeWorkflowTests
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
+        private readonly int _completedThroughDay;
+        private readonly bool _writeActiveState;
+        private readonly HashSet<int> _skippedDays;
+        private readonly bool _writePrototypeScene;
+        private readonly string? _prototypeSceneOverride;
+        private readonly int _smokeExitCode;
+        private readonly bool _writePackagingArtifacts;
+        private readonly string? _smokeStdoutOverride;
+        private readonly int _workflowExitCode;
+        private readonly string? _workflowStdoutOverride;
+        private readonly string? _workflowStderrOverride;
+
+        public FakeHostedProcessRunner(
+            int completedThroughDay = 7,
+            bool writeActiveState = true,
+            IEnumerable<int>? skippedDays = null,
+            bool writePrototypeScene = true,
+            string? prototypeSceneOverride = null,
+            int smokeExitCode = 0,
+            bool writePackagingArtifacts = true,
+            string? smokeStdoutOverride = null,
+            int workflowExitCode = 0,
+            string? workflowStdoutOverride = null,
+            string? workflowStderrOverride = null)
+        {
+            _completedThroughDay = completedThroughDay;
+            _writeActiveState = writeActiveState;
+            _skippedDays = skippedDays is null ? [] : new HashSet<int>(skippedDays);
+            _writePrototypeScene = writePrototypeScene;
+            _prototypeSceneOverride = prototypeSceneOverride;
+            _smokeExitCode = smokeExitCode;
+            _writePackagingArtifacts = writePackagingArtifacts;
+            _smokeStdoutOverride = smokeStdoutOverride;
+            _workflowExitCode = workflowExitCode;
+            _workflowStdoutOverride = workflowStdoutOverride;
+            _workflowStderrOverride = workflowStderrOverride;
+        }
+
         public List<HostedProcessCommand> Commands { get; } = [];
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
@@ -365,14 +688,138 @@ public sealed class PrototypeWorkflowTests
             Commands.Add(command);
             if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
             {
-                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (marker)\n", ""));
+                return Task.FromResult(new HostedProcessResult(
+                    _smokeExitCode,
+                    _smokeStdoutOverride ?? (_smokeExitCode == 0 ? "SMOKE PASS (marker)\n" : ""),
+                    _smokeExitCode == 0 ? "" : "SMOKE FAIL\n"));
             }
 
-            Write("docs/prototypes/demo-prototype.prototype.json", "{}");
-            Write("logs/ci/active-prototypes/demo-prototype.active.json", "{}");
+            var slug = ExtractSlug(command.Arguments, command.WorkingDirectory) ?? "demo-prototype";
+            var scenePath = _prototypeSceneOverride ?? BuildPrototypeScene(slug);
+            Write(
+                $"docs/prototypes/{slug}.prototype.json",
+                $$"""
+                {
+                  "prototype_type_kit": {
+                    "manifest": {
+                      "paths": {
+                        "default_scene": "{{scenePath}}"
+                      }
+                    }
+                  }
+                }
+                """);
+            if (_writePrototypeScene)
+            {
+                Write(scenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
+            }
+            if (_writePackagingArtifacts)
+            {
+                Write(
+                    $"logs/ci/active-prototypes/{slug}.packaging.json",
+                    $$"""
+                    {
+                      "kind": "prototype-packaging-summary",
+                      "default_scene": "{{scenePath}}",
+                      "default_scene_label": "DemoPrototypePrototype 场景",
+                      "tdd_summary_paths": [
+                        "logs/ci/2026-05-14/prototype-tdd-{{slug}}-green/summary.json"
+                      ],
+                      "tdd_stage_counts": {
+                        "red": 0,
+                        "green": 1,
+                        "refactor": 0
+                      },
+                      "playtest_focus_points": [
+                        "首分钟是否知道目标。",
+                        "操作反馈是否清楚。"
+                      ]
+                    }
+                    """);
+                Write($"logs/ci/active-prototypes/{slug}.completion.md", "# Prototype Completion Report\n");
+            }
+            if (_writeActiveState)
+            {
+                Write(
+                    $"logs/ci/active-prototypes/{slug}.active.json",
+                    $$"""
+                    {
+                      "status": "completed-through-day",
+                      "completed_through_day": {{_completedThroughDay}},
+                      "missing_required_fields": [],
+                      "prototype_spec": "docs/prototypes/{{slug}}.prototype.json",
+                      "completion_summary": "原型创建完成。\n\n下一步建议：继续试玩并记录反馈。",
+                      "steps_run": [
+                        { "day": 1, "status": "ok" },
+                        { "day": 2, "status": "{{StepStatus(2)}}", "reason": "{{StepReason(2)}}" },
+                        { "day": 3, "status": "{{StepStatus(3)}}", "reason": "{{StepReason(3)}}" },
+                        { "day": 4, "status": "{{StepStatus(4)}}" },
+                        { "day": 5, "status": "{{StepStatus(5)}}" },
+                        { "day": 6, "status": "{{StepStatus(6)}}" },
+                        { "day": 7, "status": "{{StepStatus(7)}}" }
+                      ]
+                    }
+                    """);
+            }
             Write("logs/ci/project-health/latest.html", "<html></html>");
             Write("logs/ci/project-health/latest.json", "{}");
-            return Task.FromResult(new HostedProcessResult(0, "prototype workflow ok\n", ""));
+            return Task.FromResult(new HostedProcessResult(
+                _workflowExitCode,
+                _workflowStdoutOverride ?? (_workflowExitCode == 0 ? "prototype workflow ok\n" : ""),
+                _workflowStderrOverride ?? ""));
+        }
+
+        private string StepStatus(int day)
+        {
+            return _skippedDays.Contains(day) ? "skipped" : "ok";
+        }
+
+        private string StepReason(int day)
+        {
+            if (day == 2 && _skippedDays.Contains(day))
+            {
+                return "prototype_scaffold_already_exists";
+            }
+
+            return day == 3 && _skippedDays.Contains(day)
+                ? "prototype_red_already_green"
+                : "";
+        }
+
+        private static string BuildPrototypeScene(string slug)
+        {
+            var parts = slug.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
+            var pascal = string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+            return $"res://Game.Godot/Prototypes/{slug}/{pascal}Prototype.tscn";
+        }
+
+        private static string? ExtractSlug(IReadOnlyList<string> arguments, string workingDirectory)
+        {
+            for (var i = 0; i < arguments.Count - 1; i++)
+            {
+                if (string.Equals(arguments[i], "--slug", StringComparison.Ordinal))
+                {
+                    return arguments[i + 1];
+                }
+
+                if (string.Equals(arguments[i], "--prototype-file", StringComparison.Ordinal))
+                {
+                    var path = Path.Combine(workingDirectory, arguments[i + 1].Replace('/', Path.DirectorySeparatorChar));
+                    if (!File.Exists(path))
+                    {
+                        continue;
+                    }
+
+                    var firstLine = File.ReadLines(path).FirstOrDefault()?.Trim().TrimStart('\ufeff');
+                    if (!string.IsNullOrWhiteSpace(firstLine) &&
+                        firstLine.StartsWith("# Prototype:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return firstLine["# Prototype:".Length..].Trim();
+                    }
+                }
+            }
+
+            return null;
         }
 
         private void Write(string relativePath, string text)
@@ -381,6 +828,13 @@ public sealed class PrototypeWorkflowTests
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, text);
         }
+    }
+
+    private static void WritePrototypeRecord(string repoPath, string relativePath, string text)
+    {
+        var path = Path.Combine(repoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text);
     }
 
     private sealed class TempDirectory : IDisposable

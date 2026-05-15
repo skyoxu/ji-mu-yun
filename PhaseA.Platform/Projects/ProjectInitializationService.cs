@@ -5,6 +5,8 @@ namespace PhaseA.Platform.Projects;
 
 public sealed class ProjectInitializationService
 {
+    private static readonly TimeSpan StaleInitializationAge = TimeSpan.FromMinutes(15);
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ProjectInitializationService> _logger;
 
@@ -20,6 +22,50 @@ public sealed class ProjectInitializationService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         _ = Task.Run(() => RunChapter2BootstrapAsync(projectId));
+    }
+
+    public Task ReconcileInterruptedInitializationsAsync(CancellationToken cancellationToken = default)
+    {
+        return ReconcileInitializationsOlderThanAsync(TimeSpan.Zero, cancellationToken);
+    }
+
+    public async Task ReconcileStaleInitializationsAsync(CancellationToken cancellationToken = default)
+    {
+        await ReconcileInitializationsOlderThanAsync(StaleInitializationAge, cancellationToken);
+    }
+
+    private async Task ReconcileInitializationsOlderThanAsync(
+        TimeSpan maxAge,
+        CancellationToken cancellationToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+        var staleProjects = await metadataStore.ListStaleProjectInitializationsAsync(maxAge, cancellationToken);
+        foreach (var stale in staleProjects)
+        {
+            var failure = maxAge == TimeSpan.Zero
+                ? "Project initialization was interrupted because the service restarted before completion."
+                : $"Project initialization timed out after {StaleInitializationAge.TotalMinutes:0} minutes.";
+            _logger.LogWarning(
+                "Cleaning stale project initialization. ProjectId={ProjectId} RunId={RunId} Status={Status}",
+                stale.ProjectId,
+                stale.RunId,
+                stale.RunStatus);
+            await metadataStore.RecordProjectCreationFailureAsync(new ProjectCreationFailureCommand(
+                stale.AccountId,
+                stale.ProjectId,
+                stale.Name,
+                stale.GameName,
+                stale.GameTypeSource,
+                stale.TemplateRuleId,
+                stale.WorkspaceRootPath,
+                failure), cancellationToken);
+            await metadataStore.DeleteProjectAsync(stale.ProjectId, cancellationToken);
+            if (Directory.Exists(stale.WorkspaceRootPath))
+            {
+                Directory.Delete(stale.WorkspaceRootPath, recursive: true);
+            }
+        }
     }
 
     private async Task RunChapter2BootstrapAsync(string projectId)

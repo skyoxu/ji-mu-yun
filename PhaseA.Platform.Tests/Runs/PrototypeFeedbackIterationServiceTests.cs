@@ -70,6 +70,53 @@ public sealed class PrototypeFeedbackIterationServiceTests
         runner.Commands.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task SubmitAsync_BlocksWhenRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var lockRunId = await store.CreateRunAsync(projectId, null, "existing-run");
+        (await store.TryAcquireRunnerLockAsync(projectId, lockRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeFeedbackIterationService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("project_busy");
+        run!.Status.Should().Be("blocked");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SubmitAsync_MarksRunFailedAndReleasesLock_WhenRunnerThrows()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var runner = new ThrowingHostedProcessRunner();
+        var service = new PrototypeFeedbackIterationService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.ExitCode.Should().Be(500);
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool prototypeSucceeded)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
@@ -106,6 +153,14 @@ public sealed class PrototypeFeedbackIterationServiceTests
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "Codex changed prototype.");
             return Task.FromResult(new HostedProcessResult(0, "codex stdout", ""));
+        }
+    }
+
+    private sealed class ThrowingHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("runner failed");
         }
     }
 

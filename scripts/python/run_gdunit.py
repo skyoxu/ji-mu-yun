@@ -20,6 +20,32 @@ import time
 import xml.etree.ElementTree as ET
 
 
+def _copy_reports_best_effort(src_root: str, dest_root: str) -> list[tuple[str, str, str]]:
+    failures: list[tuple[str, str, str]] = []
+    if not os.path.isdir(src_root):
+        return failures
+
+    for current_root, dir_names, file_names in os.walk(src_root):
+        rel_root = os.path.relpath(current_root, src_root)
+        dest_dir = dest_root if rel_root in (".", "") else os.path.join(dest_root, rel_root)
+        try:
+            os.makedirs(dest_dir, exist_ok=True)
+        except OSError as ex:
+            failures.append((current_root, dest_dir, str(ex)))
+            dir_names[:] = []
+            continue
+
+        for name in file_names:
+            src = os.path.join(current_root, name)
+            dst = os.path.join(dest_dir, name)
+            try:
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy2(src, dst)
+            except OSError as ex:
+                failures.append((src, dst, str(ex)))
+    return failures
+
+
 def _find_latest_results_xml(reports_dir: str):
     try:
         if not os.path.isdir(reports_dir):
@@ -258,15 +284,19 @@ def main():
         shutil.copy2(console_path, os.path.join(dest, 'gdunit-console.txt'))
     except Exception:
         pass
+    report_copy_failures = []
     # Copy reports if they exist
     if os.path.isdir(reports_dir):
         for name in os.listdir(reports_dir):
             src = os.path.join(reports_dir, name)
             dst = os.path.join(dest, name)
             if os.path.isdir(src):
-                shutil.copytree(src, dst, dirs_exist_ok=True)
+                report_copy_failures.extend(_copy_reports_best_effort(src, dst))
             else:
-                shutil.copy2(src, dst)
+                try:
+                    shutil.copy2(src, dst)
+                except OSError as ex:
+                    report_copy_failures.append((src, dst, str(ex)))
 
     parsed = {}
     latest_results = _find_latest_results_xml(reports_dir)
@@ -288,6 +318,8 @@ def main():
         'timeout_sec': args.timeout_sec,
         'results': parsed,
     }
+    if report_copy_failures:
+        summary['report_copy_failures'] = report_copy_failures
     if prewarm_rc is not None:
         summary['prewarm_rc'] = prewarm_rc
         if prewarm_note:

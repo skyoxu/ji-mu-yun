@@ -8,6 +8,7 @@ namespace PhaseA.Platform.Runs;
 public sealed class Chapter2BootstrapService
 {
     private const string RunType = "chapter2-bootstrap";
+    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(12);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -15,6 +16,7 @@ public sealed class Chapter2BootstrapService
     private readonly Chapter2BootstrapCommandBuilder _commandBuilder;
     private readonly ProjectHealthArtifactIndexer _artifactIndexer;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly TimeSpan _executionTimeout;
 
     public Chapter2BootstrapService(
         PhaseAMetadataStore metadataStore,
@@ -32,7 +34,8 @@ public sealed class Chapter2BootstrapService
         IHostedProcessRunner processRunner,
         Chapter2BootstrapCommandBuilder commandBuilder,
         ProjectHealthArtifactIndexer artifactIndexer,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -40,6 +43,7 @@ public sealed class Chapter2BootstrapService
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
+        _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
     public async Task<Chapter2BootstrapResult> RunAsync(string projectId, CancellationToken cancellationToken = default)
@@ -100,7 +104,21 @@ public sealed class Chapter2BootstrapService
             await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
-            var hardChecks = await _processRunner.RunAsync(_commandBuilder.BuildLocalHardChecksCommand(project.RepoPath), cancellationToken);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(_executionTimeout);
+            HostedProcessResult hardChecks;
+            try
+            {
+                hardChecks = await _processRunner.RunAsync(_commandBuilder.BuildLocalHardChecksCommand(project.RepoPath), timeout.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                hardChecks = new HostedProcessResult(
+                    124,
+                    "",
+                    $"Chapter 2 bootstrap timed out after {_executionTimeout.TotalMinutes:0} minutes.");
+            }
+
             var exitCode = hardChecks.ExitCode;
             var status = exitCode == 0 ? "succeeded" : "failed";
             var stdout = hardChecks.Stdout;

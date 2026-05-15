@@ -200,6 +200,40 @@ public sealed class ProjectCreationServiceTests
         Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ListStaleProjectInitializationsAsync_FindsOldRunningBootstrap()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+        var runId = await store.CreateRunAsync(created.ProjectId!, created.WorkspaceId, "chapter2-bootstrap");
+        await store.MarkRunStartedAsync(runId);
+
+        using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                UPDATE runs
+                SET created_utc = $old_utc,
+                    started_utc = $old_utc
+                WHERE id = $run_id;
+                """;
+            command.Parameters.AddWithValue("$old_utc", DateTimeOffset.UtcNow.AddMinutes(-20).ToString("O"));
+            command.Parameters.AddWithValue("$run_id", runId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var stale = await store.ListStaleProjectInitializationsAsync(TimeSpan.FromMinutes(15));
+
+        stale.Should().ContainSingle(item => item.ProjectId == created.ProjectId && item.RunId == runId);
+    }
+
     private static ProjectCreationRequest Request(string gameName)
     {
         return new ProjectCreationRequest(null, gameName, "manual", null, null, null, null);

@@ -75,73 +75,97 @@ public sealed class PrototypeFeedbackIterationService
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return new PrototypeFeedbackResult(runId, "project_busy", "有任务正在执行，请等待当前任务完成后再提交反馈。", []);
+        }
+
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
-        var relativeDir = Path.Combine("logs", "phase-a-feedback", project.ProjectId, runId);
-        var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
-        Directory.CreateDirectory(absoluteDir);
-
-        var submittedRelativePath = ToSlash(Path.Combine(relativeDir, "submitted-feedback.md"));
-        var resultRelativePath = ToSlash(Path.Combine(relativeDir, "result-log.md"));
-        var submittedAbsolutePath = Path.Combine(project.RepoPath, submittedRelativePath.Replace('/', Path.DirectorySeparatorChar));
-        var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
-        var now = DateTimeOffset.UtcNow.ToString("O");
-        var skillAction = ResolveSkillAction(request.SkillActionId);
-
-        await File.WriteAllTextAsync(
-            submittedAbsolutePath,
-            BuildSubmittedFeedback(project, runId, feedback, now, skillAction),
-            Encoding.UTF8,
-            cancellationToken);
-
-        var model = PrototypeModelPolicy.Normalize(request.Model);
-        var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
-        var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
-        var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
-        var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), cancellationToken);
-        var codexOutput = File.Exists(codexOutputAbsolutePath)
-            ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
-            : "";
-        var assistantMessage = BuildAssistantMessage(project, runId, model, feedback, codexResult, codexOutput, skillAction);
-        await File.WriteAllTextAsync(
-            resultAbsolutePath,
-            BuildResultLog(project, runId, feedback, assistantMessage, model, codexResult, codexOutput, now, skillAction),
-            Encoding.UTF8,
-            cancellationToken);
-
-        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
-            runId,
-            project.ProjectId,
-            "prototype-feedback-submission",
-            submittedRelativePath,
-            "Formal prototype feedback submission"), cancellationToken);
-        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
-            runId,
-            project.ProjectId,
-            "prototype-feedback-result-log",
-            resultRelativePath,
-            "Formal prototype feedback result log"), cancellationToken);
-        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
-            runId,
-            project.ProjectId,
-            "prototype-feedback-codex-output",
-            codexOutputRelativePath,
-            "Formal prototype feedback Codex output"), cancellationToken);
-
-        var evidenceJson = JsonSerializer.Serialize(new
+        try
         {
-            run_type = RunType,
-            model,
-            submitted_feedback = submittedRelativePath,
-            result_log = resultRelativePath,
-            codex_output = codexOutputRelativePath,
-            skill_action_id = skillAction?.ActionId,
-            skill_name = skillAction?.SkillName
-        });
-        await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, cancellationToken);
+            var relativeDir = Path.Combine("logs", "phase-a-feedback", project.ProjectId, runId);
+            var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
+            Directory.CreateDirectory(absoluteDir);
 
-        var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
-        return new PrototypeFeedbackResult(runId, "completed", assistantMessage, artifacts);
+            var submittedRelativePath = ToSlash(Path.Combine(relativeDir, "submitted-feedback.md"));
+            var resultRelativePath = ToSlash(Path.Combine(relativeDir, "result-log.md"));
+            var submittedAbsolutePath = Path.Combine(project.RepoPath, submittedRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            var skillAction = ResolveSkillAction(request.SkillActionId);
+
+            await File.WriteAllTextAsync(
+                submittedAbsolutePath,
+                BuildSubmittedFeedback(project, runId, feedback, now, skillAction),
+                Encoding.UTF8,
+                cancellationToken);
+
+            var model = PrototypeModelPolicy.Normalize(request.Model);
+            var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
+            var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
+            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), cancellationToken);
+            var codexOutput = File.Exists(codexOutputAbsolutePath)
+                ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
+                : "";
+            var assistantMessage = BuildAssistantMessage(project, runId, model, feedback, codexResult, codexOutput, skillAction);
+            await File.WriteAllTextAsync(
+                resultAbsolutePath,
+                BuildResultLog(project, runId, feedback, assistantMessage, model, codexResult, codexOutput, now, skillAction),
+                Encoding.UTF8,
+                cancellationToken);
+
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-feedback-submission",
+                submittedRelativePath,
+                "Formal prototype feedback submission"), cancellationToken);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-feedback-result-log",
+                resultRelativePath,
+                "Formal prototype feedback result log"), cancellationToken);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-feedback-codex-output",
+                codexOutputRelativePath,
+                "Formal prototype feedback Codex output"), cancellationToken);
+
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = RunType,
+                model,
+                submitted_feedback = submittedRelativePath,
+                result_log = resultRelativePath,
+                codex_output = codexOutputRelativePath,
+                skill_action_id = skillAction?.ActionId,
+                skill_name = skillAction?.SkillName
+            });
+            await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, cancellationToken);
+
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+            return new PrototypeFeedbackResult(runId, "completed", assistantMessage, artifacts);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = RunType,
+                failure_code = "prototype_feedback_iteration_failed"
+            });
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
+            return new PrototypeFeedbackResult(runId, "failed", "本轮正式反馈处理失败，请稍后重试。", []);
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
     }
 
     private SkillActionDefinition? ResolveSkillAction(string? actionId)

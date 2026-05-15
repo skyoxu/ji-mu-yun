@@ -320,6 +320,30 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_prototype_drafts (
+            project_id TEXT PRIMARY KEY,
+            status TEXT NOT NULL,
+            run_id TEXT NULL,
+            file_name TEXT NULL,
+            prototype_slug TEXT NULL,
+            hypothesis TEXT NULL,
+            core_player_fantasy TEXT NULL,
+            minimum_playable_loop TEXT NULL,
+            success_criteria_json TEXT NOT NULL DEFAULT '[]',
+            game_feature TEXT NULL,
+            core_gameplay_loop TEXT NULL,
+            win_fail_conditions TEXT NULL,
+            matched_fields_json TEXT NOT NULL DEFAULT '[]',
+            warnings_json TEXT NOT NULL DEFAULT '[]',
+            failure_code TEXT NULL,
+            line_count INTEGER NOT NULL DEFAULT 0,
+            byte_count INTEGER NOT NULL DEFAULT 0,
+            updated_utc TEXT NOT NULL,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE SET NULL
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",

@@ -4,6 +4,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -120,6 +121,36 @@ public sealed class Chapter2BootstrapServiceTests
         runs.Should().Contain(run => run.RunType == "chapter2-bootstrap" && run.Status == "blocked");
     }
 
+    [Fact]
+    public async Task RunAsync_TimesOutAndReleasesRunnerLock()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new HangingHostedProcessRunner();
+        var service = new Chapter2BootstrapService(
+            store,
+            options,
+            runner,
+            new Chapter2BootstrapCommandBuilder(options),
+            new ProjectHealthArtifactIndexer(),
+            new ProjectWorkspaceSeeder(options),
+            TimeSpan.FromMilliseconds(50));
+
+        var result = await service.RunAsync(projectId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(124);
+        result.Stderr.Should().Contain("timed out");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ExitCode.Should().Be(124);
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -187,6 +218,15 @@ public sealed class Chapter2BootstrapServiceTests
             }
 
             return Task.FromResult(_results.Dequeue());
+        }
+    }
+
+    private sealed class HangingHostedProcessRunner : IHostedProcessRunner
+    {
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+            return new HostedProcessResult(0, "", "");
         }
     }
 

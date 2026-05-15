@@ -112,6 +112,32 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_HidesRecoveredInterruptedRunAfterStartupReconcile()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-feedback-iteration");
+        await store.MarkRunStartedAsync(runId);
+        (await store.TryAcquireRunnerLockAsync(projectId, runId)).Should().BeTrue();
+        var service = new ArtifactReadbackService(store, options);
+
+        var recovered = await store.ReconcileInterruptedRunsAsync("Run was interrupted because the service restarted before completion.");
+        var active = await service.GetActiveRunAsync(project.AccountId);
+        var run = await store.GetRunSnapshotAsync(runId);
+
+        recovered.Should().Be(1);
+        active.Busy.Should().BeFalse();
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("service restarted before completion");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+    }
+
+    [Fact]
     public void ReadProjectHealth_ReturnsHtmlAndJson()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "prototype-spec",
+  "slug": "rpgdemo1",
+  "status": "active",
+  "date": "2026-05-14",
+  "game_name": "",
+  "game_type": "prototype",
+  "game_type_source": "",
+  "game_type_guide": "",
+  "game_type_specifics": {},
+  "prototype_file": "docs/prototypes/2026-05-14-rpgdemo1.md",
+  "prototype_spec": "docs/prototypes/rpgdemo1.prototype.json",
+  "prototype_type_kit": {
+    "game_type": "prototype",
+    "kit_path": "docs/prototype-type-kits/prototype.md"
+  },
+  "implementation_skill": {},
+  "prototype_core": {
+    "hypothesis": "以上传草稿为原型方向，验证核心玩法能否在短时间内被理解并完成一次可玩循环。",
+    "core_player_fantasy": "玩家能够在一个简短场景中体验主题幻想、核心行动和明确反馈。",
+    "minimum_playable_loop": "读取目标 -> 进入场景 -> 执行核心行动 -> 获得胜负反馈 -> 可重新尝试。",
+    "game_feature": "原型标识 Slug：",
+    "core_gameplay_loop": "探索 -> 行动 -> 解决挑战 -> 获得奖励或失败反馈 -> 再次尝试。",
+    "win_fail_conditions": "完成场景目标则胜利；核心资源耗尽、角色失败或未达成目标则失败。",
+    "success_criteria": [
+      "玩家能在 30 秒内理解目标和基本操作。",
+      "玩家能在 2 分钟内完成一次完整可玩循环。"
+    ]
+  },
+  "tdd": {
+    "red": "unexpected_green",
+    "green": "pending",
+    "refactor": "pending",
+    "red_summary": "logs/ci/2026-05-14/prototype-tdd-rpgdemo1-red/summary.json"
+  }
+}

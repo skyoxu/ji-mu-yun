@@ -39,6 +39,9 @@ public sealed class PrototypeRecordWriter
     private static string BuildMarkdown(PrototypeWorkflowRequest request, string slug)
     {
         var successCriteria = request.SuccessCriteria!.Where(item => !string.IsNullOrWhiteSpace(item)).ToArray();
+        var gameName = request.GameName?.Trim() ?? "";
+        var gameType = request.GameType?.Trim() ?? "";
+        var gameTypeSource = request.GameTypeSource?.Trim() ?? "";
         var lines = new List<string>
         {
             $"# Prototype: {slug}",
@@ -47,6 +50,9 @@ public sealed class PrototypeRecordWriter
             "- Owner: phase-a-platform",
             $"- Date: {DateTime.UtcNow:yyyy-MM-dd}",
             "- Related formal task ids: none yet",
+            $"- Game Name: {(string.IsNullOrWhiteSpace(gameName) ? "TBD" : gameName)}",
+            $"- Game Type: {(string.IsNullOrWhiteSpace(gameType) ? "TBD" : gameType)}",
+            $"- Game Type Source: {(string.IsNullOrWhiteSpace(gameTypeSource) ? "TBD" : gameTypeSource)}",
             "",
             "## Hypothesis",
             $"- {request.Hypothesis!.Trim()}",

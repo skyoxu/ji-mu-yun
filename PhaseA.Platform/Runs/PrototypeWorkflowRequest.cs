@@ -2,6 +2,9 @@ namespace PhaseA.Platform.Runs;
 
 public sealed record PrototypeWorkflowRequest(
     string? Slug,
+    string? GameName,
+    string? GameType,
+    string? GameTypeSource,
     string? Hypothesis,
     string? CorePlayerFantasy,
     string? MinimumPlayableLoop,

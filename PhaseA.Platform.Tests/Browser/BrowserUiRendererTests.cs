@@ -28,6 +28,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("projectDetailPanel");
         html.Should().Contain("currentProjectPanel");
         html.Should().Contain("initStatusPanel");
+        html.Should().Contain("pollProjectInitializationResult");
         html.Should().Contain("showLoggedOut");
         html.Should().Contain("logout");
         html.Should().Contain("退出登录");
@@ -46,7 +47,15 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("draftFile");
         html.Should().Contain("分析草稿并回填");
         html.Should().Contain("prototype-drafts/analyze");
+        html.Should().Contain("prototype-drafts/latest");
+        html.Should().Contain("loadLatestPrototypeDraft");
+        html.Should().Contain("loadLatestPrototypeDraft(true)");
+        html.Should().Contain("renderDraftImportStatus");
+        html.Should().Contain("draftAnalysisRunning");
+        html.Should().Contain("草稿分析仍在进行中");
         html.Should().Contain("草稿分析中..暂不可启动原型.");
+        html.Should().Contain("已同步最近一次草稿分析结果，表单已自动补全到最新状态。");
+        html.Should().Contain("当前还不能启动：缺少必填项");
         html.Should().NotContain("project-drafts/import");
         html.Should().Contain("repairPrototype");
         html.Should().Contain("修复原型");

@@ -228,6 +228,9 @@
             "guide_path": {
               "type": "string"
             },
+            "needs_narrative": {
+              "type": "boolean"
+            },
             "selected_sections": {
               "type": "array",
               "items": {
@@ -243,6 +246,9 @@
                     "type": "string"
                   },
                   "title": {
+                    "type": "string"
+                  },
+                  "prompt": {
                     "type": "string"
                   },
                   "answer": {

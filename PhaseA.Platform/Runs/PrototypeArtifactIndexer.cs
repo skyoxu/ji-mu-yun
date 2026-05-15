@@ -17,6 +17,8 @@ public sealed class PrototypeArtifactIndexer
             (prototypeRecordPath, "prototype-record", "Prototype markdown record"),
             ($"docs/prototypes/{slug}.prototype.json", "prototype-sidecar-json", "Prototype JSON sidecar"),
             ($"logs/ci/active-prototypes/{slug}.active.json", "active-prototype-json", "Active prototype state"),
+            ($"logs/ci/active-prototypes/{slug}.packaging.json", "prototype-packaging-summary", "Prototype packaging summary JSON"),
+            ($"logs/ci/active-prototypes/{slug}.completion.md", "prototype-completion-report", "Prototype completion report markdown"),
             ("logs/ci/project-health/latest.html", "project-health-html", "Project health dashboard HTML"),
             ("logs/ci/project-health/latest.json", "project-health-json", "Project health dashboard index JSON")
         };

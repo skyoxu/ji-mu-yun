@@ -39,7 +39,7 @@ def main() -> int:
     parser.add_argument("--dotnet", default=None)
     parser.add_argument("--admin-token", default=DEFAULT_ADMIN_TOKEN)
     parser.add_argument("--timeout-seconds", type=int, default=300)
-    parser.add_argument("--stop-after-day", type=int, default=4, choices=[2, 3, 4, 5])
+    parser.add_argument("--stop-after-day", type=int, default=4, choices=[2, 3, 4, 5, 6, 7])
     parser.add_argument("--use-current-repo", action="store_true")
     parser.add_argument("--skip-chapter2", action="store_true")
     args = parser.parse_args()

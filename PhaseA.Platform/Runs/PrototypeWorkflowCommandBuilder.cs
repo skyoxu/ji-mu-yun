@@ -31,11 +31,8 @@ public sealed class PrototypeWorkflowCommandBuilder
             arguments.Add("--confirm");
         }
 
-        if (request.StopAfterDay is not null)
-        {
-            arguments.Add("--stop-after-day");
-            arguments.Add(request.StopAfterDay.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        }
+        arguments.Add("--stop-after-day");
+        arguments.Add(Math.Min(7, Math.Max(1, request.StopAfterDay ?? 7)).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         if (!string.IsNullOrWhiteSpace(request.ScoreEngine))
         {

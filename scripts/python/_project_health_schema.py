@@ -161,6 +161,9 @@ def _validate_project_health_dashboard_fallback(payload: dict[str, Any]) -> list
         else:
             for key in ("game_type", "guide_path"):
                 _require_string(game_type_specifics, key, errors, allow_empty=True)
+            needs_narrative = game_type_specifics.get("needs_narrative")
+            if needs_narrative is not None and not isinstance(needs_narrative, bool):
+                errors.append("$.project_overview.game_type_specifics.needs_narrative: expected boolean")
             selected_sections = game_type_specifics.get("selected_sections")
             if not isinstance(selected_sections, list):
                 errors.append("$.project_overview.game_type_specifics.selected_sections: expected array")
@@ -171,6 +174,9 @@ def _validate_project_health_dashboard_fallback(payload: dict[str, Any]) -> list
                         continue
                     for key in ("id", "title", "answer"):
                         _require_string(section, key, errors, allow_empty=True)
+                    prompt = section.get("prompt")
+                    if prompt is not None and not isinstance(prompt, str):
+                        errors.append(f"$.project_overview.game_type_specifics.selected_sections[{idx}].prompt: expected string")
         prototype_type_kit = project_overview.get("prototype_type_kit")
         if not isinstance(prototype_type_kit, dict):
             errors.append("$.project_overview.prototype_type_kit: expected object")

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Callable
@@ -31,6 +32,8 @@ CMD_NAME = "local-hard-checks"
 TASK_SCOPE = "repo"
 SCHEMA_VERSION = "1.0.0"
 PROTOCOL_VERSION = "1.0.0"
+RUN_DIR_PREFIX = "lhc"
+GATE_BUNDLE_SUBDIR = "g"
 SUPPORTED_SIDECARS = [
     "summary.json",
     "execution-context.json",
@@ -46,8 +49,20 @@ SUPPORTED_RECOVERY_ACTIONS = [
 ]
 
 
+def _short_run_dir_token(run_id: str) -> str:
+    value = str(run_id or "").strip()
+    if not value:
+        return "default"
+    if len(value) <= 12:
+        return value
+    return hashlib.sha1(value.encode("utf-8")).hexdigest()[:12]
+
+
 def default_out_dir(run_id: str) -> Path:
-    return repo_root() / "logs" / "ci" / today_str() / f"{CMD_NAME}-{run_id}"
+    # Keep artifact semantics stable while shortening the per-run folder name.
+    # This avoids Windows path-length failures inside deep Phase A workspaces.
+    token = _short_run_dir_token(run_id)
+    return repo_root() / "logs" / "ci" / today_str() / f"{RUN_DIR_PREFIX}-{token}"
 
 
 def latest_index_path(out_dir: Path) -> Path:
@@ -115,12 +130,12 @@ def build_step_plan(
             "cmd": build_gate_bundle_hard_cmd(
                 delivery_profile=delivery_profile,
                 task_files=task_files,
-                out_dir=str(out_dir),
+                out_dir=str(out_dir / GATE_BUNDLE_SUBDIR),
                 run_id=run_id,
             ),
             "artifacts": {
-                "reported_out_dir": str(out_dir / "hard").replace("\\", "/"),
-                "summary_file": str(out_dir / "hard" / "summary.json").replace("\\", "/"),
+                "reported_out_dir": str(out_dir / GATE_BUNDLE_SUBDIR).replace("\\", "/"),
+                "summary_file": str(out_dir / GATE_BUNDLE_SUBDIR / "summary.json").replace("\\", "/"),
             },
         },
         {
