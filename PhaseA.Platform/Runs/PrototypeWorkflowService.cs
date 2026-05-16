@@ -473,8 +473,42 @@ public sealed class PrototypeWorkflowService
             });
 
         var result = await _processRunner.RunAsync(command, cancellationToken);
-        var effectiveExitCode = ResolvePrototypeSmokeExitCode(result);
-        return new GodotSmokeResult(true, effectiveExitCode, result.Stdout, result.Stderr, "strict_headless_prototype_scene", scenePath);
+        var sceneSmokeExitCode = ResolvePrototypeSmokeExitCode(result);
+        if (sceneSmokeExitCode != 0)
+        {
+            return new GodotSmokeResult(true, sceneSmokeExitCode, result.Stdout, result.Stderr, "strict_headless_prototype_scene", scenePath);
+        }
+
+        var navigationCommand = new HostedProcessCommand(
+            _options.PythonCommand,
+            [
+                "-3",
+                "scripts/python/prototype_main_menu_navigation_smoke.py",
+                "--godot-bin",
+                _options.GodotBin,
+                "--project-path",
+                projectRepoPath,
+                "--expected-scene",
+                scenePath,
+                "--timeout-sec",
+                "15"
+            ],
+            projectRepoPath,
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["GODOT_BIN"] = _options.GodotBin
+            });
+        var navigationResult = await _processRunner.RunAsync(navigationCommand, cancellationToken);
+        var navigationExitCode = navigationResult.ExitCode;
+        var stdout = CombineProcessText(result.Stdout, navigationResult.Stdout);
+        var stderr = CombineProcessText(result.Stderr, navigationResult.Stderr);
+        return new GodotSmokeResult(
+            true,
+            navigationExitCode,
+            stdout,
+            stderr,
+            navigationExitCode == 0 ? "strict_headless_main_menu_navigation" : "prototype_main_menu_navigation_failed",
+            scenePath);
     }
 
     private static int ResolvePrototypeSmokeExitCode(HostedProcessResult result)
@@ -1126,6 +1160,12 @@ public sealed class PrototypeWorkflowService
             rawFailure.Contains("prototype_completion_scene_missing", StringComparison.OrdinalIgnoreCase))
         {
             return "没有创建有效的godot场景文件";
+        }
+
+        if (rawFailure.Contains("prototype_main_menu_navigation_failed", StringComparison.OrdinalIgnoreCase) ||
+            rawFailure.Contains("MAIN_MENU_PROTOTYPE_NAV FAIL", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Main.tscn 未能通过主菜单“原型”入口跳转到本次创建的原型场景。";
         }
 
         if (rawFailure.Contains("prototype_completion_state_missing", StringComparison.OrdinalIgnoreCase))

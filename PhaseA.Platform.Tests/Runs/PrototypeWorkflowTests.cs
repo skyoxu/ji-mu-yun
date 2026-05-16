@@ -81,13 +81,16 @@ public sealed class PrototypeWorkflowTests
         record.Should().Contain("- Game Name: Demo Game");
         record.Should().Contain("- Game Type: rpg");
         record.Should().Contain("- Game Type Source: 勇者斗恶龙");
-        runner.Commands.Should().HaveCount(2);
+        runner.Commands.Should().HaveCount(3);
         runner.Commands[0].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[0].Arguments.Should().Contain("run-prototype-workflow");
         runner.Commands[1].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands[1].Arguments.Should().Contain(["--strict"]);
         runner.Commands[1].Arguments.Should().Contain("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
+        runner.Commands[2].WorkingDirectory.Should().Be(project.RepoPath);
+        runner.Commands[2].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
+        runner.Commands[2].Arguments.Should().Contain("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
         result.Artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-record",
             "prototype-sidecar-json",
@@ -193,6 +196,30 @@ public sealed class PrototypeWorkflowTests
         run.StderrText.Should().Contain("prototype_completion_step_not_ok:3:skipped");
         progress.Failure.Should().Be("TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。");
         runner.Commands.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsWhenMainMenuCannotNavigateToPrototypeScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(mainMenuNavigationExitCode: 9, mainMenuNavigationStderrOverride: "MAIN_MENU_PROTOTYPE_NAV FAIL prototype_scene_not_loaded");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var progress = await service.GetProgressAsync(projectId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StdoutText.Should().Contain("SMOKE PASS");
+        run.StderrText.Should().Contain("MAIN_MENU_PROTOTYPE_NAV FAIL");
+        progress.Status.Should().Be("failed");
+        progress.Failure.Should().Be("Main.tscn 未能通过主菜单“原型”入口跳转到本次创建的原型场景。");
     }
 
     [Fact]
@@ -376,7 +403,7 @@ public sealed class PrototypeWorkflowTests
             WinFailConditions: "",
             Confirm: true));
 
-        await WaitForCommandsAsync(runner, 2);
+        await WaitForCommandsAsync(runner, 3);
         var queuedRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
         result.Status.Should().Be("queued");
         var record = File.ReadAllText(Path.Combine(project!.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar)), System.Text.Encoding.UTF8);
@@ -409,7 +436,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, runner);
 
         var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
-        await WaitForCommandsAsync(runner, 2);
+        await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
         result.Status.Should().Be("queued");
@@ -446,7 +473,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, runner);
 
         var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
-        await WaitForCommandsAsync(runner, 2);
+        await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
         result.Status.Should().Be("queued");
@@ -651,6 +678,9 @@ public sealed class PrototypeWorkflowTests
         private readonly int _smokeExitCode;
         private readonly bool _writePackagingArtifacts;
         private readonly string? _smokeStdoutOverride;
+        private readonly int _mainMenuNavigationExitCode;
+        private readonly string? _mainMenuNavigationStdoutOverride;
+        private readonly string? _mainMenuNavigationStderrOverride;
         private readonly int _workflowExitCode;
         private readonly string? _workflowStdoutOverride;
         private readonly string? _workflowStderrOverride;
@@ -664,6 +694,9 @@ public sealed class PrototypeWorkflowTests
             int smokeExitCode = 0,
             bool writePackagingArtifacts = true,
             string? smokeStdoutOverride = null,
+            int mainMenuNavigationExitCode = 0,
+            string? mainMenuNavigationStdoutOverride = null,
+            string? mainMenuNavigationStderrOverride = null,
             int workflowExitCode = 0,
             string? workflowStdoutOverride = null,
             string? workflowStderrOverride = null)
@@ -676,6 +709,9 @@ public sealed class PrototypeWorkflowTests
             _smokeExitCode = smokeExitCode;
             _writePackagingArtifacts = writePackagingArtifacts;
             _smokeStdoutOverride = smokeStdoutOverride;
+            _mainMenuNavigationExitCode = mainMenuNavigationExitCode;
+            _mainMenuNavigationStdoutOverride = mainMenuNavigationStdoutOverride;
+            _mainMenuNavigationStderrOverride = mainMenuNavigationStderrOverride;
             _workflowExitCode = workflowExitCode;
             _workflowStdoutOverride = workflowStdoutOverride;
             _workflowStderrOverride = workflowStderrOverride;
@@ -692,6 +728,14 @@ public sealed class PrototypeWorkflowTests
                     _smokeExitCode,
                     _smokeStdoutOverride ?? (_smokeExitCode == 0 ? "SMOKE PASS (marker)\n" : ""),
                     _smokeExitCode == 0 ? "" : "SMOKE FAIL\n"));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    _mainMenuNavigationExitCode,
+                    _mainMenuNavigationStdoutOverride ?? (_mainMenuNavigationExitCode == 0 ? "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn\n" : ""),
+                    _mainMenuNavigationStderrOverride ?? (_mainMenuNavigationExitCode == 0 ? "" : "MAIN_MENU_PROTOTYPE_NAV FAIL\n")));
             }
 
             var slug = ExtractSlug(command.Arguments, command.WorkingDirectory) ?? "demo-prototype";

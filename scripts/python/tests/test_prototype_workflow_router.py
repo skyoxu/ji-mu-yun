@@ -727,6 +727,31 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertIn("tests/Prototype/DqRpgPrototype", green_step["cmd"])
         self.assertEqual("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", green_step["default_scene"])
 
+    def test_implementation_prompt_should_require_main_menu_navigation_to_default_scene(self) -> None:
+        module = _load_module("prototype_workflow_router_prompt_main_menu_navigation", "scripts/python/run_prototype_workflow.py")
+        payload = {
+            "slug": "dq-rpg",
+            "hypothesis": "验证战斗循环是否成立",
+            "core_player_fantasy": "玩家在一分钟内感到探索与战斗压力",
+            "minimum_playable_loop": "移动，遇敌，战斗，结算",
+            "success_criteria": ["玩家能完成一轮最小循环"],
+            "game_feature": "地图探索加遭遇战",
+            "core_gameplay_loop": "移动，战斗，奖励选择",
+            "win_fail_conditions": "获胜继续，失败重试",
+        }
+
+        prompt = module._build_implementation_prompt(
+            payload=payload,
+            record_file="docs/prototypes/2026-05-16-dq-rpg.md",
+            default_scene="res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn",
+        )
+
+        self.assertIn("Main.tscn", prompt)
+        self.assertIn("主菜单里的“原型 / Prototype”按钮", prompt)
+        self.assertIn("PrototypeCatalog + ScreenNavigator", prompt)
+        self.assertIn("default_scene", prompt)
+        self.assertIn("不允许只生成 prototype 场景文件而不接通 Main.tscn 的主菜单原型入口", prompt)
+
     def test_validate_day4_outputs_should_fail_when_scaffold_or_core_files_are_missing(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_fail", "scripts/python/run_prototype_workflow.py")
         with tempfile.TemporaryDirectory() as td:

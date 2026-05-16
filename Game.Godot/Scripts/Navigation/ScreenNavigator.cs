@@ -9,14 +9,14 @@ public partial class ScreenNavigator : Node
     [Export] public bool UseFadeTransition { get; set; } = true;
     [Export] public float FadeDurationSec { get; set; } = 0.25f;
 
-    private Control? _root;
+    private Node? _root;
     private Control? _overlays;
-    private Control? _current;
+    private Node? _current;
     private bool _busy;
 
     public override void _Ready()
     {
-        _root = GetNodeOrNull<Control>(ScreenRootPath);
+        _root = GetNodeOrNull<Node>(ScreenRootPath);
         if (_root == null)
         {
             GD.PushWarning("[Navigator] ScreenRoot not found; navigation disabled.");
@@ -52,7 +52,7 @@ public partial class ScreenNavigator : Node
             _current.QueueFree();
             _current = null;
         }
-        var inst = packed.Instantiate<Control>();
+        var inst = packed.Instantiate();
         _root!.AddChild(inst);
         _current = inst;
         if (_current.HasMethod("Enter")) _current.CallDeferred("Enter");

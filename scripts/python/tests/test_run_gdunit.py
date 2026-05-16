@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -27,6 +29,10 @@ def _load_module(name: str, relative_path: str):
 
 
 run_gdunit = _load_module("run_gdunit_test_module", "scripts/python/run_gdunit.py")
+prototype_main_menu_navigation_smoke = _load_module(
+    "prototype_main_menu_navigation_smoke_test_module",
+    "scripts/python/prototype_main_menu_navigation_smoke.py",
+)
 
 
 class RunGdUnitTests(unittest.TestCase):
@@ -53,6 +59,24 @@ class RunGdUnitTests(unittest.TestCase):
             self.assertEqual(1, len(failures))
             self.assertTrue((dest_root / "report_1" / "results.xml").exists())
             self.assertFalse((dest_root / "report_1" / "test_suites" / "deep.html").exists())
+
+    def test_prototype_main_menu_navigation_smoke_write_helpers_should_support_nested_paths(self) -> None:
+        tmpdir = Path(tempfile.mkdtemp())
+        try:
+            deep = tmpdir
+            for index in range(8):
+                deep = deep / f"nested-segment-{index:02d}-for-long-path-check"
+            target = deep / "main_menu_navigation_smoke.gd"
+
+            prototype_main_menu_navigation_smoke._write_text(target, "extends SceneTree\n")
+
+            self.assertTrue(os.path.exists(prototype_main_menu_navigation_smoke._to_windows_extended_path(target.resolve())))
+            self.assertEqual("extends SceneTree\n", prototype_main_menu_navigation_smoke._read_text(target))
+        finally:
+            shutil.rmtree(
+                prototype_main_menu_navigation_smoke._to_windows_extended_path(tmpdir.resolve()),
+                ignore_errors=True,
+            )
 
 
 if __name__ == "__main__":

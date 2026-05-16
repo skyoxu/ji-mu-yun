@@ -148,7 +148,11 @@ def main() -> int:
             events.append({"event": "artifact_types_ok", "artifact_types": artifact_types})
 
             project_repo = resolve_project_repo(workspace_root, metadata_db, project_id)
-            validation = validate_project_specific_outputs(project_repo)
+            prototype_record_relative = extract_prototype_record_relative(run_details)
+            validation = validate_project_specific_outputs(
+                project_repo,
+                prototype_record_relative=prototype_record_relative,
+            )
             events.append({"event": "project_outputs_ok", **validation})
 
             status = "ok"
@@ -349,9 +353,24 @@ def resolve_project_repo(workspace_root: Path, metadata_db: Path, project_id: st
     return repo
 
 
-def validate_project_specific_outputs(project_repo: Path) -> dict[str, Any]:
+def extract_prototype_record_relative(run_details: dict[str, Any]) -> str:
+    run = run_details.get("run") if isinstance(run_details, dict) else None
+    if not isinstance(run, dict):
+        return ""
+    evidence_json = str(run.get("evidenceJson") or "").strip()
+    if not evidence_json:
+        return ""
+    try:
+        evidence = json.loads(evidence_json)
+    except json.JSONDecodeError:
+        return ""
+    return str(evidence.get("prototype_record") or "").strip()
+
+
+def validate_project_specific_outputs(project_repo: Path, *, prototype_record_relative: str) -> dict[str, Any]:
+    prototype_record_path = project_repo / prototype_record_relative.replace("/", os.sep) if prototype_record_relative else project_repo / "docs" / "prototypes" / "2026-05-16-dq-rpg.md"
     required_paths = {
-        "prototype_record": project_repo / "docs" / "prototypes" / "2026-05-15-dq-rpg.md",
+        "prototype_record": prototype_record_path,
         "prototype_spec": project_repo / "docs" / "prototypes" / "dq-rpg.prototype.json",
         "core_loop": project_repo / "Game.Core" / "Prototypes" / "DqRpgPrototypeLoop.cs",
         "runtime_script": project_repo / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / "DqRpgPrototype.cs",

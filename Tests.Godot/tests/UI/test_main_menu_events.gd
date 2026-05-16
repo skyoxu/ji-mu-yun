@@ -40,5 +40,9 @@ func test_main_menu_emits_default_menu_prototype_payload() -> void:
     await get_tree().process_frame
     assert_bool(_received).is_true()
     assert_str(_etype).is_equal("ui.menu.prototype")
-    assert_str(_data_json).contains("\"slug\":\"default-rpg-template\"")
-    assert_str(_data_json).contains("\"scene_path\":\"res://Game.Godot/Prototypes/DefaultRpgTemplate/DefaultRpgPrototype.tscn\"")
+    if ResourceLoader.exists("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"):
+        assert_str(_data_json).contains("\"slug\":\"dq-rpg\"")
+        assert_str(_data_json).contains("\"scene_path\":\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"")
+    else:
+        assert_str(_data_json).contains("\"slug\":\"default-rpg-template\"")
+        assert_str(_data_json).contains("\"scene_path\":\"res://Game.Godot/Prototypes/DefaultRpgTemplate/DefaultRpgPrototype.tscn\"")
