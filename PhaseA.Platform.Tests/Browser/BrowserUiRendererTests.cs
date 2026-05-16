@@ -107,6 +107,16 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("updateChatPanelVisibility");
         html.Should().Contain("seedChatFromPrototypeProgress");
         html.Should().Contain("prototypeSeedMessage");
+        html.Should().Contain("formatNextStepSource");
+        html.Should().Contain("formatNextStepEvaluation");
+        html.Should().Contain("下一步建议来源：");
+        html.Should().Contain("继续优化评估：");
+        html.Should().Contain("Codex 输出");
+        html.Should().Contain("原型记录");
+        html.Should().Contain("系统生成");
+        html.Should().Contain("建议继续");
+        html.Should().Contain("建议谨慎");
+        html.Should().Contain("暂不建议");
         html.Should().Contain("sanitizePublicChatContent");
         html.Should().NotContain("latestPrototypeTerminalOutput");
         html.Should().NotContain("stdoutText || run.stderrText");

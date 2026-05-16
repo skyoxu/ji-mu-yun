@@ -2235,18 +2235,18 @@ def _find_latest_codex_output_path(*, root: Path, slug: str) -> Path | None:
     return max(candidates, key=lambda item: item.stat().st_mtime)
 
 
-def _resolve_completion_next_step(*, root: Path, payload: dict[str, Any]) -> str:
+def _resolve_completion_next_step(*, root: Path, payload: dict[str, Any]) -> tuple[str, str]:
     current = str(payload.get("next_step") or "").strip()
     if current and not _is_placeholder_next_step(current):
-        return current
+        return current, "record"
 
     slug = str(payload.get("slug") or "prototype")
     codex_output_path = _find_latest_codex_output_path(root=root, slug=slug)
     if codex_output_path and path_exists(codex_output_path):
         candidate = _extract_next_step_from_codex_output(read_text(codex_output_path, errors="ignore"))
         if candidate:
-            return candidate
-    return _build_actionable_next_step(payload)
+            return candidate, "codex"
+    return _build_actionable_next_step(payload), "system"
 
 
 def _friendly_scene_label(scene_path: str) -> str:
@@ -2269,6 +2269,37 @@ def _build_tdd_stage_counts(tdd_summaries: list[dict[str, Any]]) -> dict[str, in
         if stage in counts:
             counts[stage] += 1
     return counts
+
+
+def _evaluate_next_step(
+    *,
+    next_step_source: str,
+    completed_steps: list[dict[str, Any]],
+    report_default_scene: str,
+    tdd_summary_paths: list[str],
+) -> tuple[str, str]:
+    source = str(next_step_source or "").strip().lower()
+    completed_days = {
+        int(step.get("day"))
+        for step in completed_steps
+        if step.get("day") and str(step.get("status") or "").strip().lower() == "ok"
+    }
+    has_scene = bool(str(report_default_scene or "").strip())
+    has_green = any("green" in str(path or "").lower() for path in tdd_summary_paths)
+
+    if source == "codex":
+        return "recommended", "建议来自 Codex 输出，且当前原型已完成本轮验收，可直接继续优化。"
+
+    if source == "record":
+        return "caution", "建议来自原型记录而非本轮执行结果，继续前建议先确认它仍适合当前产物。"
+
+    if has_scene and has_green and 5 in completed_days:
+        return "recommended", "系统建议与当前已验证的原型闭环目标一致，可以作为下一轮继续优化的方向。"
+
+    if has_scene and completed_days:
+        return "caution", "系统建议可以作为方向参考，但不是基于本轮 Codex 诊断直接生成，继续前建议先人工确认。"
+
+    return "not_recommended", "当前原型验收证据不足，建议先补齐场景或验证，再决定是否继续沿这条建议优化。"
 
 
 def _build_completion_summary(
@@ -2386,8 +2417,9 @@ def _write_completion_report(
     steps_run: list[dict[str, Any]],
 ) -> tuple[str, str]:
     slug = str(payload.get("slug") or "prototype")
-    resolved_next_step = _resolve_completion_next_step(root=root, payload=payload)
+    resolved_next_step, next_step_source = _resolve_completion_next_step(root=root, payload=payload)
     payload["next_step"] = resolved_next_step
+    payload["next_step_source"] = next_step_source
     packaging_payload = _read_json_file(root / packaging_summary_path.replace("/", os.sep))
     report_default_scene = (
         str(packaging_payload.get("default_scene") or "").strip()
@@ -2401,6 +2433,14 @@ def _write_completion_report(
         prototype_spec=prototype_spec,
         next_step=resolved_next_step,
     )
+    next_step_evaluation, next_step_evaluation_reason = _evaluate_next_step(
+        next_step_source=next_step_source,
+        completed_steps=steps_run,
+        report_default_scene=report_default_scene,
+        tdd_summary_paths=tdd_summary_paths,
+    )
+    payload["next_step_evaluation"] = next_step_evaluation
+    payload["next_step_evaluation_reason"] = next_step_evaluation_reason
     lines = [
         "# Prototype Completion Report",
         "",
@@ -2817,6 +2857,9 @@ def main(argv: list[str] | None = None) -> int:
     if int(args.stop_after_day) >= 7:
         state["completion_summary"] = completion_summary
         state["completion_report"] = completion_report_path
+        state["next_step_source"] = str(payload.get("next_step_source") or "")
+        state["next_step_evaluation"] = str(payload.get("next_step_evaluation") or "")
+        state["next_step_evaluation_reason"] = str(payload.get("next_step_evaluation_reason") or "")
     path = write_active_state(repo_root=root, slug=str(payload["slug"]), payload=state)
     print(f"PROTOTYPE_WORKFLOW 状态=完成 day={args.stop_after_day} 活动状态={path.relative_to(root).as_posix()}")
     return 0

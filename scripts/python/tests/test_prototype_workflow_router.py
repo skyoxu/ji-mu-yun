@@ -1110,6 +1110,45 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             "继续处理这个工作区的 写权限问题，或者直接转去补 Day 5 的 最小验证。",
             payload["next_step"],
         )
+        self.assertEqual("codex", payload["next_step_source"])
+        self.assertEqual("recommended", payload["next_step_evaluation"])
+
+    def test_completion_report_should_mark_system_source_when_using_fallback(self) -> None:
+        module = _load_module("prototype_workflow_router_completion_report_source_fallback", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            scene_path = root / "Game.Godot" / "Prototypes" / "dq-rpg" / "DqRpgPrototype.tscn"
+            scene_path.parent.mkdir(parents=True, exist_ok=True)
+            scene_path.write_text("[gd_scene format=3]\n", encoding="utf-8")
+            payload = {
+                "slug": "dq-rpg",
+                "game_type": "rpg",
+                "next_step": "Stay in prototype lane until explicitly promoted later.",
+                "success_criteria": ["奖励3选1可以正确理解"],
+                "core_gameplay_loop": "地图移动，概率撞怪，打赢怪物，选择成长",
+                "win_fail_conditions": "打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败",
+            }
+            packaging_path, summary_paths = module._write_packaging_summary(
+                root=root,
+                payload=payload,
+                record_file="docs/prototypes/2026-05-16-dq-rpg.md",
+                prototype_spec="docs/prototypes/dq-rpg.prototype.json",
+                steps_run=[],
+            )
+
+            module._write_completion_report(
+                root=root,
+                payload=payload,
+                record_file="docs/prototypes/2026-05-16-dq-rpg.md",
+                prototype_spec="docs/prototypes/dq-rpg.prototype.json",
+                packaging_summary_path=packaging_path,
+                tdd_summary_paths=summary_paths,
+                steps_run=[],
+            )
+
+        self.assertEqual("system", payload["next_step_source"])
+        self.assertEqual("not_recommended", payload["next_step_evaluation"])
+        self.assertIn("当前原型验收证据不足", payload["next_step_evaluation_reason"])
 
     def test_normalize_payload_should_infer_rpg_game_type_from_unstructured_text(self) -> None:
         module = _load_module("prototype_workflow_router_infer_rpg", "scripts/python/run_prototype_workflow.py")

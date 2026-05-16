@@ -281,12 +281,15 @@ public sealed class PrototypeWorkflowService
         var run = runs.FirstOrDefault(item => item.RunType == RunType);
         if (run is null)
         {
-            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始 7 日可玩原型路线。", null, null, null, null);
+            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始 7 日可玩原型路线。", null, null, null, null, null, null, null);
         }
 
         var step = string.IsNullOrWhiteSpace(run.ProgressStep) ? run.Status : run.ProgressStep;
         var label = string.IsNullOrWhiteSpace(run.ProgressLabel) ? DefaultLabel(run.Status) : run.ProgressLabel;
         var completionSummary = ReadCompletionSummaryFromRun(run);
+        var nextStepSource = ReadNextStepSourceFromRun(run);
+        var nextStepEvaluation = ReadNextStepEvaluationFromRun(run);
+        var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(run);
         var packaging = ReadPackagingSummaryFromRun(project.RepoPath, run);
         return new PrototypeWorkflowProgress(
             run.Status,
@@ -297,6 +300,9 @@ public sealed class PrototypeWorkflowService
             run.RunId,
             run.Status == "failed" ? ResolveUserFacingFailure(run) : null,
             completionSummary,
+            nextStepSource,
+            nextStepEvaluation,
+            nextStepEvaluationReason,
             packaging?.DefaultScene,
             packaging?.DefaultSceneLabel,
             packaging?.TddSummaryCount,
@@ -638,6 +644,68 @@ public sealed class PrototypeWorkflowService
         }
     }
 
+    private static string? ReadNextStepSourceFromRun(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object ||
+                !completion.TryGetProperty("next_step_source", out var sourceElement) ||
+                sourceElement.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return sourceElement.GetString();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadNextStepEvaluationFromRun(RunSnapshot run)
+    {
+        return ReadPrototypeCompletionStringField(run, "next_step_evaluation");
+    }
+
+    private static string? ReadNextStepEvaluationReasonFromRun(RunSnapshot run)
+    {
+        return ReadPrototypeCompletionStringField(run, "next_step_evaluation_reason");
+    }
+
+    private static string? ReadPrototypeCompletionStringField(RunSnapshot run, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object ||
+                !completion.TryGetProperty(fieldName, out var fieldElement) ||
+                fieldElement.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return fieldElement.GetString();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private static PrototypePackagingSummaryReadback? ReadPackagingSummaryFromRun(string repositoryRoot, RunSnapshot run)
     {
         if (string.IsNullOrWhiteSpace(run.EvidenceJson))
@@ -790,6 +858,15 @@ public sealed class PrototypeWorkflowService
             var completionSummary = root.TryGetProperty("completion_summary", out var completionSummaryElement) && completionSummaryElement.ValueKind == JsonValueKind.String
                 ? completionSummaryElement.GetString()
                 : null;
+            var nextStepSource = root.TryGetProperty("next_step_source", out var nextStepSourceElement) && nextStepSourceElement.ValueKind == JsonValueKind.String
+                ? nextStepSourceElement.GetString()
+                : null;
+            var nextStepEvaluation = root.TryGetProperty("next_step_evaluation", out var nextStepEvaluationElement) && nextStepEvaluationElement.ValueKind == JsonValueKind.String
+                ? nextStepEvaluationElement.GetString()
+                : null;
+            var nextStepEvaluationReason = root.TryGetProperty("next_step_evaluation_reason", out var nextStepEvaluationReasonElement) && nextStepEvaluationReasonElement.ValueKind == JsonValueKind.String
+                ? nextStepEvaluationReasonElement.GetString()
+                : null;
             if (completedThroughDay >= CurrentWorkflowMaxDay && string.IsNullOrWhiteSpace(completionSummary))
             {
                 return PrototypeCompletionValidation.Failure("prototype_completion_summary_missing");
@@ -809,7 +886,7 @@ public sealed class PrototypeWorkflowService
                 }
             }
 
-            return PrototypeCompletionValidation.Success(status, completedThroughDay, smokeScene, completionSummary);
+            return PrototypeCompletionValidation.Success(status, completedThroughDay, smokeScene, completionSummary, nextStepSource, nextStepEvaluation, nextStepEvaluationReason);
         }
         catch (JsonException)
         {
@@ -1421,16 +1498,19 @@ public sealed class PrototypeWorkflowService
         int CompletedThroughDay,
         string? Error,
         string? SmokeScene,
-        string? CompletionSummary)
+        string? CompletionSummary,
+        string? NextStepSource,
+        string? NextStepEvaluation,
+        string? NextStepEvaluationReason)
     {
         public static PrototypeCompletionValidation Failure(string error)
         {
-            return new PrototypeCompletionValidation(false, "", 0, error, null, null);
+            return new PrototypeCompletionValidation(false, "", 0, error, null, null, null, null, null);
         }
 
-        public static PrototypeCompletionValidation Success(string status, int completedThroughDay, string smokeScene, string? completionSummary)
+        public static PrototypeCompletionValidation Success(string status, int completedThroughDay, string smokeScene, string? completionSummary, string? nextStepSource, string? nextStepEvaluation, string? nextStepEvaluationReason)
         {
-            return new PrototypeCompletionValidation(true, status, completedThroughDay, null, smokeScene, completionSummary);
+            return new PrototypeCompletionValidation(true, status, completedThroughDay, null, smokeScene, completionSummary, nextStepSource, nextStepEvaluation, nextStepEvaluationReason);
         }
 
         public object ToEvidence()
@@ -1442,7 +1522,10 @@ public sealed class PrototypeWorkflowService
                 completed_through_day = CompletedThroughDay,
                 error = Error,
                 smoke_scene = SmokeScene,
-                completion_summary = CompletionSummary
+                completion_summary = CompletionSummary,
+                next_step_source = NextStepSource,
+                next_step_evaluation = NextStepEvaluation,
+                next_step_evaluation_reason = NextStepEvaluationReason
             };
         }
     }

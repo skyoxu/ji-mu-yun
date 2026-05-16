@@ -1304,12 +1304,18 @@ public sealed class BrowserUiRenderer
                   const redCount = Number(progress?.tddRedCount || 0);
                   const greenCount = Number(progress?.tddGreenCount || 0);
                   const refactorCount = Number(progress?.tddRefactorCount || 0);
+                  const nextStepSource = formatNextStepSource(progress?.nextStepSource);
+                  const nextStepEvaluation = formatNextStepEvaluation(progress?.nextStepEvaluation);
+                  const nextStepEvaluationReason = String(progress?.nextStepEvaluationReason || "").trim();
                   const focusPoints = Array.isArray(progress?.playtestFocusPoints) ? progress.playtestFocusPoints.filter(Boolean) : [];
                   $("prototypeAcceptanceSummary").className = "card";
                   $("prototypeAcceptanceSummary").innerHTML = `
                     <strong>原型验收摘要</strong>
                     <p class="muted">默认场景：${escapeHtml(defaultScene)}</p>
                     <p class="muted">验证摘要：共 ${escapeHtml(String(tddSummaryCount))} 份 · 红灯 ${escapeHtml(String(redCount))} · 绿灯 ${escapeHtml(String(greenCount))} · 重构 ${escapeHtml(String(refactorCount))}</p>
+                    <p class="muted">下一步建议来源：${escapeHtml(nextStepSource)}</p>
+                    <p class="muted">继续优化评估：${escapeHtml(nextStepEvaluation)}</p>
+                    ${nextStepEvaluationReason ? `<p class="muted">${escapeHtml(nextStepEvaluationReason)}</p>` : ""}
                     ${focusPoints.length ? `<div><strong>建议试玩重点</strong><ul>${focusPoints.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : "<p class='muted'>暂无试玩重点建议。</p>"}
                   `;
                 }
@@ -1353,17 +1359,32 @@ public sealed class BrowserUiRenderer
                     if (realSummary) {
                       updateContinueSuggestionFromText(realSummary);
                       setFormalFeedbackAvailability(true);
-                      return realSummary;
+                      return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n${realSummary}`.trim();
                     }
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“同意继续优化”，系统会把这条建议作为正式反馈提交给 Codex 继续实现。`;
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“同意继续优化”，系统会把这条建议作为正式反馈提交给 Codex 继续实现。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
                   }
                   return "原型流程已有进度。你可以继续说明目标或补充需求，我会按当前项目上下文协助梳理。";
+                }
+
+                function formatNextStepSource(value) {
+                  const normalized = String(value || "").trim().toLowerCase();
+                  if (normalized === "codex") return "Codex 输出";
+                  if (normalized === "record") return "原型记录";
+                  return "系统生成";
+                }
+
+                function formatNextStepEvaluation(value) {
+                  const normalized = String(value || "").trim().toLowerCase();
+                  if (normalized === "recommended") return "建议继续";
+                  if (normalized === "caution") return "建议谨慎";
+                  if (normalized === "not_recommended") return "暂不建议";
+                  return "待判断";
                 }
 
                 function defaultNextSuggestedFeedback() {
