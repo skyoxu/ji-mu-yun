@@ -37,6 +37,7 @@ build/
 !scripts/sc/build/
 !scripts/sc/build/**
 reports/
+artifacts/
 logs/*
 !logs/.gdignore
 gitlog/
@@ -52,6 +53,8 @@ TestResults/
 # Tests.Godot must read the real game assets via Junction (do not version mirrored copies)
 Tests.Godot/Game.Godot/
 Tests.Godot/Game.Godot/**
+Tests.Godot/logs/
+Tests.Godot/logs/**
 # Godot/VS misc metadata not for VCS
 *.uid
 tmp_patch.txt
