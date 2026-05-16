@@ -15,6 +15,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+PLACEHOLDER_NEXT_STEPS = {
+    "Proceed to the next prototype workflow confirmation step.",
+    "Stay in prototype lane until explicitly promoted later.",
+}
+
 
 def configure_stdio_utf8() -> None:
     for stream_name in ("stdout", "stderr"):
@@ -2128,6 +2133,122 @@ def _playtest_focus_points(payload: dict[str, Any]) -> list[str]:
     return defaults
 
 
+def _is_placeholder_next_step(value: Any) -> bool:
+    text = re.sub(r"\s+", " ", str(value or "").strip())
+    return text in PLACEHOLDER_NEXT_STEPS
+
+
+def _compact_advice_text(value: Any, *, limit: int = 48) -> str:
+    text = str(value or "").strip()
+    text = text.strip("()（）[]【】")
+    text = re.sub(r"\s+", " ", text)
+    return text[:limit].rstrip("，、；;,.。 ") if len(text) > limit else text
+
+
+def _build_actionable_next_step(payload: dict[str, Any]) -> str:
+    game_type = str(payload.get("game_type") or "").strip().lower()
+    success_criteria = [str(item).strip() for item in list(payload.get("success_criteria") or []) if str(item).strip()]
+    loop_text = _compact_advice_text(payload.get("core_gameplay_loop") or payload.get("minimum_playable_loop"), limit=72)
+    feature_text = _compact_advice_text(payload.get("game_feature"), limit=72)
+    win_fail_text = _compact_advice_text(payload.get("win_fail_conditions"), limit=56)
+
+    if game_type == "rpg":
+        parts = [
+            "请继续把当前 RPG 原型补成一个完整首轮闭环：优先让玩家能稳定移动、触发遇敌、完成一场战斗，并在胜利后完成一次奖励 3 选 1 再返回地图。"
+        ]
+        if success_criteria:
+            parts.append(f"完成后先重点验证“{_compact_advice_text(success_criteria[0], limit=40)}”是否真的成立。")
+        if win_fail_text:
+            parts.append(f"同时把“{win_fail_text}”做成玩家一眼能看懂的明确提示。")
+        return " ".join(parts)
+
+    if loop_text:
+        suggestion = f"请继续把当前原型补成一个可反复试玩的最小闭环：围绕“{loop_text}”补齐关键反馈、状态切换和完成判定。"
+    elif feature_text:
+        suggestion = f"请继续把当前原型的核心玩法做实：围绕“{feature_text}”补齐玩家输入、结果反馈和完成判定。"
+    else:
+        suggestion = "请继续优化这个半成品原型：优先补齐首分钟目标提示、核心交互反馈、状态切换和明确的完成/失败判定。"
+
+    if success_criteria:
+        suggestion += f" 完成后先验证“{_compact_advice_text(success_criteria[0], limit=40)}”是否真正成立。"
+    elif win_fail_text:
+        suggestion += f" 同时把“{win_fail_text}”做成玩家容易理解的明确提示。"
+    return suggestion
+
+
+def _strip_public_markdown_noise(text: str) -> str:
+    value = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    value = value.replace("`", "")
+    value = re.sub(r"[A-Za-z]:\\[^\s)>\]]+", "", value)
+    value = re.sub(r"res://[^\s)>\]]+", "", value)
+    value = re.sub(r"\b[\w.-]+[/\\][\w./\\-]+\b", "", value)
+    value = re.sub(r"\s+", " ", value)
+    return value.strip(" -\t\r\n")
+
+
+def _normalize_suggestion_sentence(text: str) -> str:
+    value = _strip_public_markdown_noise(text)
+    value = re.sub(r"^(?:如果你(?:要|愿意|需要)[，,]?\s*(?:我)?下一步可以|下一步(?:建议)?[：:]?|可以直接|可以继续)\s*", "", value)
+    value = value.strip("，,：:;； ")
+    if not value:
+        return ""
+    if value[-1] not in "。！？!?":
+        value += "。"
+    return value
+
+
+def _extract_next_step_from_codex_output(text: str) -> str:
+    value = str(text or "").strip()
+    if not value:
+        return ""
+
+    patterns = [
+        r"下一步建议[：:]\s*(.+?)(?:\n\s*\n|$)",
+        r"如果你(?:要|愿意|需要)[，,]?\s*(?:我)?下一步可以(.+?)(?:\n\s*\n|$)",
+        r"接下来可以(.+?)(?:\n\s*\n|$)",
+    ]
+    for pattern in patterns:
+        matches = re.findall(pattern, value, flags=re.IGNORECASE | re.DOTALL)
+        for candidate in reversed(matches):
+            normalized = _normalize_suggestion_sentence(candidate)
+            if normalized:
+                return normalized
+
+    paragraphs = [item.strip() for item in re.split(r"\n\s*\n", value) if item.strip()]
+    for paragraph in reversed(paragraphs):
+        if "下一步" not in paragraph and "如果你要" not in paragraph and "如果你愿意" not in paragraph and "接下来" not in paragraph:
+            continue
+        normalized = _normalize_suggestion_sentence(paragraph)
+        if normalized:
+            return normalized
+    return ""
+
+
+def _find_latest_codex_output_path(*, root: Path, slug: str) -> Path | None:
+    logs_root = root / "logs" / "ci"
+    if not path_exists(logs_root):
+        return None
+    prefix = f"prototype-implementation-{sanitize_slug(slug)}"
+    candidates = [path for path in logs_root.rglob("codex-output.txt") if path.parent.name == prefix]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda item: item.stat().st_mtime)
+
+
+def _resolve_completion_next_step(*, root: Path, payload: dict[str, Any]) -> str:
+    current = str(payload.get("next_step") or "").strip()
+    if current and not _is_placeholder_next_step(current):
+        return current
+
+    slug = str(payload.get("slug") or "prototype")
+    codex_output_path = _find_latest_codex_output_path(root=root, slug=slug)
+    if codex_output_path and path_exists(codex_output_path):
+        candidate = _extract_next_step_from_codex_output(read_text(codex_output_path, errors="ignore"))
+        if candidate:
+            return candidate
+    return _build_actionable_next_step(payload)
+
+
 def _friendly_scene_label(scene_path: str) -> str:
     value = str(scene_path or "").strip()
     if not value:
@@ -2156,6 +2277,7 @@ def _build_completion_summary(
     steps_run: list[dict[str, Any]],
     tdd_summary_paths: list[str],
     prototype_spec: str,
+    next_step: str,
 ) -> str:
     success_criteria = [str(item).strip() for item in list(payload.get("success_criteria") or []) if str(item).strip()]
     completed_steps = [step for step in steps_run if str(step.get("status") or "").strip().lower() == "ok"]
@@ -2186,10 +2308,6 @@ def _build_completion_summary(
     ])
     if tdd_summary_paths:
         lines.append(f"- 已整理 {len(tdd_summary_paths)} 份验证摘要。")
-
-    next_step = str(payload.get("next_step") or "").strip()
-    if not next_step or next_step == "Proceed to the next prototype workflow confirmation step.":
-        next_step = "请先试玩当前版本，重点检查首分钟目标理解、操作反馈、胜负条件与基础手感；若仍有明显问题，可继续同意下一轮优化。"
 
     lines.extend([
         "",
@@ -2268,6 +2386,8 @@ def _write_completion_report(
     steps_run: list[dict[str, Any]],
 ) -> tuple[str, str]:
     slug = str(payload.get("slug") or "prototype")
+    resolved_next_step = _resolve_completion_next_step(root=root, payload=payload)
+    payload["next_step"] = resolved_next_step
     packaging_payload = _read_json_file(root / packaging_summary_path.replace("/", os.sep))
     report_default_scene = (
         str(packaging_payload.get("default_scene") or "").strip()
@@ -2279,6 +2399,7 @@ def _write_completion_report(
         steps_run=steps_run,
         tdd_summary_paths=tdd_summary_paths,
         prototype_spec=prototype_spec,
+        next_step=resolved_next_step,
     )
     lines = [
         "# Prototype Completion Report",

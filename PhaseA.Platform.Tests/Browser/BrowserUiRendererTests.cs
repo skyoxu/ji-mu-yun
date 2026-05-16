@@ -115,6 +115,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("可以点击“修复原型”继续修复");
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
+        html.Should().Contain("submitQuickFix");
+        html.Should().Contain("快速修复");
+        html.Should().Contain("快速修复：适合修入口接线、文案、状态显示、小范围逻辑问题");
+        html.Should().Contain("prototype-quick-fixes");
         html.Should().Contain("submitFormalFeedback");
         html.Should().Contain("提交反馈并继续优化原型");
         html.Should().Contain("continueSuggestedFeedback");
@@ -126,6 +130,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("suggestedFeedback");
         html.Should().Contain("defaultNextSuggestedFeedback");
         html.Should().Contain("updateContinueSuggestionFromText");
+        html.Should().Contain("如果你同意|如你同意|若你同意");
         html.Should().Contain("feedbackRecords");
         html.Should().Contain("prototype-feedback-iterations");
         html.Should().NotContain("skillActionPanel");

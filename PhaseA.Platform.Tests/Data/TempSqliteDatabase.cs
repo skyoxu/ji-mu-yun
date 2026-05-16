@@ -45,7 +45,18 @@ internal sealed class TempSqliteDatabase : IDisposable
     {
         if (File.Exists(_path))
         {
-            File.Delete(_path);
+            for (var attempt = 0; attempt < 10; attempt++)
+            {
+                try
+                {
+                    File.Delete(_path);
+                    break;
+                }
+                catch (IOException) when (attempt < 9)
+                {
+                    Thread.Sleep(100);
+                }
+            }
         }
     }
 }

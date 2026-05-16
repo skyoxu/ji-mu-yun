@@ -8,17 +8,18 @@ using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Runs;
 
-public sealed class PrototypeFeedbackIterationService
+public sealed class PrototypeQuickFixService
 {
-    private const string RunType = "prototype-feedback-iteration";
-    private static readonly TimeSpan ExecutionTimeout = TimeSpan.FromMinutes(20);
+    private const string RunType = "prototype-quick-fix";
+    private const string ReasoningEffort = "low";
+
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
 
-    public PrototypeFeedbackIterationService(
+    public PrototypeQuickFixService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
@@ -26,16 +27,7 @@ public sealed class PrototypeFeedbackIterationService
     {
     }
 
-    public PrototypeFeedbackIterationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
-        IHostedProcessRunner processRunner,
-        IProjectWorkspaceSeeder workspaceSeeder)
-        : this(metadataStore, options, processRunner, workspaceSeeder, new SkillActionCatalog())
-    {
-    }
-
-    public PrototypeFeedbackIterationService(
+    public PrototypeQuickFixService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
@@ -60,7 +52,7 @@ public sealed class PrototypeFeedbackIterationService
         var feedback = request.Feedback?.Trim();
         if (string.IsNullOrWhiteSpace(feedback))
         {
-            return new PrototypeFeedbackResult("", "missing_feedback", "请输入要正式提交的反馈。", []);
+            return new PrototypeFeedbackResult("", "missing_feedback", "请输入要快速修复的问题。", []);
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
@@ -71,7 +63,7 @@ public sealed class PrototypeFeedbackIterationService
 
         if (!await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
-            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先运行并完成 7 步可玩原型，再提交正式反馈。自由对话仍可使用。", []);
+            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先完成 7 步可玩原型，再使用快速修复。", []);
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
@@ -80,23 +72,24 @@ public sealed class PrototypeFeedbackIterationService
         if (!locked)
         {
             await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
-            return new PrototypeFeedbackResult(runId, "project_busy", "有任务正在执行，请等待当前任务完成后再提交反馈。", []);
+            return new PrototypeFeedbackResult(runId, "project_busy", "当前有任务正在执行，请等待完成后再试。", []);
         }
 
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
-        await SetProgressAsync(runId, "running", "prepare", "正在整理正式反馈并准备启动 Codex。", CancellationToken.None);
+        await SetProgressAsync(runId, "running", "prepare", "正在准备快速修复任务。", CancellationToken.None);
 
         try
         {
-            using var timeout = new CancellationTokenSource(ExecutionTimeout);
-            var relativeDir = Path.Combine("logs", "phase-a-feedback", project.ProjectId, runId);
+            var relativeDir = Path.Combine("logs", "phase-a-quick-fix", project.ProjectId, runId);
             var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
             Directory.CreateDirectory(absoluteDir);
 
             var submittedRelativePath = ToSlash(Path.Combine(relativeDir, "submitted-feedback.md"));
             var resultRelativePath = ToSlash(Path.Combine(relativeDir, "result-log.md"));
+            var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
             var submittedAbsolutePath = Path.Combine(project.RepoPath, submittedRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var now = DateTimeOffset.UtcNow.ToString("O");
             var skillAction = ResolveSkillAction(request.SkillActionId);
 
@@ -107,16 +100,17 @@ public sealed class PrototypeFeedbackIterationService
                 CancellationToken.None);
 
             var model = PrototypeModelPolicy.Normalize(request.Model);
-            var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
-            var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            using var timeout = new CancellationTokenSource();
+            timeout.CancelAfter(TimeSpan.FromSeconds(90));
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
-            await SetProgressAsync(runId, "running", "codex", "Codex 正在继续优化当前原型。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "codex", "Codex 正在执行快速修复。", CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), timeout.Token);
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
                 : "";
-            var assistantMessage = BuildAssistantMessage(project, runId, model, feedback, codexResult, codexOutput, skillAction);
-            await SetProgressAsync(runId, "running", "finalize", "Codex 已返回结果，正在整理反馈日志。", CancellationToken.None);
+            var assistantMessage = BuildAssistantMessage(feedback, codexResult, codexOutput);
+            await SetProgressAsync(runId, "running", "finalize", "快速修复结果已返回，正在整理日志。", CancellationToken.None);
+
             await File.WriteAllTextAsync(
                 resultAbsolutePath,
                 BuildResultLog(project, runId, feedback, assistantMessage, model, codexResult, codexOutput, now, skillAction),
@@ -126,21 +120,21 @@ public sealed class PrototypeFeedbackIterationService
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
                 runId,
                 project.ProjectId,
-                "prototype-feedback-submission",
+                "prototype-quick-fix-submission",
                 submittedRelativePath,
-                "Formal prototype feedback submission"), CancellationToken.None);
+                "Prototype quick fix submission"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
                 runId,
                 project.ProjectId,
-                "prototype-feedback-result-log",
+                "prototype-quick-fix-result-log",
                 resultRelativePath,
-                "Formal prototype feedback result log"), CancellationToken.None);
+                "Prototype quick fix result log"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
                 runId,
                 project.ProjectId,
-                "prototype-feedback-codex-output",
+                "prototype-quick-fix-codex-output",
                 codexOutputRelativePath,
-                "Formal prototype feedback Codex output"), CancellationToken.None);
+                "Prototype quick fix Codex output"), CancellationToken.None);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -150,10 +144,11 @@ public sealed class PrototypeFeedbackIterationService
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
                 skill_action_id = skillAction?.ActionId,
-                skill_name = skillAction?.SkillName
+                skill_name = skillAction?.SkillName,
+                quick_fix = true
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
-            await SetProgressAsync(runId, "completed", "", "正式反馈处理已完成。", CancellationToken.None);
+            await SetProgressAsync(runId, "completed", "", "快速修复已完成。", CancellationToken.None);
 
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
             return new PrototypeFeedbackResult(runId, "completed", assistantMessage, artifacts);
@@ -163,22 +158,22 @@ public sealed class PrototypeFeedbackIterationService
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
-                failure_code = "prototype_feedback_iteration_timeout"
+                failure_code = "prototype_quick_fix_timeout"
             });
-            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", "Prototype feedback iteration exceeded the execution timeout.", evidenceJson, CancellationToken.None);
-            await SetProgressAsync(runId, "failed", "timeout", "正式反馈处理超时，请缩小反馈范围后重试。", CancellationToken.None);
-            return new PrototypeFeedbackResult(runId, "failed", "正式反馈处理超时。请把需求拆小后重试，或先使用快速修复。", []);
+            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", "Prototype quick fix exceeded the 90 second timeout.", evidenceJson, CancellationToken.None);
+            await SetProgressAsync(runId, "failed", "timeout", "快速修复超时，请改用正式反馈或缩小问题范围。", CancellationToken.None);
+            return new PrototypeFeedbackResult(runId, "failed", "快速修复超时。请改用正式反馈，或把问题描述得更小、更明确。", []);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
-                failure_code = "prototype_feedback_iteration_failed"
+                failure_code = "prototype_quick_fix_failed"
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
-            await SetProgressAsync(runId, "failed", "error", "正式反馈处理失败，请查看运行记录。", CancellationToken.None);
-            return new PrototypeFeedbackResult(runId, "failed", "本轮正式反馈处理失败，请稍后重试。", []);
+            await SetProgressAsync(runId, "failed", "error", "快速修复失败，请查看运行记录。", CancellationToken.None);
+            return new PrototypeFeedbackResult(runId, "failed", "快速修复失败，请稍后重试。", []);
         }
         finally
         {
@@ -216,7 +211,7 @@ public sealed class PrototypeFeedbackIterationService
         SkillActionDefinition? skillAction)
     {
         return $"""
-            # Prototype Feedback Submission
+            # Prototype Quick Fix Submission
 
             Project: {project.Name}
             ProjectId: {project.ProjectId}
@@ -232,7 +227,6 @@ public sealed class PrototypeFeedbackIterationService
 
     private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
         var arguments = new List<string>
         {
             "exec",
@@ -243,7 +237,7 @@ public sealed class PrototypeFeedbackIterationService
             "-c",
             "approval_policy=\"never\"",
             "-c",
-            $"model_reasoning_effort=\"{PrototypeModelPolicy.DefaultReasoningEffort}\"",
+            $"model_reasoning_effort=\"{ReasoningEffort}\"",
             "--cd",
             repositoryRoot,
             "-o",
@@ -258,8 +252,64 @@ public sealed class PrototypeFeedbackIterationService
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
-                ["PHASEA_CODEX_REASONING_EFFORT"] = PrototypeModelPolicy.DefaultReasoningEffort
+                ["PHASEA_CODEX_REASONING_EFFORT"] = ReasoningEffort
             });
+    }
+
+    private static string BuildCodexPrompt(ProjectSnapshot project, string runId, string feedback, SkillActionDefinition? skillAction)
+    {
+        var skillInstruction = skillAction is null
+            ? "能力模式：普通模式。"
+            : $"能力模式：{skillAction.Label}。执行时使用 ${skillAction.SkillName} 的方法。";
+
+        return $"""
+            你正在执行积木云 Phase A 的快速修复任务。
+            {skillInstruction}
+
+            硬约束：
+            - 这是一个 90 秒内完成的小修复，不要做大范围重构。
+            - 仅处理明确、局部、低风险问题。
+            - 优先修改少量文件，优先修接线、常量、菜单入口、状态显示、文本或小型前端逻辑。
+            - 如果问题超出小修范围，不要展开大工程，只输出简短结论，说明应改走正式反馈。
+            - 输出必须面向浏览器用户，不要包含路径、命令、脚本名、日志名、环境变量。
+
+            目标项目：
+            - ProjectId: {project.ProjectId}
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameType: {project.GameTypeSource}
+            - QuickFixRunId: {runId}
+
+            用户快速修复请求：
+            {feedback}
+
+            返回格式：
+            1. 是否完成快速修复
+            2. 改了什么
+            3. 如何验证
+            4. 如果未完成，说明为什么应改走正式反馈
+            """;
+    }
+
+    private static string BuildAssistantMessage(string feedback, HostedProcessResult codexResult, string codexOutput)
+    {
+        var result = !string.IsNullOrWhiteSpace(codexOutput)
+            ? codexOutput.Trim()
+            : FirstNonEmpty(codexResult.Stdout, codexResult.Stderr, "Quick fix did not return a final message.");
+        var publicResult = PublicChatSanitizer.Sanitize(result);
+        if (string.IsNullOrWhiteSpace(publicResult))
+        {
+            publicResult = "快速修复已执行，但没有可展示的公开摘要。";
+        }
+
+        return $"""
+            快速修复已完成。
+            本轮目标：
+            {feedback}
+
+            完成报告：
+            {publicResult}
+            """;
     }
 
     private static string BuildResultLog(
@@ -274,7 +324,7 @@ public sealed class PrototypeFeedbackIterationService
         SkillActionDefinition? skillAction)
     {
         return $"""
-            # Prototype Feedback Result
+            # Prototype Quick Fix Result
 
             Project: {project.Name}
             ProjectId: {project.ProjectId}
@@ -303,69 +353,6 @@ public sealed class PrototypeFeedbackIterationService
             ## Codex Output
 
             {codexOutput}
-            """;
-    }
-
-    private static string BuildAssistantMessage(
-        ProjectSnapshot project,
-        string runId,
-        string model,
-        string feedback,
-        HostedProcessResult codexResult,
-        string codexOutput,
-        SkillActionDefinition? skillAction)
-    {
-        var result = !string.IsNullOrWhiteSpace(codexOutput)
-            ? codexOutput.Trim()
-            : FirstNonEmpty(codexResult.Stdout, codexResult.Stderr, "Codex did not return a final message.");
-        var publicResult = PublicChatSanitizer.Sanitize(result);
-        if (string.IsNullOrWhiteSpace(publicResult))
-        {
-            publicResult = "本轮优化已完成，但没有可展示的公开摘要。";
-        }
-
-        return $"""
-            本轮继续优化已完成。
-
-            本轮目标：
-            {feedback}
-
-            完成报告：
-            {publicResult}
-
-            下一步建议：
-            请试玩当前原型，重点检查首分钟是否知道目标、操作反馈是否清晰、节奏是否顺畅、胜负条件是否明确。如果仍有明显问题，可以继续点击“同意继续优化”，我会把这些方向作为下一轮正式反馈继续交给 Codex 处理。
-            """;
-    }
-
-    private static string BuildCodexPrompt(ProjectSnapshot project, string runId, string feedback, SkillActionDefinition? skillAction)
-    {
-        var skillInstruction = skillAction is null
-            ? "能力模式：普通模式。不要激活任何额外 $skill，按通用原型迭代工程师方式处理。"
-            : $"能力模式：{skillAction.Label}。请在执行本次正式反馈时使用 ${skillAction.SkillName} 的方法和判断框架，并将其用于代码、资源或文档优化决策。";
-
-        return $"""
-            你正在执行积木云 Phase A 的正式原型反馈迭代。
-            {skillInstruction}
-
-            目标：
-            - 根据用户反馈继续优化当前 Godot 原型。
-            - 可以修改当前仓库内与原型相关的代码、场景、测试和文档。
-            - 保持 Prototype lane 范围，不进入 Chapter 3-7 正式交付流程。
-            - 不要执行破坏性 git 操作。
-            - 完成后总结：用户反馈、主要改动、验证结果、建议下一步。
-            - 面向浏览器用户输出公开摘要，不要包含路径、命令、脚本名、日志名、环境变量或内部实现细节。
-            - 如果还有值得继续优化的事项，请在结尾明确写“下一步建议：...”。如果没有明显建议，请写“下一步建议：暂无，建议进入试玩验收。”
-
-            Project:
-            - ProjectId: {project.ProjectId}
-            - Name: {project.Name}
-            - GameName: {project.GameName}
-            - GameType: {project.GameTypeSource}
-            - FeedbackRunId: {runId}
-
-            用户正式反馈：
-            {feedback}
             """;
     }
 

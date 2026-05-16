@@ -29,7 +29,8 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "scripts",
         ".agents/skills",
         "docs/prototype-type-kits",
-        "docs/game-type-guides"
+        "docs/game-type-guides",
+        "Tests.Godot/addons/gdUnit4"
     ];
 
     private static readonly string[] SeededPrototypeTemplateDirectories =
@@ -161,6 +162,11 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             return true;
         }
 
+        if (ShouldAlwaysKeepDirectory(sourceRoot, fullPath))
+        {
+            return false;
+        }
+
         if (ExcludedDirectoryNames.Contains(name, StringComparer.OrdinalIgnoreCase))
         {
             return true;
@@ -173,6 +179,16 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
         return name.StartsWith("phase-a-workspaces-", StringComparison.OrdinalIgnoreCase) ||
                fullPath.Contains($"{Path.DirectorySeparatorChar}logs{Path.DirectorySeparatorChar}phase-a-innernet{Path.DirectorySeparatorChar}workspaces", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ShouldAlwaysKeepDirectory(string sourceRoot, string fullPath)
+    {
+        var relativePath = Path.GetRelativePath(sourceRoot, fullPath)
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+        return relativePath.Equals(
+            $"Tests.Godot{Path.DirectorySeparatorChar}addons{Path.DirectorySeparatorChar}gdUnit4{Path.DirectorySeparatorChar}bin",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ShouldSkipFile(string sourceRoot, string name, string fullPath)

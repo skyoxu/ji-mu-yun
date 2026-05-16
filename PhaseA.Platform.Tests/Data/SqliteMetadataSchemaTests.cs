@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using Xunit;
 
@@ -97,6 +98,42 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+        var chatHistory = new ProjectChatHistoryService(store);
+
+        await store.AddProjectChatMessageAsync(
+            accountId,
+            project.ProjectId!,
+            "assistant",
+            "本轮继续优化已完成。\n\n下一步建议：继续优化首分钟体验。",
+            "formal-feedback-result",
+            retainLatest: 10);
+        await store.AddProjectChatMessageAsync(
+            accountId,
+            project.ProjectId!,
+            "user",
+            "我同意，继续。",
+            "formal-feedback",
+            retainLatest: 10);
+
+        var result = await chatHistory.ListAsync(accountId, project.ProjectId!);
+
+        result.Should().NotBeNull();
+        result!.Messages.Should().HaveCount(2);
+        result.Messages[0].SuggestedFeedback.Should().Be("继续优化首分钟体验。");
+        result.Messages[0].ContinueConsumed.Should().BeTrue();
+        result.Messages[1].ContinueConsumed.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ReconcileAbandonedRunsAsync_FailsOnlyRunsThatExceededHeartbeatTimeout()
     {
         using var database = TempSqliteDatabase.Create();
@@ -146,6 +183,49 @@ public sealed class SqliteMetadataSchemaTests
         freshRun!.Status.Should().Be("running");
         (await store.HasRunnerLockAsync(staleProject.ProjectId)).Should().BeFalse();
         (await store.HasRunnerLockAsync(freshProject.ProjectId)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ReconcileAbandonedRunsAsync_CanRecoverPrototypeQuickFixRuns()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Quick Fix Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-quick-fix");
+        await store.MarkRunStartedAsync(runId);
+        await store.TryAcquireRunnerLockAsync(project.ProjectId, runId);
+
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                UPDATE runs
+                SET started_utc = $old_utc,
+                    progress_updated_utc = $old_utc
+                WHERE id = $run_id;
+                """;
+            command.Parameters.AddWithValue("$old_utc", DateTimeOffset.UtcNow.AddMinutes(-10).ToString("O"));
+            command.Parameters.AddWithValue("$run_id", runId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var recovered = await store.ReconcileAbandonedRunsAsync(
+            run => run.RunType == "prototype-quick-fix" ? TimeSpan.FromMinutes(3) : null,
+            run => $"timeout:{run.RunType}");
+        var recoveredRun = await store.GetRunSnapshotAsync(runId);
+
+        recovered.Should().Be(1);
+        recoveredRun!.Status.Should().Be("failed");
+        recoveredRun.StderrText.Should().Contain("timeout:prototype-quick-fix");
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
     }
 
     private static ProjectCreationCommand CreateCommand(string accountId, string projectName, string gameName)

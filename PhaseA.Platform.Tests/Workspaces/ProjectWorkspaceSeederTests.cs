@@ -170,6 +170,32 @@ public sealed class ProjectWorkspaceSeederTests
         File.Exists(Path.Combine(targetRepo, "docs", "prototypes", "2026-05-15-dq-rpg.md")).Should().BeFalse();
     }
 
+    [Fact]
+    public void EnsureSeeded_PreservesGdUnitBinDirectoryForWorkspaceValidation()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "bin"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src"));
+        File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "bin", "GdUnitCmdTool.gd"), "runner\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src", "GdUnitTestSuite.gd"), "suite\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        var seeder = new ProjectWorkspaceSeeder(options);
+
+        seeder.EnsureSeeded(targetRepo);
+
+        File.Exists(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "bin", "GdUnitCmdTool.gd")).Should().BeTrue();
+        File.Exists(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "GdUnitTestSuite.gd")).Should().BeTrue();
+    }
+
     private static bool TryCreateJunction(string junctionPath, string targetPath)
     {
         var startInfo = new ProcessStartInfo

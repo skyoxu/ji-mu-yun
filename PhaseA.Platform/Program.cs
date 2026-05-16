@@ -30,6 +30,7 @@ builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
+builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
 builder.Services.AddSingleton<ProjectCreationService>();
 builder.Services.AddSingleton<ProjectDraftImportService>();
 builder.Services.AddSingleton<ProjectInitializationService>();
@@ -43,6 +44,7 @@ builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
+builder.Services.AddSingleton<PrototypeQuickFixService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -68,11 +70,8 @@ var interruptedRunCount = await metadataStore.ReconcileInterruptedRunsAsync(
     "Run was interrupted because the service restarted before completion.");
 await metadataStore.ReconcileProjectBootstrapStatusAsync();
 await initializationService.ReconcileStaleInitializationsAsync();
-var workspaceSeeder = app.Services.GetRequiredService<IProjectWorkspaceSeeder>();
-foreach (var project in await metadataStore.ListProjectSnapshotsAsync())
-{
-    workspaceSeeder.EnsureSeeded(project.RepoPath);
-}
+var workspaceMaintenance = app.Services.GetRequiredService<ProjectWorkspaceMaintenanceService>();
+await workspaceMaintenance.EnsureAllWorkspacesSeededAsync();
 if (interruptedRunCount > 0)
 {
     app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
@@ -365,11 +364,35 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
 {
     try
     {
+        await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
         var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
         if (result.Status == "completed")
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
             await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, "formal-feedback-result", cancellationToken);
+        }
+
+        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", async (
+    string projectId,
+    PrototypeFeedbackRequest request,
+    [FromServices] PrototypeQuickFixService quickFixes,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "quick-fix", cancellationToken);
+        var result = await quickFixes.SubmitAsync(projectId, request, cancellationToken);
+        if (result.Status == "completed")
+        {
+            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, "quick-fix-result", cancellationToken);
         }
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);

@@ -228,6 +228,8 @@ public sealed class BrowserUiRenderer
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
                     <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
+                    <p class="muted">快速修复：适合修入口接线、文案、状态显示、小范围逻辑问题；如果是玩法增强、结构调整或多文件连续迭代，请使用“提交反馈并继续优化原型”。</p>
+                    <button id="submitQuickFix" class="secondary" data-global-action="true">快速修复</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈并继续优化原型</button>
                     <h2>正式反馈记录</h2>
                     <div id="feedbackRecords" class="card-list feedback-scroll"></div>
@@ -307,24 +309,15 @@ public sealed class BrowserUiRenderer
                 async function loadServerChatHistoryForProject(projectId) {
                   if (!projectId) return;
                   try {
-                    const localByKey = new Map(
-                      (state.chatHistory || [])
-                        .filter(isStoredChatMessage)
-                        .map(message => [chatMessageKey(message), message])
-                    );
                     const result = await api(`/api/projects/${projectId}/chat-history`);
                     state.chatHistory = (result.messages || [])
                       .map(message => ({
                         role: message.role,
                         content: sanitizePublicChatContent(message.content),
-                        kind: message.kind || null
+                        kind: message.kind || null,
+                        continueConsumed: !!message.continueConsumed,
+                        suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || "")
                       }))
-                      .map(message => {
-                        const local = localByKey.get(chatMessageKey(message));
-                        if (local?.continueConsumed) message.continueConsumed = true;
-                        if (local?.suggestedFeedback) message.suggestedFeedback = sanitizePublicChatContent(local.suggestedFeedback);
-                        return message;
-                      })
                       .filter(isStoredChatMessage)
                       .slice(-maxStoredChatMessages);
                     renderChatHistory();
@@ -537,9 +530,19 @@ public sealed class BrowserUiRenderer
                   await submitFormalFeedbackText(feedback, "正式提交中...");
                 }
 
+                async function submitQuickFix() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\uff0c\u518d\u4f7f\u7528\u5feb\u901f\u4fee\u590d\u3002");
+                  const feedback = $("chatMessage").value.trim();
+                  if (!feedback) return out("\u8bf7\u8f93\u5165\u8981\u5feb\u901f\u4fee\u590d\u7684\u95ee\u9898\u3002");
+                  await submitQuickFixText(feedback, "快速修复中...");
+                }
+
                 async function continueSuggestedFeedback(messageIndex) {
                   const message = state.chatHistory[messageIndex];
                   const suggestion = message?.suggestedFeedback || state.nextSuggestedFeedback;
+                  if (isGlobalBusy()) return out("当前有任务正在执行，请等待完成后再试。");
                   if (!suggestion) return out("当前没有可继续执行的建议。");
                   if (message) {
                     message.continueConsumed = true;
@@ -554,6 +557,7 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
                   setLocalBusy(true);
+                  $("submitQuickFix").disabled = true;
                   $("submitFormalFeedback").disabled = true;
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
                   try {
@@ -572,6 +576,37 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                     updateContinueSuggestionFromText(result.assistantMessage);
+                  } catch (error) { showError(error); }
+                  finally {
+                    setLocalBusy(false);
+                    setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function submitQuickFixText(feedback, busyText) {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\uff0c\u518d\u4f7f\u7528\u5feb\u901f\u4fee\u590d\u3002");
+                  setLocalBusy(true);
+                  $("submitQuickFix").disabled = true;
+                  $("submitFormalFeedback").disabled = true;
+                  $("submitQuickFix").textContent = busyText || "快速修复中...";
+                  try {
+                    state.chatHistory.push({ role: "user", content: feedback, kind: "quick-fix" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    $("chatMessage").value = "";
+                    const result = await api(`/api/projects/${state.projectId}/prototype-quick-fixes`, {
+                      method: "POST",
+                      body: JSON.stringify({ feedback, model: $("globalModel").value, skillActionId: $("chatSkillMode").value || "normal" })
+                    });
+                    state.chatHistory.push({ role: "assistant", content: result.assistantMessage || "本轮快速修复已完成。", kind: "quick-fix-result" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    await loadServerChatHistoryForProject(state.projectId);
+                    out(result);
+                    await loadRuns();
                   } catch (error) { showError(error); }
                   finally {
                     setLocalBusy(false);
@@ -1291,6 +1326,8 @@ public sealed class BrowserUiRenderer
 
                 function setFormalFeedbackAvailability(canSubmit) {
                   state.prototypeReadyForFeedback = canSubmit;
+                  $("submitQuickFix").disabled = !canSubmit;
+                  $("submitQuickFix").textContent = canSubmit ? "快速修复" : "需先完成 7 步原型后才能快速修复";
                   $("submitFormalFeedback").disabled = !canSubmit;
                   $("submitFormalFeedback").textContent = canSubmit ? "\u63d0\u4ea4\u53cd\u9988\u5e76\u7ee7\u7eed\u4f18\u5316\u539f\u578b" : "\u9700\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\u540e\u624d\u80fd\u63d0\u4ea4\u53cd\u9988";
                   renderChatHistory();
@@ -1335,10 +1372,10 @@ public sealed class BrowserUiRenderer
 
                 function updateContinueSuggestionFromText(text) {
                   const sanitized = sanitizePublicChatContent(text || "");
-                  const match = sanitized.match(/下一步建议[：:]\s*([\s\S]{1,800})/);
+                  const match = sanitized.match(/下一步建议[：:]\s*([\s\S]{1,800}?)(?:\n\s*\n(?:如果你同意|如你同意|若你同意)|$)/);
                   state.nextSuggestedFeedback = match ? match[1].trim() : defaultNextSuggestedFeedback();
                   const lastAssistant = state.chatHistory.filter(message => message.role === "assistant" && !message.pending).slice(-1)[0];
-                  if (lastAssistant && !lastAssistant.continueConsumed) {
+                  if (lastAssistant && !lastAssistant.continueConsumed && !lastAssistant.suggestedFeedback) {
                     lastAssistant.suggestedFeedback = state.nextSuggestedFeedback;
                   }
                   setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
@@ -1420,6 +1457,7 @@ public sealed class BrowserUiRenderer
                 $("createProject").onclick = createProject;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
+                $("submitQuickFix").onclick = submitQuickFix;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
                 renderChatHistory();
