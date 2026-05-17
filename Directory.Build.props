@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**/artifacts/**;**/.verify/**;**/logs/**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/artifacts/**;**/.verify/**;**/logs/**;**/obj/**;**/bin/**</DefaultItemExcludes>
   </PropertyGroup>
 </Project>

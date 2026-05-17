@@ -162,6 +162,21 @@ This file is the repository map. It routes you to the right source document by t
 - CI should emit both `DeliveryProfile: <...>` and `SecurityProfile: <...>` in Step Summary.
 - Host boundary rules stay hard in all profiles: `res://` and `user://` only, HTTPS only, `ALLOWED_EXTERNAL_HOSTS`, `GD_OFFLINE_MODE`, no dynamic external code loading.
 
+## Phase A Runtime Ops
+- Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
+- Stable public reverse-proxy entry is `http://47.250.131.70:8080`.
+- Canonical Phase A runtime config file is `logs/phase-a-innernet/start-phasea.ps1`.
+- Canonical Caddy config file is `logs/phase-a-innernet/Caddyfile`.
+- Caddy must listen on `0.0.0.0:8080` and reverse proxy to `127.0.0.1:18080`.
+- Do not run Phase A with `dotnet run` against the default repo `obj/bin` paths for the live server. Use the checked-in startup script.
+- The startup script must keep build outputs outside the repo source tree. Current stable build root is `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
+- The startup script must explicitly set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080` before starting `PhaseA.Platform.exe`.
+- Repo-wide MSBuild default item excludes must keep generated `logs/**`, `obj/**`, and `bin/**` content out of compile inputs. This prevents duplicate assembly attribute failures during live server recovery.
+- Recovery order when public `502` appears:
+  - Verify `PhaseA.Platform` health on `127.0.0.1:18080` first.
+  - Only after the app is healthy should `caddy` on `8080` be restarted or validated.
+  - If the app fails to start, inspect bind-port conflicts and build-path contamination before touching Caddy again.
+
 ## Repo Map
 - Detailed per-directory responsibilities and stop-loss rules: [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
 - `Game.Core/`: pure C# domain logic and contract-adjacent code.
