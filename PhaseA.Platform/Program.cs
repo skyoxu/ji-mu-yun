@@ -45,6 +45,8 @@ builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
 builder.Services.AddSingleton<PrototypeQuickFixService>();
+builder.Services.AddSingleton<PrototypeIterationPlanService>();
+builder.Services.AddSingleton<PrototypeIterationGoalService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -355,6 +357,68 @@ app.MapGet("/api/projects/{projectId}/chat-history", async (
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
+app.MapPost("/api/projects/{projectId}/iteration-plan", async (
+    string projectId,
+    PrototypeIterationPlanRequest request,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await iterationPlans.CreateAsync(adminAccountId, projectId, request, cancellationToken);
+        if (result.Status == "ready")
+        {
+            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
+            var goalSummary = result.Goals.Count == 0
+                ? result.Summary
+                : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
+            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
+        }
+        return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
+    string projectId,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    CancellationToken cancellationToken) =>
+{
+    var result = await iterationPlans.GetLatestAsync(adminAccountId, projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
+    string projectId,
+    [FromServices] PrototypeIterationGoalService iterationGoals,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await iterationGoals.ExecuteNextAsync(adminAccountId, projectId, cancellationToken);
+        if (result.Status is "completed" or "failed" or "needs_fix")
+        {
+            await chatHistory.AppendAsync(
+                adminAccountId,
+                projectId,
+                "assistant",
+                result.Summary,
+                result.Status == "completed" ? "iteration-goal-result" : "iteration-goal-failed",
+                cancellationToken);
+        }
+        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     string projectId,
     PrototypeFeedbackRequest request,
@@ -366,9 +430,15 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     {
         await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
         var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
-        if (result.Status == "completed")
+        if (result.Status == "completed" || result.Status == "failed")
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, "formal-feedback-result", cancellationToken);
+            await chatHistory.AppendAsync(
+                adminAccountId,
+                projectId,
+                "assistant",
+                result.AssistantMessage,
+                result.Status == "completed" ? "formal-feedback-result" : "formal-feedback-failed",
+                cancellationToken);
         }
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
@@ -390,9 +460,15 @@ app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", async (
     {
         await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "quick-fix", cancellationToken);
         var result = await quickFixes.SubmitAsync(projectId, request, cancellationToken);
-        if (result.Status == "completed")
+        if (result.Status == "completed" || result.Status == "failed")
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, "quick-fix-result", cancellationToken);
+            await chatHistory.AppendAsync(
+                adminAccountId,
+                projectId,
+                "assistant",
+                result.AssistantMessage,
+                result.Status == "completed" ? "quick-fix-result" : "quick-fix-failed",
+                cancellationToken);
         }
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);

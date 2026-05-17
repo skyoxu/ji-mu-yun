@@ -1453,6 +1453,318 @@ public sealed class PhaseAMetadataStore
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task<ProjectIterationSessionSnapshot> CreateProjectIterationSessionAsync(
+        string accountId,
+        string projectId,
+        string sourceKind,
+        string sourceMessage,
+        string overallGoal,
+        IReadOnlyList<ProjectIterationGoalCreateCommand> goals,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceKind);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceMessage);
+        ArgumentException.ThrowIfNullOrWhiteSpace(overallGoal);
+        ArgumentNullException.ThrowIfNull(goals);
+
+        var sessionId = NewId();
+        var now = DateTimeOffset.UtcNow.ToString("O");
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = (SqliteTransaction)transaction;
+            command.CommandText =
+                """
+                INSERT INTO project_iteration_sessions (
+                    id,
+                    project_id,
+                    account_id,
+                    source_kind,
+                    source_message,
+                    overall_goal,
+                    status,
+                    current_goal_index,
+                    latest_summary,
+                    created_utc,
+                    updated_utc,
+                    completed_utc)
+                VALUES (
+                    $id,
+                    $project_id,
+                    $account_id,
+                    $source_kind,
+                    $source_message,
+                    $overall_goal,
+                    'planning',
+                    0,
+                    NULL,
+                    $created_utc,
+                    $updated_utc,
+                    NULL);
+                """;
+            command.Parameters.AddWithValue("$id", sessionId);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$account_id", accountId);
+            command.Parameters.AddWithValue("$source_kind", sourceKind);
+            command.Parameters.AddWithValue("$source_message", sourceMessage);
+            command.Parameters.AddWithValue("$overall_goal", overallGoal);
+            command.Parameters.AddWithValue("$created_utc", now);
+            command.Parameters.AddWithValue("$updated_utc", now);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        foreach (var goal in goals.OrderBy(goal => goal.GoalIndex))
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = (SqliteTransaction)transaction;
+            command.CommandText =
+                """
+                INSERT INTO project_iteration_goals (
+                    id,
+                    session_id,
+                    goal_index,
+                    title,
+                    description,
+                    acceptance_hint,
+                    status,
+                    result_summary,
+                    created_utc,
+                    updated_utc,
+                    completed_utc)
+                VALUES (
+                    $id,
+                    $session_id,
+                    $goal_index,
+                    $title,
+                    $description,
+                    $acceptance_hint,
+                    'pending',
+                    NULL,
+                    $created_utc,
+                    $updated_utc,
+                    NULL);
+                """;
+            command.Parameters.AddWithValue("$id", NewId());
+            command.Parameters.AddWithValue("$session_id", sessionId);
+            command.Parameters.AddWithValue("$goal_index", goal.GoalIndex);
+            command.Parameters.AddWithValue("$title", goal.Title);
+            command.Parameters.AddWithValue("$description", goal.Description);
+            command.Parameters.AddWithValue("$acceptance_hint", (object?)goal.AcceptanceHint ?? DBNull.Value);
+            command.Parameters.AddWithValue("$created_utc", now);
+            command.Parameters.AddWithValue("$updated_utc", now);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return new ProjectIterationSessionSnapshot(
+            sessionId,
+            projectId,
+            accountId,
+            sourceKind,
+            sourceMessage,
+            overallGoal,
+            "planning",
+            0,
+            null,
+            now,
+            now,
+            null);
+    }
+
+    public async Task UpdateProjectIterationSessionStatusAsync(
+        string sessionId,
+        string status,
+        int currentGoalIndex,
+        string? latestSummary,
+        string? completedUtc = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE project_iteration_sessions
+            SET status = $status,
+                current_goal_index = $current_goal_index,
+                latest_summary = $latest_summary,
+                updated_utc = $updated_utc,
+                completed_utc = $completed_utc
+            WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", sessionId);
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$current_goal_index", currentGoalIndex);
+        command.Parameters.AddWithValue("$latest_summary", (object?)latestSummary ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$completed_utc", (object?)completedUtc ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        ProjectIterationSessionSnapshot? session = null;
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT id, project_id, account_id, source_kind, source_message, overall_goal, status,
+                       current_goal_index, latest_summary, created_utc, updated_utc, completed_utc
+                FROM project_iteration_sessions
+                WHERE project_id = $project_id
+                ORDER BY created_utc DESC
+                LIMIT 1;
+                """;
+            command.Parameters.AddWithValue("$project_id", projectId);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                session = new ProjectIterationSessionSnapshot(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetString(5),
+                    reader.GetString(6),
+                    reader.GetInt32(7),
+                    reader.IsDBNull(8) ? null : reader.GetString(8),
+                    reader.GetString(9),
+                    reader.GetString(10),
+                    reader.IsDBNull(11) ? null : reader.GetString(11));
+            }
+        }
+
+        if (session is null)
+        {
+            return null;
+        }
+
+        var goals = new List<ProjectIterationGoalSnapshot>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT id, session_id, goal_index, title, description, acceptance_hint, status, result_summary,
+                       created_utc, updated_utc, completed_utc
+                FROM project_iteration_goals
+                WHERE session_id = $session_id
+                ORDER BY goal_index ASC;
+                """;
+            command.Parameters.AddWithValue("$session_id", session.SessionId);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                goals.Add(new ProjectIterationGoalSnapshot(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetInt32(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.IsDBNull(5) ? null : reader.GetString(5),
+                    reader.GetString(6),
+                    reader.IsDBNull(7) ? null : reader.GetString(7),
+                    reader.GetString(8),
+                    reader.GetString(9),
+                    reader.IsDBNull(10) ? null : reader.GetString(10)));
+            }
+        }
+
+        var goalRuns = new List<ProjectIterationGoalRunSnapshot>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT id, session_id, goal_id, run_id, run_type, created_utc
+                FROM project_iteration_goal_runs
+                WHERE session_id = $session_id
+                ORDER BY created_utc ASC, id ASC;
+                """;
+            command.Parameters.AddWithValue("$session_id", session.SessionId);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                goalRuns.Add(new ProjectIterationGoalRunSnapshot(
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetString(5)));
+            }
+        }
+
+        return new ProjectIterationSessionDetails(session, goals, goalRuns);
+    }
+
+    public async Task UpdateProjectIterationGoalStatusAsync(
+        string goalId,
+        string status,
+        string? resultSummary,
+        string? completedUtc,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(goalId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE project_iteration_goals
+            SET status = $status,
+                result_summary = $result_summary,
+                updated_utc = $updated_utc,
+                completed_utc = $completed_utc
+            WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", goalId);
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$result_summary", (object?)resultSummary ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$completed_utc", (object?)completedUtc ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task LinkProjectIterationGoalRunAsync(
+        string sessionId,
+        string goalId,
+        string runId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(goalId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runType);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_iteration_goal_runs (id, session_id, goal_id, run_id, run_type, created_utc)
+            VALUES ($id, $session_id, $goal_id, $run_id, $run_type, $created_utc);
+            """;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$session_id", sessionId);
+        command.Parameters.AddWithValue("$goal_id", goalId);
+        command.Parameters.AddWithValue("$run_id", runId);
+        command.Parameters.AddWithValue("$run_type", runType);
+        command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<ProjectPrototypeDraftSnapshot?> GetProjectPrototypeDraftAsync(
         string projectId,
         CancellationToken cancellationToken = default)

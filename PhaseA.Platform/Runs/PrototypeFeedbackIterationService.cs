@@ -11,18 +11,19 @@ namespace PhaseA.Platform.Runs;
 public sealed class PrototypeFeedbackIterationService
 {
     private const string RunType = "prototype-feedback-iteration";
-    private static readonly TimeSpan ExecutionTimeout = TimeSpan.FromMinutes(20);
+    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(30);
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
+    private readonly TimeSpan _executionTimeout;
 
     public PrototypeFeedbackIterationService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog())
+        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), null)
     {
     }
 
@@ -31,7 +32,7 @@ public sealed class PrototypeFeedbackIterationService
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder)
-        : this(metadataStore, options, processRunner, workspaceSeeder, new SkillActionCatalog())
+        : this(metadataStore, options, processRunner, workspaceSeeder, new SkillActionCatalog(), null)
     {
     }
 
@@ -40,13 +41,15 @@ public sealed class PrototypeFeedbackIterationService
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
-        SkillActionCatalog skillActionCatalog)
+        SkillActionCatalog skillActionCatalog,
+        TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
+        _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
     public async Task<PrototypeFeedbackResult> SubmitAsync(
@@ -88,7 +91,7 @@ public sealed class PrototypeFeedbackIterationService
 
         try
         {
-            using var timeout = new CancellationTokenSource(ExecutionTimeout);
+            using var timeout = new CancellationTokenSource(_executionTimeout);
             var relativeDir = Path.Combine("logs", "phase-a-feedback", project.ProjectId, runId);
             var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
             Directory.CreateDirectory(absoluteDir);

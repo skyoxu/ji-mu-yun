@@ -30,7 +30,10 @@ public sealed class SqliteMetadataSchemaTests
             "runner_locks",
             "account_llm_bindings",
             "project_chat_messages",
-            "project_prototype_drafts"
+            "project_prototype_drafts",
+            "project_iteration_sessions",
+            "project_iteration_goals",
+            "project_iteration_goal_runs"
         ]);
     }
 
@@ -226,6 +229,44 @@ public sealed class SqliteMetadataSchemaTests
         recoveredRun!.Status.Should().Be("failed");
         recoveredRun.StderrText.Should().Contain("timeout:prototype-quick-fix");
         (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetLatestProjectIterationSessionAsync_ReturnsStructuredGoalRuns()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+        await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
+
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            project.ProjectId!,
+            "manual_feedback",
+            "improve prototype",
+            "overall goal",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Desc 1", "Hint 1"),
+                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Desc 2", "Hint 2")
+            ]);
+
+        var runId = await store.CreateRunAsync(project.ProjectId!, project.WorkspaceId, "prototype-iteration-goal");
+        var details = await store.GetLatestProjectIterationSessionAsync(project.ProjectId!);
+        details.Should().NotBeNull();
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, details!.Goals[0].GoalId, runId, "prototype-iteration-goal");
+
+        details = await store.GetLatestProjectIterationSessionAsync(project.ProjectId!);
+
+        details.Should().NotBeNull();
+        details!.Goals.Should().HaveCount(2);
+        details.GoalRuns.Should().ContainSingle();
+        details.GoalRuns[0].GoalId.Should().Be(details.Goals[0].GoalId);
+        details.GoalRuns[0].RunId.Should().Be(runId);
+        details.GoalRuns[0].RunType.Should().Be("prototype-iteration-goal");
     }
 
     private static ProjectCreationCommand CreateCommand(string accountId, string projectName, string gameName)

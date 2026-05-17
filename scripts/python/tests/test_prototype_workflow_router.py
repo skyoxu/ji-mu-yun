@@ -1060,8 +1060,8 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertIn("下一步建议：", completion)
         self.assertNotIn("Stay in prototype lane until explicitly promoted later.", completion)
 
-    def test_completion_report_should_prefer_real_codex_next_step_over_fallback(self) -> None:
-        module = _load_module("prototype_workflow_router_completion_report_real_codex_next_step", "scripts/python/run_prototype_workflow.py")
+    def test_completion_report_should_fallback_when_codex_next_step_is_internal_execution_noise(self) -> None:
+        module = _load_module("prototype_workflow_router_completion_report_internal_codex_next_step", "scripts/python/run_prototype_workflow.py")
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             scene_path = root / "Game.Godot" / "Prototypes" / "dq-rpg" / "DqRpgPrototype.tscn"
@@ -1102,12 +1102,60 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             )
             completion = (root / completion_path.replace("/", os.sep)).read_text(encoding="utf-8")
 
-        self.assertIn("继续处理这个工作区的 写权限问题", completion_summary)
-        self.assertIn("补 Day 5 的 最小验证", completion_summary)
-        self.assertNotIn("当前 RPG 原型补成一个完整首轮闭环", completion_summary)
+        self.assertNotIn("写权限问题", completion_summary)
+        self.assertNotIn("Day 5", completion_summary)
+        self.assertIn("当前 RPG 原型补成一个完整首轮闭环", completion_summary)
         self.assertIn("下一步建议：", completion)
         self.assertEqual(
-            "继续处理这个工作区的 写权限问题，或者直接转去补 Day 5 的 最小验证。",
+            "请继续把当前 RPG 原型补成一个完整首轮闭环：优先让玩家能稳定移动、触发遇敌、完成一场战斗，并在胜利后完成一次奖励 3 选 1 再返回地图。 完成后先重点验证“奖励3选1可以正确理解”是否真的成立。",
+            payload["next_step"],
+        )
+        self.assertEqual("system", payload["next_step_source"])
+        self.assertEqual("not_recommended", payload["next_step_evaluation"])
+
+    def test_completion_report_should_keep_real_product_next_step_from_codex(self) -> None:
+        module = _load_module("prototype_workflow_router_completion_report_product_codex_next_step", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            scene_path = root / "Game.Godot" / "Prototypes" / "dq-rpg" / "DqRpgPrototype.tscn"
+            scene_path.parent.mkdir(parents=True, exist_ok=True)
+            scene_path.write_text("[gd_scene format=3]\n", encoding="utf-8")
+            codex_output = root / "logs" / "ci" / module.today_str() / "prototype-implementation-dq-rpg" / "codex-output.txt"
+            codex_output.parent.mkdir(parents=True, exist_ok=True)
+            codex_output.write_text(
+                """本轮已经打通主菜单进入原型场景。
+
+下一步建议：继续补齐战斗胜利后的奖励三选一反馈，并把失败提示做得更明确，确保玩家能完成一次完整闭环。
+""",
+                encoding="utf-8",
+            )
+            payload = {
+                "slug": "dq-rpg",
+                "game_type": "rpg",
+                "next_step": "Stay in prototype lane until explicitly promoted later.",
+                "success_criteria": ["奖励3选1可以正确理解"],
+                "core_gameplay_loop": "地图移动，概率撞怪，打赢怪物，选择成长",
+            }
+            packaging_path, summary_paths = module._write_packaging_summary(
+                root=root,
+                payload=payload,
+                record_file="docs/prototypes/2026-05-16-dq-rpg.md",
+                prototype_spec="docs/prototypes/dq-rpg.prototype.json",
+                steps_run=[],
+            )
+
+            module._write_completion_report(
+                root=root,
+                payload=payload,
+                record_file="docs/prototypes/2026-05-16-dq-rpg.md",
+                prototype_spec="docs/prototypes/dq-rpg.prototype.json",
+                packaging_summary_path=packaging_path,
+                tdd_summary_paths=summary_paths,
+                steps_run=[],
+            )
+
+        self.assertEqual(
+            "继续补齐战斗胜利后的奖励三选一反馈，并把失败提示做得更明确，确保玩家能完成一次完整闭环。",
             payload["next_step"],
         )
         self.assertEqual("codex", payload["next_step_source"])

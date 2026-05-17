@@ -344,10 +344,59 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE SET NULL
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_iteration_sessions (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            account_id TEXT NOT NULL,
+            source_kind TEXT NOT NULL,
+            source_message TEXT NOT NULL,
+            overall_goal TEXT NOT NULL,
+            status TEXT NOT NULL,
+            current_goal_index INTEGER NOT NULL DEFAULT 0,
+            latest_summary TEXT NULL,
+            created_utc TEXT NOT NULL,
+            updated_utc TEXT NOT NULL,
+            completed_utc TEXT NULL,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_iteration_goals (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            goal_index INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            acceptance_hint TEXT NULL,
+            status TEXT NOT NULL,
+            result_summary TEXT NULL,
+            created_utc TEXT NOT NULL,
+            updated_utc TEXT NOT NULL,
+            completed_utc TEXT NULL,
+            FOREIGN KEY (session_id) REFERENCES project_iteration_sessions(id) ON DELETE CASCADE
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_iteration_goal_runs (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            goal_id TEXT NOT NULL,
+            run_id TEXT NOT NULL,
+            run_type TEXT NOT NULL,
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES project_iteration_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (goal_id) REFERENCES project_iteration_goals(id) ON DELETE CASCADE,
+            FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE CASCADE
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
-        "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);"
+        "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
+        "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
+        "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);"
     ];
 }

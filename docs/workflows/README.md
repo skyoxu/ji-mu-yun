@@ -71,6 +71,7 @@ This file indexes the current `docs/workflows/` root documents and records how t
 | --- | --- | --- | --- | --- | --- |
 | `cloud-platform-evolution-plan.cn.md` | `cloud-platform-evolution-plan.md` | `2026-04-28 16:57:48` | `2026-04-28 17:04:51` | Chinese translation | Sync after substantive primary-document updates. |
 | `cloud-user-telemetry-and-feedback-plan.cn.md` | `cloud-user-telemetry-and-feedback-plan.md` | `2026-04-28 17:23:27` | `2026-04-28 17:23:27` | Chinese translation | Sync after substantive primary-document updates. |
+| `phase-a-iteration-plan-mode.cn.md` | No matching English primary document | `2026-05-17 00:00:00` | `2026-05-17 00:00:00` | Chinese-specific document | Maintain as an independent Chinese-specific document until a matching primary document exists. |
 | `prototype-7day-playable-godot-zh.md` | No matching English primary document | `2026-04-15 14:31:27` | `2026-04-21 18:47:54` | Chinese-specific document | Maintain as an independent Chinese-specific document until a matching primary document exists. |
 | `prototype-workflow-zh.md` | No matching English primary document | `2026-04-15 13:48:15` | `2026-05-01 13:52:55` | Chinese-specific document | Maintain as an independent Chinese-specific document until a matching primary document exists. |
 

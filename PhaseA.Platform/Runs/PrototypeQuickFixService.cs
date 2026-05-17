@@ -12,18 +12,20 @@ public sealed class PrototypeQuickFixService
 {
     private const string RunType = "prototype-quick-fix";
     private const string ReasoningEffort = "low";
+    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(300);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
+    private readonly TimeSpan _executionTimeout;
 
     public PrototypeQuickFixService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog())
+        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), null)
     {
     }
 
@@ -32,13 +34,15 @@ public sealed class PrototypeQuickFixService
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
-        SkillActionCatalog skillActionCatalog)
+        SkillActionCatalog skillActionCatalog,
+        TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
+        _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
     public async Task<PrototypeFeedbackResult> SubmitAsync(
@@ -101,7 +105,7 @@ public sealed class PrototypeQuickFixService
 
             var model = PrototypeModelPolicy.Normalize(request.Model);
             using var timeout = new CancellationTokenSource();
-            timeout.CancelAfter(TimeSpan.FromSeconds(90));
+            timeout.CancelAfter(_executionTimeout);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
             await SetProgressAsync(runId, "running", "codex", "Codex 正在执行快速修复。", CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), timeout.Token);
@@ -160,7 +164,7 @@ public sealed class PrototypeQuickFixService
                 run_type = RunType,
                 failure_code = "prototype_quick_fix_timeout"
             });
-            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", "Prototype quick fix exceeded the 90 second timeout.", evidenceJson, CancellationToken.None);
+            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
             await SetProgressAsync(runId, "failed", "timeout", "快速修复超时，请改用正式反馈或缩小问题范围。", CancellationToken.None);
             return new PrototypeFeedbackResult(runId, "failed", "快速修复超时。请改用正式反馈，或把问题描述得更小、更明确。", []);
         }

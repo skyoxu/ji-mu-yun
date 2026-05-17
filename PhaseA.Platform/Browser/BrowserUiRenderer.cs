@@ -120,6 +120,26 @@ public sealed class BrowserUiRenderer
                 .status-ok { color: var(--accent); }
                 .status-warn { color: var(--accent-2); }
                 .status-fail { color: var(--danger); }
+                .goal-card-current { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(198, 95, 45, 0.18); }
+                .goal-card-next { border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(15, 107, 87, 0.18); }
+                .goal-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.35rem 0 0.5rem; }
+                .goal-badge {
+                  display: inline-flex;
+                  align-items: center;
+                  border-radius: 999px;
+                  padding: 0.2rem 0.55rem;
+                  font-size: 0.8rem;
+                  font-weight: 700;
+                  background: #f3ead9;
+                  color: var(--ink);
+                }
+                .goal-badge-current { background: #fff0d9; color: var(--accent-2); }
+                .goal-badge-next { background: #e6f4ef; color: var(--accent); }
+                .goal-badge-succeeded { background: #e6f4ef; color: var(--accent); }
+                .goal-badge-running { background: #fff0d9; color: var(--accent-2); }
+                .goal-badge-pending { background: #f3ead9; color: var(--muted); }
+                .goal-badge-failed { background: #f8e1df; color: var(--danger); }
+                .goal-badge-needs-fix { background: #f8e1df; color: var(--danger); }
                 .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
                 .hidden { display: none !important; }
                 @media (max-width: 920px) {
@@ -224,14 +244,25 @@ public sealed class BrowserUiRenderer
                     <p class="muted">选择项目后即可聊天。后端会映射到服务器本机 Codex CLI 配置；需要执行工作流时仍使用上方固定按钮。</p>
                     <label>能力模式 <select id="chatSkillMode"><option value="normal">普通模式</option></select></label>
                     <div id="chatSkillDescription" class="card muted">普通模式：不激活 skills。</div>
+                    <h2>主流程：迭代计划</h2>
+                    <p class="muted">推荐流程：先把较大的优化目标拆成 3-7 个小目标，再逐个执行。每次只推进一个目标，完成后停下，由你决定是否继续。</p>
+                    <button id="createIterationPlan" class="ghost" data-global-action="true">生成迭代计划</button>
+                    <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一目标</button>
+                    <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
+                    <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
+                    <div id="iterationPlanGoals" class="card-list"></div>
+                    <details id="quickFixPanel">
+                      <summary>兼容入口：快速修复</summary>
+                      <p class="muted">仅适合接线、文案、状态显示等单点小修。若需求涉及玩法增强、结构调整或多个连续目标，请优先使用上方迭代计划主流程。</p>
+                      <button id="submitQuickFix" class="secondary" data-global-action="true">快速修复</button>
+                    </details>
                     <h2>聊天记录</h2>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
                     <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
-                    <p class="muted">快速修复：适合修入口接线、文案、状态显示、小范围逻辑问题；如果是玩法增强、结构调整或多文件连续迭代，请使用“提交反馈并继续优化原型”。</p>
-                    <button id="submitQuickFix" class="secondary" data-global-action="true">快速修复</button>
-                    <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈并继续优化原型</button>
-                    <h2>正式反馈记录</h2>
+                    <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈并生成迭代计划</button>
+                    <h2>流程记录</h2>
+                    <div id="feedbackSummary" class="card muted">尚未生成迭代计划。</div>
                     <div id="feedbackRecords" class="card-list feedback-scroll"></div>
                   </section>
                   <section>
@@ -246,7 +277,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -285,7 +316,7 @@ public sealed class BrowserUiRenderer
                 function renderInlineContinueAction(message, index) {
                   if (message.role !== "assistant" || message.pending || message.continueConsumed || !message.suggestedFeedback) return "";
                   if (!state.prototypeReadyForFeedback) return "";
-                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">同意继续优化</button>`;
+                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">按建议生成计划 / 继续下一目标</button>`;
                 }
 
                 function chatStorageKey(projectId = state.projectId) {
@@ -325,6 +356,130 @@ public sealed class BrowserUiRenderer
                     updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
                   } catch {
                     renderChatHistory();
+                  }
+                }
+
+                async function loadIterationPlan() {
+                  if (!state.projectId) {
+                    state.iterationPlan = null;
+                    renderIterationPlan();
+                    return;
+                  }
+                  try {
+                    state.iterationPlan = await api(`/api/projects/${state.projectId}/iteration-plan/latest`);
+                  } catch (error) {
+                    if (error?.status === 404) {
+                      state.iterationPlan = null;
+                    } else {
+                      showError(error);
+                    }
+                  }
+                  renderIterationPlan();
+                }
+
+                function renderIterationPlan() {
+                  const plan = state.iterationPlan;
+                  if (!plan || !plan.session) {
+                    $("iterationPlanStatus").className = "card muted";
+                    $("iterationPlanStatus").textContent = "尚未生成迭代计划。";
+                    $("iterationPlanGoals").innerHTML = "";
+                    $("createIterationPlan").disabled = isGlobalBusy();
+                    $("createIterationPlan").textContent = "生成迭代计划";
+                    $("executeIterationGoal").disabled = true;
+                    $("executeIterationGoal").textContent = "请先生成迭代计划";
+                    return;
+                  }
+                  const session = plan.session;
+                  const goals = Array.isArray(plan.goals) ? plan.goals : [];
+                  const hasNeedsFix = goals.some(goal => goal.status === "needs_fix");
+                  const hasPending = goals.some(goal => goal.status === "pending");
+                  const canCreateNewPlan = !hasPending && !hasNeedsFix;
+                  $("iterationPlanStatus").className = "card";
+                  $("iterationPlanStatus").innerHTML = `
+                    <strong>${escapeHtml(session.status || "ready")}</strong>
+                    <p>${escapeHtml(session.overallGoal || "")}</p>
+                    ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
+                    <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
+                  `;
+                  $("createIterationPlan").disabled = !canCreateNewPlan || isGlobalBusy();
+                  $("createIterationPlan").textContent = canCreateNewPlan ? "生成新的迭代计划" : hasNeedsFix ? "当前计划需先修复" : "当前已有未完成计划";
+                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || isGlobalBusy();
+                  $("executeIterationGoal").textContent = hasNeedsFix ? "请先修复当前目标" : hasPending ? "执行下一目标" : "当前没有待执行目标";
+                  $("iterationPlanGoals").innerHTML = goals.map(goal => `
+                    <div class="card">
+                      <strong>step ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(goal.status || "pending")}</strong>
+                      <p>${escapeHtml(goal.title || "")}</p>
+                      <p class="muted">${escapeHtml(goal.description || "")}</p>
+                      ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
+                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
+                    </div>`).join("");
+                }
+
+                async function createIterationPlan() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const message = $("chatMessage").value.trim();
+                  if (!message) return out("请先输入要拆解的优化目标。");
+                  await submitIterationPlanFromFeedback(message, "正在生成迭代计划...");
+                }
+
+                async function submitIterationPlanFromFeedback(message, busyText, sourceKind = "manual_feedback") {
+                  setLocalBusy(true, "正在生成迭代计划，请等待当前任务执行完毕。");
+                  try {
+                    state.chatHistory.push({ role: "user", content: message, kind: "iteration-plan-request" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    $("chatMessage").value = "";
+                    const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
+                      method: "POST",
+                      body: JSON.stringify({ message, sourceKind })
+                    });
+                    state.iterationPlan = {
+                      session: {
+                        sessionId: result.sessionId,
+                        status: result.status,
+                        overallGoal: message,
+                        currentGoalIndex: 0,
+                        latestSummary: result.summary
+                      },
+                      goals: result.goals || []
+                    };
+                    const summary = result.goals?.length
+                      ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
+                      : result.summary;
+                    state.chatHistory.push({ role: "assistant", content: summary, kind: "iteration-plan-result" });
+                    renderIterationPlan();
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    out(result);
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await loadIterationPlan();
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function executeIterationGoal() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  setLocalBusy(true, "正在执行下一目标，请等待当前任务执行完毕。");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/iteration-plan/execute-next`, {
+                      method: "POST"
+                    });
+                    await loadServerChatHistoryForProject(state.projectId);
+                    out(result);
+                  } catch (error) {
+                    await loadServerChatHistoryForProject(state.projectId);
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await loadIterationPlan();
+                    await loadRuns();
+                    await refreshActiveRun();
                   }
                 }
 
@@ -401,6 +556,7 @@ public sealed class BrowserUiRenderer
                   state.authenticated = false;
                   state.activeRun = null;
                   state.localBusy = false;
+                  state.iterationPlan = null;
                   $("stepsPanel").classList.remove("hidden");
                   $("sessionPanel").classList.remove("hidden");
                   $("adminPanel").classList.add("hidden");
@@ -527,7 +683,7 @@ public sealed class BrowserUiRenderer
                   if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
                   const feedback = $("chatMessage").value.trim();
                   if (!feedback) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
-                  await submitFormalFeedbackText(feedback, "正式提交中...");
+                  await submitIterationPlanFromFeedback(feedback, "正在生成迭代计划...");
                 }
 
                 async function submitQuickFix() {
@@ -549,7 +705,12 @@ public sealed class BrowserUiRenderer
                     renderChatHistory();
                     saveChatHistoryForProject();
                   }
-                  await submitFormalFeedbackText(suggestion, "继续优化中...");
+                  const hasPendingPlan = state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending");
+                  if (hasPendingPlan) {
+                    await executeIterationGoal();
+                    return;
+                  }
+                  await submitIterationPlanFromFeedback(suggestion, "正在生成迭代计划...", "completion_suggestion");
                 }
 
                 async function submitFormalFeedbackText(feedback, busyText) {
@@ -576,7 +737,16 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                     updateContinueSuggestionFromText(result.assistantMessage);
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮正式反馈处理失败。");
+                    if (message) {
+                      state.chatHistory.push({ role: "assistant", content: message, kind: "formal-feedback-failed" });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                    showError(error);
+                    await loadServerChatHistoryForProject(state.projectId);
+                  }
                   finally {
                     setLocalBusy(false);
                     setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
@@ -607,7 +777,16 @@ public sealed class BrowserUiRenderer
                     await loadServerChatHistoryForProject(state.projectId);
                     out(result);
                     await loadRuns();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮快速修复失败。");
+                    if (message) {
+                      state.chatHistory.push({ role: "assistant", content: message, kind: "quick-fix-failed" });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                    showError(error);
+                    await loadServerChatHistoryForProject(state.projectId);
+                  }
                   finally {
                     setLocalBusy(false);
                     setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
@@ -741,6 +920,7 @@ public sealed class BrowserUiRenderer
                   showProjectDetail();
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
+                  loadIterationPlan();
                 }
 
                 async function loadProjectRuntimeState() {
@@ -895,7 +1075,36 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderFeedbackRecords() {
+                  const goalRecords = iterationGoalRecords();
+                  if (goalRecords.length > 0) {
+                    renderFeedbackSummary();
+                    const markers = iterationGoalMarkers();
+                    $("feedbackRecords").innerHTML = goalRecords.map(record => {
+                      const run = record.run;
+                      const isCurrent = markers.currentGoalId === record.goal.goalId;
+                      const isNext = markers.nextGoalId === record.goal.goalId;
+                      const cardClass = isCurrent ? "card goal-card-current" : isNext ? "card goal-card-next" : "card";
+                      const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
+                      return `
+                        <div class="${cardClass}">
+                          <strong>目标 ${escapeHtml(String(record.goal.goalIndex))} · ${escapeHtml(record.goal.title || "")}</strong>
+                          <div class="goal-badges">
+                            ${goalBadge(statusLabel(record.goal.status), `goal-badge-${normalizeGoalStatus(record.goal.status)}`)}
+                            ${isCurrent ? goalBadge("当前目标", "goal-badge-current") : ""}
+                            ${isNext ? goalBadge("下一目标", "goal-badge-next") : ""}
+                          </div>
+                          <span class="muted">${escapeHtml(run?.status || "未执行")}</span>
+                          ${record.goal.resultSummary ? `<p>${escapeHtml(record.goal.resultSummary)}</p>` : "<p class='muted'>该目标尚未产出结果摘要。</p>"}
+                          ${run ? `<p class="muted">Run: ${escapeHtml(run.runId)}</p>` : "<p class='muted'>该目标尚未关联执行记录。</p>"}
+                          <p>${downloads || "暂无可下载日志"}</p>
+                        </div>
+                      `;
+                    }).join("");
+                    return;
+                  }
+
                   const feedbackRuns = state.runs.filter(r => r.runType === "prototype-feedback-iteration");
+                  renderFeedbackSummary(feedbackRuns);
                   $("feedbackRecords").innerHTML = feedbackRuns.map((run, index) => {
                     const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
                     return `
@@ -905,7 +1114,96 @@ public sealed class BrowserUiRenderer
                         <p>${downloads || "暂无可下载日志"}</p>
                       </div>
                     `;
-                  }).join("") || "<p class='muted'>还没有正式反馈记录。</p>";
+                  }).join("") || "<p class='muted'>还没有流程记录。</p>";
+                }
+
+                function renderFeedbackSummary(legacyFeedbackRuns = []) {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  if (goals.length > 0) {
+                    const completedGoals = goals.filter(goal => goal.status === "succeeded").length;
+                    const runningGoal = goals.find(goal => goal.status === "running");
+                    const needsFixGoal = goals.find(goal => goal.status === "needs_fix");
+                    const pendingGoal = goals.find(goal => goal.status === "pending");
+                    const failedGoal = goals.find(goal => goal.status === "failed");
+                    const currentGoal = needsFixGoal || failedGoal || runningGoal || pendingGoal || goals[goals.length - 1];
+                    const nextGoal = needsFixGoal || failedGoal ? null : pendingGoal;
+                    $("feedbackSummary").className = "card";
+                    $("feedbackSummary").innerHTML = `
+                      <strong>计划摘要</strong>
+                      <p class="muted">总目标数：${escapeHtml(String(goals.length))} · 已完成：${escapeHtml(String(completedGoals))}</p>
+                      <p class="muted">当前目标：${currentGoal ? escapeHtml(`step ${currentGoal.goalIndex} · ${currentGoal.title || ""}`) : "暂无"}</p>
+                      <p class="muted">下一目标：${needsFixGoal ? "请先修复当前目标" : nextGoal ? escapeHtml(`step ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
+                    `;
+                    return;
+                  }
+
+                  if (legacyFeedbackRuns.length > 0) {
+                    $("feedbackSummary").className = "card";
+                    $("feedbackSummary").innerHTML = `
+                      <strong>流程摘要</strong>
+                      <p class="muted">当前项目还没有迭代计划，以下仅展示旧正式反馈记录。</p>
+                      <p class="muted">正式反馈次数：${escapeHtml(String(legacyFeedbackRuns.length))}</p>
+                    `;
+                    return;
+                  }
+
+                  $("feedbackSummary").className = "card muted";
+                  $("feedbackSummary").textContent = "尚未生成迭代计划。";
+                }
+
+                function iterationGoalRecords() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goalRuns = Array.isArray(state.iterationPlan?.goalRuns) ? state.iterationPlan.goalRuns : [];
+                  if (!goals.length) return [];
+                  const runMap = new Map(state.runs.map(run => [run.runId, run]));
+                  const latestGoalRunByGoalId = new Map();
+                  goalRuns.forEach(goalRun => {
+                    if (!goalRun?.goalId || !goalRun?.runId) return;
+                    latestGoalRunByGoalId.set(goalRun.goalId, goalRun);
+                  });
+                  return goals
+                    .map(goal => {
+                      const goalRun = latestGoalRunByGoalId.get(goal.goalId);
+                      const matchedRun = goalRun ? (runMap.get(goalRun.runId) || null) : null;
+                      return { goal, run: matchedRun };
+                    })
+                    .filter(record => record.goal.status !== "pending" || record.run);
+                }
+
+                function iterationGoalMarkers() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const runningGoal = goals.find(goal => goal.status === "running");
+                  const needsFixGoal = goals.find(goal => goal.status === "needs_fix");
+                  const failedGoal = goals.find(goal => goal.status === "failed");
+                  const pendingGoal = goals.find(goal => goal.status === "pending");
+                  const currentGoal = needsFixGoal || failedGoal || runningGoal || pendingGoal || goals[goals.length - 1] || null;
+                  const nextGoal = needsFixGoal || failedGoal ? null : pendingGoal || null;
+                  return {
+                    currentGoalId: currentGoal?.goalId || "",
+                    nextGoalId: nextGoal?.goalId || ""
+                  };
+                }
+
+                function normalizeGoalStatus(value) {
+                  const normalized = String(value || "pending").trim().toLowerCase();
+                  if (normalized === "succeeded") return "succeeded";
+                  if (normalized === "running") return "running";
+                  if (normalized === "failed") return "failed";
+                  if (normalized === "needs_fix") return "needs-fix";
+                  return "pending";
+                }
+
+                function statusLabel(value) {
+                  const normalized = normalizeGoalStatus(value);
+                  if (normalized === "succeeded") return "已完成";
+                  if (normalized === "running") return "进行中";
+                  if (normalized === "failed") return "失败";
+                  if (normalized === "needs-fix") return "需修复";
+                  return "待执行";
+                }
+
+                function goalBadge(text, className) {
+                  return `<span class="goal-badge ${className}">${escapeHtml(text)}</span>`;
                 }
 
                 function feedbackArtifacts(run) {
@@ -965,6 +1263,10 @@ public sealed class BrowserUiRenderer
                   try {
                     state.activeRun = await api("/api/account/active-run");
                     applyGlobalBusyState();
+                    if (state.projectId && shouldAutoRefreshIterationPlan(state.activeRun)) {
+                      await loadIterationPlan();
+                      await loadRuns();
+                    }
                     if (!state.activeRun?.busy && state.projectId) {
                       await loadPrototypeProgress();
                     }
@@ -972,6 +1274,15 @@ public sealed class BrowserUiRenderer
                     state.activeRun = null;
                     applyGlobalBusyState();
                   }
+                }
+
+                function shouldAutoRefreshIterationPlan(activeRun) {
+                  return !!(
+                    state.projectId &&
+                    activeRun?.busy &&
+                    activeRun?.projectId === state.projectId &&
+                    activeRun?.runType === "prototype-iteration-goal"
+                  );
                 }
 
                 function guardGlobalAction() {
@@ -1334,8 +1645,13 @@ public sealed class BrowserUiRenderer
                   state.prototypeReadyForFeedback = canSubmit;
                   $("submitQuickFix").disabled = !canSubmit;
                   $("submitQuickFix").textContent = canSubmit ? "快速修复" : "需先完成 7 步原型后才能快速修复";
-                  $("submitFormalFeedback").disabled = !canSubmit;
-                  $("submitFormalFeedback").textContent = canSubmit ? "\u63d0\u4ea4\u53cd\u9988\u5e76\u7ee7\u7eed\u4f18\u5316\u539f\u578b" : "\u9700\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\u540e\u624d\u80fd\u63d0\u4ea4\u53cd\u9988";
+                  const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
+                  $("submitFormalFeedback").disabled = !canSubmit || hasPendingPlan;
+                  $("submitFormalFeedback").textContent = !canSubmit
+                    ? "\u9700\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\u540e\u624d\u80fd\u63d0\u4ea4\u53cd\u9988"
+                    : hasPendingPlan
+                      ? "当前已有未完成计划，请先执行下一目标"
+                      : "提交反馈并生成迭代计划";
                   renderChatHistory();
                 }
 
@@ -1364,7 +1680,7 @@ public sealed class BrowserUiRenderer
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“同意继续优化”，系统会把这条建议作为正式反馈提交给 Codex 继续实现。`.trim();
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“按建议生成计划 / 继续下一目标”。系统会优先基于这条建议生成迭代计划；如果当前已经有未完成计划，则会直接继续执行下一目标。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
@@ -1480,6 +1796,8 @@ public sealed class BrowserUiRenderer
                 $("sendChat").onclick = sendChat;
                 $("submitQuickFix").onclick = submitQuickFix;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
+                $("createIterationPlan").onclick = createIterationPlan;
+                $("executeIterationGoal").onclick = executeIterationGoal;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
                 renderChatHistory();
                 $("loadRuns").onclick = loadRuns;

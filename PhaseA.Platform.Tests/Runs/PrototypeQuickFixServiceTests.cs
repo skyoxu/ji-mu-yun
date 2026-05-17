@@ -3,7 +3,9 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
+using PhaseA.Platform.Skills;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -54,7 +56,7 @@ public sealed class PrototypeQuickFixServiceTests
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var runner = new TimeoutHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
 
         var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -134,7 +136,7 @@ public sealed class PrototypeQuickFixServiceTests
     {
         public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             return new HostedProcessResult(0, "", "");
         }
     }

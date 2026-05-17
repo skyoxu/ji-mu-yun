@@ -2197,6 +2197,46 @@ def _normalize_suggestion_sentence(text: str) -> str:
     return value
 
 
+def _is_internal_execution_suggestion(text: str) -> bool:
+    value = _strip_public_markdown_noise(text).lower()
+    if not value:
+        return False
+
+    keyword_groups = [
+        [
+            "day 4",
+            "day 5",
+            "step 04",
+            "step 05",
+            "环境清理",
+            "文件锁",
+            "写权限",
+            "工作区",
+            "重跑",
+            "build-server",
+            "dotnet test",
+            "dotnet build",
+            "obj/tmp",
+            "gdunit",
+            "godot/gdunit",
+            "清掉",
+            "shutdown",
+        ],
+        [
+            "res://",
+            ".csproj",
+            ".sln",
+            ".ps1",
+            ".py",
+            ".log",
+            "logs/ci",
+            "logs\\ci",
+            "prototype lane",
+        ],
+    ]
+    return any(keyword in value for group in keyword_groups for keyword in group)
+
+
 def _extract_next_step_from_codex_output(text: str) -> str:
     value = str(text or "").strip()
     if not value:
@@ -2211,7 +2251,7 @@ def _extract_next_step_from_codex_output(text: str) -> str:
         matches = re.findall(pattern, value, flags=re.IGNORECASE | re.DOTALL)
         for candidate in reversed(matches):
             normalized = _normalize_suggestion_sentence(candidate)
-            if normalized:
+            if normalized and not _is_internal_execution_suggestion(normalized):
                 return normalized
 
     paragraphs = [item.strip() for item in re.split(r"\n\s*\n", value) if item.strip()]
@@ -2219,7 +2259,7 @@ def _extract_next_step_from_codex_output(text: str) -> str:
         if "下一步" not in paragraph and "如果你要" not in paragraph and "如果你愿意" not in paragraph and "接下来" not in paragraph:
             continue
         normalized = _normalize_suggestion_sentence(paragraph)
-        if normalized:
+        if normalized and not _is_internal_execution_suggestion(normalized):
             return normalized
     return ""
 
