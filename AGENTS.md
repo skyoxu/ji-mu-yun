@@ -165,8 +165,9 @@ This file is the repository map. It routes you to the right source document by t
 ## Phase A Runtime Ops
 - Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
 - Stable public reverse-proxy entry is `http://47.250.131.70:8080`.
-- Canonical Phase A runtime config file is `logs/phase-a-innernet/start-phasea.ps1`.
-- Canonical Caddy config file is `logs/phase-a-innernet/Caddyfile`.
+- Canonical Phase A runtime config file is `runtime/phase-a/start-phasea.ps1`.
+- Canonical Caddy config file is `runtime/phase-a/Caddyfile`.
+- Important runtime configuration files must not live under `log/` or `logs/`. Logs stay under `logs/`; checked-in startup/config files stay under a stable source directory such as `runtime/phase-a/`.
 - Caddy must listen on `0.0.0.0:8080` and reverse proxy to `127.0.0.1:18080`.
 - Do not run Phase A with `dotnet run` against the default repo `obj/bin` paths for the live server. Use the checked-in startup script.
 - The startup script must keep build outputs outside the repo source tree. Current stable build root is `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.

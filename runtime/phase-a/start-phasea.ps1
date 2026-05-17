@@ -1,0 +1,63 @@
+$env:APP_BIND_URL = 'http://127.0.0.1:18080'
+$env:HTTPS_TERMINATION = 'caddy'
+$env:PUBLIC_BASE_URL = 'https://47.250.131.70:8080'
+$env:HOSTED_WORKSPACE_ROOT = 'C:\jimuyun\logs\phase-a-innernet\workspaces'
+$env:HOSTED_PROJECT_LIMIT = '2'
+$env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
+$env:PHASEA_REPOSITORY_ROOT = 'C:\jimuyun'
+$env:PHASEA_ADMIN_TOKEN_HASH = 'UI2isMCjDiUggsvViOvOdWdwONV2B_FFAr5hP7vLKv4'
+$env:PHASEA_CODEX_COMMAND = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd'
+Remove-Item Env:\PHASEA_CHAT_TEST_MODE -ErrorAction SilentlyContinue
+Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
+$env:GODOT_BIN = 'C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
+Set-Location 'C:\jimuyun'
+$runtimeRoot = 'C:\jimuyun\logs\phase-a-innernet\runtime'
+$buildRoot = 'C:\Users\Administrator\.codex\memories\phasea-runtime-build'
+$objRoot = Join-Path $buildRoot 'obj'
+$outRoot = Join-Path $buildRoot 'out'
+$pidFile = 'C:\jimuyun\logs\phase-a-innernet\phasea.pid'
+$dotnet = 'C:\Program Files\dotnet\dotnet.exe'
+
+New-Item -ItemType Directory -Force -Path $runtimeRoot, $buildRoot, $objRoot, $outRoot | Out-Null
+
+& $dotnet build 'PhaseA.Platform\PhaseA.Platform.csproj' `
+  -c Debug `
+  "-p:BaseIntermediateOutputPath=$objRoot\" `
+  "-p:MSBuildProjectExtensionsPath=$objRoot\" `
+  "-p:OutDir=$outRoot\" `
+  /nologo
+
+if ($LASTEXITCODE -ne 0) {
+  throw "phasea_build_failed"
+}
+
+$exePath = Join-Path $outRoot 'PhaseA.Platform.exe'
+if (!(Test-Path $exePath)) {
+  throw "phasea_exe_missing"
+}
+
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = $exePath
+$psi.WorkingDirectory = 'C:\jimuyun'
+$psi.UseShellExecute = $false
+$psi.CreateNoWindow = $true
+
+foreach ($key in [System.Environment]::GetEnvironmentVariables().Keys) {
+  $psi.Environment[$key] = [string][System.Environment]::GetEnvironmentVariable([string]$key)
+}
+
+$psi.Environment['APP_BIND_URL'] = $env:APP_BIND_URL
+$psi.Environment['ASPNETCORE_URLS'] = $env:APP_BIND_URL
+$psi.Environment['HTTPS_TERMINATION'] = $env:HTTPS_TERMINATION
+$psi.Environment['PUBLIC_BASE_URL'] = $env:PUBLIC_BASE_URL
+$psi.Environment['HOSTED_WORKSPACE_ROOT'] = $env:HOSTED_WORKSPACE_ROOT
+$psi.Environment['HOSTED_PROJECT_LIMIT'] = $env:HOSTED_PROJECT_LIMIT
+$psi.Environment['PHASEA_METADATA_DB_PATH'] = $env:PHASEA_METADATA_DB_PATH
+$psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
+$psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
+$psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
+$psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
+
+$process = [System.Diagnostics.Process]::Start($psi)
+
+Set-Content -Path $pidFile -Value $process.Id -Encoding ascii
