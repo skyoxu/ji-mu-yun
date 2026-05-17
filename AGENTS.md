@@ -173,6 +173,20 @@ This file is the repository map. It routes you to the right source document by t
 - The startup script must keep build outputs outside the repo source tree. Current stable build root is `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
 - The startup script must explicitly set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080` before starting `PhaseA.Platform.exe`.
 - Repo-wide MSBuild default item excludes must keep generated `logs/**`, `obj/**`, and `bin/**` content out of compile inputs. This prevents duplicate assembly attribute failures during live server recovery.
+- Recovery-grade runtime variable map for the live server:
+  - `APP_BIND_URL=http://127.0.0.1:18080`
+  - `ASPNETCORE_URLS=http://127.0.0.1:18080`
+  - `HTTPS_TERMINATION=caddy`
+  - `PUBLIC_BASE_URL=https://47.250.131.70:8080`
+  - `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
+  - `HOSTED_PROJECT_LIMIT=2`
+  - `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
+  - `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
+  - `PHASEA_CODEX_COMMAND=C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd`
+  - `GODOT_BIN=C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe`
+- Sensitive runtime variables must not store real values in git-tracked docs:
+  - `PHASEA_ADMIN_TOKEN_HASH`: required for live auth; load from the host secret store or service environment only; never commit the real value into `AGENTS.md`, `README.md`, scripts, or workflow docs.
+  - If future user/admin token hashes are added, document the variable names and source-of-truth only, never the real hash values.
 - Recovery order when public `502` appears:
   - Verify `PhaseA.Platform` health on `127.0.0.1:18080` first.
   - Only after the app is healthy should `caddy` on `8080` be restarted or validated.
