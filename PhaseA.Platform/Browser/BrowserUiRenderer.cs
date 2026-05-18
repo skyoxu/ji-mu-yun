@@ -1329,21 +1329,21 @@ public sealed class BrowserUiRenderer
                 function feedbackPrimaryActionState() {
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !state.prototypeReadyForFeedback) {
-                    return { label: "", action: "", disabled: true };
+                    return { label: "", action: "", source: "", disabled: true };
                   }
                   const decision = currentIterationPlanDecision();
                   const hasNeedsFix = goals.some(goal => goal.status === "needs_fix" || goal.status === "failed");
                   const hasPending = goals.some(goal => goal.status === "pending");
                   if (decision === "should_refine_plan") {
-                    return { label: "按评估重拆迭代计划", action: "refine", disabled: isGlobalBusy() };
+                    return { label: "按评估重拆迭代计划", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() };
                   }
                   if (hasNeedsFix || hasPending) {
-                    return { label: "继续评估当前计划", action: "evaluate", disabled: isGlobalBusy() };
+                    return { label: "继续评估当前计划", action: "evaluate", source: "目标执行结果", disabled: isGlobalBusy() };
                   }
                   if (decision === "ready_to_execute") {
-                    return { label: "继续当前迭代目标", action: "execute", disabled: isGlobalBusy() };
+                    return { label: "继续当前迭代目标", action: "execute", source: "当前计划评估", disabled: isGlobalBusy() };
                   }
-                  return { label: "", action: "", disabled: true };
+                  return { label: "", action: "", source: "", disabled: true };
                 }
 
                 function renderFeedbackPrimaryAction() {
@@ -1352,6 +1352,7 @@ public sealed class BrowserUiRenderer
                   return `
                     <div class="card">
                       <strong>当前推荐动作</strong>
+                      ${state.source ? `<p class="muted">来源：${escapeHtml(state.source)}</p>` : ""}
                       <button id="feedbackPrimaryAction" class="secondary" data-global-action="true" data-feedback-primary-action="${escapeHtml(state.action)}" ${state.disabled ? "disabled" : ""}>${escapeHtml(state.label)}</button>
                     </div>
                   `;
