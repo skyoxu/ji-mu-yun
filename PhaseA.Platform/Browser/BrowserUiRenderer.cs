@@ -318,7 +318,7 @@ public sealed class BrowserUiRenderer
                 function renderInlineContinueAction(message, index) {
                   if (message.role !== "assistant" || message.pending || message.continueConsumed || !message.suggestedFeedback) return "";
                   if (!state.prototypeReadyForFeedback) return "";
-                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">按建议生成计划 / 继续下一目标</button>`;
+                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">${escapeHtml(continueActionLabel())}</button>`;
                 }
 
                 function chatStorageKey(projectId = state.projectId) {
@@ -400,7 +400,10 @@ public sealed class BrowserUiRenderer
                   const goals = Array.isArray(plan.goals) ? plan.goals : [];
                   const hasNeedsFix = goals.some(goal => goal.status === "needs_fix");
                   const hasPending = goals.some(goal => goal.status === "pending");
-                  const canCreateNewPlan = !hasPending && !hasNeedsFix;
+                  const evaluationDecision = currentIterationPlanDecision();
+                  const shouldRefinePlan = evaluationDecision === "should_refine_plan";
+                  const blockedByCurrentGoal = evaluationDecision === "blocked_by_current_goal";
+                  const canCreateNewPlan = (!hasPending && !hasNeedsFix) || shouldRefinePlan;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
                     <strong>${escapeHtml(session.status || "ready")}</strong>
@@ -408,13 +411,26 @@ public sealed class BrowserUiRenderer
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
                   `;
-                  $("createIterationPlan").disabled = !canCreateNewPlan || isGlobalBusy();
-                  $("createIterationPlan").textContent = canCreateNewPlan ? "生成新的迭代计划" : hasNeedsFix ? "当前计划需先修复" : "当前已有未完成计划";
+                  $("createIterationPlan").disabled = !canCreateNewPlan || blockedByCurrentGoal || isGlobalBusy();
+                  $("createIterationPlan").textContent = shouldRefinePlan
+                    ? "按评估重拆迭代计划"
+                    : canCreateNewPlan
+                      ? "生成新的迭代计划"
+                      : hasNeedsFix
+                        ? "当前计划需先修复"
+                        : "当前已有未完成计划";
                   $("evaluateIterationPlan").disabled = isGlobalBusy();
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
-                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || isGlobalBusy();
-                  $("executeIterationGoal").textContent = hasNeedsFix ? "请先修复当前目标" : hasPending ? "执行下一目标" : "当前没有待执行目标";
+                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || shouldRefinePlan || isGlobalBusy();
+                  $("executeIterationGoal").textContent = hasNeedsFix
+                    ? "请先修复当前目标"
+                    : shouldRefinePlan
+                      ? "建议先重拆迭代计划"
+                      : hasPending
+                        ? "执行下一目标"
+                        : "当前没有待执行目标";
                   renderIterationPlanEvaluation();
+                  renderChatHistory();
                   $("iterationPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
                       <strong>step ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(goal.status || "pending")}</strong>
@@ -432,12 +448,19 @@ public sealed class BrowserUiRenderer
                     $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
                     return;
                   }
+                  const decision = String(evaluation.decision || "").trim().toLowerCase();
+                  const actionHint = decision === "should_refine_plan"
+                    ? "推荐先点击“按评估重拆迭代计划”，不要直接执行下一目标。"
+                    : decision === "ready_to_execute"
+                      ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
+                      : "推荐先处理当前阻塞项，再决定是否继续。";
                   $("iterationPlanEvaluation").className = "card";
                   $("iterationPlanEvaluation").innerHTML = `
                     <strong>${escapeHtml(evaluation.decision || "pending")}</strong>
                     <p>${escapeHtml(evaluation.summary || "")}</p>
                     ${evaluation.reason ? `<p class="muted">${escapeHtml(evaluation.reason)}</p>` : ""}
                     ${evaluation.suggestedAction ? `<p class="muted">建议动作：${escapeHtml(evaluation.suggestedAction)}</p>` : ""}
+                    <p class="muted">页面建议：${escapeHtml(actionHint)}</p>
                     ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议重拆提示词：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
                   `;
                 }
@@ -461,6 +484,7 @@ public sealed class BrowserUiRenderer
                       body: JSON.stringify({})
                     });
                     renderIterationPlanEvaluation();
+                    renderIterationPlan();
                     out(state.iterationPlanEvaluation);
                   } catch (error) {
                     showError(error);
@@ -754,6 +778,10 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                   }
                   const hasPendingPlan = state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending");
+                  if (hasPendingPlan && currentIterationPlanDecision() === "should_refine_plan") {
+                    await submitIterationPlanFromFeedback(suggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
+                    return;
+                  }
                   if (hasPendingPlan) {
                     await executeIterationGoal();
                     return;
@@ -1728,7 +1756,7 @@ public sealed class BrowserUiRenderer
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“按建议生成计划 / 继续下一目标”。系统会优先基于这条建议生成迭代计划；如果当前已经有未完成计划，则会直接继续执行下一目标。`.trim();
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“${continueActionLabel()}”。系统会根据当前状态执行更明确的动作：没有计划时生成计划；已有计划且评估认为过大时重拆计划；已有计划且边界清晰时继续执行下一目标。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
@@ -1753,6 +1781,18 @@ public sealed class BrowserUiRenderer
 
                 function defaultNextSuggestedFeedback() {
                   return "请继续优化这个半成品原型：优先检查首分钟体验、操作反馈、目标提示、胜负条件和基础手感；如果发现明显短板，请直接改进并在完成后给出新的下一步建议。";
+                }
+
+                function currentIterationPlanDecision() {
+                  return String(state.iterationPlanEvaluation?.decision || "").trim().toLowerCase();
+                }
+
+                function continueActionLabel() {
+                  const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
+                  const decision = currentIterationPlanDecision();
+                  if (hasPendingPlan && decision === "should_refine_plan") return "按建议重拆迭代计划";
+                  if (hasPendingPlan) return "继续当前迭代目标";
+                  return "按建议生成迭代计划";
                 }
 
                 function updateContinueSuggestionFromText(text) {
