@@ -153,6 +153,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("evidence.goal_id === goal.goalId");
         html.Should().Contain("data-continue-suggestion");
         html.Should().Contain("continueActionLabel");
+        html.Should().Contain("inlineContinueActionLabelForMessage");
         html.Should().Contain("按建议生成迭代计划");
         html.Should().Contain("按建议重拆迭代计划");
         html.Should().Contain("继续当前迭代目标");
@@ -203,6 +204,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("createIterationPlan");
         html.Should().Contain("evaluateIterationPlan");
         html.Should().Contain("buildIterationPlanEvaluationChatMessage");
+        html.Should().Contain("resolveIterationPlanEvaluationSuggestedFeedback");
+        html.Should().Contain("__iteration_plan_execute_next__");
         html.Should().Contain("iteration-plan-evaluation");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");

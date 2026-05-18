@@ -317,9 +317,23 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderInlineContinueAction(message, index) {
-                  if (message.role !== "assistant" || message.pending || message.continueConsumed || !message.suggestedFeedback) return "";
+                  if (message.role !== "assistant" || message.pending || message.continueConsumed) return "";
                   if (!state.prototypeReadyForFeedback) return "";
-                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">${escapeHtml(continueActionLabel())}</button>`;
+                  const label = inlineContinueActionLabelForMessage(message);
+                  if (!label) return "";
+                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">${escapeHtml(label)}</button>`;
+                }
+
+                function inlineContinueActionLabelForMessage(message) {
+                  const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
+                  if (message?.kind === "iteration-plan-evaluation") {
+                    const decision = String(message.evaluationDecision || currentIterationPlanDecision()).trim().toLowerCase();
+                    if (decision === "should_refine_plan") return "按评估重拆迭代计划";
+                    if (decision === "ready_to_execute" && hasPendingPlan) return "继续当前迭代目标";
+                    return "";
+                  }
+                  if (!message?.suggestedFeedback) return "";
+                  return continueActionLabel();
                 }
 
                 function chatStorageKey(projectId = state.projectId) {
@@ -491,6 +505,17 @@ public sealed class BrowserUiRenderer
                   return lines.join("\n");
                 }
 
+                function resolveIterationPlanEvaluationSuggestedFeedback(evaluation) {
+                  const decision = String(evaluation?.decision || "").trim().toLowerCase();
+                  if (decision === "should_refine_plan") {
+                    return String(evaluation?.suggestedPromptForRegeneration || state.nextSuggestedFeedback || defaultNextSuggestedFeedback()).trim();
+                  }
+                  if (decision === "ready_to_execute") {
+                    return "__iteration_plan_execute_next__";
+                  }
+                  return "";
+                }
+
                 async function evaluateIterationPlan(announceInChat = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
@@ -507,7 +532,9 @@ public sealed class BrowserUiRenderer
                       state.chatHistory.push({
                         role: "assistant",
                         content: buildIterationPlanEvaluationChatMessage(state.iterationPlanEvaluation),
-                        kind: "iteration-plan-evaluation"
+                        kind: "iteration-plan-evaluation",
+                        evaluationDecision: state.iterationPlanEvaluation?.decision || "",
+                        suggestedFeedback: resolveIterationPlanEvaluationSuggestedFeedback(state.iterationPlanEvaluation)
                       });
                       renderChatHistory();
                       saveChatHistoryForProject();
@@ -805,6 +832,11 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                   }
                   const hasPendingPlan = state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending");
+                  if (suggestion === "__iteration_plan_execute_next__") {
+                    if (!hasPendingPlan) return out("当前没有可继续执行的目标。");
+                    await executeIterationGoal();
+                    return;
+                  }
                   if (hasPendingPlan && currentIterationPlanDecision() === "should_refine_plan") {
                     await submitIterationPlanFromFeedback(suggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
                     return;
