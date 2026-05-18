@@ -38,6 +38,7 @@ from dev_cli_builders import (
     build_run_chapter7_ui_wiring_cmd,
     build_run_prototype_tdd_cmd,
     build_run_prototype_workflow_cmd,
+    build_import_game_type_template_cmd,
     build_quality_gates_cmd,
     build_run_dotnet_cmd,
     build_run_gdunit_full_cmd,
@@ -47,6 +48,7 @@ from dev_cli_builders import (
     build_phase_a_runtime_smoke_cmd,
     build_phase_a_public_smoke_cmd,
     build_phase_a_prototype_e2e_cmd,
+    build_phase_a_prototype_real_e2e_cmd,
     build_phase_a_ops_check_cmd,
     build_phase_a_backup_cmd,
     build_phase_a_generate_admin_token_cmd,
@@ -242,6 +244,12 @@ def cmd_phase_a_prototype_e2e(args: argparse.Namespace) -> int:
     return run(build_phase_a_prototype_e2e_cmd(args))
 
 
+def cmd_phase_a_prototype_real_e2e(args: argparse.Namespace) -> int:
+    """Run the real isolated Phase A prototype lane end-to-end check."""
+
+    return run(build_phase_a_prototype_real_e2e_cmd(args))
+
+
 def cmd_phase_a_ops_check(args: argparse.Namespace) -> int:
     """Run Phase A deployment operations prerequisite checks."""
 
@@ -336,6 +344,12 @@ def cmd_run_prototype_workflow(args: argparse.Namespace) -> int:
     """Run the top-level prototype workflow router."""
 
     return run(build_run_prototype_workflow_cmd(args))
+
+
+def cmd_import_game_type_template(args: argparse.Namespace) -> int:
+    """Import an offline game-type template into the repo-local prototype baseline."""
+
+    return run(build_import_game_type_template_cmd(args))
 
 
 def cmd_create_prototype_scene(args: argparse.Namespace) -> int:
@@ -512,6 +526,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_e2e.add_argument("--use-current-repo", action="store_true")
     p_phase_a_e2e.add_argument("--skip-chapter2", action="store_true")
     p_phase_a_e2e.set_defaults(func=cmd_phase_a_prototype_e2e)
+
+    # phase-a-prototype-real-e2e
+    p_phase_a_real_e2e = sub.add_parser(
+        "phase-a-prototype-real-e2e",
+        help="run the real isolated Phase A prototype lane end-to-end check with prototype + Godot acceptance",
+    )
+    p_phase_a_real_e2e.add_argument("--repository-root", default=".")
+    p_phase_a_real_e2e.add_argument("--timeout-seconds", type=int, default=1800)
+    p_phase_a_real_e2e.add_argument("--stop-after-day", type=int, default=7, choices=[5, 6, 7])
+    p_phase_a_real_e2e.set_defaults(func=cmd_phase_a_prototype_real_e2e)
 
     # phase-a-ops-check
     p_phase_a_ops = sub.add_parser("phase-a-ops-check", help="check Phase A deployment operations prerequisites")
@@ -788,6 +812,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_proto_workflow.add_argument("--score-timeout-sec", type=int, default=180)
     p_proto_workflow.add_argument("--self-check", action="store_true")
     p_proto_workflow.set_defaults(func=cmd_run_prototype_workflow)
+
+    p_import_template = sub.add_parser(
+        "import-game-type-template",
+        help="import an offline game-type template into the repo-local prototype baseline",
+    )
+    p_import_template.add_argument("--game-type", required=True)
+    p_import_template.add_argument("--source-root", default="")
+    p_import_template.add_argument("--repo-root", default=".")
+    p_import_template.add_argument("--out-json", default="")
+    p_import_template.set_defaults(func=cmd_import_game_type_template)
 
     # detect-project-stage
     p_stage = sub.add_parser("detect-project-stage", help="检测仓库阶段并刷新 project-health 产物")

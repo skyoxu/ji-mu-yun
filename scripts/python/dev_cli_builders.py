@@ -265,6 +265,23 @@ def build_phase_a_prototype_e2e_cmd(args) -> list[str]:
     return cmd
 
 
+def build_phase_a_prototype_real_e2e_cmd(args) -> list[str]:
+    cmd = [
+        "py",
+        "-3",
+        "scripts/python/phase_a_prototype_e2e_real.py",
+    ]
+    if getattr(args, "repository_root", ""):
+        cmd += ["--repository-root", args.repository_root]
+    timeout_seconds = int(getattr(args, "timeout_seconds", 0) or 0)
+    if timeout_seconds > 0:
+        cmd += ["--timeout-seconds", str(timeout_seconds)]
+    stop_after_day = int(getattr(args, "stop_after_day", 0) or 0)
+    if stop_after_day > 0:
+        cmd += ["--stop-after-day", str(stop_after_day)]
+    return cmd
+
+
 def build_phase_a_ops_check_cmd(args) -> list[str]:
     cmd = ["py", "-3", "scripts/python/phase_a_ops_check.py"]
     for attr, option in [
@@ -436,6 +453,17 @@ def build_run_prototype_workflow_cmd(args) -> list[str]:
         cmd += ["--score-timeout-sec", str(args.score_timeout_sec)]
     if getattr(args, "self_check", False):
         cmd.append("--self-check")
+    return cmd
+
+
+def build_import_game_type_template_cmd(args) -> list[str]:
+    cmd = ["py", "-3", "scripts/python/import_game_type_template.py", "--game-type", args.game_type]
+    if getattr(args, "source_root", ""):
+        cmd += ["--source-root", args.source_root]
+    if getattr(args, "repo_root", ""):
+        cmd += ["--repo-root", args.repo_root]
+    if getattr(args, "out_json", ""):
+        cmd += ["--out-json", args.out_json]
     return cmd
 
 

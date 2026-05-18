@@ -552,6 +552,17 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         module = _load_module("prototype_workflow_router_rpg_skill_payload", "scripts/python/run_prototype_workflow.py")
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
+            catalog = root / "docs" / "prototype-type-kits" / "game-type-template-catalog.json"
+            catalog.parent.mkdir(parents=True, exist_ok=True)
+            catalog.write_text(
+                '{"schema_version":1,"entries":[{"game_type":"rpg","template_id":"default-rpg-template","source_mode":"repo-imported","repo_template_path":"Game.Godot/Prototypes/DefaultRpgTemplate","manifest_path":"docs/prototype-type-kits/default-rpg-template.manifest.json","import_source_path":"C:/gametype/rpgdemo","enabled":true}]}\n',
+                encoding="utf-8",
+            )
+            manifest_path = root / "docs" / "prototype-type-kits" / "default-rpg-template.manifest.json"
+            manifest_path.write_text(
+                '{"schema_version":1,"paths":{"skill_path":".agents/skills/prototype-rpg-godot-zh/SKILL.md","contract_path":".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md"}}\n',
+                encoding="utf-8",
+            )
             skill_path = root / ".agents" / "skills" / "prototype-rpg-godot-zh" / "SKILL.md"
             skill_path.parent.mkdir(parents=True, exist_ok=True)
             skill_path.write_text("# skill\n", encoding="utf-8")
@@ -634,6 +645,12 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 """
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
+            catalog = root / "docs" / "prototype-type-kits" / "game-type-template-catalog.json"
+            catalog.parent.mkdir(parents=True, exist_ok=True)
+            catalog.write_text(
+                '{"schema_version":1,"entries":[{"game_type":"rpg","template_id":"default-rpg-template","source_mode":"repo-imported","repo_template_path":"Game.Godot/Prototypes/DefaultRpgTemplate","manifest_path":"docs/prototype-type-kits/default-rpg-template.manifest.json","import_source_path":"C:/gametype/rpgdemo","enabled":true}]}\n',
+                encoding="utf-8",
+            )
             skill_path = root / ".agents" / "skills" / "prototype-rpg-godot-zh" / "SKILL.md"
             skill_path.parent.mkdir(parents=True, exist_ok=True)
             skill_path.write_text("# skill\n", encoding="utf-8")
@@ -663,6 +680,29 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             active_state["prototype"]["prototype_type_kit"]["manifest_path"],
         )
         self.assertIn("prototype-rpg-godot-zh", active_state["confirmation_summary"])
+
+    def test_catalog_should_drive_default_manifest_lookup(self) -> None:
+        module = _load_module("prototype_workflow_router_manifest_catalog", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            catalog = root / "docs" / "prototype-type-kits" / "game-type-template-catalog.json"
+            catalog.parent.mkdir(parents=True, exist_ok=True)
+            catalog.write_text(
+                '{"schema_version":1,"entries":[{"game_type":"rpg","template_id":"default-rpg-template","source_mode":"repo-imported","repo_template_path":"Game.Godot/Prototypes/DefaultRpgTemplate","manifest_path":"docs/prototype-type-kits/default-rpg-template.manifest.json","import_source_path":"C:/gametype/rpgdemo","enabled":true}]}\n',
+                encoding="utf-8",
+            )
+            manifest = root / "docs" / "prototype-type-kits" / "default-rpg-template.manifest.json"
+            manifest.write_text('{"schema_version":1,"slug":"default-rpg-template"}\n', encoding="utf-8")
+
+            payload = module.enrich_payload_with_prototype_manifest(
+                root=root,
+                payload={"slug": "demo", "game_type": "rpg", "prototype_type_kit": {}},
+            )
+
+        self.assertEqual(
+            "docs/prototype-type-kits/default-rpg-template.manifest.json",
+            payload["prototype_type_kit"]["manifest_path"],
+        )
 
     def test_record_render_should_include_template_fields(self) -> None:
         module = _load_module("prototype_workflow_router_record", "scripts/python/run_prototype_tdd.py")
@@ -1534,6 +1574,29 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual("run-prototype-workflow", args.cmd)
         self.assertIn("scripts/python/run_prototype_workflow.py", cmd)
         self.assertIn("docs/prototypes/sample.md", cmd)
+
+    def test_dev_cli_should_expose_phase_a_prototype_real_e2e_entry(self) -> None:
+        builders = _load_module("dev_cli_builders_module_for_phase_a_prototype_real_e2e", "scripts/python/dev_cli_builders.py")
+        dev_cli = _load_module("dev_cli_module_for_phase_a_prototype_real_e2e", "scripts/python/dev_cli.py")
+        parser = dev_cli.build_parser()
+        args = parser.parse_args(
+            [
+                "phase-a-prototype-real-e2e",
+                "--repository-root",
+                "C:/jimuyun",
+                "--timeout-seconds",
+                "1800",
+                "--stop-after-day",
+                "7",
+            ]
+        )
+        cmd = builders.build_phase_a_prototype_real_e2e_cmd(args)
+
+        self.assertEqual("phase-a-prototype-real-e2e", args.cmd)
+        self.assertIn("scripts/python/phase_a_prototype_e2e_real.py", cmd)
+        self.assertIn("C:/jimuyun", cmd)
+        self.assertIn("1800", cmd)
+        self.assertIn("7", cmd)
 
 
 if __name__ == "__main__":

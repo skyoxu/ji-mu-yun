@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "game_type": "rpg",
+      "template_id": "default-rpg-template",
+      "source_mode": "repo-imported",
+      "repo_template_path": "Game.Godot/Prototypes/DefaultRpgTemplate",
+      "manifest_path": "docs/prototype-type-kits/default-rpg-template.manifest.json",
+      "import_source_path": "C:/gametype/rpgdemo",
+      "enabled": true
+    }
+  ]
+}

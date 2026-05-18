@@ -142,6 +142,22 @@ def write_text(path: str, content: str) -> None:
         f.write(content)
 
 
+def _cleanup_godot_processes(godot_bin: str) -> None:
+    exe_name = os.path.basename(godot_bin).strip()
+    if not exe_name:
+        return
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/IM", exe_name, "/T"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except Exception:
+        pass
+
+
 def ensure_tests_project_junction(repo_root: str, project_abs: str, out_dir: str) -> None:
     """
     Hard gate: ensure Tests.Godot/Game.Godot is a Junction to the real Game.Godot.
@@ -207,6 +223,8 @@ def main():
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)
 
+    _cleanup_godot_processes(args.godot_bin)
+
     # Hard gate before any Godot invocation.
     ensure_tests_project_junction(repo_root=root, project_abs=proj, out_dir=out_dir)
 
@@ -264,7 +282,10 @@ def main():
             # normalize relative tests path to res://
             apath = 'res://' + apath.replace('\\', '/').lstrip('/')
         cmd += ['-a', apath]
-    rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000)
+    try:
+        rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000)
+    finally:
+        _cleanup_godot_processes(args.godot_bin)
     console_path = os.path.join(out_dir, 'gdunit-console.txt')
     with open(console_path, 'w', encoding='utf-8') as f:
         f.write(out)

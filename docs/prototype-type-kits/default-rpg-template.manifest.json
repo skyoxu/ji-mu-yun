@@ -2,8 +2,8 @@
   "schema_version": 1,
   "game_type": "rpg",
   "slug": "default-rpg-template",
-  "label": "Default RPG Template",
-  "description": "Neutral reusable RPG prototype template metadata for the repo-local prototype lane.",
+  "label": "Imported RPG Template",
+  "description": "Imported from offline RPG template source and frozen into the repo-local prototype lane.",
   "paths": {
     "asset_pack_root": "Game.Godot/Prototypes/DefaultRpgTemplate/Assets/",
     "scene_template_root": "Game.Godot/Prototypes/DefaultRpgTemplate/",
@@ -11,6 +11,9 @@
     "default_script": "Game.Godot/Prototypes/DefaultRpgTemplate/Scripts/DefaultRpgPrototype.cs",
     "prototype_record_example": "docs/prototypes/2026-05-04-default-rpg-template.md",
     "skill_path": ".agents/skills/prototype-rpg-godot-zh/SKILL.md",
-    "contract_path": ".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md"
+    "contract_path": ".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md",
+    "core_loop": "Game.Core/Prototypes/DefaultRpgPrototypeLoop.cs",
+    "core_loop_test": "Game.Core.Tests/Prototypes/DefaultRpgPrototypeLoopTests.cs",
+    "godot_scene_test": "Tests.Godot/tests/Prototype/DefaultRpgPrototype/test_default_rpg_prototype_scene.gd"
   }
 }

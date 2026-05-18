@@ -196,6 +196,44 @@ public sealed class ProjectWorkspaceSeederTests
         File.Exists(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "GdUnitTestSuite.gd")).Should().BeTrue();
     }
 
+    [Fact]
+    public void EnsureSeeded_SkipsLockedGdUnitFiles_ButContinuesSync()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "docs", "prototype-type-kits"));
+        File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd"), "new suite\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "new manifest\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        Directory.CreateDirectory(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src"));
+        Directory.CreateDirectory(Path.Combine(targetRepo, "docs", "prototype-type-kits"));
+        File.WriteAllText(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd"), "old suite\n");
+        File.WriteAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md"), "old manifest\n");
+
+        var seeder = new ProjectWorkspaceSeeder(options);
+        var lockedPath = Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd");
+        using (var lockedHandle = new FileStream(
+                   lockedPath,
+                   FileMode.Open,
+                   FileAccess.Read,
+                   FileShare.None))
+        {
+            seeder.EnsureSeeded(targetRepo);
+        }
+
+        File.ReadAllText(lockedPath).Should().Be("old suite\n");
+        File.ReadAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md")).Should().Be("new manifest\n");
+    }
+
     private static bool TryCreateJunction(string junctionPath, string targetPath)
     {
         var startInfo = new ProcessStartInfo

@@ -116,6 +116,22 @@ def _open_writer(path: Path):
     return open(_to_windows_extended_path(path.resolve()), "w", encoding="utf-8", errors="ignore")
 
 
+def _cleanup_godot_processes(godot_bin: str) -> None:
+    exe_name = os.path.basename(godot_bin).strip()
+    if not exe_name:
+        return
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/IM", exe_name, "/T"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except Exception:
+        pass
+
+
 def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: int) -> int:
     bin_path = Path(godot_bin)
     project_root = Path(project_path)
@@ -139,6 +155,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
 
     temp_script_dir = Path(tempfile.mkdtemp(prefix="phasea-nav-smoke-"))
     try:
+        _cleanup_godot_processes(str(bin_path))
         temp_script = temp_script_dir / "main_menu_navigation_smoke.gd"
         out_path = dest / "out.log"
         err_path = dest / "err.log"
@@ -211,6 +228,8 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
                 proc.kill()
                 print("[prototype_main_menu_navigation] timeout", file=sys.stderr)
                 return 124
+            finally:
+                _cleanup_godot_processes(str(bin_path))
 
         stdout = _read_text(out_path) if out_path.exists() else ""
         stderr = _read_text(err_path) if err_path.exists() else ""
@@ -242,6 +261,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             print(combined, file=sys.stderr)
         return proc.returncode if proc.returncode != 0 else 1
     finally:
+        _cleanup_godot_processes(str(bin_path))
         shutil.rmtree(_to_windows_extended_path(temp_script_dir.resolve()), ignore_errors=True)
 
 

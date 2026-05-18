@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +31,50 @@ from pathlib import Path
 
 def _is_known_good_scene(scene: str) -> bool:
     return bool(scene) and scene.startswith("res://") and scene.lower().endswith(".tscn")
+
+
+def _cleanup_godot_processes(godot_bin: str) -> None:
+    exe_name = os.path.basename(godot_bin).strip()
+    if not exe_name:
+        return
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/IM", exe_name, "/T"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except Exception:
+        pass
+
+
+def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str, str]:
+    prewarm_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
+    prewarm = subprocess.run(
+        prewarm_cmd,
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        timeout=600,
+    )
+    if prewarm.returncode == 0:
+        return True, "godot-build-solutions", prewarm.stdout or "", prewarm.stderr or ""
+
+    fallback = subprocess.run(
+        ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        timeout=600,
+    )
+    stdout = (prewarm.stdout or "") + (("\n" + fallback.stdout) if fallback.stdout else "")
+    stderr = (prewarm.stderr or "") + (("\n" + fallback.stderr) if fallback.stderr else "")
+    return fallback.returncode == 0, "dotnet-build", stdout, stderr
 
 
 def _run_smoke(
@@ -66,10 +111,43 @@ def _run_smoke(
     err_path = dest / "headless.err.log"
     log_path = dest / "headless.log"
     summary_path = dest / "summary.json"
+    prewarm_out_path = dest / "prewarm.out.log"
+    prewarm_err_path = dest / "prewarm.err.log"
 
     cmd = [str(bin_path), "--headless", "--path", project_path, "--scene", scene]
     cmd_text = " ".join(cmd)
     print(f"[smoke_headless] starting Godot: {' '.join(cmd)} (timeout={timeout_sec}s)")
+    _cleanup_godot_processes(str(bin_path))
+    prewarm_ok, prewarm_mode, prewarm_stdout, prewarm_stderr = _prewarm_csharp(str(bin_path), project_root)
+    prewarm_out_path.write_text(prewarm_stdout, encoding="utf-8", errors="ignore")
+    prewarm_err_path.write_text(prewarm_stderr, encoding="utf-8", errors="ignore")
+    if not prewarm_ok:
+        print("[smoke_headless] failed to prewarm C# build", file=sys.stderr)
+        summary = {
+            "runId": f"smoke-{ts}",
+            "date": day,
+            "timestamp": ts,
+            "godot_bin": str(bin_path),
+            "project_path": project_path,
+            "scene": scene,
+            "known_good_scene": _is_known_good_scene(scene),
+            "timeout_sec": timeout_sec,
+            "strict": strict,
+            "command": cmd_text,
+            "prewarm_mode": prewarm_mode,
+            "artifacts": {
+                "prewarm_out_log": str(prewarm_out_path),
+                "prewarm_err_log": str(prewarm_err_path),
+                "summary_json": str(summary_path),
+            },
+            "exit_code": 1,
+        }
+        summary_path.write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+            errors="ignore",
+        )
+        return 1
 
     with out_path.open("w", encoding="utf-8", errors="ignore") as f_out, \
             err_path.open("w", encoding="utf-8", errors="ignore") as f_err:
@@ -87,6 +165,8 @@ def _run_smoke(
                 proc.kill()
             except Exception:
                 pass
+        finally:
+            _cleanup_godot_processes(str(bin_path))
 
     content_parts: list[str] = []
     if out_path.is_file():
@@ -133,7 +213,10 @@ def _run_smoke(
             "db_opened": has_db_open,
             "any_output": has_any,
         },
+        "prewarm_mode": prewarm_mode,
         "artifacts": {
+            "prewarm_out_log": str(prewarm_out_path),
+            "prewarm_err_log": str(prewarm_err_path),
             "out_log": str(out_path),
             "err_log": str(err_path),
             "combined_log": str(log_path),

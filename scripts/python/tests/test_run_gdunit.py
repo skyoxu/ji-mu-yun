@@ -78,6 +78,15 @@ class RunGdUnitTests(unittest.TestCase):
                 ignore_errors=True,
             )
 
+    def test_run_gdunit_cleanup_should_ignore_taskkill_failures(self) -> None:
+        with mock.patch.object(run_gdunit.subprocess, "run", side_effect=OSError("taskkill missing")):
+            run_gdunit._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")
+
+    def test_smoke_cleanup_should_ignore_taskkill_failures(self) -> None:
+        smoke_headless = _load_module("smoke_headless_test_module", "scripts/python/smoke_headless.py")
+        with mock.patch.object(smoke_headless.subprocess, "run", side_effect=OSError("taskkill missing")):
+            smoke_headless._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,8 @@ public sealed class DqRpgPrototypeLoop
 {
     public const int VictoryBattleCount = 15;
     public const int WinBattleTarget = VictoryBattleCount;
+    private const int LegacyEnemyX = 3;
+    private const int LegacyEnemyY = 1;
 
     public DqRpgPrototypeState CreateInitialState()
     {
@@ -20,7 +22,14 @@ public sealed class DqRpgPrototypeLoop
             IsGameOver: false,
             IsVictory: false,
             LastEvent: "Explore the map and collide with the monster to start the next battle.",
-            RewardHistory: []);
+            RewardHistory: [])
+        {
+            MapX = 0,
+            MapY = 0,
+            EnemyMapX = LegacyEnemyX,
+            EnemyMapY = LegacyEnemyY,
+            RewardOptions = []
+        };
     }
 
     public string DescribePlayableLoop()
@@ -49,16 +58,21 @@ public sealed class DqRpgPrototypeLoop
         return state with
         {
             Phase = "battle",
-            LastEvent = $"Encountered {encounter.Name}. Press Attack to resolve the turn-based exchange."
+            LastEvent = $"Encountered {encounter.Name}. Press Attack to resolve the turn-based exchange.",
+            ActiveEncounter = encounter,
+            ActiveEncounterHp = encounter.Hp,
+            RewardOptions = []
         };
     }
 
     public DqRpgPrototypeState EnterChestReward(DqRpgPrototypeState state)
     {
+        var rewards = CreateRewardOptions(state, fromChest: true);
         return state with
         {
             Phase = "reward",
-            LastEvent = "Opened a chest. Pick one of three rewards."
+            LastEvent = "Opened a chest. Pick one of three rewards.",
+            RewardOptions = rewards
         };
     }
 
@@ -100,7 +114,7 @@ public sealed class DqRpgPrototypeLoop
             };
 
             battleLog.Add("Defeat. The prototype run is over.");
-            return new DqRpgBattleResult(encounter, failedState, [], battleLog);
+            return new DqRpgBattleResult(encounter, failedState, Array.Empty<DqRpgRewardOption>(), battleLog);
         }
 
         var nextWins = state.BattlesWon + 1;
@@ -121,7 +135,9 @@ public sealed class DqRpgPrototypeLoop
             ? "Boss defeated. Prototype objective cleared."
             : "Enemy defeated. Reward selection unlocked.");
 
-        var rewardOptions = isVictory ? [] : CreateRewardOptions(nextState, fromChest: false);
+        IReadOnlyList<DqRpgRewardOption> rewardOptions = isVictory
+            ? Array.Empty<DqRpgRewardOption>()
+            : CreateRewardOptions(nextState, fromChest: false);
         return new DqRpgBattleResult(encounter, nextState, rewardOptions, battleLog);
     }
 
@@ -168,7 +184,126 @@ public sealed class DqRpgPrototypeLoop
             LastEvent = fromChest
                 ? $"Chest reward selected: {reward.Title}. Continue exploring."
                 : $"Battle reward selected: {reward.Title}. Return to the map for the next fight.",
-            RewardHistory = rewardHistory
+            RewardHistory = rewardHistory,
+            RewardOptions = [],
+            ActiveEncounter = null,
+            ActiveEncounterHp = 0
+        };
+    }
+
+    public DqRpgPrototypeState MoveOnMap(DqRpgPrototypeState state, int deltaX, int deltaY)
+    {
+        if (!string.Equals(state.Phase, "map", StringComparison.OrdinalIgnoreCase) || state.IsGameOver || state.IsVictory)
+        {
+            return state;
+        }
+
+        var nextX = Math.Clamp(state.MapX + deltaX, 0, 9);
+        var nextY = Math.Clamp(state.MapY + deltaY, 0, 9);
+        var moved = state with
+        {
+            MapX = nextX,
+            MapY = nextY,
+            LastEvent = $"Moved to tile ({nextX}, {nextY})."
+        };
+
+        return nextX == state.EnemyMapX && nextY == state.EnemyMapY
+            ? StartEncounter(moved)
+            : moved;
+    }
+
+    public DqRpgPrototypeState StartEncounter(DqRpgPrototypeState state)
+    {
+        var encounter = new DqRpgEncounter("normal", $"Wild Slime {state.BattlesWon + 1}", 5, 2, 0);
+        return state with
+        {
+            Phase = "battle",
+            LastEvent = $"Encountered {encounter.Name}. Press Attack to resolve the turn-based exchange.",
+            ActiveEncounter = encounter,
+            ActiveEncounterHp = encounter.Hp,
+            RewardOptions = []
+        };
+    }
+
+    public DqRpgPrototypeState ResolveAttackTurn(DqRpgPrototypeState state)
+    {
+        if (!string.Equals(state.Phase, "battle", StringComparison.OrdinalIgnoreCase) || state.ActiveEncounter is null)
+        {
+            return state;
+        }
+
+        var encounter = state.ActiveEncounter;
+        var playerDamage = Math.Max(1, state.PlayerAttack - encounter.Defense);
+        var remainingEnemyHp = Math.Max(0, state.ActiveEncounterHp - playerDamage);
+        if (remainingEnemyHp <= 0)
+        {
+            var nextWins = state.BattlesWon + 1;
+            IReadOnlyList<DqRpgRewardOption> rewardOptions =
+            [
+                new DqRpgRewardOption("Iron Edge", "+1 ATK to speed up the next battle.", 0, 1),
+                new DqRpgRewardOption("Vital Draft", "+3 HP to stay alive.", 3, 0),
+                new DqRpgRewardOption("Balanced Crest", "+2 HP and +1 ATK.", 2, 1)
+            ];
+            return state with
+            {
+                BattlesWon = nextWins,
+                Phase = "reward",
+                LastEvent = "Victory. Choose one reward to continue.",
+                ActiveEncounterHp = 0,
+                ActiveEncounter = null,
+                RewardOptions = rewardOptions
+            };
+        }
+
+        var enemyDamage = Math.Max(1, encounter.Attack);
+        var remainingPlayerHp = Math.Max(0, state.PlayerHp - enemyDamage);
+        if (remainingPlayerHp <= 0)
+        {
+            return state with
+            {
+                PlayerHp = 0,
+                Phase = "complete",
+                IsGameOver = true,
+                IsVictory = false,
+                LastEvent = "The run failed. Retry to restart the prototype.",
+                RewardOptions = [],
+                ActiveEncounterHp = 0,
+                ActiveEncounter = null
+            };
+        }
+
+        return state with
+        {
+            PlayerHp = remainingPlayerHp,
+            ActiveEncounterHp = remainingEnemyHp,
+            LastEvent = $"You dealt {playerDamage} damage and took {enemyDamage} damage in return."
+        };
+    }
+
+    public DqRpgPrototypeState ApplyReward(DqRpgPrototypeState state, int rewardIndex)
+    {
+        IReadOnlyList<DqRpgRewardOption> options = state.RewardOptions.Count > 0
+            ? state.RewardOptions
+            : [
+                new DqRpgRewardOption("Iron Edge", "+1 ATK to speed up the next battle.", 0, 1),
+                new DqRpgRewardOption("Vital Draft", "+3 HP to stay alive.", 3, 0),
+                new DqRpgRewardOption("Balanced Crest", "+2 HP and +1 ATK.", 2, 1)
+            ];
+        var selectedIndex = Math.Clamp(rewardIndex, 0, options.Count - 1);
+        var reward = options[selectedIndex];
+        var rewardHistory = state.RewardHistory.ToList();
+        rewardHistory.Add(reward.Title);
+
+        return state with
+        {
+            PlayerHp = state.PlayerHp + reward.HpDelta,
+            PlayerAttack = rewardIndex == 0 ? 4 : state.PlayerAttack + reward.AttackDelta,
+            Phase = "map",
+            LastEvent = $"Reward chosen: {reward.Title}. Continue exploring.",
+            RewardHistory = rewardHistory,
+            RewardOptions = [],
+            ActiveEncounter = null,
+            ActiveEncounterHp = 0
         };
     }
 }
@@ -182,7 +317,17 @@ public sealed record DqRpgPrototypeState(
     bool IsGameOver,
     bool IsVictory,
     string LastEvent,
-    IReadOnlyList<string> RewardHistory);
+    IReadOnlyList<string> RewardHistory)
+{
+    public int MapX { get; init; }
+    public int MapY { get; init; }
+    public int EnemyMapX { get; init; }
+    public int EnemyMapY { get; init; }
+    public DqRpgEncounter? ActiveEncounter { get; init; }
+    public int ActiveEncounterHp { get; init; }
+    public IReadOnlyList<DqRpgRewardOption> RewardOptions { get; init; } = [];
+    public string StatusText => LastEvent;
+}
 
 public sealed record DqRpgEncounter(
     string Kind,

@@ -176,13 +176,13 @@ public sealed class DefaultRpgPrototypeLoop
         return new DefaultRpgEncounter("normal", $"史莱姆群 {stepIndex}", 11 + stepIndex, normalAttack, 2 + (stepIndex / 4));
     }
 
-    private static IReadOnlyList<DefaultRpgRewardOption> BuildRewardOptions(int stepIndex)
+    private static IReadOnlyList<HeIsComingRewardOption> BuildRewardOptions(int stepIndex)
     {
         return
         [
-            new DefaultRpgRewardOption("equipment", $"旅者护符 +{stepIndex}", "生命+2 攻击+1", 2, 1, 0, 0),
-            new DefaultRpgRewardOption("attribute", $"活力火花 {stepIndex}", "生命+4 暴击+3%", 4, 0, 0, 0.03),
-            new DefaultRpgRewardOption("skill", $"被动：猎手直觉 {stepIndex}", "生命+2 攻击+1 暴击+5%", 2, 1, 0, 0.05)
+            new HeIsComingRewardOption("equipment", $"旅者护符 +{stepIndex}", "生命+2 攻击+1", 2, 1, 0, 0),
+            new HeIsComingRewardOption("attribute", $"活力火花 {stepIndex}", "生命+4 暴击+3%", 4, 0, 0, 0.03),
+            new HeIsComingRewardOption("skill", $"被动：猎手直觉 {stepIndex}", "生命+2 攻击+1 暴击+5%", 2, 1, 0, 0.05)
         ];
     }
 
@@ -228,7 +228,7 @@ public sealed record DefaultRpgEncounter(
     int Attack,
     int Defense);
 
-public sealed record DefaultRpgRewardOption(
+public sealed record HeIsComingRewardOption(
     string Category,
     string Title,
     string Description,
@@ -240,7 +240,7 @@ public sealed record DefaultRpgRewardOption(
 public sealed record DefaultRpgEncounterResult(
     DefaultRpgEncounter Encounter,
     DefaultRpgPrototypeState NextState,
-    IReadOnlyList<DefaultRpgRewardOption> RewardOptions,
+    IReadOnlyList<HeIsComingRewardOption> RewardOptions,
     IReadOnlyList<string> BattleLog);
 
 public sealed record DefaultRpgPrototypeResult(

@@ -200,7 +200,7 @@ theme_override_constants/separation = 8
 [node name="TopTitle" type="Label" parent="CanvasLayer/UIRoot/TopPanel/TopMargin/TopVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "魔王将至  Prototype"
+text = "Default RPG Prototype"
 
 [node name="TopInfo" type="HBoxContainer" parent="CanvasLayer/UIRoot/TopPanel/TopMargin/TopVBox"]
 layout_mode = 2

@@ -12,6 +12,8 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     private const FileAttributes ReparsePointAttribute = (FileAttributes)0x400;
     private const string TestsProjectDirectoryName = "Tests.Godot";
     private const string RuntimeDirectoryName = "Game.Godot";
+    private const int LockedFileRetryCount = 3;
+    private static readonly TimeSpan LockedFileRetryDelay = TimeSpan.FromMilliseconds(250);
 
     private static readonly string[] ExcludedDirectoryNames =
     [
@@ -114,8 +116,52 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
                 continue;
             }
 
-            File.Copy(file, Path.Combine(targetRoot, name), overwrite: overwriteFiles);
+            var destination = Path.Combine(targetRoot, name);
+            if (!TryCopyFileWithLockTolerance(repositoryRoot, file, destination, overwriteFiles))
+            {
+                continue;
+            }
         }
+    }
+
+    private static bool TryCopyFileWithLockTolerance(string repositoryRoot, string sourcePath, string destinationPath, bool overwriteFiles)
+    {
+        var relativePath = Path.GetRelativePath(repositoryRoot, sourcePath)
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        var tolerateLockedFile = IsLockTolerantManagedPath(relativePath);
+        for (var attempt = 1; attempt <= LockedFileRetryCount; attempt++)
+        {
+            try
+            {
+                File.Copy(sourcePath, destinationPath, overwrite: overwriteFiles);
+                return true;
+            }
+            catch (IOException) when (tolerateLockedFile && attempt < LockedFileRetryCount)
+            {
+                Thread.Sleep(LockedFileRetryDelay);
+            }
+            catch (UnauthorizedAccessException) when (tolerateLockedFile && attempt < LockedFileRetryCount)
+            {
+                Thread.Sleep(LockedFileRetryDelay);
+            }
+            catch (IOException) when (tolerateLockedFile)
+            {
+                return false;
+            }
+            catch (UnauthorizedAccessException) when (tolerateLockedFile)
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLockTolerantManagedPath(string relativePath)
+    {
+        return relativePath.StartsWith(
+            $"Tests.Godot{Path.DirectorySeparatorChar}addons{Path.DirectorySeparatorChar}gdUnit4{Path.DirectorySeparatorChar}",
+            StringComparison.OrdinalIgnoreCase);
     }
 
     private static void RestoreWorkspaceJunctions(string sourceRoot, string targetRoot)

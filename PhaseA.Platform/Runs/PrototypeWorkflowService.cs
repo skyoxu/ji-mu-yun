@@ -2,6 +2,7 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Runs;
@@ -20,6 +21,7 @@ public sealed class PrototypeWorkflowService
     private readonly LlmBindingService _llmBindingService;
     private readonly LlmStopLossService _llmStopLossService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly GameTypeTemplateCatalog _templateCatalog;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -30,7 +32,7 @@ public sealed class PrototypeWorkflowService
         PrototypeArtifactIndexer artifactIndexer,
         LlmBindingService llmBindingService,
         LlmStopLossService llmStopLossService)
-        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options))
+        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options))
     {
     }
 
@@ -43,7 +45,8 @@ public sealed class PrototypeWorkflowService
         PrototypeArtifactIndexer artifactIndexer,
         LlmBindingService llmBindingService,
         LlmStopLossService llmStopLossService,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        GameTypeTemplateCatalog templateCatalog)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -54,6 +57,7 @@ public sealed class PrototypeWorkflowService
         _llmBindingService = llmBindingService;
         _llmStopLossService = llmStopLossService;
         _workspaceSeeder = workspaceSeeder;
+        _templateCatalog = templateCatalog;
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -69,6 +73,7 @@ public sealed class PrototypeWorkflowService
 
         request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
         request = EnrichRequestFromProject(project, request);
+        EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
         if (missing.Count > 0)
         {
@@ -168,6 +173,7 @@ public sealed class PrototypeWorkflowService
 
         request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
         request = EnrichRequestFromProject(project, request);
+        EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
         if (missing.Count > 0)
         {
@@ -1446,6 +1452,21 @@ public sealed class PrototypeWorkflowService
         }
 
         return null;
+    }
+
+    private void EnsureTemplateManifestExistsForGameType(PrototypeWorkflowRequest request)
+    {
+        var template = _templateCatalog.Find(request.GameType);
+        if (template is null || !template.Enabled)
+        {
+            return;
+        }
+
+        var manifestPath = Path.Combine(_options.RepositoryRoot, template.ManifestPath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(manifestPath))
+        {
+            throw new InvalidOperationException($"Game type template manifest missing for {template.GameType}: {template.ManifestPath}");
+        }
     }
 
     private static readonly (string Step, string Substep, string Label)[] ProgressSteps =

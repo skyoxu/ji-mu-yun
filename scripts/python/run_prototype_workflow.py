@@ -369,14 +369,40 @@ def _infer_game_type_from_raw_payload(raw: dict[str, Any]) -> str:
     return ""
 
 
+def load_game_type_template_catalog(root: Path) -> dict[str, dict[str, Any]]:
+    catalog_path = root / "docs" / "prototype-type-kits" / "game-type-template-catalog.json"
+    if not catalog_path.exists():
+        return {}
+    try:
+        payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    entries: dict[str, dict[str, Any]] = {}
+    for item in list(payload.get("entries") or []):
+        if not isinstance(item, dict):
+            continue
+        game_type = sanitize_slug(str(item.get("game_type") or ""))
+        if not game_type:
+            continue
+        entries[game_type] = dict(item)
+    return entries
+
+
+def find_game_type_template_entry(*, root: Path, game_type: str) -> dict[str, Any]:
+    return dict(load_game_type_template_catalog(root).get(sanitize_slug(game_type)) or {})
+
+
 def enrich_payload_with_prototype_manifest(*, root: Path, payload: dict[str, Any]) -> dict[str, Any]:
     updated = dict(payload)
     type_kit = dict(updated.get("prototype_type_kit") or {}) if isinstance(updated.get("prototype_type_kit"), dict) else {}
     manifest_path = str(type_kit.get("manifest_path") or "").strip()
-    if not manifest_path and sanitize_slug(str(updated.get("game_type") or "")) == "rpg":
-        default_manifest = root / "docs" / "prototype-type-kits" / "default-rpg-template.manifest.json"
-        if default_manifest.exists():
-            manifest_path = str(default_manifest.relative_to(root)).replace("\\", "/")
+    if not manifest_path:
+        entry = find_game_type_template_entry(root=root, game_type=str(updated.get("game_type") or ""))
+        configured_manifest = str(entry.get("manifest_path") or "").strip()
+        if configured_manifest:
+            default_manifest = root / configured_manifest
+            if default_manifest.exists():
+                manifest_path = str(default_manifest.relative_to(root)).replace("\\", "/")
     if not manifest_path:
         if type_kit:
             updated["prototype_type_kit"] = type_kit
@@ -779,7 +805,7 @@ def enrich_payload_with_game_type_guide(*, root: Path, payload: dict[str, Any]) 
 
 
 def _repo_relative_posix(root: Path, path: Path) -> str:
-    return str(path.relative_to(root)).replace("\\", "/")
+    return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
 
 
 def _slug_to_pascal(slug: str) -> str:
@@ -830,21 +856,36 @@ def _prototype_godot_test_path(slug: str) -> str:
 
 def enrich_payload_with_repo_local_skill(*, root: Path, payload: dict[str, Any]) -> dict[str, Any]:
     updated = dict(payload)
-    game_type = sanitize_slug(str(updated.get("game_type") or ""))
-    if game_type != "rpg":
+    entry = find_game_type_template_entry(root=root, game_type=str(updated.get("game_type") or ""))
+    if not entry:
         updated.pop("implementation_skill", None)
         return updated
 
-    skill_file = root / ".agents" / "skills" / "prototype-rpg-godot-zh" / "SKILL.md"
+    manifest_path = str(entry.get("manifest_path") or "").strip()
+    skill_rel = ""
+    contract_rel = ""
+    if manifest_path:
+        manifest_file = (root / manifest_path).resolve()
+        if manifest_file.exists():
+            try:
+                manifest_payload = json.loads(manifest_file.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                manifest_payload = {}
+            paths = manifest_payload.get("paths") if isinstance(manifest_payload, dict) else {}
+            if isinstance(paths, dict):
+                skill_rel = str(paths.get("skill_path") or "").strip()
+                contract_rel = str(paths.get("contract_path") or "").strip()
+
+    skill_file = (root / skill_rel).resolve() if skill_rel else root / ".agents" / "skills" / "prototype-rpg-godot-zh" / "SKILL.md"
     if not skill_file.exists():
         updated.pop("implementation_skill", None)
         return updated
 
     metadata: dict[str, Any] = {
-        "name": "prototype-rpg-godot-zh",
+        "name": skill_file.parent.name,
         "path": _repo_relative_posix(root, skill_file),
     }
-    contract_file = skill_file.parent / "references" / "rpg-prototype-contract.md"
+    contract_file = (root / contract_rel).resolve() if contract_rel else skill_file.parent / "references" / "rpg-prototype-contract.md"
     if contract_file.exists():
         metadata["contract_path"] = _repo_relative_posix(root, contract_file)
     updated["implementation_skill"] = metadata
