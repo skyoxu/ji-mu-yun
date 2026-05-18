@@ -301,6 +301,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderChatHistory() {
+                  applyChatWorkflowActions();
                   state.chatHistory.forEach(message => {
                     if (typeof message.content === "string") message.content = sanitizePublicChatContent(message.content);
                   });
@@ -326,6 +327,10 @@ public sealed class BrowserUiRenderer
 
                 function inlineContinueActionLabelForMessage(message) {
                   const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
+                  if ((message?.kind === "iteration-goal-result" || message?.kind === "iteration-goal-failed") &&
+                      message?.suggestedFeedback === "__iteration_plan_evaluate__") {
+                    return "继续评估当前计划";
+                  }
                   if (message?.kind === "iteration-plan-evaluation") {
                     const decision = String(message.evaluationDecision || currentIterationPlanDecision()).trim().toLowerCase();
                     if (decision === "should_refine_plan") return "按评估重拆迭代计划";
@@ -334,6 +339,32 @@ public sealed class BrowserUiRenderer
                   }
                   if (!message?.suggestedFeedback) return "";
                   return continueActionLabel();
+                }
+
+                function applyChatWorkflowActions() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const shouldOfferPlanEvaluation = goals.some(goal => goal.status === "pending" || goal.status === "needs_fix");
+                  let latestGoalResultIndex = -1;
+                  for (let index = state.chatHistory.length - 1; index >= 0; index--) {
+                    const message = state.chatHistory[index];
+                    if (message?.role === "assistant" && (message.kind === "iteration-goal-result" || message.kind === "iteration-goal-failed")) {
+                      latestGoalResultIndex = index;
+                      break;
+                    }
+                  }
+
+                  state.chatHistory.forEach((message, index) => {
+                    if (message?.role !== "assistant" || message.pending) return;
+                    if (message.kind === "iteration-goal-result" || message.kind === "iteration-goal-failed") {
+                      if (message.continueConsumed || index !== latestGoalResultIndex || !shouldOfferPlanEvaluation) {
+                        if (message.suggestedFeedback === "__iteration_plan_evaluate__") {
+                          message.suggestedFeedback = "";
+                        }
+                        return;
+                      }
+                      message.suggestedFeedback = "__iteration_plan_evaluate__";
+                    }
+                  });
                 }
 
                 function chatStorageKey(projectId = state.projectId) {
@@ -832,6 +863,10 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                   }
                   const hasPendingPlan = state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending");
+                  if (suggestion === "__iteration_plan_evaluate__") {
+                    await evaluateIterationPlan(true);
+                    return;
+                  }
                   if (suggestion === "__iteration_plan_execute_next__") {
                     if (!hasPendingPlan) return out("当前没有可继续执行的目标。");
                     await executeIterationGoal();

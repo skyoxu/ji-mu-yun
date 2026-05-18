@@ -154,9 +154,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("data-continue-suggestion");
         html.Should().Contain("continueActionLabel");
         html.Should().Contain("inlineContinueActionLabelForMessage");
+        html.Should().Contain("applyChatWorkflowActions");
         html.Should().Contain("按建议生成迭代计划");
         html.Should().Contain("按建议重拆迭代计划");
         html.Should().Contain("继续当前迭代目标");
+        html.Should().Contain("继续评估当前计划");
         html.Should().Contain("nextSuggestedFeedback");
         html.Should().Contain("continueConsumed");
         html.Should().Contain("suggestedFeedback");
@@ -205,6 +207,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("evaluateIterationPlan");
         html.Should().Contain("buildIterationPlanEvaluationChatMessage");
         html.Should().Contain("resolveIterationPlanEvaluationSuggestedFeedback");
+        html.Should().Contain("__iteration_plan_evaluate__");
         html.Should().Contain("__iteration_plan_execute_next__");
         html.Should().Contain("iteration-plan-evaluation");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
