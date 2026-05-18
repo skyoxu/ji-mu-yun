@@ -262,6 +262,7 @@ public sealed class BrowserUiRenderer
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
                     <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
+                    <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈并生成迭代计划</button>
                     <h2>流程记录</h2>
                     <div id="feedbackSummary" class="card muted">尚未生成迭代计划。</div>
@@ -392,6 +393,8 @@ public sealed class BrowserUiRenderer
                     $("createIterationPlan").textContent = "生成迭代计划";
                     $("evaluateIterationPlan").disabled = true;
                     $("evaluateIterationPlan").textContent = "请先生成迭代计划";
+                    $("evaluateIterationPlanFromChat").disabled = true;
+                    $("evaluateIterationPlanFromChat").textContent = "请先生成迭代计划";
                     $("executeIterationGoal").disabled = true;
                     $("executeIterationGoal").textContent = "请先生成迭代计划";
                     return;
@@ -421,6 +424,8 @@ public sealed class BrowserUiRenderer
                         : "当前已有未完成计划";
                   $("evaluateIterationPlan").disabled = isGlobalBusy();
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
+                  $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
+                  $("evaluateIterationPlanFromChat").textContent = "评估当前计划是否值得继续";
                   $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || shouldRefinePlan || isGlobalBusy();
                   $("executeIterationGoal").textContent = hasNeedsFix
                     ? "请先修复当前目标"
@@ -473,7 +478,20 @@ public sealed class BrowserUiRenderer
                   await submitIterationPlanFromFeedback(message, "正在生成迭代计划...");
                 }
 
-                async function evaluateIterationPlan() {
+                function buildIterationPlanEvaluationChatMessage(evaluation) {
+                  if (!evaluation) return "当前没有可用的迭代计划评估结果。";
+                  const lines = [
+                    "迭代计划继续评估结果：",
+                    `decision: ${String(evaluation.decision || "pending").trim()}`,
+                    String(evaluation.summary || "").trim()
+                  ].filter(Boolean);
+                  if (evaluation.reason) lines.push(`原因：${String(evaluation.reason).trim()}`);
+                  if (evaluation.suggestedAction) lines.push(`建议动作：${String(evaluation.suggestedAction).trim()}`);
+                  if (evaluation.suggestedPromptForRegeneration) lines.push(`建议重拆提示词：${String(evaluation.suggestedPromptForRegeneration).trim()}`);
+                  return lines.join("\n");
+                }
+
+                async function evaluateIterationPlan(announceInChat = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
@@ -485,6 +503,15 @@ public sealed class BrowserUiRenderer
                     });
                     renderIterationPlanEvaluation();
                     renderIterationPlan();
+                    if (announceInChat) {
+                      state.chatHistory.push({
+                        role: "assistant",
+                        content: buildIterationPlanEvaluationChatMessage(state.iterationPlanEvaluation),
+                        kind: "iteration-plan-evaluation"
+                      });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
                     out(state.iterationPlanEvaluation);
                   } catch (error) {
                     showError(error);
@@ -1882,6 +1909,7 @@ public sealed class BrowserUiRenderer
                 $("createProject").onclick = createProject;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
+                $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitQuickFix").onclick = submitQuickFix;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;

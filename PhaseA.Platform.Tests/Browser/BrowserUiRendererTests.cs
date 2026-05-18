@@ -127,6 +127,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("可以点击“修复原型”继续修复");
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
+        html.Should().Contain("evaluateIterationPlanFromChat");
+        html.Should().Contain("评估当前计划是否值得继续");
         html.Should().Contain("quickFixPanel");
         html.Should().Contain("<details id=\"quickFixPanel\">");
         html.Should().Contain("<summary>兼容入口：快速修复</summary>");
@@ -200,6 +202,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("skillActionId");
         html.Should().Contain("createIterationPlan");
         html.Should().Contain("evaluateIterationPlan");
+        html.Should().Contain("buildIterationPlanEvaluationChatMessage");
+        html.Should().Contain("iteration-plan-evaluation");
+        html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");
         html.Should().Contain("iterationAutoRefreshHint");
         html.Should().Contain("执行中会自动刷新进度");
