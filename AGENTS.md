@@ -191,6 +191,11 @@ This file is the repository map. It routes you to the right source document by t
   - Verify `PhaseA.Platform` health on `127.0.0.1:18080` first.
   - Only after the app is healthy should `caddy` on `8080` be restarted or validated.
   - If the app fails to start, inspect bind-port conflicts and build-path contamination before touching Caddy again.
+- Phase A local self-recovery scripts:
+  - `runtime/phase-a/ensure-phasea.ps1`: one-shot health check and restart recovery for `127.0.0.1:18080` and public `8080`.
+  - `runtime/phase-a/watch-phasea.ps1`: background watchdog loop that runs `ensure-phasea.ps1` every 30 seconds and writes runtime evidence under `logs/phase-a-innernet/runtime/`.
+  - Watchdog pid file: `logs/phase-a-innernet/phasea-watchdog.pid`
+  - Watchdog log: `logs/phase-a-innernet/runtime/phasea-watchdog.log`
 
 ## Repo Map
 - Detailed per-directory responsibilities and stop-loss rules: [Directory Responsibilities](docs/agents/16-directory-responsibilities.md)
