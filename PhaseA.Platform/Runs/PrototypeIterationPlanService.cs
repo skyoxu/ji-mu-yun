@@ -6,6 +6,9 @@ namespace PhaseA.Platform.Runs;
 public sealed class PrototypeIterationPlanService
 {
     private static readonly Regex SplitRegex = new(@"[。！？!?]\s*|\r?\n+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex NumberedGoalRegex = new(
+        @"(?:^|\n)\s*(?:step\s*)?\d{1,2}\s*[\.\):\-:：、]?\s*(.+?)(?=(?:\n\s*(?:step\s*)?\d{1,2}\s*[\.\):\-:：、]?\s*)|\z)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline);
     private static readonly string[] InternalSuggestionKeywords =
     [
         "Day 4",
@@ -193,16 +196,23 @@ public sealed class PrototypeIterationPlanService
     private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message)
     {
         var normalized = message.Replace("\r", "\n");
-        var segments = SplitRegex
-            .Split(normalized)
-            .Select(value => value.Trim())
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
+        var segments = ExtractStructuredGoals(normalized);
+        var usedStructuredGoals = segments.Count > 0;
+        if (segments.Count == 0)
+        {
+            segments = SplitRegex
+                .Split(normalized)
+                .Select(value => value.Trim())
+                .Where(IsMeaningfulGoalSegment)
+                .Select(NormalizeGoalSegment)
+                .Where(IsMeaningfulGoalSegment)
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+        }
 
         if (segments.Count == 0)
         {
-            segments.Add(message.Trim());
+            segments.Add(NormalizeGoalSegment(message));
         }
 
         var goals = new List<PrototypeIterationPlanGoalResult>();
@@ -218,36 +228,77 @@ public sealed class PrototypeIterationPlanService
                 index,
                 BuildGoalTitle(index, segment),
                 segment,
-                $"完成后应能明确判断“{TrimForHint(segment)}”是否已落地。",
+                $"完成并验证：{TrimForHint(segment)}。",
                 "pending"));
             index++;
         }
 
-        while (goals.Count < 3)
+        while (!usedStructuredGoals && goals.Count < 3)
         {
             var title = goals.Count switch
             {
-                0 => "梳理当前缺口",
-                1 => "完成最小闭环",
-                _ => "补齐关键说明与验证"
+                0 => "目标 1：补齐当前核心缺口",
+                1 => "目标 2：收敛关键交互链路",
+                _ => "目标 3：完成一次可验证检查"
             };
             var description = goals.Count switch
             {
-                0 => "先定位当前原型里最阻塞玩家体验的一个核心问题，并整理出最小改动方向。",
-                1 => "围绕最小可玩闭环完成一次明确的代码与场景推进。",
-                _ => "补齐提示、说明或验证点，确保用户能判断本轮是否值得继续。"
+                0 => "先补齐当前最影响可玩的核心能力，并让结果可见。",
+                1 => "把与该能力直接相关的关键交互链路连通。",
+                _ => "补一轮最小验证，确认这次改动已经可用。"
             };
             goals.Add(new PrototypeIterationPlanGoalResult(
                 goals.Count + 1,
                 title,
                 description,
-                $"完成后应能人工确认“{title}”已达成。",
+                $"完成并验证：{title}。",
                 "pending"));
         }
 
         return goals;
     }
 
+    private static List<string> ExtractStructuredGoals(string message)
+    {
+        return NumberedGoalRegex.Matches(message)
+            .Select(match => match.Groups[1].Value.Trim())
+            .Select(NormalizeGoalSegment)
+            .Where(IsMeaningfulGoalSegment)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static string NormalizeGoalSegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Replace("\r", "\n")
+            .Trim()
+            .Trim(';', '；', ',', '，', '.', '。', ':', '：', '-', ' ')
+            .Replace("\n", " ")
+            .Trim();
+    }
+
+    private static bool IsMeaningfulGoalSegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 4)
+        {
+            return false;
+        }
+
+        var letterOrDigitCount = trimmed.Count(char.IsLetterOrDigit);
+        return letterOrDigitCount >= 3;
+    }
     private static string BuildOverallGoal(string gameName, string message)
     {
         var prefix = string.IsNullOrWhiteSpace(gameName) ? "当前项目" : gameName.Trim();
