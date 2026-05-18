@@ -247,9 +247,11 @@ public sealed class BrowserUiRenderer
                     <h2>主流程：迭代计划</h2>
                     <p class="muted">推荐流程：先把较大的优化目标拆成 3-7 个小目标，再逐个执行。每次只推进一个目标，完成后停下，由你决定是否继续。</p>
                     <button id="createIterationPlan" class="ghost" data-global-action="true">生成迭代计划</button>
+                    <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前迭代计划</button>
                     <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一目标</button>
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
                     <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
+                    <div id="iterationPlanEvaluation" class="card muted">尚未评估当前迭代计划。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
                     <details id="quickFixPanel">
                       <summary>兼容入口：快速修复</summary>
@@ -277,7 +279,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -362,6 +364,7 @@ public sealed class BrowserUiRenderer
                 async function loadIterationPlan() {
                   if (!state.projectId) {
                     state.iterationPlan = null;
+                    state.iterationPlanEvaluation = null;
                     renderIterationPlan();
                     return;
                   }
@@ -382,9 +385,13 @@ public sealed class BrowserUiRenderer
                   if (!plan || !plan.session) {
                     $("iterationPlanStatus").className = "card muted";
                     $("iterationPlanStatus").textContent = "尚未生成迭代计划。";
+                    $("iterationPlanEvaluation").className = "card muted";
+                    $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
                     $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
                     $("createIterationPlan").textContent = "生成迭代计划";
+                    $("evaluateIterationPlan").disabled = true;
+                    $("evaluateIterationPlan").textContent = "请先生成迭代计划";
                     $("executeIterationGoal").disabled = true;
                     $("executeIterationGoal").textContent = "请先生成迭代计划";
                     return;
@@ -403,8 +410,11 @@ public sealed class BrowserUiRenderer
                   `;
                   $("createIterationPlan").disabled = !canCreateNewPlan || isGlobalBusy();
                   $("createIterationPlan").textContent = canCreateNewPlan ? "生成新的迭代计划" : hasNeedsFix ? "当前计划需先修复" : "当前已有未完成计划";
+                  $("evaluateIterationPlan").disabled = isGlobalBusy();
+                  $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || isGlobalBusy();
                   $("executeIterationGoal").textContent = hasNeedsFix ? "请先修复当前目标" : hasPending ? "执行下一目标" : "当前没有待执行目标";
+                  renderIterationPlanEvaluation();
                   $("iterationPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
                       <strong>step ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(goal.status || "pending")}</strong>
@@ -415,12 +425,49 @@ public sealed class BrowserUiRenderer
                     </div>`).join("");
                 }
 
+                function renderIterationPlanEvaluation() {
+                  const evaluation = state.iterationPlanEvaluation;
+                  if (!evaluation) {
+                    $("iterationPlanEvaluation").className = "card muted";
+                    $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
+                    return;
+                  }
+                  $("iterationPlanEvaluation").className = "card";
+                  $("iterationPlanEvaluation").innerHTML = `
+                    <strong>${escapeHtml(evaluation.decision || "pending")}</strong>
+                    <p>${escapeHtml(evaluation.summary || "")}</p>
+                    ${evaluation.reason ? `<p class="muted">${escapeHtml(evaluation.reason)}</p>` : ""}
+                    ${evaluation.suggestedAction ? `<p class="muted">建议动作：${escapeHtml(evaluation.suggestedAction)}</p>` : ""}
+                    ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议重拆提示词：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
+                  `;
+                }
+
                 async function createIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const message = $("chatMessage").value.trim();
                   if (!message) return out("请先输入要拆解的优化目标。");
                   await submitIterationPlanFromFeedback(message, "正在生成迭代计划...");
+                }
+
+                async function evaluateIterationPlan() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  setLocalBusy(true, "正在评估当前迭代计划，请等待当前任务执行完毕。");
+                  try {
+                    state.iterationPlanEvaluation = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
+                      method: "POST",
+                      body: JSON.stringify({})
+                    });
+                    renderIterationPlanEvaluation();
+                    out(state.iterationPlanEvaluation);
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await refreshActiveRun();
+                  }
                 }
 
                 async function submitIterationPlanFromFeedback(message, busyText, sourceKind = "manual_feedback") {
@@ -444,6 +491,7 @@ public sealed class BrowserUiRenderer
                       },
                       goals: result.goals || []
                     };
+                    state.iterationPlanEvaluation = null;
                     const summary = result.goals?.length
                       ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
                       : result.summary;
@@ -1797,6 +1845,7 @@ public sealed class BrowserUiRenderer
                 $("submitQuickFix").onclick = submitQuickFix;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
+                $("evaluateIterationPlan").onclick = evaluateIterationPlan;
                 $("executeIterationGoal").onclick = executeIterationGoal;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
                 renderChatHistory();

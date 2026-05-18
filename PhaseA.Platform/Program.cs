@@ -392,6 +392,24 @@ app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
     return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
 });
 
+app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
+    string projectId,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var progress = await prototypeWorkflow.GetProgressAsync(projectId, cancellationToken);
+        var result = await iterationPlans.EvaluateAsync(adminAccountId, projectId, progress, cancellationToken);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
     string projectId,
     [FromServices] PrototypeIterationGoalService iterationGoals,

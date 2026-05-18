@@ -196,12 +196,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("\u666e\u901a\u6a21\u5f0f");
         html.Should().Contain("skillActionId");
         html.Should().Contain("createIterationPlan");
+        html.Should().Contain("evaluateIterationPlan");
         html.Should().Contain("executeIterationGoal");
         html.Should().Contain("iterationAutoRefreshHint");
         html.Should().Contain("执行中会自动刷新进度");
         html.Should().Contain("iterationPlanStatus");
+        html.Should().Contain("iterationPlanEvaluation");
         html.Should().Contain("iterationPlanGoals");
         html.Should().Contain("主流程：迭代计划");
+        html.Should().Contain("评估当前迭代计划");
+        html.Should().Contain("renderIterationPlanEvaluation");
+        html.Should().Contain("suggestedPromptForRegeneration");
         html.Should().Contain("当前已有未完成计划，请先执行下一目标");
         html.Should().Contain("生成新的迭代计划");
         html.Should().Contain("当前已有未完成计划");
@@ -210,6 +215,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("当前没有待执行目标");
         html.Should().Contain("请先修复当前目标");
         html.Should().Contain("/iteration-plan");
+        html.Should().Contain("/iteration-plan/evaluate");
         html.Should().Contain("/iteration-plan/execute-next");
         html.Should().Contain("loadIterationPlan");
         html.Should().Contain("renderIterationPlan");
