@@ -1303,7 +1303,12 @@ public sealed class BrowserUiRenderer
                       <p class="muted">总目标数：${escapeHtml(String(goals.length))} · 已完成：${escapeHtml(String(completedGoals))}</p>
                       <p class="muted">当前目标：${currentGoal ? escapeHtml(`step ${currentGoal.goalIndex} · ${currentGoal.title || ""}`) : "暂无"}</p>
                       <p class="muted">下一目标：${needsFixGoal ? "请先修复当前目标" : nextGoal ? escapeHtml(`step ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
+                      ${renderFeedbackPrimaryAction()}
                     `;
+                    const primaryActionButton = $("feedbackPrimaryAction");
+                    if (primaryActionButton) {
+                      primaryActionButton.onclick = () => runFeedbackPrimaryAction();
+                    }
                     return;
                   }
 
@@ -1319,6 +1324,57 @@ public sealed class BrowserUiRenderer
 
                   $("feedbackSummary").className = "card muted";
                   $("feedbackSummary").textContent = "尚未生成迭代计划。";
+                }
+
+                function feedbackPrimaryActionState() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  if (!goals.length || !state.prototypeReadyForFeedback) {
+                    return { label: "", action: "", disabled: true };
+                  }
+                  const decision = currentIterationPlanDecision();
+                  const hasNeedsFix = goals.some(goal => goal.status === "needs_fix" || goal.status === "failed");
+                  const hasPending = goals.some(goal => goal.status === "pending");
+                  if (decision === "should_refine_plan") {
+                    return { label: "按评估重拆迭代计划", action: "refine", disabled: isGlobalBusy() };
+                  }
+                  if (hasNeedsFix || hasPending) {
+                    return { label: "继续评估当前计划", action: "evaluate", disabled: isGlobalBusy() };
+                  }
+                  if (decision === "ready_to_execute") {
+                    return { label: "继续当前迭代目标", action: "execute", disabled: isGlobalBusy() };
+                  }
+                  return { label: "", action: "", disabled: true };
+                }
+
+                function renderFeedbackPrimaryAction() {
+                  const state = feedbackPrimaryActionState();
+                  if (!state.label || !state.action) return "";
+                  return `
+                    <div class="card">
+                      <strong>当前推荐动作</strong>
+                      <button id="feedbackPrimaryAction" class="secondary" data-global-action="true" data-feedback-primary-action="${escapeHtml(state.action)}" ${state.disabled ? "disabled" : ""}>${escapeHtml(state.label)}</button>
+                    </div>
+                  `;
+                }
+
+                async function runFeedbackPrimaryAction() {
+                  const state = feedbackPrimaryActionState();
+                  if (!state.action) return out("当前没有可执行的推荐动作。");
+                  if (state.action === "refine") {
+                    const evaluationMessage = state.chatHistory.filter(message => message.role === "assistant" && message.kind === "iteration-plan-evaluation" && !message.continueConsumed).slice(-1)[0];
+                    if (evaluationMessage) {
+                      await continueSuggestedFeedback(state.chatHistory.indexOf(evaluationMessage));
+                      return;
+                    }
+                    if (!state.nextSuggestedFeedback) return out("当前没有可用于重拆计划的建议。");
+                    await submitIterationPlanFromFeedback(state.nextSuggestedFeedback, "正在按评估重拆迭代计划...", "completion_suggestion");
+                    return;
+                  }
+                  if (state.action === "execute") {
+                    await executeIterationGoal();
+                    return;
+                  }
+                  await evaluateIterationPlan(true);
                 }
 
                 function iterationGoalRecords() {

@@ -170,6 +170,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("流程记录");
         html.Should().Contain("feedbackSummary");
         html.Should().Contain("renderFeedbackSummary");
+        html.Should().Contain("renderFeedbackPrimaryAction");
+        html.Should().Contain("feedbackPrimaryActionState");
+        html.Should().Contain("runFeedbackPrimaryAction");
+        html.Should().Contain("feedbackPrimaryAction");
+        html.Should().Contain("当前推荐动作");
         html.Should().Contain("计划摘要");
         html.Should().Contain("总目标数");
         html.Should().Contain("已完成");
