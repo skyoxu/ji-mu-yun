@@ -6,4 +6,7 @@ public sealed record PrototypeFeedbackResult(
     string RunId,
     string Status,
     string AssistantMessage,
-    IReadOnlyList<ArtifactSnapshot> Artifacts);
+    IReadOnlyList<ArtifactSnapshot> Artifacts,
+    string? IterationSessionStatus = null,
+    string? IterationGoalStatus = null,
+    int? IterationGoalIndex = null);

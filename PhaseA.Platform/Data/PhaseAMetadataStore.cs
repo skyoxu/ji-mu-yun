@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Runs;
 using System.Text.Json;
 using SQLitePCL;
 
@@ -1489,6 +1490,7 @@ public sealed class PhaseAMetadataStore
                     status,
                     current_goal_index,
                     latest_summary,
+                    latest_evaluation_json,
                     created_utc,
                     updated_utc,
                     completed_utc)
@@ -1501,6 +1503,7 @@ public sealed class PhaseAMetadataStore
                     $overall_goal,
                     'planning',
                     0,
+                    NULL,
                     NULL,
                     $created_utc,
                     $updated_utc,
@@ -1570,6 +1573,7 @@ public sealed class PhaseAMetadataStore
             "planning",
             0,
             null,
+            null,
             now,
             now,
             null);
@@ -1580,6 +1584,7 @@ public sealed class PhaseAMetadataStore
         string status,
         int currentGoalIndex,
         string? latestSummary,
+        string? latestEvaluationJson = null,
         string? completedUtc = null,
         CancellationToken cancellationToken = default)
     {
@@ -1594,6 +1599,7 @@ public sealed class PhaseAMetadataStore
             SET status = $status,
                 current_goal_index = $current_goal_index,
                 latest_summary = $latest_summary,
+                latest_evaluation_json = $latest_evaluation_json,
                 updated_utc = $updated_utc,
                 completed_utc = $completed_utc
             WHERE id = $id;
@@ -1602,6 +1608,7 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$status", status);
         command.Parameters.AddWithValue("$current_goal_index", currentGoalIndex);
         command.Parameters.AddWithValue("$latest_summary", (object?)latestSummary ?? DBNull.Value);
+        command.Parameters.AddWithValue("$latest_evaluation_json", (object?)latestEvaluationJson ?? DBNull.Value);
         command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$completed_utc", (object?)completedUtc ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
@@ -1620,7 +1627,7 @@ public sealed class PhaseAMetadataStore
             command.CommandText =
                 """
                 SELECT id, project_id, account_id, source_kind, source_message, overall_goal, status,
-                       current_goal_index, latest_summary, created_utc, updated_utc, completed_utc
+                       current_goal_index, latest_summary, latest_evaluation_json, created_utc, updated_utc, completed_utc
                 FROM project_iteration_sessions
                 WHERE project_id = $project_id
                 ORDER BY created_utc DESC
@@ -1640,9 +1647,10 @@ public sealed class PhaseAMetadataStore
                     reader.GetString(6),
                     reader.GetInt32(7),
                     reader.IsDBNull(8) ? null : reader.GetString(8),
-                    reader.GetString(9),
+                    reader.IsDBNull(9) ? null : reader.GetString(9),
                     reader.GetString(10),
-                    reader.IsDBNull(11) ? null : reader.GetString(11));
+                    reader.GetString(11),
+                    reader.IsDBNull(12) ? null : reader.GetString(12));
             }
         }
 
@@ -1705,7 +1713,20 @@ public sealed class PhaseAMetadataStore
             }
         }
 
-        return new ProjectIterationSessionDetails(session, goals, goalRuns);
+        PrototypeIterationPlanEvaluationResult? latestEvaluation = null;
+        if (!string.IsNullOrWhiteSpace(session.LatestEvaluationJson))
+        {
+            try
+            {
+                latestEvaluation = JsonSerializer.Deserialize<PrototypeIterationPlanEvaluationResult>(session.LatestEvaluationJson!);
+            }
+            catch (JsonException)
+            {
+                latestEvaluation = null;
+            }
+        }
+
+        return new ProjectIterationSessionDetails(session, goals, goalRuns, latestEvaluation);
     }
 
     public async Task UpdateProjectIterationGoalStatusAsync(
@@ -1735,6 +1756,137 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$completed_utc", (object?)completedUtc ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task UpsertProjectRunMemoryAsync(
+        string projectId,
+        string scope,
+        string status,
+        string currentObjective,
+        string completedItemsJson,
+        string currentBlockersJson,
+        string nextRecommendedAction,
+        string allowedScopeJson,
+        string? lastVerifiedResult,
+        string? lastRunOutcome,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(scope);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentObjective);
+        ArgumentException.ThrowIfNullOrWhiteSpace(completedItemsJson);
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentBlockersJson);
+        ArgumentException.ThrowIfNullOrWhiteSpace(nextRecommendedAction);
+        ArgumentException.ThrowIfNullOrWhiteSpace(allowedScopeJson);
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var existingId = await ExecuteScalarStringAsync(
+            connection,
+            "SELECT id FROM project_run_memories WHERE project_id = $project_id AND scope = $scope;",
+            cancellationToken,
+            ("$project_id", projectId),
+            ("$scope", scope));
+
+        if (string.IsNullOrWhiteSpace(existingId))
+        {
+            await using var insert = connection.CreateCommand();
+            insert.CommandText =
+                """
+                INSERT INTO project_run_memories (
+                    id, project_id, scope, status, current_objective, completed_items_json,
+                    current_blockers_json, next_recommended_action, allowed_scope_json,
+                    last_verified_result, last_run_outcome, updated_utc)
+                VALUES (
+                    $id, $project_id, $scope, $status, $current_objective, $completed_items_json,
+                    $current_blockers_json, $next_recommended_action, $allowed_scope_json,
+                    $last_verified_result, $last_run_outcome, $updated_utc);
+                """;
+            insert.Parameters.AddWithValue("$id", NewId());
+            insert.Parameters.AddWithValue("$project_id", projectId);
+            insert.Parameters.AddWithValue("$scope", scope);
+            insert.Parameters.AddWithValue("$status", status);
+            insert.Parameters.AddWithValue("$current_objective", currentObjective);
+            insert.Parameters.AddWithValue("$completed_items_json", completedItemsJson);
+            insert.Parameters.AddWithValue("$current_blockers_json", currentBlockersJson);
+            insert.Parameters.AddWithValue("$next_recommended_action", nextRecommendedAction);
+            insert.Parameters.AddWithValue("$allowed_scope_json", allowedScopeJson);
+            insert.Parameters.AddWithValue("$last_verified_result", (object?)lastVerifiedResult ?? DBNull.Value);
+            insert.Parameters.AddWithValue("$last_run_outcome", (object?)lastRunOutcome ?? DBNull.Value);
+            insert.Parameters.AddWithValue("$updated_utc", now);
+            await insert.ExecuteNonQueryAsync(cancellationToken);
+            return;
+        }
+
+        await using var update = connection.CreateCommand();
+        update.CommandText =
+            """
+            UPDATE project_run_memories
+            SET status = $status,
+                current_objective = $current_objective,
+                completed_items_json = $completed_items_json,
+                current_blockers_json = $current_blockers_json,
+                next_recommended_action = $next_recommended_action,
+                allowed_scope_json = $allowed_scope_json,
+                last_verified_result = $last_verified_result,
+                last_run_outcome = $last_run_outcome,
+                updated_utc = $updated_utc
+            WHERE id = $id;
+            """;
+        update.Parameters.AddWithValue("$id", existingId);
+        update.Parameters.AddWithValue("$status", status);
+        update.Parameters.AddWithValue("$current_objective", currentObjective);
+        update.Parameters.AddWithValue("$completed_items_json", completedItemsJson);
+        update.Parameters.AddWithValue("$current_blockers_json", currentBlockersJson);
+        update.Parameters.AddWithValue("$next_recommended_action", nextRecommendedAction);
+        update.Parameters.AddWithValue("$allowed_scope_json", allowedScopeJson);
+        update.Parameters.AddWithValue("$last_verified_result", (object?)lastVerifiedResult ?? DBNull.Value);
+        update.Parameters.AddWithValue("$last_run_outcome", (object?)lastRunOutcome ?? DBNull.Value);
+        update.Parameters.AddWithValue("$updated_utc", now);
+        await update.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<ProjectRunMemorySnapshot?> GetProjectRunMemoryAsync(
+        string projectId,
+        string scope,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(scope);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, project_id, scope, status, current_objective, completed_items_json,
+                   current_blockers_json, next_recommended_action, allowed_scope_json,
+                   last_verified_result, last_run_outcome, updated_utc
+            FROM project_run_memories
+            WHERE project_id = $project_id AND scope = $scope
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$scope", scope);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectRunMemorySnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.GetString(5),
+            reader.GetString(6),
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.IsDBNull(10) ? null : reader.GetString(10),
+            reader.GetString(11));
     }
 
     public async Task LinkProjectIterationGoalRunAsync(

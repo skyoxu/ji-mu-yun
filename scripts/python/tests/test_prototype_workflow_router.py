@@ -827,20 +827,62 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
-                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n}\n",
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
                 encoding="utf-8",
             )
             (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
-                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public string DescribePlayableLoop() => \"ok\"; }\n",
+                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public int WinBattleTarget => 15; public string[] RewardOptions => []; public string DescribePlayableLoop() => \"ok\"; }\n",
                 encoding="utf-8",
             )
-            (root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs").write_text("test\n", encoding="utf-8")
-            (root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd").write_text("test\n", encoding="utf-8")
+            (root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs").write_text(
+                "MoveOnMap(); StartEncounter(); ResolveAttackTurn(); ApplyReward(); state.BattlesWon.ToString(); state.RewardOptions.Count.ToString(); state.StatusText.ToString();\n",
+                encoding="utf-8",
+            )
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd").write_text(
+                'var scene := preload("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn").instantiate()\nassert_object(scene.get_node_or_null("PrototypeLoop")).is_not_null()\n',
+                encoding="utf-8",
+            )
 
             ok, issues = module._validate_day4_implementation_outputs(root=root, payload={"slug": "dq-rpg"})
 
         self.assertTrue(ok)
         self.assertEqual([], issues)
+
+    def test_validate_day4_outputs_should_fail_when_rpg_test_contract_drifts(self) -> None:
+        module = _load_module("prototype_workflow_router_day4_validation_contract_drift", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            class_name = "DqRpgPrototype"
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core.Tests" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name).mkdir(parents=True, exist_ok=True)
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / f"{class_name}.tscn").write_text(
+                "[gd_scene format=3]\n[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
+                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public int WinBattleTarget => 15; public string[] RewardOptions => []; public string DescribePlayableLoop() => \"ok\"; }\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs").write_text(
+                "ResolvePlayerAttack(); RetryFromMap(); state.CanRetry.ToString(); state.MaxHp.ToString(); state.Victories.ToString(); state.Defense.ToString();\n",
+                encoding="utf-8",
+            )
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd").write_text(
+                'var scene := preload("res://Game.Godot/Prototypes/DefaultRpgTemplate/DefaultRpgPrototype.tscn").instantiate()\n',
+                encoding="utf-8",
+            )
+
+            ok, issues = module._validate_day4_implementation_outputs(root=root, payload={"slug": "dq-rpg"})
+
+        self.assertFalse(ok)
+        self.assertIn("rpg_dotnet_test_contract_drift=Game.Core.Tests/Prototypes/DqRpgPrototypeLoopTests.cs", issues)
+        self.assertIn("rpg_gdunit_test_contract_drift=Tests.Godot/tests/Prototype/DqRpgPrototype/test_dq_rpg_prototype_scene.gd", issues)
 
     def test_validate_day4_outputs_should_support_long_windows_paths(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_long_path", "scripts/python/run_prototype_workflow.py")
@@ -856,14 +898,20 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             )
             module.write_text(
                 root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs",
-                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n}\n",
+                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
             )
             module.write_text(
                 root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs",
-                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public string DescribePlayableLoop() => \"ok\"; }\n",
+                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public int WinBattleTarget => 15; public string[] RewardOptions => []; public string DescribePlayableLoop() => \"ok\"; }\n",
             )
-            module.write_text(root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs", "test\n")
-            module.write_text(root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd", "test\n")
+            module.write_text(
+                root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs",
+                "MoveOnMap(); StartEncounter(); ResolveAttackTurn(); ApplyReward(); state.BattlesWon.ToString(); state.RewardOptions.Count.ToString(); state.StatusText.ToString();\n",
+            )
+            module.write_text(
+                root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd",
+                'var scene := preload("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn").instantiate()\nassert_object(scene.get_node_or_null("PrototypeLoop")).is_not_null()\n',
+            )
 
             ok, issues = module._validate_day4_implementation_outputs(root=root, payload={"slug": "dq-rpg"})
             long_path = root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd"
@@ -881,16 +929,22 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             expected_scene = Path("Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn").read_text(encoding="utf-8")
             expected_script = Path("Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs").read_text(encoding="utf-8")
             expected_core = Path("Game.Core/Prototypes/DqRpgPrototypeLoop.cs").read_text(encoding="utf-8")
+            expected_dotnet_test = Path("Game.Core.Tests/Prototypes/DqRpgPrototypeLoopTests.cs").read_text(encoding="utf-8")
+            expected_gdunit_test = Path("Tests.Godot/tests/Prototype/DqRpgPrototype/test_dq_rpg_prototype_scene.gd").read_text(encoding="utf-8")
 
             module._write_rpg_project_specific_fallback(root=root, payload={"slug": "dq-rpg"})
 
             scene_text = (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "DqRpgPrototype.tscn").read_text(encoding="utf-8")
             script_text = (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / "DqRpgPrototype.cs").read_text(encoding="utf-8")
             core_text = (root / "Game.Core" / "Prototypes" / "DqRpgPrototypeLoop.cs").read_text(encoding="utf-8")
+            dotnet_test_text = (root / "Game.Core.Tests" / "Prototypes" / "DqRpgPrototypeLoopTests.cs").read_text(encoding="utf-8")
+            gdunit_test_text = (root / "Tests.Godot" / "tests" / "Prototype" / "DqRpgPrototype" / "test_dq_rpg_prototype_scene.gd").read_text(encoding="utf-8")
 
         self.assertEqual(expected_scene, scene_text)
         self.assertEqual(expected_script, script_text)
         self.assertEqual(expected_core, core_text)
+        self.assertEqual(expected_dotnet_test, dotnet_test_text)
+        self.assertEqual(expected_gdunit_test, gdunit_test_text)
 
     def test_baseline_repo_root_should_prefer_phasea_repository_root_env(self) -> None:
         module = _load_module("prototype_workflow_router_phasea_repo_root", "scripts/python/run_prototype_workflow.py")

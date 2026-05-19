@@ -137,6 +137,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("兼容入口：快速修复");
         html.Should().Contain("仅适合接线、文案、状态显示等单点小修");
         html.Should().Contain("prototype-quick-fixes");
+        html.Should().Contain("needs-fix-route");
+        html.Should().Contain("submitNeedsFixRouteRequest");
         html.Should().Contain("quick-fix-failed");
         html.Should().Contain("submitFormalFeedback");
         html.Should().Contain("提交反馈并生成迭代计划");

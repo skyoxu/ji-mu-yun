@@ -22,6 +22,7 @@ public sealed class PrototypeWorkflowService
     private readonly LlmStopLossService _llmStopLossService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly GameTypeTemplateCatalog _templateCatalog;
+    private readonly PrototypeRouteStateWriter _routeStateWriter;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -32,7 +33,7 @@ public sealed class PrototypeWorkflowService
         PrototypeArtifactIndexer artifactIndexer,
         LlmBindingService llmBindingService,
         LlmStopLossService llmStopLossService)
-        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options))
+        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options), new PrototypeRouteStateWriter())
     {
     }
 
@@ -46,7 +47,8 @@ public sealed class PrototypeWorkflowService
         LlmBindingService llmBindingService,
         LlmStopLossService llmStopLossService,
         IProjectWorkspaceSeeder workspaceSeeder,
-        GameTypeTemplateCatalog templateCatalog)
+        GameTypeTemplateCatalog templateCatalog,
+        PrototypeRouteStateWriter? routeStateWriter = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -58,6 +60,7 @@ public sealed class PrototypeWorkflowService
         _llmStopLossService = llmStopLossService;
         _workspaceSeeder = workspaceSeeder;
         _templateCatalog = templateCatalog;
+        _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -100,6 +103,7 @@ public sealed class PrototypeWorkflowService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
@@ -138,6 +142,7 @@ public sealed class PrototypeWorkflowService
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, slug, validation, smoke);
         await SetProgressAsync(
             runId,
             status,
@@ -186,6 +191,7 @@ public sealed class PrototypeWorkflowService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
@@ -331,6 +337,7 @@ public sealed class PrototypeWorkflowService
         await AdvancePrototypeStepsAsync(runId, CancellationToken.None);
 
         _workspaceSeeder.EnsureSeeded(projectRepoPath);
+        EnsureGameTypeTemplateBaseline(projectRepoPath, request);
         var process = await _processRunner.RunAsync(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), CancellationToken.None);
         var slug = ResolvePrototypeSlug(projectRepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -362,6 +369,11 @@ public sealed class PrototypeWorkflowService
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
+        if (project is not null)
+        {
+            WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, slug, validation, smoke);
+        }
         await SetProgressAsync(
             runId,
             status,
@@ -1467,6 +1479,114 @@ public sealed class PrototypeWorkflowService
         {
             throw new InvalidOperationException($"Game type template manifest missing for {template.GameType}: {template.ManifestPath}");
         }
+    }
+
+    private void WritePrototypeRouteState(
+        ProjectSnapshot project,
+        string runId,
+        string status,
+        int exitCode,
+        string prototypeRecordPath,
+        string slug,
+        PrototypeCompletionValidation validation,
+        GodotSmokeResult smoke)
+    {
+        _routeStateWriter.WritePrototypeState(project, new
+        {
+            route = RunType,
+            run_id = runId,
+            status,
+            exit_code = exitCode,
+            prototype_record = prototypeRecordPath,
+            slug,
+            prototype_completion = validation.ToEvidence(),
+            godot_smoke = smoke.ToEvidence(),
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
+    }
+
+    private void EnsureGameTypeTemplateBaseline(string projectRepoPath, PrototypeWorkflowRequest request)
+    {
+        var template = _templateCatalog.Find(request.GameType);
+        if (template is null || !template.Enabled)
+        {
+            return;
+        }
+
+        var repoTemplateRoot = CombineRepoPath(_options.RepositoryRoot, template.RepoTemplatePath);
+        var projectTemplateRoot = CombineRepoPath(projectRepoPath, template.RepoTemplatePath);
+        if (!Directory.Exists(repoTemplateRoot))
+        {
+            return;
+        }
+
+        if (!ShouldSeedTemplateBaseline(projectRepoPath, request.GameType, projectTemplateRoot))
+        {
+            return;
+        }
+
+        CopyDirectoryIfMissing(repoTemplateRoot, projectTemplateRoot);
+        TryCopyFileIfMissing(
+            CombineRepoPath(_options.RepositoryRoot, "Game.Core/Prototypes/DefaultRpgPrototypeLoop.cs"),
+            CombineRepoPath(projectRepoPath, "Game.Core/Prototypes/DefaultRpgPrototypeLoop.cs"));
+        TryCopyFileIfMissing(
+            CombineRepoPath(_options.RepositoryRoot, "Game.Core.Tests/Prototypes/DefaultRpgPrototypeLoopTests.cs"),
+            CombineRepoPath(projectRepoPath, "Game.Core.Tests/Prototypes/DefaultRpgPrototypeLoopTests.cs"));
+        TryCopyFileIfMissing(
+            CombineRepoPath(_options.RepositoryRoot, "Tests.Godot/tests/Prototype/DefaultRpgPrototype/test_default_rpg_prototype_scene.gd"),
+            CombineRepoPath(projectRepoPath, "Tests.Godot/tests/Prototype/DefaultRpgPrototype/test_default_rpg_prototype_scene.gd"));
+    }
+
+    private static bool ShouldSeedTemplateBaseline(string projectRepoPath, string? gameType, string projectTemplateRoot)
+    {
+        if (!string.Equals(gameType, "rpg", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!Directory.Exists(projectTemplateRoot))
+        {
+            return true;
+        }
+
+        var projectSpecificScene = CombineRepoPath(projectRepoPath, "Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
+        return !File.Exists(projectSpecificScene);
+    }
+
+    private static void CopyDirectoryIfMissing(string sourceRoot, string targetRoot)
+    {
+        foreach (var directory in Directory.EnumerateDirectories(sourceRoot, "*", SearchOption.AllDirectories))
+        {
+            var relative = Path.GetRelativePath(sourceRoot, directory);
+            Directory.CreateDirectory(Path.Combine(targetRoot, relative));
+        }
+
+        foreach (var file in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
+        {
+            var relative = Path.GetRelativePath(sourceRoot, file);
+            TryCopyFileIfMissing(file, Path.Combine(targetRoot, relative));
+        }
+    }
+
+    private static void TryCopyFileIfMissing(string sourcePath, string targetPath)
+    {
+        if (!File.Exists(sourcePath) || File.Exists(targetPath))
+        {
+            return;
+        }
+
+        var parent = Path.GetDirectoryName(targetPath);
+        if (!string.IsNullOrWhiteSpace(parent))
+        {
+            Directory.CreateDirectory(parent);
+        }
+
+        File.Copy(sourcePath, targetPath, overwrite: false);
+    }
+
+    private static string CombineRepoPath(string root, string relativePath)
+    {
+        return Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     private static readonly (string Step, string Substep, string Label)[] ProgressSteps =

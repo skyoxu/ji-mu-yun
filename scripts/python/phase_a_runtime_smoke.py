@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime as dt
+import hashlib
 import json
 import os
 import socket
@@ -50,7 +52,7 @@ def main() -> int:
             "HOSTED_WORKSPACE_ROOT": str(workspace_root),
             "PHASEA_METADATA_DB_PATH": str(metadata_db),
             "PHASEA_REPOSITORY_ROOT": str(repository_root),
-            "PHASEA_ADMIN_TOKEN_HASH": args.admin_token,
+            "PHASEA_ADMIN_TOKEN_HASH": token_hash(args.admin_token),
             "PHASEA_ADMIN_USERNAME": "admin",
             "DELIVERY_PROFILE": "fast-ship",
         }
@@ -183,9 +185,17 @@ def run_checks(base_url: str, admin_token: str) -> list[dict[str, Any]]:
     events.append({"event": "git_url_rejected", "status": status})
 
     first = create_project(base_url, headers, "Smoke Game One")
-    second = create_project(base_url, headers, "Smoke Game Two")
     events.append({"event": "project_created", "project_id": first.get("projectId")})
-    events.append({"event": "project_created", "project_id": second.get("projectId")})
+
+    status, payload = request_json(
+        "POST",
+        f"{base_url}/api/projects",
+        headers=headers,
+        body={"gameName": "Smoke Game Two", "gameTypeSource": "manual"},
+    )
+    assert_status(status, 409, payload, "project initialization concurrency guard")
+    assert_error_or_failure(payload, "project_initialization_in_progress")
+    events.append({"event": "initialization_concurrency_guard_ok", "status": status})
 
     status, payload = request_json(
         "POST",
@@ -193,17 +203,22 @@ def run_checks(base_url: str, admin_token: str) -> list[dict[str, Any]]:
         headers=headers,
         body={"gameName": "Smoke Game Three", "gameTypeSource": "manual"},
     )
-    assert_status(status, 400, payload, "project quota")
-    assert_error_or_failure(payload, "project_quota_exceeded")
-    events.append({"event": "quota_enforced", "status": status})
+    assert_status(status, 409, payload, "project quota waits for initialization guard")
+    assert_error_or_failure(payload, "project_initialization_in_progress")
+    events.append({"event": "quota_deferred_by_initialization_guard", "status": status})
 
     status, payload = request_json("GET", f"{base_url}/api/projects", headers=headers)
     assert_status(status, 200, payload, "project list after creation")
-    if len(payload) != 2:
-        raise AssertionError(f"expected exactly two projects, got {len(payload)}")
+    if len(payload) != 1:
+        raise AssertionError(f"expected exactly one initializing project, got {len(payload)}")
     events.append({"event": "project_list_count_ok", "count": len(payload)})
 
     return events
+
+
+def token_hash(token: str) -> str:
+    digest = hashlib.sha256(token.strip().encode("utf-8")).digest()
+    return base64.b64encode(digest).decode("ascii").rstrip("=").replace("+", "-").replace("/", "_")
 
 
 def create_project(base_url: str, headers: dict[str, str], game_name: str) -> dict[str, Any]:

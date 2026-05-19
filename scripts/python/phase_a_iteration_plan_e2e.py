@@ -57,6 +57,7 @@ def main() -> int:
     stdout_path = run_dir / "server.stdout.log"
     stderr_path = run_dir / "server.stderr.log"
     headers = {"Authorization": f"Bearer {args.admin_token}"}
+    fake_codex = create_fake_codex(run_dir)
     env = build_server_env(
         base_url=base_url,
         workspace_root=workspace_root,
@@ -64,6 +65,7 @@ def main() -> int:
         repository_root=work_root,
         admin_token=args.admin_token,
         godot_bin=os.environ.get("GODOT_BIN", ""),
+        fake_codex_command=fake_codex,
     )
     command = [
         args.dotnet,
@@ -98,6 +100,8 @@ def main() -> int:
             events.append({"event": "project_created", "project_id": project_id})
             project_state = wait_for_project_ready(base_url, headers, project_id, timeout_seconds=args.timeout_seconds)
             events.append({"event": "project_ready", "bootstrap_status": project_state.get("bootstrapStatus")})
+            seed_prototype_route_state(project)
+            events.append({"event": "prototype_route_state_seeded"})
 
             plan = post_json(
                 base_url,
@@ -134,6 +138,55 @@ def main() -> int:
             if len(latest_goals) < 3:
                 raise AssertionError(f"expected at least 3 goals: {latest}")
 
+            evaluation = post_json(
+                base_url,
+                f"/api/projects/{project_id}/iteration-plan/evaluate",
+                headers,
+                {},
+                timeout=60,
+            )
+            events.append(
+                {
+                    "event": "plan_evaluated",
+                    "decision": evaluation.get("decision"),
+                    "summary": evaluation.get("summary"),
+                    "suggested_prompt": evaluation.get("suggestedPromptForRegeneration"),
+                }
+            )
+
+            latest_after_evaluation = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
+            events.append(
+                {
+                    "event": "plan_reloaded_after_evaluation",
+                    "latest_evaluation_decision": latest_after_evaluation.get("latestEvaluation", {}).get("decision"),
+                }
+            )
+            if latest_after_evaluation.get("latestEvaluation", {}).get("decision") != evaluation.get("decision"):
+                raise AssertionError("latest iteration plan did not persist evaluation result")
+
+            suggested_prompt = str(evaluation.get("suggestedPromptForRegeneration") or "").strip()
+            if suggested_prompt:
+                refined = post_json(
+                    base_url,
+                    f"/api/projects/{project_id}/iteration-plan",
+                    headers,
+                    {
+                        "message": suggested_prompt,
+                        "sourceKind": "completion_suggestion",
+                    },
+                    timeout=60,
+                )
+                first_goal_title = str((refined.get("goals") or [{}])[0].get("title") or "")
+                events.append(
+                    {
+                        "event": "plan_refined",
+                        "goal_count": len(refined.get("goals", [])),
+                        "first_goal_title": first_goal_title,
+                    }
+                )
+                if "重拆成 4 个更小" in first_goal_title or "不要把多个连续实现点塞进同一个目标里" in first_goal_title:
+                    raise AssertionError(f"refined plan still leaked regeneration wrapper into first goal: {first_goal_title}")
+
             execute_status, execute_payload = request_json(
                 "POST",
                 f"{base_url}/api/projects/{project_id}/iteration-plan/execute-next",
@@ -152,6 +205,8 @@ def main() -> int:
                     "summary": execute_payload.get("summary"),
                 }
             )
+            if execute_payload.get("status") != "needs_fix":
+                raise AssertionError(f"expected execute-next to produce needs_fix with fake codex: {execute_payload}")
 
             latest_after = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
             events.append(
@@ -163,6 +218,49 @@ def main() -> int:
                     "goal_run_count": len(latest_after.get("goalRuns", [])),
                 }
             )
+            needs_fix_goal = next((goal for goal in latest_after.get("goals", []) if goal.get("status") == "needs_fix"), None)
+            if needs_fix_goal is None:
+                raise AssertionError(f"expected a needs_fix goal after execute-next: {latest_after}")
+
+            needs_fix = post_json(
+                base_url,
+                f"/api/projects/{project_id}/needs-fix-route",
+                headers,
+                {
+                    "feedback": "Repair the current step using the route recovery artifacts.",
+                    "goalId": needs_fix_goal.get("goalId"),
+                    "goalIndex": needs_fix_goal.get("goalIndex"),
+                    "model": "gpt-5.4",
+                },
+                timeout=args.timeout_seconds,
+            )
+            events.append(
+                {
+                    "event": "needs_fix_route_finished",
+                    "status": needs_fix.get("status"),
+                    "goal_index": needs_fix.get("goalIndex"),
+                    "iteration_goal_status": needs_fix.get("iterationGoalStatus"),
+                    "iteration_session_status": needs_fix.get("iterationSessionStatus"),
+                }
+            )
+            if needs_fix.get("status") != "completed":
+                raise AssertionError(f"needs-fix route did not complete: {needs_fix}")
+            if needs_fix.get("iterationGoalStatus") != "succeeded":
+                raise AssertionError(f"needs-fix route did not complete the goal: {needs_fix}")
+
+            latest_after_needs_fix = get_json(base_url, f"/api/projects/{project_id}/iteration-plan/latest", headers, timeout=60)
+            events.append(
+                {
+                    "event": "plan_reloaded_after_needs_fix",
+                    "session_status": latest_after_needs_fix.get("session", {}).get("status"),
+                    "goal_statuses": [goal.get("status") for goal in latest_after_needs_fix.get("goals", [])],
+                    "goal_run_count": len(latest_after_needs_fix.get("goalRuns", [])),
+                }
+            )
+            if "succeeded" not in [goal.get("status") for goal in latest_after_needs_fix.get("goals", [])]:
+                raise AssertionError(f"expected a succeeded goal after needs-fix route: {latest_after_needs_fix}")
+            assert_needs_fix_state_written(project, int(needs_fix_goal.get("goalIndex") or 0))
+            events.append({"event": "needs_fix_route_state_written"})
 
             status = "ok"
             return 0
@@ -210,7 +308,16 @@ def copy_repo(source_root: Path, target_root: Path) -> None:
     shutil.copytree(source_root, target_root, ignore=ignore)
 
 
-def build_server_env(*, base_url: str, workspace_root: Path, metadata_db: Path, repository_root: Path, admin_token: str, godot_bin: str) -> dict[str, str]:
+def build_server_env(
+    *,
+    base_url: str,
+    workspace_root: Path,
+    metadata_db: Path,
+    repository_root: Path,
+    admin_token: str,
+    godot_bin: str,
+    fake_codex_command: Path,
+) -> dict[str, str]:
     env = os.environ.copy()
     env.update(
         {
@@ -224,12 +331,115 @@ def build_server_env(*, base_url: str, workspace_root: Path, metadata_db: Path, 
             "PHASEA_REPOSITORY_ROOT": str(repository_root),
             "PHASEA_ADMIN_TOKEN_HASH": token_hash(admin_token),
             "PHASEA_ADMIN_USERNAME": "admin",
+            "PHASEA_CODEX_COMMAND": str(fake_codex_command),
+            "PHASEA_FAKE_CODEX_COUNTER": str(fake_codex_command.with_suffix(".counter")),
             "DELIVERY_PROFILE": "fast-ship",
         }
     )
     if godot_bin:
         env["GODOT_BIN"] = godot_bin
     return env
+
+
+def create_fake_codex(run_dir: Path) -> Path:
+    fake_py = run_dir / "fake_codex.py"
+    fake_cmd = run_dir / "fake_codex.cmd"
+    fake_py.write_text(
+        """
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    output_path = None
+    args = sys.argv[1:]
+    for index, value in enumerate(args):
+        if value == "-o" and index + 1 < len(args):
+            output_path = Path(args[index + 1])
+            break
+    if output_path is None:
+        print("missing -o output path", file=sys.stderr)
+        return 2
+
+    counter_path = Path(os.environ.get("PHASEA_FAKE_CODEX_COUNTER", str(output_path) + ".counter"))
+    try:
+        current = int(counter_path.read_text(encoding="utf-8").strip() or "0")
+    except FileNotFoundError:
+        current = 0
+    next_value = current + 1
+    counter_path.write_text(str(next_value), encoding="utf-8", newline="\\n")
+
+    if next_value == 1:
+        content = (
+            "STATUS: needs_fix\\n"
+            "SUMMARY: The current goal needs a focused route repair before continuing.\\n"
+            "CHANGED: No durable project change was made in this fake execution.\\n"
+            "VERIFY: Platform E2E confirms the goal is marked needs_fix.\\n"
+            "REMAINING: Run needs-fix route for this step.\\n"
+        )
+    else:
+        content = (
+            "STATUS: completed\\n"
+            "SUMMARY: The current step was repaired through the needs-fix route.\\n"
+            "CHANGED: The fake execution completed the isolated step.\\n"
+            "VERIFY: Platform E2E confirms route state and goal status.\\n"
+            "REMAINING: none\\n"
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8", newline="\\n")
+    print("fake codex ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+""".lstrip(),
+        encoding="utf-8",
+        newline="\n",
+    )
+    fake_cmd.write_text(
+        f'@echo off\r\n"{sys.executable}" "{fake_py}" %*\r\n',
+        encoding="utf-8",
+        newline="",
+    )
+    return fake_cmd
+
+
+def seed_prototype_route_state(project: dict[str, Any]) -> None:
+    workspace_root = Path(str(project["workspaceRootPath"]))
+    state_path = workspace_root / "meta" / "routes" / "prototype" / "latest.json"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(
+        json.dumps(
+            {
+                "route": "prototype-7day-playable",
+                "run_id": "phase-a-e2e-seeded-prototype",
+                "status": "succeeded",
+                "exit_code": 0,
+                "slug": "phase-a-iteration-e2e",
+                "prototype_completion": {"status": "ok"},
+                "godot_smoke": {"status": "skipped"},
+                "updated_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def assert_needs_fix_state_written(project: dict[str, Any], goal_index: int) -> None:
+    workspace_root = Path(str(project["workspaceRootPath"]))
+    state_path = workspace_root / "meta" / "routes" / "needs-fix" / f"step-{goal_index:02d}" / "latest.json"
+    if not state_path.is_file():
+        raise AssertionError(f"needs-fix route state was not written: {state_path}")
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    if state.get("status") != "completed":
+        raise AssertionError(f"needs-fix route state did not record completion: {state}")
 
 
 def token_hash(token: str) -> str:
@@ -261,15 +471,26 @@ def wait_for_health(base_url: str, process: subprocess.Popen[bytes], timeout_sec
 
 def wait_for_project_ready(base_url: str, headers: dict[str, str], project_id: str, *, timeout_seconds: int) -> dict[str, Any]:
     deadline = time.monotonic() + timeout_seconds
+    last_projects: Any = None
     while time.monotonic() < deadline:
         projects = get_json(base_url, "/api/projects", headers, timeout=30)
+        last_projects = projects
         project = next((item for item in projects if str(item.get("projectId")) == project_id), None)
         if project and project.get("bootstrapStatus") == "succeeded":
             return project
         if project and project.get("bootstrapStatus") == "failed":
             raise AssertionError(f"project bootstrap failed: {project}")
+        if project is None:
+            failure_status, failure_payload = request_json(
+                "GET",
+                f"{base_url}/api/project-creation-failures/latest",
+                headers=headers,
+                timeout=30,
+            )
+            if failure_status == 200 and str(failure_payload.get("projectId")) == project_id:
+                raise AssertionError(f"project bootstrap failed and project was deleted: {failure_payload}")
         time.sleep(5)
-    raise TimeoutError("project bootstrap did not finish in time")
+    raise TimeoutError(f"project bootstrap did not finish in time; last_projects={last_projects}")
 
 
 def get_json(base_url: str, path: str, headers: dict[str, str], *, timeout: int) -> dict[str, Any]:

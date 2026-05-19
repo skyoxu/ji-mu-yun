@@ -1370,6 +1370,7 @@ def _build_implementation_prompt(*, payload: dict[str, Any], record_file: str, d
         "- 不允许只生成 prototype 场景文件而不接通 Main.tscn 的主菜单原型入口；如果入口无法跳到项目专属场景，这次实现视为不完整。\n"
         "- 如果当前原型是 RPG，不得仅通过加载 DefaultRpgTemplate 或复用 DefaultRpgPrototypeLoop 来包装出一个表面可运行的壳。\n"
         "- 如果当前原型是 RPG，项目专属实现必须自己维护地图移动、遇敌、战斗、奖励三选一，以及打赢目标或失败重试的最小状态流转。\n"
+        "- 如果当前原型是 RPG，不要把项目专属 dotnet/GdUnit 测试改成另一套未在当前实现中存在的方法契约；保持 MoveOnMap、StartEncounter、ResolveAttackTurn、ApplyReward、BattlesWon、RewardOptions、StatusText 这一组可验证接口，除非你同步完成完整的一致性演进。\n"
         "- 必须落地并维护以下文件：\n"
         f"  1. {scene_path}\n"
         f"  2. {script_path}\n"
@@ -1446,6 +1447,9 @@ def _prototype_battle_result_type_name(slug: str) -> str:
 def _is_rpg_payload(payload: dict[str, Any]) -> bool:
     game_type = sanitize_slug(str(payload.get("game_type") or ""))
     if game_type == "rpg":
+        return True
+    slug = sanitize_slug(str(payload.get("slug") or ""))
+    if slug == "dq-rpg" or slug.endswith("-rpg") or slug.startswith("rpg-") or "rpg" in slug.split("-"):
         return True
     implementation_skill = payload.get("implementation_skill") if isinstance(payload.get("implementation_skill"), dict) else {}
     return str(implementation_skill.get("name") or "").strip() == "prototype-rpg-godot-zh"
@@ -1802,6 +1806,101 @@ def _render_rpg_project_specific_core_loop(*, slug: str) -> str:
     )
 
 
+def _render_rpg_project_specific_dotnet_test(*, slug: str) -> str:
+    source = baseline_repo_root() / "Game.Core.Tests" / "Prototypes" / "DqRpgPrototypeLoopTests.cs"
+    if source.exists() and sanitize_slug(slug) == "dq-rpg":
+        return read_text(source, errors="ignore")
+
+    class_name = _prototype_class_name(slug)
+    loop_class_name = f"{class_name}Loop"
+    return "\n".join(
+        [
+            "using Game.Core.Prototypes;",
+            "using Xunit;",
+            "",
+            "namespace Game.Core.Tests.Prototypes;",
+            "",
+            f"public class {class_name}LoopTests",
+            "{",
+            "    [Fact]",
+            "    public void ShouldDescribePlayableLoop_WhenPrototypeImplementationIsReady()",
+            "    {",
+            f"        var loop = new {loop_class_name}();",
+            "        var summary = loop.DescribePlayableLoop();",
+            "",
+            "        Assert.False(string.IsNullOrWhiteSpace(summary));",
+            '        Assert.DoesNotContain("TODO", summary);',
+            "    }",
+            "",
+            "    [Fact]",
+            "    public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter()",
+            "    {",
+            f"        var loop = new {loop_class_name}();",
+            "        var state = loop.CreateInitialState();",
+            "",
+            "        state = loop.MoveOnMap(state, 1, 0);",
+            "        state = loop.MoveOnMap(state, 1, 0);",
+            "        state = loop.MoveOnMap(state, 1, 0);",
+            "        state = loop.MoveOnMap(state, 0, 1);",
+            "        state = loop.ResolveAttackTurn(state);",
+            "        state = loop.ResolveAttackTurn(state);",
+            "",
+            '        Assert.Equal("reward", state.Phase);',
+            "        Assert.Equal(1, state.BattlesWon);",
+            "        Assert.Equal(3, state.RewardOptions.Count);",
+            "    }",
+            "",
+            "    [Fact]",
+            "    public void ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward()",
+            "    {",
+            f"        var loop = new {loop_class_name}();",
+            "        var state = loop.CreateInitialState();",
+            "",
+            "        state = loop.StartEncounter(state);",
+            "        state = loop.ResolveAttackTurn(state);",
+            "        state = loop.ResolveAttackTurn(state);",
+            "        state = loop.ApplyReward(state, 0);",
+            "",
+            '        Assert.Equal("map", state.Phase);',
+            "        Assert.Equal(1, state.BattlesWon);",
+            '        Assert.Contains("Reward chosen", state.StatusText);',
+            "    }",
+            "}",
+            "",
+        ]
+    )
+
+
+def _render_rpg_project_specific_gdunit_test(*, slug: str) -> str:
+    source = baseline_repo_root() / "Tests.Godot" / "tests" / "Prototype" / "DqRpgPrototype" / "test_dq_rpg_prototype_scene.gd"
+    if source.exists() and sanitize_slug(slug) == "dq-rpg":
+        return read_text(source, errors="ignore")
+
+    class_name = _prototype_class_name(slug)
+    scene_rel = f"res://Game.Godot/Prototypes/{sanitize_slug(slug)}/{class_name}.tscn"
+    return "\n".join(
+        [
+            'extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"',
+            "",
+            "func _spawn_scene():",
+            f'    var scene := preload("{scene_rel}").instantiate()',
+            "    add_child(auto_free(scene))",
+            "    await get_tree().process_frame",
+            "    await get_tree().process_frame",
+            "    return scene",
+            "",
+            "func test_prototype_scene_instantiates() -> void:",
+            "    var scene = await _spawn_scene()",
+            "    assert_bool(scene.is_inside_tree()).is_true()",
+            "",
+            "func test_prototype_scene_contains_prototype_loop_node() -> void:",
+            "    var scene = await _spawn_scene()",
+            '    assert_object(scene.get_node_or_null("PrototypeLoop")).is_not_null()',
+            "",
+        ]
+    )
+
+
 def _render_rpg_project_specific_script(*, slug: str) -> str:
     source = baseline_repo_root() / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / "DqRpgPrototype.cs"
     if source.exists() and sanitize_slug(slug) == "dq-rpg":
@@ -1841,9 +1940,13 @@ def _write_rpg_project_specific_fallback(*, root: Path, payload: dict[str, Any])
     scene_path = _prototype_scene_file(root=root, slug=slug)
     script_path = _prototype_script_file(root=root, slug=slug)
     core_loop_path = _prototype_core_loop_file(root=root, slug=slug)
+    dotnet_test_path = root / _prototype_dotnet_test_path(slug).replace("/", os.sep)
+    gdunit_test_path = root / _prototype_godot_test_path(slug).replace("/", os.sep)
     write_text(scene_path, _render_rpg_project_specific_scene(slug=slug))
     write_text(script_path, _render_rpg_project_specific_script(slug=slug))
     write_text(core_loop_path, _render_rpg_project_specific_core_loop(slug=slug))
+    write_text(dotnet_test_path, _render_rpg_project_specific_dotnet_test(slug=slug))
+    write_text(gdunit_test_path, _render_rpg_project_specific_gdunit_test(slug=slug))
 
 
 def _apply_day4_fallback_if_needed(*, root: Path, payload: dict[str, Any], issues: list[str]) -> bool:
@@ -1854,6 +1957,8 @@ def _apply_day4_fallback_if_needed(*, root: Path, payload: dict[str, Any], issue
             "scaffold_script_not_replaced=",
             "template_scene_dependency=",
             "template_core_loop_dependency=",
+            "rpg_dotnet_test_contract_drift=",
+            "rpg_gdunit_test_contract_drift=",
             "rpg_runtime_loop_ui_missing=",
             "rpg_reward_flow_missing=",
             "rpg_win_target_missing=",
@@ -1906,6 +2011,34 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
         scene_text = read_text(scene_path, errors="ignore")
         if '[node name="PrototypeLoop"' not in scene_text:
             issues.append(f"missing_prototype_loop_node={_repo_relative_posix(root, scene_path)}")
+    if path_exists(dotnet_test_path) and _is_rpg_payload(payload):
+        dotnet_test_text = read_text(dotnet_test_path, errors="ignore")
+        forbidden_test_markers = (
+            "ResolvePlayerAttack(",
+            "RetryFromMap(",
+            ".CanRetry",
+            ".MaxHp",
+            ".Victories",
+            "Defense =",
+        )
+        if any(marker in dotnet_test_text for marker in forbidden_test_markers):
+            issues.append(f"rpg_dotnet_test_contract_drift={_repo_relative_posix(root, dotnet_test_path)}")
+        required_test_markers = (
+            "MoveOnMap(",
+            "StartEncounter(",
+            "ResolveAttackTurn(",
+            "ApplyReward(",
+            ".BattlesWon",
+            ".RewardOptions",
+            "StatusText",
+        )
+        if not all(marker in dotnet_test_text for marker in required_test_markers):
+            issues.append(f"rpg_dotnet_test_contract_drift={_repo_relative_posix(root, dotnet_test_path)}")
+    if path_exists(gdunit_test_path) and _is_rpg_payload(payload):
+        gdunit_test_text = read_text(gdunit_test_path, errors="ignore")
+        expected_scene_path = f'res://Game.Godot/Prototypes/{slug}/{_prototype_class_name(slug)}.tscn'
+        if expected_scene_path not in gdunit_test_text or 'get_node_or_null("PrototypeLoop")' not in gdunit_test_text:
+            issues.append(f"rpg_gdunit_test_contract_drift={_repo_relative_posix(root, gdunit_test_path)}")
     if path_exists(script_path):
         script_text = read_text(script_path, errors="ignore")
         if "Prototype scaffold ready: replace this scene with the minimum playable loop." in script_text:

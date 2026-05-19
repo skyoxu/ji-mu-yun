@@ -1,5 +1,6 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Projects;
@@ -10,12 +11,13 @@ public sealed class ProjectCreationService
     private readonly PhaseAPlatformOptions _options;
     private readonly ProjectRuleCatalog _ruleCatalog;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly PrototypeRouteStateWriter _routeStateWriter;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog)
-        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options))
+        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter())
     {
     }
 
@@ -23,12 +25,14 @@ public sealed class ProjectCreationService
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        PrototypeRouteStateWriter? routeStateWriter = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _ruleCatalog = ruleCatalog;
         _workspaceSeeder = workspaceSeeder;
+        _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -89,6 +93,16 @@ public sealed class ProjectCreationService
         Directory.CreateDirectory(layout.RuntimePath);
         Directory.CreateDirectory(layout.MetaPath);
         _workspaceSeeder.EnsureSeeded(layout.RepoPath);
+        _routeStateWriter.WriteProjectReadme(
+            layout.RepoPath,
+            projectId,
+            accountId,
+            command.ProjectName,
+            command.GameName,
+            command.GameTypeSource,
+            command.TemplateRuleId,
+            result.WorkspaceId ?? string.Empty,
+            layout.MetaPath);
 
         return result;
     }

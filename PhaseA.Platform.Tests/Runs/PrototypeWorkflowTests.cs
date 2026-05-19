@@ -109,6 +109,52 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task RunAsync_SeedsFrozenRpgTemplateBaseline_OnFirstRpgPrototypeRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        SeedRepoRpgTemplate(repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+
+        result.Status.Should().Be("succeeded");
+        File.Exists(Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "DefaultRpgPrototype.tscn")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DefaultRpgPrototypeLoop.cs")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DefaultRpgPrototypeLoopTests.cs")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DefaultRpgPrototype", "test_default_rpg_prototype_scene.gd")).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RunAsync_DoesNotOverwriteExistingFrozenRpgTemplateBaseline()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        SeedRepoRpgTemplate(repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var existingScene = Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "DefaultRpgPrototype.tscn");
+        Directory.CreateDirectory(Path.GetDirectoryName(existingScene)!);
+        File.WriteAllText(existingScene, "user-owned-scene\n");
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+
+        result.Status.Should().Be("succeeded");
+        File.ReadAllText(existingScene).Should().Be("user-owned-scene\n");
+    }
+
+    [Fact]
     public async Task RunAsync_FailsWhenCompletionStateIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
@@ -595,12 +641,72 @@ public sealed class PrototypeWorkflowTests
         return store;
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
+    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")
     {
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "勇者斗恶龙", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return result.ProjectId!;
+    }
+
+    private static void SeedRepoRpgTemplate(string repoRoot)
+    {
+        static void Write(string path, string content)
+        {
+            var parent = Path.GetDirectoryName(path);
+            if (!string.IsNullOrWhiteSpace(parent))
+            {
+                Directory.CreateDirectory(parent);
+            }
+
+            File.WriteAllText(path, content);
+        }
+
+        Write(
+            Path.Combine(repoRoot, "docs", "prototype-type-kits", "game-type-template-catalog.json"),
+            """
+            {
+              "schema_version": 1,
+              "entries": [
+                {
+                  "game_type": "rpg",
+                  "template_id": "default-rpg-template",
+                  "source_mode": "repo-imported",
+                  "repo_template_path": "Game.Godot/Prototypes/DefaultRpgTemplate",
+                  "manifest_path": "docs/prototype-type-kits/default-rpg-template.manifest.json",
+                  "import_source_path": "C:/gametype/rpgdemo",
+                  "enabled": true
+                }
+              ]
+            }
+            """);
+        Write(
+            Path.Combine(repoRoot, "docs", "prototype-type-kits", "default-rpg-template.manifest.json"),
+            """
+            {
+              "schema_version": 1,
+              "game_type": "rpg",
+              "slug": "default-rpg-template",
+              "paths": {
+                "default_scene": "Game.Godot/Prototypes/DefaultRpgTemplate/DefaultRpgPrototype.tscn"
+              }
+            }
+            """);
+        Write(
+            Path.Combine(repoRoot, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "DefaultRpgPrototype.tscn"),
+            "[gd_scene format=3]\n[node name=\"DefaultRpgPrototype\" type=\"Node2D\"]\n");
+        Write(
+            Path.Combine(repoRoot, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "Scripts", "DefaultRpgPrototype.cs"),
+            "public partial class DefaultRpgPrototype : Godot.Node2D {}\n");
+        Write(
+            Path.Combine(repoRoot, "Game.Core", "Prototypes", "DefaultRpgPrototypeLoop.cs"),
+            "public sealed class DefaultRpgPrototypeLoop {}\n");
+        Write(
+            Path.Combine(repoRoot, "Game.Core.Tests", "Prototypes", "DefaultRpgPrototypeLoopTests.cs"),
+            "public sealed class DefaultRpgPrototypeLoopTests {}\n");
+        Write(
+            Path.Combine(repoRoot, "Tests.Godot", "tests", "Prototype", "DefaultRpgPrototype", "test_default_rpg_prototype_scene.gd"),
+            "extends Node\n");
     }
 
     private static PrototypeWorkflowService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, IHostedProcessRunner runner)

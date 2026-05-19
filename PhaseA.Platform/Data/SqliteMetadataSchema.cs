@@ -105,6 +105,13 @@ public static class SqliteMetadataSchema
             "progress_updated_utc",
             "ALTER TABLE runs ADD COLUMN progress_updated_utc TEXT NULL;",
             cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_iteration_sessions",
+            "latest_evaluation_json",
+            "ALTER TABLE project_iteration_sessions ADD COLUMN latest_evaluation_json TEXT NULL;",
+            cancellationToken);
 
         await ExecuteAsync(connection, "PRAGMA user_version = 1;", transaction, cancellationToken);
 
@@ -355,6 +362,7 @@ public static class SqliteMetadataSchema
             status TEXT NOT NULL,
             current_goal_index INTEGER NOT NULL DEFAULT 0,
             latest_summary TEXT NULL,
+            latest_evaluation_json TEXT NULL,
             created_utc TEXT NOT NULL,
             updated_utc TEXT NOT NULL,
             completed_utc TEXT NULL,
@@ -391,12 +399,30 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (run_id) REFERENCES runs(id) ON DELETE CASCADE
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_run_memories (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            scope TEXT NOT NULL,
+            status TEXT NOT NULL,
+            current_objective TEXT NOT NULL,
+            completed_items_json TEXT NOT NULL DEFAULT '[]',
+            current_blockers_json TEXT NOT NULL DEFAULT '[]',
+            next_recommended_action TEXT NOT NULL,
+            allowed_scope_json TEXT NOT NULL DEFAULT '[]',
+            last_verified_result TEXT NULL,
+            last_run_outcome TEXT NULL,
+            updated_utc TEXT NOT NULL,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
-        "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);"
+        "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);"
     ];
 }

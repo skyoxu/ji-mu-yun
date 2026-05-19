@@ -111,6 +111,9 @@ public sealed class ProjectInitializationService
             return;
         }
 
+        var enrichedFailure = FirstNonEmpty(
+            BuildInitializationFailureDiagnostics(project.RepoPath),
+            failureError);
         await metadataStore.RecordProjectCreationFailureAsync(new ProjectCreationFailureCommand(
             project.AccountId,
             project.ProjectId,
@@ -119,12 +122,142 @@ public sealed class ProjectInitializationService
             project.GameTypeSource,
             project.TemplateRuleId,
             project.WorkspaceRootPath,
-            failureError));
+            enrichedFailure));
         await metadataStore.DeleteProjectAsync(projectId);
         if (Directory.Exists(project.WorkspaceRootPath))
         {
             Directory.Delete(project.WorkspaceRootPath, recursive: true);
         }
+    }
+
+    private static string? BuildInitializationFailureDiagnostics(string repoPath)
+    {
+        if (string.IsNullOrWhiteSpace(repoPath) || !Directory.Exists(repoPath))
+        {
+            return null;
+        }
+
+        var latest = Directory.EnumerateFiles(Path.Combine(repoPath, "logs", "ci"), "local-hard-checks-latest.json", SearchOption.AllDirectories)
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(file => file.LastWriteTimeUtc)
+            .FirstOrDefault();
+        if (latest is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var latestDoc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(latest.FullName));
+            var summaryPath = latestDoc.RootElement.TryGetProperty("summary_path", out var summaryPathElement)
+                ? summaryPathElement.GetString()
+                : null;
+            var summaryFullPath = ResolveRepoRelativePath(repoPath, summaryPath);
+            if (summaryFullPath is null || !File.Exists(summaryFullPath))
+            {
+                return $"LOCAL_HARD_CHECKS status=fail latest={ToRepoRelative(repoPath, latest.FullName)}";
+            }
+
+            using var summaryDoc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(summaryFullPath));
+            var failedStep = summaryDoc.RootElement.TryGetProperty("failed_step", out var failedStepElement)
+                ? failedStepElement.GetString()
+                : "";
+            var details = new List<string>
+            {
+                "LOCAL_HARD_CHECKS status=fail",
+                $"failed_step={failedStep}",
+                $"summary={ToRepoRelative(repoPath, summaryFullPath)}"
+            };
+
+            if (string.Equals(failedStep, "gate-bundle-hard", StringComparison.OrdinalIgnoreCase) &&
+                TryFindGateBundleFailure(repoPath, summaryDoc.RootElement, out var gateDetails))
+            {
+                details.Add(gateDetails);
+            }
+
+            return string.Join(Environment.NewLine, details.Where(static line => !string.IsNullOrWhiteSpace(line)));
+        }
+        catch (Exception ex)
+        {
+            return $"LOCAL_HARD_CHECKS status=fail diagnostics_error={ex.GetType().Name}:{ex.Message}";
+        }
+    }
+
+    private static bool TryFindGateBundleFailure(string repoPath, System.Text.Json.JsonElement summary, out string details)
+    {
+        details = "";
+        if (!summary.TryGetProperty("steps", out var steps) || steps.ValueKind != System.Text.Json.JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (var step in steps.EnumerateArray())
+        {
+            var name = step.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : "";
+            if (!string.Equals(name, "gate-bundle-hard", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var summaryFile = step.TryGetProperty("summary_file", out var summaryFileElement)
+                ? summaryFileElement.GetString()
+                : null;
+            var gateSummaryPath = ResolveRepoRelativePath(repoPath, summaryFile);
+            if (gateSummaryPath is not null &&
+                File.Exists(Path.Combine(Path.GetDirectoryName(gateSummaryPath) ?? "", "hard", "summary.json")))
+            {
+                gateSummaryPath = Path.Combine(Path.GetDirectoryName(gateSummaryPath)!, "hard", "summary.json");
+            }
+
+            if (gateSummaryPath is null || !File.Exists(gateSummaryPath))
+            {
+                details = $"gate_bundle_summary={summaryFile}";
+                return true;
+            }
+
+            using var gateDoc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(gateSummaryPath));
+            var failedGates = new List<string>();
+            if (gateDoc.RootElement.TryGetProperty("gates", out var gates) && gates.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var gate in gates.EnumerateArray())
+                {
+                    var status = gate.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "";
+                    var rc = gate.TryGetProperty("rc", out var rcElement) && rcElement.TryGetInt32(out var rcValue)
+                        ? rcValue
+                        : 0;
+                    if (!string.Equals(status, "fail", StringComparison.OrdinalIgnoreCase) && rc == 0)
+                    {
+                        continue;
+                    }
+
+                    var gateName = gate.TryGetProperty("name", out var gateNameElement) ? gateNameElement.GetString() : "";
+                    failedGates.Add($"{gateName}(rc={rc})");
+                }
+            }
+
+            details = $"gate_bundle_summary={ToRepoRelative(repoPath, gateSummaryPath)} failed_gates={string.Join(",", failedGates)}";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string? ResolveRepoRelativePath(string repoPath, string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        var normalized = path.Replace('/', Path.DirectorySeparatorChar);
+        return Path.IsPathRooted(normalized)
+            ? normalized
+            : Path.Combine(repoPath, normalized);
+    }
+
+    private static string ToRepoRelative(string repoPath, string path)
+    {
+        return Path.GetRelativePath(repoPath, path).Replace(Path.DirectorySeparatorChar, '/');
     }
 
     private static string FirstNonEmpty(params string?[] values)

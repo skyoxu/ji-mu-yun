@@ -5,7 +5,6 @@ $env:HOSTED_WORKSPACE_ROOT = 'C:\jimuyun\logs\phase-a-innernet\workspaces'
 $env:HOSTED_PROJECT_LIMIT = '2'
 $env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
 $env:PHASEA_REPOSITORY_ROOT = 'C:\jimuyun'
-$env:PHASEA_ADMIN_TOKEN_HASH = 'UI2isMCjDiUggsvViOvOdWdwONV2B_FFAr5hP7vLKv4'
 $env:PHASEA_CODEX_COMMAND = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd'
 Remove-Item Env:\PHASEA_CHAT_TEST_MODE -ErrorAction SilentlyContinue
 Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
@@ -17,8 +16,31 @@ $objRoot = Join-Path $buildRoot 'obj'
 $outRoot = Join-Path $buildRoot 'out'
 $pidFile = 'C:\jimuyun\logs\phase-a-innernet\phasea.pid'
 $dotnet = 'C:\Program Files\dotnet\dotnet.exe'
+$repoRootNormalized = 'C:/jimuyun'
+$ripgrepDir = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\path'
 
 New-Item -ItemType Directory -Force -Path $runtimeRoot, $buildRoot, $objRoot, $outRoot | Out-Null
+
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_ADMIN_TOKEN_HASH)) {
+  $machineHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'Machine')
+  $userHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'User')
+  $processHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'Process')
+  $resolvedHash = $processHash
+  if ([string]::IsNullOrWhiteSpace($resolvedHash)) { $resolvedHash = $userHash }
+  if ([string]::IsNullOrWhiteSpace($resolvedHash)) { $resolvedHash = $machineHash }
+  if ([string]::IsNullOrWhiteSpace($resolvedHash)) {
+    throw "phasea_admin_token_hash_missing"
+  }
+  $env:PHASEA_ADMIN_TOKEN_HASH = $resolvedHash
+}
+
+if (Test-Path $ripgrepDir) {
+  if (($env:PATH -split ';') -notcontains $ripgrepDir) {
+    $env:PATH = "$ripgrepDir;$env:PATH"
+  }
+}
+
+& git config --global --add safe.directory $repoRootNormalized 2>$null
 
 & $dotnet build 'PhaseA.Platform\PhaseA.Platform.csproj' `
   -c Debug `
@@ -57,6 +79,7 @@ $psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
 $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
+$psi.Environment['PATH'] = $env:PATH
 
 $process = [System.Diagnostics.Process]::Start($psi)
 

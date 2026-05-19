@@ -44,9 +44,11 @@ builder.Services.AddSingleton<Chapter2BootstrapService>();
 builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
+builder.Services.AddSingleton<PrototypeRouteStateWriter>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
 builder.Services.AddSingleton<PrototypeQuickFixService>();
+builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
 builder.Services.AddSingleton<PrototypeIterationPlanService>();
 builder.Services.AddSingleton<PrototypeIterationGoalService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
@@ -488,6 +490,40 @@ app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", async (
                 "assistant",
                 result.AssistantMessage,
                 result.Status == "completed" ? "quick-fix-result" : "quick-fix-failed",
+                cancellationToken);
+        }
+
+        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
+    string projectId,
+    PrototypeNeedsFixRouteRequest request,
+    [FromServices] PrototypeNeedsFixRouteService needsFixRoute,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        if (!string.IsNullOrWhiteSpace(request.Feedback))
+        {
+            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "needs-fix-route", cancellationToken);
+        }
+
+        var result = await needsFixRoute.RunAsync(adminAccountId, projectId, request, cancellationToken);
+        if (result.Status is "completed" or "failed")
+        {
+            await chatHistory.AppendAsync(
+                adminAccountId,
+                projectId,
+                "assistant",
+                result.Summary,
+                result.Status == "completed" ? "needs-fix-route-result" : "needs-fix-route-failed",
                 cancellationToken);
         }
 

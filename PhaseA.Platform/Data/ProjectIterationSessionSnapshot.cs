@@ -10,6 +10,7 @@ public sealed record ProjectIterationSessionSnapshot(
     string Status,
     int CurrentGoalIndex,
     string? LatestSummary,
+    string? LatestEvaluationJson,
     string CreatedUtc,
     string UpdatedUtc,
     string? CompletedUtc);
@@ -38,4 +39,5 @@ public sealed record ProjectIterationGoalRunSnapshot(
 public sealed record ProjectIterationSessionDetails(
     ProjectIterationSessionSnapshot Session,
     IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
-    IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns);
+    IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
+    Runs.PrototypeIterationPlanEvaluationResult? LatestEvaluation = null);

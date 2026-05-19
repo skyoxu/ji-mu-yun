@@ -416,9 +416,11 @@ public sealed class BrowserUiRenderer
                   }
                   try {
                     state.iterationPlan = await api(`/api/projects/${state.projectId}/iteration-plan/latest`);
+                    state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
                   } catch (error) {
                     if (error?.status === 404) {
                       state.iterationPlan = null;
+                      state.iterationPlanEvaluation = null;
                     } else {
                       showError(error);
                     }
@@ -488,7 +490,11 @@ public sealed class BrowserUiRenderer
                       <p class="muted">${escapeHtml(goal.description || "")}</p>
                       ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
                       ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
+                      ${String(goal.status || "").trim().toLowerCase() === "needs_fix"
+                        ? `<button class="secondary" data-global-action="true" data-quick-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}">快速修复这个目标</button>`
+                        : ""}
                     </div>`).join("");
+                  document.querySelectorAll("[data-quick-fix-goal]").forEach(button => button.onclick = () => quickFixIterationGoal(button.dataset.quickFixGoal));
                 }
 
                 function renderIterationPlanEvaluation() {
@@ -557,8 +563,19 @@ public sealed class BrowserUiRenderer
                       method: "POST",
                       body: JSON.stringify({})
                     });
+                    if (state.iterationPlan) {
+                      state.iterationPlan.latestEvaluation = state.iterationPlanEvaluation;
+                    }
                     renderIterationPlanEvaluation();
                     renderIterationPlan();
+                    if (!announceInChat) {
+                      out({
+                        action: "iteration_plan_evaluated",
+                        decision: state.iterationPlanEvaluation?.decision || "",
+                        summary: state.iterationPlanEvaluation?.summary || "",
+                        suggestedAction: state.iterationPlanEvaluation?.suggestedAction || ""
+                      });
+                    }
                     if (announceInChat) {
                       state.chatHistory.push({
                         role: "assistant",
@@ -598,7 +615,9 @@ public sealed class BrowserUiRenderer
                         currentGoalIndex: 0,
                         latestSummary: result.summary
                       },
-                      goals: result.goals || []
+                      goals: result.goals || [],
+                      goalRuns: [],
+                      latestEvaluation: null
                     };
                     state.iterationPlanEvaluation = null;
                     const summary = result.goals?.length
@@ -925,6 +944,10 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function submitQuickFixText(feedback, busyText) {
+                  return submitQuickFixRequest({ feedback }, busyText);
+                }
+
+                async function submitQuickFixRequest(payload, busyText) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\uff0c\u518d\u4f7f\u7528\u5feb\u901f\u4fee\u590d\u3002");
@@ -933,13 +956,19 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback").disabled = true;
                   $("submitQuickFix").textContent = busyText || "快速修复中...";
                   try {
+                    const feedback = String(payload?.feedback || "").trim();
                     state.chatHistory.push({ role: "user", content: feedback, kind: "quick-fix" });
                     renderChatHistory();
                     saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/prototype-quick-fixes`, {
                       method: "POST",
-                      body: JSON.stringify({ feedback, model: $("globalModel").value, skillActionId: $("chatSkillMode").value || "normal" })
+                      body: JSON.stringify({
+                        feedback,
+                        model: $("globalModel").value,
+                        skillActionId: $("chatSkillMode").value || "normal",
+                        goalRepair: payload?.goalRepair || null
+                      })
                     });
                     state.chatHistory.push({ role: "assistant", content: result.assistantMessage || "本轮快速修复已完成。", kind: "quick-fix-result" });
                     renderChatHistory();
@@ -951,6 +980,78 @@ public sealed class BrowserUiRenderer
                     const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮快速修复失败。");
                     if (message) {
                       state.chatHistory.push({ role: "assistant", content: message, kind: "quick-fix-failed" });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                    showError(error);
+                    await loadServerChatHistoryForProject(state.projectId);
+                  }
+                  finally {
+                    setLocalBusy(false);
+                    setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    await refreshActiveRun();
+                  }
+                }
+
+                function buildQuickFixFeedbackForGoal(goal) {
+                  if (!goal) return "";
+                  const parts = [
+                    `请快速修复当前迭代目标 step ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`,
+                    String(goal.description || "").trim(),
+                    goal.acceptanceHint ? `本步验收提示：${String(goal.acceptanceHint || "").trim()}` : "",
+                    "要求：只围绕当前 step 本身修复，不要被历史运行摘要带偏；修完后明确说明这一步是否已可继续。"
+                  ].filter(Boolean);
+                  return parts.join("\n");
+                }
+
+                async function quickFixIterationGoal(goalIndex) {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goal = goals.find(item => String(item.goalIndex) === String(goalIndex));
+                  if (!goal) return out("未找到需要快速修复的目标。");
+                  const feedback = buildQuickFixFeedbackForGoal(goal);
+                  if (!feedback) return out("当前目标缺少可用于快速修复的内容。");
+                  await submitNeedsFixRouteRequest({
+                    feedback,
+                    goalId: goal.goalId || "",
+                    goalIndex: Number(goal.goalIndex || 0)
+                  }, `正在修复 step ${String(goal.goalIndex)}...`);
+                }
+
+                async function submitNeedsFixRouteRequest(payload, busyText) {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\uff0c\u518d\u4f7f\u7528 needs-fix \u8def\u7531\u3002");
+                  setLocalBusy(true);
+                  $("submitQuickFix").disabled = true;
+                  $("submitFormalFeedback").disabled = true;
+                  $("submitQuickFix").textContent = busyText || "Needs fix running...";
+                  try {
+                    const feedback = String(payload?.feedback || "").trim();
+                    state.chatHistory.push({ role: "user", content: feedback, kind: "needs-fix-route" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    $("chatMessage").value = "";
+                    const result = await api(`/api/projects/${state.projectId}/needs-fix-route`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        feedback,
+                        model: $("globalModel").value,
+                        skillActionId: $("chatSkillMode").value || "normal",
+                        goalId: payload?.goalId || null,
+                        goalIndex: payload?.goalIndex || null
+                      })
+                    });
+                    state.chatHistory.push({ role: "assistant", content: result.summary || "\u672c\u8f6e needs-fix \u8def\u7531\u5df2\u5b8c\u6210\u3002", kind: "needs-fix-route-result" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    await loadServerChatHistoryForProject(state.projectId);
+                    out(result);
+                    await loadRuns();
+                    await loadIterationPlan();
+                  } catch (error) {
+                    const message = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || "Needs fix route failed.");
+                    if (message) {
+                      state.chatHistory.push({ role: "assistant", content: message, kind: "needs-fix-route-failed" });
                       renderChatHistory();
                       saveChatHistoryForProject();
                     }
@@ -2037,7 +2138,7 @@ public sealed class BrowserUiRenderer
                 $("submitQuickFix").onclick = submitQuickFix;
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
-                $("evaluateIterationPlan").onclick = evaluateIterationPlan;
+                $("evaluateIterationPlan").onclick = () => evaluateIterationPlan(false);
                 $("executeIterationGoal").onclick = executeIterationGoal;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
                 renderChatHistory();

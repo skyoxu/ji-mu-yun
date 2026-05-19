@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
@@ -28,10 +29,17 @@ public sealed class PrototypeIterationPlanService
         "Godot/GdUnit"
     ];
     private readonly PhaseAMetadataStore _metadataStore;
+    private readonly PrototypeRouteStateWriter _routeStateWriter;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
+        : this(metadataStore, new PrototypeRouteStateWriter())
+    {
+    }
+
+    public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore, PrototypeRouteStateWriter routeStateWriter)
     {
         _metadataStore = metadataStore;
+        _routeStateWriter = routeStateWriter;
     }
 
     public async Task<PrototypeIterationPlanResult> CreateAsync(
@@ -50,7 +58,8 @@ public sealed class PrototypeIterationPlanService
             throw new InvalidOperationException("Project not found.");
         }
 
-        var message = request.Message?.Trim();
+        var rawMessage = request.Message?.Trim();
+        var message = NormalizePlanningMessage(rawMessage, request.SourceKind);
         if (string.IsNullOrWhiteSpace(message))
         {
             return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", []);
@@ -66,7 +75,7 @@ public sealed class PrototypeIterationPlanService
                 "当前这条建议更像内部执行或环境修复信息，不适合直接拆成迭代目标。请先处理需修复项，或重新生成更明确的产品向优化建议。",
                 []);
         }
-        var goals = BuildGoals(message);
+        var goals = BuildGoals(message, sourceKind);
         var overallGoal = BuildOverallGoal(project.GameName, message);
         var created = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -82,7 +91,24 @@ public sealed class PrototypeIterationPlanService
             cancellationToken);
 
         var summary = $"已生成 {goals.Count} 个迭代目标。请先执行目标 1，再逐步推进后续目标。";
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, cancellationToken);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, null, cancellationToken);
+        _routeStateWriter.WriteIterationPlanState(project, new
+        {
+            route = "iteration-plan",
+            session_id = created.SessionId,
+            status = "ready",
+            source_kind = sourceKind,
+            summary,
+            goals = goals.Select(goal => new
+            {
+                goal.GoalIndex,
+                goal.Title,
+                goal.Description,
+                goal.AcceptanceHint,
+                goal.Status
+            }).ToArray(),
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
         return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals);
     }
 
@@ -118,58 +144,59 @@ public sealed class PrototypeIterationPlanService
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         if (details is null)
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            var result = new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
                 "当前项目还没有迭代计划。",
                 "还没有可执行的目标列表，无法判断是否适合直接进入下一目标。",
                 "请先生成迭代计划。",
                 null);
+            return result;
         }
 
         var goals = details.Goals.OrderBy(goal => goal.GoalIndex).ToArray();
         if (goals.Length == 0)
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
                 "当前计划没有有效目标。",
                 "计划会话存在，但没有生成任何可执行目标。",
                 "请重新生成迭代计划。",
-                BuildRegenerationPrompt(prototypeProgress, details));
+                BuildRegenerationPrompt(prototypeProgress, details)));
         }
 
         if (goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal)))
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "blocked_by_current_goal",
                 "当前计划里有需要先修复的目标。",
                 "至少一个目标已经被标记为 needs_fix，继续执行后续目标只会放大不确定性。",
                 "先修复当前目标，再决定是否继续后续目标。",
-                null);
+                null));
         }
 
         if (goals.Any(goal => string.Equals(goal.Status, "running", StringComparison.Ordinal)))
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "blocked_by_current_goal",
                 "当前计划里有进行中的目标。",
                 "已有目标正在执行，暂时不适合重新拆解或继续触发下一目标。",
                 "等待当前目标完成后再刷新判断。",
-                null);
+                null));
         }
 
         var pendingGoals = goals.Where(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)).ToArray();
         if (pendingGoals.Length == 0)
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "ready_to_execute",
                 "当前计划已经没有待执行目标。",
                 "所有目标都已完成或已停止，不需要继续执行下一目标。",
                 "如果还有新需求，请基于新的优化目标重新生成计划。",
-                null);
+                null));
         }
 
         var firstPending = pendingGoals[0];
-        var firstGoalLooksTooLarge = LooksTooBroad(firstPending.Title) || LooksTooBroad(firstPending.Description);
+        var firstGoalLooksTooLarge = !IsRecognizedSmallGoal(firstPending) && (LooksTooBroad(firstPending.Title) || LooksTooBroad(firstPending.Description));
         var overallLooksLarge = goals.Length <= 3 && goals.Any(goal => LooksTooBroad(goal.Description));
         var recommendedButStillBroad = string.Equals(prototypeProgress?.NextStepEvaluation, "recommended", StringComparison.OrdinalIgnoreCase)
                                        && goals.Length <= 3
@@ -177,24 +204,30 @@ public sealed class PrototypeIterationPlanService
 
         if (firstGoalLooksTooLarge || overallLooksLarge || recommendedButStillBroad)
         {
-            return new PrototypeIterationPlanEvaluationResult(
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
                 "当前计划可以用，但第一目标仍然偏大，直接执行风险较高。",
                 $"当前第一个待执行目标“{firstPending.Title}”混合了多个连续实现点，更像总任务而不是单次小目标。",
                 "建议先重生成一次更细的迭代计划，再执行下一目标。",
-                BuildRegenerationPrompt(prototypeProgress, details));
+                BuildRegenerationPrompt(prototypeProgress, details)));
         }
 
-        return new PrototypeIterationPlanEvaluationResult(
+        return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
             "ready_to_execute",
             "当前计划适合直接执行下一目标。",
             $"当前待执行目标“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
             "可以直接点击“执行下一目标”。",
-            null);
+            null));
     }
 
-    private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message)
+    private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message, string sourceKind)
     {
+        var refinedGoals = TryBuildRefinedGoals(message, sourceKind);
+        if (refinedGoals.Count > 0)
+        {
+            return refinedGoals;
+        }
+
         var normalized = message.Replace("\r", "\n");
         var segments = ExtractStructuredGoals(normalized);
         var usedStructuredGoals = segments.Count > 0;
@@ -256,6 +289,60 @@ public sealed class PrototypeIterationPlanService
         }
 
         return goals;
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> TryBuildRefinedGoals(string message, string sourceKind)
+    {
+        if (!string.Equals(sourceKind, "completion_suggestion", StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        var normalized = message.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return [];
+        }
+
+        var looksLikeRpgClosure =
+            normalized.Contains("RPG", StringComparison.OrdinalIgnoreCase) &&
+            normalized.Contains("完整首轮闭环", StringComparison.Ordinal) &&
+            normalized.Contains("移动", StringComparison.Ordinal) &&
+            normalized.Contains("遇敌", StringComparison.Ordinal) &&
+            normalized.Contains("战斗", StringComparison.Ordinal) &&
+            normalized.Contains("奖励 3 选 1", StringComparison.Ordinal);
+        if (!looksLikeRpgClosure)
+        {
+            return [];
+        }
+
+        return
+        [
+            new PrototypeIterationPlanGoalResult(
+                1,
+                "目标 1：补稳地图移动与可见遇敌触发",
+                "先让玩家能稳定移动，并且能清楚看到或明确触发第一次遇敌，不要把战斗、奖励和胜负提示一起塞进这一步。",
+                "完成并验证：玩家能稳定移动，并能明确进入第一次遇敌。",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                2,
+                "目标 2：补通单场战斗与基础结算",
+                "在首次遇敌后完成一场可读、可结束的战斗，至少让玩家能看到战斗开始、行动结果和胜利结算，不要在这一步同时处理奖励理解问题。",
+                "完成并验证：玩家能完整打完一场战斗，并看到明确的胜利结算。",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                3,
+                "目标 3：补通奖励 3 选 1 并返回地图",
+                "战斗胜利后展示奖励 3 选 1，并在选择后正确返回地图继续流程，重点保证奖励含义可理解、选择后状态变化可见。",
+                "完成并验证：奖励 3 选 1 可理解、可选择，且选择后能正确返回地图。",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                4,
+                "目标 4：补齐胜负目标提示与最小验证",
+                "把“打赢 15 场胜利、任一战斗失败即失败”的规则做成玩家一眼能看懂的提示，并补一轮最小验证，确认首轮闭环与目标提示能一起工作。",
+                "完成并验证：玩家能清楚理解胜负条件，且首轮闭环在提示存在时仍可正常工作。",
+                "pending"),
+        ];
     }
 
     private static List<string> ExtractStructuredGoals(string message)
@@ -348,5 +435,98 @@ public sealed class PrototypeIterationPlanService
         var separators = new[] { "，", "、", "并", "然后", "同时", "再", "后", " and ", "," };
         var separatorHits = separators.Count(text.Contains);
         return text.Length >= 36 || separatorHits >= 2;
+    }
+
+    private static bool IsRecognizedSmallGoal(ProjectIterationGoalSnapshot goal)
+    {
+        var title = goal.Title?.Trim() ?? string.Empty;
+        var description = goal.Description?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description))
+        {
+            return false;
+        }
+
+        return
+            (title.Contains("补稳地图移动与可见遇敌触发", StringComparison.Ordinal) &&
+             description.Contains("稳定移动", StringComparison.Ordinal) &&
+             description.Contains("第一次遇敌", StringComparison.Ordinal)) ||
+            (title.Contains("补通单场战斗与基础结算", StringComparison.Ordinal) &&
+             description.Contains("首次遇敌后完成一场可读、可结束的战斗", StringComparison.Ordinal)) ||
+            (title.Contains("补通奖励 3 选 1 并返回地图", StringComparison.Ordinal) &&
+             description.Contains("奖励 3 选 1", StringComparison.Ordinal) &&
+             description.Contains("返回地图", StringComparison.Ordinal)) ||
+            (title.Contains("补齐胜负目标提示与最小验证", StringComparison.Ordinal) &&
+             description.Contains("打赢 15 场胜利", StringComparison.Ordinal) &&
+             description.Contains("任一战斗失败即失败", StringComparison.Ordinal));
+    }
+
+    private async Task<PrototypeIterationPlanEvaluationResult> PersistEvaluationAsync(
+        ProjectIterationSessionDetails details,
+        PrototypeIterationPlanEvaluationResult evaluation,
+        CancellationToken cancellationToken = default)
+    {
+        var serialized = JsonSerializer.Serialize(evaluation);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+            details.Session.SessionId,
+            details.Session.Status,
+            details.Session.CurrentGoalIndex,
+            details.Session.LatestSummary,
+            serialized,
+            details.Session.CompletedUtc,
+            cancellationToken);
+        return evaluation;
+    }
+
+    private static string NormalizePlanningMessage(string? message, string? sourceKind)
+    {
+        var value = message?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var kind = sourceKind?.Trim() ?? string.Empty;
+        if (!string.Equals(kind, "completion_suggestion", StringComparison.OrdinalIgnoreCase))
+        {
+            return value;
+        }
+
+        return UnwrapRegenerationPrompt(value);
+    }
+
+    private static string UnwrapRegenerationPrompt(string message)
+    {
+        var value = message.Trim();
+        var prefixes = new[]
+        {
+            "请把这条原型优化建议重拆成 4 个更小、能单独执行的目标，不要把多个连续实现点塞进同一个目标里：",
+            "请根据当前 prototype completion report，把下一步优化拆成 4 个更小的目标：",
+            "请把当前优化目标重拆成 4 个更小的连续目标，每个目标都要足够小，适合一次单独执行。"
+        };
+
+        var changed = true;
+        while (changed)
+        {
+            changed = false;
+            foreach (var prefix in prefixes)
+            {
+                if (!value.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var remainder = value[prefix.Length..].Trim();
+                if (string.IsNullOrWhiteSpace(remainder))
+                {
+                    return value;
+                }
+
+                value = remainder;
+                changed = true;
+                break;
+            }
+        }
+
+        return value;
     }
 }

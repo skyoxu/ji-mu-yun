@@ -46,6 +46,11 @@ public sealed class ProjectCreationServiceTests
         Directory.Exists(snapshot.RepoPath).Should().BeTrue();
         Directory.Exists(snapshot.RuntimePath).Should().BeTrue();
         Directory.Exists(snapshot.MetaPath).Should().BeTrue();
+        var readme = Path.Combine(snapshot.RepoPath, "README.md");
+        File.Exists(readme).Should().BeTrue();
+        File.ReadAllText(readme).Should().Contain("ProjectId: " + result.ProjectId);
+        File.ReadAllText(readme).Should().Contain("GameTypeSource: manual");
+        File.ReadAllBytes(readme).Take(3).Should().NotEqual([0xEF, 0xBB, 0xBF]);
     }
 
     [Fact]

@@ -65,7 +65,7 @@ public sealed class PrototypeIterationGoalService
         if (needsFixGoal is not null)
         {
             var summary = $"当前计划存在需要修复的目标 {needsFixGoal.GoalIndex}。请先修复当前目标，不要继续执行下一目标。";
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", needsFixGoal.GoalIndex, summary, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", needsFixGoal.GoalIndex, summary, null, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, needsFixGoal.GoalId, "", "needs_fix", summary, needsFixGoal.GoalIndex, true, "needs_fix");
         }
 
@@ -86,7 +86,7 @@ public sealed class PrototypeIterationGoalService
 
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", null, CancellationToken.None);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", null, null, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备目标 {nextGoal.GoalIndex}。", CancellationToken.None);
 
         try
@@ -101,6 +101,7 @@ public sealed class PrototypeIterationGoalService
             var goalAbsolutePath = Path.Combine(project.RepoPath, goalRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            var codexRuntimeOutputPath = CreateShortRuntimeOutputPath(runId);
             var now = DateTimeOffset.UtcNow.ToString("O");
 
             await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, now), Encoding.UTF8, CancellationToken.None);
@@ -110,9 +111,15 @@ public sealed class PrototypeIterationGoalService
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
             var prompt = BuildPrompt(project, details.Session, nextGoal);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), timeout.Token);
-            var codexOutput = File.Exists(codexOutputAbsolutePath)
-                ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
+            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), timeout.Token);
+            if (File.Exists(codexRuntimeOutputPath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
+                File.Copy(codexRuntimeOutputPath, codexOutputAbsolutePath, overwrite: true);
+            }
+
+            var codexOutput = File.Exists(codexRuntimeOutputPath)
+                ? await File.ReadAllTextAsync(codexRuntimeOutputPath, Encoding.UTF8, CancellationToken.None)
                 : "";
             var publicSummary = BuildAssistantMessage(nextGoal, codexResult, codexOutput);
             var goalOutcome = DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
@@ -152,6 +159,7 @@ public sealed class PrototypeIterationGoalService
                 sessionStatus,
                 nextGoal.GoalIndex,
                 sessionSummary,
+                null,
                 hasNeedsFix || hasMoreGoals ? null : now,
                 CancellationToken.None);
 
@@ -177,7 +185,7 @@ public sealed class PrototypeIterationGoalService
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype iteration goal exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -192,7 +200,7 @@ public sealed class PrototypeIterationGoalService
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");
         }
         finally
@@ -227,6 +235,13 @@ public sealed class PrototypeIterationGoalService
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
                 ["PHASEA_CODEX_REASONING_EFFORT"] = ReasoningEffort
             });
+    }
+
+    private static string CreateShortRuntimeOutputPath(string runId)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "phasea-codex-out", runId);
+        Directory.CreateDirectory(root);
+        return Path.Combine(root, "codex-output.txt");
     }
 
     private static string BuildPrompt(ProjectSnapshot project, ProjectIterationSessionSnapshot session, ProjectIterationGoalSnapshot goal)
