@@ -137,6 +137,32 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task ProjectChatHistory_RemovesInternalRouteBlocks_WhenListingStoredMessages()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+        var chatHistory = new ProjectChatHistoryService(store);
+
+        await store.AddProjectChatMessageAsync(
+            accountId,
+            project.ProjectId!,
+            "assistant",
+            "目标 1 修复已执行。\n本轮目标：\nDirection lock:\nProject README:\nC:\\host\\secret",
+            "needs-fix-route-result",
+            retainLatest: 10);
+
+        var result = await chatHistory.ListAsync(accountId, project.ProjectId!);
+
+        result.Should().NotBeNull();
+        result!.Messages.Single().Content.Should().Be("目标 1 修复已执行。");
+    }
+
+    [Fact]
     public async Task ReconcileAbandonedRunsAsync_FailsOnlyRunsThatExceededHeartbeatTimeout()
     {
         using var database = TempSqliteDatabase.Create();

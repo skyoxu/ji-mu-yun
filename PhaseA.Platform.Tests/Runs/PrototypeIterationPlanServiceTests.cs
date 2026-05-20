@@ -153,10 +153,103 @@ public sealed class PrototypeIterationPlanServiceTests
             "胜利后给出三选一奖励并返回地图");
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
+    [Fact]
+    public async Task CreateAsync_ShouldForceRpgContractGoals_WhenProjectIsRpg()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Improve the first playable loop: movement, encounter, battle, reward, and return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(5);
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("assets", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("MapScene", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("BattleScene", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("scene switching", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("reward", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldRefineRpgPlan_WhenContractStepsAreMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "manual_feedback",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Improve map movement and encounter trigger.", "Movement and encounter work."),
+                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Improve one battle and settlement.", "Battle reaches settlement."),
+                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Improve reward choice and return to map.", "Reward returns to map.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("should_refine_plan");
+        result.Reason.Should().Contain("Missing RPG contract steps");
+        result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldBeReadyForRpgPlan_WhenContractStepsExist()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Improve the RPG playable loop.",
+                "completion_suggestion"));
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("ready_to_execute");
+        result.SuggestedPromptForRegeneration.Should().BeNull();
+    }
+
+    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource = "Action")
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
     }

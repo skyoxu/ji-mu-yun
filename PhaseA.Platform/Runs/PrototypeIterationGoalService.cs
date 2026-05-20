@@ -17,13 +17,14 @@ public sealed class PrototypeIterationGoalService
     private readonly PhaseAPlatformOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeIterationGoalService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), null)
+        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), null)
     {
     }
 
@@ -32,12 +33,14 @@ public sealed class PrototypeIterationGoalService
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
+        PrototypeRouteStateWriter? stateWriter = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
+        _stateWriter = stateWriter ?? new PrototypeRouteStateWriter();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -103,13 +106,45 @@ public sealed class PrototypeIterationGoalService
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var codexRuntimeOutputPath = CreateShortRuntimeOutputPath(runId);
             var now = DateTimeOffset.UtcNow.ToString("O");
+            var projectReadme = _stateWriter.ReadProjectReadme(project);
+            var prototypeState = _stateWriter.ReadLatestPrototypeState(project);
+            var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
+            if (string.IsNullOrWhiteSpace(prototypeState))
+            {
+                const string failure = "Please run prototype creation before executing the next iteration goal.";
+                var missingPrototypeEvidenceJson = JsonSerializer.Serialize(new
+                {
+                    run_type = RunType,
+                    route = "execute-next-goal",
+                    failure_code = "prototype_route_state_missing",
+                    session_id = details.Session.SessionId,
+                    goal_id = nextGoal.GoalId,
+                    goal_index = nextGoal.GoalIndex
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", 424, "", "prototype route state missing", missingPrototypeEvidenceJson, CancellationToken.None);
+                await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "needs_fix", failure, null, CancellationToken.None);
+                await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
+                _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
+                {
+                    route = "execute-next-goal",
+                    project_id = project.ProjectId,
+                    session_id = details.Session.SessionId,
+                    goal_id = nextGoal.GoalId,
+                    goal_index = nextGoal.GoalIndex,
+                    run_id = runId,
+                    status = "prototype_required",
+                    summary = failure,
+                    updated_utc = DateTimeOffset.UtcNow.ToString("O")
+                });
+                return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "needs_fix", failure, nextGoal.GoalIndex, true, "needs_fix");
+            }
 
-            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, now), Encoding.UTF8, CancellationToken.None);
+            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, projectReadme, prototypeState, iterationPlanState, now), Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
-            var prompt = BuildPrompt(project, details.Session, nextGoal);
+            var prompt = BuildPrompt(project, details.Session, nextGoal, projectReadme, prototypeState, iterationPlanState);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), timeout.Token);
             if (File.Exists(codexRuntimeOutputPath))
@@ -122,7 +157,16 @@ public sealed class PrototypeIterationGoalService
                 ? await File.ReadAllTextAsync(codexRuntimeOutputPath, Encoding.UTF8, CancellationToken.None)
                 : "";
             var publicSummary = BuildAssistantMessage(nextGoal, codexResult, codexOutput);
-            var goalOutcome = DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
+            var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, nextGoal, _processRunner, CancellationToken.None);
+            if (acceptanceValidation.Passed)
+            {
+                publicSummary = AppendAcceptanceValidationSummary(publicSummary, nextGoal);
+                codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
+            }
+
+            var goalOutcome = acceptanceValidation.Passed
+                ? new IterationGoalOutcome("succeeded", "completed", true)
+                : DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(resultAbsolutePath, BuildResultLog(details.Session, nextGoal, runId, model, publicSummary, codexResult, codexOutput, now), Encoding.UTF8, CancellationToken.None);
 
@@ -139,7 +183,9 @@ public sealed class PrototypeIterationGoalService
                 model,
                 goal_input = goalRelativePath,
                 result_log = resultRelativePath,
-                codex_output = codexOutputRelativePath
+                codex_output = codexOutputRelativePath,
+                acceptance_validation = acceptanceValidation.Kind,
+                acceptance_validation_status = acceptanceValidation.Status
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, goalOutcome.GoalStatus, publicSummary, goalOutcome.MarkCompleted ? now : null, CancellationToken.None);
@@ -162,6 +208,26 @@ public sealed class PrototypeIterationGoalService
                 null,
                 hasNeedsFix || hasMoreGoals ? null : now,
                 CancellationToken.None);
+            _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
+            {
+                route = "execute-next-goal",
+                project_id = project.ProjectId,
+                session_id = details.Session.SessionId,
+                goal_id = nextGoal.GoalId,
+                goal_index = nextGoal.GoalIndex,
+                run_id = runId,
+                status = goalOutcome.ResultStatus,
+                iteration_session_status = sessionStatus,
+                iteration_goal_status = goalOutcome.GoalStatus,
+                summary = publicSummary,
+                consumed = new
+                {
+                    project_readme = !string.IsNullOrWhiteSpace(projectReadme),
+                    prototype_route_state = true,
+                    iteration_plan_route_state = !string.IsNullOrWhiteSpace(iterationPlanState)
+                },
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            });
 
             return new PrototypeIterationGoalExecutionResult(
                 details.Session.SessionId,
@@ -227,14 +293,15 @@ public sealed class PrototypeIterationGoalService
                 repositoryRoot,
                 "-o",
                 outputPath,
-                prompt
+                "-"
             ],
             repositoryRoot,
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
                 ["PHASEA_CODEX_REASONING_EFFORT"] = ReasoningEffort
-            });
+            },
+            prompt);
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)
@@ -242,6 +309,106 @@ public sealed class PrototypeIterationGoalService
         var root = Path.Combine(Path.GetTempPath(), "phasea-codex-out", runId);
         Directory.CreateDirectory(root);
         return Path.Combine(root, "codex-output.txt");
+    }
+
+    private static string BuildPrompt(
+        ProjectSnapshot project,
+        ProjectIterationSessionSnapshot session,
+        ProjectIterationGoalSnapshot goal,
+        string projectReadme,
+        string prototypeState,
+        string iterationPlanState)
+    {
+        return $"""
+            You are running the Phase A execute-next-goal top-level route.
+
+            Mandatory rules:
+            - Execute only the current goal. Do not expand into later goals.
+            - Consume Project README, prototype route state, and iteration plan route state below only as read-only recovery context.
+            - Use the prototype route state as the baseline implementation and recovery context, not as a repair target.
+            - Use the iteration plan route state as the ordered plan contract, not as a repair target.
+            - Do not read or use needs-fix state from another step.
+            - Unless the current goal explicitly requires it, do not edit PhaseA.Platform/**, PhaseA.Platform.Tests/**, scripts/**, docs/**, runtime/**, or cloud control-plane files.
+            - If the current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
+            - Do not launch Godot, game engines, GUI applications, or long-running smoke tests in this cloud route. The platform will run acceptance validation after you finish.
+            - Prefer fast code-level validation only. If deeper runtime validation is needed, report it in VERIFY/REMAINING instead of starting a long-running process.
+            - Platform route or recovery tests passing does not prove a gameplay goal is complete.
+            - Prefer the smallest working change that completes this goal.
+            - If blocked, report the blocker directly instead of modifying unrelated infrastructure.
+            - The final answer must be safe for browser users: no paths, command lines, script names, log names, or environment variable names.
+            - If this goal is too large, complete only the core part and explicitly mark what remains.
+
+            Project:
+            - ProjectId: {project.ProjectId}
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameType: {project.GameTypeSource}
+
+            Project README:
+            {TrimForPrompt(projectReadme)}
+
+            Prototype route state:
+            {TrimForPrompt(prototypeState)}
+
+            Iteration plan route state:
+            {TrimForPrompt(iterationPlanState)}
+
+            Overall iteration goal:
+            {session.OverallGoal}
+
+            Current goal:
+            - GoalIndex: {goal.GoalIndex}
+            - Title: {goal.Title}
+            - Description: {goal.Description}
+            - AcceptanceHint: {goal.AcceptanceHint}
+
+            Output format:
+            STATUS: completed|needs_fix
+            SUMMARY: 2-4 browser-safe sentences explaining whether this goal is complete and what changed for the user.
+            CHANGED: 1-3 browser-safe lines listing the actual changes.
+            VERIFY: 1-3 browser-safe lines explaining the verification result.
+            REMAINING: If incomplete, list remaining blockers. If complete, write none.
+            """;
+    }
+
+    private static string BuildGoalInput(
+        ProjectIterationSessionSnapshot session,
+        ProjectIterationGoalSnapshot goal,
+        string projectReadme,
+        string prototypeState,
+        string iterationPlanState,
+        string now)
+    {
+        return $"""
+            # Iteration Goal Input
+
+            Route: execute-next-goal
+            SessionId: {session.SessionId}
+            OverallGoal: {session.OverallGoal}
+            GoalIndex: {goal.GoalIndex}
+            Title: {goal.Title}
+            CreatedAtUtc: {now}
+
+            ## Description
+
+            {goal.Description}
+
+            ## Acceptance Hint
+
+            {goal.AcceptanceHint}
+
+            ## Project README
+
+            {TrimForPrompt(projectReadme)}
+
+            ## Prototype Route State
+
+            {TrimForPrompt(prototypeState)}
+
+            ## Iteration Plan Route State
+
+            {TrimForPrompt(iterationPlanState)}
+            """;
     }
 
     private static string BuildPrompt(ProjectSnapshot project, ProjectIterationSessionSnapshot session, ProjectIterationGoalSnapshot goal)
@@ -254,6 +421,9 @@ public sealed class PrototypeIterationGoalService
             - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
             - 除非当前目标明确要求，否则不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 除非当前目标明确要求，否则不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
+            - 历史摘要、路由状态和恢复信息只用于定位上下文，不是本轮修复目标。
+            - 不要把平台路由、恢复语义、文档、脚本或控制台测试当作玩法目标的完成证据。
+            - 如果当前目标是玩法/Godot/RPG 目标，必须围绕 Title、Description、AcceptanceHint 中的玩法验收完成并验证。
             - 优先用最小改动完成目标。
             - 如果被阻塞，直接报告阻塞原因，不要改无关基础设施。
             - 完成后输出面向浏览器用户的简明结果，不要包含路径、命令、脚本名、日志名、环境变量。
@@ -378,11 +548,6 @@ public sealed class PrototypeIterationGoalService
             ?? ParseStructuredStatus(codexResult.Stdout)
             ?? ParseStructuredStatus(codexResult.Stderr);
 
-        if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
-        {
-            return new IterationGoalOutcome("succeeded", "completed", true);
-        }
-
         if (string.Equals(structuredStatus, "needs_fix", StringComparison.OrdinalIgnoreCase))
         {
             return new IterationGoalOutcome("needs_fix", "needs_fix", false);
@@ -400,17 +565,40 @@ public sealed class PrototypeIterationGoalService
 
         var needsFixMarkers = new[]
         {
-            "未完成",
-            "没能完成",
-            "需要修复",
-            "无法完成验证",
-            "没能完成重跑验证",
-            "先修复",
+            "\u672a\u5b8c\u6210",
+            "\u6ca1\u80fd\u5b8c\u6210",
+            "\u9700\u8981\u4fee\u590d",
+            "\u65e0\u6cd5\u5b8c\u6210\u9a8c\u8bc1",
+            "\u6ca1\u80fd\u5b8c\u6210\u91cd\u8dd1\u9a8c\u8bc1",
+            "\u5148\u4fee\u590d",
+            "\u9a8c\u8bc1\u6ca1\u8dd1\u901a",
+            "\u9a8c\u8bc1\u672a\u901a\u8fc7",
+            "\u9a8c\u8bc1\u5931\u8d25",
+            "\u6d4b\u8bd5\u5931\u8d25",
+            "\u88ab\u73b0\u6709\u65e5\u5fd7\u6587\u4ef6\u6743\u9650\u62e6\u4f4f",
+            "\u65e0\u6cd5\u5199\u5165",
+            "\u6743\u9650\u62e6\u4f4f",
+            "failed to write",
+            "permission denied",
+            "access denied",
+            "verification failed",
+            "validation failed",
+            "test failed",
+            "tests failed",
+            "could not verify",
+            "unable to verify",
             "blocked by",
             "cannot complete",
             "could not complete",
             "not completed"
         };
+
+        if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return HasBlockingEvidence(text) || !HasCompletionEvidence(codexOutput)
+                ? new IterationGoalOutcome("needs_fix", "needs_fix", false)
+                : new IterationGoalOutcome("succeeded", "completed", true);
+        }
 
         if (needsFixMarkers.Any(marker => text.Contains(marker.ToLowerInvariant(), StringComparison.Ordinal)))
         {
@@ -418,6 +606,147 @@ public sealed class PrototypeIterationGoalService
         }
 
         return new IterationGoalOutcome("succeeded", "completed", true);
+    }
+
+    private static string AppendAcceptanceValidationSummary(string publicSummary, ProjectIterationGoalSnapshot goal)
+    {
+        return $"""
+            {publicSummary.Trim()}
+
+            Platform acceptance:
+            Goal {goal.GoalIndex} passed its platform validation. The current goal can move to the next step.
+            """;
+    }
+
+    private static string AppendAcceptanceValidationEvidence(string codexOutput)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return prefix + """
+            STATUS: completed
+            VERIFY: Platform acceptance validation passed for the current gameplay goal.
+            REMAINING: none
+            """;
+    }
+
+    private static bool HasBlockingEvidence(string normalizedText)
+    {
+        var blockingMarkers = new[]
+        {
+            "failed to write",
+            "permission denied",
+            "access denied",
+            "verification failed",
+            "validation failed",
+            "test failed",
+            "tests failed",
+            "could not verify",
+            "unable to verify",
+            "blocked by",
+            "cannot complete",
+            "could not complete",
+            "not completed"
+        };
+
+        return blockingMarkers.Any(marker => normalizedText.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static IterationGoalOutcome DetermineCompletedOutcome(string codexOutput, HostedProcessResult codexResult)
+    {
+        return HasCompletionEvidence(codexOutput, codexResult.Stdout, codexResult.Stderr)
+                ? new IterationGoalOutcome("succeeded", "completed", true)
+                : new IterationGoalOutcome("needs_fix", "needs_fix", false);
+    }
+
+    private static bool HasCompletionEvidence(params string?[] values)
+    {
+        var text = string.Join("\n", values.Where(value => !string.IsNullOrWhiteSpace(value)));
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var normalizedText = text.Trim().ToLowerInvariant();
+        if (!normalizedText.Contains("verify:", StringComparison.Ordinal) ||
+            !normalizedText.Contains("remaining: none", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var verify = ExtractStructuredField(text, "VERIFY");
+        if (string.IsNullOrWhiteSpace(verify))
+        {
+            return false;
+        }
+
+        var remaining = ExtractStructuredField(text, "REMAINING");
+        if (!string.Equals(remaining?.Trim(), "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var normalizedVerify = verify.Trim().ToLowerInvariant();
+        var strongVerifyMarkers = new[]
+        {
+            "pass",
+            "passed",
+            "green",
+            "all green"
+        };
+        var hasStrongEvidence = strongVerifyMarkers.Any(marker => normalizedVerify.Contains(marker, StringComparison.Ordinal));
+        if (!hasStrongEvidence)
+        {
+            return false;
+        }
+
+        var weakVerifyMarkers = new[]
+        {
+            "todo",
+            "not run",
+            "not verified",
+            "manual check",
+            "retry",
+            "rerun",
+            "should verify",
+            "can verify",
+            "open the",
+            "confirm the"
+        };
+
+        return !weakVerifyMarkers.Any(marker => normalizedVerify.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static string? ExtractStructuredField(string value, string fieldName)
+    {
+        var prefix = fieldName + ":";
+        var lines = value.Replace("\r", "").Split('\n');
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var line = lines[index].Trim();
+            if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var result = line[prefix.Length..].Trim();
+            for (var next = index + 1; next < lines.Length; next++)
+            {
+                var nextLine = lines[next].Trim();
+                if (nextLine.Contains(':', StringComparison.Ordinal) &&
+                    nextLine.Split(':', 2)[0].All(ch => char.IsLetter(ch) || ch == '_'))
+                {
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(nextLine))
+                {
+                    result = string.IsNullOrWhiteSpace(result) ? nextLine : $"{result}\n{nextLine}";
+                }
+            }
+
+            return result;
+        }
+
+        return null;
     }
 
     private static string? ParseStructuredStatus(string? value)
@@ -480,5 +809,16 @@ public sealed class PrototypeIterationGoalService
     private static string ToSlash(string path)
     {
         return path.Replace('\\', '/');
+    }
+
+    private static string TrimForPrompt(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "(empty)";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= 6000 ? trimmed : trimmed[..6000];
     }
 }

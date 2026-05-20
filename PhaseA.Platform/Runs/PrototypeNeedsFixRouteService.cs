@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
@@ -48,15 +49,18 @@ public sealed class PrototypeNeedsFixRouteService
 
         var readme = _stateWriter.ReadProjectReadme(project);
         var stepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
-        var prototypeState = string.IsNullOrWhiteSpace(stepState)
+        var executeNextGoalState = string.IsNullOrWhiteSpace(stepState)
+            ? _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex)
+            : "";
+        var prototypeState = string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState)
             ? _stateWriter.ReadLatestPrototypeState(project)
             : "";
-        if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(prototypeState))
+        if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState) && string.IsNullOrWhiteSpace(prototypeState))
         {
             return new PrototypeNeedsFixRouteResult("", "prototype_required", "Please run prototype creation before needs fix.", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
-        var feedback = BuildFeedback(request.Feedback, readme, stepState, prototypeState, goal);
+        var feedback = BuildFeedback(request.Feedback, readme, stepState, executeNextGoalState, prototypeState, goal);
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.ProjectId,
             new PrototypeFeedbackRequest(
@@ -70,7 +74,7 @@ public sealed class PrototypeNeedsFixRouteService
                     goal.Title,
                     goal.Description,
                     goal.AcceptanceHint,
-                    goal.ResultSummary)),
+                    BuildCompactSummary(goal.ResultSummary))),
             requireSucceededPrototypeRun: false,
             cancellationToken);
 
@@ -85,7 +89,7 @@ public sealed class PrototypeNeedsFixRouteService
             status = quickFixResult.Status,
             iteration_session_status = quickFixResult.IterationSessionStatus,
             iteration_goal_status = quickFixResult.IterationGoalStatus,
-            summary = quickFixResult.AssistantMessage,
+            summary = BuildCompactSummary(quickFixResult.AssistantMessage),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
 
@@ -120,15 +124,29 @@ public sealed class PrototypeNeedsFixRouteService
         string? userFeedback,
         string projectReadme,
         string stepState,
+        string executeNextGoalState,
         string prototypeState,
         ProjectIterationGoalSnapshot goal)
     {
-        var sourceLabel = string.IsNullOrWhiteSpace(stepState)
-            ? "prototype route state"
-            : "current needs fix step state";
-        var sourceState = string.IsNullOrWhiteSpace(stepState) ? prototypeState : stepState;
+        var sourceLabel = !string.IsNullOrWhiteSpace(stepState)
+            ? "current needs fix step state"
+            : !string.IsNullOrWhiteSpace(executeNextGoalState)
+                ? "current execute next goal step state"
+                : "prototype route state";
+        var sourceState = CompactRouteState(!string.IsNullOrWhiteSpace(stepState)
+            ? stepState
+            : !string.IsNullOrWhiteSpace(executeNextGoalState)
+                ? executeNextGoalState
+                : prototypeState);
         return $"""
             Run the needs fix top-level route for the current prototype iteration step.
+
+            Direction lock:
+            - The repair target is only the Current goal below.
+            - Project README and Recovery source are read-only recovery context, not repair targets.
+            - Do not repair Phase A platform routing, route-state readers, recovery logic, docs, scripts, deployment, or tests unless the Current goal explicitly asks for that.
+            - If Current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
+            - Platform route or recovery tests passing does not prove a gameplay goal is complete.
 
             Project README:
             {TrimForPrompt(projectReadme)}
@@ -138,7 +156,7 @@ public sealed class PrototypeNeedsFixRouteService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
-            - PreviousResultSummary: {goal.ResultSummary}
+            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary)}
 
             Recovery source consumed: {sourceLabel}
             {TrimForPrompt(sourceState)}
@@ -149,6 +167,73 @@ public sealed class PrototypeNeedsFixRouteService
             Scope rule:
             Only repair this current step. Do not read or use needs fix state from another step.
             """;
+    }
+
+    private static string BuildCompactSummary(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var lines = value
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(line => !line.StartsWith("Project README:", StringComparison.OrdinalIgnoreCase))
+            .Where(line => !line.StartsWith("Recovery source consumed:", StringComparison.OrdinalIgnoreCase))
+            .Where(line => !line.StartsWith("{", StringComparison.Ordinal))
+            .Take(8);
+        var summary = string.Join(" ", lines);
+        return summary.Length <= 1200 ? summary : summary[..1200];
+    }
+
+    private static string CompactRouteState(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "(empty)";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            var root = document.RootElement;
+            var compact = new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["route"] = ReadString(root, "route"),
+                ["status"] = ReadString(root, "status"),
+                ["run_id"] = ReadString(root, "run_id"),
+                ["goal_index"] = ReadInt(root, "goal_index"),
+                ["iteration_session_status"] = ReadString(root, "iteration_session_status"),
+                ["iteration_goal_status"] = ReadString(root, "iteration_goal_status"),
+                ["summary"] = BuildCompactSummary(ReadString(root, "summary"))
+            };
+
+            return JsonSerializer.Serialize(compact.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value));
+        }
+        catch (JsonException)
+        {
+            return TrimForPrompt(BuildCompactSummary(value));
+        }
+    }
+
+    private static string? ReadString(JsonElement root, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
+    }
+
+    private static int? ReadInt(JsonElement root, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.Number &&
+               value.TryGetInt32(out var result)
+            ? result
+            : null;
     }
 
     private static string TrimForPrompt(string value)

@@ -50,6 +50,12 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "iteration-plan", "latest.json"), payload);
     }
 
+    public void WriteExecuteNextGoalState(ProjectSnapshot project, int goalIndex, object payload)
+    {
+        var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
+        WriteState(project, Path.Combine("routes", "execute-next-goal", step, "latest.json"), payload);
+    }
+
     public void WriteNeedsFixState(ProjectSnapshot project, int goalIndex, object payload)
     {
         var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
@@ -66,6 +72,17 @@ public sealed class PrototypeRouteStateWriter
     {
         var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
         return ReadState(project, Path.Combine("routes", "needs-fix", step, "latest.json"));
+    }
+
+    public string ReadLatestExecuteNextGoalState(ProjectSnapshot project, int goalIndex)
+    {
+        var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
+        return ReadState(project, Path.Combine("routes", "execute-next-goal", step, "latest.json"));
+    }
+
+    public string ReadLatestIterationPlanState(ProjectSnapshot project)
+    {
+        return ReadState(project, Path.Combine("routes", "iteration-plan", "latest.json"));
     }
 
     public string ReadLatestPrototypeState(ProjectSnapshot project)
@@ -128,13 +145,16 @@ public sealed class PrototypeRouteStateWriter
 
             - Prototype route state: meta/routes/prototype/latest.json
             - Iteration plan route state: meta/routes/iteration-plan/latest.json
+            - Execute next goal route state: meta/routes/execute-next-goal/step-XX/latest.json
             - Needs fix route state: meta/routes/needs-fix/step-XX/latest.json
 
             ## Recovery Rules
 
             - Start from this README to identify the project and game type.
+            - Execute next goal must read this README, prototype route state, and iteration plan route state before running a step.
             - For needs fix, read only the current step state under meta/routes/needs-fix/step-XX.
-            - If the current step has no needs fix state, read meta/routes/prototype/latest.json.
+            - If the current step has no needs fix state, read meta/routes/execute-next-goal/step-XX/latest.json.
+            - If both current-step states are missing, read meta/routes/prototype/latest.json.
             - Do not consume other steps' needs fix state.
             - Project meta root: {metaPath}
             """;

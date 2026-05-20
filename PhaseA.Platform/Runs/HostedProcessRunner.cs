@@ -15,11 +15,16 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             WorkingDirectory = command.WorkingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = command.StandardInput is not null,
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        if (command.StandardInput is not null)
+        {
+            startInfo.StandardInputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        }
 
         foreach (var argument in command.Arguments)
         {
@@ -51,9 +56,35 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         };
 
         process.Start();
+        if (command.StandardInput is not null)
+        {
+            await process.StandardInput.WriteAsync(command.StandardInput);
+            await process.StandardInput.FlushAsync(cancellationToken);
+            process.StandardInput.Close();
+        }
+
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        await process.WaitForExitAsync(cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync(CancellationToken.None);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            throw;
+        }
 
         return new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
     }

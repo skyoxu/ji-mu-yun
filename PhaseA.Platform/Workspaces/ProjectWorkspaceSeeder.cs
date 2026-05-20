@@ -35,6 +35,12 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "Tests.Godot/addons/gdUnit4"
     ];
 
+    private static readonly string[] ManagedRelativeFiles =
+    [
+        "Directory.Build.props",
+        "Directory.Build.targets"
+    ];
+
     private static readonly string[] SeededPrototypeTemplateDirectories =
     [
         "DefaultRpgTemplate"
@@ -67,6 +73,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
         if (Directory.Exists(targetRoot) && Directory.EnumerateFileSystemEntries(targetRoot).Any())
         {
+            SyncManagedFiles(sourceRoot, targetRoot);
             SyncManagedDirectories(sourceRoot, targetRoot);
             RestoreWorkspaceJunctions(sourceRoot, targetRoot);
             return;
@@ -75,6 +82,22 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         Directory.CreateDirectory(targetRoot);
         CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
         RestoreWorkspaceJunctions(sourceRoot, targetRoot);
+    }
+
+    private static void SyncManagedFiles(string sourceRoot, string targetRoot)
+    {
+        foreach (var relativeFile in ManagedRelativeFiles)
+        {
+            var sourcePath = Path.Combine(sourceRoot, relativeFile.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(sourcePath))
+            {
+                continue;
+            }
+
+            var destinationPath = Path.Combine(targetRoot, relativeFile.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(sourcePath, destinationPath, overwrite: true);
+        }
     }
 
     private static void SyncManagedDirectories(string sourceRoot, string targetRoot)

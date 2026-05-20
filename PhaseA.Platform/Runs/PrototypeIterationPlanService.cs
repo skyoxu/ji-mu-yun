@@ -76,6 +76,10 @@ public sealed class PrototypeIterationPlanService
                 []);
         }
         var goals = BuildGoals(message, sourceKind);
+        if (IsRpgProject(project))
+        {
+            goals = BuildRpgContractGoals(message, goals);
+        }
         var overallGoal = BuildOverallGoal(project.GameName, message);
         var created = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -195,6 +199,18 @@ public sealed class PrototypeIterationPlanService
                 null));
         }
 
+        var isRpgProject = IsRpgProject(project);
+        var rpgPlanIssue = isRpgProject ? FindRpgPlanContractIssue(goals) : null;
+        if (rpgPlanIssue is not null)
+        {
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
+                "should_refine_plan",
+                "当前 RPG 迭代计划缺少类型 skill 要求的场景或素材验收 step。",
+                rpgPlanIssue,
+                "请先按 RPG 类型 skill 重新生成迭代计划：基础素材验收、地图场景、战斗场景、主原型/场景切换必须分别成 step。",
+                BuildRpgRegenerationPrompt(details)));
+        }
+
         var firstPending = pendingGoals[0];
         var firstGoalLooksTooLarge = !IsRecognizedSmallGoal(firstPending) && (LooksTooBroad(firstPending.Title) || LooksTooBroad(firstPending.Description));
         var overallLooksLarge = goals.Length <= 3 && goals.Any(goal => LooksTooBroad(goal.Description));
@@ -202,7 +218,7 @@ public sealed class PrototypeIterationPlanService
                                        && goals.Length <= 3
                                        && firstGoalLooksTooLarge;
 
-        if (firstGoalLooksTooLarge || overallLooksLarge || recommendedButStillBroad)
+        if (!isRpgProject && (firstGoalLooksTooLarge || overallLooksLarge || recommendedButStillBroad))
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
@@ -289,6 +305,116 @@ public sealed class PrototypeIterationPlanService
         }
 
         return goals;
+    }
+
+    private static bool IsRpgProject(ProjectSnapshot project)
+    {
+        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
+        if (text.Contains("rpg", StringComparison.Ordinal) ||
+            text.Contains("dragon quest", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return File.Exists(Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"));
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> BuildRpgContractGoals(
+        string message,
+        List<PrototypeIterationPlanGoalResult> existingGoals)
+    {
+        var hint = TrimForHint(message, 96);
+        return
+        [
+            new PrototypeIterationPlanGoalResult(
+                1,
+                "RPG Step 1: basic assets and UI validation",
+                $"Inventory the RPG prototype baseline for required map, battle, reward, character, enemy, and UI assets before scene work starts. Source request: {hint}",
+                "Pass only when the RPG prototype has readable basic assets/UI markers for map play, battle play, reward selection, player, and enemy.",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                2,
+                "RPG Step 2: MapScene creation and validation",
+                "Create and validate a dedicated RPG map scene. This step must focus on map scene structure, player spawn, visible encounter affordance, and the ability to start the first encounter.",
+                "Pass only when the project contains a valid RPG MapScene and the map scene can independently prove movement plus encounter entry.",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                3,
+                "RPG Step 3: BattleScene creation and validation",
+                "Create and validate a dedicated RPG battle scene. This step must focus on one readable battle, action resolution, victory/defeat settlement, and battle UI feedback.",
+                "Pass only when the project contains a valid RPG BattleScene and one battle can independently reach settlement.",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                4,
+                "RPG Step 4: main prototype scene and scene switching validation",
+                "Create and validate the main RPG prototype scene that connects the menu/start path, map scene, battle scene, and return path without collapsing all logic into one scene.",
+                "Pass only when the main prototype scene can switch into the map, enter battle, and return to the correct RPG flow scene.",
+                "pending"),
+            new PrototypeIterationPlanGoalResult(
+                5,
+                "RPG Step 5: reward loop and return-to-map validation",
+                "Validate the RPG reward flow as its own step: victory leads to three reward choices, choosing one changes visible state, and the player returns to the map loop.",
+                "Pass only when reward 3-choice selection, state change, and return-to-map loop are all verified.",
+                "pending")
+        ];
+    }
+
+    private static string? FindRpgPlanContractIssue(ProjectIterationGoalSnapshot[] goals)
+    {
+        var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
+        var missing = new List<string>();
+
+        if (!ContainsAny(combined, "asset", "assets", "material", "materials", "sprite", "sprites", "tileset", "ui", "hud", "素材", "美术", "界面"))
+        {
+            missing.Add("basic assets/UI validation step");
+        }
+
+        if (!ContainsAny(combined, "mapscene", "map scene", "mapscene.tscn", "地图场景"))
+        {
+            missing.Add("dedicated MapScene step");
+        }
+
+        if (!ContainsAny(combined, "battlescene", "battle scene", "battlescene.tscn", "战斗场景"))
+        {
+            missing.Add("dedicated BattleScene step");
+        }
+
+        var hasMainScene = ContainsAny(combined, "main prototype", "main scene", "prototype scene", "主原型", "主场景");
+        var hasSwitching = ContainsAny(combined, "scene switching", "scene switch", "switch into", "return path", "场景切换", "跳转");
+        if (!hasMainScene || !hasSwitching)
+        {
+            missing.Add("main prototype scene and scene switching step");
+        }
+
+        if (!ContainsAny(combined, "reward", "3-choice", "three reward", "three choices", "return-to-map", "return to the map", "奖励", "三选一", "3 选 1", "返回地图"))
+        {
+            missing.Add("reward loop and return-to-map step");
+        }
+
+        if (missing.Count == 0)
+        {
+            return null;
+        }
+
+        return $"Missing RPG contract steps: {string.Join(", ", missing)}.";
+    }
+
+    private static string BuildRpgRegenerationPrompt(ProjectIterationSessionDetails details)
+    {
+        var sourceMessage = details.Session.SourceMessage?.Trim();
+        if (string.IsNullOrWhiteSpace(sourceMessage))
+        {
+            sourceMessage = details.Session.OverallGoal?.Trim();
+        }
+
+        return string.IsNullOrWhiteSpace(sourceMessage)
+            ? "Regenerate the RPG iteration plan as strict contract steps: basic assets/UI, MapScene, BattleScene, main prototype scene switching, reward loop return-to-map."
+            : $"Regenerate the RPG iteration plan as strict contract steps: basic assets/UI, MapScene, BattleScene, main prototype scene switching, reward loop return-to-map. Source request: {sourceMessage}";
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
     private static List<PrototypeIterationPlanGoalResult> TryBuildRefinedGoals(string message, string sourceKind)

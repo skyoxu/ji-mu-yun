@@ -1,0 +1,9 @@
+<Project>
+  <Target Name="RemoveGeneratedWorkspaceInputs" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Compile Remove="$(GeneratedWorkspaceExcludes)" />
+      <EmbeddedResource Remove="$(GeneratedWorkspaceExcludes)" />
+      <None Remove="$(GeneratedWorkspaceExcludes)" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -11,6 +11,7 @@ Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
 $env:GODOT_BIN = 'C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
 Set-Location 'C:\jimuyun'
 $runtimeRoot = 'C:\jimuyun\logs\phase-a-innernet\runtime'
+$tempRoot = 'C:\jimuyun\logs\phase-a-innernet\tmp'
 $buildRoot = 'C:\Users\Administrator\.codex\memories\phasea-runtime-build'
 $objRoot = Join-Path $buildRoot 'obj'
 $outRoot = Join-Path $buildRoot 'out'
@@ -19,7 +20,9 @@ $dotnet = 'C:\Program Files\dotnet\dotnet.exe'
 $repoRootNormalized = 'C:/jimuyun'
 $ripgrepDir = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\path'
 
-New-Item -ItemType Directory -Force -Path $runtimeRoot, $buildRoot, $objRoot, $outRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $runtimeRoot, $tempRoot, $buildRoot, $objRoot, $outRoot | Out-Null
+Remove-Item -LiteralPath $objRoot, $outRoot -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path $objRoot, $outRoot | Out-Null
 
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_ADMIN_TOKEN_HASH)) {
   $machineHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'Machine')
@@ -42,10 +45,21 @@ if (Test-Path $ripgrepDir) {
 
 & git config --global --add safe.directory $repoRootNormalized 2>$null
 
+if (Test-Path $pidFile) {
+  $oldPidText = Get-Content -LiteralPath $pidFile -Raw -ErrorAction SilentlyContinue
+  if ($null -eq $oldPidText) { $oldPidText = '' }
+  $oldPid = 0
+  if ([int]::TryParse($oldPidText.Trim(), [ref]$oldPid)) {
+    $oldProcess = Get-Process -Id $oldPid -ErrorAction SilentlyContinue
+    if ($oldProcess -and $oldProcess.ProcessName -eq 'PhaseA.Platform') {
+      Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
+      Wait-Process -Id $oldPid -Timeout 10 -ErrorAction SilentlyContinue
+    }
+  }
+}
+
 & $dotnet build 'PhaseA.Platform\PhaseA.Platform.csproj' `
   -c Debug `
-  "-p:BaseIntermediateOutputPath=$objRoot\" `
-  "-p:MSBuildProjectExtensionsPath=$objRoot\" `
   "-p:OutDir=$outRoot\" `
   /nologo
 
@@ -80,6 +94,8 @@ $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
 $psi.Environment['PATH'] = $env:PATH
+$psi.Environment['TEMP'] = $tempRoot
+$psi.Environment['TMP'] = $tempRoot
 
 $process = [System.Diagnostics.Process]::Start($psi)
 

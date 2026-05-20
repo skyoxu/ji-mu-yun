@@ -120,6 +120,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("建议谨慎");
         html.Should().Contain("暂不建议");
         html.Should().Contain("sanitizePublicChatContent");
+        html.Should().Contain("Recovery source consumed:");
         html.Should().NotContain("latestPrototypeTerminalOutput");
         html.Should().NotContain("stdoutText || run.stderrText");
         html.Should().NotContain("tailText(text");

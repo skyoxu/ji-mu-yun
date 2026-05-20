@@ -158,12 +158,23 @@ public sealed class PrototypeQuickFixService
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
                 : "";
-            var assistantMessage = BuildAssistantMessage(feedback, codexResult, codexOutput, targetGoal);
+            var publicCodexReport = BuildPublicCodexReport(codexResult, codexOutput);
+            var assistantMessage = BuildAssistantMessage(publicCodexReport, targetGoal);
+            var acceptanceValidation = targetGoal is null
+                ? PrototypeGoalAcceptanceValidationResult.NotRun()
+                : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
+            if (acceptanceValidation.Passed)
+            {
+                assistantMessage = AppendAcceptanceValidationSummary(assistantMessage, targetGoal!);
+                codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
+            }
             await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "目标修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
 
             var goalRepairOutcome = targetGoal is null
                 ? null
-                : DetermineGoalRepairOutcome(targetGoal, assistantMessage, codexResult, codexOutput);
+                : acceptanceValidation.Passed
+                    ? new GoalRepairOutcome("succeeded", true)
+                    : DetermineGoalRepairOutcome(targetGoal, assistantMessage, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(
                 resultAbsolutePath,
@@ -203,7 +214,9 @@ public sealed class PrototypeQuickFixService
                 goal_repair = targetGoal is not null,
                 goal_id = targetGoal?.GoalId,
                 goal_index = targetGoal?.GoalIndex,
-                goal_repair_status = goalRepairOutcome?.GoalStatus
+                goal_repair_status = goalRepairOutcome?.GoalStatus,
+                acceptance_validation = acceptanceValidation.Kind,
+                acceptance_validation_status = acceptanceValidation.Status
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null && goalRepairOutcome is not null)
@@ -357,7 +370,7 @@ public sealed class PrototypeQuickFixService
             GoalTitle: {goal.Title}
             GoalDescription: {goal.Description}
             AcceptanceHint: {goal.AcceptanceHint}
-            PreviousResultSummary: {goal.ResultSummary}
+            PreviousResultSummary: {BuildCompactGoalSummary(goal.ResultSummary)}
             """)}
             """;
     }
@@ -379,7 +392,7 @@ public sealed class PrototypeQuickFixService
             repositoryRoot,
             "-o",
             outputPath,
-            prompt
+            "-"
         };
 
         return new HostedProcessCommand(
@@ -390,7 +403,8 @@ public sealed class PrototypeQuickFixService
             {
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
                 ["PHASEA_CODEX_REASONING_EFFORT"] = ReasoningEffort
-            });
+            },
+            prompt);
     }
 
     private static string BuildCodexPrompt(ProjectSnapshot project, string runId, string feedback, SkillActionDefinition? skillAction, ProjectIterationGoalSnapshot? goal, ProjectRunMemorySnapshot? runMemory = null)
@@ -458,6 +472,10 @@ public sealed class PrototypeQuickFixService
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
             - 如果当前目标是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
+            - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复目标。
+            - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前目标的完成内容，除非当前目标标题和验收提示明确要求。
+            - 如果当前目标是玩法/Godot/RPG 目标，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
+            - 对玩法/Godot/RPG 目标，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
             - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前目标的唯一剩余问题。
             - 优先用最小改动完成目标。
             - 如果被阻塞，直接报告阻塞原因，不要改无关基础设施。
@@ -475,6 +493,7 @@ public sealed class PrototypeQuickFixService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
+            - PreviousResultSummary: {BuildCompactGoalSummary(goal.ResultSummary)}
 
             用户触发这次修复时附带的说明：
             {feedback}
@@ -486,6 +505,7 @@ public sealed class PrototypeQuickFixService
 
             成功定义：
             - 只有当当前 step 已可继续，才可视为修复成功。
+            - “已可继续”必须指当前目标的玩法/业务验收通过，不是平台路由或恢复语义通过。
             - 如果仍未可继续，必须明确写出“当前 step 仍需修复”以及唯一剩余阻塞。
             - 不要切换去处理 step {goal.GoalIndex + 1} 或任何后续目标。
 
@@ -498,7 +518,16 @@ public sealed class PrototypeQuickFixService
             """;
     }
 
-    private static string BuildAssistantMessage(string feedback, HostedProcessResult codexResult, string codexOutput, ProjectIterationGoalSnapshot? goal)
+    private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)
+    {
+        return $"""
+            {(goal is null ? "快速修复已完成。" : $"目标 {goal.GoalIndex} 修复已执行。")}
+            完成报告：
+            {publicCodexReport}
+            """;
+    }
+
+    private static string BuildPublicCodexReport(HostedProcessResult codexResult, string codexOutput)
     {
         var result = !string.IsNullOrWhiteSpace(codexOutput)
             ? codexOutput.Trim()
@@ -506,17 +535,10 @@ public sealed class PrototypeQuickFixService
         var publicResult = PublicChatSanitizer.Sanitize(result);
         if (string.IsNullOrWhiteSpace(publicResult))
         {
-            publicResult = "快速修复已执行，但没有可展示的公开摘要。";
+            return "快速修复已执行，但没有可展示的公开摘要。";
         }
 
-        return $"""
-            {(goal is null ? "快速修复已完成。" : $"目标 {goal.GoalIndex} 修复已执行。")}
-            本轮目标：
-            {feedback}
-
-            完成报告：
-            {publicResult}
-            """;
+        return publicResult;
     }
 
     private static string BuildResultLog(
@@ -556,7 +578,7 @@ public sealed class PrototypeQuickFixService
             GoalTitle: {goal.Title}
             GoalDescription: {goal.Description}
             AcceptanceHint: {goal.AcceptanceHint}
-            PreviousResultSummary: {goal.ResultSummary}
+            PreviousResultSummary: {BuildCompactGoalSummary(goal.ResultSummary)}
             """)}
 
             ## Result
@@ -616,9 +638,108 @@ public sealed class PrototypeQuickFixService
         return "";
     }
 
+    private static string BuildCompactGoalSummary(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var lines = value
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(line => !line.StartsWith("Project README:", StringComparison.OrdinalIgnoreCase))
+            .Where(line => !line.StartsWith("Recovery source consumed:", StringComparison.OrdinalIgnoreCase))
+            .Where(line => !line.StartsWith("Direction lock:", StringComparison.OrdinalIgnoreCase))
+            .Where(line => !line.StartsWith("{", StringComparison.Ordinal))
+            .Where(line => !line.StartsWith("\"", StringComparison.Ordinal))
+            .Take(6);
+        var summary = string.Join(" ", lines);
+        return summary.Length <= 1000 ? summary : summary[..1000];
+    }
+
     private static string ToSlash(string path)
     {
         return path.Replace('\\', '/');
+    }
+
+    private async Task<AcceptanceValidationResult> RunGoalAcceptanceValidationAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        CancellationToken cancellationToken)
+    {
+        if (!IsRpgFirstEncounterGoal(project, goal))
+        {
+            return AcceptanceValidationResult.NotRun();
+        }
+
+        var testProject = Path.Combine(project.RepoPath, "Game.Core.Tests", "Game.Core.Tests.csproj");
+        if (!File.Exists(testProject))
+        {
+            return AcceptanceValidationResult.Failed("rpg-step1-core-tests");
+        }
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+        try
+        {
+            var result = await _processRunner.RunAsync(
+                new HostedProcessCommand(
+                    "dotnet",
+                    [
+                        "test",
+                        testProject,
+                        "--filter",
+                        "FullyQualifiedName~DqRpgPrototypeLoopTests"
+                    ],
+                    project.RepoPath,
+                    new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)),
+                linked.Token);
+            return result.ExitCode == 0
+                ? AcceptanceValidationResult.Pass("rpg-step1-core-tests")
+                : AcceptanceValidationResult.Failed("rpg-step1-core-tests");
+        }
+        catch (OperationCanceledException)
+        {
+            return AcceptanceValidationResult.Failed("rpg-step1-core-tests");
+        }
+    }
+
+    private static bool IsRpgFirstEncounterGoal(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        var projectType = string.Join(" ", project.GameTypeSource, project.TemplateRuleId).ToLowerInvariant();
+        if (!projectType.Contains("rpg", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var goalText = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
+        return goal.GoalIndex == 1 &&
+               (goalText.Contains("encounter", StringComparison.Ordinal) ||
+                goalText.Contains("battle", StringComparison.Ordinal) ||
+                goalText.Contains("enemy", StringComparison.Ordinal) ||
+                goalText.Contains("遇敌", StringComparison.Ordinal) ||
+                goalText.Contains("遭遇", StringComparison.Ordinal));
+    }
+
+    private static string AppendAcceptanceValidationSummary(string assistantMessage, ProjectIterationGoalSnapshot goal)
+    {
+        return $"""
+            {assistantMessage.Trim()}
+
+            平台验收：
+            目标 {goal.GoalIndex} 的最小玩法验收已通过。当前目标可以进入下一步。
+            """;
+    }
+
+    private static string AppendAcceptanceValidationEvidence(string codexOutput)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return prefix + """
+            STATUS: completed
+            VERIFY: Platform acceptance validation passed for the current gameplay goal.
+            REMAINING: none
+            """;
     }
 
     private static GoalRepairOutcome DetermineGoalRepairOutcome(
@@ -632,11 +753,6 @@ public sealed class PrototypeQuickFixService
         var structuredStatus = ParseStructuredStatus(codexOutput)
             ?? ParseStructuredStatus(codexResult.Stdout)
             ?? ParseStructuredStatus(codexResult.Stderr);
-        if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
-        {
-            return new GoalRepairOutcome("succeeded", true);
-        }
-
         if (string.Equals(structuredStatus, "needs_fix", StringComparison.OrdinalIgnoreCase))
         {
             return new GoalRepairOutcome("needs_fix", false);
@@ -683,6 +799,12 @@ public sealed class PrototypeQuickFixService
             "安全测试"
         };
         var offTopicMatched = offTopicSignals.Any(normalized.Contains) && !GoalAllowsInfraTerms(goal);
+        if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return offTopicMatched || HasBlockingEvidence(codexOutput.ToLowerInvariant()) || !HasCompletionEvidence(codexOutput)
+                ? new GoalRepairOutcome("needs_fix", false)
+                : new GoalRepairOutcome("succeeded", true);
+        }
 
         if (successSignals.Any(normalized.Contains) && !fixSignals.Any(normalized.Contains) && goalMatched)
         {
@@ -714,6 +836,125 @@ public sealed class PrototypeQuickFixService
         }
 
         return new GoalRepairOutcome("needs_fix", false);
+    }
+
+    public static bool HasGoalRepairCompletionEvidenceForTesting(params string?[] values)
+    {
+        return HasCompletionEvidence(values);
+    }
+
+    public static bool HasGoalRepairBlockingEvidenceForTesting(string normalizedText)
+    {
+        return HasBlockingEvidence(normalizedText.ToLowerInvariant());
+    }
+
+    private static bool HasBlockingEvidence(string normalizedText)
+    {
+        var blockingMarkers = new[]
+        {
+            "还没有做",
+            "没有做",
+            "未做",
+            "未完成",
+            "没有完成",
+            "未验证",
+            "没有验证",
+            "业务验收",
+            "仍需修复",
+            "需要修复",
+            "无法验证",
+            "验证未通过",
+            "验证失败",
+            "测试失败",
+            "not run",
+            "not verified",
+            "not completed",
+            "not complete",
+            "still incomplete",
+            "could not verify",
+            "unable to verify",
+            "verification failed",
+            "validation failed",
+            "test failed",
+            "tests failed",
+            "blocked by",
+            "remaining blocker",
+            "permission denied",
+            "access denied"
+        };
+
+        return blockingMarkers.Any(marker => normalizedText.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static bool HasCompletionEvidence(params string?[] values)
+    {
+        var text = string.Join("\n", values.Where(value => !string.IsNullOrWhiteSpace(value)));
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var normalizedText = text.ToLowerInvariant();
+        if (!normalizedText.Contains("verify:", StringComparison.Ordinal) ||
+            !normalizedText.Contains("remaining: none", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var verify = ExtractStructuredField(text, "VERIFY");
+        if (string.IsNullOrWhiteSpace(verify))
+        {
+            return false;
+        }
+
+        var remaining = ExtractStructuredField(text, "REMAINING");
+        if (!string.Equals(remaining?.Trim(), "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var normalizedVerify = verify.Trim().ToLowerInvariant();
+        var strongVerifyMarkers = new[]
+        {
+            "pass",
+            "passed",
+            "green",
+            "all green",
+            "通过"
+        };
+        var hasStrongEvidence = strongVerifyMarkers.Any(marker => normalizedVerify.Contains(marker, StringComparison.Ordinal));
+        return hasStrongEvidence && !HasBlockingEvidence(normalizedVerify);
+    }
+
+    private static string? ExtractStructuredField(string text, string fieldName)
+    {
+        var lines = text.Split(['\r', '\n'], StringSplitOptions.None);
+        var prefix = fieldName + ":";
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var line = lines[index];
+            if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var parts = new List<string> { line[prefix.Length..].Trim() };
+            for (var next = index + 1; next < lines.Length; next++)
+            {
+                var nextLine = lines[next];
+                if (nextLine.Contains(':', StringComparison.Ordinal) &&
+                    nextLine.Split(':', 2)[0].All(static c => char.IsLetter(c) || c == '_'))
+                {
+                    break;
+                }
+
+                parts.Add(nextLine.Trim());
+            }
+
+            return string.Join(" ", parts.Where(static part => !string.IsNullOrWhiteSpace(part))).Trim();
+        }
+
+        return null;
     }
 
     private static string? ParseStructuredStatus(string? value)
@@ -942,6 +1183,7 @@ public sealed class PrototypeQuickFixService
         "GodotGame.sln",
         "GodotGame.csproj",
         "Directory.Build.props",
+        "Directory.Build.targets",
         "project.godot",
         "export_presets.cfg",
         "packages.lock.json"
@@ -949,4 +1191,23 @@ public sealed class PrototypeQuickFixService
 
     private sealed record GoalRepairOutcome(string GoalStatus, bool MarkCompleted);
     private sealed record ExecutionWorkspace(string RootPath, string CodexOutputPath, bool SyncBack, IReadOnlyList<string> ManagedPaths);
+    private sealed record AcceptanceValidationResult(string Kind, string Status)
+    {
+        public bool Passed => string.Equals(Status, "passed", StringComparison.Ordinal);
+
+        public static AcceptanceValidationResult NotRun()
+        {
+            return new AcceptanceValidationResult("none", "not_run");
+        }
+
+        public static AcceptanceValidationResult Pass(string kind)
+        {
+            return new AcceptanceValidationResult(kind, "passed");
+        }
+
+        public static AcceptanceValidationResult Failed(string kind)
+        {
+            return new AcceptanceValidationResult(kind, "failed");
+        }
+    }
 }

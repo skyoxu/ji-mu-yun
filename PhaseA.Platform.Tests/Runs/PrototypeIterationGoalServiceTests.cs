@@ -4,6 +4,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -48,8 +49,12 @@ public sealed class PrototypeIterationGoalServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修主菜单入口。再修地图移动。最后补提示文案。"));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project!);
+        stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -67,6 +72,9 @@ public sealed class PrototypeIterationGoalServiceTests
         details.Goals[0].Status.Should().Be("succeeded");
         details.Goals[1].Status.Should().Be("pending");
         runner.Commands.Should().ContainSingle();
+        runner.Commands[0].Arguments.Last().Should().Be("-");
+        runner.Commands[0].StandardInput.Should().Contain("prototype-baseline");
+        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
         artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-iteration-goal-input",
             "prototype-iteration-goal-result",
@@ -101,6 +109,34 @@ public sealed class PrototypeIterationGoalServiceTests
     }
 
     [Fact]
+    public async Task ExecuteNextAsync_ShouldRequirePrototypeRouteState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the first playable RPG step."));
+        var runner = new FakeHostedProcessRunner();
+        var stateWriter = new PrototypeRouteStateWriter();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+
+        result.Status.Should().Be("needs_fix");
+        result.SessionStatus.Should().Be("needs_fix");
+        details!.Goals[0].Status.Should().Be("needs_fix");
+        runner.Commands.Should().BeEmpty();
+        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("prototype_required");
+    }
+
+    [Fact]
     public async Task ExecuteNextAsync_MarksGoalNeedsFix_WhenRunnerExitCodeIsNonZero()
     {
         using var database = TempSqliteDatabase.Create();
@@ -115,6 +151,35 @@ public sealed class PrototypeIterationGoalServiceTests
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the current project page hint first."));
         var runner = new ExitCodeFailureHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("needs_fix");
+        result.SessionStatus.Should().Be("needs_fix");
+        details.Should().NotBeNull();
+        details!.Goals[0].Status.Should().Be("needs_fix");
+        details.Session.Status.Should().Be("needs_fix");
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_MarksGoalNeedsFix_WhenCompletedOutputHasBlockedVerification()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the current project page hint first."));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        var runner = new BlockedVerificationHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -155,9 +220,9 @@ public sealed class PrototypeIterationGoalServiceTests
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
 STATUS: completed
-SUMMARY: 已完成当前目标，并让用户更容易理解接下来该做什么。
+SUMMARY: Completed the current goal with verified behavior.
 CHANGED: Updated the current project page entry hint.
-VERIFY: Open the current project page and confirm the hint is visible.
+VERIFY: Unit tests passed and Godot smoke passed.
 REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "iteration goal stdout", ""));
@@ -194,6 +259,23 @@ VERIFY: Retry after the runner problem is cleared.
 REMAINING: The goal is still incomplete.
 """);
             return Task.FromResult(new HostedProcessResult(2, "", "runner failed"));
+        }
+    }
+
+    private sealed class BlockedVerificationHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Implemented the requested goal.
+CHANGED: Updated gameplay behavior.
+VERIFY: Godot verification was blocked by an existing log file permission issue.
+REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "", ""));
         }
     }
 

@@ -1,6 +1,12 @@
 <Project>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**/artifacts/**;**/.verify/**;**/logs/**;**/obj/**;**/bin/**</DefaultItemExcludes>
+    <GeneratedWorkspaceExcludes>artifacts/**;.verify/**;logs/**;obj_verify/**;bin_verify/**;temp-obj/**;.codex-temp/**;.codex-test/**;artifacts\**;.verify\**;logs\**;obj_verify\**;bin_verify\**;temp-obj\**;.codex-temp\**;.codex-test\**;**/artifacts/**;**/.verify/**;**/logs/**;**/obj_verify/**;**/bin_verify/**;**/temp-obj/**;**/.codex-temp/**;**/.codex-test/**;**\artifacts\**;**\.verify\**;**\logs\**;**\obj_verify\**;**\bin_verify\**;**\temp-obj\**;**\.codex-temp\**;**\.codex-test\**</GeneratedWorkspaceExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedWorkspaceExcludes);obj/**;bin/**;obj\**;bin\**;**/obj/**;**/bin/**;**\obj\**;**\bin\**</DefaultItemExcludes>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="$(GeneratedWorkspaceExcludes)" />
+    <EmbeddedResource Remove="$(GeneratedWorkspaceExcludes)" />
+    <None Remove="$(GeneratedWorkspaceExcludes)" />
+  </ItemGroup>
 </Project>

@@ -202,14 +202,14 @@ REMAINING: Run needs-fix for this step.
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            Prompt = command.Arguments.Last();
+            Prompt = command.StandardInput ?? "";
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
 STATUS: completed
 SUMMARY: Current step is ready to continue.
 CHANGED: Repaired the current step.
-VERIFY: Continue with the next step.
+VERIFY: Current step verification passed.
 REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "needs fix completed", ""));

@@ -31,6 +31,7 @@ public sealed class ProjectPackageService
         ".gitattributes",
         ".gitignore",
         "Directory.Build.props",
+        "Directory.Build.targets",
         "export_presets.cfg",
         "GodotGame.csproj",
         "GodotGame.sln",

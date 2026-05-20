@@ -684,6 +684,7 @@ public sealed class BrowserUiRenderer
 
                 function sanitizePublicChatContent(value) {
                   return String(value || "")
+                    .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
                     .replace(/[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
                     .replace(/(?<![\w.])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
                     .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")

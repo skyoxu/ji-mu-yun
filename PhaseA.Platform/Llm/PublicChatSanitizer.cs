@@ -11,6 +11,7 @@ public static class PublicChatSanitizer
     private static readonly Regex CommandLineRegex = new(@"(?im)^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w./\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*", RegexOptions.Compiled);
     private static readonly Regex InlineCommandRegex = new(@"\b(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w./\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^，。；\r\n]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex InternalMarkerRegex = new(@"\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex InternalRouteBlockRegex = new(@"(?is)(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:).*$", RegexOptions.Compiled);
 
     public static string Sanitize(string? value)
     {
@@ -20,6 +21,7 @@ public static class PublicChatSanitizer
         }
 
         var sanitized = WindowsPathRegex.Replace(value, RedactedText);
+        sanitized = InternalRouteBlockRegex.Replace(sanitized, RedactedText);
         sanitized = UnixPathRegex.Replace(sanitized, RedactedText);
         sanitized = CommandLineRegex.Replace(sanitized, RedactedText);
         sanitized = InlineCommandRegex.Replace(sanitized, RedactedText);
@@ -34,7 +36,7 @@ public static class PublicChatSanitizer
         sanitized = Regex.Replace(sanitized, @"\s+([，。；：、,.!?！？])", "$1");
         sanitized = Regex.Replace(sanitized, @"([（(【\[])\s+", "$1");
         sanitized = Regex.Replace(sanitized, @"\s+([）)】\]])", "$1");
-        sanitized = Regex.Replace(sanitized, @"(?:请查看|然后运行|运行|执行)\s*(?=[，。；,.!?！？]|$)", "");
+        sanitized = Regex.Replace(sanitized, @"(?:请查看|然后运行|运行)\s*(?=[，。；,.!?！？]|$)", "");
         sanitized = Regex.Replace(sanitized, @"[，、]\s*[，、]+", "，");
         sanitized = Regex.Replace(sanitized, @"\n{3,}", "\n\n");
         return sanitized;

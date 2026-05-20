@@ -13,6 +13,36 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class PrototypeQuickFixServiceTests
 {
     [Fact]
+    public void GoalRepairCompletionEvidence_ShouldAcceptStrongStructuredVerification()
+    {
+        var output = """
+STATUS: completed
+SUMMARY: Current step is repaired through structured status.
+CHANGED: Step repair completed.
+VERIFY: Godot gameplay verification passed for map movement and first encounter trigger.
+REMAINING: none
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalRepairCompletionEvidence_ShouldRejectMissingGameplayVerification()
+    {
+        var output = """
+STATUS: completed
+SUMMARY: Platform route tests passed, but gameplay acceptance is not verified.
+CHANGED: Route recovery behavior was adjusted.
+VERIFY: Platform tests passed.
+REMAINING: none
+
+还没有做的是 Godot 侧对地图移动稳定、明确进入第一次遇敌的业务验收。
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task SubmitAsync_CreatesQuickFixRun_AndArtifacts()
     {
         using var database = TempSqliteDatabase.Create();
@@ -191,6 +221,39 @@ public sealed class PrototypeQuickFixServiceTests
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRejectCompletedStatus_WhenGameplayVerificationIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "目标 1 需要修复。");
+        var runner = new StructuredCompletedButMissingGameplayVerificationHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+            "修复当前目标",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, details.Goals[0].GoalId, 1, details.Goals[0].Title, details.Goals[0].Description, details.Goals[0].AcceptanceHint, details.Goals[0].ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.IterationSessionStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        refreshed.Session.Status.Should().Be("needs_fix");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldPersistNeedsFixSummary_WhenRepairTimesOut()
     {
         using var database = TempSqliteDatabase.Create();
@@ -323,8 +386,27 @@ ready to continue
 STATUS: completed
 SUMMARY: Current step is repaired through structured status.
 CHANGED: Step repair completed.
-VERIFY: Route can continue.
+VERIFY: Godot gameplay verification passed for map movement and first encounter trigger.
 REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class StructuredCompletedButMissingGameplayVerificationHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Platform route tests passed, but gameplay acceptance is not verified.
+CHANGED: Route recovery behavior was adjusted.
+VERIFY: Platform tests passed.
+REMAINING: none
+
+还没有做的是 Godot 侧对地图移动稳定、明确进入第一次遇敌的业务验收。
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }
