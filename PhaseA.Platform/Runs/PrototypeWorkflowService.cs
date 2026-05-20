@@ -118,7 +118,7 @@ public sealed class PrototypeWorkflowService
             : PrototypeCompletionValidation.Failure("prototype_workflow_failed");
         var smoke = process.ExitCode == 0 && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
             ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, cancellationToken)
-            : GodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_workflow_failed" : "prototype_completion_validation_failed");
+            : PrototypeGodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_workflow_failed" : "prototype_completion_validation_failed");
         var status = process.ExitCode == 0 && smoke.ExitCode == 0 && validation.Succeeded ? "succeeded" : "failed";
         var exitCode = ResolveRunExitCode(process.ExitCode, smoke.ExitCode, validation.Succeeded);
         var stdout = CombineProcessText(process.Stdout, smoke.Stdout);
@@ -345,7 +345,7 @@ public sealed class PrototypeWorkflowService
             : PrototypeCompletionValidation.Failure("prototype_workflow_failed");
         var smoke = process.ExitCode == 0 && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
             ? await RunPostPrototypeGodotSmokeAsync(projectRepoPath, validation.SmokeScene, CancellationToken.None)
-            : GodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_workflow_failed" : "prototype_completion_validation_failed");
+            : PrototypeGodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_workflow_failed" : "prototype_completion_validation_failed");
         var status = process.ExitCode == 0 && smoke.ExitCode == 0 && validation.Succeeded ? "succeeded" : "failed";
         var exitCode = ResolveRunExitCode(process.ExitCode, smoke.ExitCode, validation.Succeeded);
         var stdout = CombineProcessText(process.Stdout, smoke.Stdout);
@@ -422,7 +422,7 @@ public sealed class PrototypeWorkflowService
             : PrototypeCompletionValidation.Failure("prototype_repair_failed");
         var smoke = process.ExitCode == 0 && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
             ? await RunPostPrototypeGodotSmokeAsync(projectRepoPath, validation.SmokeScene, CancellationToken.None)
-            : GodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_repair_failed" : "prototype_completion_validation_failed");
+            : PrototypeGodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_repair_failed" : "prototype_completion_validation_failed");
         var status = process.ExitCode == 0 && smoke.ExitCode == 0 && validation.Succeeded ? "succeeded" : "failed";
         var exitCode = ResolveRunExitCode(process.ExitCode, smoke.ExitCode, validation.Succeeded);
         var stdout = CombineProcessText(process.Stdout, smoke.Stdout);
@@ -468,82 +468,9 @@ public sealed class PrototypeWorkflowService
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
     }
 
-    private async Task<GodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
+    private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_options.GodotBin))
-        {
-            return GodotSmokeResult.NotRun("godot_bin_not_configured", scenePath);
-        }
-
-        var command = new HostedProcessCommand(
-            _options.PythonCommand,
-            [
-                "-3",
-                "scripts/python/smoke_headless.py",
-                "--godot-bin",
-                _options.GodotBin,
-                "--project-path",
-                projectRepoPath,
-                "--scene",
-                scenePath,
-                "--timeout-sec",
-                "10",
-                "--strict"
-            ],
-            projectRepoPath,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["GODOT_BIN"] = _options.GodotBin
-            });
-
-        var result = await _processRunner.RunAsync(command, cancellationToken);
-        var sceneSmokeExitCode = ResolvePrototypeSmokeExitCode(result);
-        if (sceneSmokeExitCode != 0)
-        {
-            return new GodotSmokeResult(true, sceneSmokeExitCode, result.Stdout, result.Stderr, "strict_headless_prototype_scene", scenePath);
-        }
-
-        var navigationCommand = new HostedProcessCommand(
-            _options.PythonCommand,
-            [
-                "-3",
-                "scripts/python/prototype_main_menu_navigation_smoke.py",
-                "--godot-bin",
-                _options.GodotBin,
-                "--project-path",
-                projectRepoPath,
-                "--expected-scene",
-                scenePath,
-                "--timeout-sec",
-                "15"
-            ],
-            projectRepoPath,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["GODOT_BIN"] = _options.GodotBin
-            });
-        var navigationResult = await _processRunner.RunAsync(navigationCommand, cancellationToken);
-        var navigationExitCode = navigationResult.ExitCode;
-        var stdout = CombineProcessText(result.Stdout, navigationResult.Stdout);
-        var stderr = CombineProcessText(result.Stderr, navigationResult.Stderr);
-        return new GodotSmokeResult(
-            true,
-            navigationExitCode,
-            stdout,
-            stderr,
-            navigationExitCode == 0 ? "strict_headless_main_menu_navigation" : "prototype_main_menu_navigation_failed",
-            scenePath);
-    }
-
-    private static int ResolvePrototypeSmokeExitCode(HostedProcessResult result)
-    {
-        if (result.ExitCode == 0)
-        {
-            return 0;
-        }
-
-        var combined = $"{result.Stdout}\n{result.Stderr}";
-        return combined.Contains("SMOKE PASS", StringComparison.OrdinalIgnoreCase) ? 0 : result.ExitCode;
+        return await PrototypeGodotSmokeService.RunAsync(_options, _processRunner, projectRepoPath, scenePath, cancellationToken);
     }
 
     private static string CombineProcessText(string primary, string secondary)
@@ -1489,11 +1416,12 @@ public sealed class PrototypeWorkflowService
         string prototypeRecordPath,
         string slug,
         PrototypeCompletionValidation validation,
-        GodotSmokeResult smoke)
+        PrototypeGodotSmokeResult smoke)
     {
         _routeStateWriter.WritePrototypeState(project, new
         {
             route = RunType,
+            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
             run_id = runId,
             status,
             exit_code = exitCode,
@@ -1607,31 +1535,6 @@ public sealed class PrototypeWorkflowService
         ("running_step06_packaging", "", "Step 06：正在整理产物与报告。"),
         ("running_step07_review", "", "Step 07：正在生成最终摘要。")
     ];
-
-    private sealed record GodotSmokeResult(
-        bool Ran,
-        int ExitCode,
-        string Stdout,
-        string Stderr,
-        string Reason,
-        string? ScenePath)
-    {
-        public static GodotSmokeResult NotRun(string reason, string? scenePath = null)
-        {
-            return new GodotSmokeResult(false, 0, "", "", reason, scenePath);
-        }
-
-        public object ToEvidence()
-        {
-            return new
-            {
-                ran = Ran,
-                exit_code = ExitCode,
-                reason = Reason,
-                scene = ScenePath
-            };
-        }
-    }
 
     private sealed record PrototypeCompletionValidation(
         bool Succeeded,

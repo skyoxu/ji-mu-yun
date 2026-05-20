@@ -130,6 +130,7 @@ public sealed class PrototypeQuickFixService
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var now = DateTimeOffset.UtcNow.ToString("O");
             var skillAction = ResolveSkillAction(request.SkillActionId);
+            var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
             var executionWorkspace = PrepareExecutionWorkspace(project, targetGoal, runId, codexOutputAbsolutePath);
 
             await File.WriteAllTextAsync(
@@ -163,17 +164,31 @@ public sealed class PrototypeQuickFixService
             var acceptanceValidation = targetGoal is null
                 ? PrototypeGoalAcceptanceValidationResult.NotRun()
                 : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
+            var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
             if (acceptanceValidation.Passed)
             {
                 assistantMessage = AppendAcceptanceValidationSummary(assistantMessage, targetGoal!);
                 codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
+                var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
+                godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal!, prototypeState, _options, _processRunner, CancellationToken.None);
+                if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
+                {
+                    assistantMessage = AppendGodotSmokeValidationSummary(assistantMessage, targetGoal!, godotSmokeValidation);
+                    codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
+                }
+                else if (godotSmokeValidation.Required)
+                {
+                    assistantMessage = AppendGodotSmokeValidationFailure(assistantMessage, godotSmokeValidation);
+                }
             }
             await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "目标修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
 
             var goalRepairOutcome = targetGoal is null
                 ? null
                 : acceptanceValidation.Passed
-                    ? new GoalRepairOutcome("succeeded", true)
+                    ? godotSmokeValidation.Passed
+                        ? new GoalRepairOutcome("succeeded", true)
+                        : new GoalRepairOutcome("needs_fix", false)
                     : DetermineGoalRepairOutcome(targetGoal, assistantMessage, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(
@@ -208,6 +223,7 @@ public sealed class PrototypeQuickFixService
                 submitted_feedback = submittedRelativePath,
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
+                route_skill = routeSkill,
                 skill_action_id = skillAction?.ActionId,
                 skill_name = skillAction?.SkillName,
                 quick_fix = true,
@@ -216,7 +232,8 @@ public sealed class PrototypeQuickFixService
                 goal_index = targetGoal?.GoalIndex,
                 goal_repair_status = goalRepairOutcome?.GoalStatus,
                 acceptance_validation = acceptanceValidation.Kind,
-                acceptance_validation_status = acceptanceValidation.Status
+                acceptance_validation_status = acceptanceValidation.Status,
+                godot_smoke_validation = godotSmokeValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null && goalRepairOutcome is not null)
@@ -420,6 +437,7 @@ public sealed class PrototypeQuickFixService
 
         return $"""
             你正在执行积木云 Phase A 的快速修复任务。
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             {skillInstruction}
 
             硬约束：
@@ -466,6 +484,7 @@ public sealed class PrototypeQuickFixService
         return $"""
             你正在执行积木云 Phase A 的单目标迭代修复任务。
 
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             Mandatory rules:
             - 这次只处理当前目标，不要顺手扩展到后续目标。
             - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
@@ -738,6 +757,43 @@ public sealed class PrototypeQuickFixService
         return prefix + """
             STATUS: completed
             VERIFY: Platform acceptance validation passed for the current gameplay goal.
+            REMAINING: none
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationSummary(
+        string assistantMessage,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalGodotSmokeValidationResult validation)
+    {
+        return $"""
+            {assistantMessage.Trim()}
+
+            Platform engine validation:
+            Goal {goal.GoalIndex} passed Godot smoke validation.
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationFailure(
+        string assistantMessage,
+        PrototypeGoalGodotSmokeValidationResult validation)
+    {
+        return $"""
+            {assistantMessage.Trim()}
+
+            Platform engine validation:
+            STATUS: needs_fix
+            VERIFY: Godot smoke validation did not pass.
+            REMAINING: Run and pass Godot smoke validation for the current gameplay goal.
+            REASON: {validation.Smoke.Reason}
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationEvidence(string codexOutput)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return prefix + """
+            VERIFY: Godot smoke validation passed for the current gameplay goal.
             REMAINING: none
             """;
     }

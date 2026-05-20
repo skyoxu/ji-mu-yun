@@ -157,6 +157,57 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFive()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need engine verification for reward loop.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldHonorStructuredCompletedStatus()
     {
         using var database = TempSqliteDatabase.Create();
@@ -336,14 +387,75 @@ REMAINING: none
         return result.ProjectId!;
     }
 
-    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? godotBin = null)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var values = new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repoRoot
-        });
+        };
+
+        if (!string.IsNullOrWhiteSpace(godotBin))
+        {
+            values["GODOT_BIN"] = godotBin;
+        }
+
+        return PhaseAPlatformOptionsLoader.FromDictionary(values);
+    }
+
+    private static void EnsureRpgAcceptanceMarkers(string repoPath)
+    {
+        var testProjectRoot = Path.Combine(repoPath, "Game.Core.Tests");
+        Directory.CreateDirectory(testProjectRoot);
+        File.WriteAllText(Path.Combine(testProjectRoot, "Game.Core.Tests.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+</Project>
+""");
+
+        var testsPath = Path.Combine(repoPath, "Game.Core.Tests", "Prototypes");
+        Directory.CreateDirectory(testsPath);
+        File.WriteAllText(Path.Combine(testsPath, "DqRpgPrototypeLoopTests.cs"), """
+public sealed class DqRpgPrototypeLoopTests
+{
+    public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
+    public void ResolveAttackTurn() { }
+    public void BattlesWon() { }
+    public void Victory() { }
+    public void ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward() { }
+    // RewardOptions.Count
+    public void ApplyReward() { }
+    // Reward chosen
+}
+""");
+
+        var corePath = Path.Combine(repoPath, "Game.Core", "Prototypes");
+        Directory.CreateDirectory(corePath);
+        File.WriteAllText(Path.Combine(corePath, "DqRpgPrototypeLoop.cs"), """
+public sealed class DqRpgPrototypeLoop
+{
+    public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
+    public void ResolveAttackTurn() { }
+    public void BattlesWon() { }
+    public void Victory() { }
+    public void ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward() { }
+    // RewardOptions.Count
+    public void ApplyReward() { }
+    // Battle reward selected
+    // Return to the map
+}
+""");
+    }
+
+    private static void EnsureRpgSmokeSceneFile(string repoPath)
+    {
+        var scenePath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg");
+        Directory.CreateDirectory(scenePath);
+        File.WriteAllText(Path.Combine(scenePath, "DqRpgPrototype.tscn"), """
+[gd_scene format=3]
+
+[node name="DqRpgPrototype" type="Node"]
+""");
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
@@ -371,6 +483,41 @@ REMAINING: none
 玩家现在可以稳定移动，并且能够明确触发第一次遇敌。
 地图中的第一次遇敌入口已经接通，本 step 现在已可继续。
 ready to continue
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class GoalRepairStep5HostedProcessRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Goal 5 is repaired.
+CHANGED: Updated the reward loop.
+VERIFY: Platform acceptance validation passed for the current gameplay goal.
+REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }

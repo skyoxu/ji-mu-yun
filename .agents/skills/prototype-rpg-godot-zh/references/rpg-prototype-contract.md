@@ -35,6 +35,21 @@ This contract defines the default implementation expectations for a short playab
 - Reward application to attributes, equipment, or passive skills according to the prototype record.
 - Return to the correct scene after resolution.
 
+
+### Core Resource Routes
+
+Keep the smallest possible set of explicit core resource paths for RPG prototypes:
+
+- Map assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Map/`
+- Player assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Player/`
+- Enemy assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Enemy/`
+
+Scene ownership must remain separate:
+
+- `MapScene` consumes map assets and player assets.
+- `BattleScene` consumes player assets, enemy assets, and battle UI assets.
+- The main prototype scene owns routing, not combat rules.
+
 ### Assets And UI
 
 - Support repo-local generated or hand-authored assets.

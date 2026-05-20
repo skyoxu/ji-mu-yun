@@ -60,7 +60,7 @@ public sealed class PrototypeNeedsFixRouteService
             return new PrototypeNeedsFixRouteResult("", "prototype_required", "Please run prototype creation before needs fix.", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
-        var feedback = BuildFeedback(request.Feedback, readme, stepState, executeNextGoalState, prototypeState, goal);
+        var feedback = BuildFeedback(project, request.Feedback, readme, stepState, executeNextGoalState, prototypeState, goal);
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.ProjectId,
             new PrototypeFeedbackRequest(
@@ -81,6 +81,7 @@ public sealed class PrototypeNeedsFixRouteService
         _stateWriter.WriteNeedsFixState(project, goal.GoalIndex, new
         {
             route = "needs-fix",
+            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
             project_id = project.ProjectId,
             session_id = details.Session.SessionId,
             goal_id = goal.GoalId,
@@ -121,6 +122,7 @@ public sealed class PrototypeNeedsFixRouteService
     }
 
     private static string BuildFeedback(
+        ProjectSnapshot project,
         string? userFeedback,
         string projectReadme,
         string stepState,
@@ -166,6 +168,8 @@ public sealed class PrototypeNeedsFixRouteService
 
             Scope rule:
             Only repair this current step. Do not read or use needs fix state from another step.
+
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             """;
     }
 

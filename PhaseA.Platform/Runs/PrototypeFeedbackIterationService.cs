@@ -102,6 +102,7 @@ public sealed class PrototypeFeedbackIterationService
             var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var now = DateTimeOffset.UtcNow.ToString("O");
             var skillAction = ResolveSkillAction(request.SkillActionId);
+            var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
 
             await File.WriteAllTextAsync(
                 submittedAbsolutePath,
@@ -153,7 +154,8 @@ public sealed class PrototypeFeedbackIterationService
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
                 skill_action_id = skillAction?.ActionId,
-                skill_name = skillAction?.SkillName
+                skill_name = skillAction?.SkillName,
+                route_skill = routeSkill
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await SetProgressAsync(runId, "completed", "", "正式反馈处理已完成。", CancellationToken.None);
@@ -349,6 +351,7 @@ public sealed class PrototypeFeedbackIterationService
 
         return $"""
             你正在执行积木云 Phase A 的正式原型反馈迭代。
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             {skillInstruction}
 
             目标：

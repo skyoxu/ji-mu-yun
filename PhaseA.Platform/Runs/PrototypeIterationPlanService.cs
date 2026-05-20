@@ -75,8 +75,9 @@ public sealed class PrototypeIterationPlanService
                 "当前这条建议更像内部执行或环境修复信息，不适合直接拆成迭代目标。请先处理需修复项，或重新生成更明确的产品向优化建议。",
                 []);
         }
+        var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
         var goals = BuildGoals(message, sourceKind);
-        if (IsRpgProject(project))
+        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
         {
             goals = BuildRpgContractGoals(message, goals);
         }
@@ -99,6 +100,7 @@ public sealed class PrototypeIterationPlanService
         _routeStateWriter.WriteIterationPlanState(project, new
         {
             route = "iteration-plan",
+            route_skill = routeSkill,
             session_id = created.SessionId,
             status = "ready",
             source_kind = sourceKind,
@@ -199,7 +201,7 @@ public sealed class PrototypeIterationPlanService
                 null));
         }
 
-        var isRpgProject = IsRpgProject(project);
+        var isRpgProject = PrototypeRouteSkillPolicy.IsRpgProject(project);
         var rpgPlanIssue = isRpgProject ? FindRpgPlanContractIssue(goals) : null;
         if (rpgPlanIssue is not null)
         {

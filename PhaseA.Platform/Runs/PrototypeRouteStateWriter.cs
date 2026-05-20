@@ -150,6 +150,11 @@ public sealed class PrototypeRouteStateWriter
 
             ## Recovery Rules
 
+            - Default route skill context:
+              - RPG projects use `prototype-rpg-godot-zh`.
+              - Non-RPG prototype projects use `prototype-7day-playable-godot-zh`.
+              - The same route skill context is inherited by prototype, iteration plan, execute-next-goal, and needs-fix.
+
             - Start from this README to identify the project and game type.
             - Execute next goal must read this README, prototype route state, and iteration plan route state before running a step.
             - For needs fix, read only the current step state under meta/routes/needs-fix/step-XX.

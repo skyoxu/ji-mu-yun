@@ -80,6 +80,9 @@ internal static class PrototypeGoalAcceptanceValidator
             4 => new AcceptanceContract(
                 "rpg-step4-win-loss-goal-visibility",
                 ["VictoryBattleCount", "IsVictory", "IsGameOver", "Defeat"]),
+            5 => new AcceptanceContract(
+                "rpg-step5-reward-loop-return-map",
+                ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"]),
             _ => null
         };
     }

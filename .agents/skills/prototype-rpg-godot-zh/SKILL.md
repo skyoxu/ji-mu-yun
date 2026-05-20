@@ -54,6 +54,17 @@ Use the bundled RPG prototype asset pack as the default visual seed when the use
 
 These files are template assets for RPG prototype work. Keep all references repo-relative, and copy or adapt them into a new prototype slug when the user wants a separate playable slice.
 
+
+## Core RPG Resource Routes
+
+For RPG prototypes, the smallest strong-coupling resources are:
+
+- Map assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Map/`
+- Player assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Player/`
+- Enemy assets: `Game.Godot/Prototypes/DefaultRpgTemplate/Assets/Enemy/`
+
+Treat these as repo-relative defaults. When a project slug is created, copy or adapt them into that slug instead of hardcoding absolute paths.
+
 ## Expected RPG Scope
 
 - Map scene:

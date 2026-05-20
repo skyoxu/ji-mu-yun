@@ -158,14 +158,27 @@ public sealed class PrototypeIterationGoalService
                 : "";
             var publicSummary = BuildAssistantMessage(nextGoal, codexResult, codexOutput);
             var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, nextGoal, _processRunner, CancellationToken.None);
+            var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
             if (acceptanceValidation.Passed)
             {
                 publicSummary = AppendAcceptanceValidationSummary(publicSummary, nextGoal);
                 codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
+                godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, nextGoal, prototypeState, _options, _processRunner, CancellationToken.None);
+                if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
+                {
+                    publicSummary = AppendGodotSmokeValidationSummary(publicSummary, nextGoal, godotSmokeValidation);
+                    codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
+                }
+                else if (godotSmokeValidation.Required)
+                {
+                    publicSummary = AppendGodotSmokeValidationFailure(publicSummary, godotSmokeValidation);
+                }
             }
 
             var goalOutcome = acceptanceValidation.Passed
-                ? new IterationGoalOutcome("succeeded", "completed", true)
+                ? godotSmokeValidation.Passed
+                    ? new IterationGoalOutcome("succeeded", "completed", true)
+                    : new IterationGoalOutcome("needs_fix", "needs_fix", false)
                 : DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(resultAbsolutePath, BuildResultLog(details.Session, nextGoal, runId, model, publicSummary, codexResult, codexOutput, now), Encoding.UTF8, CancellationToken.None);
@@ -185,7 +198,8 @@ public sealed class PrototypeIterationGoalService
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
                 acceptance_validation = acceptanceValidation.Kind,
-                acceptance_validation_status = acceptanceValidation.Status
+                acceptance_validation_status = acceptanceValidation.Status,
+                godot_smoke_validation = godotSmokeValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, goalOutcome.GoalStatus, publicSummary, goalOutcome.MarkCompleted ? now : null, CancellationToken.None);
@@ -211,6 +225,7 @@ public sealed class PrototypeIterationGoalService
             _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
             {
                 route = "execute-next-goal",
+                route_skill = PrototypeRouteSkillPolicy.Resolve(project),
                 project_id = project.ProjectId,
                 session_id = details.Session.SessionId,
                 goal_id = nextGoal.GoalId,
@@ -220,6 +235,7 @@ public sealed class PrototypeIterationGoalService
                 iteration_session_status = sessionStatus,
                 iteration_goal_status = goalOutcome.GoalStatus,
                 summary = publicSummary,
+                godot_smoke_validation = godotSmokeValidation.ToEvidence(),
                 consumed = new
                 {
                     project_readme = !string.IsNullOrWhiteSpace(projectReadme),
@@ -321,6 +337,7 @@ public sealed class PrototypeIterationGoalService
     {
         return $"""
             You are running the Phase A execute-next-goal top-level route.
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
 
             Mandatory rules:
             - Execute only the current goal. Do not expand into later goals.
@@ -624,6 +641,43 @@ public sealed class PrototypeIterationGoalService
         return prefix + """
             STATUS: completed
             VERIFY: Platform acceptance validation passed for the current gameplay goal.
+            REMAINING: none
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationSummary(
+        string publicSummary,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalGodotSmokeValidationResult validation)
+    {
+        return $"""
+            {publicSummary.Trim()}
+
+            Platform engine validation:
+            Goal {goal.GoalIndex} passed Godot smoke validation.
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationFailure(
+        string publicSummary,
+        PrototypeGoalGodotSmokeValidationResult validation)
+    {
+        return $"""
+            {publicSummary.Trim()}
+
+            Platform engine validation:
+            STATUS: needs_fix
+            VERIFY: Godot smoke validation did not pass.
+            REMAINING: Run and pass Godot smoke validation for the current gameplay goal.
+            REASON: {validation.Smoke.Reason}
+            """;
+    }
+
+    private static string AppendGodotSmokeValidationEvidence(string codexOutput)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return prefix + """
+            VERIFY: Godot smoke validation passed for the current gameplay goal.
             REMAINING: none
             """;
     }
