@@ -203,6 +203,7 @@ REMAINING: none
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
+        runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
     }
@@ -412,12 +413,17 @@ REMAINING: none
 <Project Sdk="Microsoft.NET.Sdk">
 </Project>
 """);
+        File.WriteAllText(Path.Combine(repoPath, "GodotGame.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+</Project>
+""");
 
         var testsPath = Path.Combine(repoPath, "Game.Core.Tests", "Prototypes");
         Directory.CreateDirectory(testsPath);
         File.WriteAllText(Path.Combine(testsPath, "DqRpgPrototypeLoopTests.cs"), """
 public sealed class DqRpgPrototypeLoopTests
 {
+    public void MoveOnMap() { }
     public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
     public void ResolveAttackTurn() { }
     public void BattlesWon() { }
@@ -425,7 +431,11 @@ public sealed class DqRpgPrototypeLoopTests
     public void ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward() { }
     // RewardOptions.Count
     public void ApplyReward() { }
-    // Reward chosen
+    // Battle reward selected
+    // Return to the map
+    // VictoryBattleCount
+    // IsVictory
+    // IsGameOver
 }
 """);
 
@@ -434,6 +444,7 @@ public sealed class DqRpgPrototypeLoopTests
         File.WriteAllText(Path.Combine(corePath, "DqRpgPrototypeLoop.cs"), """
 public sealed class DqRpgPrototypeLoop
 {
+    public void MoveOnMap() { }
     public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
     public void ResolveAttackTurn() { }
     public void BattlesWon() { }
@@ -452,10 +463,87 @@ public sealed class DqRpgPrototypeLoop
         var scenePath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg");
         Directory.CreateDirectory(scenePath);
         File.WriteAllText(Path.Combine(scenePath, "DqRpgPrototype.tscn"), """
-[gd_scene format=3]
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
 
 [node name="DqRpgPrototype" type="Node"]
+[node name="StartButton" type="Button" parent="."]
+text = "Start Adventure"
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="UI" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+[node name="MapScene" parent="CanvasLayer/UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+[node name="RpgMapAsset" type="TextureRect" parent="MapScene"]
+texture = ExtResource("1")
+[node name="RpgPlayerAsset" type="TextureRect" parent="MapScene"]
+texture = ExtResource("2")
+[node name="RpgEnemyAsset" type="TextureRect" parent="MapScene"]
+texture = ExtResource("3")
 """);
+        File.WriteAllText(Path.Combine(scenePath, "MapScene.tscn"), """
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
+
+[node name="MapScene" type="Node"]
+[node name="Grid" type="Node" parent="."]
+[node name="Player" type="Node" parent="."]
+[node name="Enemy" type="Node" parent="."]
+[node name="RpgMapAsset" type="TextureRect" parent="."]
+texture = ExtResource("1")
+[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+texture = ExtResource("2")
+[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+texture = ExtResource("3")
+""");
+        File.WriteAllText(Path.Combine(scenePath, "BattleScene.tscn"), """
+[gd_scene format=3]
+
+[node name="BattleScene" type="Node"]
+[node name="AttackButton" type="Button" parent="."]
+text = "Attack"
+""");
+        var scriptPath = Path.Combine(scenePath, "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), "public sealed class DqRpgPrototype { void Ready() { _mapScene = GetNode<MapScene>(\"CanvasLayer/UI/MapScene\"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; } void ShowMapScene() {} }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), "public sealed class MapScene { public event System.Action? EncounterEntered; void MovePlayer() {} }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "BattleScene.cs"), "public sealed class BattleScene { public event System.Action? BattleFinished; void ResolveBattle() {} }\n");
+        var catalogPath = Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes");
+        Directory.CreateDirectory(catalogPath);
+        File.WriteAllText(Path.Combine(catalogPath, "PrototypeCatalog.cs"), """
+public static class PrototypeCatalog
+{
+    public const string DqRpgPrototypeScenePath = "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn";
+}
+""");
+        var mainScenePath = Path.Combine(repoPath, "Game.Godot", "Scenes");
+        Directory.CreateDirectory(mainScenePath);
+        File.WriteAllText(Path.Combine(mainScenePath, "Main.tscn"), "[gd_scene format=3]\n");
+        var dqAssetPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Assets");
+        Directory.CreateDirectory(dqAssetPath);
+        foreach (var assetFile in new[] { "map_floor_tile.png", "player_hero.png", "enemy_slime.png" })
+        {
+            File.WriteAllText(Path.Combine(dqAssetPath, assetFile), "asset");
+        }
+
+        foreach (var (assetDir, assetFile) in new[] { ("Map", "map_tile.png"), ("Player", "player_hero.png"), ("Enemy", "enemy_slime.png") })
+        {
+            var path = Path.Combine(repoPath, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "Assets", assetDir);
+            Directory.CreateDirectory(path);
+            File.WriteAllText(Path.Combine(path, assetFile), "asset");
+        }
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
@@ -497,7 +585,7 @@ ready to continue
             Commands.Add(command);
             if (command.FileName == "dotnet")
             {
-                return Task.FromResult(new HostedProcessResult(0, "dotnet test ok", ""));
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
             if (command.Arguments.Contains("scripts/python/smoke_headless.py"))

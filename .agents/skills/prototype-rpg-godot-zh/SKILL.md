@@ -55,6 +55,19 @@ Use the bundled RPG prototype asset pack as the default visual seed when the use
 These files are template assets for RPG prototype work. Keep all references repo-relative, and copy or adapt them into a new prototype slug when the user wants a separate playable slice.
 
 
+
+## Runtime Asset And UI Layout Rules
+
+- Do not leave or create `Game.Godot/.gdignore` in an active RPG prototype project; it prevents Godot from importing and loading `res://Game.Godot/**` runtime assets.
+- Copy or adapt the minimum required RPG visual assets into the current prototype slug, for example `Game.Godot/Prototypes/dq-rpg/Assets/`, before referencing them from scenes.
+- After adding or copying PNG assets, run Godot import for the active project before smoke validation so `.import` metadata exists.
+- The three required runtime asset instances must use exact node names:
+  - `RpgMapAsset` for the map/background asset.
+  - `RpgPlayerAsset` for the player/hero asset.
+  - `RpgEnemyAsset` for the enemy/monster asset.
+- `Start Adventure` must reveal a non-empty map scene. Put the instantiated `MapScene` and `BattleScene` under `CanvasLayer/UI`, not directly under a `Node2D` root, and anchor the map scene to the full viewport.
+- The main RPG prototype script must resolve the map scene through `CanvasLayer/UI/MapScene` and make it visible when `StartButton.Pressed` fires.
+
 ## Core RPG Resource Routes
 
 For RPG prototypes, the smallest strong-coupling resources are:

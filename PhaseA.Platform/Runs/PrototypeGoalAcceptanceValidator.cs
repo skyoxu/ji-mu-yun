@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
@@ -28,6 +29,26 @@ internal static class PrototypeGoalAcceptanceValidator
 
         var testsPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
         var corePath = Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
+        if (contract.AssetUsageAcceptance && !HasRpgSceneAssetUsage(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+        }
+
+        if (contract.MapEntryAcceptance && !HasRpgMapEntryAcceptanceFiles(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+        }
+
+        if (contract.BattleSceneAcceptance && !HasRpgBattleSceneAcceptanceFiles(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+        }
+
+        if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+        }
+
         if (!HasRequiredMarkers(testsPath, corePath, contract.RequiredMarkers))
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
@@ -49,9 +70,36 @@ internal static class PrototypeGoalAcceptanceValidator
                     project.RepoPath,
                     new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)),
                 linked.Token);
-            return result.ExitCode == 0
-                ? PrototypeGoalAcceptanceValidationResult.Pass(contract.Kind)
-                : PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            if (result.ExitCode != 0)
+            {
+                return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            }
+
+            var godotProject = Path.Combine(project.RepoPath, "GodotGame.csproj");
+            if (File.Exists(godotProject))
+            {
+                var buildResult = await processRunner.RunAsync(
+                    new HostedProcessCommand(
+                        "dotnet",
+                        [
+                            "build",
+                            godotProject,
+                            "-c",
+                            "Debug",
+                            "-v",
+                            "minimal",
+                            "--no-restore"
+                        ],
+                        project.RepoPath,
+                        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)),
+                    linked.Token);
+                if (buildResult.ExitCode != 0)
+                {
+                    return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+                }
+            }
+
+            return PrototypeGoalAcceptanceValidationResult.Pass(contract.Kind);
         }
         catch (OperationCanceledException)
         {
@@ -69,20 +117,32 @@ internal static class PrototypeGoalAcceptanceValidator
         return goal.GoalIndex switch
         {
             1 => new AcceptanceContract(
-                "rpg-step1-map-movement-first-encounter",
-                ["MoveOnMap", "ResolveAttackTurn", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"]),
+                "rpg-step1-basic-assets-ui-validation",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count"],
+                AssetUsageAcceptance: true),
             2 => new AcceptanceContract(
-                "rpg-step2-single-battle-settlement",
-                ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"]),
+                "rpg-step2-start-adventure-visible-mapscene",
+                ["MoveOnMap", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"],
+                MapEntryAcceptance: true),
             3 => new AcceptanceContract(
-                "rpg-step3-reward-choice-return-map",
-                ["ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward", "RewardOptions.Count", "ApplyReward", "Battle reward selected"]),
+                "rpg-step3-battlescene-settlement",
+                ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
+                BattleSceneAcceptance: true),
             4 => new AcceptanceContract(
-                "rpg-step4-win-loss-goal-visibility",
-                ["VictoryBattleCount", "IsVictory", "IsGameOver", "Defeat"]),
+                "rpg-step4-main-scene-switching",
+                ["MoveOnMap", "ResolveAttackTurn", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true),
             5 => new AcceptanceContract(
                 "rpg-step5-reward-loop-return-map",
                 ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"]),
+            6 => new AcceptanceContract(
+                "rpg-final-full-playable-acceptance",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ApplyReward", "Battle reward selected", "VictoryBattleCount", "IsVictory", "IsGameOver"],
+                AssetUsageAcceptance: true,
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true,
+                FinalAcceptance: true),
             _ => null
         };
     }
@@ -121,7 +181,220 @@ internal static class PrototypeGoalAcceptanceValidator
         return requiredMarkers.All(marker => text.Contains(marker, StringComparison.Ordinal));
     }
 
-    private sealed record AcceptanceContract(string Kind, IReadOnlyList<string> RequiredMarkers);
+    private static bool HasRpgFinalAcceptanceFiles(string repoPath)
+    {
+        var requiredFiles = new[]
+        {
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"),
+            Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"),
+            Path.Combine(repoPath, "Game.Godot", "Scenes", "Main.tscn")
+        };
+        if (requiredFiles.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        if (!HasRpgSceneAssetUsage(repoPath))
+        {
+            return false;
+        }
+
+        var catalogText = File.ReadAllText(Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"));
+        return catalogText.Contains("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", StringComparison.Ordinal) &&
+               HasRpgMapEntryAcceptanceFiles(repoPath) &&
+               HasRpgBattleSceneAcceptanceFiles(repoPath);
+    }
+
+    private static bool HasRpgMapEntryAcceptanceFiles(string repoPath)
+    {
+        var mainScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
+        var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
+        var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
+        var mapScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs");
+        if (new[] { mainScene, mainScript, mapScene, mapScript }.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        var mainSceneText = File.ReadAllText(mainScene);
+        var mainScriptText = File.ReadAllText(mainScript);
+        var mapSceneText = File.ReadAllText(mapScene);
+        var mapScriptText = File.ReadAllText(mapScript);
+
+        return mainSceneText.Contains("StartButton", StringComparison.Ordinal) &&
+               mainSceneText.Contains("Start Adventure", StringComparison.Ordinal) &&
+               mainSceneText.Contains("MapScene", StringComparison.Ordinal) &&
+               mainSceneText.Contains("parent=\"CanvasLayer/UI\"", StringComparison.Ordinal) &&
+               mainSceneText.Contains("anchors_preset = 15", StringComparison.Ordinal) &&
+               mainScriptText.Contains("Pressed += ShowMapScene", StringComparison.Ordinal) &&
+               mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal) &&
+               mainScriptText.Contains("_mapScene.Visible = true", StringComparison.Ordinal) &&
+               mapSceneText.Contains("MapScene", StringComparison.Ordinal) &&
+               mapSceneText.Contains("Grid", StringComparison.Ordinal) &&
+               mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal) &&
+               mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal) &&
+               mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal) &&
+               mapScriptText.Contains("MovePlayer", StringComparison.Ordinal) &&
+               mapScriptText.Contains("EncounterEntered", StringComparison.Ordinal);
+    }
+
+    private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
+    {
+        var battleScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn");
+        var battleScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs");
+        if (new[] { battleScene, battleScript }.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        var battleSceneText = File.ReadAllText(battleScene);
+        var battleScriptText = File.ReadAllText(battleScript);
+        return battleSceneText.Contains("BattleScene", StringComparison.Ordinal) &&
+               battleSceneText.Contains("Attack", StringComparison.Ordinal) &&
+               battleScriptText.Contains("ResolveBattle", StringComparison.Ordinal) &&
+               battleScriptText.Contains("BattleFinished", StringComparison.Ordinal);
+    }
+
+    private static bool HasRpgSceneAssetUsage(string repoPath)
+    {
+        var sceneFiles = new[]
+        {
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn"),
+            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn")
+        };
+        if (sceneFiles.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        if (File.Exists(Path.Combine(repoPath, "Game.Godot", ".gdignore")))
+        {
+            return false;
+        }
+
+        var usages = sceneFiles.SelectMany(path => ReadSceneAssetUsages(repoPath, path)).ToList();
+        return HasRequiredRpgAssetUsage(usages, "RpgMapAsset", IsMapAssetPath) &&
+               HasRequiredRpgAssetUsage(usages, "RpgPlayerAsset", IsPlayerAssetPath) &&
+               HasRequiredRpgAssetUsage(usages, "RpgEnemyAsset", IsEnemyAssetPath);
+    }
+
+    private static IEnumerable<SceneAssetUsage> ReadSceneAssetUsages(string repoPath, string sceneFile)
+    {
+        var text = File.ReadAllText(sceneFile);
+        var resources = Regex.Matches(
+                text,
+                "\\[ext_resource\\s+[^\\]]*type=\"Texture2D\"[^\\]]*path=\"(?<path>[^\"]+)\"[^\\]]*id=\"(?<id>[^\"]+)\"[^\\]]*\\]",
+                RegexOptions.CultureInvariant)
+            .Cast<Match>()
+            .ToDictionary(
+                match => match.Groups["id"].Value,
+                match => match.Groups["path"].Value,
+                StringComparer.Ordinal);
+        if (resources.Count == 0)
+        {
+            yield break;
+        }
+
+        var nodeMatches = Regex.Matches(
+            text,
+            "\\[node\\s+name=\"(?<name>[^\"]+)\"\\s+type=\"(?<type>TextureRect|Sprite2D|AnimatedSprite2D)\"[^\\]]*\\](?<body>.*?)(?=\\r?\\n\\[node|\\r?\\n\\[connection|\\z)",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        foreach (Match nodeMatch in nodeMatches)
+        {
+            var textureMatch = Regex.Match(
+                nodeMatch.Groups["body"].Value,
+                "texture\\s*=\\s*ExtResource\\(\"(?<id>[^\"]+)\"\\)",
+                RegexOptions.CultureInvariant);
+            if (!textureMatch.Success)
+            {
+                continue;
+            }
+
+            var id = textureMatch.Groups["id"].Value;
+            if (!resources.TryGetValue(id, out var resourcePath))
+            {
+                continue;
+            }
+
+            yield return new SceneAssetUsage(
+                nodeMatch.Groups["name"].Value,
+                nodeMatch.Groups["type"].Value,
+                resourcePath,
+                GodotResourceExists(repoPath, resourcePath));
+        }
+    }
+
+    private static bool HasRequiredRpgAssetUsage(
+        IEnumerable<SceneAssetUsage> usages,
+        string requiredNodeName,
+        Func<string, bool> isExpectedAssetPath)
+    {
+        return usages.Any(usage =>
+            string.Equals(usage.NodeName, requiredNodeName, StringComparison.Ordinal) &&
+            usage.ResourceExists &&
+            isExpectedAssetPath(usage.ResourcePath));
+    }
+
+    private static bool GodotResourceExists(string repoPath, string resourcePath)
+    {
+        const string resPrefix = "res://";
+        if (!resourcePath.StartsWith(resPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var relativePath = resourcePath[resPrefix.Length..].Replace('/', Path.DirectorySeparatorChar);
+        return File.Exists(Path.Combine(repoPath, relativePath));
+    }
+
+    private static bool IsMapAssetPath(string resourcePath)
+    {
+        return IsAssetPath(resourcePath, "/assets/map/") ||
+               ContainsAssetToken(resourcePath, "map", "tile", "floor", "backdrop", "overworld");
+    }
+
+    private static bool IsPlayerAssetPath(string resourcePath)
+    {
+        return IsAssetPath(resourcePath, "/assets/player/") ||
+               ContainsAssetToken(resourcePath, "player", "hero", "main_character", "protagonist");
+    }
+
+    private static bool IsEnemyAssetPath(string resourcePath)
+    {
+        return IsAssetPath(resourcePath, "/assets/enemy/") ||
+               ContainsAssetToken(resourcePath, "enemy", "boss", "monster", "slime");
+    }
+
+    private static bool IsAssetPath(string resourcePath, string requiredSegment)
+    {
+        return resourcePath.Replace('\\', '/').ToLowerInvariant().Contains(requiredSegment, StringComparison.Ordinal);
+    }
+
+    private static bool ContainsAssetToken(string resourcePath, params string[] tokens)
+    {
+        var normalized = resourcePath.Replace('\\', '/').ToLowerInvariant();
+        return tokens.Any(token =>
+            normalized.Contains($"{token}.png", StringComparison.Ordinal) ||
+            normalized.Contains($"{token}_", StringComparison.Ordinal) ||
+            normalized.Contains($"_{token}", StringComparison.Ordinal) ||
+            normalized.Contains($"/{token}", StringComparison.Ordinal));
+    }
+
+    private sealed record SceneAssetUsage(string NodeName, string NodeType, string ResourcePath, bool ResourceExists);
+
+    private sealed record AcceptanceContract(
+        string Kind,
+        IReadOnlyList<string> RequiredMarkers,
+        bool AssetUsageAcceptance = false,
+        bool MapEntryAcceptance = false,
+        bool BattleSceneAcceptance = false,
+        bool FinalAcceptance = false);
 }
 
 internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, string Status)

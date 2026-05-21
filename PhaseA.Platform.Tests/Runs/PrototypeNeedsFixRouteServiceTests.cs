@@ -11,6 +11,35 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class PrototypeNeedsFixRouteServiceTests
 {
     [Fact]
+    public async Task RunAsync_ShouldUseProjectLevelNeedsFix_WhenNoCurrentRepairGoalExists()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var plan = new PrototypeIterationPlanService(store);
+        await plan.CreateAsync(accountId, created.ProjectId!, new PrototypeIterationPlanRequest("1. Stabilize map movement\n2. Finish battle"));
+        var runner = new SuccessRunner();
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter());
+
+        var result = await route.RunAsync(accountId, created.ProjectId!, new PrototypeNeedsFixRouteRequest(Feedback: "Godot error"));
+
+        result.Status.Should().Be("completed");
+        result.RunId.Should().NotBeEmpty();
+        result.GoalIndex.Should().Be(0);
+        var details = await store.GetLatestProjectIterationSessionAsync(created.ProjectId!);
+        details!.Goals[0].Status.Should().Be("pending");
+        runner.Prompt.Should().Contain("project-level runtime issue");
+        runner.Prompt.Should().Contain("Do not generate or rewrite the iteration plan.");
+    }
+
+    [Fact]
     public async Task RunAsync_ShouldRequirePrototypeState_WhenNoNeedsFixStateExists()
     {
         using var database = TempSqliteDatabase.Create();
@@ -43,6 +72,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var project = await store.GetProjectSnapshotAsync(projectId);
         var writer = new PrototypeRouteStateWriter();
         writer.WriteProjectReadme(project!);
+        new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
         writer.WriteNeedsFixState(project!, 1, new
         {
             route = "needs-fix",
@@ -68,7 +98,11 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Length.Should().BeLessThan(16000);
         runner.Prompt.Should().Contain("Project README and Recovery source are read-only recovery context, not repair targets.");
         runner.Prompt.Should().Contain("Platform route or recovery tests passing does not prove a gameplay goal is complete.");
+        runner.Prompt.Should().Contain("Project prototype contract");
+        runner.Prompt.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
+        runner.Prompt.Should().Contain("First enemy has 30 HP and 5 ATK.");
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain(result.RunId);
+        writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("prototype_contract");
     }
 
     [Fact]
@@ -134,6 +168,23 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repoRoot
         });
+    }
+
+    private static PrototypeWorkflowRequest ContractRequest()
+    {
+        return new PrototypeWorkflowRequest(
+            Slug: "contract",
+            GameName: "Contract RPG",
+            GameType: "rpg",
+            GameTypeSource: "RPG",
+            Hypothesis: "Project-specific form values must drive the RPG prototype.",
+            CorePlayerFantasy: "Explore, encounter enemies, and grow through rewards.",
+            MinimumPlayableLoop: "Move on map, trigger encounter, win battle, choose reward, return to map.",
+            SuccessCriteria: ["Contract values are implemented."],
+            GameFeature: "Every movement increases encounter probability by 10% and encounter must happen within 10 steps.",
+            CoreGameplayLoop: "Player starts at 100 HP, 10 ATK, 2 DEF. First enemy has 30 HP and 5 ATK.",
+            WinFailConditions: "Win after 15 battles. Any battle loss means game loss.",
+            Confirm: true);
     }
 
     private sealed class SuccessRunner : IHostedProcessRunner

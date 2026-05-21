@@ -471,34 +471,12 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     }
 });
 
-app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", async (
-    string projectId,
-    PrototypeFeedbackRequest request,
-    [FromServices] PrototypeQuickFixService quickFixes,
-    [FromServices] ProjectChatHistoryService chatHistory,
-    CancellationToken cancellationToken) =>
+app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", (
+    string projectId) =>
 {
-    try
-    {
-        await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "quick-fix", cancellationToken);
-        var result = await quickFixes.SubmitAsync(projectId, request, cancellationToken);
-        if (result.Status == "completed" || result.Status == "failed")
-        {
-            await chatHistory.AppendAsync(
-                adminAccountId,
-                projectId,
-                "assistant",
-                result.AssistantMessage,
-                result.Status == "completed" ? "quick-fix-result" : "quick-fix-failed",
-                cancellationToken);
-        }
-
-        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
-    }
-    catch (InvalidOperationException ex)
-    {
-        return Results.NotFound(new { error = ex.Message });
-    }
+    return Results.Json(
+        new { error = "quick_fix_direct_entry_disabled", message = "Quick fix is only available through the needs-fix route." },
+        statusCode: StatusCodes.Status410Gone);
 });
 
 app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
@@ -516,7 +494,7 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
         }
 
         var result = await needsFixRoute.RunAsync(adminAccountId, projectId, request, cancellationToken);
-        if (result.Status is "completed" or "failed")
+        if (!string.IsNullOrWhiteSpace(result.Summary))
         {
             await chatHistory.AppendAsync(
                 adminAccountId,

@@ -23,6 +23,7 @@ public sealed class PrototypeWorkflowService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly GameTypeTemplateCatalog _templateCatalog;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
+    private readonly PrototypeContractService _contractService;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -33,7 +34,7 @@ public sealed class PrototypeWorkflowService
         PrototypeArtifactIndexer artifactIndexer,
         LlmBindingService llmBindingService,
         LlmStopLossService llmStopLossService)
-        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options), new PrototypeRouteStateWriter())
+        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options), new PrototypeRouteStateWriter(), new PrototypeContractService())
     {
     }
 
@@ -48,7 +49,8 @@ public sealed class PrototypeWorkflowService
         LlmStopLossService llmStopLossService,
         IProjectWorkspaceSeeder workspaceSeeder,
         GameTypeTemplateCatalog templateCatalog,
-        PrototypeRouteStateWriter? routeStateWriter = null)
+        PrototypeRouteStateWriter? routeStateWriter = null,
+        PrototypeContractService? contractService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -61,6 +63,7 @@ public sealed class PrototypeWorkflowService
         _workspaceSeeder = workspaceSeeder;
         _templateCatalog = templateCatalog;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
+        _contractService = contractService ?? new PrototypeContractService();
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -105,6 +108,7 @@ public sealed class PrototypeWorkflowService
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
+        var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
@@ -136,13 +140,14 @@ public sealed class PrototypeWorkflowService
         {
             run_type = RunType,
             prototype_record = prototypeRecordPath,
+            prototype_contract = contract.RelativePath,
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
-        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, slug, validation, smoke);
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
         await SetProgressAsync(
             runId,
             status,
@@ -193,6 +198,7 @@ public sealed class PrototypeWorkflowService
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
+        var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
 
@@ -200,7 +206,7 @@ public sealed class PrototypeWorkflowService
         {
             try
             {
-                await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, request);
+                await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, contract.RelativePath, request);
             }
             catch (Exception ex)
             {
@@ -330,6 +336,7 @@ public sealed class PrototypeWorkflowService
         string projectRepoPath,
         string runId,
         string prototypeRecordPath,
+        string prototypeContractPath,
         PrototypeWorkflowRequest request)
     {
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
@@ -363,6 +370,7 @@ public sealed class PrototypeWorkflowService
         {
             run_type = RunType,
             prototype_record = prototypeRecordPath,
+            prototype_contract = prototypeContractPath,
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
@@ -372,7 +380,7 @@ public sealed class PrototypeWorkflowService
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
         if (project is not null)
         {
-            WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, slug, validation, smoke);
+            WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, prototypeContractPath, slug, validation, smoke);
         }
         await SetProgressAsync(
             runId,
@@ -441,6 +449,7 @@ public sealed class PrototypeWorkflowService
             run_type = RunType,
             repair = true,
             prototype_record = prototypeRecordPath,
+            prototype_contract = _contractService.Read(project).RelativePath,
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
@@ -1414,6 +1423,7 @@ public sealed class PrototypeWorkflowService
         string status,
         int exitCode,
         string prototypeRecordPath,
+        string prototypeContractPath,
         string slug,
         PrototypeCompletionValidation validation,
         PrototypeGodotSmokeResult smoke)
@@ -1426,6 +1436,7 @@ public sealed class PrototypeWorkflowService
             status,
             exit_code = exitCode,
             prototype_record = prototypeRecordPath,
+            prototype_contract = prototypeContractPath,
             slug,
             prototype_completion = validation.ToEvidence(),
             godot_smoke = smoke.ToEvidence(),

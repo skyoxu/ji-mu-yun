@@ -8,15 +8,18 @@ public sealed class PrototypeNeedsFixRouteService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
+    private readonly PrototypeContractService _contractService;
 
     public PrototypeNeedsFixRouteService(
         PhaseAMetadataStore metadataStore,
         PrototypeQuickFixService quickFixService,
-        PrototypeRouteStateWriter stateWriter)
+        PrototypeRouteStateWriter stateWriter,
+        PrototypeContractService? contractService = null)
     {
         _metadataStore = metadataStore;
         _quickFixService = quickFixService;
         _stateWriter = stateWriter;
+        _contractService = contractService ?? new PrototypeContractService();
     }
 
     public async Task<PrototypeNeedsFixRouteResult> RunAsync(
@@ -38,16 +41,17 @@ public sealed class PrototypeNeedsFixRouteService
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
         if (details is null)
         {
-            return new PrototypeNeedsFixRouteResult("", "missing_plan", "Please generate an iteration plan before running needs fix.", 0, null, null, []);
+            return new PrototypeNeedsFixRouteResult("", "missing_plan", "当前项目还没有迭代计划。请先使用固定的“生成迭代计划”按钮创建计划；提交反馈不会自动生成计划。", 0, null, null, []);
         }
 
         var goal = ResolveGoal(details, request);
         if (goal is null)
         {
-            return new PrototypeNeedsFixRouteResult("", "missing_goal", "No current needs fix goal was found.", 0, details.Session.Status, null, []);
+            return await RunProjectLevelNeedsFixAsync(project, details, request, cancellationToken);
         }
 
         var readme = _stateWriter.ReadProjectReadme(project);
+        var prototypeContract = _contractService.Read(project);
         var stepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
         var executeNextGoalState = string.IsNullOrWhiteSpace(stepState)
             ? _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex)
@@ -57,10 +61,10 @@ public sealed class PrototypeNeedsFixRouteService
             : "";
         if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState) && string.IsNullOrWhiteSpace(prototypeState))
         {
-            return new PrototypeNeedsFixRouteResult("", "prototype_required", "Please run prototype creation before needs fix.", goal.GoalIndex, details.Session.Status, goal.Status, []);
+            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型路线产物。请先运行原型创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
-        var feedback = BuildFeedback(project, request.Feedback, readme, stepState, executeNextGoalState, prototypeState, goal);
+        var feedback = BuildFeedback(project, request.Feedback, readme, prototypeContract, stepState, executeNextGoalState, prototypeState, goal);
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.ProjectId,
             new PrototypeFeedbackRequest(
@@ -91,6 +95,12 @@ public sealed class PrototypeNeedsFixRouteService
             iteration_session_status = quickFixResult.IterationSessionStatus,
             iteration_goal_status = quickFixResult.IterationGoalStatus,
             summary = BuildCompactSummary(quickFixResult.AssistantMessage),
+            consumed = new
+            {
+                project_readme = !string.IsNullOrWhiteSpace(readme),
+                prototype_contract = !string.IsNullOrWhiteSpace(prototypeContract.Json),
+                prototype_contract_path = prototypeContract.RelativePath
+            },
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
 
@@ -101,6 +111,46 @@ public sealed class PrototypeNeedsFixRouteService
             goal.GoalIndex,
             quickFixResult.IterationSessionStatus,
             quickFixResult.IterationGoalStatus,
+            quickFixResult.Artifacts);
+    }
+
+    private async Task<PrototypeNeedsFixRouteResult> RunProjectLevelNeedsFixAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        PrototypeNeedsFixRouteRequest request,
+        CancellationToken cancellationToken)
+    {
+        var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _contractService.Read(project), _stateWriter.ReadLatestPrototypeState(project));
+        var quickFixResult = await _quickFixService.SubmitAsync(
+            project.ProjectId,
+            new PrototypeFeedbackRequest(
+                feedback,
+                request.Model,
+                request.SkillActionId,
+                null),
+            requireSucceededPrototypeRun: false,
+            cancellationToken);
+
+        _stateWriter.WriteNeedsFixState(project, 0, new
+        {
+            route = "needs-fix",
+            scope = "project",
+            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+            project_id = project.ProjectId,
+            session_id = details.Session.SessionId,
+            run_id = quickFixResult.RunId,
+            status = quickFixResult.Status,
+            summary = BuildCompactSummary(quickFixResult.AssistantMessage),
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
+
+        return new PrototypeNeedsFixRouteResult(
+            quickFixResult.RunId,
+            quickFixResult.Status,
+            quickFixResult.AssistantMessage,
+            0,
+            details.Session.Status,
+            null,
             quickFixResult.Artifacts);
     }
 
@@ -117,14 +167,19 @@ public sealed class PrototypeNeedsFixRouteService
         }
 
         return details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal))
-               ?? details.Goals.FirstOrDefault(goal => goal.GoalIndex == details.Session.CurrentGoalIndex)
-               ?? details.Goals.FirstOrDefault();
+               ?? details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "failed", StringComparison.Ordinal))
+               ?? details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "running", StringComparison.Ordinal))
+               ?? details.Goals.FirstOrDefault(goal =>
+                   goal.GoalIndex == details.Session.CurrentGoalIndex &&
+                   !string.Equals(goal.Status, "pending", StringComparison.Ordinal) &&
+                   !string.Equals(goal.Status, "succeeded", StringComparison.Ordinal));
     }
 
     private static string BuildFeedback(
         ProjectSnapshot project,
         string? userFeedback,
         string projectReadme,
+        PrototypeContractSnapshot prototypeContract,
         string stepState,
         string executeNextGoalState,
         string prototypeState,
@@ -153,6 +208,8 @@ public sealed class PrototypeNeedsFixRouteService
             Project README:
             {TrimForPrompt(projectReadme)}
 
+            {PrototypeContractService.BuildPromptBlock(prototypeContract)}
+
             Current goal:
             - GoalIndex: {goal.GoalIndex}
             - Title: {goal.Title}
@@ -170,6 +227,43 @@ public sealed class PrototypeNeedsFixRouteService
             Only repair this current step. Do not read or use needs fix state from another step.
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
+            """;
+    }
+
+    private static string BuildProjectLevelFeedback(
+        ProjectSnapshot project,
+        string? userFeedback,
+        string projectReadme,
+        PrototypeContractSnapshot prototypeContract,
+        string prototypeState)
+    {
+        return $"""
+            Run the needs fix top-level route for a project-level runtime issue.
+
+            Direction lock:
+            - This request is still needs-fix-route, but it is not bound to a single iteration step.
+            - Repair the user's reported runtime issue in the hosted game project.
+            - Do not generate or rewrite the iteration plan.
+            - Do not repair Phase A platform routing, route-state readers, recovery logic, deployment, or tests.
+            - Prefer gameplay/project files only. If the report is too vague, inspect the Godot project configuration and fix the concrete runtime wiring problem that matches the report.
+            - Output must be browser-safe: do not expose paths, command lines, script names, logs, or environment variables.
+
+            Project README:
+            {CompactRouteState(projectReadme)}
+
+            {PrototypeContractService.BuildPromptBlock(prototypeContract)}
+
+            Prototype route state:
+            {CompactRouteState(prototypeState)}
+
+            Project:
+            - ProjectId: {project.ProjectId}
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameType: {project.GameTypeSource}
+
+            User reported issue:
+            {userFeedback}
             """;
     }
 

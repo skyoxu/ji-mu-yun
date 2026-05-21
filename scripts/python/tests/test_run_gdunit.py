@@ -78,6 +78,24 @@ class RunGdUnitTests(unittest.TestCase):
                 ignore_errors=True,
             )
 
+    def test_prototype_main_menu_navigation_smoke_should_click_rpg_start_and_verify_visible_map(self) -> None:
+        script = prototype_main_menu_navigation_smoke.SCRIPT_TEXT
+
+        self.assertIn("StartButton", script)
+        self.assertIn('start_button.emit_signal("pressed")', script)
+        self.assertIn("rpg_map_scene_not_visible_after_start", script)
+        self.assertIn("rpg_map_scene_has_no_visible_size_after_start", script)
+        self.assertIn("RPG_START_ADVENTURE_MAP_VISIBLE PASS", script)
+
+    def test_prototype_main_menu_navigation_smoke_should_fail_when_godot_errors_exist(self) -> None:
+        source = Path(prototype_main_menu_navigation_smoke.__file__).read_text(encoding="utf-8")
+
+        self.assertIn("godot_error_markers", source)
+        self.assertIn('"ERROR:"', source)
+        self.assertIn('"Parse Error:"', source)
+        self.assertIn("not has_godot_errors", source)
+        self.assertIn('"godot_errors_detected": has_godot_errors', source)
+
     def test_run_gdunit_cleanup_should_ignore_taskkill_failures(self) -> None:
         with mock.patch.object(run_gdunit.subprocess, "run", side_effect=OSError("taskkill missing")):
             run_gdunit._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")

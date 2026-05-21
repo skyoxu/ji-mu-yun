@@ -18,13 +18,14 @@ public sealed class PrototypeIterationGoalService
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _stateWriter;
+    private readonly PrototypeContractService _contractService;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeIterationGoalService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), null)
+        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new PrototypeContractService(), null)
     {
     }
 
@@ -34,6 +35,7 @@ public sealed class PrototypeIterationGoalService
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? stateWriter = null,
+        PrototypeContractService? contractService = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
@@ -41,6 +43,7 @@ public sealed class PrototypeIterationGoalService
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _stateWriter = stateWriter ?? new PrototypeRouteStateWriter();
+        _contractService = contractService ?? new PrototypeContractService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -107,6 +110,7 @@ public sealed class PrototypeIterationGoalService
             var codexRuntimeOutputPath = CreateShortRuntimeOutputPath(runId);
             var now = DateTimeOffset.UtcNow.ToString("O");
             var projectReadme = _stateWriter.ReadProjectReadme(project);
+            var prototypeContract = _contractService.Read(project);
             var prototypeState = _stateWriter.ReadLatestPrototypeState(project);
             var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
             if (string.IsNullOrWhiteSpace(prototypeState))
@@ -139,12 +143,12 @@ public sealed class PrototypeIterationGoalService
                 return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "needs_fix", failure, nextGoal.GoalIndex, true, "needs_fix");
             }
 
-            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, projectReadme, prototypeState, iterationPlanState, now), Encoding.UTF8, CancellationToken.None);
+            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState, now), Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
-            var prompt = BuildPrompt(project, details.Session, nextGoal, projectReadme, prototypeState, iterationPlanState);
+            var prompt = BuildPrompt(project, details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), timeout.Token);
             if (File.Exists(codexRuntimeOutputPath))
@@ -239,6 +243,8 @@ public sealed class PrototypeIterationGoalService
                 consumed = new
                 {
                     project_readme = !string.IsNullOrWhiteSpace(projectReadme),
+                    prototype_contract = !string.IsNullOrWhiteSpace(prototypeContract.Json),
+                    prototype_contract_path = prototypeContract.RelativePath,
                     prototype_route_state = true,
                     iteration_plan_route_state = !string.IsNullOrWhiteSpace(iterationPlanState)
                 },
@@ -332,6 +338,7 @@ public sealed class PrototypeIterationGoalService
         ProjectIterationSessionSnapshot session,
         ProjectIterationGoalSnapshot goal,
         string projectReadme,
+        PrototypeContractSnapshot prototypeContract,
         string prototypeState,
         string iterationPlanState)
     {
@@ -364,6 +371,8 @@ public sealed class PrototypeIterationGoalService
             Project README:
             {TrimForPrompt(projectReadme)}
 
+            {PrototypeContractService.BuildPromptBlock(prototypeContract)}
+
             Prototype route state:
             {TrimForPrompt(prototypeState)}
 
@@ -392,6 +401,7 @@ public sealed class PrototypeIterationGoalService
         ProjectIterationSessionSnapshot session,
         ProjectIterationGoalSnapshot goal,
         string projectReadme,
+        PrototypeContractSnapshot prototypeContract,
         string prototypeState,
         string iterationPlanState,
         string now)
@@ -417,6 +427,10 @@ public sealed class PrototypeIterationGoalService
             ## Project README
 
             {TrimForPrompt(projectReadme)}
+
+            ## Project Prototype Contract
+
+            {TrimForPrompt(PrototypeContractService.BuildPromptBlock(prototypeContract))}
 
             ## Prototype Route State
 

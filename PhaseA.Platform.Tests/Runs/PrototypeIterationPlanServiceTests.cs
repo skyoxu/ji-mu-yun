@@ -111,11 +111,12 @@ public sealed class PrototypeIterationPlanServiceTests
                 "manual_feedback"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(4);
+        result.Goals.Should().HaveCount(5);
         result.Goals[0].Description.Should().Be("Stabilize map movement");
         result.Goals[1].Description.Should().Be("Add visible encounter trigger");
         result.Goals[2].Description.Should().Be("Finish one battle and settlement");
         result.Goals[3].Description.Should().StartWith("Reward 3 choices and return to the map");
+        result.Goals[4].Title.Should().Contain("Final Step");
     }
 
     [Fact]
@@ -145,12 +146,13 @@ public sealed class PrototypeIterationPlanServiceTests
                 "manual_feedback"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(4);
-        result.Goals.Select(goal => goal.Description).Should().Equal(
+        result.Goals.Should().HaveCount(5);
+        result.Goals.Take(4).Select(goal => goal.Description).Should().Equal(
             "先稳定地图移动与镜头跟随",
             "加入可见遇敌触发并能正常进入战斗",
             "完成一场战斗并正确结算胜负",
             "胜利后给出三选一奖励并返回地图");
+        result.Goals[4].Title.Should().Contain("Final Step");
     }
 
     [Fact]
@@ -174,12 +176,18 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(5);
+        result.Goals.Should().HaveCount(6);
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("assets", StringComparison.OrdinalIgnoreCase));
-        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("MapScene", StringComparison.OrdinalIgnoreCase));
+        result.Goals[1].Title.Should().Contain("Start Adventure");
+        result.Goals[1].Title.Should().Contain("MapScene");
+        result.Goals[1].Description.Should().Contain("clicking Start Adventure");
+        result.Goals[1].AcceptanceHint.Should().Contain("visible RPG MapScene");
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("BattleScene", StringComparison.OrdinalIgnoreCase));
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("scene switching", StringComparison.OrdinalIgnoreCase));
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("reward", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Last().Title.Should().Contain("Final Step");
+        result.Goals.Last().AcceptanceHint.Should().Contain("full RPG playable prototype");
+        result.Goals.Last().AcceptanceHint.Should().Contain("Start Adventure visible-map validation");
     }
 
     [Fact]

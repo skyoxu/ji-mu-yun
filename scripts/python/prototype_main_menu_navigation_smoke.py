@@ -80,8 +80,56 @@ func _initialize() -> void:
         quit(9)
         return
 
+    if expected_scene.find("/dq-rpg/") >= 0:
+        var start_button = _find_node_by_name(current, "StartButton")
+        if start_button == null:
+            push_error("rpg_start_button_missing")
+            quit(10)
+            return
+
+        start_button.emit_signal("pressed")
+        await process_frame
+        await process_frame
+        await process_frame
+
+        var map_scene = _find_node_by_name(current, "MapScene")
+        if map_scene == null:
+            push_error("rpg_map_scene_missing_after_start")
+            quit(11)
+            return
+        if not map_scene.visible:
+            push_error("rpg_map_scene_not_visible_after_start")
+            quit(12)
+            return
+        if map_scene is Control:
+            var control := map_scene as Control
+            if control.size.x <= 0.0 or control.size.y <= 0.0:
+                push_error("rpg_map_scene_has_no_visible_size_after_start")
+                quit(13)
+                return
+
+        var map_title = _find_node_by_name(map_scene, "Title")
+        var map_grid = _find_node_by_name(map_scene, "Grid")
+        var map_status = _find_node_by_name(map_scene, "StatusLabel")
+        if map_title == null or map_grid == null or map_status == null:
+            push_error("rpg_map_visible_markers_missing_after_start")
+            quit(14)
+            return
+
+        print("RPG_START_ADVENTURE_MAP_VISIBLE PASS")
+
     print("MAIN_MENU_PROTOTYPE_NAV PASS scene=%s" % actual_scene)
     quit(0)
+
+func _find_node_by_name(root: Node, wanted_name: String) -> Node:
+    if root.name == wanted_name:
+        return root
+    for child in root.get_children():
+        if child is Node:
+            var found = _find_node_by_name(child, wanted_name)
+            if found != null:
+                return found
+    return null
 '''
 
 
@@ -236,13 +284,31 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
         combined = stdout + ("\n" + stderr if stderr else "")
         _write_text(log_path, combined)
 
-        passed = proc.returncode == 0 and "MAIN_MENU_PROTOTYPE_NAV PASS" in combined
+        godot_error_markers = (
+            "ERROR:",
+            "SCRIPT ERROR:",
+            "Parse Error:",
+            "Failed to instantiate",
+            "Cannot instantiate",
+        )
+        has_godot_errors = any(marker in combined for marker in godot_error_markers)
+        rpg_start_required = "/dq-rpg/" in expected_scene
+        rpg_start_passed = (not rpg_start_required) or "RPG_START_ADVENTURE_MAP_VISIBLE PASS" in combined
+        passed = (
+            proc.returncode == 0
+            and "MAIN_MENU_PROTOTYPE_NAV PASS" in combined
+            and rpg_start_passed
+            and not has_godot_errors
+        )
         summary = {
             "run_id": f"prototype-main-menu-navigation-{ts}",
             "expected_scene": expected_scene,
             "passed": passed,
             "exit_code": proc.returncode,
             "prewarm_mode": prewarm_mode,
+            "godot_errors_detected": has_godot_errors,
+            "rpg_start_adventure_required": rpg_start_required,
+            "rpg_start_adventure_passed": rpg_start_passed,
             "artifacts": {
                 "stdout": str(out_path),
                 "stderr": str(err_path),

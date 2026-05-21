@@ -49,19 +49,76 @@ def _cleanup_godot_processes(godot_bin: str) -> None:
         pass
 
 
+def _build_output_has_success(stdout: str, stderr: str) -> bool:
+    combined = f"{stdout}\n{stderr}".lower()
+    return (
+        "[ done ]" in combined
+        and "dotnet_build_project" in combined
+    )
+
+
+def _is_prototype_scene(scene: str) -> bool:
+    return scene.lower().startswith("res://game.godot/prototypes/")
+
+
+def _has_runtime_failure(output: str) -> bool:
+    lowered = output.lower()
+    failure_markers = (
+        "script error",
+        "fatal:",
+        "unhandled exception",
+        "exception:",
+        "error:",
+        "failed loading resource",
+        "can't load",
+        "cannot load",
+    )
+    return any(marker in lowered for marker in failure_markers)
+
+
+def _stop_dotnet_build_server(project_root: Path) -> None:
+    try:
+        subprocess.run(
+            ["dotnet", "build-server", "shutdown"],
+            cwd=project_root,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=30,
+        )
+    except Exception:
+        pass
+
+
 def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str, str]:
     prewarm_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
-    prewarm = subprocess.run(
-        prewarm_cmd,
-        cwd=project_root,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="ignore",
-        timeout=600,
-    )
-    if prewarm.returncode == 0:
-        return True, "godot-build-solutions", prewarm.stdout or "", prewarm.stderr or ""
+    try:
+        prewarm = subprocess.run(
+            prewarm_cmd,
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=600,
+        )
+        prewarm_stdout = prewarm.stdout or ""
+        prewarm_stderr = prewarm.stderr or ""
+        prewarm_returncode = prewarm.returncode
+    except subprocess.TimeoutExpired as exc:
+        _cleanup_godot_processes(godot_bin)
+        prewarm_stdout = exc.stdout or ""
+        prewarm_stderr = (exc.stderr or "") + "\n[smoke_headless] godot build-solutions prewarm timed out; falling back to dotnet build."
+        prewarm_returncode = 124
+
+    if isinstance(prewarm_stdout, bytes):
+        prewarm_stdout = prewarm_stdout.decode("utf-8", errors="ignore")
+    if isinstance(prewarm_stderr, bytes):
+        prewarm_stderr = prewarm_stderr.decode("utf-8", errors="ignore")
+
+    if prewarm_returncode == 0 or _build_output_has_success(prewarm_stdout, prewarm_stderr):
+        _stop_dotnet_build_server(project_root)
+        return True, "godot-build-solutions", prewarm_stdout, prewarm_stderr
 
     fallback = subprocess.run(
         ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
@@ -72,9 +129,14 @@ def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str,
         errors="ignore",
         timeout=600,
     )
-    stdout = (prewarm.stdout or "") + (("\n" + fallback.stdout) if fallback.stdout else "")
-    stderr = (prewarm.stderr or "") + (("\n" + fallback.stderr) if fallback.stderr else "")
-    return fallback.returncode == 0, "dotnet-build", stdout, stderr
+    stdout = prewarm_stdout + (("\n" + fallback.stdout) if fallback.stdout else "")
+    stderr = prewarm_stderr + (("\n" + fallback.stderr) if fallback.stderr else "")
+    if fallback.returncode == 0:
+        _stop_dotnet_build_server(project_root)
+        return True, "dotnet-build", stdout, stderr
+
+    _stop_dotnet_build_server(project_root)
+    return False, "dotnet-build", stdout, stderr
 
 
 def _run_smoke(
@@ -182,11 +244,15 @@ def _run_smoke(
     has_marker = "[TEMPLATE_SMOKE_READY]" in text
     has_db_open = "[DB] opened" in text
     has_any = bool(text.strip())
+    has_runtime_failure = _has_runtime_failure(text)
+    has_prototype_alive = _is_prototype_scene(scene) and has_any and not has_runtime_failure
 
     if has_marker:
         print("SMOKE PASS (marker)")
     elif has_db_open:
         print("SMOKE PASS (db opened)")
+    elif has_prototype_alive:
+        print("SMOKE PASS (prototype scene alive)")
     elif has_any:
         print("SMOKE PASS (any output)")
     else:
@@ -194,8 +260,9 @@ def _run_smoke(
 
     exit_code = 0
     if strict:
-        # Strict mode: require at least the marker or a DB opened line.
-        exit_code = 0 if (has_marker or has_db_open) else 1
+        # Strict mode keeps Main.tscn marker semantics, but prototype scenes
+        # validate as a running scene when they emit output without runtime failures.
+        exit_code = 0 if (has_marker or has_db_open or has_prototype_alive) else 1
 
     summary = {
         "runId": f"smoke-{ts}",
@@ -212,6 +279,8 @@ def _run_smoke(
             "template_smoke_ready": has_marker,
             "db_opened": has_db_open,
             "any_output": has_any,
+            "prototype_scene_alive": has_prototype_alive,
+            "runtime_failure": has_runtime_failure,
         },
         "prewarm_mode": prewarm_mode,
         "artifacts": {

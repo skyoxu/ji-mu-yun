@@ -19,13 +19,14 @@ public sealed class PrototypeQuickFixService
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
+    private readonly PrototypeContractService _contractService;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeQuickFixService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), null)
+        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), new PrototypeContractService(), null)
     {
     }
 
@@ -35,6 +36,18 @@ public sealed class PrototypeQuickFixService
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
+        TimeSpan? executionTimeout)
+        : this(metadataStore, options, processRunner, workspaceSeeder, skillActionCatalog, new PrototypeContractService(), executionTimeout)
+    {
+    }
+
+    public PrototypeQuickFixService(
+        PhaseAMetadataStore metadataStore,
+        PhaseAPlatformOptions options,
+        IHostedProcessRunner processRunner,
+        IProjectWorkspaceSeeder workspaceSeeder,
+        SkillActionCatalog skillActionCatalog,
+        PrototypeContractService? contractService = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
@@ -42,6 +55,7 @@ public sealed class PrototypeQuickFixService
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
+        _contractService = contractService ?? new PrototypeContractService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -139,10 +153,32 @@ public sealed class PrototypeQuickFixService
                 Encoding.UTF8,
                 CancellationToken.None);
 
+            var preflightResult = targetGoal is null || iterationDetails is null
+                ? null
+                : await TryCompleteAlreadySatisfiedGoalAsync(
+                    project,
+                    iterationDetails,
+                    targetGoal,
+                    runId,
+                    submittedRelativePath,
+                    resultRelativePath,
+                    resultAbsolutePath,
+                    codexOutputRelativePath,
+                    codexOutputAbsolutePath,
+                    routeSkill,
+                    skillAction,
+                    now,
+                    CancellationToken.None);
+            if (preflightResult is not null)
+            {
+                return preflightResult;
+            }
+
             var model = PrototypeModelPolicy.Normalize(request.Model);
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
-            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory);
+            var prototypeContract = _contractService.Read(project);
+            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract);
             await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath), timeout.Token);
             if (executionWorkspace.SyncBack)
@@ -224,6 +260,8 @@ public sealed class PrototypeQuickFixService
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
                 route_skill = routeSkill,
+                prototype_contract = prototypeContract.RelativePath,
+                prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
                 skill_action_id = skillAction?.ActionId,
                 skill_name = skillAction?.SkillName,
                 quick_fix = true,
@@ -353,6 +391,155 @@ public sealed class PrototypeQuickFixService
         return runs.Any(run => run.RunType == "prototype-7day-playable" && run.Status == "succeeded");
     }
 
+    private async Task<PrototypeFeedbackResult?> TryCompleteAlreadySatisfiedGoalAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails iterationDetails,
+        ProjectIterationGoalSnapshot targetGoal,
+        string runId,
+        string submittedRelativePath,
+        string resultRelativePath,
+        string resultAbsolutePath,
+        string codexOutputRelativePath,
+        string codexOutputAbsolutePath,
+        object routeSkill,
+        SkillActionDefinition? skillAction,
+        string now,
+        CancellationToken cancellationToken)
+    {
+        await SetProgressAsync(runId, "running", "preflight", $"正在检查目标 {targetGoal.GoalIndex} 是否已经满足验收。", cancellationToken);
+        var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, cancellationToken);
+        if (!acceptanceValidation.Passed)
+        {
+            return null;
+        }
+
+        var assistantMessage = $"""
+            当前目标已经通过平台验收。
+
+            Platform acceptance:
+            Goal {targetGoal.GoalIndex} passed its platform validation. The current goal can move to the next step.
+            """;
+        var codexOutput = "Preflight validation passed before running Codex.";
+        var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
+        var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
+        godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, cancellationToken);
+        if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
+        {
+            assistantMessage = AppendGodotSmokeValidationSummary(assistantMessage, targetGoal, godotSmokeValidation);
+            codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
+        }
+        else if (godotSmokeValidation.Required)
+        {
+            assistantMessage = AppendGodotSmokeValidationFailure(assistantMessage, godotSmokeValidation);
+        }
+
+        var goalRepairOutcome = godotSmokeValidation.Passed
+            ? new GoalRepairOutcome("succeeded", true)
+            : new GoalRepairOutcome("needs_fix", false);
+
+        await File.WriteAllTextAsync(codexOutputAbsolutePath, codexOutput, Encoding.UTF8, cancellationToken);
+        await File.WriteAllTextAsync(
+            resultAbsolutePath,
+            BuildResultLog(
+                project,
+                runId,
+                "Preflight validation",
+                assistantMessage,
+                PrototypeModelPolicy.Normalize(null),
+                new HostedProcessResult(0, "Preflight validation passed.", ""),
+                codexOutput,
+                now,
+                skillAction,
+                targetGoal,
+                goalRepairOutcome),
+            Encoding.UTF8,
+            cancellationToken);
+
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-submission",
+            submittedRelativePath,
+            "Prototype quick fix submission"), cancellationToken);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-result-log",
+            resultRelativePath,
+            "Prototype quick fix result log"), cancellationToken);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-codex-output",
+            codexOutputRelativePath,
+            "Prototype quick fix Codex output"), cancellationToken);
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            preflight = true,
+            submitted_feedback = submittedRelativePath,
+            result_log = resultRelativePath,
+            codex_output = codexOutputRelativePath,
+            route_skill = routeSkill,
+            skill_action_id = skillAction?.ActionId,
+            skill_name = skillAction?.SkillName,
+            quick_fix = true,
+            goal_repair = true,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            goal_repair_status = goalRepairOutcome.GoalStatus,
+            acceptance_validation = acceptanceValidation.Kind,
+            acceptance_validation_status = acceptanceValidation.Status,
+            godot_smoke_validation = godotSmokeValidation.ToEvidence()
+        });
+        await _metadataStore.CompleteRunAsync(runId, "completed", 0, "Preflight validation passed.", "", evidenceJson, cancellationToken);
+        await _metadataStore.UpdateProjectIterationGoalStatusAsync(
+            targetGoal.GoalId,
+            goalRepairOutcome.GoalStatus,
+            assistantMessage,
+            goalRepairOutcome.MarkCompleted ? now : null,
+            cancellationToken);
+        await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair-preflight", cancellationToken);
+
+        var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+        var hasNeedsFix = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal)) == true;
+        var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
+        var sessionStatus = goalRepairOutcome.GoalStatus == "succeeded"
+            ? (hasMoreGoals ? "paused_for_review" : "completed")
+            : "needs_fix";
+        var sessionSummary = goalRepairOutcome.GoalStatus == "succeeded"
+            ? (hasMoreGoals
+                ? $"目标 {targetGoal.GoalIndex} 已通过验收。请确认后决定是否继续目标 {targetGoal.GoalIndex + 1}。"
+                : "所有迭代目标已完成。")
+            : $"目标 {targetGoal.GoalIndex} 已通过核心验收，但仍需继续完成引擎验证。";
+        if (hasNeedsFix && goalRepairOutcome.GoalStatus == "succeeded")
+        {
+            sessionStatus = "needs_fix";
+        }
+
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+            iterationDetails.Session.SessionId,
+            sessionStatus,
+            targetGoal.GoalIndex,
+            sessionSummary,
+            refreshed?.Session.LatestEvaluationJson,
+            sessionStatus == "completed" ? now : null,
+            cancellationToken);
+        await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], cancellationToken);
+        await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"目标 {targetGoal.GoalIndex} 验收完成。" : $"目标 {targetGoal.GoalIndex} 仍需继续修复。", cancellationToken);
+
+        var goalArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        return new PrototypeFeedbackResult(
+            runId,
+            "completed",
+            assistantMessage,
+            goalArtifacts,
+            sessionStatus,
+            goalRepairOutcome.GoalStatus,
+            targetGoal.GoalIndex);
+    }
+
     private Task SetProgressAsync(string runId, string step, string substep, string label, CancellationToken cancellationToken)
     {
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
@@ -424,20 +611,22 @@ public sealed class PrototypeQuickFixService
             prompt);
     }
 
-    private static string BuildCodexPrompt(ProjectSnapshot project, string runId, string feedback, SkillActionDefinition? skillAction, ProjectIterationGoalSnapshot? goal, ProjectRunMemorySnapshot? runMemory = null)
+    private static string BuildCodexPrompt(ProjectSnapshot project, string runId, string feedback, SkillActionDefinition? skillAction, ProjectIterationGoalSnapshot? goal, ProjectRunMemorySnapshot? runMemory = null, PrototypeContractSnapshot? prototypeContract = null)
     {
         if (goal is not null)
         {
-            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory);
+            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory, prototypeContract);
         }
 
         var skillInstruction = skillAction is null
             ? "能力模式：普通模式。"
             : $"能力模式：{skillAction.Label}。执行时使用 ${skillAction.SkillName} 的方法。";
+        var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
 
         return $"""
             你正在执行积木云 Phase A 的快速修复任务。
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
+            {contractBlock}
             {skillInstruction}
 
             硬约束：
@@ -465,7 +654,12 @@ public sealed class PrototypeQuickFixService
             """;
     }
 
-    private static string BuildGoalRepairPrompt(ProjectSnapshot project, string runId, string feedback, ProjectIterationGoalSnapshot goal, ProjectRunMemorySnapshot? runMemory)
+    private static PrototypeContractSnapshot MissingPrototypeContract()
+    {
+        return new PrototypeContractSnapshot("routes/prototype-contract/latest.json", "");
+    }
+
+    private static string BuildGoalRepairPrompt(ProjectSnapshot project, string runId, string feedback, ProjectIterationGoalSnapshot goal, ProjectRunMemorySnapshot? runMemory, PrototypeContractSnapshot? prototypeContract)
     {
         var memoryBlock = runMemory is null
             ? "暂无结构化运行记忆，直接按当前目标执行。"
@@ -480,11 +674,13 @@ public sealed class PrototypeQuickFixService
             - LastVerifiedResult: {runMemory.LastVerifiedResult}
             - LastRunOutcome: {runMemory.LastRunOutcome}
             """;
+        var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
 
         return $"""
             你正在执行积木云 Phase A 的单目标迭代修复任务。
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
+            {contractBlock}
             Mandatory rules:
             - 这次只处理当前目标，不要顺手扩展到后续目标。
             - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。

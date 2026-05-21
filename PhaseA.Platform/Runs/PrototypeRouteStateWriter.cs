@@ -144,6 +144,7 @@ public sealed class PrototypeRouteStateWriter
             ## Prototype Route Contract
 
             - Prototype route state: meta/routes/prototype/latest.json
+            - Prototype contract state: meta/routes/prototype-contract/latest.json
             - Iteration plan route state: meta/routes/iteration-plan/latest.json
             - Execute next goal route state: meta/routes/execute-next-goal/step-XX/latest.json
             - Needs fix route state: meta/routes/needs-fix/step-XX/latest.json
@@ -153,10 +154,13 @@ public sealed class PrototypeRouteStateWriter
             - Default route skill context:
               - RPG projects use `prototype-rpg-godot-zh`.
               - Non-RPG prototype projects use `prototype-7day-playable-godot-zh`.
-              - The same route skill context is inherited by prototype, iteration plan, execute-next-goal, and needs-fix.
+            - The same route skill context is inherited by prototype, iteration plan, execute-next-goal, and needs-fix.
+              - The project prototype contract is the source of truth for user form fields.
+              - User form fields override route skill templates and generic type defaults.
 
             - Start from this README to identify the project and game type.
-            - Execute next goal must read this README, prototype route state, and iteration plan route state before running a step.
+            - Prototype, iteration plan, execute next goal, and needs fix must read the prototype contract before reporting success.
+            - Execute next goal must read this README, prototype contract, prototype route state, and iteration plan route state before running a step.
             - For needs fix, read only the current step state under meta/routes/needs-fix/step-XX.
             - If the current step has no needs fix state, read meta/routes/execute-next-goal/step-XX/latest.json.
             - If both current-step states are missing, read meta/routes/prototype/latest.json.

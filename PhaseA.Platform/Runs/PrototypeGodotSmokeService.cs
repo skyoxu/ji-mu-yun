@@ -119,7 +119,7 @@ internal static class PrototypeGodotSmokeService
             return false;
         }
 
-        return goal.GoalIndex == 5;
+        return goal.GoalIndex is 5 or 6;
     }
 
     private static string? ResolveSmokeScene(string prototypeStateJson)

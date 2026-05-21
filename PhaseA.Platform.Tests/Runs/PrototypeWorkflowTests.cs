@@ -104,8 +104,15 @@ public sealed class PrototypeWorkflowTests
         run.Status.Should().Be("succeeded");
         run.ProgressStep.Should().Be("succeeded");
         run.EvidenceJson.Should().Contain("prototype_artifacts");
+        run.EvidenceJson.Should().Contain("prototype_contract");
         run.EvidenceJson.Should().Contain("godot_smoke");
         run.StdoutText.Should().Contain("SMOKE PASS");
+        var contract = new PrototypeContractService().Read(project);
+        contract.Json.Should().Contain("project-specific source of truth");
+        contract.Json.Should().Contain("One-room tactical combat.");
+        contract.Json.Should().Contain("Move, choose action, resolve enemy response.");
+        contract.Json.Should().Contain("Win by defeating enemy; fail when health reaches zero.");
+        new PrototypeRouteStateWriter().ReadLatestPrototypeState(project).Should().Contain("prototype_contract");
     }
 
     [Fact]

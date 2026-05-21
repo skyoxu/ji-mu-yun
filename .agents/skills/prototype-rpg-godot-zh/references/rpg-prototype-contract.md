@@ -50,6 +50,25 @@ Scene ownership must remain separate:
 - `BattleScene` consumes player assets, enemy assets, and battle UI assets.
 - The main prototype scene owns routing, not combat rules.
 
+
+### Runtime Asset Instance Contract
+
+- Active RPG prototype scenes must not rely on assets that are only present in a template folder if the current project slug owns the playable slice.
+- Copy the required map, player, and enemy visual assets into the current prototype slug, for example `Game.Godot/Prototypes/dq-rpg/Assets/`.
+- Do not keep `Game.Godot/.gdignore` in active RPG prototype projects because it blocks Godot resource import for runtime assets under `Game.Godot`.
+- Each current prototype scene must use exact, category-safe node names for the three foundation assets:
+  - `RpgMapAsset` uses a map/background/tile asset.
+  - `RpgPlayerAsset` uses a player/hero/protagonist asset.
+  - `RpgEnemyAsset` uses an enemy/monster/boss asset.
+- Asset references must resolve to real `res://` files, and Godot import metadata must be generated before acceptance smoke.
+
+### Start Adventure Visibility Contract
+
+- `StartButton.Pressed` must switch from the menu to a visible map scene.
+- `MapScene` must be under `CanvasLayer/UI` or an equivalent UI layout parent with non-zero viewport-sized layout.
+- The map scene must remain visible after the click and contain visible map markers, a grid, status text, the player asset, and the enemy asset.
+- A prototype that navigates to the RPG shell but shows a blank screen after `Start Adventure` is not accepted.
+
 ### Assets And UI
 
 - Support repo-local generated or hand-authored assets.
