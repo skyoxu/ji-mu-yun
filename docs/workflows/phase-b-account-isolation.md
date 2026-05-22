@@ -15,6 +15,7 @@ Implemented scope:
 - Username/password login is explicitly deferred to Phase C or the pre-production identity-system pass.
 - Project listing, project creation, deletion, chat history, package access, asset access, run readback, and artifact readback are scoped to the authenticated account.
 - Admin-only panels and admin APIs require the resolved admin role.
+- Admin-only route denials return explicit HTTP 403 JSON instead of framework-forbid middleware output.
 - Each signed-in account can read and save its own LLM gateway binding through `/api/account/llm-binding`.
 - Each signed-in account can view its own LLM usage summary through `/api/account/llm-usage`.
 - Admin can view cross-account LLM usage summary through `/api/admin/llm-usage` without exposing plaintext tokens.
@@ -114,7 +115,7 @@ Phase B can be called complete for the current prototype-hardening scope when al
 - Required: Admin can inspect account-level LLM usage, export account-level usage CSV, and inspect recent LLM run summaries.
 - Required: Local Phase B smoke passes without credentials, proving route presence and unauthenticated rejection.
 - Required: Public Phase B smoke passes without credentials, proving reverse-proxy route presence and unauthenticated rejection.
-- Required before production exposure: Authorized Phase B smoke passes with an admin access token.
+- Required: Authorized Phase B smoke passes with an admin access token on both local and public endpoints.
 
 Deferred beyond this Phase B prototype-hardening scope:
 
@@ -127,5 +128,5 @@ Deferred beyond this Phase B prototype-hardening scope:
 
 - Local unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`.
 - Public unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://47.250.131.70:8080`.
-- Authorized admin smoke: pending because the current shell does not have `PHASEA_ADMIN_TOKEN` plaintext.
-- Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 193 tests passed.
+- Authorized admin smoke: passed on local and public endpoints with a host-provided admin token; token value was not written to logs or docs.
+- Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 196 tests passed.

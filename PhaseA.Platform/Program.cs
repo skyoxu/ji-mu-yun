@@ -193,7 +193,7 @@ app.MapGet("/api/admin/llm-usage", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     return Results.Ok(await readback.GetAdminLlmUsageAsync(cancellationToken));
@@ -206,7 +206,7 @@ app.MapGet("/api/admin/llm-usage.csv", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     var usage = await readback.GetAdminLlmUsageAsync(cancellationToken);
@@ -226,7 +226,7 @@ app.MapGet("/api/admin/llm-runs", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     return Results.Ok(await readback.GetAdminLlmRunAuditAsync(limit ?? 100, cancellationToken));
@@ -474,7 +474,7 @@ app.MapGet("/api/admin/llm-binding", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     var binding = await llmBinding.GetAsync(adminAccountId, cancellationToken);
@@ -498,7 +498,7 @@ app.MapPost("/api/admin/llm-binding", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     var result = await llmBinding.BindAsync(adminAccountId, request, cancellationToken);
@@ -524,7 +524,7 @@ app.MapPost("/api/admin/users", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     if (string.IsNullOrWhiteSpace(request.Username))
@@ -562,7 +562,7 @@ app.MapGet("/api/admin/users", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
@@ -577,7 +577,7 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     if (string.Equals(accountId, CurrentAccountId(context), StringComparison.Ordinal))
@@ -606,7 +606,7 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     if (string.Equals(accountId, CurrentAccountId(context), StringComparison.Ordinal))
@@ -638,7 +638,7 @@ app.MapGet("/api/admin/account-audit", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     var query = new AdminAccountAuditQuery(
@@ -660,7 +660,7 @@ app.MapGet("/api/admin/account-audit.csv", async (
 {
     if (!CurrentIdentity(context).IsAdmin)
     {
-        return Results.Forbid();
+        return AdminForbidden();
     }
 
     var query = new AdminAccountAuditQuery(
@@ -1166,6 +1166,11 @@ static AccountIdentity CurrentIdentity(HttpContext context)
 static string CurrentAccountId(HttpContext context)
 {
     return CurrentIdentity(context).AccountId;
+}
+
+static IResult AdminForbidden()
+{
+    return Results.Json(new { error = "admin_required" }, statusCode: StatusCodes.Status403Forbidden);
 }
 
 static bool TryReadApiProjectId(PathString path, out string projectId)
