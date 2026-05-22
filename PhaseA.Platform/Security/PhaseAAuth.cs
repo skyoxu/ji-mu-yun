@@ -56,6 +56,21 @@ public static class PhaseAAuth
         return null;
     }
 
+    public static string? ReadBearerOrHeaderToken(HttpRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return ReadToken(request);
+    }
+
+    public static string HashTokenForStorage(string token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token.Trim())))
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
     private static string? ReadToken(HttpRequest request)
     {
         var authorization = request.Headers.Authorization.ToString();
@@ -79,10 +94,7 @@ public static class PhaseAAuth
             return false;
         }
 
-        var actualHash = Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token.Trim())))
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
+        var actualHash = HashTokenForStorage(token);
 
         return CryptographicOperations.FixedTimeEquals(
             Encoding.ASCII.GetBytes(actualHash),

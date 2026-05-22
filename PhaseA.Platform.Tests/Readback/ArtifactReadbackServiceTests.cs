@@ -84,6 +84,101 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public void ExportAdminLlmUsageCsv_ExcludesSecrets()
+    {
+        var usage = new AdminLlmUsageReadback(
+            "2026-05-22",
+            1,
+            2,
+            3.50m,
+            new[] { new AdminLlmAccountUsageItem("account-1", "user,one", false, false, 2, 2, 3.50m) });
+
+        var csv = ArtifactReadbackService.ExportAdminLlmUsageCsv(usage);
+
+        csv.Should().Contain("utc_day,account_id,username,is_admin,is_disabled,project_count,llm_call_count,estimated_cost_cny");
+        csv.Should().Contain("\"user,one\"");
+        csv.Contains("token", StringComparison.OrdinalIgnoreCase).Should().BeFalse();
+        csv.Contains("secret", StringComparison.OrdinalIgnoreCase).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Readback_ReturnsAdminLlmRunAuditWithoutProcessOutput()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, owner, "Owner Game");
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-chat");
+        await store.CompleteRunAsync(runId, "succeeded", 0, "secret stdout", "secret stderr", "{}", CancellationToken.None);
+        await store.RecordRunLlmAuditAsync(runId, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
+        var service = new ArtifactReadbackService(store, options);
+
+        var audit = await service.GetAdminLlmRunAuditAsync();
+
+        var item = audit.Runs.Should().ContainSingle(run => run.RunId == runId).Subject;
+        item.Username.Should().NotBeNullOrWhiteSpace();
+        item.LlmCostJson.Should().Contain("estimated_cost_cny");
+        item.ToString().Should().NotContain("secret stdout");
+        item.ToString().Should().NotContain("secret stderr");
+    }
+
+    [Fact]
+    public async Task Readback_ReturnsAdminLlmUsageAcrossAccounts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("audit-user", 1);
+        var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
+        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game");
+        var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
+        var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-chat");
+        await store.RecordRunLlmAuditAsync(ownerRun, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
+        await store.RecordRunLlmAuditAsync(otherRun, "new-api", "req-other", "gpt-5.5", """{"estimated_cost_cny":2.75}""");
+        var service = new ArtifactReadbackService(store, options);
+
+        var usage = await service.GetAdminLlmUsageAsync();
+
+        usage.AccountCount.Should().BeGreaterThanOrEqualTo(2);
+        usage.CallCount.Should().Be(2);
+        usage.EstimatedCostCny.Should().Be(4.00m);
+        usage.Accounts.Should().Contain(account => account.AccountId == owner && account.CallCount == 1 && account.EstimatedCostCny == 1.25m);
+        usage.Accounts.Should().Contain(account => account.AccountId == other.AccountId && account.CallCount == 1 && account.EstimatedCostCny == 2.75m);
+    }
+
+    [Fact]
+    public async Task Readback_ReturnsAccountScopedLlmUsage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("other-llm-user", 1);
+        var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
+        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game");
+        var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
+        var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-chat");
+        await store.RecordRunLlmAuditAsync(ownerRun, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
+        await store.RecordRunLlmAuditAsync(otherRun, "new-api", "req-other", "gpt-5.4", """{"estimated_cost_cny":9.99}""");
+        var service = new ArtifactReadbackService(store, options);
+
+        var usage = await service.GetAccountLlmUsageAsync(owner);
+
+        usage.CallCount.Should().Be(1);
+        usage.EstimatedCostCny.Should().Be(1.25m);
+        usage.RecentRuns.Should().ContainSingle(run => run.RunId == ownerRun);
+        usage.RecentRuns.Should().NotContain(run => run.RunId == otherRun);
+    }
+
+    [Fact]
     public async Task ReadArtifactAsync_ResolvesArtifactsInsideOwningProjectRepo()
     {
         using var database = TempSqliteDatabase.Create();

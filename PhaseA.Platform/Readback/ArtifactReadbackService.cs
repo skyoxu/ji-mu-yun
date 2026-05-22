@@ -1,6 +1,8 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Workspaces;
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
 
 namespace PhaseA.Platform.Readback;
@@ -36,6 +38,96 @@ public sealed class ArtifactReadbackService
                 run.ProgressLabel);
     }
 
+    public async Task<AccountLlmUsageReadback> GetAccountLlmUsageAsync(
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var costJson = await _metadataStore.ListAccountLlmCostJsonForUtcDayAsync(accountId, today, cancellationToken);
+        var recent = await _metadataStore.ListLlmRunsForAccountAsync(accountId, limit: 20, cancellationToken);
+        var items = new List<RunReadbackItem>();
+        foreach (var run in recent)
+        {
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken);
+            items.Add(RunReadbackItem.FromSnapshot(run, artifacts));
+        }
+
+        return new AccountLlmUsageReadback(
+            today.ToString("O", CultureInfo.InvariantCulture),
+            costJson.Count,
+            costJson.Sum(ReadEstimatedCostCny),
+            items);
+    }
+
+    public async Task<AdminLlmUsageReadback> GetAdminLlmUsageAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accounts = await _metadataStore.ListAccountsAsync(cancellationToken);
+        var items = new List<AdminLlmAccountUsageItem>();
+        foreach (var account in accounts)
+        {
+            var costJson = await _metadataStore.ListAccountLlmCostJsonForUtcDayAsync(account.AccountId, today, cancellationToken);
+            items.Add(new AdminLlmAccountUsageItem(
+                account.AccountId,
+                account.Username,
+                account.IsAdmin,
+                account.IsDisabled,
+                account.ProjectCount,
+                costJson.Count,
+                costJson.Sum(ReadEstimatedCostCny)));
+        }
+
+        return new AdminLlmUsageReadback(
+            today.ToString("O", CultureInfo.InvariantCulture),
+            items.Count,
+            items.Sum(item => item.CallCount),
+            items.Sum(item => item.EstimatedCostCny),
+            items);
+    }
+
+    public async Task<AdminLlmRunAuditReadback> GetAdminLlmRunAuditAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 200);
+        var rows = await _metadataStore.ListLlmRunsForAdminAsync(boundedLimit, cancellationToken);
+        var items = rows.Select(row => new AdminLlmRunAuditItem(
+            row.Account.AccountId,
+            row.Account.Username,
+            row.Run.ProjectId,
+            row.Run.RunId,
+            row.Run.RunType,
+            row.Run.Status,
+            row.Run.LlmGateway,
+            row.Run.LlmModel,
+            row.Run.LlmRequestId,
+            row.Run.LlmCostJson)).ToArray();
+        return new AdminLlmRunAuditReadback(items.Length, items);
+    }
+
+    public static string ExportAdminLlmUsageCsv(AdminLlmUsageReadback usage)
+    {
+        ArgumentNullException.ThrowIfNull(usage);
+
+        var builder = new StringBuilder();
+        builder.AppendLine("utc_day,account_id,username,is_admin,is_disabled,project_count,llm_call_count,estimated_cost_cny");
+        foreach (var account in usage.Accounts)
+        {
+            builder
+                .Append(Csv(usage.UtcDay)).Append(',')
+                .Append(Csv(account.AccountId)).Append(',')
+                .Append(Csv(account.Username)).Append(',')
+                .Append(account.IsAdmin ? "true" : "false").Append(',')
+                .Append(account.IsDisabled ? "true" : "false").Append(',')
+                .Append(account.ProjectCount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append(account.CallCount.ToString(CultureInfo.InvariantCulture)).Append(',')
+                .Append(account.EstimatedCostCny.ToString(CultureInfo.InvariantCulture))
+                .AppendLine();
+        }
+
+        return builder.ToString();
+    }
+
     public Task<ProjectCreationFailureSnapshot?> GetLatestProjectCreationFailureAsync(
         string accountId,
         CancellationToken cancellationToken = default)
@@ -62,9 +154,37 @@ public sealed class ArtifactReadbackService
         return new ProjectRunsReadback(project, items, ReadProjectHealthSummary(project.RepoPath));
     }
 
+    public async Task<ProjectRunsReadback?> GetProjectRunsForAccountAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        var readback = await GetProjectRunsAsync(projectId, cancellationToken);
+        return readback is null || !string.Equals(readback.Project.AccountId, accountId, StringComparison.Ordinal)
+            ? null
+            : readback;
+    }
+
     public Task<RunSnapshot?> GetRunAsync(string runId, CancellationToken cancellationToken = default)
     {
         return _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+    }
+
+    public async Task<RunSnapshot?> GetRunForAccountAsync(
+        string accountId,
+        string runId,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        if (run is null)
+        {
+            return null;
+        }
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(run.ProjectId, cancellationToken);
+        return project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal)
+            ? null
+            : run;
     }
 
     public Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunAsync(string runId, CancellationToken cancellationToken = default)
@@ -82,6 +202,26 @@ public sealed class ArtifactReadbackService
 
         var project = await _metadataStore.GetProjectSnapshotAsync(artifact.ProjectId, cancellationToken);
         return project is null ? null : ReadArtifact(project.RepoPath, artifact);
+    }
+
+    public async Task<ArtifactReadResult?> ReadArtifactForAccountAsync(
+        string accountId,
+        string artifactId,
+        CancellationToken cancellationToken = default)
+    {
+        var artifact = await _metadataStore.GetArtifactAsync(artifactId, cancellationToken);
+        if (artifact is null)
+        {
+            return null;
+        }
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(artifact.ProjectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return ReadArtifact(project.RepoPath, artifact);
     }
 
     public ArtifactReadResult? ReadProjectHealth(string relativePath)
@@ -161,6 +301,36 @@ public sealed class ArtifactReadbackService
             UnitTestFileCount: GetInt(signals, "unit_test_files"),
             TopRecommendation: FindTopRecommendation(doctorResult),
             DashboardPath: "logs/ci/project-health/latest.html");
+    }
+
+    private static decimal ReadEstimatedCostCny(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return 0m;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.TryGetProperty("estimated_cost_cny", out var value) &&
+                value.TryGetDecimal(out var cost))
+            {
+                return cost;
+            }
+        }
+        catch (JsonException)
+        {
+            return 0m;
+        }
+
+        return 0m;
+    }
+
+    private static string Csv(string? value)
+    {
+        var text = value ?? "";
+        return "\"" + text.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
     }
 
     private ArtifactReadResult? ReadArtifact(string repositoryRoot, ArtifactSnapshot artifact)

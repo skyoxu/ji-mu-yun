@@ -159,7 +159,7 @@ public sealed class BrowserUiRenderer
             <body>
               <header>
                 <h1>积木云 Phase A 原型控制台</h1>
-                <p>Phase A Prototype Console：用于创建项目、运行云端原型路线、查看运行日志和产物的单管理员控制台。</p>
+                <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
                 <div id="activeRunBanner" class="busy-banner hidden"></div>
               </header>
               <main>
@@ -171,12 +171,12 @@ public sealed class BrowserUiRenderer
                   </section>
                   <section id="stepsPanel" class="stack">
                     <h2>使用步骤</h2>
-                    <p>1. 粘贴 Admin token 并保存。2. 创建或选择项目。3. 先运行 Chapter 2 初始化。4. 填写 7 步可玩原型表单并运行。5. 在 Runs 和 Output 查看结果与产物链接。</p>
+                    <p>1. Paste an access token and save it. 2. Create or select a project. 3. Run the prototype workflow. 4. Review runs, outputs, and downloadable artifacts.</p>
                     <p class="muted">当前 Phase A 只提供固定工作流按钮，不是 Codex CLI 式自由对话窗口。</p>
                   </section>
                   <section id="sessionPanel" class="stack">
                     <h2>会话</h2>
-                    <label>Admin token <input id="token" type="password" autocomplete="off" placeholder="粘贴服务器生成的 token"></label>
+                    <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
                     <button id="saveToken">验证并进入</button>
                     <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
                   </section>
@@ -191,12 +191,35 @@ public sealed class BrowserUiRenderer
                     <h2>Codex 配置</h2>
                     <p class="muted">自由对话复用服务器本机 Codex CLI 的登录态、provider 和配置；浏览器用户只能从服务器允许的模型列表中选择。</p>
                     <p class="muted">当前后端以只读方式调用 codex exec。聊天不会直接修改文件；需要执行工作流时仍使用页面上的固定按钮。</p>
+                    <h2>LLM Binding</h2>
+                    <label>Gateway base URL <input id="llmGatewayBaseUrl" placeholder="https://new-api.example/v1"></label>
+                    <label>External account ref <input id="llmExternalAccountRef" placeholder="new-api account or user ref"></label>
+                    <label>Token ref <input id="llmTokenRef" placeholder="host secret env var name or secret ref"></label>
+                    <button id="saveLlmBinding" class="secondary" data-global-action="true">Save account LLM binding</button>
+                    <button id="loadLlmBinding" class="ghost">Load account LLM binding</button>
+                    <button id="loadLlmUsage" class="ghost">Load LLM usage</button>
+                    <div id="llmBindingStatus" class="card muted">No account LLM binding loaded.</div>
+                    <div id="llmUsageStatus" class="card muted">No account LLM usage loaded.</div>
                     <button id="logout" class="danger-button">退出登录</button>
                   </section>
                   <section id="projectListPanel" class="hidden">
                     <h2>项目列表</h2>
                     <button id="refreshProjects" class="ghost">刷新项目列表</button>
                     <div id="projects" class="card-list"></div>
+                  </section>
+                  <section id="accountAdminPanel" class="stack hidden">
+                    <h2>Account Admin</h2>
+                    <label>Username <input id="newUsername" placeholder="phaseb-user"></label>
+                    <label>Project limit <input id="newUserProjectLimit" type="number" min="1" value="2"></label>
+                    <button id="createUserAccount" class="secondary" data-global-action="true">Create user token</button>
+                    <button id="refreshUserAccounts" class="ghost">Refresh users</button>
+                    <button id="loadAdminLlmUsage" class="ghost">Load admin LLM usage</button>
+                    <button id="downloadAdminLlmUsageCsv" class="ghost">Download admin LLM usage CSV</button>
+                    <button id="loadAdminLlmRuns" class="ghost">Load admin LLM run audit</button>
+                    <div id="createUserAccountResult" class="card muted">Admin only. The token is shown once after creation.</div>
+                    <div id="userAccounts" class="card-list"></div>
+                    <div id="adminLlmUsageStatus" class="card muted">No admin LLM usage loaded.</div>
+                    <div id="adminLlmRunsStatus" class="card muted">No admin LLM run audit loaded.</div>
                   </section>
                 </aside>
                 <div id="adminPanel" class="stack hidden">
@@ -304,7 +327,7 @@ public sealed class BrowserUiRenderer
                 const headers = () => ({ "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" });
 
                 function setTokenFromStorage() {
-                  $("token").value = localStorage.getItem("phaseAAdminToken") || "";
+                  $("token").value = localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 }
 
                 function renderChatHistory() {
@@ -764,12 +787,13 @@ public sealed class BrowserUiRenderer
                   $("globalModelPanel").classList.add("hidden");
                   $("createProjectPanel").classList.add("hidden");
                   $("codexConfigPanel").classList.add("hidden");
+                  $("accountAdminPanel").classList.add("hidden");
                   $("prototypeCommandPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
                   state.nextSuggestedFeedback = "";
                   $("projectListPanel").classList.add("hidden");
                   applyGlobalBusyState();
-                  $("sessionStatus").textContent = "请粘贴 Admin token 后验证。";
+                  $("sessionStatus").textContent = "Please paste an access token to sign in.";
                 }
 
                 function showAdminShell(role = state.role || "user") {
@@ -781,11 +805,19 @@ public sealed class BrowserUiRenderer
                   $("globalModelPanel").classList.remove("hidden");
                   $("createProjectPanel").classList.remove("hidden");
                   $("codexConfigPanel").classList.remove("hidden");
+                  $("accountAdminPanel").classList.toggle("hidden", role !== "admin");
                   $("prototypeCommandPanel").classList.toggle("hidden", role !== "admin");
                   $("chatPanel").classList.add("hidden");
                   $("projectDetailPanel").classList.add("hidden");
                   $("initStatusPanel").classList.add("hidden");
                   loadSkillActions();
+                  loadLlmBinding();
+                  loadLlmUsage();
+                  if (role === "admin") {
+                    loadUserAccounts();
+                    loadAdminLlmUsage();
+                    loadAdminLlmRuns();
+                  }
                   refreshActiveRun();
                 }
 
@@ -892,6 +924,266 @@ public sealed class BrowserUiRenderer
                   } finally {
                     button.disabled = false;
                     button.textContent = originalText;
+                  }
+                }
+
+                async function createUserAccount() {
+                  if (!guardGlobalAction()) return;
+                  const username = $("newUsername").value.trim();
+                  const projectLimit = Number($("newUserProjectLimit").value || "2");
+                  if (!username) return out("Username is required.");
+                  if (!Number.isFinite(projectLimit) || projectLimit < 1) return out("Project limit must be greater than zero.");
+                  setLocalBusy(true);
+                  $("createUserAccount").disabled = true;
+                  $("createUserAccount").textContent = "Creating...";
+                  try {
+                    const result = await api("/api/admin/users", {
+                      method: "POST",
+                      body: JSON.stringify({ username, projectLimit })
+                    });
+                    $("createUserAccountResult").className = "card";
+                    $("createUserAccountResult").innerHTML = `
+                      <strong>User created</strong>
+                      <p>username: ${escapeHtml(result.username)}</p>
+                      <p>accountId: ${escapeHtml(result.accountId)}</p>
+                      <p>projectLimit: ${escapeHtml(result.projectLimit)}</p>
+                      <p>token: <code>${escapeHtml(result.token)}</code></p>
+                    `;
+                    out(result);
+                    await loadUserAccounts();
+                  } catch (error) {
+                    $("createUserAccountResult").className = "card danger";
+                    $("createUserAccountResult").textContent = error?.payload?.error || "create_user_failed";
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    $("createUserAccount").disabled = false;
+                    $("createUserAccount").textContent = "Create user token";
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function loadUserAccounts() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const result = await api("/api/admin/users");
+                    const users = result.users || [];
+                    $("userAccounts").innerHTML = users.map(user => `
+                      <div class="card">
+                        <strong>${escapeHtml(user.username)}${user.isAdmin ? " · admin" : ""}${user.isDisabled ? " · disabled" : ""}</strong>
+                        <p class="muted">accountId: ${escapeHtml(user.accountId)}</p>
+                        <p class="muted">projects: ${escapeHtml(user.projectCount)} / ${escapeHtml(user.projectLimit)}</p>
+                        <p class="muted">created: ${escapeHtml(user.createdUtc)}</p>
+                        ${user.isAdmin ? "" : `
+                          <div class="split-actions">
+                            <button class="ghost" data-user-status="${escapeHtml(user.accountId)}" data-disabled="${user.isDisabled ? "false" : "true"}">${user.isDisabled ? "Enable user" : "Disable user"}</button>
+                            <button class="secondary" data-user-rotate="${escapeHtml(user.accountId)}">Rotate token</button>
+                          </div>
+                        `}
+                      </div>
+                    `).join("") || "<p class='muted'>No users.</p>";
+                    document.querySelectorAll("[data-user-status]").forEach(button => {
+                      button.onclick = () => updateUserStatus(button.dataset.userStatus, button.dataset.disabled === "true");
+                    });
+                    document.querySelectorAll("[data-user-rotate]").forEach(button => {
+                      button.onclick = () => rotateUserToken(button.dataset.userRotate);
+                    });
+                  } catch (error) {
+                    $("userAccounts").innerHTML = "<p class='danger'>Failed to load users.</p>";
+                  }
+                }
+
+                async function loadLlmBinding() {
+                  if (!state.authenticated) return;
+                  try {
+                    const binding = await api("/api/account/llm-binding");
+                    $("llmGatewayBaseUrl").value = binding.gatewayBaseUrl || "";
+                    $("llmExternalAccountRef").value = binding.externalAccountRef || "";
+                    $("llmTokenRef").value = binding.tokenRef || "";
+                    $("llmBindingStatus").className = "card";
+                    $("llmBindingStatus").innerHTML = `
+                      <strong>Account LLM binding loaded</strong>
+                      <p>provider: ${escapeHtml(binding.gatewayProvider || "")}</p>
+                      <p>baseUrl: ${escapeHtml(binding.gatewayBaseUrl || "")}</p>
+                      <p>externalAccountRef: ${escapeHtml(binding.externalAccountRef || "")}</p>
+                      <p>tokenRef: ${escapeHtml(binding.tokenRef || "")}</p>
+                    `;
+                  } catch (error) {
+                    $("llmBindingStatus").className = "card muted";
+                    $("llmBindingStatus").textContent = "No account LLM binding configured.";
+                  }
+                }
+
+                async function saveLlmBinding() {
+                  if (!guardGlobalAction()) return;
+                  setLocalBusy(true);
+                  $("saveLlmBinding").disabled = true;
+                  $("saveLlmBinding").textContent = "Saving...";
+                  try {
+                    const result = await api("/api/account/llm-binding", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        gatewayProvider: "new-api",
+                        gatewayBaseUrl: $("llmGatewayBaseUrl").value.trim(),
+                        externalAccountRef: $("llmExternalAccountRef").value.trim(),
+                        tokenRef: $("llmTokenRef").value.trim()
+                      })
+                    });
+                    $("llmBindingStatus").className = "card";
+                    $("llmBindingStatus").textContent = "Account LLM binding saved.";
+                    out(result);
+                    await loadLlmBinding();
+                  } catch (error) {
+                    $("llmBindingStatus").className = "card danger";
+                    $("llmBindingStatus").textContent = error?.payload?.failureCode || error?.payload?.error || "llm_binding_failed";
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    $("saveLlmBinding").disabled = false;
+                    $("saveLlmBinding").textContent = "Save account LLM binding";
+                  }
+                }
+
+                async function loadLlmUsage() {
+                  if (!state.authenticated) return;
+                  try {
+                    const usage = await api("/api/account/llm-usage");
+                    const runs = usage.recentRuns || [];
+                    $("llmUsageStatus").className = "card";
+                    $("llmUsageStatus").innerHTML = `
+                      <strong>Today: ${escapeHtml(usage.callCount)} LLM calls · CNY ${escapeHtml(usage.estimatedCostCny)}</strong>
+                      <p class="muted">UTC day: ${escapeHtml(usage.utcDay)}</p>
+                      <div class="card-list">
+                        ${runs.slice(0, 5).map(run => `
+                          <div class="card">
+                            <strong>${escapeHtml(run.runType)} · ${escapeHtml(run.status)}</strong>
+                            <p class="muted">model: ${escapeHtml(run.llmModel || "")}</p>
+                            <p class="muted">gateway: ${escapeHtml(run.llmGateway || "")}</p>
+                            <p class="muted">${escapeHtml(run.llmCostJson || "")}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No LLM runs today.</p>"}
+                      </div>
+                    `;
+                  } catch (error) {
+                    $("llmUsageStatus").className = "card danger";
+                    $("llmUsageStatus").textContent = error?.payload?.error || "llm_usage_load_failed";
+                  }
+                }
+
+                async function loadAdminLlmUsage() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const usage = await api("/api/admin/llm-usage");
+                    const accounts = usage.accounts || [];
+                    $("adminLlmUsageStatus").className = "card";
+                    $("adminLlmUsageStatus").innerHTML = `
+                      <strong>All accounts today: ${escapeHtml(usage.callCount)} LLM calls · CNY ${escapeHtml(usage.estimatedCostCny)}</strong>
+                      <p class="muted">accounts: ${escapeHtml(usage.accountCount)} · UTC day: ${escapeHtml(usage.utcDay)}</p>
+                      <div class="card-list">
+                        ${accounts.map(account => `
+                          <div class="card">
+                            <strong>${escapeHtml(account.username)}${account.isAdmin ? " · admin" : ""}${account.isDisabled ? " · disabled" : ""}</strong>
+                            <p class="muted">projects: ${escapeHtml(account.projectCount)}</p>
+                            <p class="muted">calls: ${escapeHtml(account.callCount)} · CNY ${escapeHtml(account.estimatedCostCny)}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No accounts.</p>"}
+                      </div>
+                    `;
+                  } catch (error) {
+                    $("adminLlmUsageStatus").className = "card danger";
+                    $("adminLlmUsageStatus").textContent = error?.payload?.error || "admin_llm_usage_load_failed";
+                  }
+                }
+
+                async function downloadAdminLlmUsageCsv() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const response = await fetch("/api/admin/llm-usage.csv", {
+                      headers: { "Authorization": `Bearer ${token()}` },
+                      cache: "no-store"
+                    });
+                    if (!response.ok) {
+                      throw { status: response.status, payload: { error: "admin_llm_usage_csv_failed" } };
+                    }
+
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = url;
+                    anchor.download = "admin-llm-usage.csv";
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (error) {
+                    showError(error);
+                  }
+                }
+
+                async function loadAdminLlmRuns() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const audit = await api("/api/admin/llm-runs?limit=50");
+                    const runs = audit.runs || [];
+                    $("adminLlmRunsStatus").className = "card";
+                    $("adminLlmRunsStatus").innerHTML = `
+                      <strong>Recent LLM runs: ${escapeHtml(audit.count)}</strong>
+                      <div class="card-list">
+                        ${runs.map(run => `
+                          <div class="card">
+                            <strong>${escapeHtml(run.username)} · ${escapeHtml(run.runType)} · ${escapeHtml(run.status)}</strong>
+                            <p class="muted">projectId: ${escapeHtml(run.projectId)}</p>
+                            <p class="muted">runId: ${escapeHtml(run.runId)}</p>
+                            <p class="muted">model: ${escapeHtml(run.llmModel || "")} · gateway: ${escapeHtml(run.llmGateway || "")}</p>
+                            <p class="muted">requestId: ${escapeHtml(run.llmRequestId || "")}</p>
+                            <p class="muted">${escapeHtml(run.llmCostJson || "")}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No LLM runs.</p>"}
+                      </div>
+                    `;
+                  } catch (error) {
+                    $("adminLlmRunsStatus").className = "card danger";
+                    $("adminLlmRunsStatus").textContent = error?.payload?.error || "admin_llm_runs_load_failed";
+                  }
+                }
+
+                async function updateUserStatus(accountId, disabled) {
+                  if (!guardGlobalAction()) return;
+                  setLocalBusy(true);
+                  try {
+                    const result = await api(`/api/admin/users/${encodeURIComponent(accountId)}/status`, {
+                      method: "POST",
+                      body: JSON.stringify({ disabled })
+                    });
+                    $("createUserAccountResult").className = "card";
+                    $("createUserAccountResult").textContent = disabled ? "User disabled." : "User enabled.";
+                    out(result);
+                    await loadUserAccounts();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                  }
+                }
+
+                async function rotateUserToken(accountId) {
+                  if (!guardGlobalAction()) return;
+                  setLocalBusy(true);
+                  try {
+                    const result = await api(`/api/admin/users/${encodeURIComponent(accountId)}/rotate-token`, { method: "POST" });
+                    $("createUserAccountResult").className = "card";
+                    $("createUserAccountResult").innerHTML = `
+                      <strong>User token rotated</strong>
+                      <p>username: ${escapeHtml(result.username)}</p>
+                      <p>accountId: ${escapeHtml(result.accountId)}</p>
+                      <p>token: <code>${escapeHtml(result.token)}</code></p>
+                    `;
+                    out(result);
+                    await loadUserAccounts();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
                   }
                 }
 
@@ -1131,6 +1423,7 @@ public sealed class BrowserUiRenderer
                     }
                     out(projects);
                   } catch (error) {
+                    localStorage.removeItem("phaseAAccessToken");
                     localStorage.removeItem("phaseAAdminToken");
                     showLoggedOut();
                     showError(error);
@@ -2191,12 +2484,14 @@ public sealed class BrowserUiRenderer
                 }
 
                 $("saveToken").onclick = () => {
-                  localStorage.setItem("phaseAAdminToken", token());
+                  localStorage.setItem("phaseAAccessToken", token());
+                  localStorage.removeItem("phaseAAdminToken");
                   $("sessionStatus").textContent = token() ? "Token 验证中..." : "Token 已清空。";
                   if (token()) refreshProjects(); else showLoggedOut();
                 };
                 $("logout").onclick = () => {
                   localStorage.removeItem("phaseAAdminToken");
+                  localStorage.removeItem("phaseAAccessToken");
                   $("token").value = "";
                   state.projectId = "";
                   state.projects = [];
@@ -2204,6 +2499,14 @@ public sealed class BrowserUiRenderer
                 };
                 $("refreshProjects").onclick = refreshProjects;
                 $("createProject").onclick = createProject;
+                $("createUserAccount").onclick = createUserAccount;
+                $("refreshUserAccounts").onclick = loadUserAccounts;
+                $("loadAdminLlmUsage").onclick = loadAdminLlmUsage;
+                $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
+                $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
+                $("saveLlmBinding").onclick = saveLlmBinding;
+                $("loadLlmBinding").onclick = loadLlmBinding;
+                $("loadLlmUsage").onclick = loadLlmUsage;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
                 $("syncChatHistory").onclick = syncChatHistory;
@@ -2290,7 +2593,7 @@ public sealed class BrowserUiRenderer
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
-                const token = () => localStorage.getItem("phaseAAdminToken") || "";
+                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 async function loadPackages() {
@@ -2417,7 +2720,7 @@ public sealed class BrowserUiRenderer
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
                 const model = params.get("model") || "gpt-5.4";
-                const token = () => localStorage.getItem("phaseAAdminToken") || "";
+                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
 

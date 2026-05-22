@@ -28,7 +28,7 @@ Rules:
 - Caddy is the only public listener for Phase A.
 - `PUBLIC_BASE_URL` must be HTTPS.
 - Do not store upstream provider API keys in Phase A platform configuration or SQLite.
-- Browser/API callers must send `Authorization: Bearer <admin-token>` or the configured admin token header.
+- Browser/API callers must send `Authorization: Bearer <access-token>`. The initial admin access token is backed by `PHASEA_ADMIN_TOKEN_HASH`; database-created user access tokens are stored as hashes.
 
 ## Caddyfile
 
@@ -46,15 +46,15 @@ your-domain.example {
 }
 ```
 
-## Admin Token
+## Access Tokens
 
-Generate a strong token before first deployment:
+Generate a strong initial admin access token before first deployment:
 
 ```powershell
 py -3 scripts/python/dev_cli.py phase-a-generate-admin-token
 ```
 
-Set the generated value as `PHASEA_ADMIN_TOKEN_HASH` in the host service environment. Phase A currently treats this configured value as the bearer-token verifier, so rotate it by changing the service environment and restarting the process. Do not commit the generated token, and do not put it in Caddyfile or git-tracked docs.
+Set the generated hash as `PHASEA_ADMIN_TOKEN_HASH` in the host service environment. Admin can create database-backed user access tokens from the console after sign-in. Do not commit plaintext tokens or token hashes, and do not put them in Caddyfile or git-tracked docs.
 
 ## Operations Preflight
 
@@ -121,7 +121,7 @@ py -3 scripts/python/dev_cli.py phase-a-runtime-smoke --dotnet "C:\Program Files
 py -3 scripts/python/dev_cli.py phase-a-prototype-e2e --dotnet "C:\Program Files\dotnet\dotnet.exe" --stop-after-day 5
 py -3 scripts/python/dev_cli.py phase-a-restore-drill --dotnet "C:\Program Files\dotnet\dotnet.exe"
 py -3 scripts/python/dev_cli.py phase-a-token-rotation-drill --dotnet "C:\Program Files\dotnet\dotnet.exe"
-py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-domain.example" --admin-token "<admin-token>"
+py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-domain.example" --admin-token "<access-token>"
 ```
 
 `phase-a-runtime-smoke` starts `PhaseA.Platform` with a temporary SQLite database and workspace under `logs/ci/<date>/phase-a-runtime-smoke/<run_id>/`. It verifies `/healthz`, auth rejection, authenticated project creation, browser Git URL rejection, and the default two-project quota.
@@ -130,7 +130,7 @@ py -3 scripts/python/dev_cli.py phase-a-public-smoke --base-url "https://your-do
 
 `phase-a-restore-drill` creates a fixture SQLite/workspace pair, backs it up, restores it to a new location, starts `PhaseA.Platform` against the restored files, and verifies project readback through the API.
 
-`phase-a-token-rotation-drill` starts the service with an old token, restarts with a new token, then verifies old-token rejection and new-token acceptance.
+`phase-a-token-rotation-drill` starts the service with an old token, restarts with a new token, then verifies old access-token rejection and new access-token acceptance.
 
 Run service-starting drills serially. Parallel `dotnet run` invocations can lock `PhaseA.Platform` build outputs.
 

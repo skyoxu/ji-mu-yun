@@ -3,6 +3,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Security;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Data;
@@ -52,6 +53,104 @@ public sealed class SqliteMetadataSchemaTests
 
         repeatedAccountId.Should().Be(accountId);
         projectLimit.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task CreateUserAccountAsync_StoresTokenHashAndProjectLimit()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+
+        var result = await store.CreateUserAccountAsync("phaseb-user", 1);
+        var resolved = await store.ResolveAccountByTokenHashAsync(PhaseAAuth.HashTokenForStorage(result.Token));
+        var projectLimit = await store.GetProjectLimitAsync(result.AccountId);
+
+        resolved.Should().NotBeNull();
+        resolved!.AccountId.Should().Be(result.AccountId);
+        resolved.Username.Should().Be("phaseb-user");
+        resolved.IsAdmin.Should().BeFalse();
+        resolved.IsDisabled.Should().BeFalse();
+        projectLimit.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ProjectBelongsToAccountAsync_ReturnsFalseForOtherAccounts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("other-user", 1);
+        var project = await store.CreateProjectAsync(CreateCommand(owner, "project-one", "Game One"));
+
+        (await store.ProjectBelongsToAccountAsync(owner, project.ProjectId!)).Should().BeTrue();
+        (await store.ProjectBelongsToAccountAsync(other.AccountId, project.ProjectId!)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ListAccountsAsync_ReturnsProjectCountsAndLimits()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var user = await store.CreateUserAccountAsync("listed-user", 1);
+        await store.CreateProjectAsync(CreateCommand(user.AccountId, "project-one", "Game One"));
+
+        var accounts = await store.ListAccountsAsync();
+
+        accounts.Should().Contain(account => account.AccountId == admin && account.IsAdmin);
+        accounts.Should().Contain(account =>
+            account.AccountId == user.AccountId &&
+            account.Username == "listed-user" &&
+            !account.IsAdmin &&
+            !account.IsDisabled &&
+            account.ProjectLimit == 1 &&
+            account.ProjectCount == 1);
+    }
+
+    [Fact]
+    public async Task SetUserDisabledAsync_BlocksTokenResolution()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var user = await store.CreateUserAccountAsync("disabled-user", 1);
+        var tokenHash = PhaseAAuth.HashTokenForStorage(user.Token);
+
+        (await store.SetUserDisabledAsync(user.AccountId, true)).Should().BeTrue();
+        (await store.ResolveAccountByTokenHashAsync(tokenHash)).Should().BeNull();
+
+        (await store.SetUserDisabledAsync(user.AccountId, false)).Should().BeTrue();
+        (await store.ResolveAccountByTokenHashAsync(tokenHash)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task RotateUserTokenAsync_InvalidatesPreviousToken()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var user = await store.CreateUserAccountAsync("rotate-user", 1);
+        var oldHash = PhaseAAuth.HashTokenForStorage(user.Token);
+
+        var rotated = await store.RotateUserTokenAsync(user.AccountId);
+
+        rotated.Should().NotBeNull();
+        rotated!.Token.Should().NotBe(user.Token);
+        (await store.ResolveAccountByTokenHashAsync(oldHash)).Should().BeNull();
+        (await store.ResolveAccountByTokenHashAsync(PhaseAAuth.HashTokenForStorage(rotated.Token))).Should().NotBeNull();
     }
 
     [Fact]

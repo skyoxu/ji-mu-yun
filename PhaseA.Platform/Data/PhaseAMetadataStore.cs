@@ -1,6 +1,8 @@
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
+using System.Security.Cryptography;
 using System.Text.Json;
 using SQLitePCL;
 
@@ -35,6 +37,8 @@ public sealed class PhaseAMetadataStore
 
         if (!string.IsNullOrWhiteSpace(existingId))
         {
+            await SyncAdminSecretsAsync(connection, existingId, cancellationToken);
+            await UpsertProjectLimitAsync(connection, existingId, _options.HostedProjectLimit, now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return existingId;
         }
@@ -59,6 +63,205 @@ public sealed class PhaseAMetadataStore
 
         await transaction.CommitAsync(cancellationToken);
         return accountId;
+    }
+
+    public async Task<AccountSnapshot?> ResolveAccountByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, username, is_admin, is_disabled
+            FROM accounts
+            WHERE token_hash = $token_hash
+              AND is_disabled = 0
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$token_hash", tokenHash);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new AccountSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetInt64(2) == 1,
+            reader.GetInt64(3) == 1);
+    }
+
+    public async Task<AdminCreateUserResult> CreateUserAccountAsync(
+        string username,
+        int projectLimit,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(username);
+        if (projectLimit < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(projectLimit), "Project limit must be greater than zero.");
+        }
+
+        var normalizedUsername = username.Trim();
+        var token = GenerateAccountToken();
+        var tokenHash = PhaseAAuth.HashTokenForStorage(token);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var accountId = NewId();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await using (var command = connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            command.CommandText =
+                """
+                INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, created_utc)
+                VALUES ($id, $username, NULL, $token_hash, 0, $created_utc);
+                """;
+            command.Parameters.AddWithValue("$id", accountId);
+            command.Parameters.AddWithValue("$username", normalizedUsername);
+            command.Parameters.AddWithValue("$token_hash", tokenHash);
+            command.Parameters.AddWithValue("$created_utc", now);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await UpsertProjectLimitAsync(connection, accountId, projectLimit, now, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return new AdminCreateUserResult(accountId, normalizedUsername, token, projectLimit);
+    }
+
+    public async Task<IReadOnlyList<AdminUserListItem>> ListAccountsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                a.id,
+                a.username,
+                a.is_admin,
+                a.is_disabled,
+                COALESCE(pl.project_limit, $default_project_limit),
+                COUNT(p.id),
+                a.created_utc
+            FROM accounts a
+            LEFT JOIN project_limits pl ON pl.account_id = a.id
+            LEFT JOIN projects p ON p.account_id = a.id
+            GROUP BY a.id, a.username, a.is_admin, a.is_disabled, pl.project_limit, a.created_utc
+            ORDER BY a.is_admin DESC, a.created_utc ASC, a.username ASC;
+            """;
+        command.Parameters.AddWithValue("$default_project_limit", _options.HostedProjectLimit);
+
+        var accounts = new List<AdminUserListItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            accounts.Add(new AdminUserListItem(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1,
+                checked((int)reader.GetInt64(4)),
+                checked((int)reader.GetInt64(5)),
+                reader.GetString(6)));
+        }
+
+        return accounts;
+    }
+
+    public async Task<bool> SetUserDisabledAsync(
+        string accountId,
+        bool disabled,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE accounts
+            SET is_disabled = $is_disabled
+            WHERE id = $account_id
+              AND is_admin = 0;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$is_disabled", disabled ? 1 : 0);
+        return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
+    }
+
+    public async Task<AdminRotateUserTokenResult?> RotateUserTokenAsync(
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        var token = GenerateAccountToken();
+        var tokenHash = PhaseAAuth.HashTokenForStorage(token);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
+        string? username;
+        await using (var lookup = connection.CreateCommand())
+        {
+            lookup.Transaction = transaction;
+            lookup.CommandText =
+                """
+                SELECT username
+                FROM accounts
+                WHERE id = $account_id
+                  AND is_admin = 0;
+                """;
+            lookup.Parameters.AddWithValue("$account_id", accountId);
+            username = await lookup.ExecuteScalarAsync(cancellationToken) as string;
+        }
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return null;
+        }
+
+        await using (var update = connection.CreateCommand())
+        {
+            update.Transaction = transaction;
+            update.CommandText =
+                """
+                UPDATE accounts
+                SET token_hash = $token_hash,
+                    is_disabled = 0
+                WHERE id = $account_id
+                  AND is_admin = 0;
+                """;
+            update.Parameters.AddWithValue("$account_id", accountId);
+            update.Parameters.AddWithValue("$token_hash", tokenHash);
+            await update.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return new AdminRotateUserTokenResult(accountId, username, token);
+    }
+
+    public async Task<bool> ProjectBelongsToAccountAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var count = await ExecuteScalarLongAsync(
+            connection,
+            "SELECT COUNT(*) FROM projects WHERE id = $project_id AND account_id = $account_id;",
+            cancellationToken,
+            ("$project_id", projectId),
+            ("$account_id", accountId)) ?? 0;
+        return count > 0;
     }
 
     public async Task ReconcileProjectBootstrapStatusAsync(CancellationToken cancellationToken = default)
@@ -1015,24 +1218,7 @@ public sealed class PhaseAMetadataStore
             return null;
         }
 
-        return new RunSnapshot(
-            reader.GetString(0),
-            reader.GetString(1),
-            reader.IsDBNull(2) ? null : reader.GetString(2),
-            reader.GetString(3),
-            reader.GetString(4),
-            reader.IsDBNull(5) ? null : reader.GetInt32(5),
-            reader.IsDBNull(6) ? null : reader.GetString(6),
-            reader.IsDBNull(7) ? null : reader.GetString(7),
-            reader.IsDBNull(8) ? null : reader.GetString(8),
-            reader.GetString(9),
-            reader.GetString(10),
-            reader.GetString(11),
-            reader.IsDBNull(12) ? null : reader.GetString(12),
-            reader.IsDBNull(13) ? null : reader.GetString(13),
-            reader.IsDBNull(14) ? null : reader.GetString(14),
-            reader.IsDBNull(15) ? null : reader.GetString(15),
-            reader.IsDBNull(16) ? null : reader.GetString(16));
+        return ReadRunSnapshot(reader);
     }
 
     public async Task<IReadOnlyList<RunSnapshot>> ListRunsForProjectAsync(string projectId, CancellationToken cancellationToken = default)
@@ -1071,27 +1257,135 @@ public sealed class PhaseAMetadataStore
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            runs.Add(new RunSnapshot(
-                reader.GetString(0),
-                reader.GetString(1),
-                reader.IsDBNull(2) ? null : reader.GetString(2),
-                reader.GetString(3),
-                reader.GetString(4),
-                reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                reader.IsDBNull(6) ? null : reader.GetString(6),
-                reader.IsDBNull(7) ? null : reader.GetString(7),
-                reader.IsDBNull(8) ? null : reader.GetString(8),
-                reader.GetString(9),
-                reader.GetString(10),
-                reader.GetString(11),
-                reader.IsDBNull(12) ? null : reader.GetString(12),
-                reader.IsDBNull(13) ? null : reader.GetString(13),
-                reader.IsDBNull(14) ? null : reader.GetString(14),
-                reader.IsDBNull(15) ? null : reader.GetString(15),
-                reader.IsDBNull(16) ? null : reader.GetString(16)));
+            runs.Add(ReadRunSnapshot(reader));
         }
 
         return runs;
+    }
+
+    public async Task<IReadOnlyList<RunSnapshot>> ListLlmRunsForAccountAsync(
+        string accountId,
+        int limit = 20,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        if (limit < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be greater than zero.");
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                r.id,
+                r.project_id,
+                r.workspace_id,
+                r.run_type,
+                r.status,
+                r.exit_code,
+                r.stdout_text,
+                r.stderr_text,
+                r.evidence_json,
+                r.progress_step,
+                r.progress_substep,
+                r.progress_label,
+                r.progress_updated_utc,
+                r.llm_gateway,
+                r.llm_request_id,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            WHERE p.account_id = $account_id
+              AND r.llm_cost_json IS NOT NULL
+            ORDER BY r.created_utc DESC, r.id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$limit", limit);
+
+        var runs = new List<RunSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            runs.Add(ReadRunSnapshot(reader));
+        }
+
+        return runs;
+    }
+
+    public async Task<IReadOnlyList<(AdminUserListItem Account, RunSnapshot Run)>> ListLlmRunsForAdminAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        if (limit < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be greater than zero.");
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                a.id,
+                a.username,
+                a.is_admin,
+                a.is_disabled,
+                COALESCE(pl.project_limit, $default_project_limit),
+                (
+                    SELECT COUNT(*)
+                    FROM projects count_projects
+                    WHERE count_projects.account_id = a.id
+                ) AS project_count,
+                a.created_utc,
+                r.id,
+                r.project_id,
+                r.workspace_id,
+                r.run_type,
+                r.status,
+                r.exit_code,
+                r.stdout_text,
+                r.stderr_text,
+                r.evidence_json,
+                r.progress_step,
+                r.progress_substep,
+                r.progress_label,
+                r.progress_updated_utc,
+                r.llm_gateway,
+                r.llm_request_id,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            LEFT JOIN project_limits pl ON pl.account_id = a.id
+            WHERE r.llm_cost_json IS NOT NULL
+            ORDER BY r.created_utc DESC, r.id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$default_project_limit", _options.HostedProjectLimit);
+        command.Parameters.AddWithValue("$limit", limit);
+
+        var rows = new List<(AdminUserListItem Account, RunSnapshot Run)>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var account = new AdminUserListItem(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1,
+                checked((int)reader.GetInt64(4)),
+                checked((int)reader.GetInt64(5)),
+                reader.GetString(6));
+            var run = ReadRunSnapshot(reader, offset: 7);
+            rows.Add((account, run));
+        }
+
+        return rows;
     }
 
     public async Task<RunSnapshot?> GetActiveRunForAccountAsync(string accountId, CancellationToken cancellationToken = default)
@@ -2094,6 +2388,28 @@ public sealed class PhaseAMetadataStore
         return value is null ? _options.HostedProjectLimit : checked((int)value.Value);
     }
 
+    private static RunSnapshot ReadRunSnapshot(SqliteDataReader reader, int offset = 0)
+    {
+        return new RunSnapshot(
+            reader.GetString(offset + 0),
+            reader.GetString(offset + 1),
+            reader.IsDBNull(offset + 2) ? null : reader.GetString(offset + 2),
+            reader.GetString(offset + 3),
+            reader.GetString(offset + 4),
+            reader.IsDBNull(offset + 5) ? null : reader.GetInt32(offset + 5),
+            reader.IsDBNull(offset + 6) ? null : reader.GetString(offset + 6),
+            reader.IsDBNull(offset + 7) ? null : reader.GetString(offset + 7),
+            reader.IsDBNull(offset + 8) ? null : reader.GetString(offset + 8),
+            reader.GetString(offset + 9),
+            reader.GetString(offset + 10),
+            reader.GetString(offset + 11),
+            reader.IsDBNull(offset + 12) ? null : reader.GetString(offset + 12),
+            reader.IsDBNull(offset + 13) ? null : reader.GetString(offset + 13),
+            reader.IsDBNull(offset + 14) ? null : reader.GetString(offset + 14),
+            reader.IsDBNull(offset + 15) ? null : reader.GetString(offset + 15),
+            reader.IsDBNull(offset + 16) ? null : reader.GetString(offset + 16));
+    }
+
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
     {
         var connection = new SqliteConnection(_connectionString);
@@ -2122,6 +2438,30 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$created_utc", now);
         command.Parameters.AddWithValue("$updated_utc", now);
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private async Task SyncAdminSecretsAsync(SqliteConnection connection, string accountId, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE accounts
+            SET username = $username,
+                password_hash = $password_hash,
+                token_hash = $token_hash
+            WHERE id = $id
+              AND is_admin = 1;
+            """;
+        command.Parameters.AddWithValue("$id", accountId);
+        command.Parameters.AddWithValue("$username", _options.AdminUsername);
+        command.Parameters.AddWithValue("$password_hash", (object?)_options.AdminPasswordHash ?? DBNull.Value);
+        command.Parameters.AddWithValue("$token_hash", (object?)_options.AdminTokenHash ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static string GenerateAccountToken()
+    {
+        return Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
     }
 
     private static async Task<string?> ExecuteScalarStringAsync(

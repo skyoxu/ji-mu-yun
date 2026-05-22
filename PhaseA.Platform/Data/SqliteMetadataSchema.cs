@@ -24,6 +24,13 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "accounts",
+            "is_disabled",
+            "ALTER TABLE accounts ADD COLUMN is_disabled INTEGER NOT NULL DEFAULT 0;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "projects",
             "llm_binding_required",
             "ALTER TABLE projects ADD COLUMN llm_binding_required INTEGER NOT NULL DEFAULT 0;",

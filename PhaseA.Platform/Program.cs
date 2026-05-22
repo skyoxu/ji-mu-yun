@@ -11,6 +11,7 @@ using PhaseA.Platform.Skills;
 using PhaseA.Platform.Workspaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -103,16 +104,26 @@ app.Use(async (context, next) =>
         return;
     }
 
-    var authOptions = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
-    var role = PhaseAAuth.GetRole(context.Request, authOptions);
-    if (role is null)
+    var identity = await ResolveIdentityAsync(context, adminAccountId);
+    if (identity is null)
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         await context.Response.WriteAsJsonAsync(new { error = PhaseAAuth.AuthFailureCode });
         return;
     }
 
-    context.Items["phasea.role"] = role;
+    if (TryReadApiProjectId(context.Request.Path, out var projectId) &&
+        !await metadataStore.ProjectBelongsToAccountAsync(identity.AccountId, projectId, context.RequestAborted))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        await context.Response.WriteAsJsonAsync(new { error = "project_not_found" });
+        return;
+    }
+
+    context.Items["phasea.identity"] = identity;
+    context.Items["phasea.role"] = identity.Role;
+    context.Items["phasea.accountId"] = identity.AccountId;
+    context.Items["phasea.username"] = identity.Username;
     await next(context);
 });
 
@@ -135,31 +146,90 @@ app.MapGet("/ui", (
 });
 
 app.MapGet("/api/projects", async (
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    return Results.Ok(await readback.ListProjectsAsync(adminAccountId, cancellationToken));
+    return Results.Ok(await readback.ListProjectsAsync(CurrentAccountId(context), cancellationToken));
 });
 
 app.MapGet("/api/project-creation-failures/latest", async (
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    var failure = await readback.GetLatestProjectCreationFailureAsync(adminAccountId, cancellationToken);
+    var failure = await readback.GetLatestProjectCreationFailureAsync(CurrentAccountId(context), cancellationToken);
     return failure is null ? Results.NotFound(new { error = "project_creation_failure_not_found" }) : Results.Ok(failure);
 });
 
 app.MapGet("/api/session", (HttpContext context) => Results.Ok(new
 {
     authenticated = true,
-    role = context.Items.TryGetValue("phasea.role", out var role) ? role?.ToString() ?? "user" : "user"
+    accountId = CurrentIdentity(context).AccountId,
+    username = CurrentIdentity(context).Username,
+    role = CurrentIdentity(context).Role
 }));
 
 app.MapGet("/api/account/active-run", async (
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    return Results.Ok(await readback.GetActiveRunAsync(adminAccountId, cancellationToken));
+    return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
+});
+
+app.MapGet("/api/account/llm-usage", async (
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    return Results.Ok(await readback.GetAccountLlmUsageAsync(CurrentAccountId(context), cancellationToken));
+});
+
+app.MapGet("/api/admin/llm-usage", async (
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    return Results.Ok(await readback.GetAdminLlmUsageAsync(cancellationToken));
+});
+
+app.MapGet("/api/admin/llm-usage.csv", async (
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    var usage = await readback.GetAdminLlmUsageAsync(cancellationToken);
+    var csv = ArtifactReadbackService.ExportAdminLlmUsageCsv(usage);
+    return Results.Text(
+        csv,
+        "text/csv; charset=utf-8",
+        Encoding.UTF8,
+        StatusCodes.Status200OK);
+});
+
+app.MapGet("/api/admin/llm-runs", async (
+    int? limit,
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    return Results.Ok(await readback.GetAdminLlmRunAuditAsync(limit ?? 100, cancellationToken));
 });
 
 app.MapGet("/api/projects/{projectId}/runs", async (
@@ -173,19 +243,21 @@ app.MapGet("/api/projects/{projectId}/runs", async (
 
 app.MapPost("/api/projects/{projectId}/packages", async (
     string projectId,
+    HttpContext context,
     [FromServices] ProjectPackageService packages,
     CancellationToken cancellationToken) =>
 {
-    var result = await packages.CreatePackageAsync(adminAccountId, projectId, cancellationToken);
+    var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
 });
 
 app.MapGet("/api/projects/{projectId}/packages", async (
     string projectId,
+    HttpContext context,
     [FromServices] ProjectPackageService packages,
     CancellationToken cancellationToken) =>
 {
-    var result = await packages.ListPackagesAsync(adminAccountId, projectId, cancellationToken);
+    var result = await packages.ListPackagesAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
@@ -193,20 +265,22 @@ app.MapGet("/api/projects/{projectId}/asset-inventory", async (
     string projectId,
     string? model,
     bool? judge,
+    HttpContext context,
     [FromServices] ProjectAssetInventoryService assets,
     CancellationToken cancellationToken) =>
 {
-    var result = await assets.GetInventoryAsync(adminAccountId, projectId, judge == true, model, cancellationToken);
+    var result = await assets.GetInventoryAsync(CurrentAccountId(context), projectId, judge == true, model, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapGet("/api/projects/{projectId}/asset-preview", async (
     string projectId,
     string resource,
+    HttpContext context,
     [FromServices] ProjectAssetInventoryService assets,
     CancellationToken cancellationToken) =>
 {
-    var result = await assets.ReadPreviewAsync(adminAccountId, projectId, resource, cancellationToken);
+    var result = await assets.ReadPreviewAsync(CurrentAccountId(context), projectId, resource, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "asset_preview_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -233,6 +307,7 @@ app.MapGet("/projects/{projectId}/asset-preview", async (
     string resource,
     HttpRequest request,
     [FromServices] ProjectAssetInventoryService assets,
+    [FromServices] PhaseAMetadataStore store,
     [FromServices] ProjectAssetPreviewTicketService tickets,
     CancellationToken cancellationToken) =>
 {
@@ -242,7 +317,13 @@ app.MapGet("/projects/{projectId}/asset-preview", async (
         return Results.Unauthorized();
     }
 
-    var result = await assets.ReadPreviewAsync(adminAccountId, projectId, resource, cancellationToken);
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var result = await assets.ReadPreviewAsync(project.AccountId, projectId, resource, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "asset_preview_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -253,6 +334,7 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
     string fileName,
     HttpRequest request,
     [FromServices] ProjectPackageService packages,
+    [FromServices] PhaseAMetadataStore store,
     [FromServices] ProjectPackageDownloadTicketService tickets,
     CancellationToken cancellationToken) =>
 {
@@ -262,7 +344,13 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
         return Results.Unauthorized();
     }
 
-    var result = await packages.ReadPackageAsync(adminAccountId, projectId, fileName, cancellationToken);
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var result = await packages.ReadPackageAsync(project.AccountId, projectId, fileName, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "project_package_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -293,11 +381,12 @@ app.MapGet("/assets", (
 
 app.MapGet("/projects/{projectId}", async (
     string projectId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     [FromServices] BrowserUiRenderer ui,
     CancellationToken cancellationToken) =>
 {
-    var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
+    var result = await readback.GetProjectRunsForAccountAsync(CurrentAccountId(context), projectId, cancellationToken);
     if (result is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
@@ -308,10 +397,11 @@ app.MapGet("/projects/{projectId}", async (
 
 app.MapGet("/api/runs/{runId}", async (
     string runId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    var run = await readback.GetRunAsync(runId, cancellationToken);
+    var run = await readback.GetRunForAccountAsync(CurrentAccountId(context), runId, cancellationToken);
     if (run is null)
     {
         return Results.NotFound(new { error = "run_not_found" });
@@ -323,11 +413,12 @@ app.MapGet("/api/runs/{runId}", async (
 
 app.MapGet("/runs/{runId}", async (
     string runId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     [FromServices] BrowserUiRenderer ui,
     CancellationToken cancellationToken) =>
 {
-    var run = await readback.GetRunAsync(runId, cancellationToken);
+    var run = await readback.GetRunForAccountAsync(CurrentAccountId(context), runId, cancellationToken);
     if (run is null)
     {
         return Results.NotFound(new { error = "run_not_found" });
@@ -339,19 +430,21 @@ app.MapGet("/runs/{runId}", async (
 
 app.MapGet("/api/artifacts/{artifactId}", async (
     string artifactId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
+    var artifact = await readback.ReadArtifactForAccountAsync(CurrentAccountId(context), artifactId, cancellationToken);
     return artifact is null ? Results.NotFound(new { error = "artifact_not_found" }) : Results.Ok(artifact);
 });
 
 app.MapGet("/artifacts/{artifactId}", async (
     string artifactId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    var artifact = await readback.ReadArtifactAsync(artifactId, cancellationToken);
+    var artifact = await readback.ReadArtifactForAccountAsync(CurrentAccountId(context), artifactId, cancellationToken);
     if (artifact is null)
     {
         return Results.NotFound(new { error = "artifact_not_found" });
@@ -375,25 +468,144 @@ app.MapGet("/project-health/latest.json", (
 });
 
 app.MapGet("/api/admin/llm-binding", async (
+    HttpContext context,
     [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
     var binding = await llmBinding.GetAsync(adminAccountId, cancellationToken);
+    return binding is null ? Results.NotFound(new { error = "llm_binding_not_found" }) : Results.Ok(binding);
+});
+
+app.MapGet("/api/account/llm-binding", async (
+    HttpContext context,
+    [FromServices] LlmBindingService llmBinding,
+    CancellationToken cancellationToken) =>
+{
+    var binding = await llmBinding.GetAsync(CurrentAccountId(context), cancellationToken);
     return binding is null ? Results.NotFound(new { error = "llm_binding_not_found" }) : Results.Ok(binding);
 });
 
 app.MapPost("/api/admin/llm-binding", async (
     LlmBindingRequest request,
+    HttpContext context,
     [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
     var result = await llmBinding.BindAsync(adminAccountId, request, cancellationToken);
     return result.Succeeded ? Results.Ok(result.Binding) : Results.BadRequest(result);
+});
+
+app.MapPost("/api/account/llm-binding", async (
+    LlmBindingRequest request,
+    HttpContext context,
+    [FromServices] LlmBindingService llmBinding,
+    CancellationToken cancellationToken) =>
+{
+    var result = await llmBinding.BindAsync(CurrentAccountId(context), request, cancellationToken);
+    return result.Succeeded ? Results.Ok(result.Binding) : Results.BadRequest(result);
+});
+
+app.MapPost("/api/admin/users", async (
+    AdminCreateUserRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] PhaseAPlatformOptions platformOptions,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    if (string.IsNullOrWhiteSpace(request.Username))
+    {
+        return Results.BadRequest(new { error = "username_required" });
+    }
+
+    var projectLimit = request.ProjectLimit ?? platformOptions.HostedProjectLimit;
+    if (projectLimit < 1)
+    {
+        return Results.BadRequest(new { error = "invalid_project_limit" });
+    }
+
+    try
+    {
+        return Results.Ok(await store.CreateUserAccountAsync(request.Username, projectLimit, cancellationToken));
+    }
+    catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+    {
+        return Results.Conflict(new { error = "username_already_exists" });
+    }
+});
+
+app.MapGet("/api/admin/users", async (
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
+});
+
+app.MapPost("/api/admin/users/{accountId}/status", async (
+    string accountId,
+    AdminUpdateUserStatusRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    if (string.Equals(accountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.BadRequest(new { error = "cannot_modify_current_admin" });
+    }
+
+    var updated = await store.SetUserDisabledAsync(accountId, request.Disabled, cancellationToken);
+    return updated ? Results.Ok(new { accountId, disabled = request.Disabled }) : Results.NotFound(new { error = "user_not_found" });
+});
+
+app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
+    string accountId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    if (string.Equals(accountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.BadRequest(new { error = "cannot_rotate_current_admin" });
+    }
+
+    var result = await store.RotateUserTokenAsync(accountId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "user_not_found" }) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/chat", async (
     string projectId,
     ChatRequest request,
+    HttpContext context,
     [FromServices] ChatService chat,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
@@ -403,8 +615,8 @@ app.MapPost("/api/projects/{projectId}/chat", async (
         var result = await chat.SendAsync(projectId, request, cancellationToken);
         if (result.Status == "succeeded")
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Message, null, cancellationToken);
-            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", result.AssistantMessage, null, cancellationToken);
+            await chatHistory.AppendAsync(CurrentAccountId(context), projectId, "user", request.Message, null, cancellationToken);
+            await chatHistory.AppendAsync(CurrentAccountId(context), projectId, "assistant", result.AssistantMessage, null, cancellationToken);
         }
 
         return result.Status switch
@@ -425,30 +637,33 @@ app.MapPost("/api/projects/{projectId}/chat", async (
 
 app.MapGet("/api/projects/{projectId}/chat-history", async (
     string projectId,
+    HttpContext context,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
-    var result = await chatHistory.ListAsync(adminAccountId, projectId, cancellationToken);
+    var result = await chatHistory.ListAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     string projectId,
     PrototypeIterationPlanRequest request,
+    HttpContext context,
     [FromServices] PrototypeIterationPlanService iterationPlans,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await iterationPlans.CreateAsync(adminAccountId, projectId, request, cancellationToken);
+        var accountId = CurrentAccountId(context);
+        var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
         if (result.Status == "ready")
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
             var goalSummary = result.Goals.Count == 0
                 ? result.Summary
                 : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
-            await chatHistory.AppendAsync(adminAccountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
         }
         return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
     }
@@ -460,15 +675,17 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
 
 app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
     string projectId,
+    HttpContext context,
     [FromServices] PrototypeIterationPlanService iterationPlans,
     CancellationToken cancellationToken) =>
 {
-    var result = await iterationPlans.GetLatestAsync(adminAccountId, projectId, cancellationToken);
+    var result = await iterationPlans.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     string projectId,
+    HttpContext context,
     [FromServices] PrototypeIterationPlanService iterationPlans,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
@@ -476,7 +693,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     try
     {
         var progress = await prototypeWorkflow.GetProgressAsync(projectId, cancellationToken);
-        var result = await iterationPlans.EvaluateAsync(adminAccountId, projectId, progress, cancellationToken);
+        var result = await iterationPlans.EvaluateAsync(CurrentAccountId(context), projectId, progress, cancellationToken);
         return Results.Ok(result);
     }
     catch (InvalidOperationException ex)
@@ -487,17 +704,19 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
 
 app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
     string projectId,
+    HttpContext context,
     [FromServices] PrototypeIterationGoalService iterationGoals,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await iterationGoals.ExecuteNextAsync(adminAccountId, projectId, cancellationToken);
+        var accountId = CurrentAccountId(context);
+        var result = await iterationGoals.ExecuteNextAsync(accountId, projectId, cancellationToken);
         if (result.Status is "completed" or "failed" or "needs_fix")
         {
             await chatHistory.AppendAsync(
-                adminAccountId,
+                accountId,
                 projectId,
                 "assistant",
                 result.Summary,
@@ -515,18 +734,20 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
 app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     string projectId,
     PrototypeFeedbackRequest request,
+    HttpContext context,
     [FromServices] PrototypeFeedbackIterationService feedbackIterations,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
+        var accountId = CurrentAccountId(context);
+        await chatHistory.AppendAsync(accountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
         var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
         if (result.Status == "completed" || result.Status == "failed")
         {
             await chatHistory.AppendAsync(
-                adminAccountId,
+                accountId,
                 projectId,
                 "assistant",
                 result.AssistantMessage,
@@ -553,22 +774,24 @@ app.MapPost("/api/projects/{projectId}/prototype-quick-fixes", (
 app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
     string projectId,
     PrototypeNeedsFixRouteRequest request,
+    HttpContext context,
     [FromServices] PrototypeNeedsFixRouteService needsFixRoute,
     [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
+        var accountId = CurrentAccountId(context);
         if (!string.IsNullOrWhiteSpace(request.Feedback))
         {
-            await chatHistory.AppendAsync(adminAccountId, projectId, "user", request.Feedback, "needs-fix-route", cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "user", request.Feedback, "needs-fix-route", cancellationToken);
         }
 
-        var result = await needsFixRoute.RunAsync(adminAccountId, projectId, request, cancellationToken);
+        var result = await needsFixRoute.RunAsync(accountId, projectId, request, cancellationToken);
         if (!string.IsNullOrWhiteSpace(result.Summary))
         {
             await chatHistory.AppendAsync(
-                adminAccountId,
+                accountId,
                 projectId,
                 "assistant",
                 result.Summary,
@@ -617,6 +840,7 @@ app.MapPost("/api/projects/{projectId}/skill-actions/{actionId}", async (
 
 app.MapPost("/api/projects", async (
     JsonElement payload,
+    HttpContext context,
     [FromServices] ProjectCreationService projects,
     [FromServices] ProjectInitializationService initialization,
     CancellationToken cancellationToken) =>
@@ -636,7 +860,7 @@ app.MapPost("/api/projects", async (
         return Results.BadRequest(new { error = "invalid_project_request" });
     }
 
-    var result = await projects.CreateProjectAsync(adminAccountId, request, cancellationToken);
+    var result = await projects.CreateProjectAsync(CurrentAccountId(context), request, cancellationToken);
     if (!result.Succeeded)
     {
         return result.FailureCode == "project_initialization_in_progress"
@@ -687,20 +911,22 @@ app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
 
 app.MapGet("/api/projects/{projectId}/prototype-drafts/latest", async (
     string projectId,
+    HttpContext context,
     [FromServices] ProjectDraftImportService draftImport,
     CancellationToken cancellationToken) =>
 {
-    var result = await draftImport.GetLatestAsync(adminAccountId, projectId, cancellationToken);
+    var result = await draftImport.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "prototype_draft_not_found" }) : Results.Ok(result);
 });
 
 app.MapDelete("/api/projects/{projectId}", async (
     string projectId,
     [FromBody] ProjectDeletionRequest request,
+    HttpContext context,
     [FromServices] ProjectCreationService projects,
     CancellationToken cancellationToken) =>
 {
-    var result = await projects.DeleteProjectAsync(adminAccountId, projectId, request, cancellationToken);
+    var result = await projects.DeleteProjectAsync(CurrentAccountId(context), projectId, request, cancellationToken);
     return result.Succeeded
         ? Results.Ok(result)
         : result.FailureCode switch
@@ -821,5 +1047,71 @@ app.MapPost("/api/projects/{projectId}/prototype-scene", async (
 });
 
 app.Run(options.AppBindUrl);
+
+static async Task<AccountIdentity?> ResolveIdentityAsync(HttpContext context, string adminAccountId)
+{
+    var authOptions = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
+    var token = PhaseAAuth.ReadBearerOrHeaderToken(context.Request);
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        return null;
+    }
+
+    var role = PhaseAAuth.GetRole(context.Request, authOptions);
+    if (role == PhaseAAuth.AdminRole)
+    {
+        return new AccountIdentity(adminAccountId, authOptions.AdminUsername, PhaseAAuth.AdminRole);
+    }
+
+    var store = context.RequestServices.GetRequiredService<PhaseAMetadataStore>();
+    var account = await store.ResolveAccountByTokenHashAsync(PhaseAAuth.HashTokenForStorage(token), context.RequestAborted);
+    if (account is not null)
+    {
+        return new AccountIdentity(
+            account.AccountId,
+            account.Username,
+            account.IsAdmin ? PhaseAAuth.AdminRole : PhaseAAuth.UserRole);
+    }
+
+    if (role == PhaseAAuth.UserRole)
+    {
+        return new AccountIdentity(adminAccountId, "legacy-user", PhaseAAuth.UserRole);
+    }
+
+    return null;
+}
+
+static AccountIdentity CurrentIdentity(HttpContext context)
+{
+    return context.Items.TryGetValue("phasea.identity", out var value) && value is AccountIdentity identity
+        ? identity
+        : throw new InvalidOperationException("Authenticated account identity is missing.");
+}
+
+static string CurrentAccountId(HttpContext context)
+{
+    return CurrentIdentity(context).AccountId;
+}
+
+static bool TryReadApiProjectId(PathString path, out string projectId)
+{
+    projectId = "";
+    var value = path.Value;
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return false;
+    }
+
+    var prefix = "/api/projects/";
+    if (!value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+    {
+        return false;
+    }
+
+    var remainder = value[prefix.Length..];
+    var slashIndex = remainder.IndexOf('/');
+    projectId = slashIndex < 0 ? remainder : remainder[..slashIndex];
+    return !string.IsNullOrWhiteSpace(projectId);
+}
 
 public partial class Program;

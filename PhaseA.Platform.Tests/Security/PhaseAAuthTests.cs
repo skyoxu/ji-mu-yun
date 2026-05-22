@@ -27,7 +27,7 @@ public sealed class PhaseAAuthTests
         const string token = "local-admin-token";
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
-            ["PHASEA_ADMIN_TOKEN_HASH"] = HashToken(token)
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(token)
         });
         var context = new DefaultHttpContext();
         context.Request.Headers.Authorization = $"Bearer {token}";
@@ -45,7 +45,7 @@ public sealed class PhaseAAuthTests
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["PHASEA_ADMIN_TOKEN_HASH"] = HashToken("local-admin-token"),
-            ["PHASEA_USER_TOKEN_HASH"] = HashToken(token)
+            ["PHASEA_USER_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(token)
         });
         var context = new DefaultHttpContext();
         context.Request.Headers.Authorization = $"Bearer {token}";
@@ -54,6 +54,12 @@ public sealed class PhaseAAuthTests
 
         role.Should().Be(PhaseAAuth.UserRole);
         PhaseAAuth.IsAuthorized(context.Request, options).Should().BeTrue();
+    }
+
+    [Fact]
+    public void HashTokenForStorage_MatchesExistingSha256Base64UrlFormat()
+    {
+        PhaseAAuth.HashTokenForStorage("local-admin-token").Should().Be(HashToken("local-admin-token"));
     }
 
     [Fact]
