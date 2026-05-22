@@ -165,6 +165,11 @@ internal static class PrototypeGodotSmokeService
         }
 
         var combined = $"{result.Stdout}\n{result.Stderr}";
+        if (combined.Contains("ERROR:", StringComparison.OrdinalIgnoreCase))
+        {
+            return result.ExitCode == 0 ? 1 : result.ExitCode;
+        }
+
         return combined.Contains("SMOKE PASS", StringComparison.OrdinalIgnoreCase) ? 0 : result.ExitCode;
     }
 

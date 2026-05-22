@@ -45,6 +45,16 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "prototype", "latest.json"), payload);
     }
 
+    public void WritePrototypeRepairState(ProjectSnapshot project, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "prototype-repair", "latest.json"), payload);
+    }
+
+    public string ReadLatestPrototypeRepairState(ProjectSnapshot project)
+    {
+        return ReadState(project, Path.Combine("routes", "prototype-repair", "latest.json"));
+    }
+
     public void WriteIterationPlanState(ProjectSnapshot project, object payload)
     {
         WriteState(project, Path.Combine("routes", "iteration-plan", "latest.json"), payload);

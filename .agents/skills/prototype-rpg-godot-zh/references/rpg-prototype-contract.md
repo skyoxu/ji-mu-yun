@@ -17,6 +17,8 @@ This contract defines the default implementation expectations for a short playab
 
 - A bounded playable map scene suitable for a short prototype loop.
 - Movement and encounter entry logic.
+- A single shared coordinate parent for the visible map art, movement grid, and token overlay. The map art, grid, player token, enemy token, and objective tokens must not drift apart under layout resizing.
+- If the prototype uses a 600x600 map and 10x10 grid, movement tokens must be positioned inside that same 600x600 layer.
 - Reward chest/object placement support.
 - Obstacle/path validation for generated or randomized layouts when needed.
 - Scene switching that does not visually stack map and battle content.
@@ -26,6 +28,9 @@ This contract defines the default implementation expectations for a short playab
 - Separate battle presentation from map presentation.
 - Visible player and enemy state.
 - Time-based or turn-based resolution appropriate to the prototype record.
+- `Attack` must not blindly resolve the entire battle and immediately leave the scene unless the prototype record explicitly calls for one-click full battle settlement.
+- If a normal battle win produces reward options, the main prototype route must show the reward selection instead of returning directly to the map.
+- The final-run victory flag is only for full prototype completion, not for deciding whether a normal battle reward panel should appear.
 - Battle log remains visible through the result state unless the design explicitly changes it.
 - Clean return path to map or prototype end state.
 
@@ -33,7 +38,7 @@ This contract defines the default implementation expectations for a short playab
 
 - Three-choice reward selection.
 - Reward application to attributes, equipment, or passive skills according to the prototype record.
-- Return to the correct scene after resolution.
+- Return to the correct scene after resolution, with the map scene visible, the player token visible, and movement input still active.
 
 
 ### Core Resource Routes

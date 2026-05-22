@@ -68,6 +68,9 @@ public sealed class PrototypeIterationGoalServiceTests
         result.SessionStatus.Should().Be("paused_for_review");
         run!.RunType.Should().Be("prototype-iteration-goal");
         run.Status.Should().Be("completed");
+        run.ProgressStep.Should().Be("completed");
+        run.ProgressSubstep.Should().Be("succeeded");
+        run.ProgressLabel.Should().Be("目标 1 已完成。");
         details.Should().NotBeNull();
         details!.Session.Status.Should().Be("paused_for_review");
         details.Goals[0].Status.Should().Be("succeeded");
@@ -191,14 +194,21 @@ public sealed class PrototypeIterationGoalServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修 step1，再做 step2。"));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new NeedsFixHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
         result.SessionStatus.Should().Be("needs_fix");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.ProgressStep.Should().Be("needs_fix");
+        run.ProgressSubstep.Should().Be("needs_fix");
+        run.ProgressLabel.Should().Be("目标 1 需要修复。");
         details.Should().NotBeNull();
         details!.Goals[0].Status.Should().Be("needs_fix");
         details.Session.Status.Should().Be("needs_fix");
@@ -424,15 +434,18 @@ texture = ExtResource("3")
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
 
-[node name="MapScene" type="Node"]
-[node name="Grid" type="Node" parent="."]
-[node name="Player" type="Node" parent="."]
-[node name="Enemy" type="Node" parent="."]
-[node name="RpgMapAsset" type="TextureRect" parent="."]
+[node name="MapScene" type="Control"]
+custom_minimum_size = Vector2(700, 700)
+[node name="TrackLayer" type="Control" parent="."]
+custom_minimum_size = Vector2(600, 600)
+[node name="RpgMapAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+custom_minimum_size = Vector2(600, 600)
 texture = ExtResource("1")
-[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+[node name="Grid" type="GridContainer" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+[node name="Overlay" type="Control" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+[node name="RpgPlayerAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay"]
 texture = ExtResource("2")
-[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+[node name="RpgEnemyAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay"]
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "BattleScene.tscn"), """
@@ -444,9 +457,9 @@ text = "Attack"
 """);
         var scriptPath = Path.Combine(scenePath, "Scripts");
         Directory.CreateDirectory(scriptPath);
-        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), "public sealed class DqRpgPrototype { void Ready() { _mapScene = GetNode<MapScene>(\"CanvasLayer/UI/MapScene\"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; } void ShowMapScene() {} }\n");
-        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), "public sealed class MapScene { public event System.Action? EncounterEntered; void MovePlayer() {} }\n");
-        File.WriteAllText(Path.Combine(scriptPath, "BattleScene.cs"), "public sealed class BattleScene { public event System.Action? BattleFinished; void ResolveBattle() {} }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), "public sealed class DqRpgPrototype { void Ready() { _mapScene = GetNode<MapScene>(\"CanvasLayer/UI/MapScene\"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; } void ShowMapScene() {} void ShowRewardScene(object rewards) {} void OnBattleFinished(bool isVictory, System.Collections.Generic.IReadOnlyList<object> rewards) { if (rewards.Count > 0) { ShowRewardScene(rewards); return; } ShowMapScene(); } }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), "public sealed class MapScene { object TrackLayer; public event System.Action? EncounterEntered; void MovePlayer() { GridToPosition(); } void GridToPosition() {} void ShowRewardReturnStatus() { _player.Visible = true; } dynamic _player; }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "BattleScene.cs"), "public sealed class BattleScene { public event System.Action? BattleFinished; void ResolveBattle() { ResolveAttackTurn(); } void ResolveAttackTurn() {} }\n");
         var catalogPath = Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes");
         Directory.CreateDirectory(catalogPath);
         File.WriteAllText(Path.Combine(catalogPath, "PrototypeCatalog.cs"), """

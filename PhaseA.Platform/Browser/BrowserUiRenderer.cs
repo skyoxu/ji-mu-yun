@@ -254,6 +254,7 @@ public sealed class BrowserUiRenderer
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前迭代计划。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
                     <h2>聊天记录</h2>
+                    <button id="syncChatHistory" class="ghost">同步服务器聊天记录</button>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
                     <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
@@ -304,36 +305,8 @@ public sealed class BrowserUiRenderer
                     <div class="card">
                       <strong>${message.role === "assistant" ? "助手" : "我"}${message.pending ? " · 生成中" : ""}</strong>
                       <span>${escapeHtml(message.content)}</span>
-                      ${renderInlineContinueAction(message, index)}
                     </div>
                   `).join("") || "<p class='muted'>还没有对话。</p>";
-                  document.querySelectorAll("[data-continue-suggestion]").forEach(button => {
-                    button.onclick = () => continueSuggestedFeedback(Number(button.dataset.continueSuggestion));
-                  });
-                }
-
-                function renderInlineContinueAction(message, index) {
-                  if (message.role !== "assistant" || message.pending || message.continueConsumed) return "";
-                  if (!state.prototypeReadyForFeedback) return "";
-                  const label = inlineContinueActionLabelForMessage(message);
-                  if (!label) return "";
-                  return `<button class="secondary" data-global-action="true" data-continue-suggestion="${index}">${escapeHtml(label)}</button>`;
-                }
-
-                function inlineContinueActionLabelForMessage(message) {
-                  const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
-                  if ((message?.kind === "iteration-goal-result" || message?.kind === "iteration-goal-failed") &&
-                      message?.suggestedFeedback === "__iteration_plan_evaluate__") {
-                    return "继续评估当前计划";
-                  }
-                  if (message?.kind === "iteration-plan-evaluation") {
-                    const decision = String(message.evaluationDecision || currentIterationPlanDecision()).trim().toLowerCase();
-                    if (decision === "should_refine_plan") return "按评估重拆迭代计划";
-                    if (decision === "ready_to_execute" && hasPendingPlan) return "继续当前迭代目标";
-                    return "";
-                  }
-                  if (!message?.suggestedFeedback) return "";
-                  return continueActionLabel();
                 }
 
                 function applyChatWorkflowActions() {
@@ -485,7 +458,7 @@ public sealed class BrowserUiRenderer
                       <p class="muted">${escapeHtml(goal.description || "")}</p>
                       ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
                       ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
-                      ${String(goal.status || "").trim().toLowerCase() === "needs_fix"
+                      ${["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase())
                         ? `<button class="secondary" data-global-action="true" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}">运行 Needs Fix 路由</button>`
                         : ""}
                     </div>`).join("");
@@ -560,9 +533,13 @@ public sealed class BrowserUiRenderer
                 async function createIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  const message = $("chatMessage").value.trim();
-                  if (!message) return out("请先输入要拆解的优化目标。");
-                  await submitIterationPlanFromFeedback(message, "正在生成迭代计划...");
+                  const typedMessage = $("chatMessage").value.trim();
+                  const message = typedMessage || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
+                  const sourceKind = typedMessage ? "manual_feedback" : "completion_suggestion";
+                  if (!typedMessage) {
+                    out("未输入优化目标，已使用当前下一步建议生成迭代计划。");
+                  }
+                  await submitIterationPlanFromFeedback(message, "正在生成迭代计划...", sourceKind);
                 }
 
                 function buildIterationPlanEvaluationChatMessage(evaluation) {
@@ -890,15 +867,32 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                async function syncChatHistory() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const button = $("syncChatHistory");
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "同步中...";
+                  try {
+                    await loadServerChatHistoryForProject(state.projectId);
+                    out("服务器聊天记录已同步。");
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
+                }
+
                 async function submitFormalFeedback() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
                   const feedback = $("chatMessage").value.trim();
-                  if (!feedback) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
                   const goal = currentNeedsFixRouteGoal();
+                  if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
                   await submitNeedsFixRouteRequest({
-                    feedback: buildNeedsFixFeedbackForUserReport(goal, feedback),
+                    feedback: feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal),
                     goalId: goal?.goalId || null,
                     goalIndex: goal?.goalIndex || null
                   }, goal ? `Needs Fix 路由执行中 step ${String(goal.goalIndex || "")}...` : "Needs Fix 路由执行中...");
@@ -1772,6 +1766,7 @@ public sealed class BrowserUiRenderer
                     showPrototypeNotice(`原型创建请求已提交，状态：${result.status || "queued"}。刷新页面可继续查看创建进度。`, "info");
                     await loadRuns();
                     await loadPrototypeProgress();
+                    await loadServerChatHistoryForProject(state.projectId);
                     setLocalBusy(false);
                     await refreshActiveRun();
                   } catch (error) {
@@ -1857,6 +1852,7 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                     await loadPrototypeProgress();
+                    await loadServerChatHistoryForProject(state.projectId);
                     setLocalBusy(false);
                     await refreshActiveRun();
                   } catch (error) {
@@ -1986,7 +1982,7 @@ public sealed class BrowserUiRenderer
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如果你同意，可以点击这条消息下方的“${continueActionLabel()}”。系统会根据当前状态执行更明确的动作：没有计划时生成计划；已有计划且评估认为过大时重拆计划；已有计划且边界清晰时继续执行下一目标。`.trim();
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如需执行，请使用迭代计划或 Needs Fix 的固定功能按钮。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
@@ -2015,14 +2011,6 @@ public sealed class BrowserUiRenderer
 
                 function currentIterationPlanDecision() {
                   return String(state.iterationPlanEvaluation?.decision || "").trim().toLowerCase();
-                }
-
-                function continueActionLabel() {
-                  const hasPendingPlan = !!(state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending"));
-                  const decision = currentIterationPlanDecision();
-                  if (hasPendingPlan && decision === "should_refine_plan") return "按建议重拆迭代计划";
-                  if (hasPendingPlan) return "继续当前迭代目标";
-                  return "按建议生成迭代计划";
                 }
 
                 function updateContinueSuggestionFromText(text) {
@@ -2112,6 +2100,7 @@ public sealed class BrowserUiRenderer
                 $("createProject").onclick = createProject;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
+                $("syncChatHistory").onclick = syncChatHistory;
                 $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;

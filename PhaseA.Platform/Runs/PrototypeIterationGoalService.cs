@@ -126,6 +126,7 @@ public sealed class PrototypeIterationGoalService
                     goal_index = nextGoal.GoalIndex
                 });
                 await _metadataStore.CompleteRunAsync(runId, "failed", 424, "", "prototype route state missing", missingPrototypeEvidenceJson, CancellationToken.None);
+                await _metadataStore.UpdateRunProgressAsync(runId, "needs_fix", "prototype_required", failure, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "needs_fix", failure, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
                 _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
@@ -208,6 +209,14 @@ public sealed class PrototypeIterationGoalService
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, goalOutcome.GoalStatus, publicSummary, goalOutcome.MarkCompleted ? now : null, CancellationToken.None);
             await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(
+                runId,
+                goalOutcome.ResultStatus,
+                goalOutcome.GoalStatus,
+                goalOutcome.GoalStatus == "succeeded"
+                    ? $"目标 {nextGoal.GoalIndex} 已完成。"
+                    : $"目标 {nextGoal.GoalIndex} 需要修复。",
+                CancellationToken.None);
 
             var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, CancellationToken.None);
             var hasNeedsFix = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal)) == true;
@@ -272,6 +281,7 @@ public sealed class PrototypeIterationGoalService
                 goal_id = nextGoal.GoalId
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype iteration goal exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "timeout", failure, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");
@@ -287,6 +297,7 @@ public sealed class PrototypeIterationGoalService
                 goal_id = nextGoal.GoalId
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "error", failure, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");

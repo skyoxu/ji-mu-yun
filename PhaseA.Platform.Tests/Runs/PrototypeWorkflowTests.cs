@@ -316,6 +316,30 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task RunAsync_FailsPrototypeSmoke_WhenGodotReportsErrorEvenWithSmokePass()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 1,
+            smokeStdoutOverride: "SMOKE PASS (any output)\n",
+            smokeStderrOverride: "ERROR: No loader found for resource: res://Game.Godot/Prototypes/dq-rpg/Assets/Player/map_player.png\n");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StdoutText.Should().Contain("SMOKE PASS");
+        run.StderrText.Should().Contain("No loader found for resource");
+    }
+
+    [Fact]
     public async Task RunAsync_FailsWhenResolvedPrototypeSceneIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
@@ -533,6 +557,243 @@ public sealed class PrototypeWorkflowTests
         runner.Commands[0].Arguments.Should().Contain(["--prototype-file", prototypeRecordPath]);
         repairRun!.Status.Should().Be("succeeded");
         repairRun.EvidenceJson.Should().Contain("\"slug\":\"dq-rpg\"");
+    }
+
+    [Fact]
+    public async Task RepairAsync_UsesPostValidationRepair_WhenCompletedPrototypeFailedSmoke()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
+        WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
+        var failedRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            10,
+            "previous stdout",
+            "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_start_button_missing",
+            $$"""
+            {
+              "prototype_record": "{{prototypeRecordPath}}",
+              "slug": "dq-rpg",
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7,
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              },
+              "godot_smoke": {
+                "ran": true,
+                "exit_code": 9,
+                "reason": "prototype_main_menu_navigation_failed",
+                "scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              }
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 3);
+        var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        runner.Commands[0].Arguments.Should().Contain("exec");
+        runner.Commands[0].Arguments.Should().NotContain("run-prototype-workflow");
+        runner.Commands[0].StandardInput.Should().Contain("post-validation prototype repair");
+        runner.Commands[0].StandardInput.Should().Contain("rpg_start_button_missing");
+        repairRun!.Status.Should().Be("succeeded");
+        repairRun.EvidenceJson.Should().Contain("\"repair_mode\":\"post_validation\"");
+    }
+
+    [Fact]
+    public async Task RepairAsync_UsesOriginalPostValidationFailure_WhenLatestRepairFailed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
+        WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
+        var originalFailureRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(originalFailureRunId);
+        await store.CompleteRunAsync(
+            originalFailureRunId,
+            "failed",
+            10,
+            "previous stdout",
+            "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_start_button_missing",
+            $$"""
+            {
+              "prototype_record": "{{prototypeRecordPath}}",
+              "slug": "dq-rpg",
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7,
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              },
+              "godot_smoke": {
+                "ran": true,
+                "exit_code": 9,
+                "reason": "prototype_main_menu_navigation_failed",
+                "scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              }
+            }
+            """);
+        var failedRepairRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRepairRunId);
+        await store.CompleteRunAsync(
+            failedRepairRunId,
+            "failed",
+            1,
+            "",
+            "PROTOTYPE_TDD status=unexpected_green stage=red expected=fail",
+            $$"""
+            {
+              "repair": true,
+              "prototype_record": "{{prototypeRecordPath}}",
+              "slug": "dq-rpg",
+              "prototype_completion": {
+                "succeeded": false,
+                "status": "failed",
+                "error": "prototype_repair_failed"
+              }
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 3);
+        var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        runner.Commands[0].Arguments.Should().Contain("exec");
+        runner.Commands[0].Arguments.Should().NotContain("run-prototype-workflow");
+        runner.Commands[0].StandardInput.Should().Contain("post-validation prototype repair");
+        runner.Commands[0].StandardInput.Should().Contain("rpg_start_button_missing");
+        repairRun!.Status.Should().Be("succeeded");
+        repairRun.EvidenceJson.Should().Contain("\"repair_mode\":\"post_validation\"");
+    }
+
+    [Fact]
+    public async Task RepairAsync_PrefersPrototypeShellSceneOverBattleSceneWhenManifestFallbackIsNeeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
+        WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
+
+        var prototypeRoot = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg");
+        Directory.CreateDirectory(prototypeRoot);
+        File.WriteAllText(Path.Combine(prototypeRoot, "BattleScene.tscn"), "[gd_scene format=3]\n", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(prototypeRoot, "DqRpgPrototype.tscn"), "[gd_scene format=3]\n", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(prototypeRoot, "MapScene.tscn"), "[gd_scene format=3]\n", System.Text.Encoding.UTF8);
+
+        var failedRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            10,
+            "previous stdout",
+            "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_start_button_missing",
+            $$"""
+            {
+              "prototype_record": "{{prototypeRecordPath}}",
+              "slug": "dq-rpg",
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7,
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              },
+              "godot_smoke": {
+                "ran": true,
+                "exit_code": 9,
+                "reason": "prototype_main_menu_navigation_failed",
+                "scene": "res://Game.Godot/Prototypes/dq-rpg/BattleScene.tscn"
+              }
+            }
+            """);
+
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 3);
+
+        result.Status.Should().Be("queued");
+        runner.Commands[0].StandardInput.Should().Contain("PreferredPrototypeShellScene: res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
+        runner.Commands[0].StandardInput.Should().Contain("Do not use BattleScene or MapScene as the main entry scene");
+    }
+
+    [Fact]
+    public async Task RepairAsync_WritesRepairStateAndChatProgress_ForNextRepair()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
+        WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
+        var failedRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            10,
+            "",
+            "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_start_button_missing",
+            $$"""
+            {
+              "prototype_record": "{{prototypeRecordPath}}",
+              "slug": "dq-rpg",
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7,
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              },
+              "godot_smoke": {
+                "ran": true,
+                "exit_code": 10,
+                "reason": "prototype_main_menu_navigation_failed",
+                "scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              }
+            }
+            """);
+        var runner = new FakeHostedProcessRunner(mainMenuNavigationExitCode: 14, mainMenuNavigationStderrOverride: "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_map_visible_markers_missing_after_start");
+        var service = Service(store, options, runner);
+
+        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        await WaitForCommandsAsync(runner, 3);
+        var repairRun = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
+        var messages = await store.ListProjectChatMessagesAsync(project.AccountId, projectId, 10);
+        var repairState = new PrototypeRouteStateWriter().ReadLatestPrototypeRepairState(project);
+
+        repairRun!.Status.Should().Be("failed");
+        messages.Should().Contain(message =>
+            message.Role == "assistant" &&
+            message.Kind == "prototype-repair-result" &&
+            message.Content.Contains("rpg_map_visible_markers_missing_after_start", StringComparison.Ordinal));
+        repairState.Should().Contain("rpg_map_visible_markers_missing_after_start");
+        repairState.Should().Contain("next_repair_focus");
     }
 
     [Fact]
@@ -791,6 +1052,7 @@ public sealed class PrototypeWorkflowTests
         private readonly int _smokeExitCode;
         private readonly bool _writePackagingArtifacts;
         private readonly string? _smokeStdoutOverride;
+        private readonly string? _smokeStderrOverride;
         private readonly int _mainMenuNavigationExitCode;
         private readonly string? _mainMenuNavigationStdoutOverride;
         private readonly string? _mainMenuNavigationStderrOverride;
@@ -807,6 +1069,7 @@ public sealed class PrototypeWorkflowTests
             int smokeExitCode = 0,
             bool writePackagingArtifacts = true,
             string? smokeStdoutOverride = null,
+            string? smokeStderrOverride = null,
             int mainMenuNavigationExitCode = 0,
             string? mainMenuNavigationStdoutOverride = null,
             string? mainMenuNavigationStderrOverride = null,
@@ -822,6 +1085,7 @@ public sealed class PrototypeWorkflowTests
             _smokeExitCode = smokeExitCode;
             _writePackagingArtifacts = writePackagingArtifacts;
             _smokeStdoutOverride = smokeStdoutOverride;
+            _smokeStderrOverride = smokeStderrOverride;
             _mainMenuNavigationExitCode = mainMenuNavigationExitCode;
             _mainMenuNavigationStdoutOverride = mainMenuNavigationStdoutOverride;
             _mainMenuNavigationStderrOverride = mainMenuNavigationStderrOverride;
@@ -840,7 +1104,7 @@ public sealed class PrototypeWorkflowTests
                 return Task.FromResult(new HostedProcessResult(
                     _smokeExitCode,
                     _smokeStdoutOverride ?? (_smokeExitCode == 0 ? "SMOKE PASS (marker)\n" : ""),
-                    _smokeExitCode == 0 ? "" : "SMOKE FAIL\n"));
+                    _smokeStderrOverride ?? (_smokeExitCode == 0 ? "" : "SMOKE FAIL\n")));
             }
 
             if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
@@ -849,6 +1113,60 @@ public sealed class PrototypeWorkflowTests
                     _mainMenuNavigationExitCode,
                     _mainMenuNavigationStdoutOverride ?? (_mainMenuNavigationExitCode == 0 ? "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn\n" : ""),
                     _mainMenuNavigationStderrOverride ?? (_mainMenuNavigationExitCode == 0 ? "" : "MAIN_MENU_PROTOTYPE_NAV FAIL\n")));
+            }
+
+            if (command.Arguments.Contains("exec"))
+            {
+                var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(outputPath))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+                    File.WriteAllText(outputPath, "STATUS: completed\nSUMMARY: post-validation repair completed\n");
+                }
+
+                var repairSlug = ExtractSlugFromPrompt(command.StandardInput) ?? "dq-rpg";
+                var repairScenePath = $"res://Game.Godot/Prototypes/{repairSlug}/DqRpgPrototype.tscn";
+                Write($"docs/prototypes/{repairSlug}.prototype.json", $$"""
+                {
+                  "prototype_type_kit": {
+                    "manifest": {
+                      "paths": {
+                        "default_scene": "{{repairScenePath}}"
+                      }
+                    }
+                  }
+                }
+                """);
+                Write(repairScenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
+                Write($"logs/ci/active-prototypes/{repairSlug}.packaging.json", $$"""
+                {
+                  "kind": "prototype-packaging-summary",
+                  "default_scene": "{{repairScenePath}}",
+                  "tdd_stage_counts": { "red": 1, "green": 1, "refactor": 0 }
+                }
+                """);
+                Write($"logs/ci/active-prototypes/{repairSlug}.completion.md", "# Prototype Completion Report\n");
+                Write($"logs/ci/active-prototypes/{repairSlug}.active.json", $$"""
+                {
+                  "status": "completed-through-day",
+                  "completed_through_day": 7,
+                  "missing_required_fields": [],
+                  "prototype_spec": "docs/prototypes/{{repairSlug}}.prototype.json",
+                  "completion_summary": "repaired",
+                  "steps_run": [
+                    { "day": 1, "status": "ok" },
+                    { "day": 2, "status": "ok" },
+                    { "day": 3, "status": "ok" },
+                    { "day": 4, "status": "ok" },
+                    { "day": 5, "status": "ok" },
+                    { "day": 6, "status": "ok" },
+                    { "day": 7, "status": "ok" }
+                  ]
+                }
+                """);
+                Write("logs/ci/project-health/latest.html", "<html></html>");
+                Write("logs/ci/project-health/latest.json", "{}");
+                return Task.FromResult(new HostedProcessResult(0, "codex repair ok", ""));
             }
 
             var slug = ExtractSlug(command.Arguments, command.WorkingDirectory) ?? "demo-prototype";
@@ -973,6 +1291,24 @@ public sealed class PrototypeWorkflowTests
                     {
                         return firstLine["# Prototype:".Length..].Trim();
                     }
+                }
+            }
+
+            return null;
+        }
+
+        private static string? ExtractSlugFromPrompt(string? prompt)
+        {
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                return null;
+            }
+
+            foreach (var line in prompt.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (line.StartsWith("- Slug:", StringComparison.OrdinalIgnoreCase))
+                {
+                    return line["- Slug:".Length..].Trim();
                 }
             }
 

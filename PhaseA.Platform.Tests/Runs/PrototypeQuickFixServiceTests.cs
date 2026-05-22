@@ -202,10 +202,110 @@ REMAINING: none
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
-        runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
-        runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
+        runner.Commands.Should().NotContain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
+        runner.Commands.Should().NotContain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldAcceptStepFiveRewardEntryMethodSignature()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        File.WriteAllText(
+            Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs"),
+            """
+public sealed class DqRpgPrototype
+{
+    void ShowMapScene() { }
+    public void ShowRewardScene(System.Collections.Generic.IReadOnlyList<object> rewards)
+    {
+        if (rewards is null || rewards.Count <= 0) { ShowMapScene(); return; }
+        ShowRewardReturnStatus();
+    }
+    public void ShowRewardReturnStatus() { ShowMapScene(); }
+}
+""");
+
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepFiveNeedsFix_WhenRewardContractIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        File.WriteAllText(
+            Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"),
+            "public sealed class MapScene { dynamic _player; void ResetMap() { _player.Visible = true; } }\n");
+
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        run!.EvidenceJson.Should().Contain("missing_rpg_reward_flow_contract");
+        runner.Commands.Should().NotContain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -321,7 +421,7 @@ REMAINING: none
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "目标 1 需要修复。");
-        var runner = new TimeoutHostedProcessRunner();
+        var runner = new ImmediateCanceledHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
 
         var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
@@ -334,8 +434,11 @@ REMAINING: none
         result.Status.Should().Be("failed");
         result.IterationGoalStatus.Should().Be("needs_fix");
         result.IterationSessionStatus.Should().Be("needs_fix");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.StderrText.Should().Contain("720 second timeout");
         refreshed!.Goals[0].Status.Should().Be("needs_fix");
         refreshed.Goals[0].ResultSummary.Should().Contain("修复超时");
+        refreshed.Goals[0].ResultSummary.Should().Contain("最小奖励闭环");
         refreshed.Session.Status.Should().Be("needs_fix");
         refreshed.Session.LatestSummary.Should().Contain("修复超时");
     }
@@ -371,6 +474,7 @@ REMAINING: none
         result.IterationSessionStatus.Should().Be("needs_fix");
         refreshed!.Goals[0].Status.Should().Be("needs_fix");
         refreshed.Session.Status.Should().Be("needs_fix");
+        runner.LastPrompt.Should().Contain("这是目标级 needs-fix 修复，不是 90 秒快速修复");
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool prototypeSucceeded)
@@ -497,15 +601,18 @@ texture = ExtResource("3")
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
 
-[node name="MapScene" type="Node"]
-[node name="Grid" type="Node" parent="."]
-[node name="Player" type="Node" parent="."]
-[node name="Enemy" type="Node" parent="."]
-[node name="RpgMapAsset" type="TextureRect" parent="."]
+[node name="MapScene" type="Control"]
+custom_minimum_size = Vector2(700, 700)
+[node name="TrackLayer" type="Control" parent="."]
+custom_minimum_size = Vector2(600, 600)
+[node name="RpgMapAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+custom_minimum_size = Vector2(600, 600)
 texture = ExtResource("1")
-[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+[node name="Grid" type="GridContainer" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+[node name="Overlay" type="Control" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer"]
+[node name="RpgPlayerAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay"]
 texture = ExtResource("2")
-[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+[node name="RpgEnemyAsset" type="TextureRect" parent="Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay"]
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "BattleScene.tscn"), """
@@ -517,9 +624,9 @@ text = "Attack"
 """);
         var scriptPath = Path.Combine(scenePath, "Scripts");
         Directory.CreateDirectory(scriptPath);
-        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), "public sealed class DqRpgPrototype { void Ready() { _mapScene = GetNode<MapScene>(\"CanvasLayer/UI/MapScene\"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; } void ShowMapScene() {} }\n");
-        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), "public sealed class MapScene { public event System.Action? EncounterEntered; void MovePlayer() {} }\n");
-        File.WriteAllText(Path.Combine(scriptPath, "BattleScene.cs"), "public sealed class BattleScene { public event System.Action? BattleFinished; void ResolveBattle() {} }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), "public sealed class DqRpgPrototype { void Ready() { _mapScene = GetNode<MapScene>(\"CanvasLayer/UI/MapScene\"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; } void ShowMapScene() {} void ShowRewardScene(object rewards) {} void OnBattleFinished(bool isVictory, System.Collections.Generic.IReadOnlyList<object> rewards) { if (rewards.Count > 0) { ShowRewardScene(rewards); return; } ShowMapScene(); } }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), "public sealed class MapScene { object TrackLayer; public event System.Action? EncounterEntered; void MovePlayer() { GridToPosition(); } void GridToPosition() {} void ShowRewardReturnStatus() { _player.Visible = true; } dynamic _player; }\n");
+        File.WriteAllText(Path.Combine(scriptPath, "BattleScene.cs"), "public sealed class BattleScene { public event System.Action? BattleFinished; void ResolveBattle() { ResolveAttackTurn(); } void ResolveAttackTurn() {} }\n");
         var catalogPath = Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes");
         Directory.CreateDirectory(catalogPath);
         File.WriteAllText(Path.Combine(catalogPath, "PrototypeCatalog.cs"), """
@@ -671,10 +778,21 @@ not ready
         }
     }
 
-    private sealed class OffTopicSuccessHostedProcessRunner : IHostedProcessRunner
+    private sealed class ImmediateCanceledHostedProcessRunner : IHostedProcessRunner
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            throw new OperationCanceledException(cancellationToken);
+        }
+    }
+
+    private sealed class OffTopicSuccessHostedProcessRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            LastPrompt = command.StandardInput ?? "";
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -11,6 +12,7 @@ public sealed class PrototypeWorkflowService
 {
     private const string RunType = "prototype-7day-playable";
     private const int CurrentWorkflowMaxDay = 7;
+    private const string RepairReasoningEffort = "high";
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -256,6 +258,11 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "prototype_repair_not_available", 404, "", "", "No failed prototype workflow with a repairable prototype record was found.", [], []);
         }
 
+        var postValidationFailureRun = runs.FirstOrDefault(run =>
+            run.RunType == RunType &&
+            SamePrototypeRecord(ExtractPrototypeRecordPath(run), prototypeRecordPath) &&
+            ShouldUsePostValidationRepair(run));
+
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "repair", "已提交原型修复，等待 runner。", cancellationToken);
@@ -264,7 +271,7 @@ public sealed class PrototypeWorkflowService
         {
             try
             {
-                await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, request.Model);
+                await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, latestPrototypeRun, postValidationFailureRun, request.Model);
             }
             catch (Exception ex)
             {
@@ -396,6 +403,8 @@ public sealed class PrototypeWorkflowService
         string projectRepoPath,
         string runId,
         string prototypeRecordPath,
+        RunSnapshot failedRun,
+        RunSnapshot? postValidationFailureRun,
         string? model)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None)
@@ -407,6 +416,13 @@ public sealed class PrototypeWorkflowService
         _workspaceSeeder.EnsureSeeded(projectRepoPath);
         var effectiveSlug = ReadSlugFromPrototypeRecord(projectRepoPath, prototypeRecordPath)
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
+        var repairBasisRun = postValidationFailureRun ?? failedRun;
+        if (ShouldUsePostValidationRepair(repairBasisRun))
+        {
+            await RunPostValidationRepairQueuedAsync(project, runId, prototypeRecordPath, effectiveSlug, repairBasisRun, model);
+            return;
+        }
+
         var repairRequest = new PrototypeWorkflowRequest(
             Slug: effectiveSlug,
             GameName: project.GameName,
@@ -464,6 +480,72 @@ public sealed class PrototypeWorkflowService
             CancellationToken.None);
     }
 
+    private async Task RunPostValidationRepairQueuedAsync(
+        ProjectSnapshot project,
+        string runId,
+        string prototypeRecordPath,
+        string slug,
+        RunSnapshot failedRun,
+        string? model)
+    {
+        await SetProgressAsync(runId, "repairing", "post_validation", "正在修复原型后置验收失败项。", CancellationToken.None);
+        var contract = _contractService.Read(project);
+        var preferredShellScene = ResolvePreferredPrototypeShellScene(project.RepoPath, slug);
+        var previousRepairState = _routeStateWriter.ReadLatestPrototypeRepairState(project);
+        var outputPath = CreateShortRuntimeOutputPath(runId);
+        var normalizedModel = PrototypeModelPolicy.Normalize(model);
+        var codexResult = await _processRunner.RunAsync(
+            BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract), outputPath, normalizedModel, project.RepoPath),
+            CancellationToken.None);
+        var codexOutput = File.Exists(outputPath)
+            ? await File.ReadAllTextAsync(outputPath, Encoding.UTF8, CancellationToken.None)
+            : "";
+
+        var validation = codexResult.ExitCode == 0
+            ? ValidateCompletedPrototypeState(project.RepoPath, slug)
+            : PrototypeCompletionValidation.Failure("prototype_post_validation_repair_failed");
+        var smoke = codexResult.ExitCode == 0 && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
+            ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, CancellationToken.None)
+            : PrototypeGodotSmokeResult.NotRun(codexResult.ExitCode != 0 ? "prototype_post_validation_repair_failed" : "prototype_completion_validation_failed");
+        var status = codexResult.ExitCode == 0 && smoke.ExitCode == 0 && validation.Succeeded ? "succeeded" : "failed";
+        var exitCode = ResolveRunExitCode(codexResult.ExitCode, smoke.ExitCode, validation.Succeeded);
+        var stdout = CombineProcessText(CombineProcessText(codexResult.Stdout, codexOutput), smoke.Stdout);
+        var stderr = codexResult.ExitCode == 0
+            ? CombineProcessText(codexResult.Stderr, CombineProcessText(smoke.Stderr, validation.Error ?? ""))
+            : CombineProcessText(codexResult.Stderr, smoke.Stderr);
+        var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug, prototypeRecordPath);
+
+        foreach (var artifact in discoveredArtifacts)
+        {
+            await _metadataStore.AddArtifactAsync(artifact, CancellationToken.None);
+        }
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            repair = true,
+            repair_mode = "post_validation",
+            model = normalizedModel,
+            prototype_record = prototypeRecordPath,
+            prototype_contract = contract.RelativePath,
+            slug,
+            previous_failure = BuildCompactFailure(failedRun),
+            prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
+            prototype_completion = validation.ToEvidence(),
+            godot_smoke = smoke.ToEvidence()
+        });
+        await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
+        WritePrototypeRepairState(project, runId, status, exitCode, prototypeRecordPath, slug, preferredShellScene, failedRun, validation, smoke);
+        await AppendPrototypeRepairChatMessageAsync(project, runId, status, validation, smoke, CancellationToken.None);
+        await SetProgressAsync(
+            runId,
+            status,
+            "repair",
+            status == "succeeded" ? "原型后置验收修复已完成。" : "原型后置验收修复失败，请查看新的失败原因。",
+            CancellationToken.None);
+    }
+
     private async Task AdvancePrototypeStepsAsync(string runId, CancellationToken cancellationToken)
     {
         foreach (var (step, substep, label) in ProgressSteps)
@@ -475,6 +557,42 @@ public sealed class PrototypeWorkflowService
     private Task SetProgressAsync(string runId, string step, string substep, string label, CancellationToken cancellationToken)
     {
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
+    }
+
+    private HostedProcessCommand BuildCodexRepairCommand(string prompt, string outputPath, string model, string repositoryRoot)
+    {
+        return new HostedProcessCommand(
+            ResolveCodexCommand(),
+            [
+                "exec",
+                "--sandbox",
+                "workspace-write",
+                "-m",
+                model,
+                "-c",
+                "approval_policy=\"never\"",
+                "-c",
+                $"model_reasoning_effort=\"{RepairReasoningEffort}\"",
+                "--cd",
+                repositoryRoot,
+                "-o",
+                outputPath,
+                "-"
+            ],
+            repositoryRoot,
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
+                ["PHASEA_CODEX_REASONING_EFFORT"] = RepairReasoningEffort
+            },
+            prompt);
+    }
+
+    private static string CreateShortRuntimeOutputPath(string runId)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "phasea-prototype-repair", runId);
+        Directory.CreateDirectory(root);
+        return Path.Combine(root, "codex-output.txt");
     }
 
     private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
@@ -492,6 +610,320 @@ public sealed class PrototypeWorkflowService
         return string.IsNullOrWhiteSpace(primary)
             ? secondary
             : $"{primary.TrimEnd()}{Environment.NewLine}{Environment.NewLine}[post-prototype-godot-smoke]{Environment.NewLine}{secondary}";
+    }
+
+    private static bool ShouldUsePostValidationRepair(RunSnapshot failedRun)
+    {
+        if (!string.Equals(failedRun.Status, "failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!LatestPrototypeCompletionSucceeded(failedRun.EvidenceJson))
+        {
+            return false;
+        }
+
+        var combined = string.Join("\n", failedRun.StdoutText, failedRun.StderrText, failedRun.EvidenceJson);
+        return combined.Contains("MAIN_MENU_PROTOTYPE_NAV FAIL", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("prototype_main_menu_navigation_failed", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("rpg_start_button_missing", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("strict_headless_prototype_scene", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool SamePrototypeRecord(string? left, string? right)
+    {
+        if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
+        {
+            return false;
+        }
+
+        return string.Equals(
+            left.Replace('\\', '/').Trim(),
+            right.Replace('\\', '/').Trim(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool LatestPrototypeCompletionSucceeded(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var succeededFlag = completion.TryGetProperty("succeeded", out var succeeded) &&
+                                succeeded.ValueKind is JsonValueKind.True;
+            var completedAllDays = completion.TryGetProperty("completed_through_day", out var day) &&
+                                   day.ValueKind == JsonValueKind.Number &&
+                                   day.TryGetInt32(out var completedThroughDay) &&
+                                   completedThroughDay >= CurrentWorkflowMaxDay;
+            return succeededFlag || completedAllDays;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static string BuildCompactFailure(RunSnapshot failedRun)
+    {
+        return FirstNonEmpty(failedRun.StderrText, failedRun.StdoutText, TryReadFailureCodeFromEvidence(failedRun.EvidenceJson), "previous prototype validation failed");
+    }
+
+    private static string BuildPostValidationRepairPrompt(
+        ProjectSnapshot project,
+        string prototypeRecordPath,
+        string slug,
+        string preferredShellScene,
+        string previousRepairState,
+        RunSnapshot failedRun,
+        PrototypeContractSnapshot contract)
+    {
+        return $"""
+            You are running a Phase A post-validation prototype repair.
+
+            This is not a fresh prototype workflow and not a TDD red-stage rerun. The previous prototype route already reached the end of the prototype workflow, but post-validation failed. Repair the existing prototype artifacts directly, then leave the normal completion artifacts intact or update them consistently.
+
+            Project:
+            - ProjectId: {project.ProjectId}
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameType: {project.GameTypeSource}
+            - Slug: {slug}
+            - PrototypeRecord: {prototypeRecordPath}
+            - PreferredPrototypeShellScene: {preferredShellScene}
+
+            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
+            {PrototypeContractService.BuildPromptBlock(contract)}
+
+            Previous prototype repair state:
+            {TrimRepairStateForPrompt(previousRepairState)}
+
+            Previous failure:
+            {BuildCompactFailure(failedRun)}
+
+            Mandatory repair scope:
+            - Repair only the hosted Godot prototype project files needed for the failed post-validation.
+            - Do not regenerate the iteration plan.
+            - Do not rerun or rewrite the prototype TDD red stage.
+            - Treat the preferred prototype shell scene as the main navigation entry for smoke verification.
+            - Do not use BattleScene or MapScene as the main entry scene for the repair route.
+            - For RPG prototypes, ensure the main menu entry can navigate to this prototype scene, Start Adventure is visible and clickable, and Start Adventure reveals a non-empty map scene.
+            - For RPG prototypes, prefer dedicated MapScene and BattleScene files under the prototype slug when missing, and keep map art, grid, and token overlay in one shared coordinate layer.
+            - If the failure says rpg_start_button_missing, add or repair the Start Adventure button and the script path that reveals the RPG map scene.
+            - Output must be browser-safe: no local paths, command lines, script names, log names, or environment variable values.
+
+            Output format:
+            STATUS: completed|needs_fix
+            SUMMARY: 2-4 browser-safe sentences.
+            CHANGED: 1-3 browser-safe lines.
+            VERIFY: 1-3 browser-safe lines. If you cannot run engine validation, say what remains for platform smoke.
+            REMAINING: none if complete, otherwise list blockers.
+            """;
+    }
+
+    private void WritePrototypeRepairState(
+        ProjectSnapshot project,
+        string runId,
+        string status,
+        int exitCode,
+        string prototypeRecordPath,
+        string slug,
+        string preferredShellScene,
+        RunSnapshot failedRun,
+        PrototypeCompletionValidation validation,
+        PrototypeGodotSmokeResult smoke)
+    {
+        var failureCode = ResolveRepairFailureCode(validation, smoke);
+        _routeStateWriter.WritePrototypeRepairState(project, new
+        {
+            route = $"{RunType}:repair",
+            repair_mode = "post_validation",
+            run_id = runId,
+            status,
+            exit_code = exitCode,
+            prototype_record = prototypeRecordPath,
+            slug,
+            preferred_shell_scene = preferredShellScene,
+            consumed_failure_run_id = failedRun.RunId,
+            last_failure_code = failureCode,
+            last_failure_summary = BuildRepairFailureSummary(failureCode),
+            next_repair_focus = BuildNextRepairFocus(failureCode, preferredShellScene),
+            prototype_completion = validation.ToEvidence(),
+            godot_smoke = smoke.ToEvidence(),
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
+    }
+
+    private async Task AppendPrototypeRepairChatMessageAsync(
+        ProjectSnapshot project,
+        string runId,
+        string status,
+        PrototypeCompletionValidation validation,
+        PrototypeGodotSmokeResult smoke,
+        CancellationToken cancellationToken)
+    {
+        var failureCode = ResolveRepairFailureCode(validation, smoke);
+        var message = BuildPrototypeRepairChatMessage(runId, status, validation, smoke, failureCode);
+        await _metadataStore.AddProjectChatMessageAsync(
+            project.AccountId,
+            project.ProjectId,
+            "assistant",
+            PublicChatSanitizer.Sanitize(message),
+            "prototype-repair-result",
+            ProjectChatHistoryService.DefaultLimit,
+            cancellationToken);
+    }
+
+    private static string BuildPrototypeRepairChatMessage(
+        string runId,
+        string status,
+        PrototypeCompletionValidation validation,
+        PrototypeGodotSmokeResult smoke,
+        string failureCode)
+    {
+        var result = string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase)
+            ? "本轮原型修复已通过平台验收。"
+            : "本轮原型修复尚未通过平台验收。";
+        var smokeLine = smoke.Ran
+            ? $"平台验收结果：{(smoke.ExitCode == 0 ? "通过" : "未通过")}。"
+            : "平台验收结果：本轮未执行。";
+        var focus = BuildNextRepairFocus(failureCode, validation.SmokeScene ?? smoke.ScenePath ?? "");
+
+        return $"""
+            原型修复进展
+
+            {result}
+            {smokeLine}
+            当前错误码：{failureCode}
+            下一次修复重点：{focus}
+            修复记录：{runId}
+            """;
+    }
+
+    private static string ResolveRepairFailureCode(PrototypeCompletionValidation validation, PrototypeGodotSmokeResult smoke)
+    {
+        if (!validation.Succeeded)
+        {
+            return FirstNonEmpty(validation.Error, "prototype_completion_validation_failed");
+        }
+
+        if (smoke.Ran && smoke.ExitCode != 0)
+        {
+            return ExtractKnownRepairFailureCode(smoke.Stderr, smoke.Stdout, smoke.Reason);
+        }
+
+        return "none";
+    }
+
+    private static string ExtractKnownRepairFailureCode(params string?[] values)
+    {
+        var combined = string.Join("\n", values.Where(value => !string.IsNullOrWhiteSpace(value)));
+        var knownCodes = new[]
+        {
+            "rpg_map_visible_markers_missing_after_start",
+            "rpg_map_scene_has_no_visible_size_after_start",
+            "rpg_map_scene_not_visible_after_start",
+            "rpg_map_scene_missing_after_start",
+            "rpg_start_button_missing",
+            "prototype_scene_mismatch",
+            "prototype_scene_not_loaded",
+            "prototype_main_menu_navigation_failed",
+            "strict_headless_prototype_scene"
+        };
+
+        return knownCodes.FirstOrDefault(code => combined.Contains(code, StringComparison.OrdinalIgnoreCase))
+               ?? FirstNonEmpty(values)
+               ?? "prototype_repair_failed";
+    }
+
+    private static string BuildRepairFailureSummary(string failureCode)
+    {
+        return failureCode switch
+        {
+            "none" => "Repair passed platform validation.",
+            "rpg_map_visible_markers_missing_after_start" => "Start Adventure reached the map path, but the map scene is missing required visible markers.",
+            "rpg_map_scene_has_no_visible_size_after_start" => "The map scene exists after Start Adventure but has no visible size.",
+            "rpg_map_scene_not_visible_after_start" => "The map scene exists after Start Adventure but is not visible.",
+            "rpg_map_scene_missing_after_start" => "Start Adventure did not reveal a map scene.",
+            "rpg_start_button_missing" => "The RPG prototype shell is missing the Start Adventure button.",
+            "prototype_scene_mismatch" => "Main menu navigation reached a different scene than the expected prototype shell scene.",
+            "prototype_scene_not_loaded" => "Main menu navigation did not load the prototype scene.",
+            _ => failureCode
+        };
+    }
+
+    private static string BuildNextRepairFocus(string failureCode, string preferredShellScene)
+    {
+        return failureCode switch
+        {
+            "none" => "No repair needed.",
+            "rpg_map_visible_markers_missing_after_start" => "Keep the prototype shell as the main entry, then ensure the map scene shown after Start Adventure contains visible Title, Grid, and StatusLabel nodes.",
+            "rpg_map_scene_has_no_visible_size_after_start" => "Set the map scene Control size to a visible non-zero area after Start Adventure.",
+            "rpg_map_scene_not_visible_after_start" => "Ensure Start Adventure makes the map scene visible and hides only the intro shell UI.",
+            "rpg_map_scene_missing_after_start" => "Wire Start Adventure to reveal or instantiate the map scene under the prototype shell.",
+            "rpg_start_button_missing" => $"Ensure the prototype shell scene contains a visible Start Adventure button. Preferred shell: {preferredShellScene}",
+            "prototype_scene_mismatch" => $"Keep Main.tscn prototype navigation pointed at the preferred prototype shell scene: {preferredShellScene}",
+            _ => "Use the latest platform validation error as the repair target and keep the prototype shell as the main entry scene."
+        };
+    }
+
+    private static string TrimRepairStateForPrompt(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "none";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= 4000 ? trimmed : trimmed[..4000];
+    }
+
+    private static string ResolvePreferredPrototypeShellScene(string repositoryRoot, string slug)
+    {
+        var prototypeSceneDirectory = Path.Combine(
+            repositoryRoot,
+            "Game.Godot",
+            "Prototypes",
+            PrototypeRecordWriter.SanitizeSlug(slug));
+        if (!Directory.Exists(prototypeSceneDirectory))
+        {
+            return "";
+        }
+
+        var exactName = $"{ToPascalCase(PrototypeRecordWriter.SanitizeSlug(slug))}Prototype.tscn";
+        var exactPath = Path.Combine(prototypeSceneDirectory, exactName);
+        if (IsValidGodotSceneFile(exactPath))
+        {
+            return $"res://{Path.GetRelativePath(repositoryRoot, exactPath).Replace(Path.DirectorySeparatorChar, '/')}";
+        }
+
+        return Directory.EnumerateFiles(prototypeSceneDirectory, "*.tscn", SearchOption.AllDirectories)
+            .Where(IsValidGodotSceneFile)
+            .Select(file => new
+            {
+                Path = file,
+                Priority = GetPrototypeScenePriority(file)
+            })
+            .OrderBy(item => item.Priority, StringComparer.Ordinal)
+            .ThenBy(item => item.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(item => $"res://{Path.GetRelativePath(repositoryRoot, item.Path).Replace(Path.DirectorySeparatorChar, '/')}")
+            .FirstOrDefault() ?? "";
+    }
+
+    private static string ToPascalCase(string value)
+    {
+        var parts = value.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
     }
 
     private static string? ExtractPrototypeRecordPath(RunSnapshot? run)
@@ -553,6 +985,12 @@ public sealed class PrototypeWorkflowService
         }
 
         return null;
+    }
+
+    private static string ResolveCodexCommand()
+    {
+        var configured = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
+        return string.IsNullOrWhiteSpace(configured) ? "codex" : configured;
     }
 
     private static string ResolvePrototypeSlug(string repositoryRoot, string prototypeRecordPath, string fallbackSlug)
@@ -1038,7 +1476,8 @@ public sealed class PrototypeWorkflowService
         }
 
         foreach (var file in Directory.EnumerateFiles(prototypeSceneDirectory, "*.tscn", SearchOption.AllDirectories)
-                     .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+                     .OrderBy(path => GetPrototypeScenePriority(path), StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(path => path, StringComparer.OrdinalIgnoreCase))
         {
             if (!IsValidGodotSceneFile(file))
             {
@@ -1051,6 +1490,22 @@ public sealed class PrototypeWorkflowService
         }
 
         return false;
+    }
+
+    private static string GetPrototypeScenePriority(string path)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        if (fileName.Contains("prototype", StringComparison.OrdinalIgnoreCase))
+        {
+            return "0";
+        }
+
+        if (fileName.Contains("main", StringComparison.OrdinalIgnoreCase))
+        {
+            return "1";
+        }
+
+        return "2";
     }
 
     private static bool IsValidPrototypeSceneForSlug(string repositoryRoot, string scene, string slug)

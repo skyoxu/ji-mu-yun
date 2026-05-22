@@ -21,37 +21,47 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.NotRun();
         }
 
-        var testProject = Path.Combine(project.RepoPath, "Game.Core.Tests", "Game.Core.Tests.csproj");
-        if (!File.Exists(testProject))
-        {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
-        }
-
         var testsPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
         var corePath = Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
         if (contract.AssetUsageAcceptance && !HasRpgSceneAssetUsage(project.RepoPath))
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_asset_usage");
         }
 
         if (contract.MapEntryAcceptance && !HasRpgMapEntryAcceptanceFiles(project.RepoPath))
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_map_entry_contract");
         }
 
         if (contract.BattleSceneAcceptance && !HasRpgBattleSceneAcceptanceFiles(project.RepoPath))
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_battle_scene_contract");
+        }
+
+        if (contract.RewardFlowAcceptance && !HasRpgRewardFlowAcceptanceFiles(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_reward_flow_contract");
         }
 
         if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath))
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_final_acceptance_contract");
         }
 
         if (!HasRequiredMarkers(testsPath, corePath, contract.RequiredMarkers))
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_required_core_markers");
+        }
+
+        if (contract.StaticAcceptanceOnly)
+        {
+            return PrototypeGoalAcceptanceValidationResult.Pass(contract.Kind);
+        }
+
+        var testProject = Path.Combine(project.RepoPath, "Game.Core.Tests", "Game.Core.Tests.csproj");
+        if (!File.Exists(testProject))
+        {
+            return PrototypeGoalAcceptanceValidationResult.NotRun();
         }
 
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
@@ -72,7 +82,7 @@ internal static class PrototypeGoalAcceptanceValidator
                 linked.Token);
             if (result.ExitCode != 0)
             {
-                return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+                return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "core_tests_failed");
             }
 
             var godotProject = Path.Combine(project.RepoPath, "GodotGame.csproj");
@@ -95,7 +105,7 @@ internal static class PrototypeGoalAcceptanceValidator
                     linked.Token);
                 if (buildResult.ExitCode != 0)
                 {
-                    return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+                    return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "godot_project_build_failed");
                 }
             }
 
@@ -103,7 +113,7 @@ internal static class PrototypeGoalAcceptanceValidator
         }
         catch (OperationCanceledException)
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind);
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "acceptance_validation_timeout");
         }
     }
 
@@ -135,13 +145,16 @@ internal static class PrototypeGoalAcceptanceValidator
                 BattleSceneAcceptance: true),
             5 => new AcceptanceContract(
                 "rpg-step5-reward-loop-return-map",
-                ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"]),
+                ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"],
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true),
             6 => new AcceptanceContract(
                 "rpg-final-full-playable-acceptance",
                 ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ApplyReward", "Battle reward selected", "VictoryBattleCount", "IsVictory", "IsGameOver"],
                 AssetUsageAcceptance: true,
                 MapEntryAcceptance: true,
                 BattleSceneAcceptance: true,
+                RewardFlowAcceptance: true,
                 FinalAcceptance: true),
             _ => null
         };
@@ -235,10 +248,19 @@ internal static class PrototypeGoalAcceptanceValidator
                mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal) &&
                mainScriptText.Contains("_mapScene.Visible = true", StringComparison.Ordinal) &&
                mapSceneText.Contains("MapScene", StringComparison.Ordinal) &&
+               mapSceneText.Contains("TrackLayer", StringComparison.Ordinal) &&
+               mapSceneText.Contains("custom_minimum_size = Vector2(600, 600)", StringComparison.Ordinal) &&
+               HasSceneNodeUnderParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
+               HasSceneNodeUnderParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
+               HasSceneNodeUnderParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
+               HasSceneNodeUnderParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay") &&
                mapSceneText.Contains("Grid", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal) &&
+               mapScriptText.Contains("TrackLayer", StringComparison.Ordinal) &&
+               mapScriptText.Contains("GridToPosition", StringComparison.Ordinal) &&
+               mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal) &&
                mapScriptText.Contains("MovePlayer", StringComparison.Ordinal) &&
                mapScriptText.Contains("EncounterEntered", StringComparison.Ordinal);
     }
@@ -256,8 +278,52 @@ internal static class PrototypeGoalAcceptanceValidator
         var battleScriptText = File.ReadAllText(battleScript);
         return battleSceneText.Contains("BattleScene", StringComparison.Ordinal) &&
                battleSceneText.Contains("Attack", StringComparison.Ordinal) &&
-               battleScriptText.Contains("ResolveBattle", StringComparison.Ordinal) &&
+               battleScriptText.Contains("ResolveAttackTurn", StringComparison.Ordinal) &&
+               !battleScriptText.Contains("_loop.ResolveBattle(_state", StringComparison.Ordinal) &&
                battleScriptText.Contains("BattleFinished", StringComparison.Ordinal);
+    }
+
+    private static bool HasRpgRewardFlowAcceptanceFiles(string repoPath)
+    {
+        var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
+        var mapScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs");
+        if (new[] { mainScript, mapScript }.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        var mainScriptText = File.ReadAllText(mainScript);
+        var mapScriptText = File.ReadAllText(mapScript);
+        return HasRewardListGuard(mainScriptText) &&
+               !mainScriptText.Contains("if (isVictory && rewards.Count > 0)", StringComparison.Ordinal) &&
+               HasRewardSceneEntry(mainScriptText) &&
+               mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal) &&
+               mapScriptText.Contains("ShowRewardReturnStatus", StringComparison.Ordinal) &&
+               mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal);
+    }
+
+    private static bool HasRewardListGuard(string mainScriptText)
+    {
+        return mainScriptText.Contains("rewards.Count > 0", StringComparison.Ordinal) ||
+               mainScriptText.Contains("rewards.Count <= 0", StringComparison.Ordinal) ||
+               mainScriptText.Contains("rewards.Count == 0", StringComparison.Ordinal);
+    }
+
+    private static bool HasRewardSceneEntry(string mainScriptText)
+    {
+        return mainScriptText.Contains("ShowRewardScene(rewards)", StringComparison.Ordinal) ||
+               Regex.IsMatch(
+                   mainScriptText,
+                   @"ShowRewardScene\s*\(\s*(?:[\w.]+\.)?IReadOnlyList<[^>]+>\s+rewards\s*\)",
+                   RegexOptions.CultureInvariant);
+    }
+
+    private static bool HasSceneNodeUnderParent(string sceneText, string nodeName, string parent)
+    {
+        return Regex.IsMatch(
+            sceneText,
+            "\\[node\\s+name=\"" + Regex.Escape(nodeName) + "\"[^\\]]*parent=\"" + Regex.Escape(parent) + "\"[^\\]]*\\]",
+            RegexOptions.CultureInvariant);
     }
 
     private static bool HasRpgSceneAssetUsage(string repoPath)
@@ -394,10 +460,12 @@ internal static class PrototypeGoalAcceptanceValidator
         bool AssetUsageAcceptance = false,
         bool MapEntryAcceptance = false,
         bool BattleSceneAcceptance = false,
-        bool FinalAcceptance = false);
+        bool RewardFlowAcceptance = false,
+        bool FinalAcceptance = false,
+        bool StaticAcceptanceOnly = false);
 }
 
-internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, string Status)
+internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, string Status, string? Reason = null)
 {
     public bool Passed => string.Equals(Status, "passed", StringComparison.Ordinal);
 
@@ -411,8 +479,8 @@ internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, stri
         return new PrototypeGoalAcceptanceValidationResult(kind, "passed");
     }
 
-    public static PrototypeGoalAcceptanceValidationResult Failed(string kind)
+    public static PrototypeGoalAcceptanceValidationResult Failed(string kind, string? reason = null)
     {
-        return new PrototypeGoalAcceptanceValidationResult(kind, "failed");
+        return new PrototypeGoalAcceptanceValidationResult(kind, "failed", reason);
     }
 }

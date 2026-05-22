@@ -13,6 +13,7 @@ public sealed class PrototypeQuickFixService
     private const string RunType = "prototype-quick-fix";
     private const string ReasoningEffort = "low";
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(300);
+    private static readonly TimeSpan DefaultGoalRepairExecutionTimeout = TimeSpan.FromMinutes(12);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -175,8 +176,11 @@ public sealed class PrototypeQuickFixService
             }
 
             var model = PrototypeModelPolicy.Normalize(request.Model);
+            var effectiveTimeout = goalRepairMode
+                ? Max(_executionTimeout, DefaultGoalRepairExecutionTimeout)
+                : _executionTimeout;
             using var timeout = new CancellationTokenSource();
-            timeout.CancelAfter(_executionTimeout);
+            timeout.CancelAfter(effectiveTimeout);
             var prototypeContract = _contractService.Read(project);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract);
             await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
@@ -225,6 +229,8 @@ public sealed class PrototypeQuickFixService
                     ? godotSmokeValidation.Passed
                         ? new GoalRepairOutcome("succeeded", true)
                         : new GoalRepairOutcome("needs_fix", false)
+                    : RequiresHardPlatformAcceptance(targetGoal, acceptanceValidation)
+                        ? new GoalRepairOutcome("needs_fix", false)
                     : DetermineGoalRepairOutcome(targetGoal, assistantMessage, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(
@@ -271,6 +277,7 @@ public sealed class PrototypeQuickFixService
                 goal_repair_status = goalRepairOutcome?.GoalStatus,
                 acceptance_validation = acceptanceValidation.Kind,
                 acceptance_validation_status = acceptanceValidation.Status,
+                acceptance_validation_reason = acceptanceValidation.Reason,
                 godot_smoke_validation = godotSmokeValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
@@ -333,13 +340,16 @@ public sealed class PrototypeQuickFixService
                 run_type = RunType,
                 failure_code = "prototype_quick_fix_timeout"
             });
-            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
+            var effectiveTimeout = goalRepairMode
+                ? Max(_executionTimeout, DefaultGoalRepairExecutionTimeout)
+                : _executionTimeout;
+            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null)
             {
-                var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复，请继续聚焦本 step，不要切到后续目标。";
+                var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小奖励闭环：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。";
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", summary, "当前目标修复超时。", [summary], CancellationToken.None);
+                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", "继续修复当前 step 的最小奖励闭环，不要推进后续目标。", summary, [summary], CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "timeout", $"目标 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前目标修复超时。系统没有切换到后续目标，你可以继续再次修复当前 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
@@ -383,6 +393,11 @@ public sealed class PrototypeQuickFixService
         }
 
         return _skillActionCatalog.Find(actionId.Trim());
+    }
+
+    private static TimeSpan Max(TimeSpan left, TimeSpan right)
+    {
+        return left >= right ? left : right;
     }
 
     private async Task<bool> HasSucceededPrototypeWorkflowAsync(string projectId, CancellationToken cancellationToken)
@@ -491,6 +506,7 @@ public sealed class PrototypeQuickFixService
             goal_repair_status = goalRepairOutcome.GoalStatus,
             acceptance_validation = acceptanceValidation.Kind,
             acceptance_validation_status = acceptanceValidation.Status,
+            acceptance_validation_reason = acceptanceValidation.Reason,
             godot_smoke_validation = godotSmokeValidation.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, "completed", 0, "Preflight validation passed.", "", evidenceJson, cancellationToken);
@@ -675,6 +691,7 @@ public sealed class PrototypeQuickFixService
             - LastRunOutcome: {runMemory.LastRunOutcome}
             """;
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
+        var platformAcceptanceBlock = BuildPlatformAcceptanceBlock(goal);
 
         return $"""
             你正在执行积木云 Phase A 的单目标迭代修复任务。
@@ -683,6 +700,7 @@ public sealed class PrototypeQuickFixService
             {contractBlock}
             Mandatory rules:
             - 这次只处理当前目标，不要顺手扩展到后续目标。
+            - 这是目标级 needs-fix 修复，不是 90 秒快速修复；允许为了完成当前 step 做必要的局部实现，但仍禁止扩大到后续目标。
             - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
@@ -710,6 +728,8 @@ public sealed class PrototypeQuickFixService
             - AcceptanceHint: {goal.AcceptanceHint}
             - PreviousResultSummary: {BuildCompactGoalSummary(goal.ResultSummary)}
 
+            {platformAcceptanceBlock}
+
             用户触发这次修复时附带的说明：
             {feedback}
 
@@ -721,6 +741,7 @@ public sealed class PrototypeQuickFixService
             成功定义：
             - 只有当当前 step 已可继续，才可视为修复成功。
             - “已可继续”必须指当前目标的玩法/业务验收通过，不是平台路由或恢复语义通过。
+            - 对奖励闭环目标，最小完成范围是：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。
             - 如果仍未可继续，必须明确写出“当前 step 仍需修复”以及唯一剩余阻塞。
             - 不要切换去处理 step {goal.GoalIndex + 1} 或任何后续目标。
 
@@ -731,6 +752,31 @@ public sealed class PrototypeQuickFixService
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
             """;
+    }
+
+    private static string BuildPlatformAcceptanceBlock(ProjectIterationGoalSnapshot goal)
+    {
+        return goal.GoalIndex == 5
+            ? """
+            平台对 RPG Step 5 的强制验收契约：
+            - 主原型场景脚本必须有一个明确的奖励展示入口，接收战斗胜利产生的 rewards 列表，并在 rewards.Count > 0 时显示奖励选择。
+            - 奖励展示入口必须能被平台识别为 ShowRewardScene(rewards)，不要只把奖励逻辑散落在战斗结束分支里。
+            - 选择奖励后必须应用 3 选 1 成长：+5 HP、+2 ATK、+1 DEF 三者之一，并让玩家状态变化可见。
+            - 选择奖励后必须关闭奖励 UI，回到地图场景，并确保玩家仍可见、仍可继续移动。
+            - 地图场景脚本必须提供可识别的奖励后返回状态刷新入口 ShowRewardReturnStatus，用于显示玩家已经回到地图循环。
+            - 核心 loop 和对应原型测试必须保留 RewardOptions.Count、ApplyReward、Battle reward selected、Return to the map 这些可验收标记。
+            - 不要把“测试依赖不可用”当作已完成；如果结构契约没满足，应继续修当前 step。
+            """
+            : "";
+    }
+
+    private static bool RequiresHardPlatformAcceptance(
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalAcceptanceValidationResult acceptanceValidation)
+    {
+        return string.Equals(acceptanceValidation.Status, "failed", StringComparison.Ordinal) &&
+               goal.GoalIndex is 5 or 6 &&
+               acceptanceValidation.Kind.StartsWith("rpg-", StringComparison.Ordinal);
     }
 
     private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)
