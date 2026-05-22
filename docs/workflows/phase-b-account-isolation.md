@@ -10,6 +10,7 @@ Implemented scope:
 - Admin can create user accounts manually from the console.
 - Admin can disable or enable user accounts without deleting their projects.
 - Admin can rotate a user access token; the new plaintext token is returned once.
+- Admin account actions are recorded in `admin_account_audit_events` without plaintext token material.
 - User tokens are generated once, stored only as hashes, and returned only at creation time.
 - Project listing, project creation, deletion, chat history, package access, asset access, run readback, and artifact readback are scoped to the authenticated account.
 - Admin-only panels and admin APIs require the resolved admin role.
@@ -52,7 +53,7 @@ Still deferred:
 
 - User deletion.
 - Full LLM audit export with filters and pagination.
-- Admin audit page for account actions.
+- Account audit CSV export and filters.
 - Full integration tests around HTTP auth middleware.
 
 ## Account LLM Binding
@@ -85,3 +86,13 @@ py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080
 ```
 
 Optional authorized checks can be enabled by passing `--admin-token <access-token>` or setting `PHASEA_ADMIN_TOKEN` in the process environment. Authorized checks create a temporary user account and verify user/admin route boundaries.
+
+## Account Action Audit
+
+Current account audit slice:
+
+- Admin user creation records `user_created`.
+- Admin disable/enable records `user_disabled` or `user_enabled`.
+- Admin token rotation records `user_token_rotated`.
+- `GET /api/admin/account-audit` requires admin role and returns recent audit events.
+- Audit metadata must not include plaintext tokens, token hashes, provider keys, or secret values.

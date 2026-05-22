@@ -246,6 +246,81 @@ public sealed class PhaseAMetadataStore
         return new AdminRotateUserTokenResult(accountId, username, token);
     }
 
+    public async Task RecordAdminAccountAuditEventAsync(
+        string actorAccountId,
+        string action,
+        string? targetAccountId,
+        object metadata,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(actorAccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(action);
+        ArgumentNullException.ThrowIfNull(metadata);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO admin_account_audit_events (
+                id,
+                actor_account_id,
+                action,
+                target_account_id,
+                metadata_json,
+                created_utc)
+            VALUES (
+                $id,
+                $actor_account_id,
+                $action,
+                $target_account_id,
+                $metadata_json,
+                $created_utc);
+            """;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$actor_account_id", actorAccountId);
+        command.Parameters.AddWithValue("$action", action.Trim());
+        command.Parameters.AddWithValue("$target_account_id", (object?)targetAccountId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$metadata_json", JsonSerializer.Serialize(metadata));
+        command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdminAccountAuditEvent>> ListAdminAccountAuditEventsAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        if (limit < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be greater than zero.");
+        }
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, actor_account_id, action, target_account_id, metadata_json, created_utc
+            FROM admin_account_audit_events
+            ORDER BY created_utc DESC, id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$limit", limit);
+
+        var events = new List<AdminAccountAuditEvent>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            events.Add(new AdminAccountAuditEvent(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5)));
+        }
+
+        return events;
+    }
+
     public async Task<bool> ProjectBelongsToAccountAsync(
         string accountId,
         string projectId,

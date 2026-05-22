@@ -31,6 +31,7 @@ public sealed class SqliteMetadataSchemaTests
             "runner_locks",
             "account_llm_bindings",
             "project_chat_messages",
+            "admin_account_audit_events",
             "project_prototype_drafts",
             "project_iteration_sessions",
             "project_iteration_goals",
@@ -151,6 +152,33 @@ public sealed class SqliteMetadataSchemaTests
         rotated!.Token.Should().NotBe(user.Token);
         (await store.ResolveAccountByTokenHashAsync(oldHash)).Should().BeNull();
         (await store.ResolveAccountByTokenHashAsync(PhaseAAuth.HashTokenForStorage(rotated.Token))).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task AdminAccountAuditEvents_AreRecordedAndListed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var user = await store.CreateUserAccountAsync("audit-user", 1);
+
+        await store.RecordAdminAccountAuditEventAsync(
+            admin,
+            "user_created",
+            user.AccountId,
+            new { username = user.Username, project_limit = user.ProjectLimit });
+
+        var events = await store.ListAdminAccountAuditEventsAsync();
+
+        events.Should().ContainSingle();
+        events[0].ActorAccountId.Should().Be(admin);
+        events[0].TargetAccountId.Should().Be(user.AccountId);
+        events[0].Action.Should().Be("user_created");
+        events[0].MetadataJson.Should().Contain("audit-user");
+        events[0].MetadataJson.Should().NotContain(user.Token);
     }
 
     [Fact]

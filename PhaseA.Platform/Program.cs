@@ -540,7 +540,14 @@ app.MapPost("/api/admin/users", async (
 
     try
     {
-        return Results.Ok(await store.CreateUserAccountAsync(request.Username, projectLimit, cancellationToken));
+        var result = await store.CreateUserAccountAsync(request.Username, projectLimit, cancellationToken);
+        await store.RecordAdminAccountAuditEventAsync(
+            CurrentAccountId(context),
+            "user_created",
+            result.AccountId,
+            new { username = result.Username, project_limit = result.ProjectLimit },
+            cancellationToken);
+        return Results.Ok(result);
     }
     catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
     {
@@ -579,6 +586,15 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     }
 
     var updated = await store.SetUserDisabledAsync(accountId, request.Disabled, cancellationToken);
+    if (updated)
+    {
+        await store.RecordAdminAccountAuditEventAsync(
+            CurrentAccountId(context),
+            request.Disabled ? "user_disabled" : "user_enabled",
+            accountId,
+            new { disabled = request.Disabled },
+            cancellationToken);
+    }
     return updated ? Results.Ok(new { accountId, disabled = request.Disabled }) : Results.NotFound(new { error = "user_not_found" });
 });
 
@@ -599,7 +615,30 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     }
 
     var result = await store.RotateUserTokenAsync(accountId, cancellationToken);
+    if (result is not null)
+    {
+        await store.RecordAdminAccountAuditEventAsync(
+            CurrentAccountId(context),
+            "user_token_rotated",
+            accountId,
+            new { username = result.Username },
+            cancellationToken);
+    }
     return result is null ? Results.NotFound(new { error = "user_not_found" }) : Results.Ok(result);
+});
+
+app.MapGet("/api/admin/account-audit", async (
+    int? limit,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    return Results.Ok(new { events = await store.ListAdminAccountAuditEventsAsync(Math.Clamp(limit ?? 100, 1, 200), cancellationToken) });
 });
 
 app.MapPost("/api/projects/{projectId}/chat", async (

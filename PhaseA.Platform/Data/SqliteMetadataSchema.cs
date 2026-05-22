@@ -335,6 +335,18 @@ public static class SqliteMetadataSchema
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS admin_account_audit_events (
+            id TEXT PRIMARY KEY,
+            actor_account_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            target_account_id TEXT NULL,
+            metadata_json TEXT NOT NULL DEFAULT '{}',
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (actor_account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (target_account_id) REFERENCES accounts(id) ON DELETE SET NULL
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS project_prototype_drafts (
             project_id TEXT PRIMARY KEY,
             status TEXT NOT NULL,
@@ -428,6 +440,7 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
+        "CREATE INDEX IF NOT EXISTS ix_admin_account_audit_events_created ON admin_account_audit_events(created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);"

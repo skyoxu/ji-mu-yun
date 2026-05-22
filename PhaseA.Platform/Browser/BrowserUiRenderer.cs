@@ -216,10 +216,12 @@ public sealed class BrowserUiRenderer
                     <button id="loadAdminLlmUsage" class="ghost">Load admin LLM usage</button>
                     <button id="downloadAdminLlmUsageCsv" class="ghost">Download admin LLM usage CSV</button>
                     <button id="loadAdminLlmRuns" class="ghost">Load admin LLM run audit</button>
+                    <button id="loadAccountAudit" class="ghost">Load account audit</button>
                     <div id="createUserAccountResult" class="card muted">Admin only. The token is shown once after creation.</div>
                     <div id="userAccounts" class="card-list"></div>
                     <div id="adminLlmUsageStatus" class="card muted">No admin LLM usage loaded.</div>
                     <div id="adminLlmRunsStatus" class="card muted">No admin LLM run audit loaded.</div>
+                    <div id="accountAuditStatus" class="card muted">No account audit loaded.</div>
                   </section>
                 </aside>
                 <div id="adminPanel" class="stack hidden">
@@ -817,6 +819,7 @@ public sealed class BrowserUiRenderer
                     loadUserAccounts();
                     loadAdminLlmUsage();
                     loadAdminLlmRuns();
+                    loadAccountAudit();
                   }
                   refreshActiveRun();
                 }
@@ -1144,6 +1147,31 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     $("adminLlmRunsStatus").className = "card danger";
                     $("adminLlmRunsStatus").textContent = error?.payload?.error || "admin_llm_runs_load_failed";
+                  }
+                }
+
+                async function loadAccountAudit() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const result = await api("/api/admin/account-audit?limit=50");
+                    const events = result.events || [];
+                    $("accountAuditStatus").className = "card";
+                    $("accountAuditStatus").innerHTML = `
+                      <strong>Recent account audit events: ${escapeHtml(events.length)}</strong>
+                      <div class="card-list">
+                        ${events.map(event => `
+                          <div class="card">
+                            <strong>${escapeHtml(event.action)} · ${escapeHtml(event.createdUtc)}</strong>
+                            <p class="muted">actor: ${escapeHtml(event.actorAccountId)}</p>
+                            <p class="muted">target: ${escapeHtml(event.targetAccountId || "")}</p>
+                            <p class="muted">${escapeHtml(event.metadataJson || "{}")}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No account audit events.</p>"}
+                      </div>
+                    `;
+                  } catch (error) {
+                    $("accountAuditStatus").className = "card danger";
+                    $("accountAuditStatus").textContent = error?.payload?.error || "account_audit_load_failed";
                   }
                 }
 
@@ -2504,6 +2532,7 @@ public sealed class BrowserUiRenderer
                 $("loadAdminLlmUsage").onclick = loadAdminLlmUsage;
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
                 $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
+                $("loadAccountAudit").onclick = loadAccountAudit;
                 $("saveLlmBinding").onclick = saveLlmBinding;
                 $("loadLlmBinding").onclick = loadLlmBinding;
                 $("loadLlmUsage").onclick = loadLlmUsage;
