@@ -96,3 +96,32 @@ Current account audit slice:
 - Admin token rotation records `user_token_rotated`.
 - `GET /api/admin/account-audit` requires admin role and returns recent audit events.
 - Audit metadata must not include plaintext tokens, token hashes, provider keys, or secret values.
+
+## Completion Definition
+
+Phase B can be called complete for the current prototype-hardening scope when all required items below are satisfied:
+
+- Required: Account-scoped authentication resolves admin and database-backed user tokens.
+- Required: User-facing project, run, artifact, package, asset, chat, and workflow APIs are scoped to the authenticated account.
+- Required: Admin can manually create users, disable/enable users, and rotate user access tokens.
+- Required: Admin account actions are recorded without plaintext token material.
+- Required: Each account can save and inspect its own LLM binding and usage summary.
+- Required: Admin can inspect account-level LLM usage, export account-level usage CSV, and inspect recent LLM run summaries.
+- Required: Local Phase B smoke passes without credentials, proving route presence and unauthenticated rejection.
+- Required: Public Phase B smoke passes without credentials, proving reverse-proxy route presence and unauthenticated rejection.
+- Required before production exposure: Authorized Phase B smoke passes with an admin access token.
+
+Deferred beyond this Phase B prototype-hardening scope:
+
+- User deletion.
+- Audit pagination, filtering, and CSV export for account actions.
+- Full LLM audit export with filters and pagination.
+- OAuth or self-service registration.
+- Automated browser E2E for the admin management panels.
+
+## Latest Completion Pass
+
+- Local unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`.
+- Public unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://47.250.131.70:8080`.
+- Authorized admin smoke: pending because the current shell does not have `PHASEA_ADMIN_TOKEN` plaintext.
+- Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 191 tests passed.
