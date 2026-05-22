@@ -19,6 +19,7 @@ Implemented scope:
 - Admin can view cross-account LLM usage summary through `/api/admin/llm-usage` without exposing plaintext tokens.
 - Admin can export the cross-account LLM usage summary as CSV through `/api/admin/llm-usage.csv`.
 - Admin can inspect recent cross-account LLM run audit summaries through `/api/admin/llm-runs`.
+- Admin can filter, page, and export account action audit events through `/api/admin/account-audit` and `/api/admin/account-audit.csv`.
 
 ## Runtime Behavior
 
@@ -53,7 +54,6 @@ Still deferred:
 
 - User deletion.
 - Full LLM audit export with filters and pagination.
-- Account audit CSV export and filters.
 - Full integration tests around HTTP auth middleware.
 
 ## Account LLM Binding
@@ -94,7 +94,8 @@ Current account audit slice:
 - Admin user creation records `user_created`.
 - Admin disable/enable records `user_disabled` or `user_enabled`.
 - Admin token rotation records `user_token_rotated`.
-- `GET /api/admin/account-audit` requires admin role and returns recent audit events.
+- `GET /api/admin/account-audit` requires admin role and returns recent audit events. It supports bounded `limit`, `offset`, `action`, and `targetAccountId` query parameters.
+- `GET /api/admin/account-audit.csv` requires admin role and exports the same filtered audit slice as CSV.
 - Audit metadata must not include plaintext tokens, token hashes, provider keys, or secret values.
 
 ## Completion Definition
@@ -104,7 +105,7 @@ Phase B can be called complete for the current prototype-hardening scope when al
 - Required: Account-scoped authentication resolves admin and database-backed user tokens.
 - Required: User-facing project, run, artifact, package, asset, chat, and workflow APIs are scoped to the authenticated account.
 - Required: Admin can manually create users, disable/enable users, and rotate user access tokens.
-- Required: Admin account actions are recorded without plaintext token material.
+- Required: Admin account actions are recorded, filterable, pageable, and exportable without plaintext token material.
 - Required: Each account can save and inspect its own LLM binding and usage summary.
 - Required: Admin can inspect account-level LLM usage, export account-level usage CSV, and inspect recent LLM run summaries.
 - Required: Local Phase B smoke passes without credentials, proving route presence and unauthenticated rejection.
@@ -114,7 +115,6 @@ Phase B can be called complete for the current prototype-hardening scope when al
 Deferred beyond this Phase B prototype-hardening scope:
 
 - User deletion.
-- Audit pagination, filtering, and CSV export for account actions.
 - Full LLM audit export with filters and pagination.
 - OAuth or self-service registration.
 - Automated browser E2E for the admin management panels.
@@ -124,4 +124,4 @@ Deferred beyond this Phase B prototype-hardening scope:
 - Local unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`.
 - Public unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://47.250.131.70:8080`.
 - Authorized admin smoke: pending because the current shell does not have `PHASEA_ADMIN_TOKEN` plaintext.
-- Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 191 tests passed.
+- Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 193 tests passed.

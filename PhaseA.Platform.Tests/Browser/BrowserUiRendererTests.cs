@@ -151,6 +151,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/admin/llm-runs");
         html.Should().Contain("loadAccountAudit");
         html.Should().Contain("/api/admin/account-audit");
+        html.Should().Contain("downloadAccountAuditCsv");
+        html.Should().Contain("/api/admin/account-audit.csv");
         html.Should().Contain("syncChatHistory");
         html.Should().Contain("同步服务器聊天记录");
         html.Should().Contain("服务器聊天记录已同步。");

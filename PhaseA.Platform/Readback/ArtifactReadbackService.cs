@@ -128,6 +128,27 @@ public sealed class ArtifactReadbackService
         return builder.ToString();
     }
 
+    public static string ExportAdminAccountAuditCsv(IReadOnlyList<AdminAccountAuditEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+
+        var builder = new StringBuilder();
+        builder.AppendLine("event_id,actor_account_id,action,target_account_id,created_utc,metadata_json");
+        foreach (var item in events)
+        {
+            builder
+                .Append(Csv(item.EventId)).Append(',')
+                .Append(Csv(item.ActorAccountId)).Append(',')
+                .Append(Csv(item.Action)).Append(',')
+                .Append(Csv(item.TargetAccountId)).Append(',')
+                .Append(Csv(item.CreatedUtc)).Append(',')
+                .Append(Csv(item.MetadataJson))
+                .AppendLine();
+        }
+
+        return builder.ToString();
+    }
+
     public Task<ProjectCreationFailureSnapshot?> GetLatestProjectCreationFailureAsync(
         string accountId,
         CancellationToken cancellationToken = default)

@@ -629,6 +629,9 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
 
 app.MapGet("/api/admin/account-audit", async (
     int? limit,
+    int? offset,
+    string? action,
+    string? targetAccountId,
     HttpContext context,
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
@@ -638,7 +641,40 @@ app.MapGet("/api/admin/account-audit", async (
         return Results.Forbid();
     }
 
-    return Results.Ok(new { events = await store.ListAdminAccountAuditEventsAsync(Math.Clamp(limit ?? 100, 1, 200), cancellationToken) });
+    var query = new AdminAccountAuditQuery(
+        Math.Clamp(limit ?? 100, 1, 200),
+        Math.Max(0, offset ?? 0),
+        action,
+        targetAccountId);
+    return Results.Ok(new { events = await store.ListAdminAccountAuditEventsAsync(query, cancellationToken) });
+});
+
+app.MapGet("/api/admin/account-audit.csv", async (
+    int? limit,
+    int? offset,
+    string? action,
+    string? targetAccountId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return Results.Forbid();
+    }
+
+    var query = new AdminAccountAuditQuery(
+        Math.Clamp(limit ?? 500, 1, 500),
+        Math.Max(0, offset ?? 0),
+        action,
+        targetAccountId);
+    var events = await store.ListAdminAccountAuditEventsAsync(query, cancellationToken);
+    var csv = ArtifactReadbackService.ExportAdminAccountAuditCsv(events);
+    return Results.Text(
+        csv,
+        "text/csv; charset=utf-8",
+        Encoding.UTF8,
+        StatusCodes.Status200OK);
 });
 
 app.MapPost("/api/projects/{projectId}/chat", async (

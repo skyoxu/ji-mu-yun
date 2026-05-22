@@ -182,6 +182,34 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task ListAdminAccountAuditEventsAsync_FiltersAndOffsetsResults()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var first = await store.CreateUserAccountAsync("audit-first", 1);
+        var second = await store.CreateUserAccountAsync("audit-second", 1);
+
+        await store.RecordAdminAccountAuditEventAsync(admin, "user_created", first.AccountId, new { username = first.Username });
+        await store.RecordAdminAccountAuditEventAsync(admin, "user_disabled", first.AccountId, new { disabled = true });
+        await store.RecordAdminAccountAuditEventAsync(admin, "user_created", second.AccountId, new { username = second.Username });
+
+        var filtered = await store.ListAdminAccountAuditEventsAsync(
+            new AdminAccountAuditQuery(Limit: 10, Offset: 0, Action: "user_created", TargetAccountId: first.AccountId));
+        var offset = await store.ListAdminAccountAuditEventsAsync(
+            new AdminAccountAuditQuery(Limit: 1, Offset: 1, Action: "user_created", TargetAccountId: null));
+
+        filtered.Should().ContainSingle();
+        filtered[0].Action.Should().Be("user_created");
+        filtered[0].TargetAccountId.Should().Be(first.AccountId);
+        offset.Should().ContainSingle();
+        offset[0].TargetAccountId.Should().Be(first.AccountId);
+    }
+
+    [Fact]
     public async Task CreateProjectAsync_EnforcesDefaultAccountQuota()
     {
         using var database = TempSqliteDatabase.Create();

@@ -285,10 +285,22 @@ public sealed class PhaseAMetadataStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<AdminAccountAuditEvent>> ListAdminAccountAuditEventsAsync(
+    public Task<IReadOnlyList<AdminAccountAuditEvent>> ListAdminAccountAuditEventsAsync(
         int limit = 100,
         CancellationToken cancellationToken = default)
     {
+        return ListAdminAccountAuditEventsAsync(
+            new AdminAccountAuditQuery(limit, 0, null, null),
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AdminAccountAuditEvent>> ListAdminAccountAuditEventsAsync(
+        AdminAccountAuditQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        var limit = Math.Clamp(query.Limit, 1, 500);
+        var offset = Math.Max(0, query.Offset);
         if (limit < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be greater than zero.");
@@ -300,10 +312,15 @@ public sealed class PhaseAMetadataStore
             """
             SELECT id, actor_account_id, action, target_account_id, metadata_json, created_utc
             FROM admin_account_audit_events
+            WHERE ($action IS NULL OR action = $action)
+              AND ($target_account_id IS NULL OR target_account_id = $target_account_id)
             ORDER BY created_utc DESC, id DESC
-            LIMIT $limit;
+            LIMIT $limit OFFSET $offset;
             """;
+        command.Parameters.AddWithValue("$action", string.IsNullOrWhiteSpace(query.Action) ? DBNull.Value : query.Action.Trim());
+        command.Parameters.AddWithValue("$target_account_id", string.IsNullOrWhiteSpace(query.TargetAccountId) ? DBNull.Value : query.TargetAccountId.Trim());
         command.Parameters.AddWithValue("$limit", limit);
+        command.Parameters.AddWithValue("$offset", offset);
 
         var events = new List<AdminAccountAuditEvent>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);

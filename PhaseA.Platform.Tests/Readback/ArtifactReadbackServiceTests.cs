@@ -102,6 +102,28 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public void ExportAdminAccountAuditCsv_EscapesMetadataAndKeepsTokenMaterialOut()
+    {
+        var events = new[]
+        {
+            new AdminAccountAuditEvent(
+                "event-1",
+                "admin-1",
+                "user_created",
+                "account-1",
+                "{\"username\":\"user,one\"}",
+                "2026-05-22T00:00:00.0000000Z")
+        };
+
+        var csv = ArtifactReadbackService.ExportAdminAccountAuditCsv(events);
+
+        csv.Should().Contain("event_id,actor_account_id,action,target_account_id,created_utc,metadata_json");
+        csv.Should().Contain("\"{\"\"username\"\":\"\"user,one\"\"}\"");
+        csv.Contains("phasea_", StringComparison.OrdinalIgnoreCase).Should().BeFalse();
+        csv.Contains("token_hash", StringComparison.OrdinalIgnoreCase).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Readback_ReturnsAdminLlmRunAuditWithoutProcessOutput()
     {
         using var database = TempSqliteDatabase.Create();

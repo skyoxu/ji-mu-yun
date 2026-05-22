@@ -217,6 +217,7 @@ public sealed class BrowserUiRenderer
                     <button id="downloadAdminLlmUsageCsv" class="ghost">Download admin LLM usage CSV</button>
                     <button id="loadAdminLlmRuns" class="ghost">Load admin LLM run audit</button>
                     <button id="loadAccountAudit" class="ghost">Load account audit</button>
+                    <button id="downloadAccountAuditCsv" class="ghost">Download account audit CSV</button>
                     <div id="createUserAccountResult" class="card muted">Admin only. The token is shown once after creation.</div>
                     <div id="userAccounts" class="card-list"></div>
                     <div id="adminLlmUsageStatus" class="card muted">No admin LLM usage loaded.</div>
@@ -1153,7 +1154,7 @@ public sealed class BrowserUiRenderer
                 async function loadAccountAudit() {
                   if (state.role !== "admin") return;
                   try {
-                    const result = await api("/api/admin/account-audit?limit=50");
+                    const result = await api("/api/admin/account-audit?limit=50&offset=0");
                     const events = result.events || [];
                     $("accountAuditStatus").className = "card";
                     $("accountAuditStatus").innerHTML = `
@@ -1172,6 +1173,31 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     $("accountAuditStatus").className = "card danger";
                     $("accountAuditStatus").textContent = error?.payload?.error || "account_audit_load_failed";
+                  }
+                }
+
+                async function downloadAccountAuditCsv() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const response = await fetch("/api/admin/account-audit.csv?limit=500&offset=0", {
+                      headers: { "Authorization": `Bearer ${token()}` },
+                      cache: "no-store"
+                    });
+                    if (!response.ok) {
+                      throw { status: response.status, payload: { error: "account_audit_csv_failed" } };
+                    }
+
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = url;
+                    anchor.download = "admin-account-audit.csv";
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (error) {
+                    showError(error);
                   }
                 }
 
@@ -2533,6 +2559,7 @@ public sealed class BrowserUiRenderer
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
                 $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
                 $("loadAccountAudit").onclick = loadAccountAudit;
+                $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("saveLlmBinding").onclick = saveLlmBinding;
                 $("loadLlmBinding").onclick = loadLlmBinding;
                 $("loadLlmUsage").onclick = loadLlmUsage;

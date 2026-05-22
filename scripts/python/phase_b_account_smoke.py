@@ -43,6 +43,8 @@ def main() -> int:
             "/api/admin/users",
             "/api/admin/llm-usage",
             "/api/admin/llm-runs",
+            "/api/admin/account-audit",
+            "/api/admin/account-audit.csv",
         ]:
             status, payload = request_json("GET", f"{base_url}{path}", timeout=args.timeout_seconds)
             assert_status(status, 401, payload, f"unauthorized {path}")
@@ -124,6 +126,29 @@ def run_authorized_checks(base_url: str, admin_token: str, timeout: float, event
         raise AssertionError(f"unexpected admin llm runs payload: {admin_runs}")
     events.append({"event": "admin_llm_runs_ok", "count": admin_runs.get("count")})
 
+    status, account_audit = request_json(
+        "GET",
+        f"{base_url}/api/admin/account-audit?limit=20&action=user_created",
+        headers=admin_headers,
+        timeout=timeout,
+    )
+    assert_status(status, 200, account_audit, "admin account audit")
+    if "events" not in account_audit:
+        raise AssertionError(f"unexpected account audit payload: {account_audit}")
+    events.append({"event": "admin_account_audit_ok", "count": len(account_audit.get("events") or [])})
+
+    status, audit_csv = request_text(
+        "GET",
+        f"{base_url}/api/admin/account-audit.csv?limit=20&action=user_created",
+        headers=admin_headers,
+        timeout=timeout,
+    )
+    if status != 200 or "event_id,actor_account_id,action,target_account_id,created_utc,metadata_json" not in audit_csv:
+        raise AssertionError(f"unexpected account audit csv response: status={status}, body={audit_csv[:200]}")
+    if "phasea_" in audit_csv.lower() or "token_hash" in audit_csv.lower():
+        raise AssertionError("account audit csv leaked token material")
+    events.append({"event": "admin_account_audit_csv_ok"})
+
 
 def request_json(
     method: str,
@@ -151,6 +176,21 @@ def request_json(
         except json.JSONDecodeError:
             payload = {"raw": raw}
         return ex.code, payload
+
+
+def request_text(
+    method: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    timeout: float,
+) -> tuple[int, str]:
+    request = urllib.request.Request(url, headers=dict(headers or {}), method=method)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as ex:
+        return ex.code, ex.read().decode("utf-8")
 
 
 def assert_status(status: int, expected: int, payload: Any, label: str) -> None:
