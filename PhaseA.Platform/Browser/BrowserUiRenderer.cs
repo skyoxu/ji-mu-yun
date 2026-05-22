@@ -207,6 +207,8 @@ public sealed class BrowserUiRenderer
                     <button id="refreshProjects" class="ghost">刷新项目列表</button>
                     <div id="projects" class="card-list"></div>
                   </section>
+                </aside>
+                <div id="adminPanel" class="stack hidden">
                   <section id="accountAdminPanel" class="stack hidden">
                     <h2>Account Admin</h2>
                     <label>Username <input id="newUsername" placeholder="phaseb-user"></label>
@@ -224,8 +226,6 @@ public sealed class BrowserUiRenderer
                     <div id="adminLlmRunsStatus" class="card muted">No admin LLM run audit loaded.</div>
                     <div id="accountAuditStatus" class="card muted">No account audit loaded.</div>
                   </section>
-                </aside>
-                <div id="adminPanel" class="stack hidden">
                   <section id="initStatusPanel" class="stack hidden">
                     <h2>项目初始化</h2>
                     <p id="initStatusText" class="muted">项目初始化配置中...请稍等 2-5 分钟后刷新页面。</p>
@@ -802,21 +802,23 @@ public sealed class BrowserUiRenderer
                 function showAdminShell(role = state.role || "user") {
                   state.authenticated = true;
                   state.role = role;
+                  const isAdmin = role === "admin";
                   $("stepsPanel").classList.add("hidden");
                   $("sessionPanel").classList.add("hidden");
                   $("adminPanel").classList.remove("hidden");
                   $("globalModelPanel").classList.remove("hidden");
-                  $("createProjectPanel").classList.remove("hidden");
+                  $("createProjectPanel").classList.toggle("hidden", isAdmin);
+                  if (isAdmin) $("projectListPanel").classList.add("hidden");
                   $("codexConfigPanel").classList.remove("hidden");
-                  $("accountAdminPanel").classList.toggle("hidden", role !== "admin");
-                  $("prototypeCommandPanel").classList.toggle("hidden", role !== "admin");
+                  $("accountAdminPanel").classList.toggle("hidden", !isAdmin);
+                  $("prototypeCommandPanel").classList.toggle("hidden", !isAdmin);
                   $("chatPanel").classList.add("hidden");
                   $("projectDetailPanel").classList.add("hidden");
                   $("initStatusPanel").classList.add("hidden");
                   loadSkillActions();
                   loadLlmBinding();
                   loadLlmUsage();
-                  if (role === "admin") {
+                  if (isAdmin) {
                     loadUserAccounts();
                     loadAdminLlmUsage();
                     loadAdminLlmRuns();
@@ -1442,9 +1444,17 @@ public sealed class BrowserUiRenderer
                 async function refreshProjects() {
                   try {
                     const session = await api("/api/session");
+                    showAdminShell(session.role || "user");
+                    if ((session.role || "user") === "admin") {
+                      state.projects = [];
+                      $("projectListPanel").classList.add("hidden");
+                      $("createProjectPanel").classList.add("hidden");
+                      out("Admin project creation and project list are disabled. Use Account Admin on the right.");
+                      return;
+                    }
+
                     const projects = await api("/api/projects");
                     state.projects = projects;
-                    showAdminShell(session.role || "user");
                     if (hasInitializingProject(projects)) {
                       showInitialization("running", "");
                       out(projects);

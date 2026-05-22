@@ -130,6 +130,9 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
         html.Should().Contain("accountAdminPanel");
+        html.IndexOf("id=\"accountAdminPanel\"", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("id=\"adminPanel\"", StringComparison.Ordinal));
+        html.Should().Contain(@"$(""createProjectPanel"").classList.toggle(""hidden"", isAdmin)");
+        html.Should().Contain("Admin project creation and project list are disabled.");
         html.Should().Contain("createUserAccount");
         html.Should().Contain("refreshUserAccounts");
         html.Should().Contain("loadUserAccounts");
