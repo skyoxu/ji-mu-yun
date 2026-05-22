@@ -75,3 +75,13 @@ Current admin audit slice:
 - The response is grouped by account and includes username, admin/disabled flags, project count, current UTC day call count, and estimated CNY cost.
 - The response intentionally does not include plaintext tokens, token hashes, provider keys, or token secret values.
 - `GET /api/admin/llm-runs` returns recent run-level audit summaries without stdout, stderr, evidence blobs, artifacts, file paths, or token material.
+
+## Smoke Check
+
+Use the Phase B account smoke script after restarting the platform:
+
+```powershell
+py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080
+```
+
+Optional authorized checks can be enabled by passing `--admin-token <access-token>` or setting `PHASEA_ADMIN_TOKEN` in the process environment. Authorized checks create a temporary user account and verify user/admin route boundaries.
