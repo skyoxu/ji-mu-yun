@@ -103,6 +103,31 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
+    public async Task CreateProjectAsync_QuotaIsScopedPerAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("phaseb-other", 1);
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+
+        var ownerFirst = await service.CreateProjectAsync(owner, Request("Owner One"));
+        await store.SetProjectBootstrapStatusAsync(ownerFirst.ProjectId!, "succeeded", null);
+        var ownerSecond = await service.CreateProjectAsync(owner, Request("Owner Two"));
+        await store.SetProjectBootstrapStatusAsync(ownerSecond.ProjectId!, "succeeded", null);
+        var ownerThird = await service.CreateProjectAsync(owner, Request("Owner Three"));
+        var otherFirst = await service.CreateProjectAsync(other.AccountId, Request("Other One"));
+
+        ownerThird.Succeeded.Should().BeFalse();
+        ownerThird.FailureCode.Should().Be("project_quota_exceeded");
+        otherFirst.Succeeded.Should().BeTrue();
+        Directory.Exists(Path.Combine(workspaceRoot.Path, other.AccountId, otherFirst.ProjectId!)).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task CreateProjectAsync_BlocksWhileInitializationIsRunning()
     {
         using var database = TempSqliteDatabase.Create();
@@ -143,6 +168,104 @@ public sealed class ProjectCreationServiceTests
         deleted.Succeeded.Should().BeTrue();
         (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
         Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_BlocksOtherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("phaseb-delete-other", 1);
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(owner, Request("Owner Game"));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+
+        var deleted = await service.DeleteProjectAsync(other.AccountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        deleted.Succeeded.Should().BeFalse();
+        deleted.FailureCode.Should().Be("project_not_found");
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_CascadesProjectRecords_DeletesWorkspace_AndReleasesQuota()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var first = await service.CreateProjectAsync(accountId, Request("Game One"));
+        await store.SetProjectBootstrapStatusAsync(first.ProjectId!, "succeeded", null);
+        var second = await service.CreateProjectAsync(accountId, Request("Game Two"));
+        await store.SetProjectBootstrapStatusAsync(second.ProjectId!, "succeeded", null);
+        var firstSnapshot = await store.GetProjectSnapshotAsync(first.ProjectId!);
+        var runId = await store.CreateRunAsync(first.ProjectId!, first.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(runId, "succeeded", 0, "ok", "", "{}", CancellationToken.None);
+        await store.AddArtifactAsync(new ArtifactCreationCommand(runId, first.ProjectId!, "sample", "logs/ci/sample.txt", "sample"));
+        await store.AddProjectChatMessageAsync(accountId, first.ProjectId!, "user", "hello", retainLatest: 10);
+        await store.UpsertProjectPrototypeDraftAsync(
+            first.ProjectId!,
+            "succeeded",
+            runId,
+            "draft.txt",
+            "demo",
+            "hypothesis",
+            "fantasy",
+            "loop",
+            "[]",
+            "feature",
+            "game loop",
+            "win",
+            "[]",
+            "[]",
+            null,
+            1,
+            10);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            first.ProjectId!,
+            "manual",
+            "make it playable",
+            "overall",
+            [new ProjectIterationGoalCreateCommand(1, "goal", "description", "acceptance")]);
+        var details = await store.GetLatestProjectIterationSessionAsync(first.ProjectId!);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, details!.Goals[0].GoalId, runId, "prototype-iteration-goal");
+        await store.UpsertProjectRunMemoryAsync(
+            first.ProjectId!,
+            "prototype",
+            "needs_fix",
+            "objective",
+            "[]",
+            "[]",
+            "next",
+            "[]",
+            null,
+            null);
+        File.WriteAllText(Path.Combine(firstSnapshot!.RuntimePath, "package.zip"), "package");
+        var quotaBlocked = await service.CreateProjectAsync(accountId, Request("Game Three"));
+
+        var deleted = await service.DeleteProjectAsync(accountId, first.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+        var replacement = await service.CreateProjectAsync(accountId, Request("Game Three"));
+
+        quotaBlocked.Succeeded.Should().BeFalse();
+        quotaBlocked.FailureCode.Should().Be("project_quota_exceeded");
+        deleted.Succeeded.Should().BeTrue();
+        replacement.Succeeded.Should().BeTrue();
+        (await store.GetProjectSnapshotAsync(first.ProjectId!)).Should().BeNull();
+        (await store.GetRunSnapshotAsync(runId)).Should().BeNull();
+        (await store.ListArtifactsForRunAsync(runId)).Should().BeEmpty();
+        (await store.ListProjectChatMessagesAsync(accountId, first.ProjectId!, limit: 10)).Should().BeEmpty();
+        (await store.GetProjectPrototypeDraftAsync(first.ProjectId!)).Should().BeNull();
+        (await store.GetLatestProjectIterationSessionAsync(first.ProjectId!)).Should().BeNull();
+        (await store.GetProjectRunMemoryAsync(first.ProjectId!, "prototype")).Should().BeNull();
+        Directory.Exists(firstSnapshot.WorkspaceRootPath).Should().BeFalse();
     }
 
     [Fact]

@@ -12,6 +12,7 @@ Implemented scope:
 - Admin can rotate a user access token; the new plaintext token is returned once.
 - Admin account actions are recorded in `admin_account_audit_events` without plaintext token material.
 - User tokens are generated once, stored only as hashes, and returned only at creation time.
+- Username/password login is explicitly deferred to Phase C or the pre-production identity-system pass.
 - Project listing, project creation, deletion, chat history, package access, asset access, run readback, and artifact readback are scoped to the authenticated account.
 - Admin-only panels and admin APIs require the resolved admin role.
 - Each signed-in account can read and save its own LLM gateway binding through `/api/account/llm-binding`.
@@ -31,6 +32,8 @@ Authentication accepts a bearer token. The server resolves the token in this ord
 
 The browser stores the token under `phaseAAccessToken`. The old `phaseAAdminToken` key is read only as a compatibility fallback and removed on new login/logout.
 
+Account password login, password reset, 2FA, OAuth, OIDC, or self-service registration are not part of Phase B. Those belong to Phase C or the pre-production identity-system pass.
+
 ## Admin User Flow
 
 1. Sign in with the admin access token.
@@ -47,6 +50,7 @@ Current hard boundary:
 
 - Users cannot list or mutate other accounts' projects through project-scoped API routes.
 - Users cannot read another account's run or artifact by guessing run/artifact ids.
+- Project deletion hardening verifies cross-account deletion is blocked, project runtime records are cascaded, workspace files are removed, and quota is released.
 - Public package and asset preview ticket URLs remain ticket-gated and resolve the owning account before reading files.
 - User tokens are not stored in plaintext.
 
@@ -116,7 +120,7 @@ Deferred beyond this Phase B prototype-hardening scope:
 
 - User deletion.
 - Full LLM audit export with filters and pagination.
-- OAuth or self-service registration.
+- Username/password login, password reset, OAuth, OIDC, or self-service registration.
 - Automated browser E2E for the admin management panels.
 
 ## Latest Completion Pass
