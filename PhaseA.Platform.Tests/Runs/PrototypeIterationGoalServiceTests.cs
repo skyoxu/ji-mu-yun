@@ -470,7 +470,20 @@ public static class PrototypeCatalog
 """);
         var mainScenePath = Path.Combine(repoPath, "Game.Godot", "Scenes");
         Directory.CreateDirectory(mainScenePath);
-        File.WriteAllText(Path.Combine(mainScenePath, "Main.tscn"), "[gd_scene format=3]\n");
+        File.WriteAllText(Path.Combine(mainScenePath, "Main.tscn"), """
+[gd_scene format=3]
+
+[node name="Main" type="Control"]
+
+[node name="ScreenRoot" type="Control" parent="."]
+visible = false
+
+[node name="Overlays" type="Control" parent="."]
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="."]
+visible = false
+""");
         var dqAssetPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Assets");
         Directory.CreateDirectory(dqAssetPath);
         foreach (var assetFile in new[] { "map_floor_tile.png", "player_hero.png", "enemy_slime.png" })

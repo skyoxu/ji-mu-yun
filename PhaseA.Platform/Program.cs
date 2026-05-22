@@ -58,7 +58,9 @@ builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<ProjectPackageService>();
+builder.Services.AddSingleton<ProjectAssetInventoryService>();
 builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
+builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
 builder.Services.AddSingleton<LlmBindingService>();
 builder.Services.AddSingleton<LlmStopLossService>();
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
@@ -89,6 +91,10 @@ app.Use(async (context, next) =>
         context.Request.Path == "/" ||
         context.Request.Path == "/ui" ||
         context.Request.Path == "/downloads" ||
+        context.Request.Path == "/assets" ||
+        (context.Request.Path.StartsWithSegments("/projects") &&
+         context.Request.Path.Value?.Contains("/asset-preview", StringComparison.Ordinal) == true &&
+         context.Request.Query.ContainsKey("ticket")) ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/packages/", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")))
@@ -183,6 +189,65 @@ app.MapGet("/api/projects/{projectId}/packages", async (
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
+app.MapGet("/api/projects/{projectId}/asset-inventory", async (
+    string projectId,
+    string? model,
+    bool? judge,
+    [FromServices] ProjectAssetInventoryService assets,
+    CancellationToken cancellationToken) =>
+{
+    var result = await assets.GetInventoryAsync(adminAccountId, projectId, judge == true, model, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapGet("/api/projects/{projectId}/asset-preview", async (
+    string projectId,
+    string resource,
+    [FromServices] ProjectAssetInventoryService assets,
+    CancellationToken cancellationToken) =>
+{
+    var result = await assets.ReadPreviewAsync(adminAccountId, projectId, resource, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "asset_preview_not_found" })
+        : Results.File(result.Content, result.ContentType, result.FileName);
+});
+
+app.MapPost("/api/projects/{projectId}/asset-preview-ticket", (
+    string projectId,
+    AssetPreviewTicketRequest request,
+    [FromServices] ProjectAssetPreviewTicketService tickets) =>
+{
+    if (string.IsNullOrWhiteSpace(request.ResourcePath))
+    {
+        return Results.BadRequest(new { error = "resource_path_required" });
+    }
+
+    return Results.Ok(new
+    {
+        previewUrl = $"/projects/{projectId}/asset-preview?resource={Uri.EscapeDataString(request.ResourcePath)}&ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, request.ResourcePath))}"
+    });
+});
+
+app.MapGet("/projects/{projectId}/asset-preview", async (
+    string projectId,
+    string resource,
+    HttpRequest request,
+    [FromServices] ProjectAssetInventoryService assets,
+    [FromServices] ProjectAssetPreviewTicketService tickets,
+    CancellationToken cancellationToken) =>
+{
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, projectId, resource))
+    {
+        return Results.Unauthorized();
+    }
+
+    var result = await assets.ReadPreviewAsync(adminAccountId, projectId, resource, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "asset_preview_not_found" })
+        : Results.File(result.Content, result.ContentType, result.FileName);
+});
+
 app.MapGet("/projects/{projectId}/packages/{fileName}", async (
     string projectId,
     string fileName,
@@ -218,6 +283,12 @@ app.MapGet("/downloads", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderDownloads(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/assets", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAssets(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/projects/{projectId}", async (

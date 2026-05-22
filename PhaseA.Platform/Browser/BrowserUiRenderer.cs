@@ -140,6 +140,15 @@ public sealed class BrowserUiRenderer
                 .goal-badge-pending { background: #f3ead9; color: var(--muted); }
                 .goal-badge-failed { background: #f8e1df; color: var(--danger); }
                 .goal-badge-needs-fix { background: #f8e1df; color: var(--danger); }
+                .asset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem; }
+                .asset-preview {
+                  width: 100%;
+                  height: 8rem;
+                  object-fit: contain;
+                  border: 1px solid var(--line);
+                  border-radius: 0.75rem;
+                  background: #f3ead9;
+                }
                 .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
                 .hidden { display: none !important; }
                 @media (max-width: 920px) {
@@ -203,10 +212,12 @@ public sealed class BrowserUiRenderer
                     <button id="refreshPrototypeProgress" class="ghost">刷新原型进度</button>
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
+                    <button id="loadAssetInventory" class="ghost" disabled>查看素材清单</button>
                     <div id="prototypeProgress" class="card muted">尚未开始 7 步可玩原型。</div>
                     <div id="prototypeAcceptanceSummary" class="card muted">原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
+                    <div id="assetInventoryStatus" class="card muted">final step 完成后可查看项目素材清单。</div>
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
                     <h2>7 步可玩原型</h2>
@@ -276,7 +287,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1159,6 +1170,8 @@ public sealed class BrowserUiRenderer
 
                 function selectProject(projectId) {
                   state.projectId = projectId;
+                  state.assetInventory = null;
+                  state.assetInventoryExpanded = false;
                   loadChatHistoryForProject(projectId);
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
@@ -1173,6 +1186,7 @@ public sealed class BrowserUiRenderer
                   await loadLatestPrototypeDraft();
                   await loadPrototypeProgress();
                   await loadProjectPackages();
+                  await refreshAssetInventoryAvailability();
                 }
 
                 async function loadLatestPrototypeDraft(forceVisibleNotice = false) {
@@ -1551,6 +1565,9 @@ public sealed class BrowserUiRenderer
                   if (!busy && state.packageList) {
                     renderProjectPackages(state.packageList);
                   }
+                  if (!busy && state.assetInventory) {
+                    renderAssetInventory(state.assetInventory, state.assetInventoryExpanded);
+                  }
                   if (busy) {
                     $("activeRunBanner").classList.remove("hidden");
                     $("activeRunBanner").textContent = state.activeRun?.busy ? activeRunText(state.activeRun) : message;
@@ -1571,6 +1588,7 @@ public sealed class BrowserUiRenderer
                     }
                     if (!state.activeRun?.busy && state.projectId) {
                       await loadPrototypeProgress();
+                      await refreshAssetInventoryAvailability();
                     }
                   } catch {
                     state.activeRun = null;
@@ -1738,6 +1756,94 @@ public sealed class BrowserUiRenderer
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
+                }
+
+                async function refreshAssetInventoryAvailability() {
+                  if (!state.projectId) {
+                    state.assetInventory = null;
+                    state.assetInventoryExpanded = false;
+                    renderAssetInventory({ canReadInventory: false, disabledReason: "project_not_selected", usedAssets: [], generationCandidates: [] }, false);
+                    return;
+                  }
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/asset-inventory?judge=false`);
+                    state.assetInventory = result;
+                    renderAssetInventory(result, state.assetInventoryExpanded);
+                  } catch {
+                    $("loadAssetInventory").disabled = true;
+                    $("assetInventoryStatus").className = "card muted";
+                    $("assetInventoryStatus").textContent = "素材清单暂不可用。";
+                  }
+                }
+
+                async function loadAssetInventory() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.4")}`, "_blank", "noreferrer");
+                }
+
+                function renderAssetInventory(result, expanded) {
+                  const canRead = !!result?.canReadInventory && !isGlobalBusy();
+                  $("loadAssetInventory").disabled = !canRead;
+                  $("loadAssetInventory").title = canRead ? "" : assetInventoryDisabledText(result?.disabledReason);
+                  if (!state.projectId) {
+                    $("assetInventoryStatus").className = "card muted";
+                    $("assetInventoryStatus").textContent = "选择项目后显示素材清单入口。";
+                    return;
+                  }
+                  if (!result?.canReadInventory) {
+                    $("assetInventoryStatus").className = "card muted";
+                    $("assetInventoryStatus").textContent = assetInventoryDisabledText(result?.disabledReason);
+                    return;
+                  }
+                  const usedAssets = result.usedAssets || [];
+                  const candidates = result.generationCandidates || [];
+                  if (!expanded) {
+                    $("assetInventoryStatus").className = "card";
+                    $("assetInventoryStatus").innerHTML = `<strong>素材清单可用</strong><p class="muted">已识别 ${escapeHtml(String(usedAssets.length))} 个素材实例，${escapeHtml(String(candidates.length))} 个可生成素材候选。点击“查看素材清单”展开。</p>`;
+                    return;
+                  }
+                  $("assetInventoryStatus").className = "card";
+                  $("assetInventoryStatus").innerHTML = `
+                    <strong>项目素材清单</strong>
+                    <p class="muted">已使用素材实例：${escapeHtml(String(usedAssets.length))} 个；可生成素材候选：${escapeHtml(String(candidates.length))} 个。</p>
+                    <h2>已使用素材</h2>
+                    <div class="asset-grid">${usedAssets.length ? usedAssets.map(renderUsedAssetItem).join("") : "<p class='muted'>未识别到可预览素材引用。</p>"}</div>
+                    <h2>可生成素材候选</h2>
+                    <div class="card-list">${candidates.length ? candidates.map(renderAssetCandidateItem).join("") : "<p class='muted'>暂未识别到明显的素材生成候选。</p>"}</div>
+                  `;
+                }
+
+                function renderUsedAssetItem(item) {
+                  return `
+                    <div class="card">
+                      <img class="asset-preview" src="${escapeHtml(item.previewUrl || "")}" alt="${escapeHtml(item.instanceName || "asset")}">
+                      <strong>${escapeHtml(item.instanceName || "")}</strong>
+                      <p class="muted">${escapeHtml(item.nodeType || "")}</p>
+                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
+                      <p class="muted">用途：${escapeHtml(item.intendedUse || "")}</p>
+                      <p class="muted">像素尺寸：${escapeHtml(assetPixelSize(item))}</p>
+                      <p class="muted">素材：${escapeHtml(item.resourcePath || "")}</p>
+                    </div>
+                  `;
+                }
+
+                function renderAssetCandidateItem(item) {
+                  return `
+                    <div class="card">
+                      <strong>${escapeHtml(item.instanceName || "")}</strong>
+                      <p class="muted">${escapeHtml(item.nodeType || "")} · ${escapeHtml(item.suggestedAssetKind || "")}</p>
+                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
+                      <p class="muted">用途：${escapeHtml(item.intendedUse || "")}</p>
+                      <p>${escapeHtml(item.reason || "")}</p>
+                      <p class="muted">判断状态：${escapeHtml(item.llmJudgementStatus || "")}</p>
+                    </div>
+                  `;
+                }
+
+                function assetInventoryDisabledText(reason) {
+                  if (reason === "final_step_not_completed") return "final step 完成后才可以查看素材清单。";
+                  if (reason === "project_not_selected") return "请先选择一个项目。";
+                  return "素材清单暂不可用。";
                 }
 
                 async function runPrototype() {
@@ -2110,6 +2216,7 @@ public sealed class BrowserUiRenderer
                 renderChatHistory();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
+                $("loadAssetInventory").onclick = loadAssetInventory;
                 $("runPrototype").onclick = runPrototype;
                 $("repairPrototype").onclick = repairPrototype;
                 $("refreshPrototypeProgress").onclick = loadPrototypeProgress;
@@ -2256,6 +2363,161 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 loadPackages();
+              </script>
+            </body>
+            </html>
+            """;
+    }
+
+    public string RenderAssets()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>项目素材清单</title>
+              <style>
+                :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --danger: #a2342f; }
+                * { box-sizing: border-box; }
+                body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
+                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 1rem; }
+                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.06em; }
+                h2 { margin: 0 0 0.75rem; }
+                p { color: var(--muted); }
+                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
+                .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
+                .list { display: grid; gap: 0.75rem; }
+                .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.75rem; background: #f3ead9; }
+                button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                button:disabled { cursor: not-allowed; opacity: 0.45; }
+                .danger { color: var(--danger); }
+                .muted { color: var(--muted); }
+                .badge { display: inline-flex; border-radius: 999px; padding: 0.2rem 0.55rem; background: #e6f4ef; color: var(--accent); font-weight: 700; font-size: 0.85rem; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <h1>项目素材清单</h1>
+                  <p>列出当前项目实际使用的素材实例、素材预览，以及未使用素材但适合生成素材的候选实例。候选项会说明它在游戏或界面中做什么用。</p>
+                </header>
+                <section id="status" class="card muted">正在读取素材清单...</section>
+                <section class="card">
+                  <h2>已使用素材</h2>
+                  <div id="usedAssets" class="grid"></div>
+                </section>
+                <section class="card">
+                  <h2>可生成素材候选</h2>
+                  <div id="candidates" class="list"></div>
+                </section>
+              </main>
+              <script>
+                const params = new URLSearchParams(location.search);
+                const projectId = params.get("projectId") || "";
+                const model = params.get("model") || "gpt-5.4";
+                const token = () => localStorage.getItem("phaseAAdminToken") || "";
+                const $ = id => document.getElementById(id);
+                const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+
+                async function loadAssets() {
+                  if (!projectId) {
+                    $("status").textContent = "缺少 projectId。请从控制台打开素材清单页。";
+                    return;
+                  }
+                  if (!token()) {
+                    $("status").textContent = "当前浏览器没有 token。请先在控制台登录。";
+                    return;
+                  }
+                  $("status").textContent = "正在识别素材实例和可生成素材候选...";
+                  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&model=${encodeURIComponent(model)}`, {
+                    headers: { "Authorization": `Bearer ${token()}` },
+                    cache: "no-store"
+                  });
+                  const payload = await response.json();
+                  if (!response.ok || !payload.canReadInventory) {
+                    $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(payload.error || payload.disabledReason || "unknown_error")}</span>`;
+                    return;
+                  }
+                  const usedAssets = payload.usedAssets || [];
+                  const candidates = payload.generationCandidates || [];
+                  $("status").textContent = `已识别 ${usedAssets.length} 个已使用素材实例，${candidates.length} 个可生成素材候选。`;
+                  await renderUsedAssets(usedAssets);
+                  renderCandidates(candidates);
+                }
+
+                async function renderUsedAssets(items) {
+                  const enriched = [];
+                  for (const item of items) {
+                    enriched.push({ ...item, previewUrl: await createPreviewUrl(item.resourcePath) });
+                  }
+                  $("usedAssets").innerHTML = enriched.length
+                    ? enriched.map(renderUsedAsset).join("")
+                    : "<p class='muted'>未识别到可预览素材引用。</p>";
+                }
+
+                async function createPreviewUrl(resourcePath) {
+                  if (!resourcePath) return "";
+                  try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-preview-ticket`, {
+                      method: "POST",
+                      headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" },
+                      body: JSON.stringify({ resourcePath }),
+                      cache: "no-store"
+                    });
+                    if (!response.ok) return "";
+                    const payload = await response.json();
+                    return payload.previewUrl || "";
+                  } catch {
+                    return "";
+                  }
+                }
+
+                function renderUsedAsset(item) {
+                  const image = item.previewUrl
+                    ? `<img class="asset-preview" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">`
+                    : "<div class='asset-preview muted'>预览不可用</div>";
+                  return `
+                    <article class="card">
+                      ${image}
+                      <strong>${escapeHtml(item.instanceName || "")}</strong>
+                      <p class="muted">${escapeHtml(item.nodeType || "")}</p>
+                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
+                      <p class="muted">用途：${escapeHtml(item.intendedUse || "")}</p>
+                      <p class="muted">像素尺寸：${escapeHtml(assetPixelSize(item))}</p>
+                      <p class="muted">素材：${escapeHtml(item.resourcePath || "")}</p>
+                    </article>
+                  `;
+                }
+
+                function assetPixelSize(item) {
+                  const width = Number(item?.pixelWidth || 0);
+                  const height = Number(item?.pixelHeight || 0);
+                  return width > 0 && height > 0 ? `${width} x ${height}` : "未知";
+                }
+
+                function renderCandidates(items) {
+                  $("candidates").innerHTML = items.length
+                    ? items.map(renderCandidate).join("")
+                    : "<p class='muted'>暂未识别到明显的素材生成候选。</p>";
+                }
+
+                function renderCandidate(item) {
+                  return `
+                    <article class="card">
+                      <strong>${escapeHtml(item.instanceName || "")}</strong>
+                      <p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p>
+                      <p class="muted">节点类型：${escapeHtml(item.nodeType || "")}</p>
+                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
+                      <p><strong>用途</strong>：${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p>
+                      <p><strong>建议原因</strong>：${escapeHtml(item.reason || "")}</p>
+                      <p class="muted">判断状态：${escapeHtml(item.llmJudgementStatus || "")}</p>
+                    </article>
+                  `;
+                }
+
+                loadAssets();
               </script>
             </body>
             </html>

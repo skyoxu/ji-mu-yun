@@ -2,9 +2,11 @@ using FluentAssertions;
 using System.IO.Compression;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Readback;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Readback;
@@ -352,6 +354,222 @@ public sealed class ArtifactReadbackServiceTests
         service.IsValid(ticket, "project-a", "other.zip").Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ProjectAssetInventory_BlocksUntilFinalStepCompleted()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient());
+
+        var result = await service.GetInventoryAsync(accountId, projectId);
+
+        result!.CanReadInventory.Should().BeFalse();
+        result.DisabledReason.Should().Be("final_step_not_completed");
+    }
+
+    [Fact]
+    public async Task ProjectAssetInventory_ListsUsedAssetsAndCandidatesAfterFinalStep()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        WriteBytes(project!.RepoPath, "Game.Godot/Assets/player.png", MinimalPng(32, 48));
+        Write(project.RepoPath, "Game.Godot/Scenes/MapScene.tscn", """
+            [gd_scene load_steps=2 format=3]
+
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player.png" id="1_player"]
+
+            [node name="MapScene" type="Node2D"]
+
+            [node name="PlayerSprite" type="Sprite2D" parent="."]
+            texture = ExtResource("1_player")
+
+            [node name="EnemySprite" type="Sprite2D" parent="."]
+            """);
+        var codex = new FakeCodexChatClient("""
+            {
+              "items": [
+                {
+                  "instanceName": "EnemySprite",
+                  "scenePath": "res://Game.Godot/Scenes/MapScene.tscn",
+                  "shouldGenerate": true,
+                  "suggestedAssetKind": "enemy_sprite",
+                  "intendedUse": "用于敌人在地图遭遇或战斗场景中的视觉表现。",
+                  "reason": "敌人需要独立视觉表现。"
+                }
+              ]
+            }
+            """);
+        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder());
+
+        var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
+        var preview = await service.ReadPreviewAsync(accountId, projectId, "res://Game.Godot/Assets/player.png");
+
+        result!.CanReadInventory.Should().BeTrue();
+        result.UsedAssets.Should().ContainSingle(item =>
+            item.InstanceName == "PlayerSprite" &&
+            item.ResourcePath == "res://Game.Godot/Assets/player.png" &&
+            item.IntendedUse == "用于玩家角色在地图或战斗场景中的视觉表现。" &&
+            item.PixelWidth == 32 &&
+            item.PixelHeight == 48 &&
+            item.PreviewUrl.Contains("asset-preview", StringComparison.Ordinal));
+        result.GenerationCandidates.Should().Contain(item =>
+            item.InstanceName == "EnemySprite" &&
+            item.SuggestedAssetKind == "enemy_sprite" &&
+            item.LlmJudgementStatus == "llm_keep" &&
+            item.IntendedUse == "用于敌人在地图遭遇或战斗场景中的视觉表现。" &&
+            item.Reason == "敌人需要独立视觉表现。");
+        codex.LastPrompt.Should().Contain("Inventory payload");
+        preview!.ContentType.Should().Be("image/png");
+        preview.FileName.Should().Be("player.png");
+    }
+
+    [Fact]
+    public async Task ProjectAssetInventory_ScansPrototypeScenesAndKeepsCandidatesWhenLlmDoesNotReturnJson()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        Write(project!.RepoPath, "Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png", "fake image");
+        Write(project.RepoPath, "Game.Godot/Prototypes/dq-rpg/MapScene.tscn", """
+            [gd_scene load_steps=2 format=3]
+
+            [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png" id="2"]
+
+            [node name="MapScene" type="Control"]
+            [node name="RpgMapAsset" type="TextureRect" parent="."]
+            texture = ExtResource("2")
+            [node name="PlayerToken" type="ColorRect" parent="."]
+            [node name="RewardChest" type="PanelContainer" parent="."]
+            """);
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("not json"), new NoopWorkspaceSeeder());
+
+        var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
+
+        result!.UsedAssets.Should().ContainSingle(item =>
+            item.InstanceName == "RpgMapAsset" &&
+            item.ScenePath == "res://Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
+        result.GenerationCandidates.Should().Contain(item =>
+            item.InstanceName == "PlayerToken" &&
+            item.LlmJudgementStatus == "llm_json_parse_failed" &&
+            item.IntendedUse == "用于玩家角色在地图或战斗场景中的视觉表现。");
+        result.GenerationCandidates.Should().Contain(item =>
+            item.InstanceName == "RewardChest" &&
+            item.LlmJudgementStatus == "llm_json_parse_failed");
+    }
+
+    [Fact]
+    public async Task ProjectAssetInventory_KeepsLlmRejectedCandidatesForReview()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        Write(project!.RepoPath, "Game.Godot/Prototypes/dq-rpg/MapScene.tscn", """
+            [gd_scene format=3]
+            [node name="PlayerToken" type="ColorRect"]
+            """);
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("""{"items":[]}"""), new NoopWorkspaceSeeder());
+
+        var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
+
+        result!.GenerationCandidates.Should().ContainSingle(item =>
+            item.InstanceName == "PlayerToken" &&
+            item.LlmJudgementStatus == "llm_reject");
+    }
+
+    [Fact]
+    public async Task ProjectAssetInventory_SkipsSeededDefaultRpgTemplate()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        Write(project!.RepoPath, "Game.Godot/Prototypes/DefaultRpgTemplate/Assets/template.png", "template");
+        Write(project.RepoPath, "Game.Godot/Prototypes/DefaultRpgTemplate/MapScene.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/DefaultRpgTemplate/Assets/template.png" id="1"]
+            [node name="TemplateMapAsset" type="TextureRect"]
+            texture = ExtResource("1")
+            """);
+        Write(project.RepoPath, "Game.Godot/Prototypes/dq-rpg/Assets/map.png", "real");
+        Write(project.RepoPath, "Game.Godot/Prototypes/dq-rpg/MapScene.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map.png" id="1"]
+            [node name="RpgMapAsset" type="TextureRect"]
+            texture = ExtResource("1")
+            """);
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder());
+
+        var result = await service.GetInventoryAsync(accountId, projectId);
+
+        result!.UsedAssets.Should().ContainSingle(item => item.InstanceName == "RpgMapAsset");
+        result.UsedAssets.Should().NotContain(item => item.ResourcePath.Contains("DefaultRpgTemplate", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ProjectAssetInventory_RejectsPreviewPathEscape()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient());
+
+        var act = async () => await service.ReadPreviewAsync(accountId, projectId, "res://../outside.png");
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void ProjectAssetPreviewTicketService_CreatesBoundExpiringTicket()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
+            ["PHASEA_ADMIN_TOKEN_HASH"] = "test-secret"
+        });
+        var service = new ProjectAssetPreviewTicketService(options);
+
+        var ticket = service.CreateTicket("project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png");
+
+        service.IsValid(ticket, "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeTrue();
+        service.IsValid(ticket, "project-b", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeFalse();
+        service.IsValid(ticket, "project-a", "res://Game.Godot/Prototypes/demo/Assets/enemy.png").Should().BeFalse();
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -394,6 +612,65 @@ public sealed class ArtifactReadbackServiceTests
         File.WriteAllText(path, content);
     }
 
+    private static void WriteBytes(string root, string relativePath, byte[] content)
+    {
+        var path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, content);
+    }
+
+    private static byte[] MinimalPng(int width, int height)
+    {
+        var bytes = new byte[24];
+        bytes[0] = 0x89;
+        bytes[1] = 0x50;
+        bytes[2] = 0x4E;
+        bytes[3] = 0x47;
+        bytes[4] = 0x0D;
+        bytes[5] = 0x0A;
+        bytes[6] = 0x1A;
+        bytes[7] = 0x0A;
+        bytes[12] = 0x49;
+        bytes[13] = 0x48;
+        bytes[14] = 0x44;
+        bytes[15] = 0x52;
+        WriteBigEndian(bytes, 16, width);
+        WriteBigEndian(bytes, 20, height);
+        return bytes;
+    }
+
+    private static void WriteBigEndian(byte[] bytes, int offset, int value)
+    {
+        bytes[offset] = (byte)((value >> 24) & 0xFF);
+        bytes[offset + 1] = (byte)((value >> 16) & 0xFF);
+        bytes[offset + 2] = (byte)((value >> 8) & 0xFF);
+        bytes[offset + 3] = (byte)(value & 0xFF);
+    }
+
+    private static async Task CreateSucceededIterationPlanAsync(
+        PhaseAMetadataStore store,
+        string accountId,
+        string projectId)
+    {
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "test",
+            "test",
+            "test",
+            [
+                new ProjectIterationGoalCreateCommand(1, "step1", "step1", null),
+                new ProjectIterationGoalCreateCommand(2, "final", "final", null)
+            ]);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in details!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "completed", 2, "done", null, DateTimeOffset.UtcNow.ToString("O"));
+    }
+
     private static IReadOnlyList<string> ZipEntryNames(byte[] content)
     {
         using var memory = new MemoryStream(content);
@@ -423,6 +700,35 @@ public sealed class ArtifactReadbackServiceTests
             {
                 Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class FakeCodexChatClient : ICodexChatClient
+    {
+        private readonly string _reply;
+
+        public FakeCodexChatClient(string reply = """{"items":[]}""")
+        {
+            _reply = reply;
+        }
+
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CancellationToken cancellationToken = default)
+        {
+            LastPrompt = prompt;
+            return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
+        }
+    }
+
+    private sealed class NoopWorkspaceSeeder : IProjectWorkspaceSeeder
+    {
+        public void EnsureSeeded(string projectRepoPath)
+        {
         }
     }
 }

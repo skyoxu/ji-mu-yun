@@ -35,6 +35,7 @@ Operate the top-level prototype lane router for Chinese Godot prototype work wit
 - Treat `docs/game-type-guides/` as extracted BMAD/GDS guide material. Use it to ask better prototype questions; do not copy a full GDD workflow into the prototype record.
 - Treat `docs/prototype-type-kits/` as prototype-only default flow/UI material for 1-2 scene playable loops. Use it to confirm or adjust the default route; do not expand it into full GDD, balance, economy, progression, or boundary design.
 - Stop for user input when required prototype fields are missing. Do not invent gameplay content.
+- Main scene SOP: every prototype creation or repair that wires a playable prototype through `Game.Godot/Scenes/Main.tscn` must set the root-level `VBox`, `Overlays`, and `ScreenRoot` nodes to `visible = false` by default. They may be shown later only by explicit runtime navigation. This prevents template/debug UI from covering the prototype entry and is a final acceptance requirement.
 
 ## Default Command
 

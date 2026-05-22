@@ -719,6 +719,7 @@ public sealed class PrototypeWorkflowService
             - Do not use BattleScene or MapScene as the main entry scene for the repair route.
             - For RPG prototypes, ensure the main menu entry can navigate to this prototype scene, Start Adventure is visible and clickable, and Start Adventure reveals a non-empty map scene.
             - For RPG prototypes, prefer dedicated MapScene and BattleScene files under the prototype slug when missing, and keep map art, grid, and token overlay in one shared coordinate layer.
+            - Main.tscn SOP: root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false so template/debug UI does not cover the prototype route.
             - If the failure says rpg_start_button_missing, add or repair the Start Adventure button and the script path that reveals the RPG map scene.
             - Output must be browser-safe: no local paths, command lines, script names, log names, or environment variable values.
 
@@ -856,6 +857,7 @@ public sealed class PrototypeWorkflowService
             "rpg_map_scene_not_visible_after_start" => "The map scene exists after Start Adventure but is not visible.",
             "rpg_map_scene_missing_after_start" => "Start Adventure did not reveal a map scene.",
             "rpg_start_button_missing" => "The RPG prototype shell is missing the Start Adventure button.",
+            "main_scene_default_ui_not_hidden" => "Main.tscn root-level VBox, Overlays, or ScreenRoot is missing or default-visible.",
             "prototype_scene_mismatch" => "Main menu navigation reached a different scene than the expected prototype shell scene.",
             "prototype_scene_not_loaded" => "Main menu navigation did not load the prototype scene.",
             _ => failureCode
@@ -872,6 +874,7 @@ public sealed class PrototypeWorkflowService
             "rpg_map_scene_not_visible_after_start" => "Ensure Start Adventure makes the map scene visible and hides only the intro shell UI.",
             "rpg_map_scene_missing_after_start" => "Wire Start Adventure to reveal or instantiate the map scene under the prototype shell.",
             "rpg_start_button_missing" => $"Ensure the prototype shell scene contains a visible Start Adventure button. Preferred shell: {preferredShellScene}",
+            "main_scene_default_ui_not_hidden" => "Set Main.tscn root-level VBox, Overlays, and ScreenRoot to visible = false by default, without removing runtime navigation wiring.",
             "prototype_scene_mismatch" => $"Keep Main.tscn prototype navigation pointed at the preferred prototype shell scene: {preferredShellScene}",
             _ => "Use the latest platform validation error as the repair target and keep the prototype shell as the main entry scene."
         };

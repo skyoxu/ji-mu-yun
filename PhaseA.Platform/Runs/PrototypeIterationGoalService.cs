@@ -365,6 +365,7 @@ public sealed class PrototypeIterationGoalService
             - Do not read or use needs-fix state from another step.
             - Unless the current goal explicitly requires it, do not edit PhaseA.Platform/**, PhaseA.Platform.Tests/**, scripts/**, docs/**, runtime/**, or cloud control-plane files.
             - If the current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
+            - Main.tscn SOP for prototype goals: root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false. This is mandatory for final/full-playable acceptance and should be preserved by earlier goals.
             - Do not launch Godot, game engines, GUI applications, or long-running smoke tests in this cloud route. The platform will run acceptance validation after you finish.
             - Prefer fast code-level validation only. If deeper runtime validation is needed, report it in VERIFY/REMAINING instead of starting a long-running process.
             - Platform route or recovery tests passing does not prove a gameplay goal is complete.

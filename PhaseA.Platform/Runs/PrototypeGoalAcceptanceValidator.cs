@@ -43,6 +43,11 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_reward_flow_contract");
         }
 
+        if (contract.MainSceneHostUiHiddenAcceptance && !HasMainSceneDefaultPrototypeHostUiHidden(project.RepoPath))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "main_scene_default_ui_not_hidden");
+        }
+
         if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath))
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_final_acceptance_contract");
@@ -155,6 +160,7 @@ internal static class PrototypeGoalAcceptanceValidator
                 MapEntryAcceptance: true,
                 BattleSceneAcceptance: true,
                 RewardFlowAcceptance: true,
+                MainSceneHostUiHiddenAcceptance: true,
                 FinalAcceptance: true),
             _ => null
         };
@@ -219,8 +225,40 @@ internal static class PrototypeGoalAcceptanceValidator
 
         var catalogText = File.ReadAllText(Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"));
         return catalogText.Contains("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", StringComparison.Ordinal) &&
+               HasMainSceneDefaultPrototypeHostUiHidden(repoPath) &&
                HasRpgMapEntryAcceptanceFiles(repoPath) &&
                HasRpgBattleSceneAcceptanceFiles(repoPath);
+    }
+
+    private static bool HasMainSceneDefaultPrototypeHostUiHidden(string repoPath)
+    {
+        var mainScene = Path.Combine(repoPath, "Game.Godot", "Scenes", "Main.tscn");
+        if (!File.Exists(mainScene))
+        {
+            return false;
+        }
+
+        var sceneText = File.ReadAllText(mainScene);
+        return IsSceneNodeDefaultHidden(sceneText, "VBox", ".") &&
+               IsSceneNodeDefaultHidden(sceneText, "Overlays", ".") &&
+               IsSceneNodeDefaultHidden(sceneText, "ScreenRoot", ".");
+    }
+
+    private static bool IsSceneNodeDefaultHidden(string sceneText, string nodeName, string parent)
+    {
+        var match = Regex.Match(
+            sceneText,
+            "\\[node\\s+name=\"" + Regex.Escape(nodeName) + "\"[^\\]]*parent=\"" + Regex.Escape(parent) + "\"[^\\]]*\\](?<body>.*?)(?=\\r?\\n\\[node|\\r?\\n\\[connection|\\z)",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        if (!match.Success)
+        {
+            return false;
+        }
+
+        return Regex.IsMatch(
+            match.Groups["body"].Value,
+            "(^|\\r?\\n)visible\\s*=\\s*false(\\r?\\n|$)",
+            RegexOptions.CultureInvariant);
     }
 
     private static bool HasRpgMapEntryAcceptanceFiles(string repoPath)
@@ -461,6 +499,7 @@ internal static class PrototypeGoalAcceptanceValidator
         bool MapEntryAcceptance = false,
         bool BattleSceneAcceptance = false,
         bool RewardFlowAcceptance = false,
+        bool MainSceneHostUiHiddenAcceptance = false,
         bool FinalAcceptance = false,
         bool StaticAcceptanceOnly = false);
 }

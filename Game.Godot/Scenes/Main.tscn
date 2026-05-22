@@ -40,6 +40,7 @@ script = ExtResource("6")
 [node name="MainMenu" parent="." instance=ExtResource("3")]
 
 [node name="ScreenRoot" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -53,6 +54,7 @@ ScreenRootPath = NodePath("../ScreenRoot")
 
 
 [node name="Overlays" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -69,6 +71,7 @@ mouse_filter = 1
 [node name="SettingsPanel" parent="." instance=ExtResource("7")]
 
 [node name="VBox" type="VBoxContainer" parent="."]
+visible = false
 layout_mode = 2
 offset_left = 20.0
 offset_top = 20.0
@@ -98,4 +101,3 @@ text = "+10 Score"
 [node name="LoseHpBtn" type="Button" parent="VBox"]
 layout_mode = 2
 text = "-5 HP"
-

@@ -261,6 +261,40 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/projects");
         html.Should().Contain("prototype-7day-playable");
         html.Should().Contain("prototype-tdd");
+        html.Should().Contain("loadAssetInventory");
+        html.Should().Contain("assetInventoryStatus");
+        html.Should().Contain("查看素材清单");
+        html.Should().Contain("/assets?projectId=");
+        html.Should().Contain("asset-inventory");
+        html.Should().Contain("asset-preview");
+        html.Should().Contain("final step 完成后才可以查看素材清单");
+        html.Should().Contain("renderAssetInventory");
+        html.Should().Contain("refreshAssetInventoryAvailability");
+        html.Should().Contain("assetInventoryExpanded");
+        html.Should().Contain("renderAssetInventory(state.assetInventory, state.assetInventoryExpanded)");
+        html.Should().Contain("用途：");
+        html.Should().Contain("asset-grid");
+    }
+
+    [Fact]
+    public void RenderAssets_IncludesAssetInventoryPageAndPreviewTickets()
+    {
+        var html = new BrowserUiRenderer().RenderAssets();
+
+        html.Should().Contain("项目素材清单");
+        html.Should().Contain("asset-inventory?judge=true");
+        html.Should().Contain("asset-preview-ticket");
+        html.Should().Contain("createPreviewUrl");
+        html.Should().Contain("已使用素材");
+        html.Should().Contain("可生成素材候选");
+        html.Should().Contain("用途");
+        html.Should().Contain("像素尺寸");
+        html.Should().Contain("assetPixelSize");
+        html.Should().Contain("pixelWidth");
+        html.Should().Contain("pixelHeight");
+        html.Should().Contain("建议原因");
+        html.Should().Contain("intendedUse");
+        html.Should().Contain("previewUrl");
     }
 
     [Fact]

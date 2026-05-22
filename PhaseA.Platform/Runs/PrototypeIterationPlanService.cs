@@ -375,8 +375,8 @@ public sealed class PrototypeIterationPlanService
             new PrototypeIterationPlanGoalResult(
                 6,
                 "RPG Final Step: full playable prototype acceptance",
-                $"Run the RPG type-skill final acceptance across the complete prototype: required RPG scenes, actual map/player/enemy asset usage in the current prototype scenes, main menu to prototype navigation, Start Adventure to visible map, battle entry, reward return-to-map, Godot build, prototype scene smoke, and package readiness. {contractInstruction}",
-                $"Pass only when the full RPG playable prototype is accepted end-to-end: MapScene, BattleScene, reward return-to-map flow, actual Map/Player/Enemy asset usage in current scenes, main menu navigation, Start Adventure visible-map validation, Godot build, prototype scene smoke, package readiness, and all project-specific prototype contract fields pass.",
+                $"Run the RPG type-skill final acceptance across the complete prototype: required RPG scenes, actual map/player/enemy asset usage in the current prototype scenes, main menu to prototype navigation, Main.tscn default-hidden VBox/Overlays/ScreenRoot SOP, Start Adventure to visible map, battle entry, reward return-to-map, Godot build, prototype scene smoke, and package readiness. {contractInstruction}",
+                $"Pass only when the full RPG playable prototype is accepted end-to-end: MapScene, BattleScene, reward return-to-map flow, actual Map/Player/Enemy asset usage in current scenes, main menu navigation, Main.tscn root-level VBox/Overlays/ScreenRoot all default to visible = false, Start Adventure visible-map validation, Godot build, prototype scene smoke, package readiness, and all project-specific prototype contract fields pass.",
                 "pending")
         ];
     }

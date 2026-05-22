@@ -708,6 +708,7 @@ public sealed class PrototypeQuickFixService
             - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复目标。
             - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前目标的完成内容，除非当前目标标题和验收提示明确要求。
             - 如果当前目标是玩法/Godot/RPG 目标，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
+            - Main.tscn SOP：原型相关修复必须保持根级 VBox、Overlays、ScreenRoot 默认 visible = false；final/full-playable 目标必须修到这一点通过。
             - 对玩法/Godot/RPG 目标，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
             - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前目标的唯一剩余问题。
             - 优先用最小改动完成目标。
@@ -766,6 +767,14 @@ public sealed class PrototypeQuickFixService
             - 地图场景脚本必须提供可识别的奖励后返回状态刷新入口 ShowRewardReturnStatus，用于显示玩家已经回到地图循环。
             - 核心 loop 和对应原型测试必须保留 RewardOptions.Count、ApplyReward、Battle reward selected、Return to the map 这些可验收标记。
             - 不要把“测试依赖不可用”当作已完成；如果结构契约没满足，应继续修当前 step。
+            """
+            : goal.GoalIndex == 6
+                ? """
+            平台对 RPG Final Step 的强制验收契约：
+            - 必须通过完整 RPG 原型验收：地图场景、战斗场景、奖励闭环、主菜单进入原型、Start Adventure 后地图可见、Godot smoke、打包准备。
+            - Main.tscn 根级 VBox、Overlays、ScreenRoot 必须存在，并且默认 visible = false。
+            - 不要删除 ScreenRoot 或导航 wiring；只把默认可见性关闭，运行时需要时再由导航逻辑显示。
+            - 如果 Main.tscn 默认宿主 UI 仍可见，必须输出 STATUS: needs_fix。
             """
             : "";
     }

@@ -74,6 +74,13 @@ Scene ownership must remain separate:
 - The map scene must remain visible after the click and contain visible map markers, a grid, status text, the player asset, and the enemy asset.
 - A prototype that navigates to the RPG shell but shows a blank screen after `Start Adventure` is not accepted.
 
+### Main Scene Default Visibility Contract
+
+- `Game.Godot/Scenes/Main.tscn` is the shared entry shell and must not show template/debug UI over prototype routes by default.
+- The root-level `VBox`, `Overlays`, and `ScreenRoot` nodes must exist and must default to `visible = false`.
+- Prototype creation, execute-next-goal, needs-fix, and final acceptance must preserve this default-hidden state.
+- Showing these nodes later is allowed only through explicit runtime navigation or settings logic, not as the scene default.
+
 ### Assets And UI
 
 - Support repo-local generated or hand-authored assets.
