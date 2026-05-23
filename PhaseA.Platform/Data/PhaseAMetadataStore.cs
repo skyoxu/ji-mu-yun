@@ -77,9 +77,11 @@ public sealed class PhaseAMetadataStore
             FROM accounts
             WHERE token_hash = $token_hash
               AND is_disabled = 0
+              AND (valid_until_utc IS NULL OR valid_until_utc > $now_utc)
             LIMIT 1;
             """;
         command.Parameters.AddWithValue("$token_hash", tokenHash);
+        command.Parameters.AddWithValue("$now_utc", DateTimeOffset.UtcNow.ToString("O"));
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken))
@@ -97,6 +99,9 @@ public sealed class PhaseAMetadataStore
     public async Task<AdminCreateUserResult> CreateUserAccountAsync(
         string username,
         int projectLimit,
+        int? validDays = null,
+        decimal? spendLimitCny = null,
+        bool requireAiCodeMirrorKey = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
@@ -109,6 +114,9 @@ public sealed class PhaseAMetadataStore
         var token = GenerateAccountToken();
         var tokenHash = PhaseAAuth.HashTokenForStorage(token);
         var now = DateTimeOffset.UtcNow.ToString("O");
+        var validUntilUtc = validDays is > 0
+            ? DateTimeOffset.UtcNow.AddDays(validDays.Value).ToString("O")
+            : null;
         var accountId = NewId();
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -118,20 +126,39 @@ public sealed class PhaseAMetadataStore
             command.Transaction = transaction;
             command.CommandText =
                 """
-                INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, created_utc)
-                VALUES ($id, $username, NULL, $token_hash, 0, $created_utc);
+                INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, valid_until_utc, spend_limit_cny, created_utc)
+                VALUES ($id, $username, NULL, $token_hash, 0, $valid_until_utc, $spend_limit_cny, $created_utc);
                 """;
             command.Parameters.AddWithValue("$id", accountId);
             command.Parameters.AddWithValue("$username", normalizedUsername);
             command.Parameters.AddWithValue("$token_hash", tokenHash);
+            command.Parameters.AddWithValue("$valid_until_utc", (object?)validUntilUtc ?? DBNull.Value);
+            command.Parameters.AddWithValue("$spend_limit_cny", spendLimitCny is null ? DBNull.Value : spendLimitCny.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
             command.Parameters.AddWithValue("$created_utc", now);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
         await UpsertProjectLimitAsync(connection, accountId, projectLimit, now, cancellationToken);
+        var assignedKeyName = requireAiCodeMirrorKey
+            ? await AssignNextAvailableAiCodeMirrorKeyInsideTransactionAsync(connection, transaction, accountId, now, cancellationToken)
+            : null;
+        if (requireAiCodeMirrorKey && string.IsNullOrWhiteSpace(assignedKeyName))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw new InvalidOperationException("aicodemirror_key_pool_exhausted");
+        }
+
         await transaction.CommitAsync(cancellationToken);
 
-        return new AdminCreateUserResult(accountId, normalizedUsername, token, projectLimit);
+        return new AdminCreateUserResult(accountId, normalizedUsername, token, projectLimit, validUntilUtc, spendLimitCny, assignedKeyName);
+    }
+
+    public Task<AdminCreateUserResult> CreateUserAccountAsync(
+        string username,
+        int projectLimit,
+        CancellationToken cancellationToken)
+    {
+        return CreateUserAccountAsync(username, projectLimit, null, null, false, cancellationToken);
     }
 
     public async Task<IReadOnlyList<AdminUserListItem>> ListAccountsAsync(CancellationToken cancellationToken = default)
@@ -147,11 +174,15 @@ public sealed class PhaseAMetadataStore
                 a.is_disabled,
                 COALESCE(pl.project_limit, $default_project_limit),
                 COUNT(p.id),
-                a.created_utc
+                a.created_utc,
+                a.valid_until_utc,
+                a.spend_limit_cny,
+                ak.key_name
             FROM accounts a
             LEFT JOIN project_limits pl ON pl.account_id = a.id
             LEFT JOIN projects p ON p.account_id = a.id
-            GROUP BY a.id, a.username, a.is_admin, a.is_disabled, pl.project_limit, a.created_utc
+            LEFT JOIN aicodemirror_key_pool ak ON ak.account_id = a.id
+            GROUP BY a.id, a.username, a.is_admin, a.is_disabled, pl.project_limit, a.created_utc, a.valid_until_utc, a.spend_limit_cny, ak.key_name
             ORDER BY a.is_admin DESC, a.created_utc ASC, a.username ASC;
             """;
         command.Parameters.AddWithValue("$default_project_limit", _options.HostedProjectLimit);
@@ -167,10 +198,44 @@ public sealed class PhaseAMetadataStore
                 reader.GetInt64(3) == 1,
                 checked((int)reader.GetInt64(4)),
                 checked((int)reader.GetInt64(5)),
-                reader.GetString(6)));
+                reader.GetString(6),
+                reader.IsDBNull(7) ? null : reader.GetString(7),
+                reader.IsDBNull(8) ? null : decimal.Parse(reader.GetString(8), System.Globalization.CultureInfo.InvariantCulture),
+                reader.IsDBNull(9) ? null : reader.GetString(9)));
         }
 
         return accounts;
+    }
+
+    public async Task<bool> UpdateUserLimitsAsync(
+        string accountId,
+        int? validDays,
+        decimal? spendLimitCny,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        if (validDays is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(validDays), "Valid days must be null or non-negative.");
+        }
+
+        var validUntilUtc = validDays is > 0
+            ? DateTimeOffset.UtcNow.AddDays(validDays.Value).ToString("O")
+            : null;
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE accounts
+            SET valid_until_utc = $valid_until_utc,
+                spend_limit_cny = $spend_limit_cny
+            WHERE id = $account_id
+              AND is_admin = 0;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$valid_until_utc", (object?)validUntilUtc ?? DBNull.Value);
+        command.Parameters.AddWithValue("$spend_limit_cny", spendLimitCny is null ? DBNull.Value : spendLimitCny.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
     }
 
     public async Task<bool> SetUserDisabledAsync(
@@ -707,6 +772,203 @@ public sealed class PhaseAMetadataStore
             reader.GetString(2),
             reader.GetString(3),
             reader.GetString(4));
+    }
+
+    public async Task<AiCodeMirrorKeyPoolEntry> UpsertAiCodeMirrorKeyAsync(
+        AiCodeMirrorKeyImportCommand create,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(create);
+        ArgumentException.ThrowIfNullOrWhiteSpace(create.KeyName);
+
+        var keyName = create.KeyName.Trim();
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO aicodemirror_key_pool (
+                id,
+                key_name,
+                status,
+                notes,
+                valid_days,
+                expires_utc,
+                credential_imported,
+                imported_utc,
+                updated_utc)
+            VALUES (
+                $id,
+                $key_name,
+                'available',
+                $notes,
+                $valid_days,
+                $expires_utc,
+                $credential_imported,
+                $imported_utc,
+                $updated_utc)
+            ON CONFLICT(key_name) DO UPDATE SET
+                notes = excluded.notes,
+                valid_days = excluded.valid_days,
+                expires_utc = excluded.expires_utc,
+                credential_imported = CASE
+                    WHEN excluded.credential_imported = 1 THEN 1
+                    ELSE aicodemirror_key_pool.credential_imported
+                END,
+                updated_utc = excluded.updated_utc;
+            """;
+        var expiresUtc = create.ValidDays is > 0
+            ? DateTimeOffset.UtcNow.AddDays(create.ValidDays.Value).ToString("O")
+            : null;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$key_name", keyName);
+        command.Parameters.AddWithValue("$notes", (object?)create.Notes ?? DBNull.Value);
+        command.Parameters.AddWithValue("$valid_days", (object?)create.ValidDays ?? DBNull.Value);
+        command.Parameters.AddWithValue("$expires_utc", (object?)expiresUtc ?? DBNull.Value);
+        command.Parameters.AddWithValue("$credential_imported", create.CredentialImported ? 1 : 0);
+        command.Parameters.AddWithValue("$imported_utc", now);
+        command.Parameters.AddWithValue("$updated_utc", now);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        return (await GetAiCodeMirrorKeyByNameAsync(keyName, cancellationToken))!;
+    }
+
+    public async Task<AiCodeMirrorKeyAssignmentResult> AssignAiCodeMirrorKeyToAccountAsync(
+        string keyName,
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(keyName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
+        var accountExists = await ExecuteScalarLongAsync(
+            connection,
+            "SELECT COUNT(1) FROM accounts WHERE id = $account_id;",
+            cancellationToken,
+            ("$account_id", accountId));
+        if (accountExists is not > 0)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("account_not_found");
+        }
+
+        var key = await ReadAiCodeMirrorKeyByNameAsync(connection, keyName.Trim(), transaction, cancellationToken);
+        if (key is null)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_not_found");
+        }
+
+        if (string.Equals(key.Status, "closed", StringComparison.OrdinalIgnoreCase))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_closed");
+        }
+
+        if (!string.IsNullOrWhiteSpace(key.ExpiresUtc) &&
+            string.CompareOrdinal(key.ExpiresUtc, now) <= 0)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_expired");
+        }
+
+        if (!key.CredentialImported)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_credential_not_imported");
+        }
+
+        if (!string.IsNullOrWhiteSpace(key.AccountId) &&
+            !string.Equals(key.AccountId, accountId, StringComparison.Ordinal))
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_already_assigned");
+        }
+
+        await using var clearCommand = connection.CreateCommand();
+        clearCommand.Transaction = transaction;
+        clearCommand.CommandText =
+            """
+            UPDATE aicodemirror_key_pool
+            SET account_id = NULL,
+                status = 'available',
+                assigned_utc = NULL,
+                updated_utc = $updated_utc
+            WHERE account_id = $account_id
+              AND key_name <> $key_name;
+            """;
+        clearCommand.Parameters.AddWithValue("$account_id", accountId);
+        clearCommand.Parameters.AddWithValue("$key_name", keyName.Trim());
+        clearCommand.Parameters.AddWithValue("$updated_utc", now);
+        await clearCommand.ExecuteNonQueryAsync(cancellationToken);
+
+        await using var assignCommand = connection.CreateCommand();
+        assignCommand.Transaction = transaction;
+        assignCommand.CommandText =
+            """
+            UPDATE aicodemirror_key_pool
+            SET account_id = $account_id,
+                status = 'assigned',
+                assigned_utc = COALESCE(assigned_utc, $assigned_utc),
+                updated_utc = $updated_utc
+            WHERE key_name = $key_name;
+            """;
+        assignCommand.Parameters.AddWithValue("$account_id", accountId);
+        assignCommand.Parameters.AddWithValue("$key_name", keyName.Trim());
+        assignCommand.Parameters.AddWithValue("$assigned_utc", now);
+        assignCommand.Parameters.AddWithValue("$updated_utc", now);
+        await assignCommand.ExecuteNonQueryAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+        var assigned = await GetAiCodeMirrorKeyForAccountAsync(accountId, cancellationToken);
+        return assigned is null
+            ? AiCodeMirrorKeyAssignmentResult.Failure("aicodemirror_key_assignment_failed")
+            : AiCodeMirrorKeyAssignmentResult.Ok(assigned);
+    }
+
+    public async Task<AiCodeMirrorKeyPoolEntry?> GetAiCodeMirrorKeyForAccountAsync(
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, key_name, account_id, status, notes, valid_days, expires_utc, credential_imported, imported_utc, assigned_utc, updated_utc
+            FROM aicodemirror_key_pool
+            WHERE account_id = $account_id
+            ORDER BY assigned_utc DESC, updated_utc DESC
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadAiCodeMirrorKey(reader) : null;
+    }
+
+    public async Task<IReadOnlyList<AiCodeMirrorKeyPoolEntry>> ListAiCodeMirrorKeysAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, key_name, account_id, status, notes, valid_days, expires_utc, credential_imported, imported_utc, assigned_utc, updated_utc
+            FROM aicodemirror_key_pool
+            ORDER BY imported_utc DESC, key_name;
+            """;
+        var items = new List<AiCodeMirrorKeyPoolEntry>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            items.Add(ReadAiCodeMirrorKey(reader));
+        }
+
+        return items;
     }
 
     public async Task<int> GetProjectLimitAsync(string accountId, CancellationToken cancellationToken = default)
@@ -1554,6 +1816,7 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(llmCostJson);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        var mergedCostJson = await MergeRunLlmCostJsonAsync(connection, runId, llmCostJson, cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -1568,7 +1831,7 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$llm_gateway", llmGateway);
         command.Parameters.AddWithValue("$llm_request_id", (object?)llmRequestId ?? DBNull.Value);
         command.Parameters.AddWithValue("$llm_model", (object?)llmModel ?? DBNull.Value);
-        command.Parameters.AddWithValue("$llm_cost_json", llmCostJson);
+        command.Parameters.AddWithValue("$llm_cost_json", mergedCostJson);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -2532,6 +2795,60 @@ public sealed class PhaseAMetadataStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    private static async Task<string?> AssignNextAvailableAiCodeMirrorKeyInsideTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string accountId,
+        string now,
+        CancellationToken cancellationToken)
+    {
+        string? keyName;
+        await using (var lookup = connection.CreateCommand())
+        {
+            lookup.Transaction = transaction;
+            lookup.CommandText =
+                """
+                SELECT key_name
+                FROM aicodemirror_key_pool
+                WHERE account_id IS NULL
+                  AND status = 'available'
+                  AND credential_imported = 1
+                  AND (expires_utc IS NULL OR expires_utc > $now_utc)
+                ORDER BY imported_utc ASC, rowid ASC
+                LIMIT 1;
+                """;
+            lookup.Parameters.AddWithValue("$now_utc", now);
+            keyName = await lookup.ExecuteScalarAsync(cancellationToken) as string;
+        }
+
+        if (string.IsNullOrWhiteSpace(keyName))
+        {
+            return null;
+        }
+
+        await using (var assign = connection.CreateCommand())
+        {
+            assign.Transaction = transaction;
+            assign.CommandText =
+                """
+                UPDATE aicodemirror_key_pool
+                SET account_id = $account_id,
+                    status = 'assigned',
+                    assigned_utc = $assigned_utc,
+                    updated_utc = $updated_utc
+                WHERE key_name = $key_name
+                  AND account_id IS NULL
+                  AND status = 'available';
+                """;
+            assign.Parameters.AddWithValue("$account_id", accountId);
+            assign.Parameters.AddWithValue("$key_name", keyName);
+            assign.Parameters.AddWithValue("$assigned_utc", now);
+            assign.Parameters.AddWithValue("$updated_utc", now);
+            var rows = await assign.ExecuteNonQueryAsync(cancellationToken);
+            return rows > 0 ? keyName : null;
+        }
+    }
+
     private async Task SyncAdminSecretsAsync(SqliteConnection connection, string accountId, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
@@ -2571,6 +2888,122 @@ public sealed class PhaseAMetadataStore
 
         var result = await command.ExecuteScalarAsync(cancellationToken);
         return result as string;
+    }
+
+    private async Task<AiCodeMirrorKeyPoolEntry?> GetAiCodeMirrorKeyByNameAsync(
+        string keyName,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await ReadAiCodeMirrorKeyByNameAsync(connection, keyName, null, cancellationToken);
+    }
+
+    private static async Task<AiCodeMirrorKeyPoolEntry?> ReadAiCodeMirrorKeyByNameAsync(
+        SqliteConnection connection,
+        string keyName,
+        SqliteTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT id, key_name, account_id, status, notes, valid_days, expires_utc, credential_imported, imported_utc, assigned_utc, updated_utc
+            FROM aicodemirror_key_pool
+            WHERE key_name = $key_name;
+            """;
+        command.Parameters.AddWithValue("$key_name", keyName);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadAiCodeMirrorKey(reader) : null;
+    }
+
+    private static AiCodeMirrorKeyPoolEntry ReadAiCodeMirrorKey(SqliteDataReader reader)
+    {
+        return new AiCodeMirrorKeyPoolEntry(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.IsDBNull(2) ? null : reader.GetString(2),
+            reader.GetString(3),
+            reader.IsDBNull(4) ? null : reader.GetString(4),
+            reader.IsDBNull(5) ? null : checked((int)reader.GetInt64(5)),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.GetInt64(7) == 1,
+            reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.GetString(10));
+    }
+
+    private static async Task<string> MergeRunLlmCostJsonAsync(
+        SqliteConnection connection,
+        string runId,
+        string llmCostJson,
+        CancellationToken cancellationToken)
+    {
+        await using var lookup = connection.CreateCommand();
+        lookup.CommandText = "SELECT llm_cost_json FROM runs WHERE id = $id;";
+        lookup.Parameters.AddWithValue("$id", runId);
+
+        var existing = await lookup.ExecuteScalarAsync(cancellationToken) as string;
+        if (string.IsNullOrWhiteSpace(existing))
+        {
+            return llmCostJson;
+        }
+
+        if (string.IsNullOrWhiteSpace(llmCostJson))
+        {
+            return existing;
+        }
+
+        try
+        {
+            using var existingDocument = JsonDocument.Parse(existing);
+            using var incomingDocument = JsonDocument.Parse(llmCostJson);
+            var merged = MergeLlmCostJson(existingDocument.RootElement, incomingDocument.RootElement);
+            return JsonSerializer.Serialize(merged);
+        }
+        catch (JsonException)
+        {
+            return llmCostJson;
+        }
+    }
+
+    private static object MergeLlmCostJson(JsonElement existing, JsonElement incoming)
+    {
+        var calls = new List<JsonElement>();
+        AppendCostCall(calls, existing);
+        AppendCostCall(calls, incoming);
+        return new { calls = calls.Select(CloneElement).ToArray() };
+    }
+
+    private static void AppendCostCall(List<JsonElement> calls, JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("calls", out var nestedCalls) && nestedCalls.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var call in nestedCalls.EnumerateArray())
+            {
+                calls.Add(CloneElement(call));
+            }
+
+            return;
+        }
+
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var call in element.EnumerateArray())
+            {
+                calls.Add(CloneElement(call));
+            }
+
+            return;
+        }
+
+        calls.Add(CloneElement(element));
+    }
+
+    private static JsonElement CloneElement(JsonElement element)
+    {
+        using var document = JsonDocument.Parse(element.GetRawText());
+        return document.RootElement.Clone();
     }
 
     private static async Task<long?> ExecuteScalarLongAsync(

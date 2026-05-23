@@ -52,24 +52,6 @@ public sealed class LlmStopLossService
 
     private static decimal ParseCostCny(string costJson)
     {
-        try
-        {
-            using var document = JsonDocument.Parse(costJson);
-            if (document.RootElement.TryGetProperty("estimated_cost_cny", out var estimated) && estimated.TryGetDecimal(out var value))
-            {
-                return value;
-            }
-
-            if (document.RootElement.TryGetProperty("cost_cny", out var cost) && cost.TryGetDecimal(out var legacyValue))
-            {
-                return legacyValue;
-            }
-        }
-        catch (JsonException)
-        {
-            return 0m;
-        }
-
-        return 0m;
+        return LlmUsageAuditJson.SumEstimatedCostCny(costJson);
     }
 }

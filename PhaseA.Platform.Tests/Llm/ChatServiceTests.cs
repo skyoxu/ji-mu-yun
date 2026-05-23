@@ -131,6 +131,7 @@ public sealed class ChatServiceTests
         result.AssistantMessage.Should().Be("codex says hello");
         result.Model.Should().Be("gpt-5.4-mini");
         codex.LastModel.Should().Be("gpt-5.4-mini");
+        codex.LastBillingApiKeyName.Should().Be(accountId);
         codex.LastPrompt.Should().Contain("hello codex");
         codex.LastPrompt.Should().Contain("请直接回答这个网页聊天用户的问题：hello codex");
         codex.LastPrompt.Should().Contain("输出必须就是要显示给用户看的最终回答");
@@ -142,6 +143,7 @@ public sealed class ChatServiceTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.LlmGateway.Should().Be("codex-cli");
         run.LlmModel.Should().Be("gpt-5.4-mini");
+        run.LlmCostJson.Should().Contain("billing_source").And.Contain("codex-cli").And.Contain("usage_status").And.Contain("unknown");
     }
 
     [Fact]
@@ -317,15 +319,18 @@ public sealed class ChatServiceTests
         public string? LastModel { get; private set; }
 
         public string? LastPrompt { get; private set; }
+        public string? LastBillingApiKeyName { get; private set; }
 
         public Task<CodexChatClientResult> CompleteAsync(
             string projectRoot,
             string model,
             string prompt,
+            string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
             LastModel = model;
             LastPrompt = prompt;
+            LastBillingApiKeyName = billingApiKeyName;
             return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
         }
     }

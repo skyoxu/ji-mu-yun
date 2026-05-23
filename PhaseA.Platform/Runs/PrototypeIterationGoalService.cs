@@ -19,6 +19,8 @@ public sealed class PrototypeIterationGoalService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly IAiCodeMirrorBillingClient _billingClient;
+    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeIterationGoalService(
@@ -36,6 +38,8 @@ public sealed class PrototypeIterationGoalService
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? stateWriter = null,
         PrototypeContractService? contractService = null,
+        IAiCodeMirrorBillingClient? billingClient = null,
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
@@ -44,6 +48,8 @@ public sealed class PrototypeIterationGoalService
         _workspaceSeeder = workspaceSeeder;
         _stateWriter = stateWriter ?? new PrototypeRouteStateWriter();
         _contractService = contractService ?? new PrototypeContractService();
+        _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
+        _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -151,7 +157,11 @@ public sealed class PrototypeIterationGoalService
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
             var prompt = BuildPrompt(project, details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), timeout.Token);
+            var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+            var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+            var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
+            var codexResult = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexCommand(prompt, codexRuntimeOutputPath, model, project.RepoPath), runtimeCredential), timeout.Token);
+            var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             if (File.Exists(codexRuntimeOutputPath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
@@ -207,6 +217,21 @@ public sealed class PrototypeIterationGoalService
                 godot_smoke_validation = godotSmokeValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
+            await _metadataStore.RecordRunLlmAuditAsync(
+                runId,
+                "codex-cli",
+                null,
+                model,
+                LlmUsageAuditJson.BuildCodexUsageJson(
+                    operation: RunType,
+                    model: model,
+                    tokenUsage: CodexUsageExtractor.Extract(codexResult.Stdout, codexResult.Stderr),
+                    runType: RunType,
+                    projectId: project.ProjectId,
+                    route: "execute-next-goal",
+                    exitCode: codexResult.ExitCode,
+                    providerBilling: providerBilling),
+                CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, goalOutcome.GoalStatus, publicSummary, goalOutcome.MarkCompleted ? now : null, CancellationToken.None);
             await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(
@@ -314,6 +339,7 @@ public sealed class PrototypeIterationGoalService
             ResolveCodexCommand(),
             [
                 "exec",
+                "--json",
                 "--sandbox",
                 "workspace-write",
                 "-m",
@@ -335,6 +361,30 @@ public sealed class PrototypeIterationGoalService
                 ["PHASEA_CODEX_REASONING_EFFORT"] = ReasoningEffort
             },
             prompt);
+    }
+
+    private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
+    {
+        return await (_keyPoolService?.ResolveKeyNameForAccountAsync(accountId, cancellationToken) ?? Task.FromResult<string?>(null))
+               ?? accountId;
+    }
+
+    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
+    {
+        if (_keyPoolService is null)
+        {
+            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
+        }
+
+        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
+        return credential.BillingKeyName is null && credential.CodexHomePath is null
+            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
+            : credential;
+    }
+
+    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
+    {
+        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)

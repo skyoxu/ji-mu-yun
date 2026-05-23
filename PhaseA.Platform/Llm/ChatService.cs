@@ -156,7 +156,7 @@ public sealed class ChatService
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var skillAction = ResolveSkillAction(request.SkillActionId);
         var prompt = BuildCodexPrompt(project, request, skillAction);
-        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, cancellationToken);
+        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, project.AccountId, cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";
@@ -179,12 +179,13 @@ public sealed class ChatService
             "codex-cli",
             null,
             model,
-            JsonSerializer.Serialize(new
-            {
-                estimated_cost_cny = 0m,
-                model,
-                backend = "codex-cli"
-            }),
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: "prototype-chat",
+                model: model,
+                tokenUsage: completion.TokenUsage ?? new CodexTokenUsage(null, null, null),
+                runType: RunType,
+                projectId: project.ProjectId,
+                providerBilling: completion.ProviderBilling),
             cancellationToken);
 
         return new ChatResult(runId, status, completion.ExitCode, sanitizedAssistantMessage, completion.FailureCode, model);

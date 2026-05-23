@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 
@@ -15,19 +16,25 @@ public sealed class SkillActionService
     private readonly SkillActionCatalog _catalog;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly IAiCodeMirrorBillingClient _billingClient;
+    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
 
     public SkillActionService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         SkillActionCatalog catalog,
         IHostedProcessRunner processRunner,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        IAiCodeMirrorBillingClient? billingClient = null,
+        AiCodeMirrorKeyPoolService? keyPoolService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _catalog = catalog;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
+        _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
+        _keyPoolService = keyPoolService;
     }
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
@@ -84,7 +91,11 @@ public sealed class SkillActionService
             cancellationToken);
 
         var prompt = BuildPrompt(action, project, request);
-        var process = await _processRunner.RunAsync(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), cancellationToken);
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
+        var process = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
             : FirstNonEmpty(process.Stdout, process.Stderr, "");
@@ -113,6 +124,23 @@ public sealed class SkillActionService
             output = outputRelativePath
         });
         await _metadataStore.CompleteRunAsync(runId, status, process.ExitCode, process.Stdout, process.Stderr, evidenceJson, cancellationToken);
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            "gpt-5.4",
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: "gpt-5.4",
+                tokenUsage: CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+                runType: RunType,
+                projectId: project.ProjectId,
+                skillActionId: action.ActionId,
+                skillName: action.SkillName,
+                route: "skill-action",
+                exitCode: process.ExitCode,
+                providerBilling: providerBilling),
+            cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
         return new SkillActionRunResult(runId, status, process.ExitCode, action.ActionId, action.SkillName, output.Trim(), artifacts);
@@ -123,6 +151,7 @@ public sealed class SkillActionService
         var arguments = new List<string>
         {
             "exec",
+            "--json",
             "--sandbox",
             "read-only",
             "-m",
@@ -147,6 +176,30 @@ public sealed class SkillActionService
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = "gpt-5.4",
                 ["PHASEA_CODEX_REASONING_EFFORT"] = "high"
             });
+    }
+
+    private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
+    {
+        return await (_keyPoolService?.ResolveKeyNameForAccountAsync(accountId, cancellationToken) ?? Task.FromResult<string?>(null))
+               ?? accountId;
+    }
+
+    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
+    {
+        if (_keyPoolService is null)
+        {
+            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
+        }
+
+        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
+        return credential.BillingKeyName is null && credential.CodexHomePath is null
+            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
+            : credential;
+    }
+
+    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
+    {
+        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
     }
 
     private static string BuildPrompt(SkillActionDefinition action, ProjectSnapshot project, SkillActionRunRequest request)

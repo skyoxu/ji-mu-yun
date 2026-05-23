@@ -1123,6 +1123,7 @@ def build_prototype_intake_llm_review(
     cmd = [
         _resolve_codex_command(),
         "exec",
+        "--json",
         *_codex_model_args(),
         "-s",
         "read-only",
@@ -2075,6 +2076,7 @@ def _run_day4_codex_implementation(*, root: Path, payload: dict[str, Any], recor
     cmd = [
         _resolve_codex_command(),
         "exec",
+        "--json",
         *_codex_model_args(),
         "--sandbox",
         "workspace-write",

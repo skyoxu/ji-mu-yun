@@ -221,7 +221,7 @@ public sealed partial class ProjectAssetInventoryService
         {
             var normalizedModel = PrototypeModelPolicy.Normalize(model);
             var prompt = BuildLlmJudgementPrompt(project, usedAssets, candidates);
-            var completion = await _codexChatClient.CompleteAsync(projectRoot, normalizedModel, prompt, cancellationToken);
+            var completion = await _codexChatClient.CompleteAsync(projectRoot, normalizedModel, prompt, project.AccountId, cancellationToken);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded
                 ? ApplyLlmJudgement(candidates, completion.AssistantMessage, out judgementFailureCode)
@@ -241,6 +241,21 @@ public sealed partial class ProjectAssetInventoryService
                 completion.AssistantMessage ?? "",
                 completion.Stderr + completion.Stdout,
                 evidenceJson,
+                cancellationToken);
+            await _metadataStore.RecordRunLlmAuditAsync(
+                runId,
+                "codex-cli",
+                null,
+                normalizedModel,
+                LlmUsageAuditJson.BuildCodexUsageJson(
+                    operation: RunType,
+                    model: normalizedModel,
+                    tokenUsage: completion.TokenUsage ?? new CodexTokenUsage(null, null, null),
+                    runType: RunType,
+                    projectId: project.ProjectId,
+                    failureCode: completion.FailureCode ?? judgementFailureCode,
+                    exitCode: completion.ExitCode,
+                    providerBilling: completion.ProviderBilling),
                 cancellationToken);
             return judged;
         }

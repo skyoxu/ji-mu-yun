@@ -17,6 +17,8 @@ public sealed class PrototypeFeedbackIterationService
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
+    private readonly IAiCodeMirrorBillingClient _billingClient;
+    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeFeedbackIterationService(
@@ -42,6 +44,8 @@ public sealed class PrototypeFeedbackIterationService
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
+        IAiCodeMirrorBillingClient? billingClient = null,
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
@@ -49,6 +53,8 @@ public sealed class PrototypeFeedbackIterationService
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
+        _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
+        _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -115,7 +121,11 @@ public sealed class PrototypeFeedbackIterationService
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
             await SetProgressAsync(runId, "running", "codex", "Codex 正在继续优化当前原型。", CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), timeout.Token);
+            var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+            var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+            var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
+            var codexResult = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), runtimeCredential), timeout.Token);
+            var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
                 : "";
@@ -158,6 +168,23 @@ public sealed class PrototypeFeedbackIterationService
                 route_skill = routeSkill
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
+            await _metadataStore.RecordRunLlmAuditAsync(
+                runId,
+                "codex-cli",
+                null,
+                model,
+                LlmUsageAuditJson.BuildCodexUsageJson(
+                    operation: RunType,
+                    model: model,
+                    tokenUsage: CodexUsageExtractor.Extract(codexResult.Stdout, codexResult.Stderr),
+                    runType: RunType,
+                    projectId: project.ProjectId,
+                    skillActionId: skillAction?.ActionId,
+                    skillName: skillAction?.SkillName,
+                    route: "formal-feedback",
+                    exitCode: codexResult.ExitCode,
+                    providerBilling: providerBilling),
+                CancellationToken.None);
             await SetProgressAsync(runId, "completed", "", "正式反馈处理已完成。", CancellationToken.None);
 
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
@@ -213,6 +240,30 @@ public sealed class PrototypeFeedbackIterationService
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
     }
 
+    private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
+    {
+        return await (_keyPoolService?.ResolveKeyNameForAccountAsync(accountId, cancellationToken) ?? Task.FromResult<string?>(null))
+               ?? accountId;
+    }
+
+    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
+    {
+        if (_keyPoolService is null)
+        {
+            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
+        }
+
+        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
+        return credential.BillingKeyName is null && credential.CodexHomePath is null
+            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
+            : credential;
+    }
+
+    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
+    {
+        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
+    }
+
     private static string BuildSubmittedFeedback(
         ProjectSnapshot project,
         string runId,
@@ -241,6 +292,7 @@ public sealed class PrototypeFeedbackIterationService
         var arguments = new List<string>
         {
             "exec",
+            "--json",
             "--sandbox",
             "workspace-write",
             "-m",

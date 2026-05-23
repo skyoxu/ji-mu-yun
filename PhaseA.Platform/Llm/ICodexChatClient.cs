@@ -6,6 +6,7 @@ public interface ICodexChatClient
         string projectRoot,
         string model,
         string prompt,
+        string? billingApiKeyName = null,
         CancellationToken cancellationToken = default);
 }
 
@@ -15,4 +16,6 @@ public sealed record CodexChatClientResult(
     string? FailureCode,
     int ExitCode,
     string Stdout,
-    string Stderr);
+    string Stderr,
+    CodexTokenUsage? TokenUsage = null,
+    AiCodeMirrorBillingDelta? ProviderBilling = null);

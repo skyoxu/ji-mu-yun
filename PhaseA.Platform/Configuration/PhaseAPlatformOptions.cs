@@ -20,4 +20,9 @@ public sealed record PhaseAPlatformOptions(
     string AdminUsername,
     string? AdminPasswordHash,
     string? AdminTokenHash,
-    string? UserTokenHash);
+    string? UserTokenHash,
+    bool AiCodeMirrorBillingEnabled,
+    string AiCodeMirrorBaseUrl,
+    string? AiCodeMirrorCookie,
+    string? AiCodeMirrorApiKeyName,
+    string AiCodeMirrorCodexHomeRoot);

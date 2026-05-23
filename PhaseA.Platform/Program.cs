@@ -64,6 +64,8 @@ builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
 builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
 builder.Services.AddSingleton<LlmBindingService>();
 builder.Services.AddSingleton<LlmStopLossService>();
+builder.Services.AddSingleton<AiCodeMirrorKeyPoolService>();
+builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingClient>();
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 builder.Services.AddTransient<ChatService>();
@@ -515,6 +517,78 @@ app.MapPost("/api/account/llm-binding", async (
     return result.Succeeded ? Results.Ok(result.Binding) : Results.BadRequest(result);
 });
 
+app.MapGet("/api/admin/aicodemirror-keys", async (
+    HttpContext context,
+    [FromServices] AiCodeMirrorKeyPoolService keyPool,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(new { keys = await keyPool.ListAsync(cancellationToken) });
+});
+
+app.MapGet("/api/admin/aicodemirror-keys/template.csv", (
+    HttpContext context) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var csv = "key_name,api_key,description,valid_days\r\nuser-key-001,sk-your-aicodemirror-key,optional description,30\r\nuser-key-002,sk-your-aicodemirror-key-2,,\r\n";
+    return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv; charset=utf-8", "aicodemirror-key-template.csv");
+});
+
+app.MapPost("/api/admin/aicodemirror-keys", async (
+    AiCodeMirrorKeyImportRequest request,
+    HttpContext context,
+    [FromServices] AiCodeMirrorKeyPoolService keyPool,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var result = await keyPool.ImportAsync(request, cancellationToken);
+    return result is null ? Results.BadRequest(new { error = "key_name_required" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/admin/aicodemirror-keys/import-csv", async (
+    HttpRequest request,
+    HttpContext context,
+    [FromServices] AiCodeMirrorKeyPoolService keyPool,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    using var reader = new StreamReader(request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
+    var csv = await reader.ReadToEndAsync(cancellationToken);
+    var result = await keyPool.ImportCsvAsync(csv, cancellationToken);
+    return result.Errors.Count == 0 ? Results.Ok(result) : Results.Json(result, statusCode: StatusCodes.Status207MultiStatus);
+});
+
+app.MapPost("/api/admin/aicodemirror-keys/assign", async (
+    AiCodeMirrorKeyAssignRequest request,
+    HttpContext context,
+    [FromServices] AiCodeMirrorKeyPoolService keyPool,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var result = await keyPool.AssignAsync(request, cancellationToken);
+    return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+});
+
 app.MapPost("/api/admin/users", async (
     AdminCreateUserRequest request,
     HttpContext context,
@@ -540,19 +614,71 @@ app.MapPost("/api/admin/users", async (
 
     try
     {
-        var result = await store.CreateUserAccountAsync(request.Username, projectLimit, cancellationToken);
+        var result = await store.CreateUserAccountAsync(request.Username, projectLimit, request.ValidDays, request.SpendLimitCny, requireAiCodeMirrorKey: true, cancellationToken);
         await store.RecordAdminAccountAuditEventAsync(
             CurrentAccountId(context),
             "user_created",
             result.AccountId,
-            new { username = result.Username, project_limit = result.ProjectLimit },
+            new
+            {
+                username = result.Username,
+                project_limit = result.ProjectLimit,
+                valid_until_utc = result.ValidUntilUtc,
+                spend_limit_cny = result.SpendLimitCny,
+                aicodemirror_key_name = result.AiCodeMirrorKeyName
+            },
             cancellationToken);
         return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex) when (ex.Message == "aicodemirror_key_pool_exhausted")
+    {
+        return Results.Conflict(new { error = "aicodemirror_key_pool_exhausted" });
     }
     catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
     {
         return Results.Conflict(new { error = "username_already_exists" });
     }
+});
+
+app.MapPost("/api/admin/users/{accountId}/limits", async (
+    string accountId,
+    AdminUpdateUserLimitsRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    if (string.Equals(accountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.BadRequest(new { error = "cannot_modify_current_admin" });
+    }
+
+    if (request.ValidDays is < 0)
+    {
+        return Results.BadRequest(new { error = "invalid_valid_days" });
+    }
+
+    if (request.SpendLimitCny is < 0)
+    {
+        return Results.BadRequest(new { error = "invalid_spend_limit_cny" });
+    }
+
+    var updated = await store.UpdateUserLimitsAsync(accountId, request.ValidDays, request.SpendLimitCny, cancellationToken);
+    if (updated)
+    {
+        await store.RecordAdminAccountAuditEventAsync(
+            CurrentAccountId(context),
+            "user_limits_updated",
+            accountId,
+            new { valid_days = request.ValidDays, spend_limit_cny = request.SpendLimitCny },
+            cancellationToken);
+    }
+
+    return updated ? Results.Ok(new { accountId, validDays = request.ValidDays, spendLimitCny = request.SpendLimitCny }) : Results.NotFound(new { error = "user_not_found" });
 });
 
 app.MapGet("/api/admin/users", async (

@@ -871,9 +871,14 @@ public sealed class PrototypeWorkflowTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
-        run!.LlmGateway.Should().Be("new-api");
-        run.LlmModel.Should().Be("codex");
+        run!.LlmGateway.Should().Be("codex-cli");
+        run.LlmModel.Should().Be(PrototypeModelPolicy.Normalize(null));
+        run.LlmCostJson.Should().Contain("calls");
         run.LlmCostJson.Should().Contain("estimated_cost_cny");
+        run.LlmCostJson.Should().Contain("billing_source");
+        run.LlmCostJson.Should().Contain("codex-cli");
+        run.LlmCostJson.Should().Contain("usage_status");
+        run.LlmCostJson.Should().Contain("unknown");
     }
 
     [Fact]

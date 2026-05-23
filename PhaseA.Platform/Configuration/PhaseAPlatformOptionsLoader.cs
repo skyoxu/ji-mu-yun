@@ -40,6 +40,16 @@ public static class PhaseAPlatformOptionsLoader
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
         var userTokenHash = GetOptionalString(get, "PHASEA_USER_TOKEN_HASH");
+        var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
+        var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
+        var aiCodeMirrorCookie = GetOptionalString(get, "AICODEMIRROR_COOKIE");
+        var aiCodeMirrorApiKeyName = GetOptionalString(get, "AICODEMIRROR_API_KEY_NAME");
+        var aiCodeMirrorCodexHomeRoot = NormalizeDirectoryPath(
+            GetString(
+                get,
+                "AICODEMIRROR_CODEX_HOME_ROOT",
+                Path.Combine(Path.GetDirectoryName(metadataDatabasePath) ?? AppContext.BaseDirectory, "aicodemirror-codex-homes")),
+            "AICODEMIRROR_CODEX_HOME_ROOT");
 
         return new PhaseAPlatformOptions(
             workspaceRoot,
@@ -61,7 +71,12 @@ public static class PhaseAPlatformOptionsLoader
             adminUsername,
             adminPasswordHash,
             adminTokenHash,
-            userTokenHash);
+            userTokenHash,
+            aiCodeMirrorBillingEnabled,
+            aiCodeMirrorBaseUrl,
+            aiCodeMirrorCookie,
+            aiCodeMirrorApiKeyName,
+            aiCodeMirrorCodexHomeRoot);
     }
 
     private static string GetString(Func<string, string?> get, string name, string defaultValue)
@@ -111,6 +126,22 @@ public static class PhaseAPlatformOptionsLoader
         }
 
         return parsed;
+    }
+
+    private static bool GetBool(Func<string, string?> get, string name, bool defaultValue)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        if (bool.TryParse(value.Trim(), out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new PhaseAPlatformConfigException($"{name} must be true or false.");
     }
 
     private static string ValidateAbsoluteUrl(string value, string name)

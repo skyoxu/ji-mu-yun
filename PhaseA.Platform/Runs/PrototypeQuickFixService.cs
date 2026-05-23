@@ -21,6 +21,8 @@ public sealed class PrototypeQuickFixService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly PrototypeContractService _contractService;
+    private readonly IAiCodeMirrorBillingClient _billingClient;
+    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeQuickFixService(
@@ -38,7 +40,7 @@ public sealed class PrototypeQuickFixService
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
         TimeSpan? executionTimeout)
-        : this(metadataStore, options, processRunner, workspaceSeeder, skillActionCatalog, new PrototypeContractService(), executionTimeout)
+        : this(metadataStore, options, processRunner, workspaceSeeder, skillActionCatalog, new PrototypeContractService(), executionTimeout: executionTimeout)
     {
     }
 
@@ -49,6 +51,8 @@ public sealed class PrototypeQuickFixService
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
         PrototypeContractService? contractService = null,
+        IAiCodeMirrorBillingClient? billingClient = null,
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null)
     {
         _metadataStore = metadataStore;
@@ -57,6 +61,8 @@ public sealed class PrototypeQuickFixService
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
         _contractService = contractService ?? new PrototypeContractService();
+        _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
+        _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -184,7 +190,11 @@ public sealed class PrototypeQuickFixService
             var prototypeContract = _contractService.Read(project);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract);
             await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(BuildCodexCommand(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath), timeout.Token);
+            var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+            var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+            var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
+            var codexResult = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexCommand(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath), runtimeCredential), timeout.Token);
+            var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             if (executionWorkspace.SyncBack)
             {
                 SyncFocusedWorkspaceBack(executionWorkspace, project.RepoPath);
@@ -281,6 +291,23 @@ public sealed class PrototypeQuickFixService
                 godot_smoke_validation = godotSmokeValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
+            await _metadataStore.RecordRunLlmAuditAsync(
+                runId,
+                "codex-cli",
+                null,
+                model,
+                LlmUsageAuditJson.BuildCodexUsageJson(
+                    operation: RunType,
+                    model: model,
+                    tokenUsage: CodexUsageExtractor.Extract(codexResult.Stdout, codexResult.Stderr),
+                    runType: RunType,
+                    projectId: project.ProjectId,
+                    skillActionId: skillAction?.ActionId,
+                    skillName: skillAction?.SkillName,
+                    route: targetGoal is null ? "quick-fix" : "needs-fix",
+                    exitCode: codexResult.ExitCode,
+                    providerBilling: providerBilling),
+                CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null && goalRepairOutcome is not null)
             {
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(
@@ -561,6 +588,30 @@ public sealed class PrototypeQuickFixService
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
     }
 
+    private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
+    {
+        return await (_keyPoolService?.ResolveKeyNameForAccountAsync(accountId, cancellationToken) ?? Task.FromResult<string?>(null))
+               ?? accountId;
+    }
+
+    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
+    {
+        if (_keyPoolService is null)
+        {
+            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
+        }
+
+        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
+        return credential.BillingKeyName is null && credential.CodexHomePath is null
+            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
+            : credential;
+    }
+
+    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
+    {
+        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
+    }
+
     private static string BuildSubmittedFeedback(
         ProjectSnapshot project,
         string runId,
@@ -600,6 +651,7 @@ public sealed class PrototypeQuickFixService
         var arguments = new List<string>
         {
             "exec",
+            "--json",
             "--sandbox",
             "workspace-write",
             "-m",

@@ -30,6 +30,7 @@ public sealed class SqliteMetadataSchemaTests
             "project_limits",
             "runner_locks",
             "account_llm_bindings",
+            "aicodemirror_key_pool",
             "project_chat_messages",
             "admin_account_audit_events",
             "project_prototype_drafts",
@@ -75,6 +76,88 @@ public sealed class SqliteMetadataSchemaTests
         resolved.IsAdmin.Should().BeFalse();
         resolved.IsDisabled.Should().BeFalse();
         projectLimit.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task AiCodeMirrorKeyPool_ImportsAndAssignsKeysToAccounts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var first = await store.CreateUserAccountAsync("key-user-one", 1);
+        var second = await store.CreateUserAccountAsync("key-user-two", 1);
+        await store.UpsertAiCodeMirrorKeyAsync(new AiCodeMirrorKeyImportCommand("upstream-key-one", CredentialImported: true));
+        await store.UpsertAiCodeMirrorKeyAsync(new AiCodeMirrorKeyImportCommand("upstream-key-two", CredentialImported: true));
+
+        var assigned = await store.AssignAiCodeMirrorKeyToAccountAsync("upstream-key-one", first.AccountId);
+        var conflict = await store.AssignAiCodeMirrorKeyToAccountAsync("upstream-key-one", second.AccountId);
+        var reassigned = await store.AssignAiCodeMirrorKeyToAccountAsync("upstream-key-two", first.AccountId);
+        var keys = await store.ListAiCodeMirrorKeysAsync();
+
+        assigned.Succeeded.Should().BeTrue();
+        assigned.Entry!.AccountId.Should().Be(first.AccountId);
+        conflict.Succeeded.Should().BeFalse();
+        conflict.FailureCode.Should().Be("aicodemirror_key_already_assigned");
+        reassigned.Succeeded.Should().BeTrue();
+        reassigned.Entry!.KeyName.Should().Be("upstream-key-two");
+        keys.Should().Contain(item => item.KeyName == "upstream-key-one" && item.AccountId == null && item.Status == "available");
+        keys.Should().Contain(item => item.KeyName == "upstream-key-two" && item.AccountId == first.AccountId && item.Status == "assigned");
+    }
+
+    [Fact]
+    public async Task AiCodeMirrorKeyPool_ImportedApiKeyCreatesIsolatedCodexHome()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var codexHomeRoot = Path.Combine(Path.GetTempPath(), "phasea-test-codex-home", Guid.NewGuid().ToString("N"));
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["AICODEMIRROR_CODEX_HOME_ROOT"] = codexHomeRoot
+        });
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var user = await store.CreateUserAccountAsync("key-user-runtime", 1);
+        var keyPool = new AiCodeMirrorKeyPoolService(store, options);
+
+        var imported = await keyPool.ImportAsync(new AiCodeMirrorKeyImportRequest(
+            KeyName: "runtime-key-one",
+            ApiKey: "sk-test-runtime-secret",
+            Notes: "runtime credential"));
+        var assigned = await keyPool.AssignAsync(new AiCodeMirrorKeyAssignRequest(user.AccountId, "runtime-key-one"));
+        var credential = await keyPool.ResolveRuntimeCredentialForAccountAsync(user.AccountId);
+
+        imported.Should().NotBeNull();
+        assigned.Succeeded.Should().BeTrue();
+        credential.Ready.Should().BeTrue();
+        credential.BillingKeyName.Should().Be("runtime-key-one");
+        credential.CodexHomePath.Should().NotBeNullOrWhiteSpace();
+        File.Exists(Path.Combine(credential.CodexHomePath!, "auth.json")).Should().BeTrue();
+        File.Exists(Path.Combine(credential.CodexHomePath!, "config.toml")).Should().BeTrue();
+        (await store.ListAiCodeMirrorKeysAsync()).Should().OnlyContain(item => !item.ToString()!.Contains("sk-test-runtime-secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateUserAccountAsync_WhenRequired_AssignsNextAvailableAiCodeMirrorKey()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        await store.UpsertAiCodeMirrorKeyAsync(new AiCodeMirrorKeyImportCommand("first-key", CredentialImported: true));
+        await store.UpsertAiCodeMirrorKeyAsync(new AiCodeMirrorKeyImportCommand("second-key", CredentialImported: true));
+
+        var user = await store.CreateUserAccountAsync("auto-key-user", 1, validDays: 7, spendLimitCny: 12.5m, requireAiCodeMirrorKey: true);
+        var keys = await store.ListAiCodeMirrorKeysAsync();
+        var users = await store.ListAccountsAsync();
+
+        user.AiCodeMirrorKeyName.Should().Be("first-key");
+        user.ValidUntilUtc.Should().NotBeNullOrWhiteSpace();
+        user.SpendLimitCny.Should().Be(12.5m);
+        keys.Should().Contain(item => item.KeyName == "first-key" && item.AccountId == user.AccountId && item.Status == "assigned");
+        users.Should().Contain(item => item.AccountId == user.AccountId && item.AiCodeMirrorKeyName == "first-key" && item.SpendLimitCny == 12.5m);
     }
 
     [Fact]

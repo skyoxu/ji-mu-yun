@@ -49,6 +49,37 @@ public sealed class LlmStopLossServiceTests
         decision.FailureCode.Should().Be("llm_daily_stop_loss_exceeded");
     }
 
+    [Fact]
+    public async Task RecordRunLlmAuditAsync_AppendsMultipleLlmCalls_AndStopLossSumsMergedCost()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["LLM_COST_STOP_LOSS_PER_RUN_CNY"] = "2.00",
+            ["LLM_COST_STOP_LOSS_DAILY_ACCOUNT_CNY"] = "2.00"
+        });
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.RecordRunLlmAuditAsync(runId, "new-api", null, "gpt-5.4", """{"billing_source":"new-api","estimated_cost_cny":1.25,"model":"gpt-5.4"}""");
+        await store.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            "gpt-5.5",
+            LlmUsageAuditJson.BuildCodexUsageJson("prototype-7day-playable", "gpt-5.5"));
+        var run = await store.GetRunSnapshotAsync(runId);
+        var service = new LlmStopLossService(store, options);
+
+        var decision = await service.CheckAsync(accountId, new LlmCostEstimate(0.80m));
+
+        run!.LlmCostJson.Should().Contain("calls").And.Contain("new-api").And.Contain("codex-cli");
+        decision.Allowed.Should().BeFalse();
+        decision.FailureCode.Should().Be("llm_daily_stop_loss_exceeded");
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());

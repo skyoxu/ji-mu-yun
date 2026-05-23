@@ -213,7 +213,18 @@ public sealed class BrowserUiRenderer
                     <h2>Account Admin</h2>
                     <label>Username <input id="newUsername" placeholder="phaseb-user"></label>
                     <label>Project limit <input id="newUserProjectLimit" type="number" min="1" value="2"></label>
+                    <label>User valid days <input id="newUserValidDays" type="number" min="1" placeholder="blank = no expiry"></label>
+                    <label>User spend limit CNY <input id="newUserSpendLimitCny" type="number" min="0" step="0.01" placeholder="blank = no limit"></label>
                     <button id="createUserAccount" class="secondary" data-global-action="true">Create user token</button>
+                    <hr>
+                    <h3>AiCodeMirror API Key Pool</h3>
+                    <p class="muted">CSV columns: key_name, api_key, description, valid_days. The api_key column is required for real per-user Codex execution.</p>
+                    <input id="aicodemirrorKeyCsv" type="file" accept=".csv,text/csv">
+                    <button id="downloadAiCodeMirrorKeyTemplate" class="ghost">Download key CSV template</button>
+                    <button id="importAiCodeMirrorKeyCsv" class="secondary" data-global-action="true">Import key CSV</button>
+                    <button id="refreshAiCodeMirrorKeys" class="ghost">Refresh key pool</button>
+                    <div id="aicodemirrorKeyImportResult" class="card muted">No key CSV imported.</div>
+                    <div id="aicodemirrorKeyPool" class="card-list"></div>
                     <button id="refreshUserAccounts" class="ghost">Refresh users</button>
                     <button id="loadAdminLlmUsage" class="ghost">Load admin LLM usage</button>
                     <button id="downloadAdminLlmUsageCsv" class="ghost">Download admin LLM usage CSV</button>
@@ -820,6 +831,7 @@ public sealed class BrowserUiRenderer
                   loadLlmUsage();
                   if (isAdmin) {
                     loadUserAccounts();
+                    loadAiCodeMirrorKeys();
                     loadAdminLlmUsage();
                     loadAdminLlmRuns();
                     loadAccountAudit();
@@ -937,15 +949,21 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   const username = $("newUsername").value.trim();
                   const projectLimit = Number($("newUserProjectLimit").value || "2");
+                  const validDaysRaw = $("newUserValidDays").value.trim();
+                  const spendLimitRaw = $("newUserSpendLimitCny").value.trim();
+                  const validDays = validDaysRaw ? Number(validDaysRaw) : null;
+                  const spendLimitCny = spendLimitRaw ? Number(spendLimitRaw) : null;
                   if (!username) return out("Username is required.");
                   if (!Number.isFinite(projectLimit) || projectLimit < 1) return out("Project limit must be greater than zero.");
+                  if (validDays !== null && (!Number.isFinite(validDays) || validDays < 1)) return out("User valid days must be blank or greater than zero.");
+                  if (spendLimitCny !== null && (!Number.isFinite(spendLimitCny) || spendLimitCny < 0)) return out("User spend limit must be blank or non-negative.");
                   setLocalBusy(true);
                   $("createUserAccount").disabled = true;
                   $("createUserAccount").textContent = "Creating...";
                   try {
                     const result = await api("/api/admin/users", {
                       method: "POST",
-                      body: JSON.stringify({ username, projectLimit })
+                      body: JSON.stringify({ username, projectLimit, validDays, spendLimitCny })
                     });
                     $("createUserAccountResult").className = "card";
                     $("createUserAccountResult").innerHTML = `
@@ -953,6 +971,9 @@ public sealed class BrowserUiRenderer
                       <p>username: ${escapeHtml(result.username)}</p>
                       <p>accountId: ${escapeHtml(result.accountId)}</p>
                       <p>projectLimit: ${escapeHtml(result.projectLimit)}</p>
+                      <p>validUntilUtc: ${escapeHtml(result.validUntilUtc || "no expiry")}</p>
+                      <p>spendLimitCny: ${escapeHtml(result.spendLimitCny ?? "no limit")}</p>
+                      <p>assignedAiCodeMirrorKey: ${escapeHtml(result.aiCodeMirrorKeyName || "")}</p>
                       <p>token: <code>${escapeHtml(result.token)}</code></p>
                     `;
                     out(result);
@@ -972,15 +993,27 @@ public sealed class BrowserUiRenderer
                 async function loadUserAccounts() {
                   if (state.role !== "admin") return;
                   try {
-                    const result = await api("/api/admin/users");
+                    const [result, usage] = await Promise.all([
+                      api("/api/admin/users"),
+                      api("/api/admin/llm-usage").catch(() => ({ accounts: [] }))
+                    ]);
                     const users = result.users || [];
+                    const usageByAccount = new Map((usage.accounts || []).map(item => [item.accountId, item]));
                     $("userAccounts").innerHTML = users.map(user => `
                       <div class="card">
                         <strong>${escapeHtml(user.username)}${user.isAdmin ? " · admin" : ""}${user.isDisabled ? " · disabled" : ""}</strong>
                         <p class="muted">accountId: ${escapeHtml(user.accountId)}</p>
                         <p class="muted">projects: ${escapeHtml(user.projectCount)} / ${escapeHtml(user.projectLimit)}</p>
+                        <p class="muted">validUntilUtc: ${escapeHtml(user.validUntilUtc || "no expiry")} · spendLimitCny: ${escapeHtml(user.spendLimitCny ?? "no limit")}</p>
+                        ${renderUserLlmUsage(user, usageByAccount.get(user.accountId))}
+                        <p class="muted">AiCodeMirror key: ${escapeHtml(user.aiCodeMirrorKeyName || "not assigned")}</p>
                         <p class="muted">created: ${escapeHtml(user.createdUtc)}</p>
                         ${user.isAdmin ? "" : `
+                          <div class="split-actions">
+                            <input data-user-valid-days="${escapeHtml(user.accountId)}" type="number" min="1" placeholder="valid days">
+                            <input data-user-spend-limit="${escapeHtml(user.accountId)}" type="number" min="0" step="0.01" placeholder="spend CNY">
+                            <button class="ghost" data-user-limits="${escapeHtml(user.accountId)}">Update limits</button>
+                          </div>
                           <div class="split-actions">
                             <button class="ghost" data-user-status="${escapeHtml(user.accountId)}" data-disabled="${user.isDisabled ? "false" : "true"}">${user.isDisabled ? "Enable user" : "Disable user"}</button>
                             <button class="secondary" data-user-rotate="${escapeHtml(user.accountId)}">Rotate token</button>
@@ -994,9 +1027,26 @@ public sealed class BrowserUiRenderer
                     document.querySelectorAll("[data-user-rotate]").forEach(button => {
                       button.onclick = () => rotateUserToken(button.dataset.userRotate);
                     });
+                    document.querySelectorAll("[data-user-limits]").forEach(button => {
+                      button.onclick = () => updateUserLimits(button.dataset.userLimits);
+                    });
                   } catch (error) {
                     $("userAccounts").innerHTML = "<p class='danger'>Failed to load users.</p>";
                   }
+                }
+
+                function renderUserLlmUsage(user, usage) {
+                  const callCount = Number(usage?.callCount || 0);
+                  const cost = Number(usage?.estimatedCostCny || 0);
+                  const limitRaw = user.spendLimitCny;
+                  const hasLimit = limitRaw !== null && limitRaw !== undefined && limitRaw !== "";
+                  const limit = hasLimit ? Number(limitRaw) : null;
+                  const remaining = hasLimit && Number.isFinite(limit) ? Math.max(0, limit - cost) : null;
+                  const overLimit = hasLimit && Number.isFinite(limit) && cost >= limit;
+                  return `
+                    <p class="${overLimit ? "danger" : "muted"}">today LLM: ${escapeHtml(callCount)} calls / CNY ${escapeHtml(cost.toFixed(4))}</p>
+                    <p class="muted">today remaining: ${escapeHtml(remaining === null ? "no limit" : `CNY ${remaining.toFixed(4)}`)}</p>
+                  `;
                 }
 
                 async function loadLlmBinding() {
@@ -1241,6 +1291,101 @@ public sealed class BrowserUiRenderer
                   } finally {
                     setLocalBusy(false);
                   }
+                }
+
+                async function updateUserLimits(accountId) {
+                  if (!guardGlobalAction()) return;
+                  const validInput = document.querySelector(`[data-user-valid-days="${CSS.escape(accountId)}"]`);
+                  const spendInput = document.querySelector(`[data-user-spend-limit="${CSS.escape(accountId)}"]`);
+                  const validDaysRaw = validInput?.value?.trim() || "";
+                  const spendLimitRaw = spendInput?.value?.trim() || "";
+                  const validDays = validDaysRaw ? Number(validDaysRaw) : null;
+                  const spendLimitCny = spendLimitRaw ? Number(spendLimitRaw) : null;
+                  if (validDays !== null && (!Number.isFinite(validDays) || validDays < 1)) return out("Valid days must be blank or greater than zero.");
+                  if (spendLimitCny !== null && (!Number.isFinite(spendLimitCny) || spendLimitCny < 0)) return out("Spend limit must be blank or non-negative.");
+                  setLocalBusy(true);
+                  try {
+                    const result = await api(`/api/admin/users/${encodeURIComponent(accountId)}/limits`, {
+                      method: "POST",
+                      body: JSON.stringify({ validDays, spendLimitCny })
+                    });
+                    $("createUserAccountResult").className = "card";
+                    $("createUserAccountResult").textContent = "User limits updated.";
+                    out(result);
+                    await loadUserAccounts();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                  }
+                }
+
+                async function loadAiCodeMirrorKeys() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const result = await api("/api/admin/aicodemirror-keys");
+                    const keys = result.keys || [];
+                    $("aicodemirrorKeyPool").innerHTML = keys.map(key => `
+                      <div class="card">
+                        <strong>${escapeHtml(key.keyName)} · ${escapeHtml(key.status)}</strong>
+                        <p class="muted">accountId: ${escapeHtml(key.accountId || "unassigned")}</p>
+                        <p class="muted">validDays: ${escapeHtml(key.validDays ?? "unlimited")} · expiresUtc: ${escapeHtml(key.expiresUtc || "no expiry")}</p>
+                        <p class="muted">credentialImported: ${escapeHtml(key.credentialImported ? "yes" : "no")}</p>
+                        <p>${escapeHtml(key.notes || "")}</p>
+                      </div>
+                    `).join("") || "<p class='muted'>No AiCodeMirror keys imported.</p>";
+                  } catch (error) {
+                    $("aicodemirrorKeyPool").innerHTML = "<p class='danger'>Failed to load AiCodeMirror keys.</p>";
+                  }
+                }
+
+                async function importAiCodeMirrorKeyCsv() {
+                  if (!guardGlobalAction()) return;
+                  const file = $("aicodemirrorKeyCsv").files?.[0];
+                  if (!file) return out("Please choose a CSV file first.");
+                  setLocalBusy(true);
+                  $("importAiCodeMirrorKeyCsv").disabled = true;
+                  $("importAiCodeMirrorKeyCsv").textContent = "Importing...";
+                  try {
+                    const csv = await file.text();
+                    const response = await fetch("/api/admin/aicodemirror-keys/import-csv", {
+                      method: "POST",
+                      headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "text/csv; charset=utf-8" },
+                      body: csv,
+                      cache: "no-store"
+                    });
+                    const result = await response.json();
+                    if (!response.ok && response.status !== 207) throw { status: response.status, payload: result };
+                    $("aicodemirrorKeyImportResult").className = result.errors?.length ? "card danger" : "card";
+                    $("aicodemirrorKeyImportResult").innerHTML = `<strong>Imported: ${escapeHtml(result.imported || 0)}</strong><p>${escapeHtml((result.errors || []).join("; ") || "ok")}</p>`;
+                    out(result);
+                    await loadAiCodeMirrorKeys();
+                  } catch (error) {
+                    $("aicodemirrorKeyImportResult").className = "card danger";
+                    $("aicodemirrorKeyImportResult").textContent = error?.payload?.error || "aicodemirror_key_csv_import_failed";
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    $("importAiCodeMirrorKeyCsv").disabled = false;
+                    $("importAiCodeMirrorKeyCsv").textContent = "Import key CSV";
+                  }
+                }
+
+                async function downloadAiCodeMirrorKeyTemplate() {
+                  const response = await fetch("/api/admin/aicodemirror-keys/template.csv", {
+                    headers: { "Authorization": `Bearer ${token()}` },
+                    cache: "no-store"
+                  });
+                  if (!response.ok) return out("Failed to download key CSV template.");
+                  const blob = await response.blob();
+                  const url = URL.createObjectURL(blob);
+                  const anchor = document.createElement("a");
+                  anchor.href = url;
+                  anchor.download = "aicodemirror-key-template.csv";
+                  document.body.appendChild(anchor);
+                  anchor.click();
+                  anchor.remove();
+                  URL.revokeObjectURL(url);
                 }
 
                 async function submitFormalFeedback() {
@@ -2564,6 +2709,9 @@ public sealed class BrowserUiRenderer
                 $("refreshProjects").onclick = refreshProjects;
                 $("createProject").onclick = createProject;
                 $("createUserAccount").onclick = createUserAccount;
+                $("downloadAiCodeMirrorKeyTemplate").onclick = downloadAiCodeMirrorKeyTemplate;
+                $("importAiCodeMirrorKeyCsv").onclick = importAiCodeMirrorKeyCsv;
+                $("refreshAiCodeMirrorKeys").onclick = loadAiCodeMirrorKeys;
                 $("refreshUserAccounts").onclick = loadUserAccounts;
                 $("loadAdminLlmUsage").onclick = loadAdminLlmUsage;
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;

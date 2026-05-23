@@ -31,6 +31,41 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "accounts",
+            "valid_until_utc",
+            "ALTER TABLE accounts ADD COLUMN valid_until_utc TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "accounts",
+            "spend_limit_cny",
+            "ALTER TABLE accounts ADD COLUMN spend_limit_cny TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "aicodemirror_key_pool",
+            "valid_days",
+            "ALTER TABLE aicodemirror_key_pool ADD COLUMN valid_days INTEGER NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "aicodemirror_key_pool",
+            "expires_utc",
+            "ALTER TABLE aicodemirror_key_pool ADD COLUMN expires_utc TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "aicodemirror_key_pool",
+            "credential_imported",
+            "ALTER TABLE aicodemirror_key_pool ADD COLUMN credential_imported INTEGER NOT NULL DEFAULT 0;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "projects",
             "llm_binding_required",
             "ALTER TABLE projects ADD COLUMN llm_binding_required INTEGER NOT NULL DEFAULT 0;",
@@ -322,6 +357,22 @@ public static class SqliteMetadataSchema
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS aicodemirror_key_pool (
+            id TEXT PRIMARY KEY,
+            key_name TEXT NOT NULL UNIQUE,
+            account_id TEXT NULL UNIQUE,
+            status TEXT NOT NULL DEFAULT 'available',
+            notes TEXT NULL,
+            valid_days INTEGER NULL,
+            expires_utc TEXT NULL,
+            credential_imported INTEGER NOT NULL DEFAULT 0,
+            imported_utc TEXT NOT NULL,
+            assigned_utc TEXT NULL,
+            updated_utc TEXT NOT NULL,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS project_chat_messages (
             id TEXT PRIMARY KEY,
             account_id TEXT NOT NULL,
@@ -439,6 +490,7 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
+        "CREATE INDEX IF NOT EXISTS ix_aicodemirror_key_pool_account ON aicodemirror_key_pool(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_admin_account_audit_events_created ON admin_account_audit_events(created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",

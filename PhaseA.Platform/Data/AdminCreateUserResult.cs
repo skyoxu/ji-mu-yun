@@ -4,4 +4,7 @@ public sealed record AdminCreateUserResult(
     string AccountId,
     string Username,
     string Token,
-    int ProjectLimit);
+    int ProjectLimit,
+    string? ValidUntilUtc = null,
+    decimal? SpendLimitCny = null,
+    string? AiCodeMirrorKeyName = null);

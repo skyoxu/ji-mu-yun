@@ -26,6 +26,8 @@ public sealed class PrototypeWorkflowService
     private readonly GameTypeTemplateCatalog _templateCatalog;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly IAiCodeMirrorBillingClient _billingClient;
+    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -52,7 +54,9 @@ public sealed class PrototypeWorkflowService
         IProjectWorkspaceSeeder workspaceSeeder,
         GameTypeTemplateCatalog templateCatalog,
         PrototypeRouteStateWriter? routeStateWriter = null,
-        PrototypeContractService? contractService = null)
+        PrototypeContractService? contractService = null,
+        IAiCodeMirrorBillingClient? billingClient = null,
+        AiCodeMirrorKeyPoolService? keyPoolService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -66,6 +70,8 @@ public sealed class PrototypeWorkflowService
         _templateCatalog = templateCatalog;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _contractService = contractService ?? new PrototypeContractService();
+        _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
+        _keyPoolService = keyPoolService;
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -117,7 +123,11 @@ public sealed class PrototypeWorkflowService
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", cancellationToken);
         await AdvancePrototypeStepsAsync(runId, cancellationToken);
 
-        var process = await _processRunner.RunAsync(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), cancellationToken);
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
+        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential), cancellationToken);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(project.RepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
             ? ValidateCompletedPrototypeState(project.RepoPath, slug)
@@ -166,6 +176,22 @@ public sealed class PrototypeWorkflowService
                 LlmStopLossService.BuildCostJson(llmEstimate, stopLoss),
                 cancellationToken);
         }
+
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            PrototypeModelPolicy.Normalize(request.Model),
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: PrototypeModelPolicy.Normalize(request.Model),
+                tokenUsage: CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+                runType: RunType,
+                projectId: project.ProjectId,
+                route: "prototype",
+                exitCode: exitCode,
+                providerBilling: providerBilling),
+            cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
 
@@ -352,7 +378,14 @@ public sealed class PrototypeWorkflowService
 
         _workspaceSeeder.EnsureSeeded(projectRepoPath);
         EnsureGameTypeTemplateBaseline(projectRepoPath, request);
-        var process = await _processRunner.RunAsync(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), CancellationToken.None);
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
+        var runtimeCredential = project is null
+            ? new AiCodeMirrorRuntimeCredential(projectId, null, null)
+            : await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? projectId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
+        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(projectRepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
             ? ValidateCompletedPrototypeState(projectRepoPath, slug)
@@ -384,7 +417,6 @@ public sealed class PrototypeWorkflowService
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
         if (project is not null)
         {
             WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, prototypeContractPath, slug, validation, smoke);
@@ -394,6 +426,21 @@ public sealed class PrototypeWorkflowService
             status,
             "",
             status == "succeeded" ? "原型路线已完成。" : "原型路线失败，请查看运行记录错误输出。",
+            CancellationToken.None);
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            PrototypeModelPolicy.Normalize(request.Model),
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: PrototypeModelPolicy.Normalize(request.Model),
+                tokenUsage: CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+                runType: RunType,
+                projectId: projectId,
+                route: "prototype",
+                exitCode: exitCode,
+                providerBilling: providerBilling),
             CancellationToken.None);
     }
 
@@ -438,7 +485,11 @@ public sealed class PrototypeWorkflowService
             Confirm: true,
             ScoreEngine: "deterministic",
             Model: model);
-        var process = await _processRunner.RunAsync(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), CancellationToken.None);
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
+        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ReadSlugFromPrototypeRecord(projectRepoPath, prototypeRecordPath)
             ?? effectiveSlug;
         var validation = process.ExitCode == 0
@@ -478,6 +529,21 @@ public sealed class PrototypeWorkflowService
             "repair",
             status == "succeeded" ? "原型修复已完成。" : "原型修复失败，请查看新的失败原因。",
             CancellationToken.None);
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            PrototypeModelPolicy.Normalize(model),
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: PrototypeModelPolicy.Normalize(model),
+                tokenUsage: CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+                runType: RunType,
+                projectId: project.ProjectId,
+                route: "prototype-repair",
+                exitCode: exitCode,
+                providerBilling: providerBilling),
+            CancellationToken.None);
     }
 
     private async Task RunPostValidationRepairQueuedAsync(
@@ -494,9 +560,13 @@ public sealed class PrototypeWorkflowService
         var previousRepairState = _routeStateWriter.ReadLatestPrototypeRepairState(project);
         var outputPath = CreateShortRuntimeOutputPath(runId);
         var normalizedModel = PrototypeModelPolicy.Normalize(model);
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
         var codexResult = await _processRunner.RunAsync(
-            BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract), outputPath, normalizedModel, project.RepoPath),
+            ApplyCodexRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
             CancellationToken.None);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var codexOutput = File.Exists(outputPath)
             ? await File.ReadAllTextAsync(outputPath, Encoding.UTF8, CancellationToken.None)
             : "";
@@ -544,6 +614,21 @@ public sealed class PrototypeWorkflowService
             "repair",
             status == "succeeded" ? "原型后置验收修复已完成。" : "原型后置验收修复失败，请查看新的失败原因。",
             CancellationToken.None);
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            normalizedModel,
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: normalizedModel,
+                tokenUsage: CodexUsageExtractor.Extract(codexResult.Stdout, codexResult.Stderr),
+                runType: RunType,
+                projectId: project.ProjectId,
+                route: "prototype-post-validation-repair",
+                exitCode: exitCode,
+                providerBilling: providerBilling),
+            CancellationToken.None);
     }
 
     private async Task AdvancePrototypeStepsAsync(string runId, CancellationToken cancellationToken)
@@ -565,6 +650,7 @@ public sealed class PrototypeWorkflowService
             ResolveCodexCommand(),
             [
                 "exec",
+                "--json",
                 "--sandbox",
                 "workspace-write",
                 "-m",
@@ -593,6 +679,30 @@ public sealed class PrototypeWorkflowService
         var root = Path.Combine(Path.GetTempPath(), "phasea-prototype-repair", runId);
         Directory.CreateDirectory(root);
         return Path.Combine(root, "codex-output.txt");
+    }
+
+    private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
+    {
+        return await (_keyPoolService?.ResolveKeyNameForAccountAsync(accountId, cancellationToken) ?? Task.FromResult<string?>(null))
+               ?? accountId;
+    }
+
+    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
+    {
+        if (_keyPoolService is null)
+        {
+            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
+        }
+
+        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
+        return credential.BillingKeyName is null && credential.CodexHomePath is null
+            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
+            : credential;
+    }
+
+    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
+    {
+        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
     }
 
     private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)

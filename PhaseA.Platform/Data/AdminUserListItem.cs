@@ -7,4 +7,7 @@ public sealed record AdminUserListItem(
     bool IsDisabled,
     int ProjectLimit,
     int ProjectCount,
-    string CreatedUtc);
+    string CreatedUtc,
+    string? ValidUntilUtc = null,
+    decimal? SpendLimitCny = null,
+    string? AiCodeMirrorKeyName = null);

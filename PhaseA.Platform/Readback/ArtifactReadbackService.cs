@@ -1,5 +1,6 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Workspaces;
 using System.Globalization;
 using System.Text;
@@ -326,26 +327,7 @@ public sealed class ArtifactReadbackService
 
     private static decimal ReadEstimatedCostCny(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return 0m;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(json);
-            if (document.RootElement.TryGetProperty("estimated_cost_cny", out var value) &&
-                value.TryGetDecimal(out var cost))
-            {
-                return cost;
-            }
-        }
-        catch (JsonException)
-        {
-            return 0m;
-        }
-
-        return 0m;
+        return LlmUsageAuditJson.SumEstimatedCostCny(json);
     }
 
     private static string Csv(string? value)

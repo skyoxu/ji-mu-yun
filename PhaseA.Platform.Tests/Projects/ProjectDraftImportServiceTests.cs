@@ -234,7 +234,7 @@ public sealed class ProjectDraftImportServiceTests
 
         public string? LastPrompt { get; private set; }
 
-        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt, CancellationToken cancellationToken = default)
+        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt, string? billingApiKeyName = null, CancellationToken cancellationToken = default)
         {
             LastPrompt = prompt;
             return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));

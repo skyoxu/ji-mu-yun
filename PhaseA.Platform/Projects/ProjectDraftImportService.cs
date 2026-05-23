@@ -97,7 +97,7 @@ public sealed class ProjectDraftImportService
             await SaveDraftAsync(project.ProjectId, fallback with { Status = "running" }, cancellationToken);
             var prompt = BuildAnalysisPrompt(project, text);
             var normalizedModel = Runs.PrototypeModelPolicy.Normalize(model);
-            var completion = await _codexChatClient.CompleteAsync(project.RepoPath, normalizedModel, prompt, cancellationToken);
+            var completion = await _codexChatClient.CompleteAsync(project.RepoPath, normalizedModel, prompt, project.AccountId, cancellationToken);
             var analyzed = completion.Succeeded
                 ? MergeCodexAnalysis(fallback, completion.AssistantMessage)
                 : fallback with { Warnings = fallback.Warnings.Append(completion.FailureCode ?? "llm_analysis_failed").ToArray() };
@@ -114,6 +114,21 @@ public sealed class ProjectDraftImportService
                 failure_code = completion.FailureCode
             });
             await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, completion.AssistantMessage ?? "", completion.Stderr + completion.Stdout, evidenceJson, cancellationToken);
+            await _metadataStore.RecordRunLlmAuditAsync(
+                runId,
+                "codex-cli",
+                null,
+                normalizedModel,
+                LlmUsageAuditJson.BuildCodexUsageJson(
+                    operation: RunType,
+                    model: normalizedModel,
+                    tokenUsage: completion.TokenUsage ?? new CodexTokenUsage(null, null, null),
+                    runType: RunType,
+                    projectId: project.ProjectId,
+                    failureCode: completion.FailureCode,
+                    exitCode: completion.ExitCode,
+                    providerBilling: completion.ProviderBilling),
+                cancellationToken);
             var persisted = analyzed with { Status = status, FailureCode = status == "succeeded" ? analyzed.FailureCode : completion.FailureCode ?? "llm_analysis_failed" };
             await SaveDraftAsync(project.ProjectId, persisted, cancellationToken);
             return persisted;
