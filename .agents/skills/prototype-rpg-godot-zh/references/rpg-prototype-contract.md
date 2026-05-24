@@ -13,6 +13,16 @@ This contract defines the default implementation expectations for a short playab
 
 ## Required Systems
 
+### User Input Traceability
+
+- The project prototype contract is the first source of truth for RPG runtime behavior.
+- `form_fields` and `input_traceability` from the project contract override this RPG contract whenever the user supplied a concrete value.
+- RPG defaults, template scenes, default assets, and example balance values are fallback aids only. They must not replace concrete user values from the project contract.
+- Encounter probability, movement rules, enemy stats, reward rules, map objectives, victory conditions, failure conditions, player fantasy, and the minimum playable loop must be derived from the user fields when those fields are non-empty.
+- If the user says each movement increases encounter chance by a concrete value, that value must appear in runtime logic, visible feedback, tests, or an explicit needs-fix blocker.
+- If the user gives enemy health, attack, reward, or win/fail rules, those concrete values must appear in battle logic, UI/state text, tests, or an explicit needs-fix blocker.
+- A final RPG acceptance pass must fail when a concrete non-empty user field exists only in markdown or metadata and is not represented in scene flow, runtime behavior, UI feedback, test coverage, or a recorded needs-fix reason.
+
 ### Map Scene
 
 - A bounded playable map scene suitable for a short prototype loop.

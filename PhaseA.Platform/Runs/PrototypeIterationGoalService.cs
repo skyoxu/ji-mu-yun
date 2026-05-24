@@ -91,6 +91,12 @@ public sealed class PrototypeIterationGoalService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, "", routeSkill.FailureCode, routeSkill.FailureMessage, nextGoal.GoalIndex, true, details.Session.Status);
+        }
+
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)

@@ -81,6 +81,12 @@ public sealed class PrototypeIterationPlanService
                 []);
         }
         var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
+        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkillAvailability.IsAvailable)
+        {
+            return new PrototypeIterationPlanResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
+        }
+
         var prototypeContract = _contractService.Read(project);
         var goals = BuildGoals(message, sourceKind);
         if (PrototypeRouteSkillPolicy.IsRpgProject(project))
@@ -405,7 +411,7 @@ public sealed class PrototypeIterationPlanService
     {
         return string.IsNullOrWhiteSpace(prototypeContract.Json)
             ? "If the project prototype contract is missing, do not invent form values; mark the goal needs_fix until the contract is restored."
-            : "Use the project prototype contract as hard acceptance input; user form values override type template defaults.";
+            : "Use the project prototype contract and input_traceability as hard acceptance input; every non-empty user field must map to a goal, validation check, or explicit needs_fix blocker, and user form values override type template defaults.";
     }
 
     private static bool IsFinalAcceptanceGoal(PrototypeIterationPlanGoalResult goal)

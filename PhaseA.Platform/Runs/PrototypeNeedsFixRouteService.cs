@@ -50,6 +50,12 @@ public sealed class PrototypeNeedsFixRouteService
             return await RunProjectLevelNeedsFixAsync(project, details, request, cancellationToken);
         }
 
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeNeedsFixRouteResult("", routeSkill.FailureCode, routeSkill.FailureMessage, goal.GoalIndex, details.Session.Status, goal.Status, []);
+        }
+
         var readme = _stateWriter.ReadProjectReadme(project);
         var prototypeContract = _contractService.Read(project);
         var stepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
@@ -120,6 +126,12 @@ public sealed class PrototypeNeedsFixRouteService
         PrototypeNeedsFixRouteRequest request,
         CancellationToken cancellationToken)
     {
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeNeedsFixRouteResult("", routeSkill.FailureCode, routeSkill.FailureMessage, 0, details.Session.Status, null, []);
+        }
+
         var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _contractService.Read(project), _stateWriter.ReadLatestPrototypeState(project));
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.ProjectId,
@@ -206,9 +218,12 @@ public sealed class PrototypeNeedsFixRouteService
             - Platform route or recovery tests passing does not prove a gameplay goal is complete.
 
             Project README:
-            {TrimForPrompt(projectReadme)}
+            {TrimForPrompt(projectReadme, 1000)}
 
-            {PrototypeContractService.BuildPromptBlock(prototypeContract)}
+            Project prototype contract:
+            - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
+            - ContractPath: {prototypeContract.RelativePath}
+            - Rule: the goal-repair executor injects the full contract once; this needs-fix route must still preserve contract traceability and must not override user form values with template defaults.
 
             Current goal:
             - GoalIndex: {goal.GoalIndex}
@@ -218,7 +233,7 @@ public sealed class PrototypeNeedsFixRouteService
             - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary)}
 
             Recovery source consumed: {sourceLabel}
-            {TrimForPrompt(sourceState)}
+            {TrimForPrompt(sourceState, 1000)}
 
             User feedback:
             {userFeedback?.Trim()}
@@ -334,7 +349,7 @@ public sealed class PrototypeNeedsFixRouteService
             : null;
     }
 
-    private static string TrimForPrompt(string value)
+    private static string TrimForPrompt(string value, int maxLength = 4000)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -342,6 +357,6 @@ public sealed class PrototypeNeedsFixRouteService
         }
 
         var trimmed = value.Trim();
-        return trimmed.Length <= 6000 ? trimmed : trimmed[..6000];
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 }

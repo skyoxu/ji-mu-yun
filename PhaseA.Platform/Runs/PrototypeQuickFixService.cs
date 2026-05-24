@@ -129,6 +129,12 @@ public sealed class PrototypeQuickFixService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkillAvailability.IsAvailable)
+        {
+            return new PrototypeFeedbackResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
+        }
+
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)

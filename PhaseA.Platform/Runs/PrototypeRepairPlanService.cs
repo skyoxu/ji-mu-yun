@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Data;
 
@@ -38,21 +39,29 @@ public sealed class PrototypeRepairPlanService
         CancellationToken cancellationToken = default)
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeRepairPlanResult("", routeSkill.FailureCode, routeSkill.FailureMessage, []);
+        }
+
         var failedRun = await FindLatestFailedRunAsync(project.ProjectId, cancellationToken);
         if (failedRun is null)
         {
             return new PrototypeRepairPlanResult("", "missing_failure", "当前项目没有可用于生成修复计划的失败记录。", []);
         }
 
+        var prototypeContract = _contractService.Read(project);
         var failureText = BuildFailureText(failedRun);
-        var goals = BuildRepairGoals(failureText);
+        var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeSkill.Context);
+        var goals = BuildRepairGoals(planContext);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复步骤。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
             project.ProjectId,
             SourceKind,
-            BuildSourceMessage(failedRun, failureText),
-            "Repair the failed prototype route through small isolated repair steps.",
+            BuildSourceMessage(failedRun, failureText, routeSkill.Context),
+            $"Repair the failed prototype route through small isolated repair steps for {routeSkill.Context.RouteSkillId}.",
             goals.Select(goal => new ProjectIterationGoalCreateCommand(
                 goal.GoalIndex,
                 goal.Title,
@@ -62,7 +71,7 @@ public sealed class PrototypeRepairPlanService
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(session.SessionId, "ready", 0, summary, null, null, cancellationToken);
 
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken);
-        _stateWriter.WriteNeedsFixState(project, 0, new
+        _stateWriter.WriteRepairPlanState(project, new
         {
             route = "repair-plan",
             source_kind = SourceKind,
@@ -70,8 +79,8 @@ public sealed class PrototypeRepairPlanService
             session_id = session.SessionId,
             status = "ready",
             summary,
-            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
-            prototype_contract = _contractService.Read(project).RelativePath,
+            route_skill = routeSkill.Context,
+            prototype_contract = prototypeContract.RelativePath,
             goals = goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -110,6 +119,12 @@ public sealed class PrototypeRepairPlanService
         CancellationToken cancellationToken = default)
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeRepairStepExecutionResult("", "", "", routeSkill.FailureCode, routeSkill.FailureMessage, 0, false, routeSkill.FailureCode);
+        }
+
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken);
         if (details is null)
         {
@@ -127,7 +142,7 @@ public sealed class PrototypeRepairPlanService
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, "running", current.ResultSummary, null, cancellationToken);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复步骤 {current.GoalIndex}。", null, null, cancellationToken);
 
-        var feedback = BuildStepFeedback(project, details, current, request.Feedback);
+        var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context);
         var result = await _quickFixService.SubmitAsync(
             project.ProjectId,
             new PrototypeFeedbackRequest(feedback, request.Model, null, null),
@@ -157,7 +172,7 @@ public sealed class PrototypeRepairPlanService
             : $"修复步骤 {current.GoalIndex} 仍需继续修复。";
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(refreshed.Session.SessionId, sessionStatus, current.GoalIndex, summary, null, sessionStatus == "completed" ? DateTimeOffset.UtcNow.ToString("O") : null, CancellationToken.None);
 
-        _stateWriter.WriteNeedsFixState(project, 0, new
+        _stateWriter.WriteRepairPlanState(project, new
         {
             route = "execute-repair-step",
             source_kind = SourceKind,
@@ -201,20 +216,37 @@ public sealed class PrototypeRepairPlanService
             .Trim();
     }
 
-    private static string BuildSourceMessage(RunSnapshot run, string failureText)
+    private static string BuildSourceMessage(RunSnapshot run, string failureText, PrototypeRouteSkillContext routeSkill)
     {
         return JsonSerializer.Serialize(new
         {
             source_run_id = run.RunId,
             source_run_type = run.RunType,
             source_status = run.Status,
+            route_skill = routeSkill.RouteSkillId,
             failure_excerpt = Trim(failureText, 4000)
         });
     }
 
-    private static List<PrototypeRepairGoalResult> BuildRepairGoals(string failureText)
+    private static PrototypeRepairPlanContext BuildPlanContext(
+        ProjectSnapshot project,
+        PrototypeContractSnapshot contract,
+        RunSnapshot failedRun,
+        string failureText,
+        PrototypeRouteSkillContext routeSkill)
     {
-        var text = failureText.ToLowerInvariant();
+        return new PrototypeRepairPlanContext(routeSkill, contract, failedRun, failureText);
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRepairGoals(PrototypeRepairPlanContext context)
+    {
+        return context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh"
+            ? BuildRpgRepairGoals(context)
+            : BuildGenericRepairGoals(context);
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRpgRepairGoals(PrototypeRepairPlanContext context)
+    {
         var goals = new List<PrototypeRepairGoalResult>();
         void Add(string title, string description, string acceptance)
         {
@@ -226,43 +258,170 @@ public sealed class PrototypeRepairPlanService
             goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
         }
 
-        if (text.Contains("no loader found") || text.Contains("non-existent resource") || text.Contains("referenced non-existent resource") || text.Contains("asset"))
-        {
-            Add("修复素材与资源引用", "把缺失资源复制到项目自己的有效资源目录，并把场景资源引用改为项目内资源。", "场景不再引用缺失资源，Godot 加载时不出现资源不存在或 loader 错误。");
-        }
+        Add(
+            "恢复原型运行证据与 TDD 绿灯",
+            BuildRpgEvidenceRepairDescription(context),
+            """
+            This step passes only when the latest run blocker is removed and the prototype route can write its completion/TDD evidence without permission, build, or cache-lock failures.
+            Do not report this step as succeeded if the latest failure evidence still blocks route completion artifacts.
+            """);
 
-        if (text.Contains("start_button_missing") || text.Contains("main_menu") || text.Contains("prototype_main_menu_navigation_failed"))
-        {
-            Add("修复主菜单到原型入口", "确保主菜单原型入口能打开当前 prototype shell 场景。", "点击主菜单原型入口后能进入当前原型 shell，而不是停留在模板主菜单。");
-        }
+        Add(
+            "修复 RPG 场景与节点合同",
+            BuildRpgSceneContractRepairDescription(context),
+            """
+            This step passes only when the current RPG prototype has the required contract-aligned scene structure, including the main prototype shell, MapScene, BattleScene, and required named map/player/enemy asset nodes.
+            Scene/script contract drift must be eliminated before continuing.
+            """);
 
-        if (text.Contains("start adventure") ||
-            text.Contains("rpg_start_button_missing") ||
-            (text.Contains("prototype_main_menu_navigation_failed") && text.Contains("dq-rpg")))
-        {
-            Add("修复原型开始交互", "确保 prototype shell 中存在可见、可点击的开始按钮，并能触发原型流程。", "开始按钮可见可点击，点击后进入核心玩法第一阶段。");
-        }
+        Add(
+            "修复 RPG 玩法合同与表单追踪",
+            BuildRpgGameplayContractRepairDescription(context),
+            """
+            This step passes only when concrete user form values from prototype-contract form_fields and input_traceability are represented in gameplay behavior, UI/state feedback, tests, or an explicit needs-fix blocker.
+            Do not replace concrete project values with RPG template defaults.
+            """);
 
-        if (text.Contains("visible") || text.Contains("size") || text.Contains("map_visible") || text.Contains("markers_missing"))
-        {
-            Add("修复关键场景可见性", "确保点击入口后关键场景、玩家和核心交互节点可见且有有效尺寸。", "验收脚本能看到关键节点，且节点没有被隐藏、遮挡或尺寸为零。");
-        }
+        Add(
+            "执行最终全量验收",
+            "运行 RPG 类型要求的最终 smoke/导航/可见性/合同一致性验收，确认修复闭环。",
+            "最终验收通过后，原型修复才算完成。");
 
-        if (text.Contains("cs2012") || text.Contains("access to the path") || text.Contains("build") || text.Contains("compile"))
-        {
-            Add("修复构建和文件锁问题", "清理或规避项目构建输出被占用的问题，避免验证阶段因文件锁失败。", "构建/预热阶段不再因文件占用失败。");
-        }
-
-        if (goals.Count == 0)
-        {
-            Add("修复最近失败项", "根据最近一次失败记录修复最小范围的问题，不扩大到新功能。", "最近一次失败原因被消除，且没有引入新的关键错误。");
-        }
-
-        Add("执行最终全量验收", "运行当前类型要求的最终 smoke/导航/可见性验收，确认修复闭环。", "最终验收通过后，原型修复才算完成。");
         return goals;
     }
 
-    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback)
+    private static List<PrototypeRepairGoalResult> BuildGenericRepairGoals(PrototypeRepairPlanContext context)
+    {
+        var goals = new List<PrototypeRepairGoalResult>();
+        void Add(string title, string description, string acceptance)
+        {
+            if (goals.Any(goal => string.Equals(goal.Title, title, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
+        }
+
+        Add(
+            "恢复原型运行证据",
+            BuildGenericEvidenceRepairDescription(context),
+            "The latest failure reason is eliminated and the prototype route can produce completion evidence without build, cache, or write failures.");
+
+        Add(
+            "修复通用原型合同缺口",
+            BuildGenericContractRepairDescription(context),
+            "The default prototype route skill and project prototype contract are reflected in the repaired output, with no new prototype drift.");
+
+        Add(
+            "执行最终全量验收",
+            "运行当前类型要求的最终 smoke/导航/可见性验收，确认修复闭环。",
+            "最终验收通过后，原型修复才算完成。");
+
+        return goals;
+    }
+
+    private static string BuildRpgEvidenceRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the latest failed RPG prototype route evidence path using the route skill, project contract, and failure output.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillGuide}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Failure evidence:
+            {context.FailureText}
+
+            Required repair scope:
+            - Read the current project README and prototype contract first.
+            - Use the latest failed run output as the source of truth for what broke.
+            - Restore writable completion artifacts, TDD green evidence, and build outputs needed by the prototype route.
+            - Do not broaden this step into gameplay or scene redesign.
+            - Preserve browser-safe output.
+            """;
+    }
+
+    private static string BuildRpgSceneContractRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the RPG scene and node contract using the selected route skill and prototype contract.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Contract requirements:
+            - The project prototype contract is authoritative.
+            - MapScene, BattleScene, and the main prototype shell must have clear responsibilities.
+            - Map, player, and enemy asset instances must use the RPG contract naming rules.
+            - Main.tscn default-hidden VBox, Overlays, and ScreenRoot SOP must remain preserved where applicable.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgGameplayContractRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair RPG gameplay behavior against project-specific form_fields and input_traceability.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Contract requirements:
+            - User form fields override RPG defaults and template examples.
+            - Encounter probability, guaranteed encounter, player stats, enemy stats, reward choices, return-to-map flow, and win/fail rules must match concrete project values when present.
+            - Any concrete non-empty input field that cannot be implemented must become an explicit needs-fix blocker, not a silent omission.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildGenericEvidenceRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the latest failed prototype route evidence path using the default prototype route skill and the project contract.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillGuide}
+
+            Failure evidence:
+            {context.FailureText}
+
+            Required repair scope:
+            - Read the current project README and prototype contract first.
+            - Use the latest failed run output as the source of truth for what broke.
+            - Restore route completion evidence before broader gameplay repair.
+            - Preserve browser-safe output.
+            """;
+    }
+
+    private static string BuildGenericContractRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the current prototype against the default prototype route skill and project prototype contract.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Contract requirements:
+            - User form fields override generic defaults.
+            - The playable loop, UI feedback, and validation evidence must match the project prototype contract.
+            - Do not invent type-specific steps unless the project contract demands them.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill)
     {
         return $"""
             Run the execute-repair-step top-level route.
@@ -286,7 +445,14 @@ public sealed class PrototypeRepairPlanService
             - GameName: {project.GameName}
             - GameType: {project.GameTypeSource}
 
-            {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
+            Route skill context:
+            - RouteSkillId: {routeSkill.RouteSkillId}
+            - RouteSkillName: {routeSkill.RouteSkillName}
+            - RouteSkillLabel: {routeSkill.RouteSkillLabel}
+            - RouteSkillGuide: {routeSkill.RouteSkillGuide}
+            - RouteSkillContract: {routeSkill.RouteSkillContract}
+            - MandatorySkillEntry: ${routeSkill.RouteSkillId}
+            - MandatorySkillPath: {routeSkill.SkillRelativePath}
 
             Extra user feedback:
             {feedback}
@@ -340,3 +506,9 @@ public sealed record PrototypeRepairStepExecutionResult(
     int GoalIndex,
     bool HasMoreWork,
     string SessionStatus);
+
+public sealed record PrototypeRepairPlanContext(
+    PrototypeRouteSkillContext RouteSkill,
+    PrototypeContractSnapshot Contract,
+    RunSnapshot FailedRun,
+    string FailureText);

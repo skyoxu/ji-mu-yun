@@ -81,6 +81,9 @@ public sealed class PrototypeWorkflowTests
         record.Should().Contain("- Game Name: Demo Game");
         record.Should().Contain("- Game Type: rpg");
         record.Should().Contain("- Game Type Source: 勇者斗恶龙");
+        record.Should().Contain("## Prototype Input Contract");
+        record.Should().Contain("| Field | Value | Must Reflect In |");
+        record.Should().Contain("| core_gameplay_loop | Move, choose action, resolve enemy response. | Map/battle/reward/control flow and loop continuity |");
         runner.Commands.Should().HaveCount(3);
         runner.Commands[0].WorkingDirectory.Should().Be(project.RepoPath);
         runner.Commands[0].Arguments.Should().Contain("run-prototype-workflow");
@@ -109,10 +112,52 @@ public sealed class PrototypeWorkflowTests
         run.StdoutText.Should().Contain("SMOKE PASS");
         var contract = new PrototypeContractService().Read(project);
         contract.Json.Should().Contain("project-specific source of truth");
+        contract.Json.Should().Contain("\"input_traceability\"");
+        contract.Json.Should().Contain("\"form_fields\"");
+        contract.Json.Should().Contain("\"field\": \"slug\"");
+        contract.Json.Should().Contain("\"field\": \"game_name\"");
+        contract.Json.Should().Contain("\"field\": \"game_type\"");
+        contract.Json.Should().Contain("\"field\": \"game_type_source\"");
+        contract.Json.Should().Contain("\"field\": \"hypothesis\"");
+        contract.Json.Should().Contain("\"field\": \"core_player_fantasy\"");
+        contract.Json.Should().Contain("\"field\": \"minimum_playable_loop\"");
+        contract.Json.Should().Contain("\"field\": \"success_criteria\"");
+        contract.Json.Should().Contain("\"field\": \"game_feature\"");
+        contract.Json.Should().Contain("\"field\": \"core_gameplay_loop\"");
+        contract.Json.Should().Contain("\"field\": \"win_fail_conditions\"");
         contract.Json.Should().Contain("One-room tactical combat.");
         contract.Json.Should().Contain("Move, choose action, resolve enemy response.");
         contract.Json.Should().Contain("Win by defeating enemy; fail when health reaches zero.");
         new PrototypeRouteStateWriter().ReadLatestPrototypeState(project).Should().Contain("prototype_contract");
+    }
+
+    [Fact]
+    public void PrototypeContractPromptBlock_RequiresInputTraceabilityForAllTopLevelRoutes()
+    {
+        var contract = new PrototypeContractSnapshot(
+            "routes/prototype-contract/latest.json",
+            """
+            {
+              "form_fields": {
+                "game_feature": "Each movement increases encounter chance by 10%.",
+                "win_fail_conditions": "First enemy has 30 HP and 5 attack."
+              },
+              "input_traceability": [
+                {
+                  "field": "game_feature",
+                  "route_rule": "Implement or explicitly preserve this field as a needs_fix blocker; do not silently drop it."
+                }
+              ]
+            }
+            """);
+
+        var block = PrototypeContractService.BuildPromptBlock(contract);
+
+        block.Should().Contain("consume form_fields and input_traceability");
+        block.Should().Contain("planning, coding, validating, or repairing");
+        block.Should().Contain("report needs_fix instead of succeeded");
+        block.Should().Contain("Each movement increases encounter chance by 10%.");
+        block.Should().Contain("First enemy has 30 HP and 5 attack.");
     }
 
     [Fact]

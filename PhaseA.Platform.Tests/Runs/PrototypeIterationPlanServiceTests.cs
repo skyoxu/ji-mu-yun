@@ -298,6 +298,47 @@ public sealed class PrototypeIterationPlanServiceTests
         result.SuggestedPromptForRegeneration.Should().BeNull();
     }
 
+    [Fact]
+    public async Task CreateAsync_FinalGoal_ShouldCarryPrototypeInputContractInstruction()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeContractService().WriteFromRequest(
+            project!,
+            new PrototypeWorkflowRequest(
+                "rpg-contract-demo",
+                "RPG Contract Demo",
+                "rpg",
+                "RPG",
+                "Validate user-specific RPG rules.",
+                "Explore, trigger danger, survive a small battle.",
+                "Move on map, trigger encounter, fight, choose reward, return.",
+                ["The first enemy has 30 HP and 5 attack."],
+                "Each movement increases encounter chance by 10%.",
+                "Move once, update encounter chance, enter battle, resolve reward.",
+                "Win by defeating enemy; fail when hero HP reaches zero.",
+                true),
+            "docs/prototypes/2026-05-24-rpg-contract-demo.md",
+            "rpg-contract-demo");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Improve the RPG playable loop.", "completion_suggestion"));
+
+        result.Goals.Should().NotBeEmpty();
+        result.Goals[^1].Description.Should().Contain("input_traceability");
+        result.Goals[^1].AcceptanceHint.Should().Contain("project-specific prototype contract fields pass");
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource = "Action")
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());

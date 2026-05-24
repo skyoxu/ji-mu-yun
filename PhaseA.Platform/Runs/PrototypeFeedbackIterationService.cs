@@ -78,12 +78,18 @@ public sealed class PrototypeFeedbackIterationService
             throw new InvalidOperationException("Project not found.");
         }
 
+        _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkillAvailability.IsAvailable)
+        {
+            return new PrototypeFeedbackResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
+        }
+
         if (!await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
             return new PrototypeFeedbackResult("", "prototype_not_ready", "请先运行并完成 7 步可玩原型，再提交正式反馈。自由对话仍可使用。", []);
         }
 
-        _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)

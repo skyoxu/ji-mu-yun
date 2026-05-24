@@ -97,6 +97,20 @@ public sealed class PrototypeCommandService
         {
             await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
+            var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+            if (!routeSkill.IsAvailable)
+            {
+                var routeSkillEvidenceJson = JsonSerializer.Serialize(new
+                {
+                    run_type = runType,
+                    slug,
+                    route_skill = routeSkill.Context,
+                    failure_code = routeSkill.FailureCode
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", 428, "", routeSkill.FailureMessage, routeSkillEvidenceJson, cancellationToken);
+                return new HostedCommandResult(runId, routeSkill.FailureCode, 428, "", routeSkill.FailureMessage, [], []);
+            }
+
             var command = commandFactory(project);
             var process = await _processRunner.RunAsync(command, cancellationToken);
             var status = process.ExitCode == 0 ? "succeeded" : "failed";

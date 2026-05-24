@@ -43,6 +43,14 @@ When `game_type` is `rpg`, this skill is the default implementation route for:
 - RPG prototype assets and UI visuals
 - repo-local asset generation or replacement work
 
+## Input Traceability Requirement
+
+- RPG prototype work must consume the project prototype contract `form_fields` and `input_traceability` before applying RPG defaults.
+- RPG defaults, bundled template assets, and example scenes are fallback implementation aids only. They must not replace concrete user values from `hypothesis`, `core_player_fantasy`, `minimum_playable_loop`, `success_criteria`, `game_feature`, `core_gameplay_loop`, or `win_fail_conditions`.
+- Map traversal, encounter rules, battle stats, reward rules, victory/failure conditions, and UI wording should be derived from the user fields when those fields are non-empty.
+- If the user says "each movement increases encounter chance by 10%" or "first enemy has 30 HP and 5 attack", that content must become gameplay logic, visible state, test expectation, or an explicit `needs_fix` blocker.
+- Final RPG acceptance must fail when a concrete non-empty input field is only present in documentation but not represented in scene flow, runtime behavior, tests, or a recorded needs-fix reason.
+
 ## Default Template Assets
 
 Use the bundled RPG prototype asset pack as the default visual seed when the user does not provide stronger art direction:

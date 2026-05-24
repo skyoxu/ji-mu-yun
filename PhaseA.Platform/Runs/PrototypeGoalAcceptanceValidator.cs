@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
@@ -51,6 +52,11 @@ internal static class PrototypeGoalAcceptanceValidator
         if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath))
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_final_acceptance_contract");
+        }
+
+        if (contract.FinalAcceptance && !HasRpgPrototypeContractValueAcceptance(project))
+        {
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "rpg_form_contract_values_not_reflected");
         }
 
         if (!HasRequiredMarkers(testsPath, corePath, contract.RequiredMarkers))
@@ -227,6 +233,97 @@ internal static class PrototypeGoalAcceptanceValidator
                HasMainSceneDefaultPrototypeHostUiHidden(repoPath) &&
                HasRpgMapEntryAcceptanceFiles(repoPath) &&
                HasRpgBattleSceneAcceptanceFiles(repoPath);
+    }
+
+    private static bool HasRpgPrototypeContractValueAcceptance(ProjectSnapshot project)
+    {
+        var contractPath = Path.Combine(project.MetaPath, "routes", "prototype-contract", "latest.json");
+        if (!File.Exists(contractPath))
+        {
+            return false;
+        }
+
+        string contractText;
+        try
+        {
+            contractText = File.ReadAllText(contractPath);
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+
+        if (!TryReadFormFields(contractText, out var formText))
+        {
+            return false;
+        }
+
+        var corePath = Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
+        var testsPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
+        if (!File.Exists(corePath) || !File.Exists(testsPath))
+        {
+            return false;
+        }
+
+        var implementationText = File.ReadAllText(corePath);
+        var requiredNumbers = ExtractRpgRequiredNumbers(formText);
+        if (requiredNumbers.Count == 0)
+        {
+            return true;
+        }
+
+        return requiredNumbers.All(number => ContainsWholeNumber(implementationText, number));
+    }
+
+    private static bool TryReadFormFields(string contractText, out string formText)
+    {
+        formText = "";
+        try
+        {
+            using var document = JsonDocument.Parse(contractText);
+            if (!document.RootElement.TryGetProperty("form_fields", out var formFields))
+            {
+                return false;
+            }
+
+            formText = formFields.GetRawText();
+            return !string.IsNullOrWhiteSpace(formText);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static IReadOnlyList<int> ExtractRpgRequiredNumbers(string formText)
+    {
+        var normalized = formText.Replace("\\u0025", "%", StringComparison.Ordinal);
+        var requirements = new List<int>();
+        AddIfMentioned(normalized, requirements, 100, "100");
+        AddIfMentioned(normalized, requirements, 10, "10%");
+        AddIfMentioned(normalized, requirements, 10, "10步");
+        AddIfMentioned(normalized, requirements, 10, "10 ATK", "10点攻击");
+        AddIfMentioned(normalized, requirements, 2, "2点防御", "2 DEF");
+        AddIfMentioned(normalized, requirements, 30, "30点生命", "30 HP");
+        AddIfMentioned(normalized, requirements, 5, "5点攻击", "5 ATK");
+        AddIfMentioned(normalized, requirements, 5, "5点生命", "5 HP");
+        AddIfMentioned(normalized, requirements, 2, "2点攻击", "2 ATK");
+        AddIfMentioned(normalized, requirements, 1, "1点防御", "1 DEF");
+        AddIfMentioned(normalized, requirements, 15, "15场", "15 battles");
+        return requirements.Distinct().ToArray();
+    }
+
+    private static void AddIfMentioned(string text, ICollection<int> requirements, int value, params string[] markers)
+    {
+        if (markers.Any(marker => text.Contains(marker, StringComparison.OrdinalIgnoreCase)))
+        {
+            requirements.Add(value);
+        }
+    }
+
+    private static bool ContainsWholeNumber(string text, int value)
+    {
+        return Regex.IsMatch(text, $@"(?<!\d){value}(?!\d)", RegexOptions.CultureInvariant);
     }
 
     private static bool HasMainSceneDefaultPrototypeHostUiHidden(string repoPath)

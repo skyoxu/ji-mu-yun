@@ -54,6 +54,24 @@ public sealed class PrototypeRecordWriter
             $"- Game Type: {(string.IsNullOrWhiteSpace(gameType) ? "TBD" : gameType)}",
             $"- Game Type Source: {(string.IsNullOrWhiteSpace(gameTypeSource) ? "TBD" : gameTypeSource)}",
             "",
+            "## Prototype Input Contract",
+            "- Rule: Every non-empty field in this section is user/project intent and must be reflected in gameplay, UI, scene flow, validation, or an explicit needs-fix blocker.",
+            "- Rule: Type templates and RPG defaults may fill gaps, but must not override concrete user values.",
+            "",
+            "| Field | Value | Must Reflect In |",
+            "| --- | --- | --- |",
+            $"| slug | {Md(slug)} | Prototype folder, scene name, route state, artifacts |",
+            $"| game_name | {Md(string.IsNullOrWhiteSpace(gameName) ? "TBD" : gameName)} | Title, menu copy, visible UI labels when useful |",
+            $"| game_type | {Md(string.IsNullOrWhiteSpace(gameType) ? "TBD" : gameType)} | Route skill, type kit, default scene/asset rules |",
+            $"| game_type_source | {Md(string.IsNullOrWhiteSpace(gameTypeSource) ? "TBD" : gameTypeSource)} | Type-specific skill selection and ambiguity handling |",
+            $"| hypothesis | {Md(request.Hypothesis!.Trim())} | Scenario framing, final report, acceptance focus |",
+            $"| core_player_fantasy | {Md(request.CorePlayerFantasy!.Trim())} | Primary verbs, UI feedback, scene presentation |",
+            $"| minimum_playable_loop | {Md(request.MinimumPlayableLoop!.Trim())} | Scene flow, state transitions, smoke/acceptance target |",
+            $"| success_criteria | {Md(string.Join("; ", successCriteria.Select(item => item.Trim())))} | Iteration goals, final validation checklist, needs-fix blockers |",
+            $"| game_feature | {Md(request.GameFeature!.Trim())} | Gameplay mechanics, scene objects, scripts, tests |",
+            $"| core_gameplay_loop | {Md(request.CoreGameplayLoop!.Trim())} | Map/battle/reward/control flow and loop continuity |",
+            $"| win_fail_conditions | {Md(request.WinFailConditions!.Trim())} | Settlement UI, game-over/retry, battle/map outcome logic |",
+            "",
             "## Hypothesis",
             $"- {request.Hypothesis!.Trim()}",
             "",
@@ -111,5 +129,10 @@ public sealed class PrototypeRecordWriter
         ]);
 
         return string.Join("\n", lines) + "\n";
+    }
+
+    private static string Md(string value)
+    {
+        return value.Replace("|", "\\|", StringComparison.Ordinal).Replace("\r", " ", StringComparison.Ordinal).Replace("\n", "<br>", StringComparison.Ordinal);
     }
 }

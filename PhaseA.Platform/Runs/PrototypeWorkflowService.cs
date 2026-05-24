@@ -118,6 +118,12 @@ public sealed class PrototypeWorkflowService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeWorkflowResult("", routeSkill.FailureCode, 428, "", "", routeSkill.FailureMessage, [], []);
+        }
+
         EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
         var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
@@ -229,6 +235,12 @@ public sealed class PrototypeWorkflowService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeWorkflowResult("", routeSkill.FailureCode, 428, "", "", routeSkill.FailureMessage, [], []);
+        }
+
         EnsureGameTypeTemplateBaseline(project.RepoPath, request);
         var prototypeRecordPath = _recordWriter.Write(request, project.RepoPath);
         var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
@@ -316,6 +328,12 @@ public sealed class PrototypeWorkflowService
             ShouldUsePostValidationRepair(run));
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeWorkflowResult("", routeSkill.FailureCode, 428, prototypeRecordPath, "", routeSkill.FailureMessage, [], []);
+        }
+
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
@@ -386,6 +404,12 @@ public sealed class PrototypeWorkflowService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+        if (!routeSkill.IsAvailable)
+        {
+            return new PrototypeWorkflowResult("", routeSkill.FailureCode, 428, prototypeRecordPath, "", routeSkill.FailureMessage, [], []);
+        }
+
         var slug = ReadSlugFromPrototypeRecord(project.RepoPath, prototypeRecordPath)
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);

@@ -62,6 +62,15 @@ The router must have these fields before it can proceed beyond intake:
 - `core_gameplay_loop`
 - `win_fail_conditions`
 
+## Prototype Input Traceability
+
+- The top-level prototype router must treat all non-empty intake fields as a project-specific input contract, not as loose background text.
+- The canonical intake fields are: `slug`, `game_name`, `game_type`, `game_type_source`, `hypothesis`, `core_player_fantasy`, `minimum_playable_loop`, `success_criteria`, `game_feature`, `core_gameplay_loop`, and `win_fail_conditions`.
+- The router must preserve these fields in the prototype record under `## Prototype Input Contract` and in the project prototype contract JSON as `form_fields` and `input_traceability`.
+- Prototype creation, iteration-plan generation/evaluation, execute-next-goal, needs-fix, repair-plan, quick-fix, and final acceptance must consume the same prototype contract.
+- Type templates and prototype type kits may provide defaults only for missing or ambiguous fields. They must not override concrete user values.
+- If a non-empty user field cannot be reflected in gameplay, UI, scene flow, tests, or final acceptance, mark the relevant goal `needs_fix` and report the missing field coverage instead of reporting success.
+
 The last three correspond to the user-facing pause sequence:
 
 1. Game feature

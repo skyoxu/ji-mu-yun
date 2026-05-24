@@ -60,6 +60,11 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "iteration-plan", "latest.json"), payload);
     }
 
+    public void WriteRepairPlanState(ProjectSnapshot project, object payload)
+    {
+        WriteState(project, Path.Combine("routes", "repair-plan", "latest.json"), payload);
+    }
+
     public void WriteExecuteNextGoalState(ProjectSnapshot project, int goalIndex, object payload)
     {
         var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
@@ -93,6 +98,11 @@ public sealed class PrototypeRouteStateWriter
     public string ReadLatestIterationPlanState(ProjectSnapshot project)
     {
         return ReadState(project, Path.Combine("routes", "iteration-plan", "latest.json"));
+    }
+
+    public string ReadLatestRepairPlanState(ProjectSnapshot project)
+    {
+        return ReadState(project, Path.Combine("routes", "repair-plan", "latest.json"));
     }
 
     public string ReadLatestPrototypeState(ProjectSnapshot project)
