@@ -1742,6 +1742,66 @@ public sealed class PhaseAMetadataStore
         return rows;
     }
 
+    public async Task<IReadOnlyList<LlmUsageRunRow>> ListLlmUsageRowsForAdminAsync(
+        string fromUtc,
+        string toUtc,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fromUtc);
+        ArgumentException.ThrowIfNullOrWhiteSpace(toUtc);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                a.id,
+                a.username,
+                a.is_admin,
+                a.is_disabled,
+                p.id,
+                p.name,
+                p.game_name,
+                r.id,
+                r.run_type,
+                r.status,
+                r.created_utc,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE r.llm_cost_json IS NOT NULL
+              AND r.created_utc >= $from_utc
+              AND r.created_utc < $to_utc
+            ORDER BY r.created_utc ASC, r.id ASC;
+            """;
+        command.Parameters.AddWithValue("$from_utc", fromUtc);
+        command.Parameters.AddWithValue("$to_utc", toUtc);
+
+        var rows = new List<LlmUsageRunRow>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rows.Add(new LlmUsageRunRow(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt64(2) == 1,
+                reader.GetInt64(3) == 1,
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.GetString(10),
+                reader.IsDBNull(11) ? null : reader.GetString(11),
+                reader.GetString(12)));
+        }
+
+        return rows;
+    }
+
     public async Task<RunSnapshot?> GetActiveRunForAccountAsync(string accountId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
@@ -2265,6 +2325,14 @@ public sealed class PhaseAMetadataStore
 
     public async Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
         string projectId,
+        CancellationToken cancellationToken)
+    {
+        return await GetLatestProjectIterationSessionAsync(projectId, null, cancellationToken);
+    }
+
+    public async Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
+        string projectId,
+        string? sourceKind = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
@@ -2279,10 +2347,15 @@ public sealed class PhaseAMetadataStore
                        current_goal_index, latest_summary, latest_evaluation_json, created_utc, updated_utc, completed_utc
                 FROM project_iteration_sessions
                 WHERE project_id = $project_id
+                  AND (
+                      ($source_kind IS NOT NULL AND source_kind = $source_kind)
+                      OR ($source_kind IS NULL AND source_kind <> 'repair_plan')
+                  )
                 ORDER BY created_utc DESC
                 LIMIT 1;
                 """;
             command.Parameters.AddWithValue("$project_id", projectId);
+            command.Parameters.AddWithValue("$source_kind", (object?)sourceKind ?? DBNull.Value);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             if (await reader.ReadAsync(cancellationToken))
             {

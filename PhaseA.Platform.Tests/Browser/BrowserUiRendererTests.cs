@@ -59,8 +59,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("当前还不能启动：缺少必填项");
         html.Should().NotContain("project-drafts/import");
         html.Should().Contain("repairPrototype");
-        html.Should().Contain("修复原型");
-        html.Should().Contain("prototype-7day-playable/repair");
+        html.Should().Contain("生成修复计划");
+        html.Should().Contain("repair-plan");
+        html.Should().Contain("executeRepairStep");
+        html.Should().Contain("执行下一项修复");
         html.Should().Contain("7 步可玩原型");
         html.Should().Contain("prototypeWorkflowPanel");
         html.Should().Contain(@"$(""prototypeWorkflowPanel"").classList.toggle(""hidden"", status === ""succeeded"")");
@@ -78,6 +80,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("prototypeProgress");
         html.Should().Contain("refreshPrototypeProgress");
         html.Should().Contain("prototype-7day-playable/progress");
+        html.Should().Contain("validatePrototype");
+        html.Should().Contain("重新验收原型");
+        html.Should().Contain("prototype-7day-playable/validate");
         html.Should().Contain("buildPrototypePayload");
         html.Should().Contain("missingPrototypeFields");
         html.Should().Contain("showPrototypeNotice");
@@ -126,7 +131,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("stdoutText || run.stderrText");
         html.Should().NotContain("tailText(text");
         html.Should().NotContain("终端输出");
-        html.Should().Contain("可以点击“修复原型”继续修复");
+        html.Should().Contain("可以点击“生成修复计划”");
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
         html.Should().Contain("accountAdminPanel");

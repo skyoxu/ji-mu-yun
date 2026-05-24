@@ -178,6 +178,12 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(6);
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("assets", StringComparison.OrdinalIgnoreCase));
+        string.Join(" ", result.Goals[0].Title, result.Goals[0].Description, result.Goals[0].AcceptanceHint)
+            .Should()
+            .NotContain("MapScene")
+            .And.NotContain("BattleScene")
+            .And.NotContain("full playable")
+            .And.NotContain("scene switching");
         result.Goals[1].Title.Should().Contain("Start Adventure");
         result.Goals[1].Title.Should().Contain("MapScene");
         result.Goals[1].Description.Should().Contain("clicking Start Adventure");
@@ -222,6 +228,44 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Decision.Should().Be("should_refine_plan");
         result.Reason.Should().Contain("Missing RPG contract steps");
+        result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldRefineRpgPlan_WhenStepOneCrossesAcceptanceBoundary()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "manual_feedback",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: basic assets and full scene validation", "Validate assets, MapScene.tscn, BattleScene.tscn, and full playable scene switching.", "Pass when MapScene and BattleScene both work."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Create and validate visible MapScene.", "Start Adventure opens a visible RPG MapScene."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene creation and validation", "Create and validate BattleScene.", "BattleScene reaches settlement."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect the main scene switching flow.", "Main prototype scene switching works."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward loop and return-to-map validation", "Validate reward and return-to-map.", "Reward returns to the map."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Validate full playable prototype acceptance.", "Final acceptance passes with Start Adventure visible map and package readiness.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("should_refine_plan");
+        result.Reason.Should().Contain("acceptance boundary mismatch");
         result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
     }
 

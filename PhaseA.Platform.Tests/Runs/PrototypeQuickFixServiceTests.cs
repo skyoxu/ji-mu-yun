@@ -75,6 +75,42 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_NonGoalRpgQuickFix_ShouldFailRun_WhenPostFixPrototypeSmokeFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        var runner = new QuickFixNavigationFailHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("修复 Start Adventure 后空白。", "gpt-5.4", "normal"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.AssistantMessage.Should().Contain("STATUS: needs_fix");
+        run!.Status.Should().Be("failed");
+        run.ProgressStep.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("validation");
+        run.EvidenceJson.Should().Contain("project_smoke_validation");
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+    }
+
+    [Fact]
     public async Task SubmitAsync_ReturnsTimeoutFailure_WhenRunnerDoesNotFinishInTime()
     {
         using var database = TempSqliteDatabase.Create();
@@ -134,6 +170,9 @@ REMAINING: none
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -157,6 +196,43 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepTwoNeedsFix_WhenMapEntryContractIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        var planService = new PrototypeIterationPlanService(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG map entry step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 2);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_map_entry_contract", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 2, "Goal 2 needs fix");
+        var runner = new OffTopicSuccessHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 2, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 2).Status.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("missing_rpg_map_entry_contract");
+        runner.LastPrompt.Should().Contain("Platform hard acceptance for RPG Step 2");
+        runner.LastPrompt.Should().Contain("TrackLayer");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFive()
     {
         using var database = TempSqliteDatabase.Create();
@@ -167,6 +243,9 @@ REMAINING: none
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -174,7 +253,6 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need engine verification for reward loop.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
-        var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
         {
@@ -219,6 +297,9 @@ REMAINING: none
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -226,7 +307,6 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
-        var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
         {
@@ -278,6 +358,9 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -285,7 +368,6 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
-        var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         EnsureRpgAcceptanceMarkers(project.RepoPath);
         File.WriteAllText(
@@ -404,6 +486,9 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Stabilize map movement and first encounter trigger."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -680,13 +765,15 @@ texture = ExtResource("2")
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "MapScene.tscn"), """
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
+[ext_resource type="Script" path="res://Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs" id="script_map"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
 
 [node name="MapScene" type="Control"]
+script = ExtResource("script_map")
 custom_minimum_size = Vector2(700, 700)
 [node name="TrackLayer" type="Control" parent="."]
 custom_minimum_size = Vector2(600, 600)
@@ -773,10 +860,45 @@ public static class PrototypeCatalog
         }
     }
 
+    private sealed class QuickFixNavigationFailHostedProcessRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(14, "", "MAIN_MENU_PROTOTYPE_NAV FAIL\nERROR: rpg_map_visible_markers_missing_after_start"));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Quick fix attempted.
+CHANGED: Updated prototype start routing.
+VERIFY: Re-run platform validation.
+REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "quick fix stdout", ""));
+        }
+    }
+
     private sealed class GoalRepairSuccessHostedProcessRunner : IHostedProcessRunner
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
@@ -828,6 +950,11 @@ REMAINING: none
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """

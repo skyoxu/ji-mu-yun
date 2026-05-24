@@ -96,6 +96,24 @@ class RunGdUnitTests(unittest.TestCase):
         self.assertIn("not has_godot_errors", source)
         self.assertIn('"godot_errors_detected": has_godot_errors', source)
 
+    def test_prototype_main_menu_navigation_prewarm_timeout_defined_before_entrypoint(self) -> None:
+        source = Path(prototype_main_menu_navigation_smoke.__file__).read_text(encoding="utf-8")
+
+        self.assertLess(source.index("PREWARM_TIMEOUT_SEC = 120"), source.index('if __name__ == "__main__":'))
+        self.assertEqual(120, prototype_main_menu_navigation_smoke.PREWARM_TIMEOUT_SEC)
+
+    def test_godot_runners_should_create_logs_gdignore(self) -> None:
+        smoke_headless = _load_module("smoke_headless_gdignore_test_module", "scripts/python/smoke_headless.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+
+            run_gdunit.ensure_runtime_logs_godot_ignored(str(root))
+            smoke_headless._ensure_runtime_logs_godot_ignored(root)
+            prototype_main_menu_navigation_smoke._ensure_runtime_logs_godot_ignored(root)
+
+            self.assertTrue((root / "logs" / ".gdignore").exists())
+            self.assertEqual("", (root / "logs" / ".gdignore").read_text(encoding="utf-8"))
+
     def test_run_gdunit_cleanup_should_ignore_taskkill_failures(self) -> None:
         with mock.patch.object(run_gdunit.subprocess, "run", side_effect=OSError("taskkill missing")):
             run_gdunit._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")
@@ -104,6 +122,48 @@ class RunGdUnitTests(unittest.TestCase):
         smoke_headless = _load_module("smoke_headless_test_module", "scripts/python/smoke_headless.py")
         with mock.patch.object(smoke_headless.subprocess, "run", side_effect=OSError("taskkill missing")):
             smoke_headless._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")
+
+    def test_smoke_prewarm_timeout_should_terminate_process_tree(self) -> None:
+        smoke_headless = _load_module("smoke_headless_timeout_test_module", "scripts/python/smoke_headless.py")
+        process = _TimedOutProcess(smoke_headless.subprocess)
+        with mock.patch.object(smoke_headless.subprocess, "Popen", return_value=process), \
+                mock.patch.object(smoke_headless, "_terminate_process_tree") as terminate:
+            rc, stdout, stderr = smoke_headless._run_captured_process(["godot"], Path("."), 1)
+
+        self.assertEqual(124, rc)
+        self.assertIn("before timeout", stdout)
+        self.assertIn("after timeout", stdout)
+        self.assertIn("timeout error", stderr)
+        terminate.assert_called_once_with(process)
+
+    def test_navigation_prewarm_timeout_should_terminate_process_tree(self) -> None:
+        process = _TimedOutProcess(prototype_main_menu_navigation_smoke.subprocess)
+        with mock.patch.object(prototype_main_menu_navigation_smoke.subprocess, "Popen", return_value=process), \
+                mock.patch.object(prototype_main_menu_navigation_smoke, "_terminate_process_tree") as terminate:
+            rc, stdout, stderr = prototype_main_menu_navigation_smoke._run_captured_process(["godot"], Path("."), 1)
+
+        self.assertEqual(124, rc)
+        self.assertIn("before timeout", stdout)
+        self.assertIn("after timeout", stdout)
+        self.assertIn("timeout error", stderr)
+        terminate.assert_called_once_with(process)
+
+
+class _TimedOutProcess:
+    def __init__(self, subprocess_module):
+        self._subprocess = subprocess_module
+        self.pid = 123
+        self.returncode = None
+
+    def communicate(self, timeout=None):
+        if timeout is not None:
+            raise self._subprocess.TimeoutExpired(
+                cmd=["godot"],
+                timeout=timeout,
+                output="before timeout",
+                stderr="timeout error",
+            )
+        return "after timeout", ""
 
 
 if __name__ == "__main__":

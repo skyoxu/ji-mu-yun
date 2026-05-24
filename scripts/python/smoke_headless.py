@@ -29,6 +29,9 @@ import sys
 from pathlib import Path
 
 
+PREWARM_TIMEOUT_SEC = 120
+
+
 def _is_known_good_scene(scene: str) -> bool:
     return bool(scene) and scene.startswith("res://") and scene.lower().endswith(".tscn")
 
@@ -47,6 +50,53 @@ def _cleanup_godot_processes(godot_bin: str) -> None:
         )
     except Exception:
         pass
+
+
+def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
+    logs_root = project_root / "logs"
+    logs_root.mkdir(parents=True, exist_ok=True)
+    gdignore = logs_root / ".gdignore"
+    if not gdignore.exists():
+        gdignore.write_text("", encoding="utf-8")
+
+
+def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/PID", str(process.pid), "/T"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except Exception:
+        try:
+            process.kill()
+        except Exception:
+            pass
+
+
+def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[int, str, str]:
+    process = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_sec)
+        return process.returncode, stdout or "", stderr or ""
+    except subprocess.TimeoutExpired as exc:
+        _terminate_process_tree(process)
+        stdout, stderr = process.communicate()
+        prefix_stdout = exc.stdout.decode("utf-8", errors="ignore") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        prefix_stderr = exc.stderr.decode("utf-8", errors="ignore") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        return 124, prefix_stdout + (stdout or ""), prefix_stderr + (stderr or "")
 
 
 def _build_output_has_success(stdout: str, stderr: str) -> bool:
@@ -92,46 +142,29 @@ def _stop_dotnet_build_server(project_root: Path) -> None:
 
 def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str, str]:
     prewarm_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
-    try:
-        prewarm = subprocess.run(
-            prewarm_cmd,
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-            timeout=600,
-        )
-        prewarm_stdout = prewarm.stdout or ""
-        prewarm_stderr = prewarm.stderr or ""
-        prewarm_returncode = prewarm.returncode
-    except subprocess.TimeoutExpired as exc:
+    prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
+        prewarm_cmd,
+        project_root,
+        PREWARM_TIMEOUT_SEC,
+    )
+    if prewarm_returncode == 124:
         _cleanup_godot_processes(godot_bin)
-        prewarm_stdout = exc.stdout or ""
-        prewarm_stderr = (exc.stderr or "") + "\n[smoke_headless] godot build-solutions prewarm timed out; falling back to dotnet build."
-        prewarm_returncode = 124
-
-    if isinstance(prewarm_stdout, bytes):
-        prewarm_stdout = prewarm_stdout.decode("utf-8", errors="ignore")
-    if isinstance(prewarm_stderr, bytes):
-        prewarm_stderr = prewarm_stderr.decode("utf-8", errors="ignore")
+        prewarm_stderr += "\n[smoke_headless] godot build-solutions prewarm timed out; falling back to dotnet build."
 
     if prewarm_returncode == 0 or _build_output_has_success(prewarm_stdout, prewarm_stderr):
         _stop_dotnet_build_server(project_root)
         return True, "godot-build-solutions", prewarm_stdout, prewarm_stderr
 
-    fallback = subprocess.run(
+    fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
         ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
-        cwd=project_root,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="ignore",
-        timeout=600,
+        project_root,
+        PREWARM_TIMEOUT_SEC,
     )
-    stdout = prewarm_stdout + (("\n" + fallback.stdout) if fallback.stdout else "")
-    stderr = prewarm_stderr + (("\n" + fallback.stderr) if fallback.stderr else "")
-    if fallback.returncode == 0:
+    stdout = prewarm_stdout + (("\n" + fallback_stdout) if fallback_stdout else "")
+    stderr = prewarm_stderr + (("\n" + fallback_stderr) if fallback_stderr else "")
+    if fallback_returncode == 124:
+        stderr += "\n[smoke_headless] dotnet prewarm fallback timed out."
+    if fallback_returncode == 0:
         _stop_dotnet_build_server(project_root)
         return True, "dotnet-build", stdout, stderr
 
@@ -168,6 +201,7 @@ def _run_smoke(
     ts = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     dest = Path("logs") / "ci" / day / "smoke" / ts
     dest.mkdir(parents=True, exist_ok=True)
+    _ensure_runtime_logs_godot_ignored(project_root)
 
     out_path = dest / "headless.out.log"
     err_path = dest / "headless.err.log"

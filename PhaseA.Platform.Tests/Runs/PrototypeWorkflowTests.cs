@@ -413,6 +413,38 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task ValidateAsync_RevalidatesExistingPrototypeWithoutRunningCodex()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        runner.Commands.Should().HaveCount(3);
+
+        var result = await service.ValidateAsync(projectId);
+        var progress = await service.GetProgressAsync(projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        result.ExitCode.Should().Be(0);
+        result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
+        runner.Commands.Should().HaveCount(5);
+        runner.Commands.Skip(3).SelectMany(command => command.Arguments).Should().NotContain("run-prototype-workflow");
+        runner.Commands[3].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands[4].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
+        run!.EvidenceJson.Should().Contain("\"validation_only\":true");
+        run.Status.Should().Be("succeeded");
+        progress.Status.Should().Be("succeeded");
+        progress.RunId.Should().Be(result.RunId);
+    }
+
+    [Fact]
     public async Task QueueAsync_BlocksWhenProjectRunnerLockIsHeld()
     {
         using var database = TempSqliteDatabase.Create();

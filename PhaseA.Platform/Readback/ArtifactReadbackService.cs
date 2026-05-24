@@ -1,6 +1,7 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 using System.Globalization;
 using System.Text;
@@ -12,11 +13,13 @@ public sealed class ArtifactReadbackService
 {
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
-    public ArtifactReadbackService(PhaseAMetadataStore metadataStore, PhaseAPlatformOptions options)
+    public ArtifactReadbackService(PhaseAMetadataStore metadataStore, PhaseAPlatformOptions options, HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
@@ -27,8 +30,20 @@ public sealed class ArtifactReadbackService
     public async Task<ActiveRunReadback> GetActiveRunAsync(string accountId, CancellationToken cancellationToken = default)
     {
         var run = await _metadataStore.GetActiveRunForAccountAsync(accountId, cancellationToken);
+        var queue = _heavyRunnerQueue.GetReadback(accountId, includeAll: false);
         return run is null
-            ? new ActiveRunReadback(false, null, null, null, null, null, null)
+            ? new ActiveRunReadback(
+                queue.CurrentAccountPosition.HasValue,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                queue.QueuedCount,
+                queue.CurrentAccountPosition,
+                queue.CurrentAccountEstimatedWaitSeconds,
+                queue.Running)
             : new ActiveRunReadback(
                 true,
                 run.RunId,
@@ -36,7 +51,16 @@ public sealed class ArtifactReadbackService
                 run.RunType,
                 run.Status,
                 run.ProgressStep,
-                run.ProgressLabel);
+                run.ProgressLabel,
+                queue.QueuedCount,
+                queue.CurrentAccountPosition,
+                queue.CurrentAccountEstimatedWaitSeconds,
+                queue.Running);
+    }
+
+    public HeavyRunnerQueueReadback GetHeavyRunnerQueue(string accountId, bool includeAll = false)
+    {
+        return _heavyRunnerQueue.GetReadback(accountId, includeAll);
     }
 
     public async Task<AccountLlmUsageReadback> GetAccountLlmUsageAsync(
@@ -104,6 +128,61 @@ public sealed class ArtifactReadbackService
             row.Run.LlmRequestId,
             row.Run.LlmCostJson)).ToArray();
         return new AdminLlmRunAuditReadback(items.Length, items);
+    }
+
+    public async Task<AdminLlmUsageAggregateReadback> GetAdminLlmUsageAggregateAsync(
+        string? grain,
+        string? split,
+        string? fromUtc,
+        string? toUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedGrain = NormalizeGrain(grain);
+        var normalizedSplit = NormalizeSplit(split);
+        var (from, to) = NormalizeRange(fromUtc, toUtc, normalizedGrain);
+        var rows = await _metadataStore.ListLlmUsageRowsForAdminAsync(
+            from.ToString("O", CultureInfo.InvariantCulture),
+            to.ToString("O", CultureInfo.InvariantCulture),
+            cancellationToken);
+
+        var groups = rows
+            .GroupBy(row =>
+            {
+                var bucket = BucketUtc(DateTimeOffset.Parse(row.CreatedUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind), normalizedGrain);
+                var projectId = normalizedSplit is "project" or "account-project" ? row.ProjectId : null;
+                return new
+                {
+                    Bucket = bucket,
+                    row.AccountId,
+                    row.Username,
+                    ProjectId = projectId,
+                    ProjectName = projectId is null ? null : row.ProjectName,
+                    GameName = projectId is null ? null : row.GameName
+                };
+            })
+            .Select(group => new AdminLlmUsageAggregateItem(
+                group.Key.Bucket.ToString("O", CultureInfo.InvariantCulture),
+                group.Key.AccountId,
+                group.Key.Username,
+                group.Key.ProjectId,
+                group.Key.ProjectName,
+                group.Key.GameName,
+                group.Count(),
+                group.Sum(row => ReadEstimatedCostCny(row.LlmCostJson))))
+            .OrderByDescending(item => item.BucketUtc, StringComparer.Ordinal)
+            .ThenBy(item => item.Username, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.ProjectName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return new AdminLlmUsageAggregateReadback(
+            normalizedGrain,
+            normalizedSplit,
+            from.ToString("O", CultureInfo.InvariantCulture),
+            to.ToString("O", CultureInfo.InvariantCulture),
+            groups.Select(item => item.BucketUtc).Distinct(StringComparer.Ordinal).Count(),
+            groups.Sum(item => item.CallCount),
+            groups.Sum(item => item.EstimatedCostCny),
+            groups);
     }
 
     public static string ExportAdminLlmUsageCsv(AdminLlmUsageReadback usage)
@@ -328,6 +407,64 @@ public sealed class ArtifactReadbackService
     private static decimal ReadEstimatedCostCny(string json)
     {
         return LlmUsageAuditJson.SumEstimatedCostCny(json);
+    }
+
+    private static string NormalizeGrain(string? grain)
+    {
+        var value = string.IsNullOrWhiteSpace(grain) ? "day" : grain.Trim().ToLowerInvariant();
+        return value is "hour" or "day" or "month"
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(grain), "Unsupported LLM usage grain.");
+    }
+
+    private static string NormalizeSplit(string? split)
+    {
+        var value = string.IsNullOrWhiteSpace(split) ? "account" : split.Trim().ToLowerInvariant();
+        return value is "account" or "project" or "account-project"
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(split), "Unsupported LLM usage split.");
+    }
+
+    private static (DateTimeOffset From, DateTimeOffset To) NormalizeRange(string? fromUtc, string? toUtc, string grain)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var to = ParseUtc(toUtc) ?? now;
+        var from = ParseUtc(fromUtc) ?? grain switch
+        {
+            "hour" => to.AddHours(-24),
+            "month" => to.AddMonths(-12),
+            _ => to.AddDays(-30)
+        };
+
+        if (from >= to)
+        {
+            throw new ArgumentOutOfRangeException(nameof(fromUtc), "fromUtc must be before toUtc.");
+        }
+
+        return (from, to);
+    }
+
+    private static DateTimeOffset? ParseUtc(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateTimeOffset.TryParse(value.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
+            ? parsed.ToUniversalTime()
+            : throw new ArgumentOutOfRangeException(nameof(value), "Invalid UTC date.");
+    }
+
+    private static DateTimeOffset BucketUtc(DateTimeOffset value, string grain)
+    {
+        var utc = value.ToUniversalTime();
+        return grain switch
+        {
+            "hour" => new DateTimeOffset(utc.Year, utc.Month, utc.Day, utc.Hour, 0, 0, TimeSpan.Zero),
+            "month" => new DateTimeOffset(utc.Year, utc.Month, 1, 0, 0, 0, TimeSpan.Zero),
+            _ => new DateTimeOffset(utc.Year, utc.Month, utc.Day, 0, 0, 0, TimeSpan.Zero)
+        };
     }
 
     private static string Csv(string? value)

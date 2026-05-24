@@ -72,6 +72,7 @@ Scene ownership must remain separate:
 - `StartButton.Pressed` must switch from the menu to a visible map scene.
 - `MapScene` must be under `CanvasLayer/UI` or an equivalent UI layout parent with non-zero viewport-sized layout.
 - The map scene must remain visible after the click and contain visible map markers, a grid, status text, the player asset, and the enemy asset.
+- The visible map markers must include exact node names `Title`, `Grid`, and `StatusLabel`. Near-equivalent names such as `MapTitle` or `PositionLabel` are contract drift and must fail final acceptance.
 - A prototype that navigates to the RPG shell but shows a blank screen after `Start Adventure` is not accepted.
 
 ### Main Scene Default Visibility Contract

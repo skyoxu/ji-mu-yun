@@ -175,6 +175,34 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_ReturnsAdminLlmUsageAggregateByProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("aggregate-project-user", 1);
+        var firstProject = await CreateProjectAsync(store, options, owner, "First Game");
+        var secondProject = await CreateProjectAsync(store, options, other.AccountId, "Second Game");
+        var firstRun = await store.CreateRunAsync(firstProject, null, "prototype-chat");
+        var secondRun = await store.CreateRunAsync(secondProject, null, "prototype-chat");
+        await store.RecordRunLlmAuditAsync(firstRun, "codex-cli", null, "gpt-5.4", """{"estimated_cost_cny":1.25}""");
+        await store.RecordRunLlmAuditAsync(secondRun, "codex-cli", null, "gpt-5.5", """{"estimated_cost_cny":2.75}""");
+        var service = new ArtifactReadbackService(store, options);
+
+        var usage = await service.GetAdminLlmUsageAggregateAsync("day", "project", null, null);
+
+        usage.Grain.Should().Be("day");
+        usage.Split.Should().Be("project");
+        usage.CallCount.Should().Be(2);
+        usage.EstimatedCostCny.Should().Be(4.00m);
+        usage.Items.Should().Contain(item => item.ProjectId == firstProject && item.ProjectName == "First Game" && item.EstimatedCostCny == 1.25m);
+        usage.Items.Should().Contain(item => item.ProjectId == secondProject && item.ProjectName == "Second Game" && item.EstimatedCostCny == 2.75m);
+    }
+
+    [Fact]
     public async Task Readback_ReturnsAccountScopedLlmUsage()
     {
         using var database = TempSqliteDatabase.Create();

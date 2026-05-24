@@ -24,20 +24,43 @@ New-Item -ItemType Directory -Force -Path $runtimeRoot, $tempRoot, $buildRoot, $
 Remove-Item -LiteralPath $objRoot, $outRoot -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $objRoot, $outRoot | Out-Null
 
+function Resolve-HostEnvironmentValue {
+  param([string]$Name)
+  $processValue = [System.Environment]::GetEnvironmentVariable($Name, 'Process')
+  $userValue = [System.Environment]::GetEnvironmentVariable($Name, 'User')
+  $machineValue = [System.Environment]::GetEnvironmentVariable($Name, 'Machine')
+  $resolvedValue = $processValue
+  if ([string]::IsNullOrWhiteSpace($resolvedValue)) { $resolvedValue = $userValue }
+  if ([string]::IsNullOrWhiteSpace($resolvedValue)) { $resolvedValue = $machineValue }
+  return $resolvedValue
+}
+
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_ADMIN_TOKEN_HASH)) {
-  $machineHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'Machine')
-  $userHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'User')
-  $processHash = [System.Environment]::GetEnvironmentVariable('PHASEA_ADMIN_TOKEN_HASH', 'Process')
-  $resolvedHash = $processHash
-  if ([string]::IsNullOrWhiteSpace($resolvedHash)) { $resolvedHash = $userHash }
-  if ([string]::IsNullOrWhiteSpace($resolvedHash)) { $resolvedHash = $machineHash }
+  $resolvedHash = Resolve-HostEnvironmentValue 'PHASEA_ADMIN_TOKEN_HASH'
   if ([string]::IsNullOrWhiteSpace($resolvedHash)) {
     throw "phasea_admin_token_hash_missing"
   }
   $env:PHASEA_ADMIN_TOKEN_HASH = $resolvedHash
 }
 
+$aiCodeMirrorCookie = Resolve-HostEnvironmentValue 'AICODEMIRROR_COOKIE'
+$aiCodeMirrorBaseUrl = Resolve-HostEnvironmentValue 'AICODEMIRROR_BASE_URL'
+$aiCodeMirrorBillingEnabled = Resolve-HostEnvironmentValue 'AICODEMIRROR_BILLING_ENABLED'
+$aiCodeMirrorApiKeyName = Resolve-HostEnvironmentValue 'AICODEMIRROR_API_KEY_NAME'
+$aiCodeMirrorCodexHomeRoot = Resolve-HostEnvironmentValue 'AICODEMIRROR_CODEX_HOME_ROOT'
+if (![string]::IsNullOrWhiteSpace($aiCodeMirrorCookie)) {
+  $env:AICODEMIRROR_COOKIE = $aiCodeMirrorCookie
+  if ([string]::IsNullOrWhiteSpace($aiCodeMirrorBillingEnabled)) {
+    $aiCodeMirrorBillingEnabled = 'true'
+  }
+}
+if (![string]::IsNullOrWhiteSpace($aiCodeMirrorBaseUrl)) { $env:AICODEMIRROR_BASE_URL = $aiCodeMirrorBaseUrl }
+if (![string]::IsNullOrWhiteSpace($aiCodeMirrorBillingEnabled)) { $env:AICODEMIRROR_BILLING_ENABLED = $aiCodeMirrorBillingEnabled }
+if (![string]::IsNullOrWhiteSpace($aiCodeMirrorApiKeyName)) { $env:AICODEMIRROR_API_KEY_NAME = $aiCodeMirrorApiKeyName }
+if (![string]::IsNullOrWhiteSpace($aiCodeMirrorCodexHomeRoot)) { $env:AICODEMIRROR_CODEX_HOME_ROOT = $aiCodeMirrorCodexHomeRoot }
+
 if (Test-Path $ripgrepDir) {
+  $env:PHASEA_RIPGREP_DIR = $ripgrepDir
   if (($env:PATH -split ';') -notcontains $ripgrepDir) {
     $env:PATH = "$ripgrepDir;$env:PATH"
   }
@@ -92,7 +115,13 @@ $psi.Environment['PHASEA_METADATA_DB_PATH'] = $env:PHASEA_METADATA_DB_PATH
 $psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
 $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
+$psi.Environment['PHASEA_RIPGREP_DIR'] = $env:PHASEA_RIPGREP_DIR
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
+if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BILLING_ENABLED)) { $psi.Environment['AICODEMIRROR_BILLING_ENABLED'] = $env:AICODEMIRROR_BILLING_ENABLED }
+if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BASE_URL)) { $psi.Environment['AICODEMIRROR_BASE_URL'] = $env:AICODEMIRROR_BASE_URL }
+if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_COOKIE)) { $psi.Environment['AICODEMIRROR_COOKIE'] = $env:AICODEMIRROR_COOKIE }
+if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_API_KEY_NAME)) { $psi.Environment['AICODEMIRROR_API_KEY_NAME'] = $env:AICODEMIRROR_API_KEY_NAME }
+if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_CODEX_HOME_ROOT)) { $psi.Environment['AICODEMIRROR_CODEX_HOME_ROOT'] = $env:AICODEMIRROR_CODEX_HOME_ROOT }
 $psi.Environment['PATH'] = $env:PATH
 $psi.Environment['TEMP'] = $tempRoot
 $psi.Environment['TMP'] = $tempRoot

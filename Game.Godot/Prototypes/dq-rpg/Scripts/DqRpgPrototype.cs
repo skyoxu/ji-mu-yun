@@ -14,16 +14,20 @@ public partial class DqRpgPrototype : Node2D
     private DqRpgEncounter? _currentEncounter;
     private IReadOnlyList<DqRpgRewardOption> _currentRewards = [];
     private bool _rewardFromChest;
+    private bool _hasStarted;
 
     private Label _headerLabel = default!;
     private Label _statsLabel = default!;
     private Label _objectiveLabel = default!;
     private RichTextLabel _logLabel = default!;
+    private ColorRect _mapAsset = default!;
     private ColorRect _playerToken = default!;
     private ColorRect _enemyToken = default!;
     private ColorRect _chestToken = default!;
     private ColorRect _enemyMapToken = default!;
     private PanelContainer _rewardPanel = default!;
+    private PanelContainer _startPanel = default!;
+    private Button _startButton = default!;
     private Button[] _rewardButtons = [];
 
     private Vector2I _playerGrid = new(1, 1);
@@ -41,10 +45,13 @@ public partial class DqRpgPrototype : Node2D
         _objectiveLabel = GetNode<Label>("CanvasLayer/UI/ObjectiveLabel");
         _logLabel = GetNode<RichTextLabel>("CanvasLayer/UI/LogPanel/LogLabel");
         _rewardPanel = GetNode<PanelContainer>("CanvasLayer/UI/RewardPanel");
-        _playerToken = GetNode<ColorRect>("Map/PlayerToken");
-        _enemyToken = GetNode<ColorRect>("Battle/EnemyToken");
-        _chestToken = GetNode<ColorRect>("Map/ChestToken");
-        _enemyMapToken = GetNode<ColorRect>("Map/EnemyToken");
+        _startPanel = GetNode<PanelContainer>("CanvasLayer/UI/StartPanel");
+        _startButton = GetNode<Button>("CanvasLayer/UI/StartPanel/StartVBox/StartButton");
+        _mapAsset = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgMapAsset");
+        _playerToken = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgPlayerAsset");
+        _enemyToken = GetNode<ColorRect>("CanvasLayer/UI/BattleScene/EnemyToken");
+        _chestToken = GetNode<ColorRect>("CanvasLayer/UI/MapScene/ChestToken");
+        _enemyMapToken = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgEnemyAsset");
         _rewardButtons =
         [
             GetNode<Button>("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption1"),
@@ -52,6 +59,7 @@ public partial class DqRpgPrototype : Node2D
             GetNode<Button>("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption3")
         ];
 
+        _startButton.Pressed += StartRun;
         for (var i = 0; i < _rewardButtons.Length; i++)
         {
             var index = i;
@@ -68,6 +76,16 @@ public partial class DqRpgPrototype : Node2D
     {
         if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
         {
+            return;
+        }
+
+        if (!_hasStarted)
+        {
+            if (keyEvent.Keycode is Key.Enter or Key.KpEnter or Key.Space)
+            {
+                StartRun();
+            }
+
             return;
         }
 
@@ -254,6 +272,7 @@ public partial class DqRpgPrototype : Node2D
 
     private void RestartRun()
     {
+        _hasStarted = false;
         _state = _loop.CreateInitialState();
         _currentEncounter = null;
         _currentRewards = [];
@@ -267,6 +286,18 @@ public partial class DqRpgPrototype : Node2D
         AppendLog(_loop.DescribePlayableLoop());
         UpdateMapTokenPositions();
         RefreshView();
+    }
+
+    private void StartRun()
+    {
+        if (_hasStarted)
+        {
+            return;
+        }
+
+        _hasStarted = true;
+        RefreshView();
+        AppendLog("Adventure started.");
     }
 
     private Vector2I FindNextOpenTile(bool preferUpperHalf)
@@ -303,14 +334,15 @@ public partial class DqRpgPrototype : Node2D
 
     private void RefreshView()
     {
-        var mapVisible = _state.Phase == "map" || _state.Phase == "reward" || _state.IsGameOver || _state.IsVictory;
-        GetNode<Control>("Map").Visible = mapVisible;
-        GetNode<Control>("Battle").Visible = _state.Phase == "battle";
-        _rewardPanel.Visible = _rewardPanel.Visible && !_state.IsGameOver && !_state.IsVictory;
-        _enemyMapToken.Visible = _state.Phase != "battle";
-        _enemyToken.Visible = _state.Phase == "battle";
+        var mapVisible = _hasStarted && (_state.Phase == "map" || _state.Phase == "reward" || _state.IsGameOver || _state.IsVictory);
+        GetNode<Control>("CanvasLayer/UI/MapScene").Visible = mapVisible;
+        GetNode<Control>("CanvasLayer/UI/BattleScene").Visible = _hasStarted && _state.Phase == "battle";
+        _rewardPanel.Visible = _hasStarted && _rewardPanel.Visible && !_state.IsGameOver && !_state.IsVictory;
+        _startPanel.Visible = !_hasStarted;
+        _enemyMapToken.Visible = _hasStarted && _state.Phase != "battle";
+        _enemyToken.Visible = _hasStarted && _state.Phase == "battle";
 
-        _headerLabel.Text = _state.Phase switch
+        _headerLabel.Text = !_hasStarted ? "DQ RPG Prototype - Start" : _state.Phase switch
         {
             "map" => "DQ RPG Prototype - Map",
             "battle" => $"DQ RPG Prototype - Battle: {_currentEncounter?.Name ?? "Unknown"}",
@@ -332,6 +364,11 @@ public partial class DqRpgPrototype : Node2D
 
     private string BuildObjectiveText()
     {
+        if (!_hasStarted)
+        {
+            return "Click Start Adventure to enter the map and begin the core loop.";
+        }
+
         if (_state.IsVictory)
         {
             return "Boss defeated. Prototype loop proved. Press R to restart.";

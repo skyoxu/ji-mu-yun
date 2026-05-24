@@ -422,6 +422,11 @@ public sealed class PrototypeIterationPlanService
     {
         var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
         var missing = new List<string>();
+        var boundaryIssue = FindRpgPlanAcceptanceBoundaryIssue(goals);
+        if (boundaryIssue is not null)
+        {
+            return boundaryIssue;
+        }
 
         if (!ContainsAny(combined, "asset", "assets", "material", "materials", "sprite", "sprites", "tileset", "ui", "hud", "素材", "美术", "界面"))
         {
@@ -463,6 +468,37 @@ public sealed class PrototypeIterationPlanService
         }
 
         return $"Missing RPG contract steps: {string.Join(", ", missing)}.";
+    }
+
+    private static string? FindRpgPlanAcceptanceBoundaryIssue(ProjectIterationGoalSnapshot[] goals)
+    {
+        var firstGoal = goals.OrderBy(goal => goal.GoalIndex).FirstOrDefault();
+        if (firstGoal is null)
+        {
+            return null;
+        }
+
+        var firstGoalText = string.Join(" ", firstGoal.Title, firstGoal.Description, firstGoal.AcceptanceHint);
+        if (ContainsAny(
+                firstGoalText,
+                "mapscene",
+                "mapscene.tscn",
+                "battle scene",
+                "battlescene",
+                "battlescene.tscn",
+                "scene switching",
+                "scene switch",
+                "switch into",
+                "return path",
+                "full playable",
+                "full rpg playable",
+                "package readiness",
+                "final acceptance"))
+        {
+            return "RPG plan acceptance boundary mismatch: step 1 must only validate foundation assets/UI in the current prototype scene. Dedicated MapScene, BattleScene, scene switching, full playable, package readiness, and final acceptance requirements must be split into later steps.";
+        }
+
+        return null;
     }
 
     private static string BuildRpgRegenerationPrompt(ProjectIterationSessionDetails details)

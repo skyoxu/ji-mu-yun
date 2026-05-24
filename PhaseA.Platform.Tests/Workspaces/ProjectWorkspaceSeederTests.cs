@@ -81,6 +81,30 @@ public sealed class ProjectWorkspaceSeederTests
         File.ReadAllText(Path.Combine(targetRepo, ".agents", "skills", "prototype-rpg-godot-zh", "SKILL.md")).Should().Be("new skill\n");
         File.ReadAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md")).Should().Be("new manifest\n");
         File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("keep local file\n");
+        File.Exists(Path.Combine(targetRepo, "logs", ".gdignore")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureSeeded_CreatesLogsGdignoreForFreshWorkspace()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Godot"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot"));
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        var seeder = new ProjectWorkspaceSeeder(options);
+
+        seeder.EnsureSeeded(targetRepo);
+
+        File.Exists(Path.Combine(targetRepo, "logs", ".gdignore")).Should().BeTrue();
     }
 
     [Fact]

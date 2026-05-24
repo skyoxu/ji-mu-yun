@@ -76,12 +76,14 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             SyncManagedFiles(sourceRoot, targetRoot);
             SyncManagedDirectories(sourceRoot, targetRoot);
             RestoreWorkspaceJunctions(sourceRoot, targetRoot);
+            EnsureRuntimeLogsAreGodotIgnored(targetRoot);
             return;
         }
 
         Directory.CreateDirectory(targetRoot);
         CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
         RestoreWorkspaceJunctions(sourceRoot, targetRoot);
+        EnsureRuntimeLogsAreGodotIgnored(targetRoot);
     }
 
     private static void SyncManagedFiles(string sourceRoot, string targetRoot)
@@ -185,6 +187,17 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         return relativePath.StartsWith(
             $"Tests.Godot{Path.DirectorySeparatorChar}addons{Path.DirectorySeparatorChar}gdUnit4{Path.DirectorySeparatorChar}",
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void EnsureRuntimeLogsAreGodotIgnored(string targetRoot)
+    {
+        var logsRoot = Path.Combine(targetRoot, "logs");
+        Directory.CreateDirectory(logsRoot);
+        var gdignorePath = Path.Combine(logsRoot, ".gdignore");
+        if (!File.Exists(gdignorePath))
+        {
+            File.WriteAllText(gdignorePath, string.Empty);
+        }
     }
 
     private static void RestoreWorkspaceJunctions(string sourceRoot, string targetRoot)

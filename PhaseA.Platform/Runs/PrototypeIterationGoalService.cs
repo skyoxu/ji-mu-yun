@@ -22,6 +22,7 @@ public sealed class PrototypeIterationGoalService
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public PrototypeIterationGoalService(
         PhaseAMetadataStore metadataStore,
@@ -40,7 +41,8 @@ public sealed class PrototypeIterationGoalService
         PrototypeContractService? contractService = null,
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
-        TimeSpan? executionTimeout = null)
+        TimeSpan? executionTimeout = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -51,6 +53,7 @@ public sealed class PrototypeIterationGoalService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<PrototypeIterationGoalExecutionResult> ExecuteNextAsync(
@@ -96,6 +99,7 @@ public sealed class PrototypeIterationGoalService
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "project_busy", "当前有任务正在执行，请等待完成后再试。", nextGoal.GoalIndex, true, "paused_for_review");
         }
 
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", null, null, CancellationToken.None);
@@ -189,11 +193,18 @@ public sealed class PrototypeIterationGoalService
                     publicSummary = AppendGodotSmokeValidationFailure(publicSummary, godotSmokeValidation);
                 }
             }
+            else if (string.Equals(acceptanceValidation.Status, "failed", StringComparison.Ordinal))
+            {
+                publicSummary = AppendAcceptanceValidationFailure(publicSummary, nextGoal, acceptanceValidation);
+                codexOutput = AppendAcceptanceValidationFailureEvidence(codexOutput, acceptanceValidation);
+            }
 
             var goalOutcome = acceptanceValidation.Passed
                 ? godotSmokeValidation.Passed
                     ? new IterationGoalOutcome("succeeded", "completed", true)
                     : new IterationGoalOutcome("needs_fix", "needs_fix", false)
+                : string.Equals(acceptanceValidation.Status, "failed", StringComparison.Ordinal)
+                    ? new IterationGoalOutcome("needs_fix", "needs_fix", false)
                 : DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
 
             await File.WriteAllTextAsync(resultAbsolutePath, BuildResultLog(details.Session, nextGoal, runId, model, publicSummary, codexResult, codexOutput, now), Encoding.UTF8, CancellationToken.None);
@@ -718,6 +729,32 @@ public sealed class PrototypeIterationGoalService
             STATUS: completed
             VERIFY: Platform acceptance validation passed for the current gameplay goal.
             REMAINING: none
+            """;
+    }
+
+    private static string AppendAcceptanceValidationFailure(
+        string publicSummary,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalAcceptanceValidationResult validation)
+    {
+        return $"""
+            {publicSummary.Trim()}
+
+            Platform acceptance:
+            Goal {goal.GoalIndex} did not pass platform validation. The current goal remains needs_fix.
+            Reason: {validation.Reason ?? validation.Status}
+            """;
+    }
+
+    private static string AppendAcceptanceValidationFailureEvidence(
+        string codexOutput,
+        PrototypeGoalAcceptanceValidationResult validation)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return $"""
+            {prefix}STATUS: needs_fix
+            VERIFY: Platform acceptance validation failed for the current gameplay goal.
+            REASON: {validation.Reason ?? validation.Status}
             """;
     }
 

@@ -12,6 +12,9 @@ import tempfile
 from pathlib import Path
 
 
+PREWARM_TIMEOUT_SEC = 120
+
+
 SCRIPT_TEXT = r'''extends SceneTree
 
 const MAIN_SCENE := "res://Game.Godot/Scenes/Main.tscn"
@@ -180,6 +183,53 @@ def _cleanup_godot_processes(godot_bin: str) -> None:
         pass
 
 
+def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
+    logs_root = project_root / "logs"
+    _ensure_dir(logs_root)
+    gdignore = logs_root / ".gdignore"
+    if not gdignore.exists():
+        _write_text(gdignore, "")
+
+
+def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/PID", str(process.pid), "/T"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=20,
+        )
+    except Exception:
+        try:
+            process.kill()
+        except Exception:
+            pass
+
+
+def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[int, str, str]:
+    process = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=timeout_sec)
+        return process.returncode, stdout or "", stderr or ""
+    except subprocess.TimeoutExpired as exc:
+        _terminate_process_tree(process)
+        stdout, stderr = process.communicate()
+        prefix_stdout = exc.stdout.decode("utf-8", errors="ignore") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        prefix_stderr = exc.stderr.decode("utf-8", errors="ignore") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        return 124, prefix_stdout + (stdout or ""), prefix_stderr + (stderr or "")
+
+
 def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: int) -> int:
     bin_path = Path(godot_bin)
     project_root = Path(project_path)
@@ -200,6 +250,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
     ts = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     dest = project_root / "logs" / "ci" / day / "prototype-main-menu-navigation" / ts
     _ensure_dir(dest)
+    _ensure_runtime_logs_godot_ignored(project_root)
 
     temp_script_dir = Path(tempfile.mkdtemp(prefix="phasea-nav-smoke-"))
     try:
@@ -212,37 +263,32 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
         _write_text(temp_script, SCRIPT_TEXT)
 
         prewarm_cmd = [str(bin_path), "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
-        prewarm = subprocess.run(
+        prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
             prewarm_cmd,
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-            timeout=600,
+            project_root,
+            PREWARM_TIMEOUT_SEC,
         )
         prewarm_mode = "godot-build-solutions"
-        prewarm_stdout = prewarm.stdout or ""
-        prewarm_stderr = prewarm.stderr or ""
-        if prewarm.returncode != 0:
-            fallback = subprocess.run(
+        if prewarm_returncode == 124:
+            _cleanup_godot_processes(str(bin_path))
+            prewarm_stderr += "\n[prototype_main_menu_navigation] godot build-solutions prewarm timed out."
+        if prewarm_returncode != 0:
+            fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
                 ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=600,
+                project_root,
+                PREWARM_TIMEOUT_SEC,
             )
             prewarm_mode = "dotnet-build"
-            prewarm_stdout += ("\n" if prewarm_stdout else "") + (fallback.stdout or "")
-            prewarm_stderr += ("\n" if prewarm_stderr else "") + (fallback.stderr or "")
-            if fallback.returncode != 0:
+            prewarm_stdout += ("\n" if prewarm_stdout else "") + fallback_stdout
+            prewarm_stderr += ("\n" if prewarm_stderr else "") + fallback_stderr
+            if fallback_returncode == 124:
+                prewarm_stderr += "\n[prototype_main_menu_navigation] dotnet prewarm fallback timed out."
+            if fallback_returncode != 0:
                 summary = {
                     "run_id": f"prototype-main-menu-navigation-{ts}",
                     "expected_scene": expected_scene,
                     "passed": False,
-                    "exit_code": fallback.returncode,
+                    "exit_code": fallback_returncode,
                     "prewarm_mode": prewarm_mode,
                     "prewarm_failed": True,
                     "artifacts": {
@@ -255,7 +301,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
                     print(prewarm_stdout, file=sys.stderr)
                 if prewarm_stderr.strip():
                     print(prewarm_stderr, file=sys.stderr)
-                return fallback.returncode or 1
+                return fallback_returncode or 1
 
         cmd = [
             str(bin_path),

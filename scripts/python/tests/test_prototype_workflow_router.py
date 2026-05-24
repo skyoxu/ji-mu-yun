@@ -791,6 +791,7 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertIn("PrototypeCatalog + ScreenNavigator", prompt)
         self.assertIn("default_scene", prompt)
         self.assertIn("不允许只生成 prototype 场景文件而不接通 Main.tscn 的主菜单原型入口", prompt)
+        self.assertIn("Title, Grid, and StatusLabel", prompt)
 
     def test_validate_day4_outputs_should_fail_when_scaffold_or_core_files_are_missing(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_fail", "scripts/python/run_prototype_workflow.py")
@@ -823,11 +824,25 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             (root / "Game.Core.Tests" / "Prototypes").mkdir(parents=True, exist_ok=True)
             (root / "Tests.Godot" / "tests" / "Prototype" / class_name).mkdir(parents=True, exist_ok=True)
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / f"{class_name}.tscn").write_text(
-                "[gd_scene format=3]\n[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n",
+                "[gd_scene format=3]\n"
+                "[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n"
+                "[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n"
+                "[node name=\"CanvasLayer\" type=\"CanvasLayer\" parent=\".\"]\n"
+                "[node name=\"UI\" type=\"Control\" parent=\"CanvasLayer\"]\n"
+                "[node name=\"StartButton\" type=\"Button\" parent=\"CanvasLayer/UI\"]\n"
+                "text = \"Start Adventure\"\n"
+                "[node name=\"MapScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                "[node name=\"Title\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgMapAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"Grid\" type=\"GridContainer\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"StatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
                 encoding="utf-8",
             )
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
-                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
                 encoding="utf-8",
             )
             (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
@@ -847,6 +862,53 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 
         self.assertTrue(ok)
         self.assertEqual([], issues)
+
+    def test_validate_day4_outputs_should_fail_when_rpg_map_visible_markers_are_missing(self) -> None:
+        module = _load_module("prototype_workflow_router_day4_validation_missing_rpg_markers", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            class_name = "DqRpgPrototype"
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core.Tests" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name).mkdir(parents=True, exist_ok=True)
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / f"{class_name}.tscn").write_text(
+                "[gd_scene format=3]\n"
+                "[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n"
+                "[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n"
+                "[node name=\"CanvasLayer\" type=\"CanvasLayer\" parent=\".\"]\n"
+                "[node name=\"UI\" type=\"Control\" parent=\"CanvasLayer\"]\n"
+                "[node name=\"StartButton\" type=\"Button\" parent=\"CanvasLayer/UI\"]\n"
+                "text = \"Start Adventure\"\n"
+                "[node name=\"MapScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                "[node name=\"RpgMapAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
+                "namespace Game.Core.Prototypes;\npublic sealed class DqRpgPrototypeLoop { public int WinBattleTarget => 15; public string[] RewardOptions => []; public string DescribePlayableLoop() => \"ok\"; }\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs").write_text(
+                "MoveOnMap(); StartEncounter(); ResolveAttackTurn(); ApplyReward(); state.BattlesWon.ToString(); state.RewardOptions.Count.ToString(); state.StatusText.ToString();\n",
+                encoding="utf-8",
+            )
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_dq_rpg_prototype_scene.gd").write_text(
+                'var scene := preload("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn").instantiate()\nassert_object(scene.get_node_or_null("PrototypeLoop")).is_not_null()\n',
+                encoding="utf-8",
+            )
+
+            ok, issues = module._validate_day4_implementation_outputs(root=root, payload={"slug": "dq-rpg"})
+
+        self.assertFalse(ok)
+        self.assertIn("rpg_scene_node_contract_drift=Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", issues)
+        self.assertIn("rpg_script_node_contract_drift=Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs", issues)
 
     def test_validate_day4_outputs_should_fail_when_rpg_test_contract_drifts(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_contract_drift", "scripts/python/run_prototype_workflow.py")
@@ -894,11 +956,25 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
             class_name = "DqRpgPrototype"
             module.write_text(
                 root / "Game.Godot" / "Prototypes" / "dq-rpg" / f"{class_name}.tscn",
-                "[gd_scene format=3]\n[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n",
+                "[gd_scene format=3]\n"
+                "[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n"
+                "[node name=\"PrototypeLoop\" type=\"Node2D\" parent=\".\"]\n"
+                "[node name=\"CanvasLayer\" type=\"CanvasLayer\" parent=\".\"]\n"
+                "[node name=\"UI\" type=\"Control\" parent=\"CanvasLayer\"]\n"
+                "[node name=\"StartButton\" type=\"Button\" parent=\"CanvasLayer/UI\"]\n"
+                "text = \"Start Adventure\"\n"
+                "[node name=\"MapScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                "[node name=\"Title\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgMapAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"Grid\" type=\"GridContainer\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"StatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
             )
             module.write_text(
                 root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs",
-                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
             )
             module.write_text(
                 root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs",

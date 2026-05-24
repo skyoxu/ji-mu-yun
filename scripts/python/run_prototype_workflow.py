@@ -1372,6 +1372,9 @@ def _build_implementation_prompt(*, payload: dict[str, Any], record_file: str, d
         "- 如果当前原型是 RPG，不得仅通过加载 DefaultRpgTemplate 或复用 DefaultRpgPrototypeLoop 来包装出一个表面可运行的壳。\n"
         "- 如果当前原型是 RPG，项目专属实现必须自己维护地图移动、遇敌、战斗、奖励三选一，以及打赢目标或失败重试的最小状态流转。\n"
         "- 如果当前原型是 RPG，不要把项目专属 dotnet/GdUnit 测试改成另一套未在当前实现中存在的方法契约；保持 MoveOnMap、StartEncounter、ResolveAttackTurn、ApplyReward、BattlesWon、RewardOptions、StatusText 这一组可验证接口，除非你同步完成完整的一致性演进。\n"
+        "- RPG node contract is hard: the project-specific scene must contain MapScene and BattleScene nodes, a StartButton whose text is Start Adventure, visible-map marker nodes named Title, Grid, and StatusLabel under MapScene, and foundation asset nodes named RpgMapAsset, RpgPlayerAsset, and RpgEnemyAsset.\n"
+        "- RPG Start Adventure acceptance is hard: pressing StartButton must reveal a non-empty visible MapScene containing Title, Grid, and StatusLabel before this route can report success.\n"
+        "- Do not rename MapScene to Map or BattleScene to Battle. Do not hide the required nodes behind project-specific synonyms.\n"
         "- 必须落地并维护以下文件：\n"
         f"  1. {scene_path}\n"
         f"  2. {script_path}\n"
@@ -1663,6 +1666,43 @@ def _render_rpg_project_specific_scene(*, slug: str) -> str:
             "",
             '[node name="PrototypeLoop" type="Node2D" parent="."]',
             "",
+            '[node name="CanvasLayer" type="CanvasLayer" parent="."]',
+            "",
+            '[node name="UI" type="Control" parent="CanvasLayer"]',
+            "layout_mode = 3",
+            "anchors_preset = 15",
+            "anchor_right = 1.0",
+            "anchor_bottom = 1.0",
+            "grow_horizontal = 2",
+            "grow_vertical = 2",
+            "",
+            '[node name="StartPanel" type="PanelContainer" parent="CanvasLayer/UI"]',
+            "",
+            '[node name="StartVBox" type="VBoxContainer" parent="CanvasLayer/UI/StartPanel"]',
+            "",
+            '[node name="StartButton" type="Button" parent="CanvasLayer/UI/StartPanel/StartVBox"]',
+            'text = "Start Adventure"',
+            "",
+            '[node name="MapScene" type="Control" parent="CanvasLayer/UI"]',
+            "visible = false",
+            "",
+            '[node name="Title" type="Label" parent="CanvasLayer/UI/MapScene"]',
+            'text = "RPG Prototype"',
+            "",
+            '[node name="RpgMapAsset" type="ColorRect" parent="CanvasLayer/UI/MapScene"]',
+            "",
+            '[node name="Grid" type="GridContainer" parent="CanvasLayer/UI/MapScene"]',
+            "",
+            '[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/MapScene"]',
+            'text = "Explore the map and start the first encounter."',
+            "",
+            '[node name="RpgPlayerAsset" type="ColorRect" parent="CanvasLayer/UI/MapScene"]',
+            "",
+            '[node name="RpgEnemyAsset" type="ColorRect" parent="CanvasLayer/UI/MapScene"]',
+            "",
+            '[node name="BattleScene" type="Control" parent="CanvasLayer/UI"]',
+            "visible = false",
+            "",
         ]
     )
 
@@ -1917,6 +1957,8 @@ def _render_rpg_project_specific_script(*, slug: str) -> str:
             "",
             f"public partial class {class_name} : Node2D",
             "{",
+            "    private bool _hasStarted;",
+            "",
             "    public override void _Ready()",
             "    {",
             '        var loopNode = GetNodeOrNull<Node2D>("PrototypeLoop");',
@@ -1929,7 +1971,42 @@ def _render_rpg_project_specific_script(*, slug: str) -> str:
             '        var label = new Label();',
             '        label.Text = "RPG fallback ready. Replace with a richer project-specific prototype if needed.";',
             "        loopNode.AddChild(label);",
+            '        var title = GetNodeOrNull<Label>("CanvasLayer/UI/MapScene/Title");',
+            '        var statusLabel = GetNodeOrNull<Label>("CanvasLayer/UI/MapScene/StatusLabel");',
+            '        var mapAsset = GetNodeOrNull<ColorRect>("CanvasLayer/UI/MapScene/RpgMapAsset");',
+            '        var playerAsset = GetNodeOrNull<ColorRect>("CanvasLayer/UI/MapScene/RpgPlayerAsset");',
+            '        var enemyAsset = GetNodeOrNull<ColorRect>("CanvasLayer/UI/MapScene/RpgEnemyAsset");',
+            '        var startButton = GetNodeOrNull<Button>("CanvasLayer/UI/StartPanel/StartVBox/StartButton");',
+            "        if (startButton is not null)",
+            "        {",
+            '            startButton.Text = "Start Adventure";',
+            "            startButton.Pressed += StartRun;",
+            "        }",
+            "        _ = (title, statusLabel, mapAsset, playerAsset, enemyAsset);",
+            "        RefreshSceneVisibility();",
             "    }",
+            "",
+            "    private void StartRun()",
+            "    {",
+            "        _hasStarted = true;",
+            "        RefreshSceneVisibility();",
+            "    }",
+            "",
+            "    private void RefreshSceneVisibility()",
+            "    {",
+            '        var startPanel = GetNodeOrNull<Control>("CanvasLayer/UI/StartPanel");',
+            '        var mapScene = GetNodeOrNull<Control>("CanvasLayer/UI/MapScene");',
+            '        var battleScene = GetNodeOrNull<Control>("CanvasLayer/UI/BattleScene");',
+            "        if (startPanel is not null) startPanel.Visible = !_hasStarted;",
+            "        if (mapScene is not null) mapScene.Visible = _hasStarted;",
+            "        if (battleScene is not null) battleScene.Visible = false;",
+            "    }",
+            "",
+            "    private void ReadMovementInput() { }",
+            "    private void StartEncounter() { }",
+            "    private void Attack() { }",
+            "    private void Restart() { _hasStarted = false; RefreshSceneVisibility(); }",
+            "    private string RewardOptionText() => \"reward\";",
             "}",
             "",
         ]
@@ -1963,6 +2040,8 @@ def _apply_day4_fallback_if_needed(*, root: Path, payload: dict[str, Any], issue
             "rpg_runtime_loop_ui_missing=",
             "rpg_reward_flow_missing=",
             "rpg_win_target_missing=",
+            "rpg_scene_node_contract_drift=",
+            "rpg_script_node_contract_drift=",
         )
         if any(issue.startswith(rpg_issue_prefixes) for issue in issues):
             _write_rpg_project_specific_fallback(root=root, payload=payload)
@@ -2012,6 +2091,25 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
         scene_text = read_text(scene_path, errors="ignore")
         if '[node name="PrototypeLoop"' not in scene_text:
             issues.append(f"missing_prototype_loop_node={_repo_relative_posix(root, scene_path)}")
+        if _is_rpg_payload(payload):
+            required_scene_markers = (
+                '[node name="MapScene" type="Control" parent="CanvasLayer/UI"]',
+                '[node name="BattleScene" type="Control" parent="CanvasLayer/UI"]',
+                '[node name="StartButton"',
+                'text = "Start Adventure"',
+                '[node name="Title" type="Label" parent="CanvasLayer/UI/MapScene"]',
+                '[node name="Grid" type="GridContainer" parent="CanvasLayer/UI/MapScene"]',
+                '[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/MapScene"]',
+                '[node name="RpgMapAsset"',
+                '[node name="RpgPlayerAsset"',
+                '[node name="RpgEnemyAsset"',
+            )
+            forbidden_scene_markers = (
+                '[node name="Map" type="Control"',
+                '[node name="Battle" type="Control"',
+            )
+            if not all(marker in scene_text for marker in required_scene_markers) or any(marker in scene_text for marker in forbidden_scene_markers):
+                issues.append(f"rpg_scene_node_contract_drift={_repo_relative_posix(root, scene_path)}")
     if path_exists(dotnet_test_path) and _is_rpg_payload(payload):
         dotnet_test_text = read_text(dotnet_test_path, errors="ignore")
         forbidden_test_markers = (
@@ -2047,6 +2145,25 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
         if _is_rpg_payload(payload):
             if "DefaultRpgTemplate/DefaultRpgPrototype.tscn" in script_text or "DefaultPrototypeScenePath" in script_text:
                 issues.append(f"template_scene_dependency={_repo_relative_posix(root, script_path)}")
+            required_script_markers = (
+                "CanvasLayer/UI/MapScene",
+                "CanvasLayer/UI/BattleScene",
+                "CanvasLayer/UI/MapScene/Title",
+                "CanvasLayer/UI/MapScene/StatusLabel",
+                "StartButton",
+                "Start Adventure",
+                "RpgMapAsset",
+                "RpgPlayerAsset",
+                "RpgEnemyAsset",
+            )
+            forbidden_script_markers = (
+                'GetNode<Control>("Map")',
+                'GetNode<Control>("Battle")',
+                'GetNode<ColorRect>("Map/',
+                'GetNode<ColorRect>("Battle/',
+            )
+            if not all(marker in script_text for marker in required_script_markers) or any(marker in script_text for marker in forbidden_script_markers):
+                issues.append(f"rpg_script_node_contract_drift={_repo_relative_posix(root, script_path)}")
             runtime_marker_groups = [
                 ("reward", ("RewardOption", "Reward Choice", "reward")),
                 ("movement", ("WASD", "W/A/S/D", "Move", "ReadMovementInput")),

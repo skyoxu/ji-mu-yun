@@ -23,7 +23,7 @@ internal static class PrototypeGoalAcceptanceValidator
 
         var testsPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
         var corePath = Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
-        if (contract.AssetUsageAcceptance && !HasRpgSceneAssetUsage(project.RepoPath))
+        if (contract.AssetUsageAcceptance && !HasRpgSceneAssetUsage(project.RepoPath, requireSplitScenes: contract.FinalAcceptance))
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_asset_usage");
         }
@@ -208,7 +208,6 @@ internal static class PrototypeGoalAcceptanceValidator
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs"),
-            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"),
             Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"),
             Path.Combine(repoPath, "Game.Godot", "Scenes", "Main.tscn")
@@ -218,7 +217,7 @@ internal static class PrototypeGoalAcceptanceValidator
             return false;
         }
 
-        if (!HasRpgSceneAssetUsage(repoPath))
+        if (!HasRpgSceneAssetUsage(repoPath, requireSplitScenes: true))
         {
             return false;
         }
@@ -266,8 +265,13 @@ internal static class PrototypeGoalAcceptanceValidator
         var mainScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
         var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
         var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
-        var mapScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs");
-        if (new[] { mainScene, mainScript, mapScene, mapScript }.Any(path => !File.Exists(path)))
+        if (new[] { mainScene, mainScript, mapScene }.Any(path => !File.Exists(path)))
+        {
+            return false;
+        }
+
+        var mapScript = ResolveSceneScriptPath(repoPath, mapScene, Path.Combine("Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"));
+        if (string.IsNullOrWhiteSpace(mapScript) || !File.Exists(mapScript))
         {
             return false;
         }
@@ -282,25 +286,27 @@ internal static class PrototypeGoalAcceptanceValidator
                mainSceneText.Contains("MapScene", StringComparison.Ordinal) &&
                mainSceneText.Contains("parent=\"CanvasLayer/UI\"", StringComparison.Ordinal) &&
                mainSceneText.Contains("anchors_preset = 15", StringComparison.Ordinal) &&
-               mainScriptText.Contains("Pressed += ShowMapScene", StringComparison.Ordinal) &&
+               HasStartAdventureMapEntry(mainScriptText) &&
                mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal) &&
                mainScriptText.Contains("_mapScene.Visible = true", StringComparison.Ordinal) &&
                mapSceneText.Contains("MapScene", StringComparison.Ordinal) &&
+               HasUniqueExtResourceIds(mapSceneText) &&
+               HasSceneRootScript(mapSceneText) &&
                mapSceneText.Contains("TrackLayer", StringComparison.Ordinal) &&
                mapSceneText.Contains("custom_minimum_size = Vector2(600, 600)", StringComparison.Ordinal) &&
-               HasSceneNodeUnderParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
-               HasSceneNodeUnderParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
-               HasSceneNodeUnderParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer") &&
-               HasSceneNodeUnderParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay") &&
+               HasSceneNodeUnderAnyParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
+               HasSceneNodeUnderAnyParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
+               HasSceneNodeUnderAnyParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
+               HasSceneNodeUnderAnyParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay", "TrackLayer/Overlay") &&
                mapSceneText.Contains("Grid", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal) &&
                mapScriptText.Contains("TrackLayer", StringComparison.Ordinal) &&
-               mapScriptText.Contains("GridToPosition", StringComparison.Ordinal) &&
-               mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal) &&
+               HasGridToVisiblePosition(mapScriptText) &&
+               HasPlayerVisibilityRestore(mapScriptText) &&
                mapScriptText.Contains("MovePlayer", StringComparison.Ordinal) &&
-               mapScriptText.Contains("EncounterEntered", StringComparison.Ordinal);
+               ContainsAny(mapScriptText, "EncounterEntered", "EncounterPressed");
     }
 
     private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
@@ -324,8 +330,14 @@ internal static class PrototypeGoalAcceptanceValidator
     private static bool HasRpgRewardFlowAcceptanceFiles(string repoPath)
     {
         var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
-        var mapScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs");
-        if (new[] { mainScript, mapScript }.Any(path => !File.Exists(path)))
+        var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
+        if (!File.Exists(mainScript) || !File.Exists(mapScene))
+        {
+            return false;
+        }
+
+        var mapScript = ResolveSceneScriptPath(repoPath, mapScene, Path.Combine("Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"));
+        if (string.IsNullOrWhiteSpace(mapScript) || !File.Exists(mapScript))
         {
             return false;
         }
@@ -336,8 +348,33 @@ internal static class PrototypeGoalAcceptanceValidator
                !mainScriptText.Contains("if (isVictory && rewards.Count > 0)", StringComparison.Ordinal) &&
                HasRewardSceneEntry(mainScriptText) &&
                mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal) &&
-               mapScriptText.Contains("ShowRewardReturnStatus", StringComparison.Ordinal) &&
-               mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal);
+               ContainsAny(mapScriptText, "ShowRewardReturnStatus", "ApplyState") &&
+               HasPlayerVisibilityRestore(mapScriptText);
+    }
+
+    private static bool HasStartAdventureMapEntry(string mainScriptText)
+    {
+        return mainScriptText.Contains("Pressed += ShowMapScene", StringComparison.Ordinal) ||
+               (mainScriptText.Contains("Pressed += StartRun", StringComparison.Ordinal) &&
+                mainScriptText.Contains("StartRun", StringComparison.Ordinal) &&
+                mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal));
+    }
+
+    private static bool HasGridToVisiblePosition(string mapScriptText)
+    {
+        return mapScriptText.Contains("GridToPosition", StringComparison.Ordinal) ||
+               mapScriptText.Contains("MapTokenPosition", StringComparison.Ordinal);
+    }
+
+    private static bool HasPlayerVisibilityRestore(string mapScriptText)
+    {
+        return mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal) ||
+               mapScriptText.Contains("_playerAsset.Visible = true", StringComparison.Ordinal);
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.Ordinal));
     }
 
     private static bool HasRewardListGuard(string mainScriptText)
@@ -364,7 +401,60 @@ internal static class PrototypeGoalAcceptanceValidator
             RegexOptions.CultureInvariant);
     }
 
-    private static bool HasRpgSceneAssetUsage(string repoPath)
+    private static bool HasSceneRootScript(string sceneText)
+    {
+        var match = Regex.Match(
+            sceneText,
+            "\\[node\\s+name=\"MapScene\"[^\\]]*\\](?<body>.*?)(?=\\r?\\n\\[node|\\r?\\n\\[connection|\\z)",
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        return match.Success &&
+               Regex.IsMatch(match.Groups["body"].Value, "script\\s*=\\s*ExtResource\\(\"[^\"]+\"\\)", RegexOptions.CultureInvariant);
+    }
+
+    private static bool HasUniqueExtResourceIds(string sceneText)
+    {
+        var ids = Regex.Matches(
+                sceneText,
+                "\\[ext_resource\\s+[^\\]]*id=\"(?<id>[^\"]+)\"[^\\]]*\\]",
+                RegexOptions.CultureInvariant)
+            .Cast<Match>()
+            .Select(match => match.Groups["id"].Value)
+            .ToList();
+        return ids.Count == ids.Distinct(StringComparer.Ordinal).Count();
+    }
+
+    private static bool HasSceneNodeUnderAnyParent(string sceneText, string nodeName, params string[] parents)
+    {
+        return parents.Any(parent => HasSceneNodeUnderParent(sceneText, nodeName, parent));
+    }
+
+    private static string? ResolveSceneScriptPath(string repoPath, string scenePath, string fallbackRelativePath)
+    {
+        var sceneText = File.ReadAllText(scenePath);
+        var scriptResource = Regex.Matches(
+                sceneText,
+                "\\[ext_resource\\s+[^\\]]*type=\"Script\"[^\\]]*path=\"(?<path>[^\"]+)\"[^\\]]*id=\"(?<id>[^\"]+)\"[^\\]]*\\]",
+                RegexOptions.CultureInvariant)
+            .Cast<Match>()
+            .Select(match => match.Groups["path"].Value)
+            .FirstOrDefault(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(scriptResource))
+        {
+            return ResolveGodotResourcePath(repoPath, scriptResource);
+        }
+
+        return Path.Combine(repoPath, fallbackRelativePath);
+    }
+
+    private static string ResolveGodotResourcePath(string repoPath, string resourcePath)
+    {
+        const string resPrefix = "res://";
+        return resourcePath.StartsWith(resPrefix, StringComparison.Ordinal)
+            ? Path.Combine(repoPath, resourcePath[resPrefix.Length..].Replace('/', Path.DirectorySeparatorChar))
+            : Path.Combine(repoPath, resourcePath.Replace('/', Path.DirectorySeparatorChar));
+    }
+
+    private static bool HasRpgSceneAssetUsage(string repoPath, bool requireSplitScenes)
     {
         var sceneFiles = new[]
         {
@@ -372,7 +462,12 @@ internal static class PrototypeGoalAcceptanceValidator
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn")
         };
-        if (sceneFiles.Any(path => !File.Exists(path)))
+        if (!File.Exists(sceneFiles[0]))
+        {
+            return false;
+        }
+
+        if (requireSplitScenes && sceneFiles.Skip(1).Any(path => !File.Exists(path)))
         {
             return false;
         }
@@ -382,7 +477,10 @@ internal static class PrototypeGoalAcceptanceValidator
             return false;
         }
 
-        var usages = sceneFiles.SelectMany(path => ReadSceneAssetUsages(repoPath, path)).ToList();
+        var usages = sceneFiles
+            .Where(File.Exists)
+            .SelectMany(path => ReadSceneAssetUsages(repoPath, path))
+            .ToList();
         return HasRequiredRpgAssetUsage(usages, "RpgMapAsset", IsMapAssetPath) &&
                HasRequiredRpgAssetUsage(usages, "RpgPlayerAsset", IsPlayerAssetPath) &&
                HasRequiredRpgAssetUsage(usages, "RpgEnemyAsset", IsEnemyAssetPath);

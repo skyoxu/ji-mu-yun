@@ -99,10 +99,17 @@ internal static class PrototypeGodotSmokeService
             return PrototypeGoalGodotSmokeValidationResult.NotRequired();
         }
 
+        if (goal.GoalIndex is >= 1 and <= 4 && string.IsNullOrWhiteSpace(options.GodotBin))
+        {
+            return PrototypeGoalGodotSmokeValidationResult.NotRequired();
+        }
+
         var scenePath = ResolveSmokeScene(prototypeStateJson);
         if (string.IsNullOrWhiteSpace(scenePath))
         {
-            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"));
+            return goal.GoalIndex is 5 or 6
+                ? PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"))
+                : PrototypeGoalGodotSmokeValidationResult.NotRequired();
         }
 
         var smoke = await RunAsync(options, processRunner, project.RepoPath, scenePath, cancellationToken);
@@ -119,7 +126,7 @@ internal static class PrototypeGodotSmokeService
             return false;
         }
 
-        return goal.GoalIndex is 5 or 6;
+        return goal.GoalIndex is >= 1 and <= 6;
     }
 
     private static string? ResolveSmokeScene(string prototypeStateJson)

@@ -42,6 +42,7 @@ builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
 builder.Services.AddSingleton<Chapter2BootstrapService>();
+builder.Services.AddSingleton<HeavyRunnerQueueService>();
 builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
@@ -52,6 +53,7 @@ builder.Services.AddSingleton<PrototypeQuickFixService>();
 builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
 builder.Services.AddSingleton<PrototypeIterationPlanService>();
 builder.Services.AddSingleton<PrototypeIterationGoalService>();
+builder.Services.AddSingleton<PrototypeRepairPlanService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -95,6 +97,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/ui" ||
         context.Request.Path == "/downloads" ||
         context.Request.Path == "/assets" ||
+        context.Request.Path == "/admin/llm-usage" ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/asset-preview", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")) ||
@@ -180,6 +183,13 @@ app.MapGet("/api/account/active-run", async (
     return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
 });
 
+app.MapGet("/api/heavy-runner/queue", (
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback) =>
+{
+    return Results.Ok(readback.GetHeavyRunnerQueue(CurrentAccountId(context), CurrentIdentity(context).IsAdmin));
+});
+
 app.MapGet("/api/account/llm-usage", async (
     HttpContext context,
     [FromServices] ArtifactReadbackService readback,
@@ -199,6 +209,30 @@ app.MapGet("/api/admin/llm-usage", async (
     }
 
     return Results.Ok(await readback.GetAdminLlmUsageAsync(cancellationToken));
+});
+
+app.MapGet("/api/admin/llm-usage/aggregate", async (
+    string? grain,
+    string? split,
+    string? fromUtc,
+    string? toUtc,
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    try
+    {
+        return Results.Ok(await readback.GetAdminLlmUsageAggregateAsync(grain, split, fromUtc, toUtc, cancellationToken));
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        return Results.BadRequest(new { error = "invalid_llm_usage_query", detail = ex.Message });
+    }
 });
 
 app.MapGet("/api/admin/llm-usage.csv", async (
@@ -379,6 +413,12 @@ app.MapGet("/assets", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderAssets(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/admin/llm-usage", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminLlmUsage(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/projects/{projectId}", async (
@@ -1008,6 +1048,66 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
     }
 });
 
+app.MapPost("/api/projects/{projectId}/repair-plan", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeRepairPlanService repairPlans,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var accountId = CurrentAccountId(context);
+        var result = await repairPlans.CreateAsync(accountId, projectId, cancellationToken);
+        if (result.Status is "ready")
+        {
+            var goalSummary = $"{result.Summary}\n\n修复步骤：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "repair-plan-result", cancellationToken);
+        }
+
+        return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/projects/{projectId}/repair-plan/latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeRepairPlanService repairPlans,
+    CancellationToken cancellationToken) =>
+{
+    var result = await repairPlans.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "repair_plan_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/repair-plan/execute-next", async (
+    string projectId,
+    PrototypeRepairStepExecutionRequest request,
+    HttpContext context,
+    [FromServices] PrototypeRepairPlanService repairPlans,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var accountId = CurrentAccountId(context);
+        var result = await repairPlans.ExecuteNextAsync(accountId, projectId, request, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(result.Summary))
+        {
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", result.Summary, "repair-step-result", cancellationToken);
+        }
+
+        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapGet("/api/skill-actions", (
     HttpContext context,
     [FromServices] SkillActionService skillActions) =>
@@ -1206,6 +1306,28 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/repair", async (
     {
         var result = await prototypeWorkflow.RepairAsync(projectId, request, cancellationToken);
         return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async (
+    string projectId,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeWorkflow.ValidateAsync(projectId, cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" or "failed" => Results.Ok(result),
+            "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
+            "prototype_validation_not_available" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
+            _ => Results.BadRequest(result)
+        };
     }
     catch (InvalidOperationException ex)
     {

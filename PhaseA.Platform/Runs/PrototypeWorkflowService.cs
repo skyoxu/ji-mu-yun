@@ -13,6 +13,7 @@ public sealed class PrototypeWorkflowService
     private const string RunType = "prototype-7day-playable";
     private const int CurrentWorkflowMaxDay = 7;
     private const string RepairReasoningEffort = "high";
+    private static readonly TimeSpan RepairExecutionTimeout = TimeSpan.FromMinutes(12);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -28,6 +29,7 @@ public sealed class PrototypeWorkflowService
     private readonly PrototypeContractService _contractService;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -56,7 +58,8 @@ public sealed class PrototypeWorkflowService
         PrototypeRouteStateWriter? routeStateWriter = null,
         PrototypeContractService? contractService = null,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null)
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -72,6 +75,7 @@ public sealed class PrototypeWorkflowService
         _contractService = contractService ?? new PrototypeContractService();
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -119,6 +123,7 @@ public sealed class PrototypeWorkflowService
         var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", cancellationToken);
         await AdvancePrototypeStepsAsync(runId, cancellationToken);
@@ -230,16 +235,37 @@ public sealed class PrototypeWorkflowService
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
 
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressAsync(projectId, cancellationToken));
+        }
+
         _ = Task.Run(async () =>
         {
             try
             {
-                await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, contract.RelativePath, request);
+                await _heavyRunnerQueue.ExecuteAsync(
+                    runId,
+                    project.AccountId,
+                    project.ProjectId,
+                    RunType,
+                    async _ =>
+                    {
+                        await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, contract.RelativePath, request);
+                        return true;
+                    },
+                    CancellationToken.None);
             }
             catch (Exception ex)
             {
                 await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "", "原型路线失败，请查看运行记录错误输出。", CancellationToken.None);
+            }
+            finally
+            {
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
             }
         }, CancellationToken.None);
 
@@ -291,17 +317,35 @@ public sealed class PrototypeWorkflowService
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressAsync(projectId, cancellationToken));
+        }
         await SetProgressAsync(runId, "queued", "repair", "已提交原型修复，等待 runner。", cancellationToken);
 
         _ = Task.Run(async () =>
         {
             try
             {
-                await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, latestPrototypeRun, postValidationFailureRun, request.Model);
+                await _heavyRunnerQueue.ExecuteAsync(
+                    runId,
+                    project.AccountId,
+                    project.ProjectId,
+                    RunType,
+                    async _ =>
+                    {
+                        await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, latestPrototypeRun, postValidationFailureRun, request.Model);
+                        return true;
+                    },
+                    CancellationToken.None);
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath, repair: true), CancellationToken.None);
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "repair", "原型修复失败，请查看新的失败原因。", CancellationToken.None);
             }
         }, CancellationToken.None);
@@ -316,6 +360,77 @@ public sealed class PrototypeWorkflowService
             [],
             [],
             await GetProgressAsync(projectId, cancellationToken));
+    }
+
+    public async Task<PrototypeWorkflowResult> ValidateAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null)
+        {
+            throw new InvalidOperationException("Project not found.");
+        }
+
+        if (await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken))
+        {
+            return new PrototypeWorkflowResult("", "project_busy", 423, "", "", "Project runner is busy.", [], []);
+        }
+
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        var latestPrototypeRun = runs.FirstOrDefault(run => run.RunType == RunType);
+        var prototypeRecordPath = ExtractPrototypeRecordPath(latestPrototypeRun);
+        if (string.IsNullOrWhiteSpace(prototypeRecordPath))
+        {
+            return new PrototypeWorkflowResult("", "prototype_validation_not_available", 404, "", "", "No prototype workflow record is available for validation.", [], []);
+        }
+
+        _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var slug = ReadSlugFromPrototypeRecord(project.RepoPath, prototypeRecordPath)
+            ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        await SetProgressAsync(runId, "validating", "completion_state", "Validating the current prototype without running Codex.", cancellationToken);
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+
+        var validation = ValidateCompletedPrototypeState(project.RepoPath, slug);
+        var smoke = validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
+            ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, cancellationToken)
+            : PrototypeGodotSmokeResult.NotRun("prototype_completion_validation_failed");
+        var status = validation.Succeeded && smoke.ExitCode == 0 ? "succeeded" : "failed";
+        var exitCode = ResolveRunExitCode(0, smoke.ExitCode, validation.Succeeded);
+        var stdout = CombineProcessText("Prototype validation-only acceptance executed.", smoke.Stdout);
+        var stderr = CombineProcessText(validation.Error ?? "", smoke.Stderr);
+        var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug, prototypeRecordPath);
+
+        foreach (var artifact in discoveredArtifacts)
+        {
+            await _metadataStore.AddArtifactAsync(artifact, cancellationToken);
+        }
+
+        var contract = _contractService.Read(project);
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            validation_only = true,
+            prototype_record = prototypeRecordPath,
+            prototype_contract = contract.RelativePath,
+            slug,
+            prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
+            prototype_completion = validation.ToEvidence(),
+            godot_smoke = smoke.ToEvidence()
+        });
+        await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
+        await SetProgressAsync(
+            runId,
+            status,
+            "validation",
+            status == "succeeded" ? "Prototype validation passed." : "Prototype validation failed. Generate or continue a repair plan before packaging.",
+            cancellationToken);
+
+        var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressAsync(projectId, cancellationToken));
     }
 
     public async Task<PrototypeWorkflowProgress> GetProgressAsync(string projectId, CancellationToken cancellationToken = default)
@@ -464,9 +579,12 @@ public sealed class PrototypeWorkflowService
         var effectiveSlug = ReadSlugFromPrototypeRecord(projectRepoPath, prototypeRecordPath)
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
         var repairBasisRun = postValidationFailureRun ?? failedRun;
+        var godotDiagnostic = GodotFailureDiagnosticService.Analyze(project, repairBasisRun);
+        await SetProgressAsync(runId, "repairing", "godot_diagnostic", "Checking recent Godot validation errors before repair.", CancellationToken.None);
+        var godotCleanup = await GodotFailureDiagnosticService.CleanupIfRecommendedAsync(project, godotDiagnostic, CancellationToken.None);
         if (ShouldUsePostValidationRepair(repairBasisRun))
         {
-            await RunPostValidationRepairQueuedAsync(project, runId, prototypeRecordPath, effectiveSlug, repairBasisRun, model);
+            await RunPostValidationRepairQueuedAsync(project, runId, prototypeRecordPath, effectiveSlug, repairBasisRun, model, godotDiagnostic, godotCleanup);
             return;
         }
 
@@ -488,7 +606,16 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
+        HostedProcessResult process;
+        try
+        {
+            using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
+            process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), timeout.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            process = new HostedProcessResult(408, "", $"Prototype repair exceeded the {RepairExecutionTimeout.TotalMinutes:0} minute timeout.");
+        }
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ReadSlugFromPrototypeRecord(projectRepoPath, prototypeRecordPath)
             ?? effectiveSlug;
@@ -520,6 +647,7 @@ public sealed class PrototypeWorkflowService
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
+            godot_diagnostic = GodotFailureDiagnosticService.ToEvidence(godotDiagnostic, godotCleanup),
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
@@ -552,7 +680,9 @@ public sealed class PrototypeWorkflowService
         string prototypeRecordPath,
         string slug,
         RunSnapshot failedRun,
-        string? model)
+        string? model,
+        GodotFailureDiagnostic godotDiagnostic,
+        GodotCacheCleanupResult godotCleanup)
     {
         await SetProgressAsync(runId, "repairing", "post_validation", "正在修复原型后置验收失败项。", CancellationToken.None);
         var contract = _contractService.Read(project);
@@ -563,9 +693,18 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-        var codexResult = await _processRunner.RunAsync(
-            ApplyCodexRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
-            CancellationToken.None);
+        HostedProcessResult codexResult;
+        try
+        {
+            using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
+            codexResult = await _processRunner.RunAsync(
+                ApplyCodexRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
+                timeout.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            codexResult = new HostedProcessResult(408, "", $"Prototype post-validation repair exceeded the {RepairExecutionTimeout.TotalMinutes:0} minute timeout.");
+        }
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var codexOutput = File.Exists(outputPath)
             ? await File.ReadAllTextAsync(outputPath, Encoding.UTF8, CancellationToken.None)
@@ -602,6 +741,7 @@ public sealed class PrototypeWorkflowService
             previous_failure = BuildCompactFailure(failedRun),
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
+            godot_diagnostic = GodotFailureDiagnosticService.ToEvidence(godotDiagnostic, godotCleanup),
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
@@ -669,9 +809,42 @@ public sealed class PrototypeWorkflowService
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
-                ["PHASEA_CODEX_REASONING_EFFORT"] = RepairReasoningEffort
+                ["PHASEA_CODEX_REASONING_EFFORT"] = RepairReasoningEffort,
+                ["PATH"] = ResolveCodexPath()
             },
             prompt);
+    }
+
+    private static string ResolveCodexPath()
+    {
+        var currentPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+        var configuredRipgrepDir = Environment.GetEnvironmentVariable("PHASEA_RIPGREP_DIR");
+        var defaultRipgrepDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "npm",
+            "node_modules",
+            "@openai",
+            "codex",
+            "node_modules",
+            "@openai",
+            "codex-win32-x64",
+            "vendor",
+            "x86_64-pc-windows-msvc",
+            "path");
+        var ripgrepDir = !string.IsNullOrWhiteSpace(configuredRipgrepDir)
+            ? configuredRipgrepDir
+            : defaultRipgrepDir;
+        if (!Directory.Exists(ripgrepDir))
+        {
+            return currentPath;
+        }
+
+        var paths = currentPath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return paths.Contains(ripgrepDir, StringComparer.OrdinalIgnoreCase)
+            ? currentPath
+            : string.IsNullOrWhiteSpace(currentPath)
+                ? ripgrepDir
+                : $"{ripgrepDir}{Path.PathSeparator}{currentPath}";
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)
@@ -796,8 +969,11 @@ public sealed class PrototypeWorkflowService
         string preferredShellScene,
         string previousRepairState,
         RunSnapshot failedRun,
-        PrototypeContractSnapshot contract)
+        PrototypeContractSnapshot contract,
+        GodotFailureDiagnostic godotDiagnostic,
+        GodotCacheCleanupResult godotCleanup)
     {
+        var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic, godotCleanup);
         return $"""
             You are running a Phase A post-validation prototype repair.
 
@@ -814,6 +990,7 @@ public sealed class PrototypeWorkflowService
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             {PrototypeContractService.BuildPromptBlock(contract)}
+            {godotDiagnosticBlock}
 
             Previous prototype repair state:
             {TrimRepairStateForPrompt(previousRepairState)}

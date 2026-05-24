@@ -150,6 +150,31 @@ public sealed class BrowserUiRenderer
                   background: #f3ead9;
                 }
                 .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
+                .modal-backdrop {
+                  position: fixed;
+                  inset: 0;
+                  z-index: 1000;
+                  display: grid;
+                  place-items: center;
+                  padding: 1rem;
+                  background: rgba(23, 33, 27, 0.45);
+                }
+                .modal-card {
+                  width: min(42rem, 100%);
+                  background: #fffdf8;
+                  border: 1px solid var(--line);
+                  border-radius: 1.2rem;
+                  box-shadow: 0 2rem 5rem rgba(23, 33, 27, 0.28);
+                  padding: 1rem;
+                  display: grid;
+                  gap: 0.8rem;
+                }
+                .token-box {
+                  min-height: 7rem;
+                  font-family: Consolas, "Courier New", monospace;
+                  overflow-wrap: anywhere;
+                  word-break: break-all;
+                }
                 .hidden { display: none !important; }
                 @media (max-width: 920px) {
                   main, .grid, .health-grid { grid-template-columns: 1fr; }
@@ -162,6 +187,18 @@ public sealed class BrowserUiRenderer
                 <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
                 <div id="activeRunBanner" class="busy-banner hidden"></div>
               </header>
+              <div id="oneTimeTokenModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="oneTimeTokenTitle">
+                <div class="modal-card">
+                  <h2 id="oneTimeTokenTitle">One-time token</h2>
+                  <p class="muted" id="oneTimeTokenMeta">Token plaintext is shown once. Save it now.</p>
+                  <textarea id="oneTimeTokenValue" class="token-box" readonly></textarea>
+                  <div class="split-actions">
+                    <button id="copyOneTimeToken" class="secondary">Copy token</button>
+                    <button id="closeOneTimeToken" class="ghost">Close</button>
+                  </div>
+                  <p id="oneTimeTokenCopyStatus" class="muted"></p>
+                </div>
+              </div>
               <main>
                 <aside class="stack">
                   <section id="globalModelPanel" class="stack hidden">
@@ -191,15 +228,8 @@ public sealed class BrowserUiRenderer
                     <h2>Codex 配置</h2>
                     <p class="muted">自由对话复用服务器本机 Codex CLI 的登录态、provider 和配置；浏览器用户只能从服务器允许的模型列表中选择。</p>
                     <p class="muted">当前后端以只读方式调用 codex exec。聊天不会直接修改文件；需要执行工作流时仍使用页面上的固定按钮。</p>
-                    <h2>LLM Binding</h2>
-                    <label>Gateway base URL <input id="llmGatewayBaseUrl" placeholder="https://new-api.example/v1"></label>
-                    <label>External account ref <input id="llmExternalAccountRef" placeholder="new-api account or user ref"></label>
-                    <label>Token ref <input id="llmTokenRef" placeholder="host secret env var name or secret ref"></label>
-                    <button id="saveLlmBinding" class="secondary" data-global-action="true">Save account LLM binding</button>
-                    <button id="loadLlmBinding" class="ghost">Load account LLM binding</button>
-                    <button id="loadLlmUsage" class="ghost">Load LLM usage</button>
-                    <div id="llmBindingStatus" class="card muted">No account LLM binding loaded.</div>
-                    <div id="llmUsageStatus" class="card muted">No account LLM usage loaded.</div>
+                    <div id="llmBindingStatus" class="hidden"></div>
+                    <div id="llmUsageStatus" class="hidden"></div>
                     <button id="logout" class="danger-button">退出登录</button>
                   </section>
                   <section id="projectListPanel" class="hidden">
@@ -228,6 +258,11 @@ public sealed class BrowserUiRenderer
                     <button id="refreshUserAccounts" class="ghost">Refresh users</button>
                     <button id="loadAdminLlmUsage" class="ghost">Load admin LLM usage</button>
                     <button id="downloadAdminLlmUsageCsv" class="ghost">Download admin LLM usage CSV</button>
+                    <div class="split-actions">
+                      <label>Cost grain <select id="adminLlmUsageGrain"><option value="day">Day</option><option value="month">Month</option><option value="hour">Hour</option></select></label>
+                      <label>Cost split <select id="adminLlmUsageSplit"><option value="account">User</option><option value="project">Project</option><option value="account-project">User + Project</option></select></label>
+                      <button id="loadAdminLlmUsageAggregate" class="ghost">Open cost aggregate page</button>
+                    </div>
                     <button id="loadAdminLlmRuns" class="ghost">Load admin LLM run audit</button>
                     <button id="loadAccountAudit" class="ghost">Load account audit</button>
                     <button id="downloadAccountAuditCsv" class="ghost">Download account audit CSV</button>
@@ -247,6 +282,7 @@ public sealed class BrowserUiRenderer
                     <p id="selectedProject" class="muted">尚未选择项目。</p>
                     <button id="loadRuns" class="ghost">加载运行记录</button>
                     <button id="refreshPrototypeProgress" class="ghost">刷新原型进度</button>
+                    <button id="validatePrototype" class="ghost" data-global-action="true">重新验收原型</button>
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
                     <button id="loadAssetInventory" class="ghost" disabled>查看素材清单</button>
@@ -269,7 +305,7 @@ public sealed class BrowserUiRenderer
                     <label>游戏功能 <textarea id="gameFeature" placeholder="本次要实现或验证的核心功能"></textarea></label>
                     <label>核心玩法循环 <textarea id="coreGameplayLoop" placeholder="输入、反馈、奖励、升级或失败的循环"></textarea></label>
                     <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
-                    <button id="repairPrototype" class="ghost hidden" data-global-action="true">修复原型</button>
+                    <button id="repairPrototype" class="ghost hidden" data-global-action="true">生成修复计划</button>
                     <button id="runPrototype" class="secondary" data-global-action="true">运行原型路线</button>
                   </section>
                   <section id="prototypeCommandPanel" class="stack hidden">
@@ -301,6 +337,12 @@ public sealed class BrowserUiRenderer
                     <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前迭代计划。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
+                    <h2>异常修复计划</h2>
+                    <p class="muted">用于把原型或验收失败拆成多个小修复步骤。每次只执行一个修复步骤，最后一步做全量验收。</p>
+                    <button id="createRepairPlan" class="ghost" data-global-action="true">生成修复计划</button>
+                    <button id="executeRepairStep" class="secondary" data-global-action="true">执行下一项修复</button>
+                    <div id="repairPlanStatus" class="card muted">尚未生成修复计划。</div>
+                    <div id="repairPlanGoals" class="card-list"></div>
                     <h2>聊天记录</h2>
                     <button id="syncChatHistory" class="ghost">同步服务器聊天记录</button>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
@@ -442,6 +484,75 @@ public sealed class BrowserUiRenderer
                     }
                   }
                   renderIterationPlan();
+                }
+
+                async function loadRepairPlan() {
+                  if (!state.projectId) {
+                    state.repairPlan = null;
+                    renderRepairPlan();
+                    return;
+                  }
+                  try {
+                    state.repairPlan = await api(`/api/projects/${state.projectId}/repair-plan/latest`);
+                  } catch (error) {
+                    if (error?.status === 404) {
+                      state.repairPlan = null;
+                    } else {
+                      showError(error);
+                    }
+                  }
+                  renderRepairPlan();
+                }
+
+                function renderRepairPlan() {
+                  const plan = state.repairPlan;
+                  if (!plan || !plan.sessionId) {
+                    $("repairPlanStatus").className = "card muted";
+                    $("repairPlanStatus").textContent = "尚未生成修复计划。";
+                    $("repairPlanGoals").innerHTML = "";
+                    $("createRepairPlan").disabled = isGlobalBusy();
+                    $("executeRepairStep").disabled = true;
+                    $("executeRepairStep").textContent = "请先生成修复计划";
+                    return;
+                  }
+                  const goals = Array.isArray(plan.goals) ? plan.goals : [];
+                  const hasRunnable = goals.some(goal => ["pending", "needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()));
+                  $("repairPlanStatus").className = "card";
+                  $("repairPlanStatus").innerHTML = `
+                    <strong>${escapeHtml(plan.status || "ready")}</strong>
+                    <p>${escapeHtml(plan.summary || "")}</p>
+                    <p class="muted">修复计划 ID：${escapeHtml(plan.sessionId || "")}</p>
+                  `;
+                  $("createRepairPlan").disabled = isGlobalBusy();
+                  $("executeRepairStep").disabled = !hasRunnable || isGlobalBusy();
+                  $("executeRepairStep").textContent = hasRunnable ? "执行下一项修复" : "修复计划已无待执行步骤";
+                  $("repairPlanGoals").innerHTML = goals.map(goal => `
+                    <div class="card">
+                      <strong>repair-step${String(goal.goalIndex || 0).padStart(2, "0")} · ${escapeHtml(goal.status || "pending")}</strong>
+                      <p>${escapeHtml(goal.title || "")}</p>
+                      <p class="muted">${escapeHtml(goal.description || "")}</p>
+                      ${goal.acceptanceHint ? `<p class="muted">验收：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
+                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
+                    </div>`).join("");
+                }
+
+                function focusRepairPlanPanel() {
+                  $("chatPanel").classList.remove("hidden");
+                  $("repairPlanStatus").scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+
+                function repairPlanChatSummary(result) {
+                  const goals = Array.isArray(result?.goals) ? result.goals : [];
+                  const lines = [
+                    result?.summary || "修复计划已生成。",
+                    "",
+                    "下一步：点击“执行下一项修复”，系统会只处理第一项未完成修复步骤。"
+                  ];
+                  if (goals.length) {
+                    lines.push("", "修复步骤：");
+                    goals.forEach(goal => lines.push(`${goal.goalIndex}. ${goal.title}`));
+                  }
+                  return lines.join("\n").trim();
                 }
 
                 function renderIterationPlan() {
@@ -720,6 +831,52 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                async function createRepairPlan() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, "正在生成修复计划，请等待当前任务执行完毕。");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/repair-plan`, { method: "POST" });
+                    state.repairPlan = result;
+                    await loadServerChatHistoryForProject(state.projectId);
+                    renderRepairPlan();
+                    state.chatHistory.push({ role: "assistant", content: repairPlanChatSummary(result), kind: "repair-plan-visible-summary" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    focusRepairPlanPanel();
+                    out(result);
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await loadRepairPlan();
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function executeRepairStep() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!state.repairPlan?.sessionId) return out("请先生成修复计划。");
+                  setLocalBusy(true, "正在执行下一项修复，请等待当前任务执行完毕。");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/repair-plan/execute-next`, {
+                      method: "POST",
+                      body: JSON.stringify({ model: $("globalModel").value })
+                    });
+                    await loadServerChatHistoryForProject(state.projectId);
+                    out(result);
+                  } catch (error) {
+                    await loadServerChatHistoryForProject(state.projectId);
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await loadRepairPlan();
+                    await loadRuns();
+                    await refreshActiveRun();
+                  }
+                }
+
                 function saveChatHistoryForProject() {
                   if (!state.projectId) return;
                   const compact = state.chatHistory.filter(isStoredChatMessage).slice(-maxStoredChatMessages);
@@ -827,8 +984,6 @@ public sealed class BrowserUiRenderer
                   $("projectDetailPanel").classList.add("hidden");
                   $("initStatusPanel").classList.add("hidden");
                   loadSkillActions();
-                  loadLlmBinding();
-                  loadLlmUsage();
                   if (isAdmin) {
                     loadUserAccounts();
                     loadAiCodeMirrorKeys();
@@ -976,6 +1131,7 @@ public sealed class BrowserUiRenderer
                       <p>assignedAiCodeMirrorKey: ${escapeHtml(result.aiCodeMirrorKeyName || "")}</p>
                       <p>token: <code>${escapeHtml(result.token)}</code></p>
                     `;
+                    showOneTimeTokenDialog("User token created", result);
                     out(result);
                     await loadUserAccounts();
                   } catch (error) {
@@ -1151,6 +1307,13 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                async function loadAdminLlmUsageAggregate() {
+                  if (state.role !== "admin") return;
+                  const grain = $("adminLlmUsageGrain").value || "day";
+                  const split = $("adminLlmUsageSplit").value || "account";
+                  window.open(`/admin/llm-usage?grain=${encodeURIComponent(grain)}&split=${encodeURIComponent(split)}`, "_blank", "noreferrer");
+                }
+
                 async function downloadAdminLlmUsageCsv() {
                   if (state.role !== "admin") return;
                   try {
@@ -1284,6 +1447,7 @@ public sealed class BrowserUiRenderer
                       <p>accountId: ${escapeHtml(result.accountId)}</p>
                       <p>token: <code>${escapeHtml(result.token)}</code></p>
                     `;
+                    showOneTimeTokenDialog("User token rotated", result);
                     out(result);
                     await loadUserAccounts();
                   } catch (error) {
@@ -1291,6 +1455,16 @@ public sealed class BrowserUiRenderer
                   } finally {
                     setLocalBusy(false);
                   }
+                }
+
+                function showOneTimeTokenDialog(title, result) {
+                  $("oneTimeTokenTitle").textContent = title || "One-time token";
+                  $("oneTimeTokenMeta").textContent = `username: ${result.username || ""} | accountId: ${result.accountId || ""} | plaintext is shown once`;
+                  $("oneTimeTokenValue").value = result.token || "";
+                  $("oneTimeTokenCopyStatus").textContent = "Save this token now. After closing, the system cannot recover plaintext token from the database.";
+                  $("oneTimeTokenModal").classList.remove("hidden");
+                  $("oneTimeTokenValue").focus();
+                  $("oneTimeTokenValue").select();
                 }
 
                 async function updateUserLimits(accountId) {
@@ -1681,6 +1855,7 @@ public sealed class BrowserUiRenderer
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();
+                  loadRepairPlan();
                 }
 
                 async function loadProjectRuntimeState() {
@@ -2048,6 +2223,11 @@ public sealed class BrowserUiRenderer
 
                 function activeRunText(run) {
                   if (!run?.busy) return "";
+                  if (run.heavyRunnerQueuePosition) {
+                    const waitSeconds = Math.max(0, run.heavyRunnerEstimatedWaitSeconds || 0);
+                    const waitMinutes = Math.max(1, Math.ceil(waitSeconds / 60));
+                    return `\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
+                  }
                   const label = run.progressLabel || run.progressStep || run.status || "";
                   return `当前任务执行中：${run.runType || "unknown"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
@@ -2447,32 +2627,36 @@ public sealed class BrowserUiRenderer
 
 
                 async function repairPrototype() {
+                  await createRepairPlan();
+                }
+
+                async function validatePrototype() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  setLocalBusy(true, "原型修复中，请等待当前任务执行完毕。");
-                  setPrototypeFormLocked(true);
-                  $("repairPrototype").classList.add("hidden");
+                  setLocalBusy(true, "原型重新验收中，请等待当前任务执行完毕。");
+                  $("validatePrototype").textContent = "验收中...";
+                  showPrototypeNotice("正在重新验收当前原型；该操作只运行平台验收和 Godot smoke，不会调用 Codex。", "info");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/repair`, {
-                      method: "POST",
-                      body: JSON.stringify({ model: $("globalModel").value })
-                    });
+                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate`, { method: "POST" });
                     out(result);
                     await loadRuns();
                     await loadPrototypeProgress();
-                    await loadServerChatHistoryForProject(state.projectId);
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    await loadProjectPackages();
+                    await refreshAssetInventoryAvailability();
                   } catch (error) {
-                    setLocalBusy(false);
-                    setPrototypeFormLocked(false);
                     showError(error);
+                    await loadPrototypeProgress();
+                  } finally {
+                    setLocalBusy(false);
+                    $("validatePrototype").textContent = "重新验收原型";
+                    await refreshActiveRun();
                   }
                 }
 
                 async function loadPrototypeProgress() {
                   if (!state.projectId) {
                     state.prototypeFailure = "";
+                    $("validatePrototype").disabled = true;
                     $("prototypeProgress").className = "card muted";
                     $("prototypeProgress").textContent = "尚未选择项目。";
                     $("prototypeAcceptanceSummary").className = "card muted";
@@ -2482,6 +2666,7 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   try {
+                    $("validatePrototype").disabled = isGlobalBusy();
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
                     state.prototypeFailure = progress?.status === "failed" ? (progress.failure || "") : "";
                     renderPrototypeProgress(progress);
@@ -2500,7 +2685,7 @@ public sealed class BrowserUiRenderer
                     <p>${escapeHtml(progress.label || "")}</p>
                     <p class="muted">step：${escapeHtml(progress.step || "-")} · substep：${escapeHtml(progress.substep || "-")}</p>
                     ${progress.updatedUtc ? `<p class="muted">更新时间：${escapeHtml(progress.updatedUtc)}</p>` : ""}
-                    ${progress.failure ? `<p class="danger">${escapeHtml(progress.failure)}</p><p class="danger">可以点击“修复原型”继续修复；修复期间页面会锁定，刷新后查看最终成功或新的失败原因。</p>` : ""}
+                    ${progress.failure ? `<p class="danger">${escapeHtml(progress.failure)}</p><p class="danger">可以点击“生成修复计划”把失败拆成小步骤，再逐项执行修复。</p>` : ""}
                   `;
                   $("repairPrototype").classList.toggle("hidden", status !== "failed");
                 }
@@ -2642,7 +2827,7 @@ public sealed class BrowserUiRenderer
                   $("runPrototype").disabled = locked || isGlobalBusy();
                   $("runPrototype").textContent = locked ? "原型创建中..刷新页面查阅创建进度." : "运行原型路线";
                   $("repairPrototype").disabled = locked || isGlobalBusy();
-                  $("repairPrototype").textContent = locked ? "原型修复中..刷新页面查阅修复进度." : "修复原型";
+                  $("repairPrototype").textContent = locked ? "修复计划处理中..刷新页面查阅进度." : "生成修复计划";
                 }
 
                 async function runTdd(stage) {
@@ -2709,18 +2894,31 @@ public sealed class BrowserUiRenderer
                 $("refreshProjects").onclick = refreshProjects;
                 $("createProject").onclick = createProject;
                 $("createUserAccount").onclick = createUserAccount;
+                $("copyOneTimeToken").onclick = async () => {
+                  const value = $("oneTimeTokenValue").value || "";
+                  try {
+                    await navigator.clipboard.writeText(value);
+                    $("oneTimeTokenCopyStatus").textContent = "Token copied.";
+                  } catch {
+                    $("oneTimeTokenValue").focus();
+                    $("oneTimeTokenValue").select();
+                    $("oneTimeTokenCopyStatus").textContent = "Copy failed. The token is selected; press Ctrl+C.";
+                  }
+                };
+                $("closeOneTimeToken").onclick = () => {
+                  $("oneTimeTokenValue").value = "";
+                  $("oneTimeTokenModal").classList.add("hidden");
+                };
                 $("downloadAiCodeMirrorKeyTemplate").onclick = downloadAiCodeMirrorKeyTemplate;
                 $("importAiCodeMirrorKeyCsv").onclick = importAiCodeMirrorKeyCsv;
                 $("refreshAiCodeMirrorKeys").onclick = loadAiCodeMirrorKeys;
                 $("refreshUserAccounts").onclick = loadUserAccounts;
                 $("loadAdminLlmUsage").onclick = loadAdminLlmUsage;
+                $("loadAdminLlmUsageAggregate").onclick = loadAdminLlmUsageAggregate;
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
                 $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
-                $("saveLlmBinding").onclick = saveLlmBinding;
-                $("loadLlmBinding").onclick = loadLlmBinding;
-                $("loadLlmUsage").onclick = loadLlmUsage;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
                 $("syncChatHistory").onclick = syncChatHistory;
@@ -2729,6 +2927,8 @@ public sealed class BrowserUiRenderer
                 $("createIterationPlan").onclick = createIterationPlan;
                 $("evaluateIterationPlan").onclick = () => evaluateIterationPlan(false);
                 $("executeIterationGoal").onclick = executeIterationGoal;
+                $("createRepairPlan").onclick = createRepairPlan;
+                $("executeRepairStep").onclick = executeRepairStep;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
                 renderChatHistory();
                 $("loadRuns").onclick = loadRuns;
@@ -2737,6 +2937,7 @@ public sealed class BrowserUiRenderer
                 $("runPrototype").onclick = runPrototype;
                 $("repairPrototype").onclick = repairPrototype;
                 $("refreshPrototypeProgress").onclick = loadPrototypeProgress;
+                $("validatePrototype").onclick = validatePrototype;
                 $("createScene").onclick = createScene;
                 document.querySelectorAll(".runTdd").forEach(button => button.onclick = () => runTdd(button.dataset.stage));
                 setTokenFromStorage();
@@ -3035,6 +3236,121 @@ public sealed class BrowserUiRenderer
                 }
 
                 loadAssets();
+              </script>
+            </body>
+            </html>
+            """;
+    }
+
+    public string RenderAdminLlmUsage()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>LLM 费用汇总</title>
+              <style>
+                :root { --ink: #17211b; --muted: #66736b; --paper: #f7f2e8; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --danger: #a2342f; }
+                body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
+                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 1rem; }
+                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.06em; }
+                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
+                .filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+                label { display: grid; gap: 0.3rem; font-weight: 700; }
+                select, input { border: 1px solid var(--line); border-radius: 0.75rem; padding: 0.65rem 0.75rem; font: inherit; background: white; }
+                button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 1rem; overflow: hidden; }
+                th, td { text-align: left; padding: 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+                th { background: #efe5d3; }
+                .muted { color: var(--muted); }
+                .danger { color: var(--danger); }
+                .summary { display: flex; flex-wrap: wrap; gap: 1rem; }
+                .summary strong { font-size: 1.4rem; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <h1>LLM 费用汇总</h1>
+                  <p class="muted">按用户、项目、小时、天、月汇总 PhaseA 记录到的 LLM 费用。</p>
+                </header>
+                <section class="card filters">
+                  <label>粒度
+                    <select id="grain"><option value="day">天</option><option value="month">月</option><option value="hour">小时</option></select>
+                  </label>
+                  <label>拆分
+                    <select id="split"><option value="account">用户</option><option value="project">项目</option><option value="account-project">用户 + 项目</option></select>
+                  </label>
+                  <label>开始 UTC
+                    <input id="fromUtc" placeholder="可空，例 2026-05-01T00:00:00Z">
+                  </label>
+                  <label>结束 UTC
+                    <input id="toUtc" placeholder="可空，默认当前时间">
+                  </label>
+                  <button id="load">加载汇总</button>
+                </section>
+                <section id="summary" class="card muted">尚未加载。</section>
+                <section class="card">
+                  <table>
+                    <thead><tr><th>时间桶 UTC</th><th>用户</th><th>项目</th><th>调用</th><th>费用 CNY</th></tr></thead>
+                    <tbody id="rows"><tr><td colspan="5" class="muted">暂无数据。</td></tr></tbody>
+                  </table>
+                </section>
+              </main>
+              <script>
+                const $ = id => document.getElementById(id);
+                const params = new URLSearchParams(location.search);
+                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+                $("grain").value = params.get("grain") || "day";
+                $("split").value = params.get("split") || "account";
+
+                async function loadUsage() {
+                  if (!token()) {
+                    $("summary").className = "card danger";
+                    $("summary").textContent = "当前浏览器没有 token，请先回控制台登录。";
+                    return;
+                  }
+                  const query = new URLSearchParams();
+                  query.set("grain", $("grain").value || "day");
+                  query.set("split", $("split").value || "account");
+                  if ($("fromUtc").value.trim()) query.set("fromUtc", $("fromUtc").value.trim());
+                  if ($("toUtc").value.trim()) query.set("toUtc", $("toUtc").value.trim());
+                  const response = await fetch(`/api/admin/llm-usage/aggregate?${query}`, {
+                    headers: { "Authorization": `Bearer ${token()}` },
+                    cache: "no-store"
+                  });
+                  const payload = await response.json();
+                  if (!response.ok) {
+                    $("summary").className = "card danger";
+                    $("summary").textContent = payload.error || "费用汇总加载失败。";
+                    return;
+                  }
+                  $("summary").className = "card";
+                  $("summary").innerHTML = `
+                    <div class="summary">
+                      <span><strong>${escapeHtml(payload.callCount)}</strong><br><span class="muted">调用次数</span></span>
+                      <span><strong>CNY ${escapeHtml(Number(payload.estimatedCostCny || 0).toFixed(4))}</strong><br><span class="muted">费用</span></span>
+                      <span><strong>${escapeHtml(payload.bucketCount)}</strong><br><span class="muted">时间桶</span></span>
+                    </div>
+                    <p class="muted">范围：${escapeHtml(payload.fromUtc)} 到 ${escapeHtml(payload.toUtc)}</p>
+                  `;
+                  const items = payload.items || [];
+                  $("rows").innerHTML = items.map(item => `
+                    <tr>
+                      <td>${escapeHtml(item.bucketUtc)}</td>
+                      <td>${escapeHtml(item.username)}<br><span class="muted">${escapeHtml(item.accountId)}</span></td>
+                      <td>${item.projectId ? `${escapeHtml(item.projectName || item.projectId)}<br><span class="muted">${escapeHtml(item.gameName || "")}</span>` : "<span class='muted'>未按项目拆分</span>"}</td>
+                      <td>${escapeHtml(item.callCount)}</td>
+                      <td>CNY ${escapeHtml(Number(item.estimatedCostCny || 0).toFixed(4))}</td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="5" class="muted">暂无数据。</td></tr>`;
+                }
+
+                $("load").onclick = loadUsage;
+                loadUsage();
               </script>
             </body>
             </html>

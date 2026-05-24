@@ -7,4 +7,8 @@ public sealed record ActiveRunReadback(
     string? RunType,
     string? Status,
     string? ProgressStep,
-    string? ProgressLabel);
+    string? ProgressLabel,
+    int HeavyRunnerQueuedCount = 0,
+    int? HeavyRunnerQueuePosition = null,
+    int? HeavyRunnerEstimatedWaitSeconds = null,
+    bool HeavyRunnerRunning = false);

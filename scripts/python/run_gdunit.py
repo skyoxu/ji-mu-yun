@@ -142,6 +142,15 @@ def write_text(path: str, content: str) -> None:
         f.write(content)
 
 
+def ensure_runtime_logs_godot_ignored(repo_root: str) -> None:
+    logs_root = os.path.join(repo_root, "logs")
+    os.makedirs(logs_root, exist_ok=True)
+    gdignore = os.path.join(logs_root, ".gdignore")
+    if not os.path.exists(gdignore):
+        with open(gdignore, "w", encoding="utf-8") as f:
+            f.write("")
+
+
 def _cleanup_godot_processes(godot_bin: str) -> None:
     exe_name = os.path.basename(godot_bin).strip()
     if not exe_name:
@@ -223,6 +232,7 @@ def main():
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)
 
+    ensure_runtime_logs_godot_ignored(root)
     _cleanup_godot_processes(args.godot_bin)
 
     # Hard gate before any Godot invocation.

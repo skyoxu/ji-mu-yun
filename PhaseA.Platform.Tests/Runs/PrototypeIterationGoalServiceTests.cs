@@ -50,8 +50,10 @@ public sealed class PrototypeIterationGoalServiceTests
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修主菜单入口。再修地图移动。最后补提示文案。"));
         var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
         var stateWriter = new PrototypeRouteStateWriter();
-        stateWriter.WriteProjectReadme(project!);
+        stateWriter.WriteProjectReadme(project);
         new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new FakeHostedProcessRunner();
@@ -75,12 +77,11 @@ public sealed class PrototypeIterationGoalServiceTests
         details!.Session.Status.Should().Be("paused_for_review");
         details.Goals[0].Status.Should().Be("succeeded");
         details.Goals[1].Status.Should().Be("pending");
-        runner.Commands.Should().ContainSingle();
-        runner.Commands[0].Arguments.Last().Should().Be("-");
-        runner.Commands[0].StandardInput.Should().Contain("prototype-baseline");
-        runner.Commands[0].StandardInput.Should().Contain("Project prototype contract");
-        runner.Commands[0].StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
-        runner.Commands[0].StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
+        var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
+        codexCommand.StandardInput.Should().Contain("prototype-baseline");
+        codexCommand.StandardInput.Should().Contain("Project prototype contract");
+        codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
+        codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("prototype_contract");
         artifacts.Select(a => a.ArtifactType).Should().Contain([
@@ -428,13 +429,15 @@ texture = ExtResource("2")
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "MapScene.tscn"), """
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
+[ext_resource type="Script" path="res://Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs" id="script_map"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
 [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
 
 [node name="MapScene" type="Control"]
+script = ExtResource("script_map")
 custom_minimum_size = Vector2(700, 700)
 [node name="TrackLayer" type="Control" parent="."]
 custom_minimum_size = Vector2(600, 600)
@@ -539,6 +542,11 @@ texture = ExtResource("3")
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
