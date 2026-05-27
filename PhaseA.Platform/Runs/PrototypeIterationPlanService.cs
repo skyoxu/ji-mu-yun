@@ -281,29 +281,36 @@ public sealed class PrototypeIterationPlanService
         {
             new(
                 1,
-                "目标 1：对齐原型合同与当前实现",
-                "先核对当前 RPG 原型已经跑通的地图、战斗、奖励闭环与需求表单字段，补齐 contract / input traceability / 实际实现之间的漂移项，不在这一步扩大功能范围。",
-                "完成并验证：需求表单中的非空关键字段都能在当前原型实现、状态说明或 needs_fix 里找到对应。",
+                "RPG Step 1: foundation asset usage and UI contract",
+                "先修正当前 RPG 原型最靠前的硬验收阻塞项：确认当前 prototype 场景真实使用并展示地图、玩家、敌人三类基础资产，同时保留可读 UI 标记，不在这一步扩大玩法范围。",
+                "完成并验证：当前 RPG prototype 真实引用并渲染 map/player/enemy 三类基础资产，且当前场景的 UI 合同可通过平台验收。",
                 "pending"),
             new(
                 2,
-                "目标 2：修正奖励 3 选 1 的可理解性和反馈",
-                "聚焦奖励 3 选 1 本身，确保三个选项的含义、选择后的变化和返回地图后的状态反馈都足够清楚。",
-                "完成并验证：玩家能理解三个奖励的差异，选择后能看到明确状态变化，并正常返回地图。",
+                "RPG Step 2: Start Adventure to visible MapScene validation",
+                "从玩家真实入口继续验证 Start Adventure -> MapScene 这条入口链，确保点击后地图可见、可移动，并能暴露第一次遇敌入口。",
+                "完成并验证：Start Adventure 会打开有效可见的 RPG MapScene，且地图路径上可证明 movement + encounter entry。",
                 "pending"),
             new(
                 3,
-                "目标 3：补稳结果回环与失败分支",
-                "验证并修正胜利返回地图、失败处理、再次进入下一轮遇敌的闭环稳定性，避免只跑通单次 happy path。",
-                "完成并验证：胜利、失败、返回地图和再次进入战斗都能形成稳定闭环。",
+                "RPG Step 3: BattleScene loop validation",
+                "单独验证当前 RPG BattleScene：至少完成一场可读战斗，覆盖攻击反馈、胜负结算和战斗 UI，不把奖励回路混进这一步。",
+                "完成并验证：BattleScene 能独立完成一次战斗结算，并展示清楚的 battle feedback 与 settlement。",
                 "pending")
         };
+
+        goals.Add(new PrototypeIterationPlanGoalResult(
+            4,
+            "RPG Step 4: reward 3-choice and return-to-map validation",
+            "把奖励 3 选 1 作为独立 step 验证：胜利后出现三个奖励选项，选择后状态发生变化，并回到地图继续闭环。",
+            "完成并验证：reward 3-choice、state change、return-to-map loop 全部成立。",
+            "pending"));
 
         if (missingWinFail)
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                4,
-                "目标 4：补齐胜负条件提示与用户预期",
+                5,
+                "RPG Step 5: win/fail condition visibility and consistency",
                 "把需求表单中的胜利/失败条件明确暴露给玩家，并校验提示文案与实际玩法结算一致。",
                 "完成并验证：玩家可以从界面或流程中清楚理解当前 prototype 的胜负条件。",
                 "pending"));
@@ -311,17 +318,17 @@ public sealed class PrototypeIterationPlanService
         else if (missingRewards)
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                4,
-                "目标 4：补齐奖励回路验收证据",
-                "围绕奖励 3 选 1 的状态变化、返回地图和再次战斗补完整体验证据，避免只在代码里存在。",
-                "完成并验证：奖励回路的关键状态变化和回到地图后的可见反馈均可复核。",
+                5,
+                "RPG Step 5: reward understanding evidence polish",
+                "在奖励闭环已经跑通的基础上，补齐玩家可见的奖励理解证据和前台反馈，避免奖励效果只在内部状态里存在。",
+                "完成并验证：奖励差异、选择结果和回到地图后的变化都能被玩家直接看懂。",
                 "pending"));
         }
         else
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                4,
-                "目标 4：修复中文产物与前台可读性",
+                5,
+                "RPG Step 5: polish user-facing readability",
                 "修正 completion、sidecar、提示信息中的乱码或表达不清问题，让前台和日志证据都可直接阅读。",
                 "完成并验证：关键中文产物可读，前台反馈与日志摘要一致。",
                 "pending"));

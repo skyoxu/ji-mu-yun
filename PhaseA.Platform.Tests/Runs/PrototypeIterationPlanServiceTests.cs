@@ -197,6 +197,54 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldUseRpgClosureGoals_AfterPrototypeAlreadySucceeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new PrototypeIterationPlanService(store);
+
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "succeeded",
+            0,
+            "ok",
+            "",
+            """
+            {
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7
+              }
+            }
+            """);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please continue refining the current RPG prototype after the first successful playable loop.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCountGreaterOrEqualTo(5);
+        result.Goals[0].Title.Should().Be("RPG Step 1: foundation asset usage and UI contract");
+        result.Goals[1].Title.Should().Be("RPG Step 2: Start Adventure to visible MapScene validation");
+        result.Goals[2].Title.Should().Be("RPG Step 3: BattleScene loop validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: reward 3-choice and return-to-map validation");
+        result.Goals[0].Title.Should().NotContain("对齐原型合同");
+        result.Goals.Last().Title.Should().Contain("RPG Final Step");
+    }
+
+    [Fact]
     public async Task EvaluateAsync_ShouldRefineRpgPlan_WhenContractStepsAreMissing()
     {
         using var database = TempSqliteDatabase.Create();
