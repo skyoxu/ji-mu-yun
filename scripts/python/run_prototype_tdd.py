@@ -49,6 +49,10 @@ def _candidate_dotnet_paths(root: Path) -> list[Path]:
         if env_val:
             candidates.append(Path(env_val) / exe_name)
 
+    repo_root_env = os.environ.get("PHASEA_REPOSITORY_ROOT")
+    if repo_root_env:
+        candidates.append(Path(repo_root_env) / ".dotnet" / exe_name)
+
     candidates.append(root / ".dotnet" / exe_name)
     candidates.append(Path.home() / ".dotnet" / exe_name)
 

@@ -86,6 +86,12 @@ class RunGdUnitTests(unittest.TestCase):
         self.assertIn("rpg_map_scene_not_visible_after_start", script)
         self.assertIn("rpg_map_scene_has_no_visible_size_after_start", script)
         self.assertIn("RPG_START_ADVENTURE_MAP_VISIBLE PASS", script)
+        self.assertIn('var map_grid = _find_node_by_name(map_scene, "Grid")', script)
+        self.assertIn('var header_label = _find_node_by_name(current, "HeaderLabel")', script)
+        self.assertIn('var stats_label = _find_node_by_name(current, "StatsLabel")', script)
+        self.assertIn('var objective_label = _find_node_by_name(current, "ObjectiveLabel")', script)
+        self.assertIn("has_legacy_map_markers", script)
+        self.assertIn("has_current_rpg_markers", script)
 
     def test_prototype_main_menu_navigation_smoke_should_fail_when_godot_errors_exist(self) -> None:
         source = Path(prototype_main_menu_navigation_smoke.__file__).read_text(encoding="utf-8")

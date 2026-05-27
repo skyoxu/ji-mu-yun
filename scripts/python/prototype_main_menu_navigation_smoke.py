@@ -111,10 +111,15 @@ func _initialize() -> void:
                 quit(13)
                 return
 
-        var map_title = _find_node_by_name(map_scene, "Title")
         var map_grid = _find_node_by_name(map_scene, "Grid")
+        var map_title = _find_node_by_name(map_scene, "Title")
         var map_status = _find_node_by_name(map_scene, "StatusLabel")
-        if map_title == null or map_grid == null or map_status == null:
+        var header_label = _find_node_by_name(current, "HeaderLabel")
+        var stats_label = _find_node_by_name(current, "StatsLabel")
+        var objective_label = _find_node_by_name(current, "ObjectiveLabel")
+        var has_legacy_map_markers = map_title != null and map_status != null
+        var has_current_rpg_markers = header_label != null and stats_label != null and objective_label != null
+        if map_grid == null or (not has_legacy_map_markers and not has_current_rpg_markers):
             push_error("rpg_map_visible_markers_missing_after_start")
             quit(14)
             return

@@ -1681,6 +1681,14 @@ public sealed class PrototypeWorkflowService
             return string.Equals(reason, "prototype_scaffold_already_exists", StringComparison.OrdinalIgnoreCase);
         }
 
+        if ((day == 3 || day == 4) && string.Equals(status, "skipped", StringComparison.OrdinalIgnoreCase))
+        {
+            var reason = step.TryGetProperty("reason", out var reasonElement)
+                ? reasonElement.GetString() ?? ""
+                : "";
+            return string.Equals(reason, "existing_project_specific_prototype_ready_for_green", StringComparison.OrdinalIgnoreCase);
+        }
+
         return false;
     }
 

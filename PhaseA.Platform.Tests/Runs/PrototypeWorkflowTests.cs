@@ -273,7 +273,7 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
-    public async Task RunAsync_FailsWhenStep03SkippedBecausePrototypeRedIsAlreadyGreen()
+    public async Task RunAsync_AllowsStep03AndStep04SkippedWhenExistingPrototypeCanGoDirectlyToGreen()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -281,7 +281,7 @@ public sealed class PrototypeWorkflowTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var runner = new FakeHostedProcessRunner(skippedDays: [3]);
+        var runner = new FakeHostedProcessRunner(skippedDays: [3, 4]);
         var service = Service(store, options, runner);
 
         var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
@@ -289,11 +289,12 @@ public sealed class PrototypeWorkflowTests
 
         var progress = await service.GetProgressAsync(projectId);
 
-        result.Status.Should().Be("failed");
-        run!.Status.Should().Be("failed");
-        run.StderrText.Should().Contain("prototype_completion_step_not_ok:3:skipped");
-        progress.Failure.Should().Be("TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。");
-        runner.Commands.Should().HaveCount(1);
+        result.Status.Should().Be("succeeded");
+        run!.Status.Should().Be("succeeded");
+        run.StderrText.Should().NotContain("prototype_completion_step_not_ok:3:skipped");
+        run.StderrText.Should().NotContain("prototype_completion_step_not_ok:4:skipped");
+        progress.Failure.Should().BeNullOrEmpty();
+        runner.Commands.Should().Contain(command => command.Arguments.Contains("run-prototype-workflow"));
     }
 
     [Fact]
@@ -1314,7 +1315,7 @@ public sealed class PrototypeWorkflowTests
                         { "day": 1, "status": "ok" },
                         { "day": 2, "status": "{{StepStatus(2)}}", "reason": "{{StepReason(2)}}" },
                         { "day": 3, "status": "{{StepStatus(3)}}", "reason": "{{StepReason(3)}}" },
-                        { "day": 4, "status": "{{StepStatus(4)}}" },
+                        { "day": 4, "status": "{{StepStatus(4)}}", "reason": "{{StepReason(4)}}" },
                         { "day": 5, "status": "{{StepStatus(5)}}" },
                         { "day": 6, "status": "{{StepStatus(6)}}" },
                         { "day": 7, "status": "{{StepStatus(7)}}" }
@@ -1342,8 +1343,8 @@ public sealed class PrototypeWorkflowTests
                 return "prototype_scaffold_already_exists";
             }
 
-            return day == 3 && _skippedDays.Contains(day)
-                ? "prototype_red_already_green"
+            return (day == 3 || day == 4) && _skippedDays.Contains(day)
+                ? "existing_project_specific_prototype_ready_for_green"
                 : "";
         }
 

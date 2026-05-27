@@ -1749,9 +1749,9 @@ def _render_rpg_project_specific_core_loop(*, slug: str) -> str:
             "        }",
             "        if (nextBattleIndex % 5 == 0)",
             "        {",
-            f'            return new {encounter_type}("elite", $\"Elite Slime {nextBattleIndex}\", 16 + nextBattleIndex, 4, 1);',
+            f'            return new {encounter_type}("elite", $\"Elite Slime {{nextBattleIndex}}\", 16 + nextBattleIndex, 4, 1);',
             "        }",
-            f'        return new {encounter_type}("normal", $\"Wild Slime {nextBattleIndex}\", 9 + nextBattleIndex, 3 + Math.Min(2, nextBattleIndex / 6), 0);',
+            f'        return new {encounter_type}("normal", $\"Wild Slime {{nextBattleIndex}}\", 9 + nextBattleIndex, 3 + Math.Min(2, nextBattleIndex / 6), 0);',
             "    }",
             "",
             f"    public {state_type} EnterBattle({state_type} state, {encounter_type} encounter)",
@@ -1813,8 +1813,8 @@ def _render_rpg_project_specific_core_loop(*, slug: str) -> str:
             "        var attackBoost = fromChest ? 1 : 1 + (tier / 7);",
             "        return",
             "        [",
-            f'            new {reward_option_type}("Vital Draft", $"+{hpBoost} HP to survive the next encounter.", hpBoost, 0),',
-            f'            new {reward_option_type}("Iron Edge", $"+{attackBoost} ATK for faster battles.", 0, attackBoost),',
+            f'            new {reward_option_type}("Vital Draft", $"+{{hpBoost}} HP to survive the next encounter.", hpBoost, 0),',
+            f'            new {reward_option_type}("Iron Edge", $"+{{attackBoost}} ATK for faster battles.", 0, attackBoost),',
             f'            new {reward_option_type}("Balanced Crest", "+2 HP and +1 ATK for a safer all-round route.", 2, 1)',
             "        ];",
             "    }",
@@ -2097,9 +2097,7 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
                 '[node name="BattleScene" type="Control" parent="CanvasLayer/UI"]',
                 '[node name="StartButton"',
                 'text = "Start Adventure"',
-                '[node name="Title" type="Label" parent="CanvasLayer/UI/MapScene"]',
                 '[node name="Grid" type="GridContainer" parent="CanvasLayer/UI/MapScene"]',
-                '[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/MapScene"]',
                 '[node name="RpgMapAsset"',
                 '[node name="RpgPlayerAsset"',
                 '[node name="RpgEnemyAsset"',
@@ -2108,7 +2106,22 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
                 '[node name="Map" type="Control"',
                 '[node name="Battle" type="Control"',
             )
-            if not all(marker in scene_text for marker in required_scene_markers) or any(marker in scene_text for marker in forbidden_scene_markers):
+            has_legacy_map_labels = (
+                '[node name="Title" type="Label" parent="CanvasLayer/UI/MapScene"]' in scene_text and
+                '[node name="StatusLabel" type="Label" parent="CanvasLayer/UI/MapScene"]' in scene_text
+            )
+            has_current_rpg_hud = all(
+                marker in scene_text for marker in (
+                    '[node name="HeaderLabel"',
+                    '[node name="StatsLabel"',
+                    '[node name="ObjectiveLabel"',
+                )
+            )
+            if (
+                not all(marker in scene_text for marker in required_scene_markers) or
+                not (has_legacy_map_labels or has_current_rpg_hud) or
+                any(marker in scene_text for marker in forbidden_scene_markers)
+            ):
                 issues.append(f"rpg_scene_node_contract_drift={_repo_relative_posix(root, scene_path)}")
     if path_exists(dotnet_test_path) and _is_rpg_payload(payload):
         dotnet_test_text = read_text(dotnet_test_path, errors="ignore")
@@ -2148,8 +2161,6 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
             required_script_markers = (
                 "CanvasLayer/UI/MapScene",
                 "CanvasLayer/UI/BattleScene",
-                "CanvasLayer/UI/MapScene/Title",
-                "CanvasLayer/UI/MapScene/StatusLabel",
                 "StartButton",
                 "Start Adventure",
                 "RpgMapAsset",
@@ -2162,7 +2173,22 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
                 'GetNode<ColorRect>("Map/',
                 'GetNode<ColorRect>("Battle/',
             )
-            if not all(marker in script_text for marker in required_script_markers) or any(marker in script_text for marker in forbidden_script_markers):
+            has_legacy_map_bindings = (
+                "CanvasLayer/UI/MapScene/Title" in script_text and
+                "CanvasLayer/UI/MapScene/StatusLabel" in script_text
+            )
+            has_current_rpg_hud_bindings = all(
+                marker in script_text for marker in (
+                    "CanvasLayer/UI/HeaderLabel",
+                    "CanvasLayer/UI/StatsLabel",
+                    "CanvasLayer/UI/ObjectiveLabel",
+                )
+            )
+            if (
+                not all(marker in script_text for marker in required_script_markers) or
+                not (has_legacy_map_bindings or has_current_rpg_hud_bindings) or
+                any(marker in script_text for marker in forbidden_script_markers)
+            ):
                 issues.append(f"rpg_script_node_contract_drift={_repo_relative_posix(root, script_path)}")
             runtime_marker_groups = [
                 ("reward", ("RewardOption", "Reward Choice", "reward")),
@@ -2183,6 +2209,11 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
         if "CreateRewardOptions" not in core_loop_text and "BuildRewardOptions" not in core_loop_text and "RewardOptions" not in core_loop_text:
             issues.append(f"rpg_reward_flow_missing={_repo_relative_posix(root, core_loop_path)}")
     return len(issues) == 0, issues
+
+
+def _has_existing_project_specific_prototype(*, root: Path, payload: dict[str, Any]) -> bool:
+    ok, _issues = _validate_day4_implementation_outputs(root=root, payload=payload)
+    return ok
 
 
 def _run_day4_codex_implementation(*, root: Path, payload: dict[str, Any], record_file: str) -> tuple[int, str]:
@@ -2714,7 +2745,7 @@ def _write_packaging_summary(
     summary = {
         "schema_version": 1,
         "kind": "prototype-packaging-summary",
-        "generated_at_utc": dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "generated_at_utc": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "slug": sanitize_slug(slug),
         "prototype_record": record_file,
         "prototype_spec": prototype_spec,
@@ -2844,6 +2875,17 @@ def _extract_summary_path_from_output(output: str) -> str:
     if not match:
         return ""
     return match.group(1).strip().replace("\\", "/")
+
+
+def _is_expected_red_tdd_capture(*, day: int, rc: int, output: str) -> bool:
+    if day != 3 or rc == 0:
+        return False
+    text = str(output or "")
+    return (
+        "PROTOTYPE_TDD status=ok" in text
+        and "stage=red" in text
+        and "expected=fail" in text
+    )
 
 
 def _split_csv(value: str) -> list[str]:
@@ -3070,11 +3112,24 @@ def main(argv: list[str] | None = None) -> int:
     packaging_summary_path = ""
     completion_summary = ""
     completion_report_path = ""
+    existing_project_specific_prototype = _has_existing_project_specific_prototype(root=root, payload=payload)
     for step in _day_steps(payload, root=root, record_file=record_file):
         day = int(step["day"])
         if day == 1:
             steps_run.append({"day": day, "title": step["title"], "status": "ok", "record": record_file, "prototype_spec": prototype_spec})
         else:
+            if existing_project_specific_prototype and day == 3:
+                steps_run.append(
+                    {
+                        "day": day,
+                        "title": step["title"],
+                        "status": "skipped",
+                        "reason": "existing_project_specific_prototype_ready_for_green",
+                    }
+                )
+                if day >= int(args.stop_after_day):
+                    break
+                continue
             internal_action = str(step.get("internal_action") or "").strip()
             if internal_action == "packaging_summary":
                 packaging_summary_path, tdd_summary_paths = _write_packaging_summary(
@@ -3126,6 +3181,18 @@ def main(argv: list[str] | None = None) -> int:
                     break
                 continue
             if internal_action == "codex_implementation":
+                if existing_project_specific_prototype:
+                    steps_run.append(
+                        {
+                            "day": day,
+                            "title": step["title"],
+                            "status": "skipped",
+                            "reason": "existing_project_specific_prototype_ready_for_green",
+                        }
+                    )
+                    if day >= int(args.stop_after_day):
+                        break
+                    continue
                 rc, output = _run_day4_codex_implementation(root=root, payload=payload, record_file=record_file)
                 step_result = {"day": day, "title": step["title"], "status": "ok" if rc == 0 else "fail"}
                 steps_run.append(step_result)
@@ -3167,8 +3234,13 @@ def main(argv: list[str] | None = None) -> int:
                 summary_path = _extract_summary_path_from_output(output)
                 if summary_path:
                     step_result["summary_path"] = summary_path
+            if _is_expected_red_tdd_capture(day=day, rc=rc, output=output):
+                step_result["status"] = "ok"
+                step_result["reason"] = "prototype_tdd_red_expected_fail_captured"
             steps_run.append(step_result)
             if rc != 0:
+                if _is_expected_red_tdd_capture(day=day, rc=rc, output=output):
+                    continue
                 print(output, end="")
                 return rc
         if day >= int(args.stop_after_day):
