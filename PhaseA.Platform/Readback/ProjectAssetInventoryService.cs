@@ -221,7 +221,7 @@ public sealed partial class ProjectAssetInventoryService
         {
             var normalizedModel = PrototypeModelPolicy.Normalize(model);
             var prompt = BuildLlmJudgementPrompt(project, usedAssets, candidates);
-            var completion = await _codexChatClient.CompleteAsync(projectRoot, normalizedModel, prompt, project.AccountId, cancellationToken);
+            var completion = await _codexChatClient.CompleteAsync(projectRoot, normalizedModel, prompt, billingApiKeyName: project.AccountId, cancellationToken: cancellationToken);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded
                 ? ApplyLlmJudgement(candidates, completion.AssistantMessage, out judgementFailureCode)

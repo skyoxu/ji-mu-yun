@@ -156,7 +156,7 @@ public sealed class ChatService
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var skillAction = ResolveSkillAction(request.SkillActionId);
         var prompt = BuildCodexPrompt(project, request, skillAction);
-        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, project.AccountId, cancellationToken);
+        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, billingApiKeyName: project.AccountId, cancellationToken: cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";

@@ -26,6 +26,7 @@ public sealed class CodexCliChatClient : ICodexChatClient
         string projectRoot,
         string model,
         string prompt,
+        CodexChatClientOptions? options = null,
         string? billingApiKeyName = null,
         CancellationToken cancellationToken = default)
     {
@@ -61,8 +62,22 @@ public sealed class CodexCliChatClient : ICodexChatClient
         startInfo.ArgumentList.Add(model);
         startInfo.ArgumentList.Add("-c");
         startInfo.ArgumentList.Add("approval_policy=\"never\"");
+        if (!string.IsNullOrWhiteSpace(options?.ReasoningEffort))
+        {
+            startInfo.ArgumentList.Add("-c");
+            startInfo.ArgumentList.Add($"model_reasoning_effort=\"{options.ReasoningEffort}\"");
+        }
+        if (options?.IgnoreRules == true)
+        {
+            startInfo.ArgumentList.Add("--ignore-rules");
+        }
         startInfo.ArgumentList.Add("--cd");
         startInfo.ArgumentList.Add(projectRoot);
+        if (!string.IsNullOrWhiteSpace(options?.OutputSchemaPath))
+        {
+            startInfo.ArgumentList.Add("--output-schema");
+            startInfo.ArgumentList.Add(options.OutputSchemaPath);
+        }
         startInfo.ArgumentList.Add("-o");
         startInfo.ArgumentList.Add(outputPath);
         startInfo.ArgumentList.Add(prompt);

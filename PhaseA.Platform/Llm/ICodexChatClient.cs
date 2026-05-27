@@ -6,9 +6,15 @@ public interface ICodexChatClient
         string projectRoot,
         string model,
         string prompt,
+        CodexChatClientOptions? options = null,
         string? billingApiKeyName = null,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record CodexChatClientOptions(
+    bool IgnoreRules = false,
+    string? OutputSchemaPath = null,
+    string? ReasoningEffort = null);
 
 public sealed record CodexChatClientResult(
     bool Succeeded,

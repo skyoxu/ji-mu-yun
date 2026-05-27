@@ -85,7 +85,9 @@ public sealed class ProjectDraftImportServiceTests
         persisted.Hypothesis.Should().Be("LLM extracts the prototype hypothesis.");
         persisted.SuccessCriteria.Should().ContainSingle("one clear loop");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
-        codex.LastPrompt.Should().Contain("You are evaluating how much of a plain-text prototype draft is preserved by a filled prototype intake form.");
+        codex.Prompts.Should().NotBeEmpty();
+        codex.Prompts[0].Should().Contain("This is a pure text-to-JSON extraction task.");
+        codex.Prompts[0].Should().Contain("Do not inspect the repository, docs, workflow files, rules files, or any external context.");
     }
 
     [Fact]
@@ -142,6 +144,8 @@ public sealed class ProjectDraftImportServiceTests
         result.GameFeature.Should().NotBeNullOrWhiteSpace();
         result.Warnings.Should().Contain("llm_json_parse_failed");
         result.Warnings.Should().NotContain("missing_game_name");
+        result.CoveragePercent.Should().BeLessThan(100);
+        result.CoverageMissingTopics.Should().NotBeEmpty();
         persisted!.Hypothesis.Should().Be(result.Hypothesis);
     }
 
@@ -200,6 +204,166 @@ public sealed class ProjectDraftImportServiceTests
         result.UnparsedLines.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task AnalyzeAsync_ShouldPreferDeterministicStructuredDraftParsing_WithoutLlmWarning()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var codex = new FakeCodex("请贴出草稿正文。");
+        var service = new ProjectDraftImportService(store, options, codex);
+        var draft = string.Join("\n",
+            "游戏名：龙境试炼",
+            "游戏类型：RPG",
+            "原型标识 Slug：dq-rpg",
+            "原型假设：复古rpg加肉鸽成长",
+            "成功标准：奖励3选1可以正确理解",
+            "游戏功能：（1.游戏场景默认1600*900；2.地图场景600*600用wsad自由连续移动；3.战斗胜利选择奖励3选1。）",
+            "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
+            "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
+
+        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+
+        result.Status.Should().Be("succeeded");
+        result.Warnings.Should().NotContain("llm_json_parse_failed");
+        result.CoveragePercent.Should().BeLessThan(100);
+        codex.Prompts.Should().HaveCount(2);
+        codex.Prompts[0].Should().Contain("coveragePercent, coverageSummary, coverageMissingTopics");
+        codex.Prompts[1].Should().Contain("Retry instruction:");
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_ShouldPreferLlmCoverageForStructuredDraft_AndFallbackOnlyOnCoverageFailure()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var codex = new SequenceCodex(
+            """
+            {
+              "coveragePercent": 78,
+              "coverageSummary": "当前回填覆盖了大部分核心内容，但部分数值和约束仍不够明确。",
+              "coverageMissingTopics": ["地图尺寸约束", "奖励规则细节"]
+            }
+            """);
+        var service = new ProjectDraftImportService(store, options, codex);
+        var draft = string.Join("\n",
+            "游戏名：龙境试炼",
+            "游戏类型：RPG",
+            "原型标识 Slug：dq-rpg",
+            "原型假设：复古rpg加肉鸽成长",
+            "成功标准：奖励3选1可以正确理解",
+            "游戏功能：（1.游戏场景默认1600*900；2.地图场景600*600用wsad自由连续移动；3.战斗胜利选择奖励3选1。）",
+            "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
+            "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
+
+        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+
+        result.Status.Should().Be("succeeded");
+        result.CoveragePercent.Should().Be(78);
+        result.CoverageSummary.Should().Be("当前回填覆盖了大部分核心内容，但部分数值和约束仍不够明确。");
+        result.CoverageMissingTopics.Should().ContainInOrder("地图尺寸约束", "奖励规则细节");
+        codex.Prompts.Should().ContainSingle();
+        codex.ProjectRoots.Should().ContainSingle();
+        codex.ProjectRoots[0].Should().NotContain("\\repo");
+        codex.ProjectRoots[0].Should().Contain("\\_coverage-llm\\");
+        codex.Prompts[0].Should().Contain("coveragePercent, coverageSummary, coverageMissingTopics");
+        codex.Prompts[0].Should().Contain("Use only the Draft text and the Filled form JSON included below.");
+        codex.Prompts[0].Should().Contain("Do not inspect or infer from repository files, implementation code, workflow docs, tests, or any external context.");
+        codex.Prompts[0].Should().Contain("Do not say the draft or form was not provided.");
+        codex.Options.Should().ContainSingle();
+        codex.Options[0]!.OutputSchemaPath.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_ShouldClampVeryHighLlmCoverage_WhenMissingTopicsExist()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var codex = new SequenceCodex(
+            """
+            {
+              "coveragePercent": 99,
+              "coverageSummary": "表单几乎完整保留了草稿内容。",
+              "coverageMissingTopics": ["敌人示例数值表述存在轻微不一致"]
+            }
+            """);
+        var service = new ProjectDraftImportService(store, options, codex);
+        var draft = string.Join("\n",
+            "游戏名：龙境试炼",
+            "游戏类型：RPG",
+            "原型标识 Slug：dq-rpg",
+            "原型假设：复古rpg加肉鸽成长",
+            "成功标准：奖励3选1可以正确理解",
+            "游戏功能：（1.游戏场景默认1600*900；2.地图场景600*600用wsad自由连续移动；3.战斗胜利选择奖励3选1。）",
+            "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
+            "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
+
+        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+
+        result.Status.Should().Be("succeeded");
+        result.CoveragePercent.Should().Be(92);
+        result.CoverageMissingTopics.Should().ContainSingle("敌人示例数值表述存在轻微不一致");
+    }
+
+    [Fact]
+    public async Task AnalyzeAsync_ShouldRetryCoverageWhenFirstLlmResponseIsNotParseable()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var codex = new SequenceCodex(
+            "我认为覆盖率大概是 85%，但还缺少一些规则。",
+            """
+            {
+              "coveragePercent": 74,
+              "coverageSummary": "当前回填保留了主要玩法，但仍缺少部分关键约束。",
+              "coverageMissingTopics": ["战斗日志", "遇敌概率规则"]
+            }
+            """);
+        var service = new ProjectDraftImportService(store, options, codex);
+        var draft = string.Join("\n",
+            "游戏名：龙境试炼",
+            "游戏类型：RPG",
+            "原型标识 Slug：dq-rpg",
+            "原型假设：复古rpg加肉鸽成长",
+            "成功标准：奖励3选1可以正确理解",
+            "游戏功能：（1.游戏场景默认1600*900；2.地图场景600*600用wsad自由连续移动；3.战斗胜利选择奖励3选1。）",
+            "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
+            "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
+
+        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+
+        result.Status.Should().Be("succeeded");
+        result.CoveragePercent.Should().Be(74);
+        result.CoverageMissingTopics.Should().ContainInOrder("战斗日志", "遇敌概率规则");
+        codex.Prompts.Should().HaveCount(2);
+        codex.Prompts[1].Should().Contain("Retry instruction:");
+        codex.Options.Should().HaveCount(2);
+        codex.Options.All(option => !string.IsNullOrWhiteSpace(option?.OutputSchemaPath)).Should().BeTrue();
+    }
+
     private static ProjectDraftImportService Service()
     {
         var options = Options(Path.Combine(Path.GetTempPath(), $"phase-a-workspaces-{Guid.NewGuid():N}"));
@@ -233,10 +397,12 @@ public sealed class ProjectDraftImportServiceTests
         }
 
         public string? LastPrompt { get; private set; }
+        public List<string> Prompts { get; } = [];
 
-        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt, string? billingApiKeyName = null, CancellationToken cancellationToken = default)
+        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt, CodexChatClientOptions? options = null, string? billingApiKeyName = null, CancellationToken cancellationToken = default)
         {
             LastPrompt = prompt;
+            Prompts.Add(prompt);
             return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
         }
     }
@@ -263,6 +429,29 @@ public sealed class ProjectDraftImportServiceTests
             {
                 Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class SequenceCodex : ICodexChatClient
+    {
+        private readonly Queue<string> _replies;
+
+        public SequenceCodex(params string[] replies)
+        {
+            _replies = new Queue<string>(replies);
+        }
+
+        public List<string> Prompts { get; } = [];
+        public List<CodexChatClientOptions?> Options { get; } = [];
+        public List<string> ProjectRoots { get; } = [];
+
+        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt, CodexChatClientOptions? options = null, string? billingApiKeyName = null, CancellationToken cancellationToken = default)
+        {
+            ProjectRoots.Add(projectRoot);
+            Prompts.Add(prompt);
+            Options.Add(options);
+            var reply = _replies.Count > 0 ? _replies.Dequeue() : "{}";
+            return Task.FromResult(new CodexChatClientResult(true, reply, null, 0, "", ""));
         }
     }
 }

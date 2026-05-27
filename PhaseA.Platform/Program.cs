@@ -69,6 +69,7 @@ builder.Services.AddSingleton<LlmStopLossService>();
 builder.Services.AddSingleton<AiCodeMirrorKeyPoolService>();
 builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingClient>();
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
+builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();

@@ -214,8 +214,8 @@ public sealed class PrototypeIterationPlanService
             project.RepoPath,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             modelPrompt,
-            project.AccountId,
-            cancellationToken);
+            billingApiKeyName: project.AccountId,
+            cancellationToken: cancellationToken);
         if (!completion.Succeeded)
         {
             return fallback with
@@ -247,8 +247,8 @@ public sealed class PrototypeIterationPlanService
             project.RepoPath,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             prompt,
-            project.AccountId,
-            cancellationToken);
+            billingApiKeyName: project.AccountId,
+            cancellationToken: cancellationToken);
         if (!completion.Succeeded)
         {
             return [];

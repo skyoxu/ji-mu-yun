@@ -5,7 +5,14 @@ $env:HOSTED_WORKSPACE_ROOT = 'C:\jimuyun\logs\phase-a-innernet\workspaces'
 $env:HOSTED_PROJECT_LIMIT = '2'
 $env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
 $env:PHASEA_REPOSITORY_ROOT = 'C:\jimuyun'
-$env:PHASEA_CODEX_COMMAND = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd'
+$preferredCodexCommands = @(
+  'C:\Users\Administrator\AppData\Roaming\npm\codex.cmd',
+  'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd'
+)
+$env:PHASEA_CODEX_COMMAND = ($preferredCodexCommands | Where-Object { Test-Path $_ } | Select-Object -First 1)
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_CODEX_COMMAND)) {
+  $env:PHASEA_CODEX_COMMAND = 'codex'
+}
 Remove-Item Env:\PHASEA_CHAT_TEST_MODE -ErrorAction SilentlyContinue
 Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
 $env:GODOT_BIN = 'C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'

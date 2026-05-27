@@ -325,6 +325,7 @@ public sealed class ChatServiceTests
             string projectRoot,
             string model,
             string prompt,
+            CodexChatClientOptions? options = null,
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
