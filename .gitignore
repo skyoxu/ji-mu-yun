@@ -102,3 +102,5 @@ _bmad/*
 .agents/*
 !.agents/skills/
 !.agents/skills/**
+backup/BMAD-METHOD-upstream/
+prototype_run_dump.txt
