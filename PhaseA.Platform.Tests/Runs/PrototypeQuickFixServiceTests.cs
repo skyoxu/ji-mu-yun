@@ -240,8 +240,8 @@ REMAINING: none
         runner.LastPrompt.Should().Contain("Platform hard acceptance");
     }
 
-    [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFive()
+[Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFourRewardLoop()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -257,9 +257,9 @@ REMAINING: none
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need engine verification for reward loop.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
 
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
@@ -284,15 +284,15 @@ REMAINING: none
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.Status.Should().Be("completed");
-        result.IterationGoalStatus.Should().Be("needs_fix");
-        result.AssistantMessage.Should().Contain("平台验收");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        result.AssistantMessage.Should().Contain("Godot");
     }
 
     [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldAcceptStepFiveRewardEntryMethodSignature()
+    public async Task SubmitAsync_GoalRepair_ShouldAcceptStepFourRewardEntryMethodSignature()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -308,9 +308,9 @@ REMAINING: none
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
 
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
@@ -345,15 +345,15 @@ public sealed class DqRpgPrototype
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.Status.Should().Be("completed");
-        result.IterationGoalStatus.Should().Be("needs_fix");
-        result.AssistantMessage.Should().Contain("平台验收");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        result.AssistantMessage.Should().Contain("Godot");
     }
 
     [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldKeepStepFiveNeedsFix_WhenRewardContractIsMissing()
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepFourNeedsFix_WhenRewardContractIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -369,9 +369,9 @@ public sealed class DqRpgPrototype
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
 
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         EnsureRpgAcceptanceMarkers(project.RepoPath);
@@ -386,12 +386,13 @@ public sealed class DqRpgPrototype
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("needs_fix");
-        run!.EvidenceJson.Should().Contain("missing_rpg_");
+        run!.EvidenceJson.Should().Contain("acceptance_validation_status");
+        run.EvidenceJson.Should().Contain("\"failed\"");
     }
 
     [Fact]
