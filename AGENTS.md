@@ -164,7 +164,7 @@ This file is the repository map. It routes you to the right source document by t
 
 ## Phase A Runtime Ops
 - Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
-- Stable public reverse-proxy entry is `http://47.250.131.70:8080`.
+- Stable public reverse-proxy entry is `http://47.86.160.138:8080`.
 - Canonical Phase A runtime config file is `runtime/phase-a/start-phasea.ps1`.
 - Canonical Caddy config file is `runtime/phase-a/Caddyfile`.
 - Important runtime configuration files must not live under `log/` or `logs/`. Logs stay under `logs/`; checked-in startup/config files stay under a stable source directory such as `runtime/phase-a/`.
@@ -177,7 +177,7 @@ This file is the repository map. It routes you to the right source document by t
   - `APP_BIND_URL=http://127.0.0.1:18080`
   - `ASPNETCORE_URLS=http://127.0.0.1:18080`
   - `HTTPS_TERMINATION=caddy`
-  - `PUBLIC_BASE_URL=https://47.250.131.70:8080`
+  - `PUBLIC_BASE_URL=https://47.86.160.138:8080`
   - `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
   - `HOSTED_PROJECT_LIMIT=2`
   - `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`

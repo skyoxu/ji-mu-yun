@@ -94,6 +94,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("原型创建中..刷新页面查阅创建进度.");
         html.Should().Contain("prototypeCommandPanel");
         html.Should().Contain(@"role !== ""admin""");
+        html.Should().Contain("id=\"loadRuns\" class=\"ghost hidden\"");
+        html.Should().Contain("id=\"runsPanel\" class=\"hidden\"");
+        html.Should().Contain("id=\"outputPanel\" class=\"hidden\"");
+        html.Should().Contain(@"$(""loadRuns"").classList.toggle(""hidden"", !isAdmin)");
+        html.Should().Contain(@"$(""runsPanel"").classList.toggle(""hidden"", !isAdmin)");
+        html.Should().Contain(@"$(""outputPanel"").classList.toggle(""hidden"", !isAdmin)");
         html.Should().NotContain("stopAfterDay");
         html.Should().Contain(@"data-stage=""red""");
         html.Should().Contain("createScene");

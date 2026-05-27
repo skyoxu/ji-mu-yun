@@ -7,6 +7,7 @@ using PhaseA.Platform.Skills;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
 using Xunit;
+using System.Text.Json;
 
 namespace PhaseA.Platform.Tests.Runs;
 
@@ -193,6 +194,14 @@ REMAINING: none
         result.IterationSessionStatus.Should().Be("paused_for_review");
         refreshed!.Goals[0].Status.Should().Be("succeeded");
         refreshed.Session.Status.Should().Be("paused_for_review");
+        var planningAnalysis = ReadPlanningAnalysis(project!.MetaPath);
+        var loopFields = planningAnalysis.GetProperty("fieldCoverage").EnumerateArray().ToArray();
+        loopFields.Should().Contain(field =>
+            field.GetProperty("field").GetString() == "minimum_playable_loop" &&
+            field.GetProperty("status").GetString() == "completed");
+        loopFields.Should().Contain(field =>
+            field.GetProperty("field").GetString() == "core_gameplay_loop" &&
+            field.GetProperty("status").GetString() == "completed");
     }
 
     [Fact]
@@ -411,6 +420,7 @@ public sealed class DqRpgPrototype
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
         WriteMainScene(project.RepoPath, hidePrototypeHostUi: false);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
@@ -459,6 +469,7 @@ public sealed class DqRpgPrototype
         });
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
         WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
@@ -611,6 +622,15 @@ public sealed class DqRpgPrototype
         refreshed.Goals[0].ResultSummary.Should().Contain("最小奖励闭环");
         refreshed.Session.Status.Should().Be("needs_fix");
         refreshed.Session.LatestSummary.Should().Contain("修复超时");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var planningAnalysis = ReadPlanningAnalysis(project!.MetaPath);
+        var loopFields = planningAnalysis.GetProperty("fieldCoverage").EnumerateArray().ToArray();
+        loopFields.Should().Contain(field =>
+            field.GetProperty("field").GetString() == "minimum_playable_loop" &&
+            field.GetProperty("status").GetString() == "partial");
+        loopFields.Should().Contain(field =>
+            field.GetProperty("field").GetString() == "core_gameplay_loop" &&
+            field.GetProperty("status").GetString() == "partial");
     }
 
     [Fact]
@@ -660,6 +680,13 @@ public sealed class DqRpgPrototype
         }
 
         return result.ProjectId!;
+    }
+
+    private static JsonElement ReadPlanningAnalysis(string metaPath)
+    {
+        var path = Path.Combine(metaPath, "routes", "iteration-plan", "latest.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        return document.RootElement.GetProperty("planning_analysis").Clone();
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? godotBin = null)
@@ -718,6 +745,14 @@ public sealed class DqRpgPrototypeLoopTests
         File.WriteAllText(Path.Combine(corePath, "DqRpgPrototypeLoop.cs"), """
 public sealed class DqRpgPrototypeLoop
 {
+    public const int StartingHp = 30;
+    public const int StartingAtk = 10;
+    public const int StartingDef = 2;
+    public const int RewardHpBonus = 5;
+    public const int RewardAtkBonus = 2;
+    public const int RewardDefBonus = 1;
+    public const int VictoryTargetBattles = 15;
+    public const int RewardHealPercent = 10;
     public void MoveOnMap() { }
     public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
     public void ResolveAttackTurn() { }
@@ -730,6 +765,29 @@ public sealed class DqRpgPrototypeLoop
     // Return to the map
 }
 """);
+    }
+
+    private static void EnsureRpgPrototypeContractValues(string metaPath)
+    {
+        var contractDir = Path.Combine(metaPath, "routes", "prototype-contract");
+        Directory.CreateDirectory(contractDir);
+        var payload = new
+        {
+            form_fields = new
+            {
+                success_criteria = new[]
+                {
+                    "Player starts with 30 HP, 10 ATK, 2 DEF.",
+                    "Rewards can add 5 HP, 2 ATK, or 1 DEF.",
+                    "Win after 15 battles.",
+                    "Heal reward restores 10% HP."
+                }
+            }
+        };
+        File.WriteAllText(
+            Path.Combine(contractDir, "latest.json"),
+            JsonSerializer.Serialize(payload),
+            System.Text.Encoding.UTF8);
     }
 
     private static void EnsureRpgSmokeSceneFile(string repoPath)

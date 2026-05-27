@@ -21,7 +21,7 @@ public sealed class ProjectInitializationService
     public void StartChapter2Bootstrap(string projectId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
-        _ = Task.Run(() => RunChapter2BootstrapAsync(projectId));
+        _ = Task.Run(() => RunChapter2BootstrapSafelyAsync(projectId));
     }
 
     public Task ReconcileInterruptedInitializationsAsync(CancellationToken cancellationToken = default)
@@ -61,21 +61,40 @@ public sealed class ProjectInitializationService
                 stale.WorkspaceRootPath,
                 failure), cancellationToken);
             await metadataStore.DeleteProjectAsync(stale.ProjectId, cancellationToken);
-            if (Directory.Exists(stale.WorkspaceRootPath))
+            PreserveFailedWorkspace(stale.WorkspaceRootPath);
+        }
+    }
+
+    private async Task RunChapter2BootstrapSafelyAsync(string projectId)
+    {
+        try
+        {
+            await RunChapter2BootstrapAsync(projectId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled project initialization failure for {ProjectId}", projectId);
+
+            try
             {
-                Directory.Delete(stale.WorkspaceRootPath, recursive: true);
+                using var scope = _scopeFactory.CreateScope();
+                var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+                await RecordFailureAndDeleteProjectAsync(metadataStore, projectId, ex.Message);
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogError(cleanupEx, "Failed to cleanup project after unhandled initialization failure for {ProjectId}", projectId);
             }
         }
     }
 
     private async Task RunChapter2BootstrapAsync(string projectId)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
-        var chapter2 = scope.ServiceProvider.GetRequiredService<Chapter2BootstrapService>();
-
         try
         {
+            using var scope = _scopeFactory.CreateScope();
+            var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+            var chapter2 = scope.ServiceProvider.GetRequiredService<Chapter2BootstrapService>();
             await metadataStore.SetProjectBootstrapStatusAsync(projectId, "running", null);
             var result = await chapter2.RunAsync(projectId);
             if (result.Status is "succeeded" or "already_succeeded")
@@ -96,6 +115,8 @@ public sealed class ProjectInitializationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Project initialization failed for {ProjectId}", projectId);
+            using var scope = _scopeFactory.CreateScope();
+            var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
             await RecordFailureAndDeleteProjectAsync(metadataStore, projectId, ex.Message);
         }
     }
@@ -124,9 +145,14 @@ public sealed class ProjectInitializationService
             project.WorkspaceRootPath,
             enrichedFailure));
         await metadataStore.DeleteProjectAsync(projectId);
-        if (Directory.Exists(project.WorkspaceRootPath))
+        PreserveFailedWorkspace(project.WorkspaceRootPath);
+    }
+
+    private static void PreserveFailedWorkspace(string workspaceRootPath)
+    {
+        if (!Directory.Exists(workspaceRootPath))
         {
-            Directory.Delete(project.WorkspaceRootPath, recursive: true);
+            return;
         }
     }
 

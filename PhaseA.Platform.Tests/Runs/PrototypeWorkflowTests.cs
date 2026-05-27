@@ -538,6 +538,10 @@ public sealed class PrototypeWorkflowTests
             "[]",
             "[]",
             null,
+            0,
+            null,
+            "[]",
+            null,
             10,
             100);
         var runner = new FakeHostedProcessRunner();

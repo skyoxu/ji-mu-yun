@@ -89,18 +89,25 @@ public sealed class ProjectDraftImportService
         }
 
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
-        await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, cancellationToken);
+        await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, null, cancellationToken);
         try
         {
             var text = DecodeUtf8(content);
             var fallback = ApplyDeterministicFallback(basic with { RunId = runId }, project, text);
-            await SaveDraftAsync(project.ProjectId, fallback with { Status = "running" }, cancellationToken);
+            await SaveDraftAsync(project.ProjectId, fallback with { Status = "running" }, text, cancellationToken);
             var prompt = BuildAnalysisPrompt(project, text);
             var normalizedModel = Runs.PrototypeModelPolicy.Normalize(model);
             var completion = await _codexChatClient.CompleteAsync(project.RepoPath, normalizedModel, prompt, project.AccountId, cancellationToken);
             var analyzed = completion.Succeeded
                 ? MergeCodexAnalysis(fallback, completion.AssistantMessage)
                 : fallback with { Warnings = fallback.Warnings.Append(completion.FailureCode ?? "llm_analysis_failed").ToArray() };
+            var coverage = await AnalyzeCoverageAsync(project, normalizedModel, text, analyzed, cancellationToken);
+            analyzed = analyzed with
+            {
+                CoveragePercent = coverage.CoveragePercent,
+                CoverageSummary = coverage.CoverageSummary,
+                CoverageMissingTopics = coverage.CoverageMissingTopics
+            };
             var status = completion.Succeeded || HasUsableDraft(analyzed) ? "succeeded" : "failed";
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -130,12 +137,12 @@ public sealed class ProjectDraftImportService
                     providerBilling: completion.ProviderBilling),
                 cancellationToken);
             var persisted = analyzed with { Status = status, FailureCode = status == "succeeded" ? analyzed.FailureCode : completion.FailureCode ?? "llm_analysis_failed" };
-            await SaveDraftAsync(project.ProjectId, persisted, cancellationToken);
+            await SaveDraftAsync(project.ProjectId, persisted, text, cancellationToken);
             return persisted;
         }
         catch (Exception)
         {
-            await SaveDraftAsync(project.ProjectId, basic with { Status = "failed", RunId = runId, FailureCode = "draft_analysis_failed" }, CancellationToken.None);
+            await SaveDraftAsync(project.ProjectId, basic with { Status = "failed", RunId = runId, FailureCode = "draft_analysis_failed" }, null, CancellationToken.None);
             throw;
         }
         finally
@@ -252,6 +259,9 @@ public sealed class ProjectDraftImportService
             MatchedFields: matched.Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
             Warnings: warnings,
             UnparsedLines: unparsed,
+            CoveragePercent: 0,
+            CoverageSummary: null,
+            CoverageMissingTopics: [],
             LineCount: lines.Length,
             ByteCount: content.Length);
 
@@ -288,6 +298,27 @@ public sealed class ProjectDraftImportService
             {text}
             Draft ends.
             """;
+    }
+
+    private async Task<DraftCoverageResult> AnalyzeCoverageAsync(
+        ProjectSnapshot project,
+        string model,
+        string draftText,
+        ProjectDraftImportResult analyzed,
+        CancellationToken cancellationToken)
+    {
+        var prompt = BuildCoveragePrompt(project, draftText, analyzed);
+        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, project.AccountId, cancellationToken);
+        if (completion.Succeeded)
+        {
+            var parsed = MergeCoverageAnalysis(completion.AssistantMessage);
+            if (parsed is not null)
+            {
+                return parsed;
+            }
+        }
+
+        return BuildDeterministicCoverageFallback(draftText, analyzed, completion.FailureCode);
     }
 
     private static ProjectDraftImportResult MergeCodexAnalysis(ProjectDraftImportResult fallback, string? assistantMessage)
@@ -686,7 +717,7 @@ public sealed class ProjectDraftImportService
         return values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : null;
     }
 
-    private Task SaveDraftAsync(string projectId, ProjectDraftImportResult result, CancellationToken cancellationToken)
+    private Task SaveDraftAsync(string projectId, ProjectDraftImportResult result, string? draftText, CancellationToken cancellationToken)
     {
         return _metadataStore.UpsertProjectPrototypeDraftAsync(
             projectId,
@@ -703,6 +734,10 @@ public sealed class ProjectDraftImportService
             result.WinFailConditions,
             JsonSerializer.Serialize(result.MatchedFields),
             JsonSerializer.Serialize(result.Warnings),
+            draftText,
+            result.CoveragePercent,
+            result.CoverageSummary,
+            JsonSerializer.Serialize(result.CoverageMissingTopics),
             result.FailureCode,
             result.LineCount,
             result.ByteCount,
@@ -729,6 +764,9 @@ public sealed class ProjectDraftImportService
             DeserializeStringArray(draft.MatchedFieldsJson),
             DeserializeStringArray(draft.WarningsJson),
             UnparsedLines: [],
+            draft.CoveragePercent,
+            draft.CoverageSummary,
+            DeserializeStringArray(draft.CoverageMissingTopicsJson),
             draft.LineCount,
             draft.ByteCount,
             draft.FailureCode);
@@ -778,8 +816,116 @@ public sealed class ProjectDraftImportService
             MatchedFields: [],
             Warnings: [failureCode],
             UnparsedLines: [],
+            CoveragePercent: 0,
+            CoverageSummary: null,
+            CoverageMissingTopics: [],
             LineCount: 0,
             ByteCount: 0,
             FailureCode: failureCode);
     }
+
+    private static string BuildCoveragePrompt(ProjectSnapshot project, string draftText, ProjectDraftImportResult analyzed)
+    {
+        var filledFieldsJson = JsonSerializer.Serialize(new
+        {
+            analyzed.ProjectName,
+            analyzed.GameName,
+            analyzed.GameTypeSource,
+            analyzed.PrototypeSlug,
+            analyzed.Hypothesis,
+            analyzed.CorePlayerFantasy,
+            analyzed.MinimumPlayableLoop,
+            analyzed.SuccessCriteria,
+            analyzed.GameFeature,
+            analyzed.CoreGameplayLoop,
+            analyzed.WinFailConditions
+        });
+
+        return $"""
+            You are evaluating how much of a plain-text prototype draft is preserved by a filled prototype intake form.
+            Treat the draft as source material and the filled form as the current structured capture.
+            Output JSON only. Do not explain. Do not use Markdown.
+            Return these camelCase keys only:
+            coveragePercent, coverageSummary, coverageMissingTopics.
+
+            Rules:
+            - coveragePercent must be an integer from 0 to 100.
+            - Give credit when the structured form faithfully preserves meaning, not only exact wording.
+            - Penalize important omitted mechanics, goals, constraints, reward rules, failure rules, UI expectations, and progression details.
+            - coverageSummary must be 1-2 concise Chinese sentences for end users.
+            - coverageMissingTopics must be a short string array in Chinese. Keep it empty when nothing important is missing.
+
+            Project:
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameTypeSource: {project.GameTypeSource}
+
+            Draft text:
+            {draftText}
+
+            Filled form JSON:
+            {filledFieldsJson}
+            """;
+    }
+
+    private static DraftCoverageResult? MergeCoverageAnalysis(string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var coveragePercent = root.TryGetProperty("coveragePercent", out var percentElement) && percentElement.ValueKind == JsonValueKind.Number
+                ? Math.Clamp(percentElement.GetInt32(), 0, 100)
+                : -1;
+            if (coveragePercent < 0)
+            {
+                return null;
+            }
+
+            return new DraftCoverageResult(
+                coveragePercent,
+                ReadString(root, "coverageSummary"),
+                ReadStringArray(root, "coverageMissingTopics"));
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static DraftCoverageResult BuildDeterministicCoverageFallback(string draftText, ProjectDraftImportResult analyzed, string? failureCode)
+    {
+        var fieldCount = 8;
+        var filledCount = 0;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.Hypothesis) ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.CorePlayerFantasy) ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.MinimumPlayableLoop) ? 0 : 1;
+        filledCount += analyzed.SuccessCriteria.Count == 0 ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.GameFeature) ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.CoreGameplayLoop) ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.WinFailConditions) ? 0 : 1;
+        filledCount += string.IsNullOrWhiteSpace(analyzed.GameTypeSource) ? 0 : 1;
+        var percent = Math.Clamp((int)Math.Round(filledCount * 100.0 / fieldCount), 0, 100);
+        var missing = new List<string>();
+        if (string.IsNullOrWhiteSpace(analyzed.GameFeature)) missing.Add("玩法特色未充分结构化");
+        if (string.IsNullOrWhiteSpace(analyzed.CoreGameplayLoop)) missing.Add("核心循环仍偏模糊");
+        if (string.IsNullOrWhiteSpace(analyzed.WinFailConditions)) missing.Add("胜负条件仍不完整");
+        if (analyzed.SuccessCriteria.Count == 0) missing.Add("成功标准缺少明确条目");
+        if (!string.IsNullOrWhiteSpace(failureCode)) missing.Add("覆盖率由降级规则估算");
+        var summary = percent >= 80
+            ? "当前回填已经覆盖了草稿的大部分核心信息，但仍可能遗漏少量细节。"
+            : "当前回填只保留了草稿的一部分关键信息，后续仍需要人工补充细节。";
+        return new DraftCoverageResult(percent, summary, missing);
+    }
+
+    private sealed record DraftCoverageResult(
+        int CoveragePercent,
+        string? CoverageSummary,
+        IReadOnlyList<string> CoverageMissingTopics);
 }

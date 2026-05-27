@@ -152,7 +152,7 @@
     "red": "unexpected_green",
     "green": "ok",
     "refactor": "pending",
-    "red_summary": "logs/ci/2026-05-15/prototype-tdd-dq-rpg-red/summary.json",
+    "red_summary": "logs/ci/2026-05-27/prototype-tdd-dq-rpg-red/summary.json",
     "green_summary": "logs/ci/2026-05-15/prototype-tdd-dq-rpg-green/summary.json"
   }
 }

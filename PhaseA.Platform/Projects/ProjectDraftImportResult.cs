@@ -18,6 +18,9 @@ public sealed record ProjectDraftImportResult(
     IReadOnlyList<string> MatchedFields,
     IReadOnlyList<string> Warnings,
     IReadOnlyList<string> UnparsedLines,
+    int CoveragePercent,
+    string? CoverageSummary,
+    IReadOnlyList<string> CoverageMissingTopics,
     int LineCount,
     int ByteCount,
     string? FailureCode = null);

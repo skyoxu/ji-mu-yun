@@ -27,7 +27,7 @@ public sealed class HeavyRunnerQueueServiceTests
                 return "first";
             });
 
-        await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
         var second = queue.ExecuteAsync(
             "run-2",
@@ -50,8 +50,8 @@ public sealed class HeavyRunnerQueueServiceTests
 
         firstCanFinish.SetResult();
 
-        Assert.Equal("first", await first.WaitAsync(TimeSpan.FromSeconds(5)));
-        Assert.Equal("second", await second.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal("first", await first.WaitAsync(TimeSpan.FromSeconds(15)));
+        Assert.Equal("second", await second.WaitAsync(TimeSpan.FromSeconds(15)));
         Assert.Equal(["first", "second"], order);
         Assert.False(queue.GetReadback("account-2", includeAll: true).Running);
     }

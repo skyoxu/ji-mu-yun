@@ -50,6 +50,8 @@ When `game_type` is `rpg`, this skill is the default implementation route for:
 - Map traversal, encounter rules, battle stats, reward rules, victory/failure conditions, and UI wording should be derived from the user fields when those fields are non-empty.
 - If the user says "each movement increases encounter chance by 10%" or "first enemy has 30 HP and 5 attack", that content must become gameplay logic, visible state, test expectation, or an explicit `needs_fix` blocker.
 - Final RPG acceptance must fail when a concrete non-empty input field is only present in documentation but not represented in scene flow, runtime behavior, tests, or a recorded needs-fix reason.
+- Iteration-plan generation must first inspect the latest successful or failed prototype result, compare it with the current prototype contract and imported draft/form fields, and only then decide whether the next steps are reconstruction, closure, or polish.
+- Do not generate a generic six-step RPG plan when the current project already has a succeeded prototype run. In that case, prefer convergence steps such as contract drift repair, reward comprehension, failure-path closure, evidence readability, and final acceptance.
 
 ## Default Template Assets
 

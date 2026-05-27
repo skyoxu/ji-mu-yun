@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -34,10 +36,69 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def run_cmd(args: list[str], *, cwd: Path, timeout_sec: int) -> tuple[int, str]:
+def _candidate_dotnet_paths(root: Path) -> list[Path]:
+    exe_name = "dotnet.exe" if os.name == "nt" else "dotnet"
+    candidates: list[Path] = []
+
+    which_dotnet = shutil.which("dotnet")
+    if which_dotnet:
+        candidates.append(Path(which_dotnet))
+
+    for env_key in ("DOTNET_ROOT", "DOTNET_HOME"):
+        env_val = os.environ.get(env_key)
+        if env_val:
+            candidates.append(Path(env_val) / exe_name)
+
+    candidates.append(root / ".dotnet" / exe_name)
+    candidates.append(Path.home() / ".dotnet" / exe_name)
+
+    if os.name == "nt":
+        candidates.append(Path(r"C:\Program Files\dotnet\dotnet.exe"))
+        candidates.append(Path(r"C:\Program Files (x86)\dotnet\dotnet.exe"))
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = os.path.normcase(os.path.normpath(str(candidate)))
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def _resolve_dotnet(root: Path) -> str:
+    for candidate in _candidate_dotnet_paths(root):
+        if candidate.is_file():
+            return str(candidate)
+    return "dotnet"
+
+
+def _build_process_env(root: Path, dotnet_bin: str) -> dict[str, str]:
+    env = os.environ.copy()
+    if os.path.isfile(dotnet_bin):
+        dotnet_root = os.path.dirname(dotnet_bin)
+        env["DOTNET_ROOT"] = dotnet_root
+        env["DOTNET_HOME"] = dotnet_root
+        current_path = env.get("PATH", "")
+        path_parts = current_path.split(os.pathsep) if current_path else []
+        if dotnet_root not in path_parts:
+            env["PATH"] = dotnet_root + (os.pathsep + current_path if current_path else "")
+    return env
+
+
+def _rewrite_command_for_environment(args: list[str], *, dotnet_bin: str) -> list[str]:
+    if args and args[0].lower() == "dotnet":
+        rewritten = list(args)
+        rewritten[0] = dotnet_bin
+        return rewritten
+    return args
+
+
+def run_cmd(args: list[str], *, cwd: Path, timeout_sec: int, env: dict[str, str] | None = None) -> tuple[int, str]:
     proc = subprocess.Popen(
         args,
         cwd=str(cwd),
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -637,6 +698,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = repo_root()
+    dotnet_bin = _resolve_dotnet(root)
+    process_env = _build_process_env(root, dotnet_bin)
     slug = _sanitize_slug(args.slug)
     out_dir = Path(args.out_dir) if str(args.out_dir or "").strip() else (root / "logs" / "ci" / today_str() / f"prototype-tdd-{slug}-{args.stage}")
     ensure_dir(out_dir)
@@ -700,7 +763,8 @@ def main(argv: list[str] | None = None) -> int:
     if not args.create_record_only:
         for index, step in enumerate(steps, start=1):
             log_path = out_dir / f"step-{index:02d}-{step['name']}.log"
-            rc, out = run_cmd([str(item) for item in step["cmd"]], cwd=root, timeout_sec=int(args.timeout_sec))
+            command = _rewrite_command_for_environment([str(item) for item in step["cmd"]], dotnet_bin=dotnet_bin)
+            rc, out = run_cmd(command, cwd=root, timeout_sec=int(args.timeout_sec), env=process_env)
             write_text(log_path, out)
             step["rc"] = rc
             step["log"] = str(log_path.relative_to(root)).replace("\\", "/")

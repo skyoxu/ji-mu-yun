@@ -183,6 +183,56 @@ def _cleanup_godot_processes(godot_bin: str) -> None:
         pass
 
 
+def _candidate_dotnet_paths(root: Path) -> list[Path]:
+    exe_name = "dotnet.exe" if os.name == "nt" else "dotnet"
+    candidates: list[Path] = []
+
+    which_dotnet = shutil.which("dotnet")
+    if which_dotnet:
+        candidates.append(Path(which_dotnet))
+
+    for env_key in ("DOTNET_ROOT", "DOTNET_HOME"):
+        env_val = os.environ.get(env_key)
+        if env_val:
+            candidates.append(Path(env_val) / exe_name)
+
+    candidates.append(root / ".dotnet" / exe_name)
+    candidates.append(Path.home() / ".dotnet" / exe_name)
+
+    if os.name == "nt":
+        candidates.append(Path(r"C:\Program Files\dotnet\dotnet.exe"))
+        candidates.append(Path(r"C:\Program Files (x86)\dotnet\dotnet.exe"))
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = os.path.normcase(os.path.normpath(str(candidate)))
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def _resolve_dotnet(root: Path) -> str:
+    for candidate in _candidate_dotnet_paths(root):
+        if candidate.is_file():
+            return str(candidate)
+    return "dotnet"
+
+
+def _build_process_env(dotnet_bin: str) -> dict[str, str]:
+    env = os.environ.copy()
+    if os.path.isfile(dotnet_bin):
+        dotnet_root = os.path.dirname(dotnet_bin)
+        env["DOTNET_ROOT"] = dotnet_root
+        env["DOTNET_HOME"] = dotnet_root
+        current_path = env.get("PATH", "")
+        path_parts = current_path.split(os.pathsep) if current_path else []
+        if dotnet_root not in path_parts:
+            env["PATH"] = dotnet_root + (os.pathsep + current_path if current_path else "")
+    return env
+
+
 def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
     logs_root = project_root / "logs"
     _ensure_dir(logs_root)
@@ -209,10 +259,11 @@ def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
             pass
 
 
-def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[int, str, str]:
+def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int, env: dict[str, str] | None = None) -> tuple[int, str, str]:
     process = subprocess.Popen(
         cmd,
         cwd=cwd,
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -233,6 +284,8 @@ def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[
 def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: int) -> int:
     bin_path = Path(godot_bin)
     project_root = Path(project_path)
+    dotnet_bin = _resolve_dotnet(project_root)
+    process_env = _build_process_env(dotnet_bin)
     if not bin_path.is_file():
         print(f"[prototype_main_menu_navigation] GODOT_BIN not found: {godot_bin}", file=sys.stderr)
         return 1
@@ -267,6 +320,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             prewarm_cmd,
             project_root,
             PREWARM_TIMEOUT_SEC,
+            env=process_env,
         )
         prewarm_mode = "godot-build-solutions"
         if prewarm_returncode == 124:
@@ -274,9 +328,10 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             prewarm_stderr += "\n[prototype_main_menu_navigation] godot build-solutions prewarm timed out."
         if prewarm_returncode != 0:
             fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
-                ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
+                [dotnet_bin, "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
                 project_root,
                 PREWARM_TIMEOUT_SEC,
+                env=process_env,
             )
             prewarm_mode = "dotnet-build"
             prewarm_stdout += ("\n" if prewarm_stdout else "") + fallback_stdout
@@ -312,6 +367,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             str(temp_script),
         ]
         env = dict(**os.environ)
+        env.update(process_env)
         env["PHASEA_EXPECTED_PROTOTYPE_SCENE"] = expected_scene
 
         with _open_writer(out_path) as f_out, _open_writer(err_path) as f_err:

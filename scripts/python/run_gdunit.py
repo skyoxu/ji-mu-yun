@@ -20,6 +20,56 @@ import time
 import xml.etree.ElementTree as ET
 
 
+def _candidate_dotnet_paths(root: str) -> list[str]:
+    exe_name = "dotnet.exe" if os.name == "nt" else "dotnet"
+    candidates: list[str] = []
+
+    which_dotnet = shutil.which("dotnet")
+    if which_dotnet:
+        candidates.append(which_dotnet)
+
+    for env_key in ("DOTNET_ROOT", "DOTNET_HOME"):
+        env_val = os.environ.get(env_key)
+        if env_val:
+            candidates.append(os.path.join(env_val, exe_name))
+
+    candidates.append(os.path.join(root, ".dotnet", exe_name))
+    candidates.append(os.path.join(os.path.expanduser("~"), ".dotnet", exe_name))
+
+    if os.name == "nt":
+        candidates.append(r"C:\Program Files\dotnet\dotnet.exe")
+        candidates.append(r"C:\Program Files (x86)\dotnet\dotnet.exe")
+
+    unique: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = os.path.normcase(os.path.normpath(candidate))
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def _resolve_dotnet(root: str) -> str:
+    for candidate in _candidate_dotnet_paths(root):
+        if os.path.isfile(candidate):
+            return candidate
+    return "dotnet"
+
+
+def _build_process_env(root: str, dotnet_bin: str) -> dict[str, str]:
+    env = os.environ.copy()
+    if os.path.isfile(dotnet_bin):
+        dotnet_root = os.path.dirname(dotnet_bin)
+        env["DOTNET_ROOT"] = dotnet_root
+        env["DOTNET_HOME"] = dotnet_root
+        current_path = env.get("PATH", "")
+        path_parts = current_path.split(os.pathsep) if current_path else []
+        if dotnet_root not in path_parts:
+            env["PATH"] = dotnet_root + (os.pathsep + current_path if current_path else "")
+    return env
+
+
 def _copy_reports_best_effort(src_root: str, dest_root: str) -> list[tuple[str, str, str]]:
     failures: list[tuple[str, str, str]] = []
     if not os.path.isdir(src_root):
@@ -81,8 +131,8 @@ def _parse_results_xml(path: str):
         return {"path": path, "error": f"parse_failed:{type(ex).__name__}"}
 
 
-def run_cmd(args, cwd=None, timeout=600_000):
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+def run_cmd(args, cwd=None, timeout=600_000, env=None):
+    p = subprocess.Popen(args, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, encoding='utf-8', errors='ignore')
     try:
         out, _ = p.communicate(timeout=timeout/1000.0)
@@ -93,7 +143,7 @@ def run_cmd(args, cwd=None, timeout=600_000):
     return p.returncode, out
 
 
-def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None):
+def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None, env=None):
     """Run a process and stream stdout; if any line contains a break marker, kill early and return rc=1.
     This avoids long timeouts when Godot enters Debugger Break state.
     """
@@ -102,7 +152,7 @@ def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None):
         'Parser Error',
         'SCRIPT ERROR',
     ]
-    p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    p = subprocess.Popen(args, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, encoding='utf-8', errors='ignore')
     buf_lines = []
     hit_break = False
@@ -227,6 +277,8 @@ def main():
     args = ap.parse_args()
 
     root = os.getcwd()
+    dotnet_bin = _resolve_dotnet(root)
+    process_env = _build_process_env(root, dotnet_bin)
     proj = os.path.abspath(args.project)
     date = dt.date.today().strftime('%Y-%m-%d')
     out_dir = os.path.join(root, 'logs', 'e2e', date)
@@ -243,7 +295,7 @@ def main():
     prewarm_note = None
     if args.prewarm:
         pre_cmd = [args.godot_bin, '--headless', '--path', proj, '--build-solutions', '--quit']
-        _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000)
+        _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000, env=process_env)
         prewarm_attempts = 1
         prewarm_rc = _rcp
         # Write first attempt
@@ -251,7 +303,7 @@ def main():
         if _rcp != 0:
             # Wait and retry once to mitigate transient C# load issues
             time.sleep(3)
-            _rcp2, _outp2 = run_cmd(pre_cmd, cwd=proj, timeout=360_000)
+            _rcp2, _outp2 = run_cmd(pre_cmd, cwd=proj, timeout=360_000, env=process_env)
             prewarm_attempts = 2
             prewarm_rc = _rcp2
             # Append retry log to same file
@@ -274,7 +326,7 @@ def main():
                 # Prefer project build; if solution exists, add as secondary
                 build_logs = []
                 for item in (dotnet_projects or [sln] if os.path.isfile(sln) else []):
-                    rc_b, out_b = run_cmd(['dotnet', 'build', item, '-c', 'Debug', '-v', 'minimal'], cwd=root, timeout=600_000)
+                    rc_b, out_b = run_cmd([dotnet_bin, 'build', item, '-c', 'Debug', '-v', 'minimal'], cwd=root, timeout=600_000, env=process_env)
                     build_logs.append((item, rc_b, out_b))
                 # Persist build logs
                 agg = []
@@ -293,7 +345,7 @@ def main():
             apath = 'res://' + apath.replace('\\', '/').lstrip('/')
         cmd += ['-a', apath]
     try:
-        rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000)
+        rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000, env=process_env)
     finally:
         _cleanup_godot_processes(args.godot_bin)
     console_path = os.path.join(out_dir, 'gdunit-console.txt')
@@ -301,7 +353,7 @@ def main():
         f.write(out)
 
     # Generate HTML log frame (optional)
-    _rc2, _out2 = run_cmd([args.godot_bin, '--headless', '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj)
+    _rc2, _out2 = run_cmd([args.godot_bin, '--headless', '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
 
     # Archive reports
     reports_dir = os.path.join(proj, 'reports')
@@ -344,6 +396,7 @@ def main():
         'rc': rc,
         'normalized_rc': normalized_rc,
         'strict_exit_code': strict_exit,
+        'dotnet_bin': dotnet_bin,
         'project': proj,
         'added': args.add,
         'timeout_sec': args.timeout_sec,

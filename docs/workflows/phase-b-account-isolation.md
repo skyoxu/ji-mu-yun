@@ -127,6 +127,6 @@ Deferred beyond this Phase B prototype-hardening scope:
 ## Latest Completion Pass
 
 - Local unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080`.
-- Public unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://47.250.131.70:8080`.
+- Public unauthenticated smoke: passed with `scripts/python/phase_b_account_smoke.py --base-url http://47.86.160.138:8080`.
 - Authorized admin smoke: passed on local and public endpoints with a host-provided admin token; token value was not written to logs or docs.
 - Unit/integration test suite: passed with `dotnet test PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj`; 196 tests passed.

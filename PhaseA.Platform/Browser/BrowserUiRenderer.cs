@@ -280,7 +280,7 @@ public sealed class BrowserUiRenderer
                   <section id="currentProjectPanel" class="stack">
                     <h2>当前项目</h2>
                     <p id="selectedProject" class="muted">尚未选择项目。</p>
-                    <button id="loadRuns" class="ghost">加载运行记录</button>
+                    <button id="loadRuns" class="ghost hidden">加载运行记录</button>
                     <button id="refreshPrototypeProgress" class="ghost">刷新原型进度</button>
                     <button id="validatePrototype" class="ghost" data-global-action="true">重新验收原型</button>
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
@@ -354,11 +354,11 @@ public sealed class BrowserUiRenderer
                     <div id="feedbackSummary" class="card muted">尚未生成迭代计划。</div>
                     <div id="feedbackRecords" class="card-list feedback-scroll"></div>
                   </section>
-                  <section>
+                  <section id="runsPanel" class="hidden">
                     <h2>运行记录</h2>
                     <div id="runs" class="card-list"></div>
                   </section>
-                  <section>
+                  <section id="outputPanel" class="hidden">
                     <h2>输出</h2>
                     <pre id="output">就绪。</pre>
                   </section>
@@ -575,6 +575,7 @@ public sealed class BrowserUiRenderer
                   }
                   const session = plan.session;
                   const goals = Array.isArray(plan.goals) ? plan.goals : [];
+                  const planningAnalysis = plan.planningAnalysis || null;
                   const hasNeedsFix = goals.some(goal => goal.status === "needs_fix");
                   const hasPending = goals.some(goal => goal.status === "pending");
                   const evaluationDecision = currentIterationPlanDecision();
@@ -587,6 +588,11 @@ public sealed class BrowserUiRenderer
                     <p>${escapeHtml(session.overallGoal || "")}</p>
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
+                    ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
+                    ${planningAnalysis ? `<p class="muted">原型状态：${escapeHtml(planningAnalysis.latestPrototypeStatus || "unknown")} · 草稿覆盖率：${escapeHtml(String(planningAnalysis.draftCoveragePercent ?? 0))}%${planningAnalysis.templateId ? ` · 模板：${escapeHtml(planningAnalysis.templateId)}` : ""}</p>` : ""}
+                    ${planningAnalysis && Array.isArray(planningAnalysis.fieldCoverage) && planningAnalysis.fieldCoverage.length
+                      ? `<p class="muted">字段判断：${escapeHtml(planningAnalysis.fieldCoverage.map(item => `${item.field}:${item.status}${item.missingReason ? `(${item.missingReason})` : item.evidence ? `(${item.evidence})` : ""}`).join(" · "))}</p>`
+                      : ""}
                   `;
                   $("createIterationPlan").disabled = !canCreateNewPlan || blockedByCurrentGoal || isGlobalBusy();
                   $("createIterationPlan").textContent = shouldRefinePlan
@@ -976,6 +982,9 @@ public sealed class BrowserUiRenderer
                   $("adminPanel").classList.remove("hidden");
                   $("globalModelPanel").classList.remove("hidden");
                   $("createProjectPanel").classList.toggle("hidden", isAdmin);
+                  $("loadRuns").classList.toggle("hidden", !isAdmin);
+                  $("runsPanel").classList.toggle("hidden", !isAdmin);
+                  $("outputPanel").classList.toggle("hidden", !isAdmin);
                   if (isAdmin) $("projectListPanel").classList.add("hidden");
                   $("codexConfigPanel").classList.remove("hidden");
                   $("accountAdminPanel").classList.toggle("hidden", !isAdmin);
@@ -1779,10 +1788,15 @@ public sealed class BrowserUiRenderer
                       out(projects);
                       return;
                     }
-                    const failed = failedProject(projects);
+
+                    // Once no project is still bootstrapping, always clear the
+                    // initialization overlay before rendering the steady-state UI.
+                    $("initStatusPanel").classList.add("hidden");
+
                     const visibleProjects = listableProjects(projects);
-                    const latestFailure = failed || visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
+                    const latestFailure = visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
                     $("projectListPanel").classList.toggle("hidden", visibleProjects.length === 0);
+                    $("createProjectPanel").classList.remove("hidden");
                     const health = await loadProjectHealthSummary();
                     $("projects").innerHTML = visibleProjects.map(p => `
                       <div class="card">
@@ -1801,8 +1815,8 @@ public sealed class BrowserUiRenderer
                     `).join("");
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
-                    if (failed || latestFailure) {
-                      showCreationFailure(failed?.bootstrapError || latestFailure?.failureError);
+                    if (visibleProjects.length === 0 && latestFailure) {
+                      showCreationFailure(latestFailure.failureError);
                     }
                     out(projects);
                   } catch (error) {
@@ -2323,7 +2337,9 @@ public sealed class BrowserUiRenderer
                   $("draftImportStatus").innerHTML = `
                     <strong>草稿已分析并回填</strong>
                     <p class="muted">${escapeHtml(draft.fileName || "")} · ${draft.lineCount || 0} 行 · ${draft.byteCount || 0} bytes</p>
+                    <p class="muted">草稿覆盖率：${escapeHtml(String(draft.coveragePercent ?? 0))}%${draft.coverageSummary ? ` · ${escapeHtml(draft.coverageSummary)}` : ""}</p>
                     <p class="muted">命中字段：${escapeHtml((draft.matchedFields || []).join(" · ") || "无")}</p>
+                    <p class="muted">覆盖缺口：${escapeHtml((draft.coverageMissingTopics || []).join(" · ") || "无")}</p>
                     <p class="muted">警告：${escapeHtml((draft.warnings || []).join(" · ") || "无")}</p>
                   `;
                 }

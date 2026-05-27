@@ -21,6 +21,7 @@ public sealed class PrototypeQuickFixService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
@@ -63,6 +64,7 @@ public sealed class PrototypeQuickFixService
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
         _contractService = contractService ?? new PrototypeContractService();
+        _stateWriter = new PrototypeRouteStateWriter();
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
@@ -342,6 +344,7 @@ public sealed class PrototypeQuickFixService
                 CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null && goalRepairOutcome is not null)
             {
+                var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(
                     targetGoal.GoalId,
                     goalRepairOutcome.GoalStatus,
@@ -372,6 +375,7 @@ public sealed class PrototypeQuickFixService
                     refreshed?.Session.LatestEvaluationJson,
                     sessionStatus == "completed" ? now : null,
                     CancellationToken.None);
+                PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
                 await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], CancellationToken.None);
 
                 await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"目标 {targetGoal.GoalIndex} 修复完成。" : $"目标 {targetGoal.GoalIndex} 仍需继续修复。", CancellationToken.None);
@@ -413,8 +417,10 @@ public sealed class PrototypeQuickFixService
             if (targetGoal is not null && iterationDetails is not null)
             {
                 var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小奖励闭环：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。";
+                var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
+                PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
                 await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", "继续修复当前 step 的最小奖励闭环，不要推进后续目标。", summary, [summary], CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "timeout", $"目标 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前目标修复超时。系统没有切换到后续目标，你可以继续再次修复当前 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
@@ -434,8 +440,10 @@ public sealed class PrototypeQuickFixService
             if (targetGoal is not null && iterationDetails is not null)
             {
                 var summary = $"目标 {targetGoal.GoalIndex} 修复失败。当前目标仍需修复，请继续聚焦本 step。";
+                var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
+                PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
                 await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", summary, "当前目标修复失败。", [summary], CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "error", $"目标 {targetGoal.GoalIndex} 修复失败，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前目标修复失败。系统没有推进后续目标，请继续修复这个 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
@@ -576,6 +584,7 @@ public sealed class PrototypeQuickFixService
             godot_smoke_validation = godotSmokeValidation.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, "completed", 0, "Preflight validation passed.", "", evidenceJson, cancellationToken);
+        var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(
             targetGoal.GoalId,
             goalRepairOutcome.GoalStatus,
@@ -608,6 +617,7 @@ public sealed class PrototypeQuickFixService
             refreshed?.Session.LatestEvaluationJson,
             sessionStatus == "completed" ? now : null,
             cancellationToken);
+        PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
         await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], cancellationToken);
         await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"目标 {targetGoal.GoalIndex} 验收完成。" : $"目标 {targetGoal.GoalIndex} 仍需继续修复。", cancellationToken);
 

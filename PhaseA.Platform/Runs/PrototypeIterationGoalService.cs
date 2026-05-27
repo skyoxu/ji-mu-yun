@@ -277,6 +277,7 @@ public sealed class PrototypeIterationGoalService
                 null,
                 hasNeedsFix || hasMoreGoals ? null : now,
                 CancellationToken.None);
+            PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, nextGoal, goalOutcome.GoalStatus, publicSummary, now, sessionSummary);
             _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
             {
                 route = "execute-next-goal",

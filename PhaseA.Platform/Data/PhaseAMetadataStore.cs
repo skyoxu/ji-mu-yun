@@ -443,19 +443,42 @@ public sealed class PhaseAMetadataStore
                           AND runs.run_type = 'chapter2-bootstrap'
                           AND runs.status = 'failed'
                     ) THEN 'failed'
+                    WHEN bootstrap_status = 'running'
+                     AND NOT EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status IN ('queued', 'running')
+                    ) THEN 'failed'
                     ELSE bootstrap_status
                 END,
                 bootstrap_error = CASE
-                    WHEN bootstrap_status = 'initial' AND EXISTS (
+                    WHEN bootstrap_status IN ('initial', 'running') AND EXISTS (
                         SELECT 1
                         FROM runs
                         WHERE runs.project_id = projects.id
                           AND runs.run_type = 'chapter2-bootstrap'
                           AND runs.status = 'failed'
                     ) THEN 'Chapter 2 initialization failed.'
+                    WHEN bootstrap_status = 'running'
+                     AND NOT EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status IN ('queued', 'running')
+                    )
+                     AND NOT EXISTS (
+                        SELECT 1
+                        FROM runs
+                        WHERE runs.project_id = projects.id
+                          AND runs.run_type = 'chapter2-bootstrap'
+                          AND runs.status IN ('succeeded', 'failed')
+                    ) THEN 'Project initialization was left in running state without an active Chapter 2 bootstrap run.'
                     ELSE bootstrap_error
                 END
-            WHERE bootstrap_status = 'initial';
+            WHERE bootstrap_status IN ('initial', 'running');
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -2664,6 +2687,10 @@ public sealed class PhaseAMetadataStore
                 win_fail_conditions,
                 matched_fields_json,
                 warnings_json,
+                draft_text,
+                coverage_percent,
+                coverage_summary,
+                coverage_missing_topics_json,
                 failure_code,
                 line_count,
                 byte_count,
@@ -2696,8 +2723,12 @@ public sealed class PhaseAMetadataStore
             reader.GetString(13),
             reader.IsDBNull(14) ? null : reader.GetString(14),
             reader.GetInt32(15),
-            reader.GetInt32(16),
-            reader.GetString(17));
+            reader.IsDBNull(16) ? null : reader.GetString(16),
+            reader.GetString(17),
+            reader.IsDBNull(18) ? null : reader.GetString(18),
+            reader.GetInt32(19),
+            reader.GetInt32(20),
+            reader.GetString(21));
     }
 
     public async Task UpsertProjectPrototypeDraftAsync(
@@ -2715,6 +2746,10 @@ public sealed class PhaseAMetadataStore
         string? winFailConditions,
         string matchedFieldsJson,
         string warningsJson,
+        string? draftText,
+        int coveragePercent,
+        string? coverageSummary,
+        string coverageMissingTopicsJson,
         string? failureCode,
         int lineCount,
         int byteCount,
@@ -2742,6 +2777,10 @@ public sealed class PhaseAMetadataStore
                 win_fail_conditions,
                 matched_fields_json,
                 warnings_json,
+                draft_text,
+                coverage_percent,
+                coverage_summary,
+                coverage_missing_topics_json,
                 failure_code,
                 line_count,
                 byte_count,
@@ -2761,6 +2800,10 @@ public sealed class PhaseAMetadataStore
                 $win_fail_conditions,
                 $matched_fields_json,
                 $warnings_json,
+                $draft_text,
+                $coverage_percent,
+                $coverage_summary,
+                $coverage_missing_topics_json,
                 $failure_code,
                 $line_count,
                 $byte_count,
@@ -2779,6 +2822,10 @@ public sealed class PhaseAMetadataStore
                 win_fail_conditions = excluded.win_fail_conditions,
                 matched_fields_json = excluded.matched_fields_json,
                 warnings_json = excluded.warnings_json,
+                draft_text = excluded.draft_text,
+                coverage_percent = excluded.coverage_percent,
+                coverage_summary = excluded.coverage_summary,
+                coverage_missing_topics_json = excluded.coverage_missing_topics_json,
                 failure_code = excluded.failure_code,
                 line_count = excluded.line_count,
                 byte_count = excluded.byte_count,
@@ -2798,6 +2845,10 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$win_fail_conditions", (object?)winFailConditions ?? DBNull.Value);
         command.Parameters.AddWithValue("$matched_fields_json", matchedFieldsJson);
         command.Parameters.AddWithValue("$warnings_json", warningsJson);
+        command.Parameters.AddWithValue("$draft_text", (object?)draftText ?? DBNull.Value);
+        command.Parameters.AddWithValue("$coverage_percent", coveragePercent);
+        command.Parameters.AddWithValue("$coverage_summary", (object?)coverageSummary ?? DBNull.Value);
+        command.Parameters.AddWithValue("$coverage_missing_topics_json", coverageMissingTopicsJson);
         command.Parameters.AddWithValue("$failure_code", (object?)failureCode ?? DBNull.Value);
         command.Parameters.AddWithValue("$line_count", lineCount);
         command.Parameters.AddWithValue("$byte_count", byteCount);

@@ -154,6 +154,34 @@ public static class SqliteMetadataSchema
             "latest_evaluation_json",
             "ALTER TABLE project_iteration_sessions ADD COLUMN latest_evaluation_json TEXT NULL;",
             cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_prototype_drafts",
+            "draft_text",
+            "ALTER TABLE project_prototype_drafts ADD COLUMN draft_text TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_prototype_drafts",
+            "coverage_percent",
+            "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_percent INTEGER NOT NULL DEFAULT 0;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_prototype_drafts",
+            "coverage_summary",
+            "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_summary TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_prototype_drafts",
+            "coverage_missing_topics_json",
+            "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_missing_topics_json TEXT NOT NULL DEFAULT '[]';",
+            cancellationToken);
 
         await ExecuteAsync(connection, "PRAGMA user_version = 1;", transaction, cancellationToken);
 
@@ -413,6 +441,10 @@ public static class SqliteMetadataSchema
             win_fail_conditions TEXT NULL,
             matched_fields_json TEXT NOT NULL DEFAULT '[]',
             warnings_json TEXT NOT NULL DEFAULT '[]',
+            draft_text TEXT NULL,
+            coverage_percent INTEGER NOT NULL DEFAULT 0,
+            coverage_summary TEXT NULL,
+            coverage_missing_topics_json TEXT NOT NULL DEFAULT '[]',
             failure_code TEXT NULL,
             line_count INTEGER NOT NULL DEFAULT 0,
             byte_count INTEGER NOT NULL DEFAULT 0,

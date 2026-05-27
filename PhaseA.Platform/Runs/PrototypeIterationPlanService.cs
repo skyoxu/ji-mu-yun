@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using System.Text.Json;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 
 namespace PhaseA.Platform.Runs;
 
@@ -31,20 +33,26 @@ public sealed class PrototypeIterationPlanService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly ICodexChatClient? _codexChatClient;
+    private readonly GameTypeTemplateCatalog? _templateCatalog;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
-        : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService())
+        : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService(), null, null)
     {
     }
 
     public PrototypeIterationPlanService(
         PhaseAMetadataStore metadataStore,
         PrototypeRouteStateWriter routeStateWriter,
-        PrototypeContractService? contractService = null)
+        PrototypeContractService? contractService = null,
+        ICodexChatClient? codexChatClient = null,
+        GameTypeTemplateCatalog? templateCatalog = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
+        _codexChatClient = codexChatClient;
+        _templateCatalog = templateCatalog;
     }
 
     public async Task<PrototypeIterationPlanResult> CreateAsync(
@@ -67,7 +75,7 @@ public sealed class PrototypeIterationPlanService
         var message = NormalizePlanningMessage(rawMessage, request.SourceKind);
         if (string.IsNullOrWhiteSpace(message))
         {
-            return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", []);
+            return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", [], null);
         }
 
         var sourceKind = string.IsNullOrWhiteSpace(request.SourceKind) ? "manual_feedback" : request.SourceKind.Trim();
@@ -78,25 +86,19 @@ public sealed class PrototypeIterationPlanService
                 "",
                 "suggestion_needs_fix",
                 "当前这条建议更像内部执行或环境修复信息，不适合直接拆成迭代目标。请先处理需修复项，或重新生成更明确的产品向优化建议。",
-                []);
+                [],
+                null);
         }
         var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
         var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
         if (!routeSkillAvailability.IsAvailable)
         {
-            return new PrototypeIterationPlanResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
+            return new PrototypeIterationPlanResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, [], null);
         }
 
         var prototypeContract = _contractService.Read(project);
-        var goals = BuildGoals(message, sourceKind);
-        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
-        {
-            goals = BuildRpgContractGoals(message, goals, prototypeContract);
-        }
-        else
-        {
-            goals = AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract);
-        }
+        var planningContext = await BuildPlanningContextAsync(project, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
+        var goals = await BuildGoalsForProjectAsync(project, prototypeContract, message, sourceKind, planningContext, cancellationToken);
         var overallGoal = BuildOverallGoal(project.GameName, message);
         var created = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -108,11 +110,19 @@ public sealed class PrototypeIterationPlanService
                 goal.GoalIndex,
                 goal.Title,
                 goal.Description,
-                goal.AcceptanceHint)).ToArray(),
+                    goal.AcceptanceHint)).ToArray(),
             cancellationToken);
 
-        var summary = $"已生成 {goals.Count} 个迭代目标，最后一个目标是按游戏类型生成的全量交付验收。请先执行目标 1，再逐步推进后续目标。";
+        var summary = BuildPlanSummary(goals.Count, planningContext);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, null, cancellationToken);
+        var planningAnalysis = ToPlanningAnalysisResult(planningContext);
+        _routeStateWriter.WriteIterationPlanAnalysisState(project, new
+        {
+            route = "iteration-plan",
+            session_id = created.SessionId,
+            planning_analysis = planningAnalysis,
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
         _routeStateWriter.WriteIterationPlanState(project, new
         {
             route = "iteration-plan",
@@ -123,6 +133,7 @@ public sealed class PrototypeIterationPlanService
             status = "ready",
             source_kind = sourceKind,
             summary,
+            planning_analysis = planningAnalysis,
             goals = goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -133,10 +144,670 @@ public sealed class PrototypeIterationPlanService
             }).ToArray(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-        return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals);
+        return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis);
     }
 
-    public async Task<ProjectIterationSessionDetails?> GetLatestAsync(
+    private async Task<List<PrototypeIterationPlanGoalResult>> BuildGoalsForProjectAsync(
+        ProjectSnapshot project,
+        PrototypeContractSnapshot prototypeContract,
+        string message,
+        string sourceKind,
+        IterationPlanningContext planningContext,
+        CancellationToken cancellationToken)
+    {
+        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            var planned = await TryBuildRpgGoalsFromModelAsync(project, planningContext, message, cancellationToken);
+            if (planned.Count > 0)
+            {
+                return planned;
+            }
+
+            return BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext);
+        }
+
+        var goals = BuildGoals(message, sourceKind);
+        return AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract);
+    }
+
+    private async Task<IterationPlanningContext> BuildPlanningContextAsync(
+        ProjectSnapshot project,
+        PrototypeRouteSkillContext routeSkill,
+        PrototypeContractSnapshot prototypeContract,
+        string message,
+        string sourceKind,
+        CancellationToken cancellationToken)
+    {
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        var latestPrototypeRun = runs
+            .FirstOrDefault(run => string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase));
+        var latestSuccessfulPrototypeRun = runs
+            .FirstOrDefault(run =>
+                string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase));
+        var draft = await _metadataStore.GetProjectPrototypeDraftAsync(project.ProjectId, cancellationToken);
+        var prototypeState = _routeStateWriter.ReadLatestPrototypeState(project);
+        var template = _templateCatalog?.Find(NormalizeGameType(project.GameTypeSource));
+
+        var deterministicFieldCoverage = BuildDeterministicFieldCoverage(draft);
+        var fallback = new IterationPlanningContext(
+            AnalysisSource: "deterministic_fallback",
+            AnalysisSummary: BuildFallbackAnalysisSummary(latestPrototypeRun, latestSuccessfulPrototypeRun, draft),
+            LatestPrototypeStatus: latestPrototypeRun?.Status ?? "missing",
+            LatestPrototypeCompletionSummary: ReadCompletionSummaryFromRun(latestSuccessfulPrototypeRun ?? latestPrototypeRun),
+            DraftCoveragePercent: draft?.CoveragePercent ?? 0,
+            DraftCoverageSummary: draft?.CoverageSummary,
+            TemplateId: template?.TemplateId,
+            FieldCoverage: deterministicFieldCoverage,
+            PrototypeStateExcerpt: TrimForPrompt(prototypeState),
+            SourceMessage: message,
+            SourceKind: sourceKind,
+            RouteSkillId: routeSkill.RouteSkillId);
+
+        if (_codexChatClient is null)
+        {
+            return fallback;
+        }
+
+        var modelPrompt = BuildPlanningAnalysisPrompt(project, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var completion = await _codexChatClient.CompleteAsync(
+            project.RepoPath,
+            PrototypeModelPolicy.Normalize("gpt-5.4"),
+            modelPrompt,
+            project.AccountId,
+            cancellationToken);
+        if (!completion.Succeeded)
+        {
+            return fallback with
+            {
+                AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, completion.FailureCode)
+            };
+        }
+
+        var parsed = TryParsePlanningContext(completion.AssistantMessage, fallback);
+        return parsed ?? fallback with
+        {
+            AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_parse_failed")
+        };
+    }
+
+    private async Task<List<PrototypeIterationPlanGoalResult>> TryBuildRpgGoalsFromModelAsync(
+        ProjectSnapshot project,
+        IterationPlanningContext planningContext,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        if (_codexChatClient is null)
+        {
+            return [];
+        }
+
+        var prompt = BuildRpgGoalPrompt(project, planningContext, message);
+        var completion = await _codexChatClient.CompleteAsync(
+            project.RepoPath,
+            PrototypeModelPolicy.Normalize("gpt-5.4"),
+            prompt,
+            project.AccountId,
+            cancellationToken);
+        if (!completion.Succeeded)
+        {
+            return [];
+        }
+
+        return ParseGoalPlan(completion.AssistantMessage);
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> BuildRpgGoalsFromContext(
+        string message,
+        string sourceKind,
+        PrototypeContractSnapshot prototypeContract,
+        IterationPlanningContext planningContext)
+    {
+        if (string.Equals(planningContext.LatestPrototypeStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+        {
+            return BuildRpgClosureGoals(planningContext);
+        }
+
+        var goals = BuildGoals(message, sourceKind);
+        return BuildRpgContractGoals(message, goals, prototypeContract);
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> BuildRpgClosureGoals(IterationPlanningContext planningContext)
+    {
+        var missingRewards = planningContext.FieldCoverage.Any(item => item.Field == "reward_loop" && !string.Equals(item.Status, "completed", StringComparison.OrdinalIgnoreCase));
+        var missingWinFail = planningContext.FieldCoverage.Any(item => item.Field == "win_fail_conditions" && !string.Equals(item.Status, "completed", StringComparison.OrdinalIgnoreCase));
+
+        var goals = new List<PrototypeIterationPlanGoalResult>
+        {
+            new(
+                1,
+                "目标 1：对齐原型合同与当前实现",
+                "先核对当前 RPG 原型已经跑通的地图、战斗、奖励闭环与需求表单字段，补齐 contract / input traceability / 实际实现之间的漂移项，不在这一步扩大功能范围。",
+                "完成并验证：需求表单中的非空关键字段都能在当前原型实现、状态说明或 needs_fix 里找到对应。",
+                "pending"),
+            new(
+                2,
+                "目标 2：修正奖励 3 选 1 的可理解性和反馈",
+                "聚焦奖励 3 选 1 本身，确保三个选项的含义、选择后的变化和返回地图后的状态反馈都足够清楚。",
+                "完成并验证：玩家能理解三个奖励的差异，选择后能看到明确状态变化，并正常返回地图。",
+                "pending"),
+            new(
+                3,
+                "目标 3：补稳结果回环与失败分支",
+                "验证并修正胜利返回地图、失败处理、再次进入下一轮遇敌的闭环稳定性，避免只跑通单次 happy path。",
+                "完成并验证：胜利、失败、返回地图和再次进入战斗都能形成稳定闭环。",
+                "pending")
+        };
+
+        if (missingWinFail)
+        {
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                4,
+                "目标 4：补齐胜负条件提示与用户预期",
+                "把需求表单中的胜利/失败条件明确暴露给玩家，并校验提示文案与实际玩法结算一致。",
+                "完成并验证：玩家可以从界面或流程中清楚理解当前 prototype 的胜负条件。",
+                "pending"));
+        }
+        else if (missingRewards)
+        {
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                4,
+                "目标 4：补齐奖励回路验收证据",
+                "围绕奖励 3 选 1 的状态变化、返回地图和再次战斗补完整体验证据，避免只在代码里存在。",
+                "完成并验证：奖励回路的关键状态变化和回到地图后的可见反馈均可复核。",
+                "pending"));
+        }
+        else
+        {
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                4,
+                "目标 4：修复中文产物与前台可读性",
+                "修正 completion、sidecar、提示信息中的乱码或表达不清问题，让前台和日志证据都可直接阅读。",
+                "完成并验证：关键中文产物可读，前台反馈与日志摘要一致。",
+                "pending"));
+        }
+
+        goals.Add(new PrototypeIterationPlanGoalResult(
+            goals.Count + 1,
+            "RPG Final Step: full playable prototype acceptance",
+            "基于当前 RPG 原型的真实完成状态执行最终验收，确认地图、战斗、奖励返回地图、需求表单字段映射、构建和可玩闭环证据都达标。",
+            "完成并验证：当前 RPG prototype 可端到端游玩，并且关键需求字段、奖励理解、胜负条件和验收证据都齐备。",
+            "pending"));
+        return goals;
+    }
+
+    private static string BuildPlanSummary(int goalCount, IterationPlanningContext planningContext)
+    {
+        var prototypeStatus = string.IsNullOrWhiteSpace(planningContext.LatestPrototypeStatus)
+            ? "unknown"
+            : planningContext.LatestPrototypeStatus;
+        var coverage = planningContext.DraftCoveragePercent;
+        return $"已基于当前原型状态与需求覆盖分析生成 {goalCount} 个迭代目标。当前原型状态：{prototypeStatus}；表单覆盖率：{coverage}%。请先执行目标 1，再逐步推进后续目标。";
+    }
+
+    private static string BuildFallbackAnalysisSummary(RunSnapshot? latestPrototypeRun, RunSnapshot? latestSuccessfulPrototypeRun, ProjectPrototypeDraftSnapshot? draft)
+    {
+        var prototypeStatus = latestSuccessfulPrototypeRun is not null
+            ? "已存在成功原型，可优先做收敛型迭代。"
+            : latestPrototypeRun is not null
+                ? $"最近一次原型状态为 {latestPrototypeRun.Status}，仍需保留基础收敛步骤。"
+                : "尚未发现已完成的原型运行记录。";
+        var draftSummary = draft is null
+            ? "当前没有草稿覆盖率分析。"
+            : $"最近草稿覆盖率约为 {draft.CoveragePercent}%。";
+        return $"{prototypeStatus}{draftSummary}";
+    }
+
+    private static string AppendFailureNote(string summary, string? failureCode)
+    {
+        return string.IsNullOrWhiteSpace(failureCode)
+            ? summary
+            : $"{summary} 模型分析降级为本地规则，原因：{failureCode}。";
+    }
+
+    private static string BuildPlanningAnalysisPrompt(
+        ProjectSnapshot project,
+        PrototypeContractSnapshot prototypeContract,
+        IterationPlanningContext fallback,
+        ProjectPrototypeDraftSnapshot? draft,
+        RunSnapshot? latestPrototypeRun,
+        RunSnapshot? latestSuccessfulPrototypeRun)
+    {
+        var draftJson = draft is null
+            ? "{}"
+            : JsonSerializer.Serialize(new
+            {
+                draft.PrototypeSlug,
+                draft.Hypothesis,
+                draft.CorePlayerFantasy,
+                draft.MinimumPlayableLoop,
+                SuccessCriteria = DeserializeJsonArray(draft.SuccessCriteriaJson),
+                draft.GameFeature,
+                draft.CoreGameplayLoop,
+                draft.WinFailConditions,
+                draft.CoveragePercent,
+                draft.CoverageSummary,
+                CoverageMissingTopics = DeserializeJsonArray(draft.CoverageMissingTopicsJson)
+            });
+        var runJson = JsonSerializer.Serialize(new
+        {
+            latest_run_status = latestPrototypeRun?.Status,
+            latest_run_summary = ReadCompletionSummaryFromRun(latestPrototypeRun),
+            latest_successful_status = latestSuccessfulPrototypeRun?.Status,
+            latest_successful_summary = ReadCompletionSummaryFromRun(latestSuccessfulPrototypeRun),
+            fallback_analysis = fallback.AnalysisSummary
+        });
+
+        return $"""
+            You are analyzing a hosted Godot prototype after prototype creation has already run.
+            Output JSON only. Do not explain. Do not use Markdown.
+            Return these keys only:
+            analysisSummary, fieldCoverage.
+
+            fieldCoverage must be an array of objects with:
+            field, status, evidence, missingReason
+
+            Rules:
+            - status must be one of completed, partial, missing.
+            - Judge completion against the current prototype result, not only the form text.
+            - Focus on prototype-form fields, map/battle/reward loop, and win/fail expectations for RPG.
+            - Keep evidence and missingReason short and browser-safe.
+
+            Project:
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameTypeSource: {project.GameTypeSource}
+            - RouteSkillId: {fallback.RouteSkillId}
+            - TemplateId: {fallback.TemplateId}
+
+            Source message:
+            {fallback.SourceMessage}
+
+            Prototype contract:
+            {TrimForPrompt(prototypeContract.Json)}
+
+            Draft/form snapshot:
+            {draftJson}
+
+            Prototype run snapshot:
+            {runJson}
+
+            Prototype route state excerpt:
+            {fallback.PrototypeStateExcerpt}
+            """;
+    }
+
+    private static string BuildRpgGoalPrompt(ProjectSnapshot project, IterationPlanningContext planningContext, string message)
+    {
+        var analysisJson = JsonSerializer.Serialize(new
+        {
+            planningContext.AnalysisSummary,
+            planningContext.LatestPrototypeStatus,
+            planningContext.LatestPrototypeCompletionSummary,
+            planningContext.DraftCoveragePercent,
+            planningContext.DraftCoverageSummary,
+            planningContext.TemplateId,
+            fieldCoverage = planningContext.FieldCoverage
+        });
+
+        return $"""
+            You are generating an iteration plan for an RPG Godot prototype.
+            Output JSON only. Do not explain. Do not use Markdown.
+            Return these keys only:
+            goals
+
+            goals must be an array of 3 to 6 objects with:
+            title, description, acceptanceHint
+
+            Rules:
+            - Base the plan on the current prototype state, not on a generic from-scratch RPG template.
+            - If the prototype already succeeded once, prefer convergence/refinement steps over scene creation steps.
+            - Use the route skill and current field coverage to decide the smallest accurate next steps.
+            - Final step must still be full playable acceptance.
+            - Keep each goal narrow enough to execute independently.
+
+            Project:
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameTypeSource: {project.GameTypeSource}
+
+            Requested optimization:
+            {message}
+
+            Planning analysis:
+            {analysisJson}
+            """;
+    }
+
+    private static IterationPlanningContext? TryParsePlanningContext(string? assistantMessage, IterationPlanningContext fallback)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var summary = root.TryGetProperty("analysisSummary", out var summaryElement) && summaryElement.ValueKind == JsonValueKind.String
+                ? summaryElement.GetString() ?? fallback.AnalysisSummary
+                : fallback.AnalysisSummary;
+            var coverage = root.TryGetProperty("fieldCoverage", out var coverageElement) && coverageElement.ValueKind == JsonValueKind.Array
+                ? coverageElement.EnumerateArray().Select(item => new PlanningFieldCoverage(
+                    item.TryGetProperty("field", out var fieldElement) && fieldElement.ValueKind == JsonValueKind.String ? fieldElement.GetString() ?? "" : "",
+                    item.TryGetProperty("status", out var statusElement) && statusElement.ValueKind == JsonValueKind.String ? statusElement.GetString() ?? "missing" : "missing",
+                    item.TryGetProperty("evidence", out var evidenceElement) && evidenceElement.ValueKind == JsonValueKind.String ? evidenceElement.GetString() : null,
+                    item.TryGetProperty("missingReason", out var missingElement) && missingElement.ValueKind == JsonValueKind.String ? missingElement.GetString() : null))
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Field))
+                    .ToArray()
+                : fallback.FieldCoverage;
+            return fallback with
+            {
+                AnalysisSource = "codex_exec",
+                AnalysisSummary = summary,
+                FieldCoverage = coverage.Count == 0 ? fallback.FieldCoverage : coverage
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> ParseGoalPlan(string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return [];
+        }
+
+        try
+        {
+            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            using var document = JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty("goals", out var goalsElement) || goalsElement.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var goals = new List<PrototypeIterationPlanGoalResult>();
+            var index = 1;
+            foreach (var item in goalsElement.EnumerateArray())
+            {
+                var title = item.TryGetProperty("title", out var titleElement) && titleElement.ValueKind == JsonValueKind.String
+                    ? titleElement.GetString()
+                    : null;
+                var description = item.TryGetProperty("description", out var descriptionElement) && descriptionElement.ValueKind == JsonValueKind.String
+                    ? descriptionElement.GetString()
+                    : null;
+                var acceptance = item.TryGetProperty("acceptanceHint", out var acceptanceElement) && acceptanceElement.ValueKind == JsonValueKind.String
+                    ? acceptanceElement.GetString()
+                    : null;
+                if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(acceptance))
+                {
+                    continue;
+                }
+
+                goals.Add(new PrototypeIterationPlanGoalResult(index++, title.Trim(), description.Trim(), acceptance.Trim(), "pending"));
+            }
+
+            return goals;
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static PlanningFieldCoverage[] BuildDeterministicFieldCoverage(ProjectPrototypeDraftSnapshot? draft)
+    {
+        if (draft is null)
+        {
+            return
+            [
+                new("hypothesis", "missing", null, "还没有导入或保存需求表单。"),
+                new("core_player_fantasy", "missing", null, "还没有导入或保存需求表单。"),
+                new("minimum_playable_loop", "missing", null, "还没有导入或保存需求表单。"),
+                new("success_criteria", "missing", null, "还没有导入或保存需求表单。"),
+                new("game_feature", "missing", null, "还没有导入或保存需求表单。"),
+                new("core_gameplay_loop", "missing", null, "还没有导入或保存需求表单。"),
+                new("win_fail_conditions", "missing", null, "还没有导入或保存需求表单。"),
+                new("reward_loop", "missing", null, "无法从需求表单确认奖励回路。")
+            ];
+        }
+
+        return
+        [
+            BuildFieldCoverage("hypothesis", draft.Hypothesis),
+            BuildFieldCoverage("core_player_fantasy", draft.CorePlayerFantasy),
+            BuildFieldCoverage("minimum_playable_loop", draft.MinimumPlayableLoop),
+            BuildFieldCoverage("success_criteria", string.Join(" / ", DeserializeJsonArray(draft.SuccessCriteriaJson))),
+            BuildFieldCoverage("game_feature", draft.GameFeature),
+            BuildFieldCoverage("core_gameplay_loop", draft.CoreGameplayLoop),
+            BuildFieldCoverage("win_fail_conditions", draft.WinFailConditions),
+            BuildFieldCoverage("reward_loop", draft.CoreGameplayLoop)
+        ];
+    }
+
+    private static PlanningFieldCoverage BuildFieldCoverage(string field, string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? new PlanningFieldCoverage(field, "missing", null, "需求表单对应字段为空。")
+            : new PlanningFieldCoverage(field, "partial", TrimForHint(value, 60), null);
+    }
+
+    private static string? ReadCompletionSummaryFromRun(RunSnapshot? run)
+    {
+        if (run is null || string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completionElement) ||
+                completionElement.ValueKind != JsonValueKind.Object ||
+                !completionElement.TryGetProperty("completion_summary", out var summaryElement) ||
+                summaryElement.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return summaryElement.GetString();
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string[] DeserializeJsonArray(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(json) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static string? ExtractFirstJsonObject(string text)
+    {
+        var start = text.IndexOf('{');
+        if (start < 0)
+        {
+            return null;
+        }
+
+        var depth = 0;
+        var inString = false;
+        var escaped = false;
+        for (var index = start; index < text.Length; index++)
+        {
+            var ch = text[index];
+            if (inString)
+            {
+                if (escaped)
+                {
+                    escaped = false;
+                    continue;
+                }
+
+                if (ch == '\\')
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (ch == '"')
+                {
+                    inString = false;
+                }
+
+                continue;
+            }
+
+            if (ch == '"')
+            {
+                inString = true;
+                continue;
+            }
+
+            if (ch == '{')
+            {
+                depth += 1;
+                continue;
+            }
+
+            if (ch != '}')
+            {
+                continue;
+            }
+
+            depth -= 1;
+            if (depth == 0)
+            {
+                return text[start..(index + 1)];
+            }
+        }
+
+        return null;
+    }
+
+    private static PrototypeIterationPlanningAnalysisResult ToPlanningAnalysisResult(IterationPlanningContext planningContext)
+    {
+        return new PrototypeIterationPlanningAnalysisResult(
+            planningContext.AnalysisSource,
+            planningContext.AnalysisSummary,
+            planningContext.LatestPrototypeStatus,
+            planningContext.LatestPrototypeCompletionSummary,
+            planningContext.DraftCoveragePercent,
+            planningContext.DraftCoverageSummary,
+            planningContext.TemplateId,
+            planningContext.FieldCoverage.Select(item => new PrototypeIterationPlanningFieldResult(
+                item.Field,
+                item.Status,
+                item.Evidence,
+                item.MissingReason)).ToArray());
+    }
+
+    private static PrototypeIterationPlanningAnalysisResult? TryReadPlanningAnalysisFromState(string stateText)
+    {
+        if (string.IsNullOrWhiteSpace(stateText))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(stateText);
+            if (!document.RootElement.TryGetProperty("planning_analysis", out var analysisElement))
+            {
+                return null;
+            }
+
+            var source = analysisElement.TryGetProperty("analysisSource", out var sourceElement) && sourceElement.ValueKind == JsonValueKind.String
+                ? sourceElement.GetString() ?? ""
+                : "";
+            var summary = analysisElement.TryGetProperty("analysisSummary", out var summaryElement) && summaryElement.ValueKind == JsonValueKind.String
+                ? summaryElement.GetString() ?? ""
+                : "";
+            var latestStatus = analysisElement.TryGetProperty("latestPrototypeStatus", out var statusElement) && statusElement.ValueKind == JsonValueKind.String
+                ? statusElement.GetString() ?? ""
+                : "";
+            var latestCompletion = analysisElement.TryGetProperty("latestPrototypeCompletionSummary", out var completionElement) && completionElement.ValueKind == JsonValueKind.String
+                ? completionElement.GetString()
+                : null;
+            var draftCoveragePercent = analysisElement.TryGetProperty("draftCoveragePercent", out var coverageElement) && coverageElement.ValueKind == JsonValueKind.Number
+                ? coverageElement.GetInt32()
+                : 0;
+            var draftCoverageSummary = analysisElement.TryGetProperty("draftCoverageSummary", out var coverageSummaryElement) && coverageSummaryElement.ValueKind == JsonValueKind.String
+                ? coverageSummaryElement.GetString()
+                : null;
+            var templateId = analysisElement.TryGetProperty("templateId", out var templateElement) && templateElement.ValueKind == JsonValueKind.String
+                ? templateElement.GetString()
+                : null;
+            var fieldCoverage = analysisElement.TryGetProperty("fieldCoverage", out var fieldElement) && fieldElement.ValueKind == JsonValueKind.Array
+                ? fieldElement.EnumerateArray().Select(item => new PrototypeIterationPlanningFieldResult(
+                    item.TryGetProperty("field", out var fieldName) && fieldName.ValueKind == JsonValueKind.String ? fieldName.GetString() ?? "" : "",
+                    item.TryGetProperty("status", out var fieldStatus) && fieldStatus.ValueKind == JsonValueKind.String ? fieldStatus.GetString() ?? "missing" : "missing",
+                    item.TryGetProperty("evidence", out var evidenceElement) && evidenceElement.ValueKind == JsonValueKind.String ? evidenceElement.GetString() : null,
+                    item.TryGetProperty("missingReason", out var missingReasonElement) && missingReasonElement.ValueKind == JsonValueKind.String ? missingReasonElement.GetString() : null))
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Field))
+                    .ToArray()
+                : [];
+
+            return new PrototypeIterationPlanningAnalysisResult(
+                source,
+                summary,
+                latestStatus,
+                latestCompletion,
+                draftCoveragePercent,
+                draftCoverageSummary,
+                templateId,
+                fieldCoverage);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? NormalizeGameType(string? gameTypeSource)
+    {
+        if (string.IsNullOrWhiteSpace(gameTypeSource))
+        {
+            return null;
+        }
+
+        var lowered = gameTypeSource.Trim().ToLowerInvariant();
+        if (lowered.Contains("rpg", StringComparison.Ordinal) ||
+            lowered.Contains("角色扮演", StringComparison.Ordinal) ||
+            lowered.Contains("勇者斗恶龙", StringComparison.Ordinal))
+        {
+            return "rpg";
+        }
+
+        return lowered;
+    }
+
+    private static string TrimForPrompt(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Length <= 5000 ? trimmed : trimmed[..5000];
+    }
+
+    public async Task<PrototypeIterationPlanDetails?> GetLatestAsync(
         string accountId,
         string projectId,
         CancellationToken cancellationToken = default)
@@ -147,7 +818,19 @@ public sealed class PrototypeIterationPlanService
             return null;
         }
 
-        return await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (details is null)
+        {
+            return null;
+        }
+
+        var stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+        return new PrototypeIterationPlanDetails(
+            details.Session,
+            details.Goals,
+            details.GoalRuns,
+            details.LatestEvaluation,
+            TryReadPlanningAnalysisFromState(stateText));
     }
 
     public async Task<PrototypeIterationPlanEvaluationResult> EvaluateAsync(
@@ -763,4 +1446,31 @@ public sealed class PrototypeIterationPlanService
 
         return value;
     }
+
+    private sealed record PlanningFieldCoverage(
+        string Field,
+        string Status,
+        string? Evidence,
+        string? MissingReason);
+
+    private sealed record IterationPlanningContext(
+        string AnalysisSource,
+        string AnalysisSummary,
+        string LatestPrototypeStatus,
+        string? LatestPrototypeCompletionSummary,
+        int DraftCoveragePercent,
+        string? DraftCoverageSummary,
+        string? TemplateId,
+        IReadOnlyList<PlanningFieldCoverage> FieldCoverage,
+        string PrototypeStateExcerpt,
+        string SourceMessage,
+        string SourceKind,
+        string RouteSkillId);
 }
+
+public sealed record PrototypeIterationPlanDetails(
+    ProjectIterationSessionSnapshot Session,
+    IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
+    IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
+    PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
+    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);

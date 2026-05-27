@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $appUrl = 'http://127.0.0.1:18080/healthz'
-$publicUrl = 'http://47.250.131.70:8080/healthz'
+$publicUrl = 'http://47.86.160.138:8080/healthz'
 $repositoryRoot = 'C:\jimuyun'
 $startScript = 'C:\jimuyun\runtime\phase-a\start-phasea.ps1'
 $pidFile = 'C:\jimuyun\logs\phase-a-innernet\phasea.pid'

@@ -25,6 +25,43 @@ from pathlib import Path
 from solution_target import resolve_test_solution_arg
 
 
+def candidate_dotnet_paths(root: Path) -> list[Path]:
+    exe_name = "dotnet.exe" if os.name == "nt" else "dotnet"
+    candidates: list[Path] = []
+
+    which_dotnet = shutil.which("dotnet")
+    if which_dotnet:
+        candidates.append(Path(which_dotnet))
+
+    for env_key in ("DOTNET_ROOT", "DOTNET_HOME"):
+        env_val = os.environ.get(env_key)
+        if env_val:
+            candidates.append(Path(env_val) / exe_name)
+
+    candidates.append(root / ".dotnet" / exe_name)
+    candidates.append(Path.home() / ".dotnet" / exe_name)
+
+    if os.name == "nt":
+        candidates.append(Path(r"C:\Program Files\dotnet\dotnet.exe"))
+        candidates.append(Path(r"C:\Program Files (x86)\dotnet\dotnet.exe"))
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = os.path.normcase(os.path.normpath(str(candidate)))
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def resolve_dotnet(root: Path) -> str:
+    for candidate in candidate_dotnet_paths(root):
+        if candidate.is_file():
+            return str(candidate)
+    return "dotnet"
+
+
 def run_cmd(args, cwd=None, timeout=900_000):
     p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, encoding='utf-8', errors='ignore')
@@ -95,7 +132,9 @@ def main():
     args = ap.parse_args()
 
     root = os.getcwd()
+    root_path = Path(root)
     resolved_solution = resolve_test_solution_arg(args.solution, root=Path(root))
+    dotnet_bin = resolve_dotnet(root_path)
     date = dt.date.today().strftime('%Y-%m-%d')
     out_dir = args.out_dir or os.path.join(root, 'logs', 'unit', date)
     ensure_dir(out_dir)
@@ -110,10 +149,11 @@ def main():
     }
 
     # Restore
-    rc, out = run_cmd(['dotnet', 'restore', resolved_solution], cwd=root)
+    rc, out = run_cmd([dotnet_bin, 'restore', resolved_solution], cwd=root)
     with io.open(os.path.join(out_dir, 'dotnet-restore.log'), 'w', encoding='utf-8') as f:
         f.write(out)
     summary['restore_rc'] = rc
+    summary['dotnet_bin'] = dotnet_bin
     if rc != 0:
         with io.open(os.path.join(out_dir, 'summary.json'), 'w', encoding='utf-8') as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
@@ -121,7 +161,7 @@ def main():
         return 1
 
     # Test with coverage
-    test_cmd = ['dotnet', 'test', resolved_solution,
+    test_cmd = [dotnet_bin, 'test', resolved_solution,
                 f'-c', args.configuration,
                 '--collect:XPlat Code Coverage',
                 '--logger', 'trx;LogFileName=tests.trx']

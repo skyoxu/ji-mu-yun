@@ -135,6 +135,12 @@ internal static class PrototypeGoalAcceptanceValidator
             return null;
         }
 
+        var semantic = ResolveRpgGoalSemantic(goal);
+        if (semantic is not null)
+        {
+            return semantic;
+        }
+
         return goal.GoalIndex switch
         {
             1 => new AcceptanceContract(
@@ -170,6 +176,99 @@ internal static class PrototypeGoalAcceptanceValidator
                 FinalAcceptance: true),
             _ => null
         };
+    }
+
+    private static AcceptanceContract? ResolveRpgGoalSemantic(ProjectIterationGoalSnapshot goal)
+    {
+        var combined = string.Join(" ", goal.Title ?? "", goal.Description ?? "", goal.AcceptanceHint ?? "");
+        if (string.IsNullOrWhiteSpace(combined))
+        {
+            return null;
+        }
+
+        var text = combined.ToLowerInvariant();
+        if (ContainsAny(text, "full playable prototype acceptance", "final acceptance", "最终验收", "全量验收", "端到端"))
+        {
+            return new AcceptanceContract(
+                "rpg-final-full-playable-acceptance",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ApplyReward", "Battle reward selected", "VictoryBattleCount", "IsVictory", "IsGameOver"],
+                AssetUsageAcceptance: true,
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true,
+                RewardFlowAcceptance: true,
+                MainSceneHostUiHiddenAcceptance: true,
+                FinalAcceptance: true);
+        }
+
+        if (ContainsAny(text, "合同", "contract", "traceability", "需求表单", "漂移"))
+        {
+            return new AcceptanceContract(
+                "rpg-contract-alignment",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count"],
+                AssetUsageAcceptance: true,
+                StaticAcceptanceOnly: true);
+        }
+
+        if (ContainsAny(text, "奖励 3 选 1", "三选一", "reward 3", "3-choice", "three reward", "奖励回路", "reward loop"))
+        {
+            return new AcceptanceContract(
+                "rpg-step5-reward-loop-return-map",
+                ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"],
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true);
+        }
+
+        if (ContainsAny(text, "失败分支", "failure path", "再次遇敌", "再次进入战斗", "回环稳定", "结果回环"))
+        {
+            return new AcceptanceContract(
+                "rpg-loop-stability",
+                ["MoveOnMap", "ResolveAttackTurn", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward", "IsGameOver"],
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true);
+        }
+
+        if (ContainsAny(text, "胜负条件", "game over", "victory condition", "失败条件", "目标提示"))
+        {
+            return new AcceptanceContract(
+                "rpg-win-fail-conditions",
+                ["VictoryBattleCount", "IsVictory", "IsGameOver"],
+                StaticAcceptanceOnly: true);
+        }
+
+        if (ContainsAny(text, "地图移动", "遇敌", "map", "encounter", "visible map", "start adventure"))
+        {
+            return new AcceptanceContract(
+                "rpg-step2-start-adventure-visible-mapscene",
+                ["MoveOnMap", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"],
+                MapEntryAcceptance: true);
+        }
+
+        if (ContainsAny(text, "战斗", "battle", "结算", "settlement", "BattleScene".ToLowerInvariant()))
+        {
+            return new AcceptanceContract(
+                "rpg-step3-battlescene-settlement",
+                ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
+                BattleSceneAcceptance: true);
+        }
+
+        if (ContainsAny(text, "场景切换", "scene switching", "main prototype scene", "主原型"))
+        {
+            return new AcceptanceContract(
+                "rpg-step4-main-scene-switching",
+                ["MoveOnMap", "ResolveAttackTurn", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true);
+        }
+
+        if (ContainsAny(text, "assets", "素材", "ui", "基础界面", "基础素材"))
+        {
+            return new AcceptanceContract(
+                "rpg-step1-basic-assets-ui-validation",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count"],
+                AssetUsageAcceptance: true);
+        }
+
+        return null;
     }
 
     private static bool IsRpgProject(ProjectSnapshot project)

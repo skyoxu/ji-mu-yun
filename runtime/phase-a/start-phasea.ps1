@@ -1,6 +1,6 @@
 $env:APP_BIND_URL = 'http://127.0.0.1:18080'
 $env:HTTPS_TERMINATION = 'caddy'
-$env:PUBLIC_BASE_URL = 'https://47.250.131.70:8080'
+$env:PUBLIC_BASE_URL = 'https://47.86.160.138:8080'
 $env:HOSTED_WORKSPACE_ROOT = 'C:\jimuyun\logs\phase-a-innernet\workspaces'
 $env:HOSTED_PROJECT_LIMIT = '2'
 $env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
@@ -9,6 +9,7 @@ $env:PHASEA_CODEX_COMMAND = 'C:\Windows\System32\config\systemprofile\AppData\Ro
 Remove-Item Env:\PHASEA_CHAT_TEST_MODE -ErrorAction SilentlyContinue
 Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
 $env:GODOT_BIN = 'C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
+$env:DOTNET_ROOT = 'C:\jimuyun\.dotnet'
 Set-Location 'C:\jimuyun'
 $runtimeRoot = 'C:\jimuyun\logs\phase-a-innernet\runtime'
 $tempRoot = 'C:\jimuyun\logs\phase-a-innernet\tmp'
@@ -17,12 +18,17 @@ $objRoot = Join-Path $buildRoot 'obj'
 $outRoot = Join-Path $buildRoot 'out'
 $pidFile = 'C:\jimuyun\logs\phase-a-innernet\phasea.pid'
 $dotnet = 'C:\Program Files\dotnet\dotnet.exe'
+$repoDotnet = 'C:\jimuyun\.dotnet\dotnet.exe'
 $repoRootNormalized = 'C:/jimuyun'
 $ripgrepDir = 'C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\node_modules\@openai\codex\node_modules\@openai\codex-win32-x64\vendor\x86_64-pc-windows-msvc\path'
 
 New-Item -ItemType Directory -Force -Path $runtimeRoot, $tempRoot, $buildRoot, $objRoot, $outRoot | Out-Null
 Remove-Item -LiteralPath $objRoot, $outRoot -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $objRoot, $outRoot | Out-Null
+
+if (!(Test-Path $dotnet) -and (Test-Path $repoDotnet)) {
+  $dotnet = $repoDotnet
+}
 
 function Resolve-HostEnvironmentValue {
   param([string]$Name)
@@ -117,6 +123,7 @@ $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
 $psi.Environment['PHASEA_RIPGREP_DIR'] = $env:PHASEA_RIPGREP_DIR
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
+$psi.Environment['DOTNET_ROOT'] = $env:DOTNET_ROOT
 if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BILLING_ENABLED)) { $psi.Environment['AICODEMIRROR_BILLING_ENABLED'] = $env:AICODEMIRROR_BILLING_ENABLED }
 if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BASE_URL)) { $psi.Environment['AICODEMIRROR_BASE_URL'] = $env:AICODEMIRROR_BASE_URL }
 if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_COOKIE)) { $psi.Environment['AICODEMIRROR_COOKIE'] = $env:AICODEMIRROR_COOKIE }

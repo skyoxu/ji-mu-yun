@@ -70,6 +70,7 @@ The router must have these fields before it can proceed beyond intake:
 - Prototype creation, iteration-plan generation/evaluation, execute-next-goal, needs-fix, repair-plan, quick-fix, and final acceptance must consume the same prototype contract.
 - Type templates and prototype type kits may provide defaults only for missing or ambiguous fields. They must not override concrete user values.
 - If a non-empty user field cannot be reflected in gameplay, UI, scene flow, tests, or final acceptance, mark the relevant goal `needs_fix` and report the missing field coverage instead of reporting success.
+- Iteration-plan generation must read the latest prototype outcome and imported draft coverage before deciding the next goals. The plan must be state-aware, not only type-template-aware.
 
 The last three correspond to the user-facing pause sequence:
 
