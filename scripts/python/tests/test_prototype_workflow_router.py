@@ -791,7 +791,8 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertIn("PrototypeCatalog + ScreenNavigator", prompt)
         self.assertIn("default_scene", prompt)
         self.assertIn("不允许只生成 prototype 场景文件而不接通 Main.tscn 的主菜单原型入口", prompt)
-        self.assertIn("Title, Grid, and StatusLabel", prompt)
+        self.assertIn("Grid plus one accepted marker set", prompt)
+        self.assertIn("HeaderLabel + StatsLabel + ObjectiveLabel", prompt)
 
     def test_validate_day4_outputs_should_fail_when_scaffold_or_core_files_are_missing(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_fail", "scripts/python/run_prototype_workflow.py")

@@ -1180,7 +1180,7 @@ public sealed class PrototypeWorkflowService
         return failureCode switch
         {
             "none" => "No repair needed.",
-            "rpg_map_visible_markers_missing_after_start" => "Keep the prototype shell as the main entry, then ensure the map scene shown after Start Adventure contains visible Title, Grid, and StatusLabel nodes.",
+            "rpg_map_visible_markers_missing_after_start" => "Keep the prototype shell as the main entry, then ensure the map scene shown after Start Adventure contains Grid plus either the legacy Title/StatusLabel markers or the current HeaderLabel/StatsLabel/ObjectiveLabel HUD markers.",
             "rpg_map_scene_has_no_visible_size_after_start" => "Set the map scene Control size to a visible non-zero area after Start Adventure.",
             "rpg_map_scene_not_visible_after_start" => "Ensure Start Adventure makes the map scene visible and hides only the intro shell UI.",
             "rpg_map_scene_missing_after_start" => "Wire Start Adventure to reveal or instantiate the map scene under the prototype shell.",

@@ -761,8 +761,8 @@ public sealed class PrototypeQuickFixService
             - 这是一个 90 秒内完成的小修复，不要做大范围重构。
             - 仅处理明确、局部、低风险问题。
             - 优先修改少量文件，优先修接线、常量、菜单入口、状态显示、文本或小型前端逻辑。
-            - 如果当前是 RPG 原型，Start Adventure 后必须让 MapScene 可见，并且 MapScene 内必须存在精确命名的可见验收标记：Title、Grid、StatusLabel。
-            - 如果当前是 RPG 原型，不要用 MapTitle、PositionLabel 或其他近似命名替代 Title、Grid、StatusLabel；验收脚本按精确节点名查找。
+            - 如果当前是 RPG 原型，Start Adventure 后必须让 MapScene 可见，并且必须保留 Grid，再满足以下两套可见验收标记之一：旧合同 `Title + StatusLabel`，或当前 HUD 合同 `HeaderLabel + StatsLabel + ObjectiveLabel`。
+            - 如果当前是 RPG 原型，不要随意再造第三套近似命名；应复用上述两套合同之一，并保持节点命名与验收脚本一致。
             - 如果问题超出小修范围，不要展开大工程，只输出简短结论，说明应改走正式反馈。
             - 输出必须面向浏览器用户，不要包含路径、命令、脚本名、日志名、环境变量。
 

@@ -58,7 +58,7 @@ RPG 类型项目必须在 prototype、iteration-plan、execute-next-goal 和 nee
 ### 最低验收范围
 
 - `MapScene` 必须可见、可移动，并能触发进入战斗。
-- `MapScene` 必须包含精确命名的验收标记节点：`Title`、`Grid`、`StatusLabel`，不得用 `MapTitle`、`PositionLabel` 等近似名替代。
+- `MapScene` 必须保留 `Grid`，并满足两套验收标记之一：旧合同 `Title` + `StatusLabel`，或当前 HUD 合同 `HeaderLabel` + `StatsLabel` + `ObjectiveLabel`。不要再引入 `MapTitle`、 `PositionLabel` 等第三套近似命名。
 - `BattleScene` 必须可见，并能展示 HP、攻击反馈、胜负状态和返回地图或结算入口。
 - 地图、主角、敌人三个基础素材必须以明确节点名实例化，不能只存在于文件系统。
 - final step 必须执行入口跳转、素材实例、主菜单默认隐藏节点和核心玩法闭环的全量检查。
