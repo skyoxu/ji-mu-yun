@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
@@ -44,6 +45,33 @@ public sealed class PrototypeRepairPlanServiceTests
         stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复步骤");
         stateJson.GetProperty("goals").GetArrayLength().Should().Be(4);
         stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().Contain("Permission denied");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseLlmTailoredRpgRepairPlan_WhenFailureIsNavigationRelated()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedNavigationPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, new LlmRepairPlanCodexClient());
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Title.Should().Be("RPG Repair Step 1: Start Adventure to visible MapScene");
+        result.Goals[1].Title.Should().Contain("movement and first encounter");
+        result.Goals[2].Title.Should().Contain("BattleScene");
+        result.Goals[3].Title.Should().Contain("reward 3-choice");
+        result.Goals[0].Title.Should().NotContain("证据");
+        result.Goals[0].Title.Should().NotContain("TDD");
     }
 
     [Fact]
@@ -106,6 +134,21 @@ public sealed class PrototypeRepairPlanServiceTests
             "{\"prototype_completion\":{\"succeeded\":false,\"error\":\"prototype_workflow_failed\"}}");
     }
 
+    private static async Task SeedFailedNavigationPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            12,
+            "Prototype workflow failed.\nprototype_main_menu_navigation_failed",
+            "Start Adventure clicked but visible MapScene markers were not found after navigation.",
+            """
+            {"prototype_completion":{"succeeded":true,"completed_through_day":7},"godot_smoke":{"ran":true,"exit_code":12,"reason":"prototype_main_menu_navigation_failed","scene":"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"}}
+            """);
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
@@ -129,6 +172,57 @@ public sealed class PrototypeRepairPlanServiceTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("This test should not execute hosted processes.");
+        }
+    }
+
+    private sealed class LlmRepairPlanCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            const string json = """
+            {
+              "goals": [
+                {
+                  "title": "RPG Repair Step 1: Start Adventure to visible MapScene",
+                  "description": "Repair the main menu route so Start Adventure always opens a visible MapScene instead of leaving the player on a blank or stale shell.",
+                  "acceptanceHint": "This step passes only when Start Adventure consistently opens a visible MapScene with the expected map markers."
+                },
+                {
+                  "title": "RPG Repair Step 2: movement and first encounter entry",
+                  "description": "Repair player movement and the first encounter trigger on the live map path.",
+                  "acceptanceHint": "This step passes only when movement works on the map and the first encounter can be triggered from the visible map route."
+                },
+                {
+                  "title": "RPG Repair Step 3: BattleScene single-loop validation",
+                  "description": "Repair the BattleScene so one battle can complete with readable feedback and settlement.",
+                  "acceptanceHint": "This step passes only when one battle can be completed end to end with visible battle feedback."
+                },
+                {
+                  "title": "RPG Repair Step 4: reward 3-choice and return-to-map",
+                  "description": "Repair the reward loop so victory leads to three reward choices and a return to the map.",
+                  "acceptanceHint": "This step passes only when victory leads to a readable 3-choice reward flow and then returns to the map."
+                },
+                {
+                  "title": "RPG Repair Step 5: win/fail visibility",
+                  "description": "Repair player-facing win/fail rules so the current prototype outcome rules are obvious.",
+                  "acceptanceHint": "This step passes only when the player can clearly understand the current win/fail rules from the UI or flow."
+                },
+                {
+                  "title": "RPG Final Step: full playable acceptance",
+                  "description": "Run the final playable acceptance after the route, map, battle, reward, and visibility fixes are complete.",
+                  "acceptanceHint": "This step passes only when the full playable RPG prototype acceptance is green."
+                }
+              ]
+            }
+            """;
+
+            return Task.FromResult(new CodexChatClientResult(true, json, null, 0, "", ""));
         }
     }
 

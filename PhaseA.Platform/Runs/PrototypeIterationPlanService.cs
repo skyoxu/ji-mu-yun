@@ -910,6 +910,15 @@ public sealed class PrototypeIterationPlanService
         }
 
         var isRpgProject = PrototypeRouteSkillPolicy.IsRpgProject(project);
+        if (isRpgProject)
+        {
+            var llmEvaluation = await TryEvaluateRpgPlanWithModelAsync(project, details, prototypeProgress, cancellationToken);
+            if (llmEvaluation is not null)
+            {
+                return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
+            }
+        }
+
         var rpgPlanIssue = isRpgProject ? FindRpgPlanContractIssue(goals) : null;
         if (rpgPlanIssue is not null)
         {
@@ -944,6 +953,32 @@ public sealed class PrototypeIterationPlanService
             $"当前待执行目标“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
             "可以直接点击“执行下一目标”。",
             null));
+    }
+
+    private async Task<PrototypeIterationPlanEvaluationResult?> TryEvaluateRpgPlanWithModelAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        PrototypeWorkflowProgress? prototypeProgress,
+        CancellationToken cancellationToken)
+    {
+        if (_codexChatClient is null)
+        {
+            return null;
+        }
+
+        var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
+        var completion = await _codexChatClient.CompleteAsync(
+            project.RepoPath,
+            PrototypeModelPolicy.Normalize("gpt-5.4"),
+            BuildRpgPlanEvaluationPrompt(project, details, prototypeProgress, planningAnalysis),
+            billingApiKeyName: project.AccountId,
+            cancellationToken: cancellationToken);
+        if (!completion.Succeeded)
+        {
+            return null;
+        }
+
+        return ParseModelEvaluation(completion.AssistantMessage);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message, string sourceKind)
@@ -1208,6 +1243,106 @@ public sealed class PrototypeIterationPlanService
         return string.IsNullOrWhiteSpace(sourceMessage)
             ? "Regenerate the RPG iteration plan as strict contract steps: basic assets/UI, Start Adventure to visible MapScene, BattleScene, main prototype scene switching, reward loop return-to-map, final full playable acceptance with Start Adventure visible-map validation."
             : $"Regenerate the RPG iteration plan as strict contract steps: basic assets/UI, Start Adventure to visible MapScene, BattleScene, main prototype scene switching, reward loop return-to-map, final full playable acceptance with Start Adventure visible-map validation. Source request: {sourceMessage}";
+    }
+
+    private static string BuildRpgPlanEvaluationPrompt(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        PrototypeWorkflowProgress? prototypeProgress,
+        PrototypeIterationPlanningAnalysisResult? planningAnalysis)
+    {
+        var goalsJson = JsonSerializer.Serialize(details.Goals.OrderBy(goal => goal.GoalIndex).Select(goal => new
+        {
+            goal.GoalIndex,
+            goal.Title,
+            goal.Description,
+            goal.AcceptanceHint,
+            goal.Status
+        }).ToArray());
+        var progressJson = JsonSerializer.Serialize(prototypeProgress);
+        var planningJson = JsonSerializer.Serialize(planningAnalysis);
+
+        return $"""
+            You are evaluating whether an RPG prototype iteration plan is accurate enough to execute as-is.
+            Output JSON only. Do not explain. Do not use Markdown.
+            Return these keys only:
+            decision, summary, reason, suggestedAction, suggestedPromptForRegeneration
+
+            Rules:
+            - decision must be one of: ready_to_execute, should_refine_plan.
+            - Use the current prototype result, planning analysis, and RPG type requirements.
+            - If the plan is generic, misses MapScene/BattleScene/reward loop/win-fail visibility/final acceptance coverage, or is misordered, return should_refine_plan.
+            - If the latest prototype gap is navigation or visible-map related, prefer should_refine_plan unless the first steps clearly target that blocker.
+            - suggestedPromptForRegeneration should be null only when decision is ready_to_execute.
+            - Keep output browser-safe.
+
+            Project:
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameTypeSource: {project.GameTypeSource}
+
+            Iteration goals:
+            {goalsJson}
+
+            Prototype progress:
+            {progressJson}
+
+            Planning analysis:
+            {planningJson}
+            """;
+    }
+
+    private static PrototypeIterationPlanEvaluationResult? ParseModelEvaluation(string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
+            var root = document.RootElement;
+            var decision = root.TryGetProperty("decision", out var decisionElement) && decisionElement.ValueKind == JsonValueKind.String
+                ? decisionElement.GetString()?.Trim()
+                : null;
+            if (!string.Equals(decision, "ready_to_execute", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(decision, "should_refine_plan", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var summary = root.TryGetProperty("summary", out var summaryElement) && summaryElement.ValueKind == JsonValueKind.String
+                ? summaryElement.GetString()?.Trim()
+                : null;
+            var reason = root.TryGetProperty("reason", out var reasonElement) && reasonElement.ValueKind == JsonValueKind.String
+                ? reasonElement.GetString()?.Trim()
+                : null;
+            var suggestedAction = root.TryGetProperty("suggestedAction", out var actionElement) && actionElement.ValueKind == JsonValueKind.String
+                ? actionElement.GetString()?.Trim()
+                : null;
+            string? suggestedPrompt = null;
+            if (root.TryGetProperty("suggestedPromptForRegeneration", out var promptElement) && promptElement.ValueKind == JsonValueKind.String)
+            {
+                suggestedPrompt = promptElement.GetString()?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(summary) || string.IsNullOrWhiteSpace(reason) || string.IsNullOrWhiteSpace(suggestedAction))
+            {
+                return null;
+            }
+
+            return new PrototypeIterationPlanEvaluationResult(
+                decision!,
+                summary!,
+                reason!,
+                suggestedAction!,
+                string.Equals(decision, "ready_to_execute", StringComparison.OrdinalIgnoreCase) ? null : suggestedPrompt);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static bool ContainsAny(string text, params string[] values)

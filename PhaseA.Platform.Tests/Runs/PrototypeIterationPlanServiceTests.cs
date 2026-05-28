@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
@@ -280,6 +281,76 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_ShouldPreferLlmEvaluation_ForRpgPlans()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new LlmEvaluationCodexClient());
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Contract alignment first.", "Align contract."),
+                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Reward readability.", "Reward is readable."),
+                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Battle follow-up.", "Battle loop works.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("failed", "failed", "", "done", null, null, null, "navigation failed", "system", "recommended", "MapScene is not visible after Start Adventure."));
+
+        result.Decision.Should().Be("should_refine_plan");
+        result.Summary.Should().Contain("需要重拆");
+        result.Reason.Should().Contain("MapScene");
+        result.SuggestedPromptForRegeneration.Should().Contain("Start Adventure");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldFallbackToDeterministicRules_WhenLlmEvaluationFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new FailedEvaluationCodexClient());
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "manual_feedback",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Improve map movement and encounter trigger.", "Movement and encounter work."),
+                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Improve one battle and settlement.", "Battle reaches settlement."),
+                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Improve reward choice and return to map.", "Reward returns to map.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("should_refine_plan");
+        result.Reason.Should().Contain("Missing RPG contract steps");
+    }
+
+    [Fact]
     public async Task EvaluateAsync_ShouldRefineRpgPlan_WhenStepOneCrossesAcceptanceBoundary()
     {
         using var database = TempSqliteDatabase.Create();
@@ -425,8 +496,45 @@ public sealed class PrototypeIterationPlanServiceTests
         {
             if (Directory.Exists(Path))
             {
-                Directory.Delete(Path, recursive: true);
+            Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class LlmEvaluationCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            const string json = """
+            {
+              "decision": "should_refine_plan",
+              "summary": "当前计划仍需要重拆。",
+              "reason": "The plan does not start from the navigation blocker. It should begin with Start Adventure to visible MapScene, then movement and encounter, before any generic contract-alignment step.",
+              "suggestedAction": "请先按导航阻塞点重拆 RPG 迭代计划。",
+              "suggestedPromptForRegeneration": "Regenerate the RPG iteration plan starting with Start Adventure to visible MapScene, movement and first encounter, BattleScene, reward loop return-to-map, and final playable acceptance."
+            }
+            """;
+            return Task.FromResult(new CodexChatClientResult(true, json, null, 0, "", ""));
+        }
+    }
+
+    private sealed class FailedEvaluationCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new CodexChatClientResult(false, null, "codex_failed", 1, "", ""));
         }
     }
 }

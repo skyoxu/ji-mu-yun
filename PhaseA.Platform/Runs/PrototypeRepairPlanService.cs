@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Llm;
 
 namespace PhaseA.Platform.Runs;
 
@@ -13,11 +14,13 @@ public sealed class PrototypeRepairPlanService
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly ICodexChatClient? _codexChatClient;
 
     public PrototypeRepairPlanService(
         PhaseAMetadataStore metadataStore,
-        PrototypeQuickFixService quickFixService)
-        : this(metadataStore, quickFixService, new PrototypeRouteStateWriter(), new PrototypeContractService())
+        PrototypeQuickFixService quickFixService,
+        ICodexChatClient? codexChatClient = null)
+        : this(metadataStore, quickFixService, new PrototypeRouteStateWriter(), new PrototypeContractService(), codexChatClient)
     {
     }
 
@@ -25,12 +28,14 @@ public sealed class PrototypeRepairPlanService
         PhaseAMetadataStore metadataStore,
         PrototypeQuickFixService quickFixService,
         PrototypeRouteStateWriter stateWriter,
-        PrototypeContractService? contractService = null)
+        PrototypeContractService? contractService = null,
+        ICodexChatClient? codexChatClient = null)
     {
         _metadataStore = metadataStore;
         _quickFixService = quickFixService;
         _stateWriter = stateWriter;
         _contractService = contractService ?? new PrototypeContractService();
+        _codexChatClient = codexChatClient;
     }
 
     public async Task<PrototypeRepairPlanResult> CreateAsync(
@@ -54,7 +59,7 @@ public sealed class PrototypeRepairPlanService
         var prototypeContract = _contractService.Read(project);
         var failureText = BuildFailureText(failedRun);
         var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeSkill.Context);
-        var goals = BuildRepairGoals(planContext);
+        var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复步骤。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -238,11 +243,47 @@ public sealed class PrototypeRepairPlanService
         return new PrototypeRepairPlanContext(routeSkill, contract, failedRun, failureText);
     }
 
-    private static List<PrototypeRepairGoalResult> BuildRepairGoals(PrototypeRepairPlanContext context)
+    private async Task<List<PrototypeRepairGoalResult>> BuildRepairGoalsAsync(
+        ProjectSnapshot project,
+        PrototypeRepairPlanContext context,
+        CancellationToken cancellationToken)
     {
-        return context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh"
-            ? BuildRpgRepairGoals(context)
-            : BuildGenericRepairGoals(context);
+        if (context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh")
+        {
+            var planned = await TryBuildRpgRepairGoalsFromModelAsync(project, context, cancellationToken);
+            if (planned.Count > 0)
+            {
+                return planned;
+            }
+
+            return BuildRpgRepairGoals(context);
+        }
+
+        return BuildGenericRepairGoals(context);
+    }
+
+    private async Task<List<PrototypeRepairGoalResult>> TryBuildRpgRepairGoalsFromModelAsync(
+        ProjectSnapshot project,
+        PrototypeRepairPlanContext context,
+        CancellationToken cancellationToken)
+    {
+        if (_codexChatClient is null)
+        {
+            return [];
+        }
+
+        var completion = await _codexChatClient.CompleteAsync(
+            project.RepoPath,
+            PrototypeModelPolicy.Normalize("gpt-5.4"),
+            BuildRpgRepairGoalPrompt(project, context),
+            billingApiKeyName: project.AccountId,
+            cancellationToken: cancellationToken);
+        if (!completion.Succeeded)
+        {
+            return [];
+        }
+
+        return ParseRepairGoalPlan(completion.AssistantMessage);
     }
 
     private static List<PrototypeRepairGoalResult> BuildRpgRepairGoals(PrototypeRepairPlanContext context)
@@ -421,6 +462,101 @@ public sealed class PrototypeRepairPlanService
             """;
     }
 
+    private static string BuildRpgRepairGoalPrompt(ProjectSnapshot project, PrototypeRepairPlanContext context)
+    {
+        var failureJson = JsonSerializer.Serialize(new
+        {
+            runType = context.FailedRun.RunType,
+            status = context.FailedRun.Status,
+            progressLabel = context.FailedRun.ProgressLabel,
+            stderr = Trim(context.FailedRun.StderrText ?? "", 2000),
+            stdout = Trim(context.FailedRun.StdoutText ?? "", 2000),
+            evidence = Trim(context.FailedRun.EvidenceJson ?? "", 3000)
+        });
+
+        return $"""
+            You are generating a repair plan for a failed hosted RPG Godot prototype run.
+            Output JSON only. Do not explain. Do not use Markdown.
+            Return these keys only:
+            goals
+
+            goals must be an array of 4 to 6 objects with:
+            title, description, acceptanceHint
+
+            Rules:
+            - Base the plan on the latest failed blocker, not on a generic RPG template.
+            - First goal must target the concrete failed blocker with the highest repair value.
+            - If the failure is main-menu/navigation/map-visibility related, do not start with evidence, TDD, permission, cache, or build-recovery steps.
+            - Use small isolated gameplay repair steps: MapScene entry, movement/encounter, battle, reward loop, win/fail visibility, final acceptance.
+            - Mention evidence/TDD/build recovery only when the failure explicitly points to permission denied, write failure, cache lock, build failure, or missing completion artifacts.
+            - Keep the final goal as full playable prototype acceptance.
+            - Keep each goal narrow enough to execute independently.
+
+            Project:
+            - Name: {project.Name}
+            - GameName: {project.GameName}
+            - GameTypeSource: {project.GameTypeSource}
+
+            Route skill:
+            - RouteSkillId: {context.RouteSkill.RouteSkillId}
+            - RouteSkillGuide: {context.RouteSkill.RouteSkillGuide}
+            - RouteSkillContract: {context.RouteSkill.RouteSkillContract}
+
+            Prototype contract:
+            {Trim(context.Contract.Json ?? "", 3000)}
+
+            Latest failed run:
+            {failureJson}
+
+            Failure excerpt:
+            {Trim(context.FailureText, 4000)}
+            """;
+    }
+
+    private static List<PrototypeRepairGoalResult> ParseRepairGoalPlan(string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
+            if (!document.RootElement.TryGetProperty("goals", out var goalsElement) || goalsElement.ValueKind != JsonValueKind.Array)
+            {
+                return [];
+            }
+
+            var goals = new List<PrototypeRepairGoalResult>();
+            var index = 1;
+            foreach (var item in goalsElement.EnumerateArray())
+            {
+                var title = item.TryGetProperty("title", out var titleElement) && titleElement.ValueKind == JsonValueKind.String
+                    ? titleElement.GetString()?.Trim()
+                    : null;
+                var description = item.TryGetProperty("description", out var descriptionElement) && descriptionElement.ValueKind == JsonValueKind.String
+                    ? descriptionElement.GetString()?.Trim()
+                    : null;
+                var acceptance = item.TryGetProperty("acceptanceHint", out var acceptanceElement) && acceptanceElement.ValueKind == JsonValueKind.String
+                    ? acceptanceElement.GetString()?.Trim()
+                    : null;
+                if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description) || string.IsNullOrWhiteSpace(acceptance))
+                {
+                    continue;
+                }
+
+                goals.Add(new PrototypeRepairGoalResult(index++, title, description, acceptance, "pending"));
+            }
+
+            return goals.Count >= 4 ? goals : [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
     private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill)
     {
         return $"""
@@ -462,6 +598,61 @@ public sealed class PrototypeRepairPlanService
     private static string Trim(string value, int maxLength)
     {
         return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
+    private static string? ExtractFirstJsonObject(string text)
+    {
+        var start = text.IndexOf('{');
+        if (start < 0)
+        {
+            return null;
+        }
+
+        var depth = 0;
+        var inString = false;
+        var escaped = false;
+        for (var index = start; index < text.Length; index++)
+        {
+            var current = text[index];
+            if (inString)
+            {
+                if (escaped)
+                {
+                    escaped = false;
+                }
+                else if (current == '\\')
+                {
+                    escaped = true;
+                }
+                else if (current == '"')
+                {
+                    inString = false;
+                }
+
+                continue;
+            }
+
+            if (current == '"')
+            {
+                inString = true;
+                continue;
+            }
+
+            if (current == '{')
+            {
+                depth++;
+            }
+            else if (current == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return text[start..(index + 1)];
+                }
+            }
+        }
+
+        return null;
     }
 }
 
