@@ -200,7 +200,7 @@ REMAINING: none
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
@@ -243,7 +243,7 @@ REMAINING: none
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG map entry step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 2);
@@ -280,7 +280,7 @@ REMAINING: none
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
@@ -331,7 +331,7 @@ REMAINING: none
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
@@ -392,7 +392,7 @@ public sealed class DqRpgPrototype
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
@@ -432,7 +432,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Last();
@@ -471,7 +471,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Last();
@@ -520,7 +520,7 @@ public sealed class DqRpgPrototype
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Stabilize map movement and first encounter trigger."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "still blocked", null);
@@ -551,7 +551,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
@@ -584,7 +584,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
@@ -617,7 +617,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
@@ -664,7 +664,7 @@ public sealed class DqRpgPrototype
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);

@@ -37,7 +37,7 @@ public sealed class ProjectDraftImportService
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
-    private readonly ICodexChatClient _codexChatClient;
+    private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IAiCodeMirrorResponsesClient? _responsesClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
@@ -56,11 +56,12 @@ public sealed class ProjectDraftImportService
         ICodexChatClient codexChatClient,
         IAiCodeMirrorResponsesClient? responsesClient,
         AiCodeMirrorKeyPoolService? keyPoolService,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
         _options = options;
-        _codexChatClient = codexChatClient;
+        _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _responsesClient = responsesClient;
         _keyPoolService = keyPoolService;
         _workspaceSeeder = workspaceSeeder;
@@ -116,10 +117,26 @@ public sealed class ProjectDraftImportService
             if (shouldUseCodex)
             {
                 var prompt = BuildAnalysisPrompt(project, text);
-                completion = await _codexChatClient.CompleteAsync(project.RepoPath, normalizedModel, prompt, DraftAnalysisCodexOptions, project.AccountId, cancellationToken);
-                analyzed = completion.Succeeded
-                    ? MergeCodexAnalysis(fallback, completion.AssistantMessage)
-                    : fallback with { Warnings = fallback.Warnings.Append(completion.FailureCode ?? "llm_analysis_failed").ToArray() };
+                var analysis = await _llmRouteEngine.CompleteAsync(
+                    new LlmRouteRequest(
+                        EnsureDraftPromptWorkspace(project.ProjectId, "analysis"),
+                        "draft-analysis",
+                        normalizedModel,
+                        prompt,
+                        DraftAnalysisCodexOptions,
+                        project.AccountId,
+                        RequireJsonObject: true),
+                    cancellationToken);
+                completion = analysis.RawResult ?? new CodexChatClientResult(
+                    analysis.Succeeded,
+                    analysis.AssistantMessage,
+                    analysis.FailureCode,
+                    analysis.ExitCode,
+                    analysis.Stdout,
+                    analysis.Stderr);
+                analyzed = analysis.Succeeded
+                    ? MergeCodexAnalysis(fallback, analysis.JsonObjectText ?? analysis.AssistantMessage)
+                    : fallback with { Warnings = fallback.Warnings.Append(analysis.FailureCode ?? "llm_analysis_failed").ToArray() };
             }
             else
             {
@@ -354,28 +371,43 @@ public sealed class ProjectDraftImportService
 
         var prompt = BuildCoveragePrompt(project, draftText, analyzed);
         var coverageOptions = DraftAnalysisCodexOptions with { OutputSchemaPath = CoverageSchemaPath };
-        var coverageRoot = EnsureCoveragePromptWorkspace(project.ProjectId);
-        var completion = await _codexChatClient.CompleteAsync(coverageRoot, model, prompt, coverageOptions, project.AccountId, cancellationToken);
+        var coverageRoot = EnsureDraftPromptWorkspace(project.ProjectId, "coverage");
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                coverageRoot,
+                "draft-coverage",
+                model,
+                prompt,
+                coverageOptions,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
         var attempts = 1;
         if (completion.Succeeded)
         {
-            var parsed = MergeCoverageAnalysis(completion.AssistantMessage);
+            var parsed = MergeCoverageAnalysis(completion.JsonObjectText ?? completion.AssistantMessage);
             if (parsed is not null)
             {
                 return new DraftCoverageAttemptResult(parsed, "llm", null, completion.ExitCode, attempts, completion.AssistantMessage);
             }
+        }
 
-            completion = await _codexChatClient.CompleteAsync(
-                coverageRoot,
-                model,
-                BuildCoverageRetryPrompt(project, draftText, analyzed),
-                coverageOptions,
-                project.AccountId,
+        if (ShouldRetryCoverage(completion))
+        {
+            completion = await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    coverageRoot,
+                    "draft-coverage-retry",
+                    model,
+                    BuildCoverageRetryPrompt(project, draftText, analyzed),
+                    coverageOptions,
+                    project.AccountId,
+                    RequireJsonObject: true),
                 cancellationToken);
             attempts++;
             if (completion.Succeeded)
             {
-                parsed = MergeCoverageAnalysis(completion.AssistantMessage);
+                var parsed = MergeCoverageAnalysis(completion.JsonObjectText ?? completion.AssistantMessage);
                 if (parsed is not null)
                 {
                     return new DraftCoverageAttemptResult(parsed, "llm", null, completion.ExitCode, attempts, completion.AssistantMessage);
@@ -396,6 +428,12 @@ public sealed class ProjectDraftImportService
             completion.ExitCode,
             attempts,
             completion.AssistantMessage ?? completion.Stderr ?? completion.Stdout);
+    }
+
+    private static bool ShouldRetryCoverage(LlmRouteResult completion)
+    {
+        return completion.Succeeded ||
+               string.Equals(completion.FailureCode, "llm_json_parse_failed", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<DraftCoverageAttemptResult?> AnalyzeCoverageWithResponsesApiAsync(
@@ -457,7 +495,7 @@ public sealed class ProjectDraftImportService
 
         try
         {
-            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            var json = LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
             var successCriteria = ReadStringArray(root, "successCriteria");
@@ -610,65 +648,6 @@ public sealed class ProjectDraftImportService
         return !string.IsNullOrWhiteSpace(result.PrototypeSlug)
             || !string.IsNullOrWhiteSpace(result.Hypothesis)
             || !string.IsNullOrWhiteSpace(result.GameFeature);
-    }
-
-    private static string? ExtractFirstJsonObject(string text)
-    {
-        var start = text.IndexOf('{');
-        if (start < 0)
-        {
-            return null;
-        }
-
-        var depth = 0;
-        var inString = false;
-        var escaped = false;
-        for (var index = start; index < text.Length; index++)
-        {
-            var ch = text[index];
-            if (inString)
-            {
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
-
-                if (ch == '\\')
-                {
-                    escaped = true;
-                    continue;
-                }
-
-                if (ch == '"')
-                {
-                    inString = false;
-                }
-
-                continue;
-            }
-
-            if (ch == '"')
-            {
-                inString = true;
-                continue;
-            }
-
-            if (ch == '{')
-            {
-                depth++;
-            }
-            else if (ch == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return text[start..(index + 1)];
-                }
-            }
-        }
-
-        return null;
     }
 
     private static int FirstSeparatorIndex(string line)
@@ -1065,7 +1044,7 @@ public sealed class ProjectDraftImportService
 
         try
         {
-            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            var json = LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
             var coveragePercent = root.TryGetProperty("coveragePercent", out var percentElement) && percentElement.ValueKind == JsonValueKind.Number
@@ -1145,9 +1124,9 @@ public sealed class ProjectDraftImportService
         return schemaPath;
     }
 
-    private string EnsureCoveragePromptWorkspace(string projectId)
+    private string EnsureDraftPromptWorkspace(string projectId, string purpose)
     {
-        var root = Path.Combine(_options.HostedWorkspaceRoot, "_coverage-llm", projectId);
+        var root = Path.Combine(_options.HostedWorkspaceRoot, "_phasea_llm", "draft-import", projectId, purpose);
         Directory.CreateDirectory(root);
         return root;
     }

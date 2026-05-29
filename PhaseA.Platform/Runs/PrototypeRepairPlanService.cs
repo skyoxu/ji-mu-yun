@@ -17,7 +17,7 @@ public sealed class PrototypeRepairPlanService
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
-    private readonly ICodexChatClient? _codexChatClient;
+    private readonly ILlmRouteEngine? _llmRouteEngine;
 
     public PrototypeRepairPlanService(
         PhaseAMetadataStore metadataStore,
@@ -32,13 +32,14 @@ public sealed class PrototypeRepairPlanService
         PrototypeQuickFixService quickFixService,
         PrototypeRouteStateWriter stateWriter,
         PrototypeContractService? contractService = null,
-        ICodexChatClient? codexChatClient = null)
+        ICodexChatClient? codexChatClient = null,
+        ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
         _quickFixService = quickFixService;
         _stateWriter = stateWriter;
         _contractService = contractService ?? new PrototypeContractService();
-        _codexChatClient = codexChatClient;
+        _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
     }
 
     public async Task<PrototypeRepairPlanResult> CreateAsync(
@@ -281,24 +282,27 @@ public sealed class PrototypeRepairPlanService
         PrototypeRepairPlanContext context,
         CancellationToken cancellationToken)
     {
-        if (_codexChatClient is null)
+        if (_llmRouteEngine is null)
         {
             return [];
         }
 
-        var completion = await _codexChatClient.CompleteAsync(
-            project.RepoPath,
-            PrototypeModelPolicy.Normalize("gpt-5.4"),
-            BuildRpgRepairGoalPrompt(project, context),
-            RepairPlanningCodexOptions,
-            billingApiKeyName: project.AccountId,
-            cancellationToken: cancellationToken);
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                EnsureRepairPlanPromptWorkspace(project),
+                "repair-plan",
+                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                BuildRpgRepairGoalPrompt(project, context),
+                RepairPlanningCodexOptions,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
         if (!completion.Succeeded)
         {
             return [];
         }
 
-        return ParseRepairGoalPlan(completion.AssistantMessage);
+        return ParseRepairGoalPlan(completion.JsonObjectText ?? completion.AssistantMessage);
     }
 
     private static List<PrototypeRepairGoalResult> BuildRpgRepairGoals(PrototypeRepairPlanContext context)
@@ -835,7 +839,7 @@ public sealed class PrototypeRepairPlanService
 
         try
         {
-            using var document = JsonDocument.Parse(ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
+            using var document = JsonDocument.Parse(LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
             if (!document.RootElement.TryGetProperty("goals", out var goalsElement) || goalsElement.ValueKind != JsonValueKind.Array)
             {
                 return [];
@@ -868,6 +872,15 @@ public sealed class PrototypeRepairPlanService
         {
             return [];
         }
+    }
+
+    private static string EnsureRepairPlanPromptWorkspace(ProjectSnapshot project)
+    {
+        var repoParent = Path.GetDirectoryName(project.RepoPath);
+        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
+        var root = Path.Combine(workspaceRoot, "_phasea_llm", "repair-plan");
+        Directory.CreateDirectory(root);
+        return root;
     }
 
     private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill)
@@ -911,61 +924,6 @@ public sealed class PrototypeRepairPlanService
     private static string Trim(string value, int maxLength)
     {
         return value.Length <= maxLength ? value : value[..maxLength];
-    }
-
-    private static string? ExtractFirstJsonObject(string text)
-    {
-        var start = text.IndexOf('{');
-        if (start < 0)
-        {
-            return null;
-        }
-
-        var depth = 0;
-        var inString = false;
-        var escaped = false;
-        for (var index = start; index < text.Length; index++)
-        {
-            var current = text[index];
-            if (inString)
-            {
-                if (escaped)
-                {
-                    escaped = false;
-                }
-                else if (current == '\\')
-                {
-                    escaped = true;
-                }
-                else if (current == '"')
-                {
-                    inString = false;
-                }
-
-                continue;
-            }
-
-            if (current == '"')
-            {
-                inString = true;
-                continue;
-            }
-
-            if (current == '{')
-            {
-                depth++;
-            }
-            else if (current == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return text[start..(index + 1)];
-                }
-            }
-        }
-
-        return null;
     }
 
     private static bool ContainsAny(string text, params string[] needles)

@@ -55,7 +55,7 @@ public sealed partial class ProjectAssetInventoryService
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
-    private readonly ICodexChatClient _codexChatClient;
+    private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
 
     public ProjectAssetInventoryService(
@@ -70,11 +70,12 @@ public sealed partial class ProjectAssetInventoryService
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ICodexChatClient codexChatClient,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
         _options = options;
-        _codexChatClient = codexChatClient;
+        _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
     }
 
@@ -221,11 +222,21 @@ public sealed partial class ProjectAssetInventoryService
         {
             var normalizedModel = PrototypeModelPolicy.Normalize(model);
             var prompt = BuildLlmJudgementPrompt(project, usedAssets, candidates);
-            var completion = await _codexChatClient.CompleteAsync(projectRoot, normalizedModel, prompt, billingApiKeyName: project.AccountId, cancellationToken: cancellationToken);
+            var completion = await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    EnsureAssetInventoryPromptWorkspace(project),
+                    "asset-inventory-judgement",
+                    normalizedModel,
+                    prompt,
+                    null,
+                    project.AccountId,
+                    RequireJsonObject: true),
+                cancellationToken);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded
-                ? ApplyLlmJudgement(candidates, completion.AssistantMessage, out judgementFailureCode)
+                ? ApplyLlmJudgement(candidates, completion.JsonObjectText ?? completion.AssistantMessage, out judgementFailureCode)
                 : candidates.Select(candidate => candidate with { LlmJudgementStatus = completion.FailureCode ?? "llm_judgement_failed" }).ToArray();
+            var rawCompletion = completion.RawResult;
             var evidenceJson = System.Text.Json.JsonSerializer.Serialize(new
             {
                 run_type = RunType,
@@ -250,12 +261,12 @@ public sealed partial class ProjectAssetInventoryService
                 LlmUsageAuditJson.BuildCodexUsageJson(
                     operation: RunType,
                     model: normalizedModel,
-                    tokenUsage: completion.TokenUsage ?? new CodexTokenUsage(null, null, null),
+                    tokenUsage: rawCompletion?.TokenUsage ?? new CodexTokenUsage(null, null, null),
                     runType: RunType,
                     projectId: project.ProjectId,
                     failureCode: completion.FailureCode ?? judgementFailureCode,
                     exitCode: completion.ExitCode,
-                    providerBilling: completion.ProviderBilling),
+                    providerBilling: rawCompletion?.ProviderBilling),
                 cancellationToken);
             return judged;
         }
@@ -333,7 +344,7 @@ public sealed partial class ProjectAssetInventoryService
 
         try
         {
-            using var document = System.Text.Json.JsonDocument.Parse(ExtractJsonObject(assistantMessage));
+            using var document = System.Text.Json.JsonDocument.Parse(LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
             var items = document.RootElement.TryGetProperty("items", out var itemsElement) && itemsElement.ValueKind == System.Text.Json.JsonValueKind.Array
                 ? itemsElement.EnumerateArray().ToArray()
                 : [];
@@ -378,13 +389,6 @@ public sealed partial class ProjectAssetInventoryService
             : null;
     }
 
-    private static string ExtractJsonObject(string value)
-    {
-        var start = value.IndexOf('{');
-        var end = value.LastIndexOf('}');
-        return start >= 0 && end >= start ? value[start..(end + 1)] : value;
-    }
-
     private string GetProjectRoot(ProjectSnapshot project)
     {
         var projectRoot = Path.GetFullPath(project.RepoPath);
@@ -394,6 +398,15 @@ public sealed partial class ProjectAssetInventoryService
         }
 
         return projectRoot;
+    }
+
+    private static string EnsureAssetInventoryPromptWorkspace(ProjectSnapshot project)
+    {
+        var repoParent = Path.GetDirectoryName(project.RepoPath);
+        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
+        var root = Path.Combine(workspaceRoot, "_phasea_llm", "asset-inventory");
+        Directory.CreateDirectory(root);
+        return root;
     }
 
     private static IEnumerable<string> EnumerateSceneFiles(string projectRoot)

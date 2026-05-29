@@ -22,7 +22,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
 
         var result = await planService.CreateAsync(
             accountId,
@@ -47,7 +47,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修主菜单入口。再修地图移动。最后补提示文案。"));
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
@@ -102,7 +102,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -155,7 +155,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -194,7 +194,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -238,7 +238,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修 step1，再做 step2。"));
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
@@ -271,7 +271,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the first playable RPG step."));
         var runner = new FakeHostedProcessRunner();
         var stateWriter = new PrototypeRouteStateWriter();
@@ -299,7 +299,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the current project page hint first."));
         var runner = new ExitCodeFailureHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner);
@@ -325,7 +325,7 @@ public sealed class PrototypeIterationGoalServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var planService = new PrototypeIterationPlanService(store);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the current project page hint first."));
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();

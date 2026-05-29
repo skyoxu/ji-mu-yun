@@ -53,7 +53,7 @@ public sealed class PhaseAPrototypeRouteE2ETests
         prototype.Status.Should().Be("succeeded");
         routeStateWriter.ReadLatestPrototypeState(project).Should().Contain(prototype.RunId);
 
-        var planService = new PrototypeIterationPlanService(store, routeStateWriter);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store, routeStateWriter);
         var plan = await planService.CreateAsync(
             accountId,
             project.ProjectId,

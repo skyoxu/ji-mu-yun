@@ -71,6 +71,7 @@ builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingCl
 builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
+builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();

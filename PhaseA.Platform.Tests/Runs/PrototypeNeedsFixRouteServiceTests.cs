@@ -23,7 +23,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
-        var plan = new PrototypeIterationPlanService(store);
+        var plan = TestRpgIterationPlanServiceFactory.Create(store);
         await plan.CreateAsync(accountId, created.ProjectId!, new PrototypeIterationPlanRequest("1. Stabilize map movement\n2. Finish battle"));
         var runner = new SuccessRunner();
         var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter());
@@ -148,7 +148,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             await store.CompleteRunAsync(runId, "succeeded", 0, "prototype ok", "", "{}");
         }
 
-        var plan = new PrototypeIterationPlanService(store);
+        var plan = TestRpgIterationPlanServiceFactory.Create(store);
         await plan.CreateAsync(accountId, created.ProjectId!, new PrototypeIterationPlanRequest("1. Stabilize map movement\n2. Finish battle"));
         var details = await store.GetLatestProjectIterationSessionAsync(created.ProjectId!);
         await store.UpdateProjectIterationGoalStatusAsync(

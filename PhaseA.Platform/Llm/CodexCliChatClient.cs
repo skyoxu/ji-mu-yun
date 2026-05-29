@@ -46,10 +46,12 @@ public sealed class CodexCliChatClient : ICodexChatClient
         {
             FileName = ResolveCodexCommand(),
             WorkingDirectory = projectRoot,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
+            StandardInputEncoding = Encoding.UTF8,
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
@@ -80,7 +82,6 @@ public sealed class CodexCliChatClient : ICodexChatClient
         }
         startInfo.ArgumentList.Add("-o");
         startInfo.ArgumentList.Add(outputPath);
-        startInfo.ArgumentList.Add(prompt);
         if (!string.IsNullOrWhiteSpace(runtimeCredential.CodexHomePath))
         {
             startInfo.Environment["CODEX_HOME"] = runtimeCredential.CodexHomePath;
@@ -114,6 +115,9 @@ public sealed class CodexCliChatClient : ICodexChatClient
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
+            await process.StandardInput.WriteAsync(prompt);
+            await process.StandardInput.FlushAsync(cancellationToken);
+            process.StandardInput.Close();
             await process.WaitForExitAsync(timeout.Token);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

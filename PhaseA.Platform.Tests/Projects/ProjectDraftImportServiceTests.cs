@@ -303,7 +303,7 @@ public sealed class ProjectDraftImportServiceTests
         codex.Prompts.Should().ContainSingle();
         codex.ProjectRoots.Should().ContainSingle();
         codex.ProjectRoots[0].Should().NotContain("\\repo");
-        codex.ProjectRoots[0].Should().Contain("\\_coverage-llm\\");
+        codex.ProjectRoots[0].Should().Contain("\\_phasea_llm\\draft-import\\");
         codex.Prompts[0].Should().Contain("coveragePercent, coverageSummary, coverageMissingTopics");
         codex.Prompts[0].Should().Contain("Use only the Draft text and the Filled form JSON included below.");
         codex.Prompts[0].Should().Contain("Do not inspect or infer from repository files, implementation code, workflow docs, tests, or any external context.");

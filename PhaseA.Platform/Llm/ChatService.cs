@@ -18,7 +18,7 @@ public sealed class ChatService
     private readonly LlmBindingService _llmBindingService;
     private readonly LlmStopLossService _llmStopLossService;
     private readonly INewApiChatClient _chatClient;
-    private readonly ICodexChatClient _codexChatClient;
+    private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
 
@@ -41,14 +41,15 @@ public sealed class ChatService
         INewApiChatClient chatClient,
         ICodexChatClient codexChatClient,
         IProjectWorkspaceSeeder workspaceSeeder,
-        SkillActionCatalog skillActionCatalog)
+        SkillActionCatalog skillActionCatalog,
+        ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmBindingService = llmBindingService;
         _llmStopLossService = llmStopLossService;
         _chatClient = chatClient;
-        _codexChatClient = codexChatClient;
+        _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
     }
@@ -157,7 +158,15 @@ public sealed class ChatService
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var skillAction = ResolveSkillAction(request.SkillActionId);
         var prompt = BuildCodexPrompt(project, request, skillAction);
-        var completion = await _codexChatClient.CompleteAsync(project.RepoPath, model, prompt, billingApiKeyName: project.AccountId, cancellationToken: cancellationToken);
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                EnsureChatPromptWorkspace(project),
+                "project-chat",
+                model,
+                prompt,
+                null,
+                project.AccountId),
+            cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";
@@ -183,13 +192,22 @@ public sealed class ChatService
             LlmUsageAuditJson.BuildCodexUsageJson(
                 operation: "prototype-chat",
                 model: model,
-                tokenUsage: completion.TokenUsage ?? new CodexTokenUsage(null, null, null),
+                tokenUsage: completion.RawResult?.TokenUsage ?? new CodexTokenUsage(null, null, null),
                 runType: RunType,
                 projectId: project.ProjectId,
-                providerBilling: completion.ProviderBilling),
+                providerBilling: completion.RawResult?.ProviderBilling),
             cancellationToken);
 
         return new ChatResult(runId, status, completion.ExitCode, sanitizedAssistantMessage, completion.FailureCode, model);
+    }
+
+    private static string EnsureChatPromptWorkspace(ProjectSnapshot project)
+    {
+        var repoParent = Path.GetDirectoryName(project.RepoPath);
+        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
+        var root = Path.Combine(workspaceRoot, "_phasea_llm", "project-chat");
+        Directory.CreateDirectory(root);
+        return root;
     }
 
     private async Task<ChatResult> CompleteDeterministicAsync(

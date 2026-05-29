@@ -40,7 +40,7 @@ public sealed class PrototypeIterationPlanService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
-    private readonly ICodexChatClient? _codexChatClient;
+    private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
@@ -53,12 +53,13 @@ public sealed class PrototypeIterationPlanService
         PrototypeRouteStateWriter routeStateWriter,
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
+        ILlmRouteEngine? llmRouteEngine = null,
         GameTypeTemplateCatalog? templateCatalog = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
-        _codexChatClient = codexChatClient;
+        _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
     }
 
@@ -249,7 +250,7 @@ public sealed class PrototypeIterationPlanService
             SourceKind: sourceKind,
             RouteSkillId: routeSkill.RouteSkillId);
 
-        if (_codexChatClient is null)
+        if (_llmRouteEngine is null)
         {
             if (PrototypeRouteSkillPolicy.IsRpgProject(project))
             {
@@ -262,16 +263,18 @@ public sealed class PrototypeIterationPlanService
         var modelPrompt = BuildPlanningAnalysisPrompt(project, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
-        var completion = await _codexChatClient.CompleteAsync(
-            promptRoot,
-            PrototypeModelPolicy.Normalize("gpt-5.4"),
-            modelPrompt,
-            options,
-            billingApiKeyName: project.AccountId,
-            cancellationToken: cancellationToken);
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                promptRoot,
+                "planning-analysis",
+                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                modelPrompt,
+                options,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
         if (!completion.Succeeded)
         {
-            PersistCodexFailure(promptRoot, "planning-analysis", completion);
             if (PrototypeRouteSkillPolicy.IsRpgProject(project))
             {
                 throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "planning_analysis_llm_failed");
@@ -283,10 +286,9 @@ public sealed class PrototypeIterationPlanService
             };
         }
 
-        var parsed = TryParsePlanningContext(completion.AssistantMessage, fallback);
+        var parsed = TryParsePlanningContext(completion.JsonObjectText ?? completion.AssistantMessage, fallback);
         if (parsed is null && PrototypeRouteSkillPolicy.IsRpgProject(project))
         {
-            PersistCodexFailure(promptRoot, "planning-analysis-parse", completion);
             throw new PrototypeIterationPlanLlmException("planning_analysis_parse_failed");
         }
 
@@ -303,7 +305,7 @@ public sealed class PrototypeIterationPlanService
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
         CancellationToken cancellationToken)
     {
-        if (_codexChatClient is null)
+        if (_llmRouteEngine is null)
         {
             throw new PrototypeIterationPlanLlmException("goal_plan_llm_client_missing");
         }
@@ -311,23 +313,24 @@ public sealed class PrototypeIterationPlanService
         var prompt = BuildRpgGoalRefinementPrompt(project, planningContext, message, scaffold);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
-        var completion = await _codexChatClient.CompleteAsync(
-            promptRoot,
-            PrototypeModelPolicy.Normalize("gpt-5.4"),
-            prompt,
-            options,
-            billingApiKeyName: project.AccountId,
-            cancellationToken: cancellationToken);
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                promptRoot,
+                "goal-plan",
+                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                prompt,
+                options,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
         if (!completion.Succeeded)
         {
-            PersistCodexFailure(promptRoot, "goal-plan", completion);
             throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "goal_plan_llm_failed");
         }
 
-        var parsed = ParseRefinedRpgGoalPlan(completion.AssistantMessage, scaffold);
+        var parsed = ParseRefinedRpgGoalPlan(completion.JsonObjectText ?? completion.AssistantMessage, scaffold);
         if (parsed.Count == 0)
         {
-            PersistCodexFailure(promptRoot, "goal-plan-parse", completion);
             throw new PrototypeIterationPlanLlmException("goal_plan_parse_failed");
         }
 
@@ -600,7 +603,7 @@ public sealed class PrototypeIterationPlanService
 
         try
         {
-            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            var json = LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
             using var document = JsonDocument.Parse(json);
             var root = document.RootElement;
             var summary = root.TryGetProperty("analysisSummary", out var summaryElement) && summaryElement.ValueKind == JsonValueKind.String
@@ -637,7 +640,7 @@ public sealed class PrototypeIterationPlanService
 
         try
         {
-            var json = ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
+            var json = LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage;
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("goals", out var goalsElement) || goalsElement.ValueKind != JsonValueKind.Array)
             {
@@ -782,69 +785,6 @@ public sealed class PrototypeIterationPlanService
         {
             return [];
         }
-    }
-
-    private static string? ExtractFirstJsonObject(string text)
-    {
-        var start = text.IndexOf('{');
-        if (start < 0)
-        {
-            return null;
-        }
-
-        var depth = 0;
-        var inString = false;
-        var escaped = false;
-        for (var index = start; index < text.Length; index++)
-        {
-            var ch = text[index];
-            if (inString)
-            {
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
-
-                if (ch == '\\')
-                {
-                    escaped = true;
-                    continue;
-                }
-
-                if (ch == '"')
-                {
-                    inString = false;
-                }
-
-                continue;
-            }
-
-            if (ch == '"')
-            {
-                inString = true;
-                continue;
-            }
-
-            if (ch == '{')
-            {
-                depth += 1;
-                continue;
-            }
-
-            if (ch != '}')
-            {
-                continue;
-            }
-
-            depth -= 1;
-            if (depth == 0)
-            {
-                return text[start..(index + 1)];
-            }
-        }
-
-        return null;
     }
 
     private static PrototypeIterationPlanningAnalysisResult ToPlanningAnalysisResult(IterationPlanningContext planningContext)
@@ -1095,7 +1035,7 @@ public sealed class PrototypeIterationPlanService
         PrototypeWorkflowProgress? prototypeProgress,
         CancellationToken cancellationToken)
     {
-        if (_codexChatClient is null)
+        if (_llmRouteEngine is null)
         {
             return BuildLlmFailedEvaluation("plan_evaluation_llm_client_missing");
         }
@@ -1103,23 +1043,24 @@ public sealed class PrototypeIterationPlanService
         var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "plan-evaluation");
         var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
-        var completion = await _codexChatClient.CompleteAsync(
-            promptRoot,
-            PrototypeModelPolicy.Normalize("gpt-5.4"),
-            BuildRpgPlanEvaluationPrompt(project, details, prototypeProgress, planningAnalysis),
-            options,
-            billingApiKeyName: project.AccountId,
-            cancellationToken: cancellationToken);
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                promptRoot,
+                "plan-evaluation",
+                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                BuildRpgPlanEvaluationPrompt(project, details, prototypeProgress, planningAnalysis),
+                options,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
         if (!completion.Succeeded)
         {
-            PersistCodexFailure(promptRoot, "plan-evaluation", completion);
             return BuildLlmFailedEvaluation(completion.FailureCode ?? "plan_evaluation_llm_failed");
         }
 
-        var parsed = ParseModelEvaluation(completion.AssistantMessage);
+        var parsed = ParseModelEvaluation(completion.JsonObjectText ?? completion.AssistantMessage);
         if (parsed is null)
         {
-            PersistCodexFailure(promptRoot, "plan-evaluation-parse", completion);
             return BuildLlmFailedEvaluation("plan_evaluation_parse_failed");
         }
 
@@ -1530,7 +1471,7 @@ public sealed class PrototypeIterationPlanService
 
         try
         {
-            using var document = JsonDocument.Parse(ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
+            using var document = JsonDocument.Parse(LlmRouteEngine.ExtractFirstJsonObject(assistantMessage) ?? assistantMessage);
             var root = document.RootElement;
             var decision = root.TryGetProperty("decision", out var decisionElement) && decisionElement.ValueKind == JsonValueKind.String
                 ? decisionElement.GetString()?.Trim()
@@ -1757,40 +1698,6 @@ public sealed class PrototypeIterationPlanService
             $"LLM 调用失败：{code}。系统不会使用本地规则假装评估成功。",
             "请先修复 LLM 调用，再重新评估当前迭代计划。",
             null);
-    }
-
-    private static void PersistCodexFailure(string promptRoot, string purpose, CodexChatClientResult completion)
-    {
-        try
-        {
-            var dir = Path.Combine(promptRoot, "logs", "phase-a-chat");
-            Directory.CreateDirectory(dir);
-            var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
-            var prefix = Path.Combine(dir, $"{stamp}-{purpose}");
-            File.WriteAllText(
-                $"{prefix}.failure.json",
-                JsonSerializer.Serialize(new
-                {
-                    purpose,
-                    completion.FailureCode,
-                    completion.ExitCode,
-                    outputLength = completion.AssistantMessage?.Length ?? 0,
-                    stdoutLength = completion.Stdout?.Length ?? 0,
-                    stderrLength = completion.Stderr?.Length ?? 0
-                }, new JsonSerializerOptions { WriteIndented = true }));
-            File.WriteAllText($"{prefix}.stdout.txt", completion.Stdout ?? "");
-            File.WriteAllText($"{prefix}.stderr.txt", completion.Stderr ?? "");
-            if (!string.IsNullOrWhiteSpace(completion.AssistantMessage))
-            {
-                File.WriteAllText($"{prefix}.output.txt", completion.AssistantMessage);
-            }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
     }
 
     private async Task<PrototypeIterationPlanEvaluationResult> PersistEvaluationAsync(

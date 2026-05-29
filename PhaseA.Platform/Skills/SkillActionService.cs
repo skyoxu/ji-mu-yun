@@ -18,6 +18,7 @@ public sealed class SkillActionService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly ILlmRouteEngine? _llmRouteEngine;
 
     public SkillActionService(
         PhaseAMetadataStore metadataStore,
@@ -26,7 +27,8 @@ public sealed class SkillActionService
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null)
+        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -35,6 +37,7 @@ public sealed class SkillActionService
         _workspaceSeeder = workspaceSeeder;
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
+        _llmRouteEngine = llmRouteEngine;
     }
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
@@ -93,15 +96,20 @@ public sealed class SkillActionService
             cancellationToken);
 
         var prompt = BuildPrompt(action, project, request);
-        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
-        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
-        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
-        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
-        var output = File.Exists(outputAbsolutePath)
-            ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
-            : FirstNonEmpty(process.Stdout, process.Stderr, "");
-        var status = process.ExitCode == 0 ? "succeeded" : "failed";
+        var routeResult = _llmRouteEngine is null
+            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, cancellationToken)
+            : await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    EnsureSkillActionPromptWorkspace(project),
+                    "skill-action",
+                    "gpt-5.4",
+                    prompt,
+                    new CodexChatClientOptions(IgnoreRules: false, ReasoningEffort: "high"),
+                    project.AccountId),
+                cancellationToken);
+        var output = FirstNonEmpty(routeResult.AssistantMessage, routeResult.Stderr, routeResult.Stdout, "");
+        await File.WriteAllTextAsync(outputAbsolutePath, output, Encoding.UTF8, cancellationToken);
+        var status = routeResult.Succeeded ? "succeeded" : "failed";
 
         await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
             runId,
@@ -125,7 +133,7 @@ public sealed class SkillActionService
             request = requestRelativePath,
             output = outputRelativePath
         });
-        await _metadataStore.CompleteRunAsync(runId, status, process.ExitCode, process.Stdout, process.Stderr, evidenceJson, cancellationToken);
+        await _metadataStore.CompleteRunAsync(runId, status, routeResult.ExitCode, routeResult.Stdout, routeResult.Stderr, evidenceJson, cancellationToken);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
             "codex-cli",
@@ -134,18 +142,52 @@ public sealed class SkillActionService
             LlmUsageAuditJson.BuildCodexUsageJson(
                 operation: RunType,
                 model: "gpt-5.4",
-                tokenUsage: CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+                tokenUsage: routeResult.RawResult?.TokenUsage ?? CodexUsageExtractor.Extract(routeResult.Stdout, routeResult.Stderr),
                 runType: RunType,
                 projectId: project.ProjectId,
                 skillActionId: action.ActionId,
                 skillName: action.SkillName,
                 route: "skill-action",
-                exitCode: process.ExitCode,
-                providerBilling: providerBilling),
+                exitCode: routeResult.ExitCode,
+                providerBilling: routeResult.RawResult?.ProviderBilling),
             cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
-        return new SkillActionRunResult(runId, status, process.ExitCode, action.ActionId, action.SkillName, output.Trim(), artifacts);
+        return new SkillActionRunResult(runId, status, routeResult.ExitCode, action.ActionId, action.SkillName, output.Trim(), artifacts);
+    }
+
+    private async Task<LlmRouteResult> RunLegacyCodexProcessAsync(
+        ProjectSnapshot project,
+        string outputAbsolutePath,
+        string prompt,
+        CancellationToken cancellationToken)
+    {
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
+        var process = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
+        var output = File.Exists(outputAbsolutePath)
+            ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
+            : FirstNonEmpty(process.Stdout, process.Stderr, "");
+        var rawResult = new CodexChatClientResult(
+            process.ExitCode == 0,
+            output,
+            process.ExitCode == 0 ? null : "codex_failed",
+            process.ExitCode,
+            process.Stdout,
+            process.Stderr,
+            CodexUsageExtractor.Extract(process.Stdout, process.Stderr),
+            providerBilling);
+        return new LlmRouteResult(
+            process.ExitCode == 0,
+            output,
+            null,
+            rawResult.FailureCode,
+            process.ExitCode,
+            process.Stdout,
+            process.Stderr,
+            rawResult);
     }
 
     private HostedProcessCommand BuildCodexReadOnlyCommand(string repositoryRoot, string outputPath, string prompt)
@@ -225,6 +267,15 @@ public sealed class SkillActionService
             - 给出可执行建议、风险和下一步。
             - 不要声称已经修改代码。
             """;
+    }
+
+    private static string EnsureSkillActionPromptWorkspace(ProjectSnapshot project)
+    {
+        var repoParent = Path.GetDirectoryName(project.RepoPath);
+        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
+        var root = Path.Combine(workspaceRoot, "_phasea_llm", "skill-action");
+        Directory.CreateDirectory(root);
+        return root;
     }
 
     private static string ResolveCodexCommand()
