@@ -36,7 +36,8 @@ public sealed class PrototypeFeedbackIterationServiceTests
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
         runner.Commands[0].Arguments.Should().Contain(["-c", "model_reasoning_effort=\"high\""]);
-        string.Join("\n", runner.Commands[0].Arguments).Should().Contain("地图制作大师").And.Contain("$generate2dmap");
+        runner.Commands[0].Arguments.Last().Should().Be("-");
+        runner.Commands[0].StandardInput.Should().Contain("地图制作大师").And.Contain("$generate2dmap");
         runner.Commands[0].Environment["PHASEA_CODEX_REASONING_EFFORT"].Should().Be("high");
         run!.RunType.Should().Be("prototype-feedback-iteration");
         run.Status.Should().Be("completed");

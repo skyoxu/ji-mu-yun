@@ -165,7 +165,7 @@ public sealed class SkillActionService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
@@ -192,34 +192,13 @@ public sealed class SkillActionService
 
     private HostedProcessCommand BuildCodexReadOnlyCommand(string repositoryRoot, string outputPath, string prompt)
     {
-        var arguments = new List<string>
-        {
-            "exec",
-            "--json",
-            "--sandbox",
-            "read-only",
-            "-m",
-            "gpt-5.4",
-            "-c",
-            "approval_policy=\"never\"",
-            "-c",
-            "model_reasoning_effort=\"high\"",
-            "--cd",
+        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repositoryRoot,
-            "-o",
             outputPath,
-            prompt
-        };
-
-        return new HostedProcessCommand(
-            ResolveCodexCommand(),
-            arguments,
-            repositoryRoot,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["PHASEA_CODEX_DEFAULT_MODEL"] = "gpt-5.4",
-                ["PHASEA_CODEX_REASONING_EFFORT"] = "high"
-            });
+            prompt,
+            "gpt-5.4",
+            "high",
+            Sandbox: "read-only"));
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
@@ -239,11 +218,6 @@ public sealed class SkillActionService
         return credential.BillingKeyName is null && credential.CodexHomePath is null
             ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
             : credential;
-    }
-
-    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
-    {
-        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
     }
 
     private static string BuildPrompt(SkillActionDefinition action, ProjectSnapshot project, SkillActionRunRequest request)
@@ -276,24 +250,6 @@ public sealed class SkillActionService
         var root = Path.Combine(workspaceRoot, "_phasea_llm", "skill-action");
         Directory.CreateDirectory(root);
         return root;
-    }
-
-    private static string ResolveCodexCommand()
-    {
-        var configured = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
-        if (!string.IsNullOrWhiteSpace(configured))
-        {
-            return configured;
-        }
-
-        var candidates = new[]
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "codex.cmd"),
-            @"C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd",
-            @"C:\Users\Administrator\AppData\Roaming\npm\codex.cmd"
-        };
-
-        return candidates.FirstOrDefault(File.Exists) ?? "codex";
     }
 
     private static string FirstNonEmpty(params string?[] values)

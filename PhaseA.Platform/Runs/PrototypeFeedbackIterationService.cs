@@ -132,7 +132,7 @@ public sealed class PrototypeFeedbackIterationService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-            var codexResult = await _processRunner.RunAsync(ApplyCodexRuntime(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), runtimeCredential), timeout.Token);
+            var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, codexOutputAbsolutePath, model, project.RepoPath), runtimeCredential), timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
@@ -267,11 +267,6 @@ public sealed class PrototypeFeedbackIterationService
             : credential;
     }
 
-    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
-    {
-        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
-    }
-
     private static string BuildSubmittedFeedback(
         ProjectSnapshot project,
         string runId,
@@ -296,35 +291,12 @@ public sealed class PrototypeFeedbackIterationService
 
     private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
-        var arguments = new List<string>
-        {
-            "exec",
-            "--json",
-            "--sandbox",
-            "workspace-write",
-            "-m",
-            model,
-            "-c",
-            "approval_policy=\"never\"",
-            "-c",
-            $"model_reasoning_effort=\"{PrototypeModelPolicy.DefaultReasoningEffort}\"",
-            "--cd",
+        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repositoryRoot,
-            "-o",
             outputPath,
-            prompt
-        };
-
-        return new HostedProcessCommand(
-            ResolveCodexCommand(),
-            arguments,
-            repositoryRoot,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
-                ["PHASEA_CODEX_REASONING_EFFORT"] = PrototypeModelPolicy.DefaultReasoningEffort
-            });
+            prompt,
+            model,
+            PrototypeModelPolicy.DefaultReasoningEffort));
     }
 
     private static string BuildResultLog(
@@ -438,27 +410,6 @@ public sealed class PrototypeFeedbackIterationService
     private static string SkillModeLabel(SkillActionDefinition? skillAction)
     {
         return skillAction is null ? "普通模式" : $"{skillAction.Label} (${skillAction.SkillName})";
-    }
-
-    private static string ResolveCodexCommand()
-    {
-        var configured = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
-        if (!string.IsNullOrWhiteSpace(configured))
-        {
-            return configured;
-        }
-
-        var candidates = new[]
-        {
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "npm",
-                "codex.cmd"),
-            @"C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd",
-            @"C:\Users\Administrator\AppData\Roaming\npm\codex.cmd"
-        };
-
-        return candidates.FirstOrDefault(File.Exists) ?? "codex";
     }
 
     private static string FirstNonEmpty(params string?[] values)

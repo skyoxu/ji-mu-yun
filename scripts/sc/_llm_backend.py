@@ -105,6 +105,13 @@ def run_llm_exec(
     output_last_message: Path,
     timeout_sec: int,
     codex_configs: list[str] | None = None,
+    codex_model: str | None = None,
+    codex_json: bool = False,
+    codex_sandbox: str = "read-only",
+    codex_skip_git_repo_check: bool = False,
+    codex_output_arg: str = "--output-last-message",
+    codex_cd_arg: str = "-C",
+    codex_extra_args: list[str] | None = None,
 ) -> tuple[int, str, list[str]]:
     backend_name = resolve_llm_backend(backend)
     if backend_name == "openai-api":
@@ -158,17 +165,25 @@ def run_llm_exec(
     extra_config_args: list[str] = []
     for item in extra_config:
         extra_config_args.extend(["-c", str(item)])
+    model = str(codex_model or "").strip()
+    sandbox = str(codex_sandbox or "read-only").strip() or "read-only"
+    output_arg = str(codex_output_arg or "--output-last-message").strip() or "--output-last-message"
+    cd_arg = str(codex_cd_arg or "-C").strip() or "-C"
 
     cmd = [
         exe,
         "exec",
+        *(["--json"] if codex_json else []),
+        *(["-m", model] if model else []),
         *extra_config_args,
-        "-s",
-        "read-only",
-        "-C",
+        "--sandbox" if sandbox != "read-only" else "-s",
+        sandbox,
+        *(["--skip-git-repo-check"] if codex_skip_git_repo_check else []),
+        cd_arg,
         str(root),
-        "--output-last-message",
+        output_arg,
         str(output_last_message),
+        *[str(item) for item in (codex_extra_args or [])],
         "-",
     ]
     try:

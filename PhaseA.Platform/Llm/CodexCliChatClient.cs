@@ -44,7 +44,7 @@ public sealed class CodexCliChatClient : ICodexChatClient
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = ResolveCodexCommand(),
+            FileName = Runs.CodexHostedProcessCommandFactory.ResolveCodexCommand(),
             WorkingDirectory = projectRoot,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -198,24 +198,4 @@ public sealed class CodexCliChatClient : ICodexChatClient
         }
     }
 
-    private static string ResolveCodexCommand()
-    {
-        var configured = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
-        if (!string.IsNullOrWhiteSpace(configured))
-        {
-            return configured;
-        }
-
-        var candidates = new[]
-        {
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "npm",
-                "codex.cmd"),
-            @"C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd",
-            @"C:\Users\Administrator\AppData\Roaming\npm\codex.cmd"
-        };
-
-        return candidates.FirstOrDefault(File.Exists) ?? "codex";
-    }
 }

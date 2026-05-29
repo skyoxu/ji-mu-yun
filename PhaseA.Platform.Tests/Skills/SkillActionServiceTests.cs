@@ -35,8 +35,10 @@ public sealed class SkillActionServiceTests
         artifacts.Select(a => a.ArtifactType).Should().Contain(["skill-action-request", "skill-action-output"]);
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "read-only"]);
-        string.Join("\n", runner.Commands[0].Arguments).Should().Contain("bmad-agent-game-designer");
+        runner.Commands[0].Arguments.Last().Should().Be("-");
+        runner.Commands[0].StandardInput.Should().Contain("bmad-agent-game-designer");
         runner.Commands[0].Arguments.Should().NotContain("Focus on combat loop.$other-skill");
+        runner.Commands[0].StandardInput.Should().Contain("Focus on combat loop.");
         runner.Commands[0].WorkingDirectory.Should().Be((await store.GetProjectSnapshotAsync(projectId))!.RepoPath);
     }
 

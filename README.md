@@ -61,6 +61,22 @@ One‑liner（已在 Editor 安装 Export Templates 后）：
 - CI 工作流 `windows-quality-gate.yml` / `ci-windows.yml` 已接入 `delivery_profile` 输入，并会在 Step Summary 固化 `DeliveryProfile:` 与 `SecurityProfile:`。
 - `prototype lane` 是探索通道，不是新的 `DELIVERY_PROFILE`；它只决定工作是否进入正式任务流，不替代正式交付门禁。
 
+## AI/LLM Engine And Invocation Protocol
+
+Use these shared entrypoints for all new LLM-backed routes or scripts:
+
+- C# structured/read-only LLM: `PhaseA.Platform/Llm/LlmRouteEngine.cs` via `ILlmRouteEngine`.
+- C# executable Codex workflows: `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`.
+- Python LLM/Codex scripts: `scripts/sc/_llm_backend.py::run_llm_exec`.
+
+Protocol rules:
+
+- Do not build raw `codex exec` subprocess calls in new routes or scripts.
+- Do not pass prompts as command-line arguments. Use `codex exec ... -` with UTF-8 stdin through the shared entrypoint.
+- Use read-only mode for analysis/JSON decisions and `workspace-write` only for explicit file-changing workflows.
+- If the shared entrypoint is missing a needed option, extend that entrypoint and its tests before adding the route.
+- Keep regression coverage in `CodexHostedProcessCommandFactoryTests`, `LlmRouteEngineTests`, `scripts/sc/tests/test_llm_backend.py`, and the caller-specific test file.
+
 ## Quick Links
 
 ### Daily Ops

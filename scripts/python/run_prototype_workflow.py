@@ -15,6 +15,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+SC_DIR = Path(__file__).resolve().parents[1] / "sc"
+if str(SC_DIR) not in sys.path:
+    sys.path.insert(0, str(SC_DIR))
+
+from _llm_backend import run_llm_exec  # noqa: E402
+
 PLACEHOLDER_NEXT_STEPS = {
     "Proceed to the next prototype workflow confirmation step.",
     "Stay in prototype lane until explicitly promoted later.",
@@ -1088,21 +1094,13 @@ def _build_llm_review_prompt(payload: dict[str, Any]) -> str:
     )
 
 
-def _resolve_codex_command() -> str:
-    if sys.platform.startswith("win"):
-        return shutil.which("codex.cmd") or shutil.which("codex") or "codex"
-    return shutil.which("codex") or "codex"
+def _codex_model() -> str:
+    return str(os.environ.get("PHASEA_CODEX_DEFAULT_MODEL") or "").strip()
 
 
-def _codex_model_args() -> list[str]:
-    args: list[str] = []
-    model = str(os.environ.get("PHASEA_CODEX_DEFAULT_MODEL") or "").strip()
+def _codex_configs() -> list[str]:
     reasoning_effort = str(os.environ.get("PHASEA_CODEX_REASONING_EFFORT") or "").strip()
-    if model:
-        args.extend(["-m", model])
-    if reasoning_effort:
-        args.extend(["-c", f'model_reasoning_effort="{reasoning_effort}"'])
-    return args
+    return [f'model_reasoning_effort="{reasoning_effort}"'] if reasoning_effort else []
 
 
 def build_prototype_intake_llm_review(
@@ -1120,21 +1118,18 @@ def build_prototype_intake_llm_review(
 
     out_path = root / "logs" / "ci" / "active-prototypes" / f"{sanitize_slug(payload.get('slug') or 'prototype')}.llm-intake-review.md"
     prompt = _build_llm_review_prompt(payload)
-    cmd = [
-        _resolve_codex_command(),
-        "exec",
-        "--json",
-        *_codex_model_args(),
-        "-s",
-        "read-only",
-        "--skip-git-repo-check",
-        "-C",
-        str(root),
-        "--output-last-message",
-        str(out_path),
-        "-",
-    ]
-    rc, trace = _run_with_input(cmd, cwd=root, input_text=prompt, timeout_sec=timeout_sec)
+    rc, trace, _cmd = run_llm_exec(
+        backend="codex-cli",
+        root=root,
+        prompt=prompt,
+        output_last_message=out_path,
+        timeout_sec=timeout_sec,
+        codex_model=_codex_model(),
+        codex_configs=_codex_configs(),
+        codex_json=True,
+        codex_sandbox="read-only",
+        codex_skip_git_repo_check=True,
+    )
     if rc != 0:
         return {"engine": engine, "status": "failed", "rc": rc, "trace": trace[-2000:]}
     review_text = out_path.read_text(encoding="utf-8") if out_path.exists() else trace
@@ -1222,44 +1217,6 @@ def _run(cmd: list[str], *, cwd: Path) -> tuple[int, str]:
         check=False,
     )
     return proc.returncode or 0, proc.stdout or ""
-
-
-def _run_with_input(cmd: list[str], *, cwd: Path, input_text: str, timeout_sec: int) -> tuple[int, str]:
-    try:
-        proc = subprocess.run(
-            cmd,
-            input=input_text,
-            cwd=str(cwd),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-            check=False,
-            timeout=timeout_sec,
-        )
-    except subprocess.TimeoutExpired:
-        return 124, "codex exec timeout\n"
-    except Exception as exc:  # noqa: BLE001
-        return 1, f"codex exec failed to start: {exc}\n"
-    return proc.returncode or 0, proc.stdout or ""
-
-
-def _resolve_codex_command() -> str:
-    if sys.platform.startswith("win"):
-        return shutil.which("codex.cmd") or shutil.which("codex") or "codex"
-    return shutil.which("codex") or "codex"
-
-
-def _codex_model_args() -> list[str]:
-    args: list[str] = []
-    model = str(os.environ.get("PHASEA_CODEX_DEFAULT_MODEL") or "").strip()
-    reasoning_effort = str(os.environ.get("PHASEA_CODEX_REASONING_EFFORT") or "").strip()
-    if model:
-        args.extend(["-m", model])
-    if reasoning_effort:
-        args.extend(["-c", f'model_reasoning_effort="{reasoning_effort}"'])
-    return args
 
 
 def _prototype_record_path(*, root: Path, slug: str) -> Path:
@@ -2284,28 +2241,25 @@ def _run_day4_codex_implementation(*, root: Path, payload: dict[str, Any], recor
     out_path = root / "logs" / "ci" / today_str() / f"prototype-implementation-{sanitize_slug(payload.get('slug') or 'prototype')}" / "codex-output.txt"
     ensure_dir(out_path.parent)
     prompt = _build_implementation_prompt(payload=payload, record_file=record_file, default_scene=default_scene)
-    cmd = [
-        _resolve_codex_command(),
-        "exec",
-        "--json",
-        *_codex_model_args(),
-        "--sandbox",
-        "workspace-write",
-        "--skip-git-repo-check",
-        "-c",
-        'approval_policy="never"',
-        "--cd",
-        str(root),
-        "-o",
-        str(out_path),
-        prompt,
-    ]
     env_overrides = {
         "GIT_CEILING_DIRECTORIES": str(root),
         "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1",
     }
     with _temporary_env(env_overrides):
-        rc, trace = _run(cmd, cwd=root)
+        rc, trace, _cmd = run_llm_exec(
+            backend="codex-cli",
+            root=root,
+            prompt=prompt,
+            output_last_message=out_path,
+            timeout_sec=1800,
+            codex_model=_codex_model(),
+            codex_configs=[*_codex_configs(), 'approval_policy="never"'],
+            codex_json=True,
+            codex_sandbox="workspace-write",
+            codex_skip_git_repo_check=True,
+            codex_output_arg="-o",
+            codex_cd_arg="--cd",
+        )
     output = ""
     if path_exists(out_path):
         output = read_text(out_path, errors="ignore")

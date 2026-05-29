@@ -162,6 +162,16 @@ This file is the repository map. It routes you to the right source document by t
 - CI should emit both `DeliveryProfile: <...>` and `SecurityProfile: <...>` in Step Summary.
 - Host boundary rules stay hard in all profiles: `res://` and `user://` only, HTTPS only, `ALLOWED_EXTERNAL_HOSTS`, `GD_OFFLINE_MODE`, no dynamic external code loading.
 
+## LLM Engine And Invocation Protocol Index
+- New Phase A routes, services, scripts, and workflow helpers must use the shared LLM/Codex entrypoints below instead of constructing provider calls or `codex exec` commands locally.
+- C# structured/read-only LLM calls must use `PhaseA.Platform/Llm/LlmRouteEngine.cs` through `ILlmRouteEngine`. Current callers include chat, draft import/coverage, asset inventory judgement, iteration planning/evaluation, repair-plan generation, and skill-action read-only output.
+- C# executable Codex workflows must use `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`. This is the only place that should construct executable Codex `HostedProcessCommand` arguments, resolve `PHASEA_CODEX_COMMAND`, set `PHASEA_CODEX_DEFAULT_MODEL` / `PHASEA_CODEX_REASONING_EFFORT`, choose `read-only` vs `workspace-write`, and attach stdin prompts.
+- Python LLM/Codex scripts must use `scripts/sc/_llm_backend.py::run_llm_exec` or a thin wrapper that delegates to it. This includes `scripts/python/run_prototype_workflow.py` and `scripts/sc/**` LLM helpers.
+- Prompt transport protocol is stdin-first: use `codex exec ... -` with UTF-8 stdin, never append large prompts as command-line arguments. For output, use the shared helper options for `--output-last-message` or `-o`.
+- Pure analysis or JSON-only decisions should remain read-only and schema/JSON parsed through the route engine or script backend. File-changing workflows must stay on explicit executable routes with `workspace-write` and existing acceptance/smoke validation.
+- If a new route needs model, reasoning effort, sandbox, output path, billing, credential, or retry behavior that the shared entrypoint cannot express, extend the shared entrypoint and its tests first; do not fork local subprocess logic.
+- Required regression coverage for protocol changes: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and the route-specific tests for the caller being changed.
+
 ## Phase A Runtime Ops
 - Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
 - Stable public reverse-proxy entry is `http://47.86.160.138:8080`.

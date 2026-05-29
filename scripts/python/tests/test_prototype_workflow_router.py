@@ -346,7 +346,7 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            with mock.patch.object(module, "_run_with_input", return_value=(0, json.dumps(fake_review, ensure_ascii=False))):
+            with mock.patch.object(module, "run_llm_exec", return_value=(0, json.dumps(fake_review, ensure_ascii=False), ["codex", "exec", "-"])):
                 review = module.build_prototype_intake_llm_review(
                     payload,
                     root=root,
@@ -373,14 +373,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         )
         calls = []
 
-        def fake_run_with_input(cmd, *, cwd, input_text, timeout_sec):
-            calls.append(cmd)
-            return 0, '{"total_score": 30, "max_score": 50, "recommendation": "market-cautious", "dimensions": [], "top_gaps": []}'
+        def fake_run_llm_exec(**kwargs):
+            calls.append(kwargs)
+            return 0, '{"total_score": 30, "max_score": 50, "recommendation": "market-cautious", "dimensions": [], "top_gaps": []}', ["codex", "exec", "-"]
 
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             with mock.patch.dict(os.environ, {"PHASEA_CODEX_DEFAULT_MODEL": "gpt-5.5", "PHASEA_CODEX_REASONING_EFFORT": "high"}):
-                with mock.patch.object(module, "_run_with_input", side_effect=fake_run_with_input):
+                with mock.patch.object(module, "run_llm_exec", side_effect=fake_run_llm_exec):
                     review = module.build_prototype_intake_llm_review(
                         payload,
                         root=root,
@@ -390,18 +390,12 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 
         self.assertEqual("ok", review["status"])
         self.assertTrue(calls)
-        self.assertIn("-m", calls[0])
-        self.assertIn("gpt-5.5", calls[0])
-        self.assertIn("-c", calls[0])
-        self.assertIn('model_reasoning_effort="high"', calls[0])
-
-    def test_resolve_codex_command_should_prefer_windows_cmd_wrapper(self) -> None:
-        module = _load_module("prototype_workflow_router_codex_cmd", "scripts/python/run_prototype_workflow.py")
-
-        with mock.patch.object(module.shutil, "which", side_effect=lambda name: {"codex.cmd": r"C:\npm\codex.cmd", "codex": r"C:\npm\codex"}.get(name)):
-            resolved = module._resolve_codex_command()
-
-        self.assertEqual(r"C:\npm\codex.cmd", resolved)
+        self.assertEqual("codex-cli", calls[0]["backend"])
+        self.assertEqual("gpt-5.5", calls[0]["codex_model"])
+        self.assertEqual(['model_reasoning_effort="high"'], calls[0]["codex_configs"])
+        self.assertTrue(calls[0]["codex_json"])
+        self.assertEqual("read-only", calls[0]["codex_sandbox"])
+        self.assertTrue(calls[0]["codex_skip_git_repo_check"])
 
     def test_day4_codex_nonzero_should_continue_when_outputs_are_valid(self) -> None:
         module = _load_module("prototype_workflow_router_day4_recover", "scripts/python/run_prototype_workflow.py")
@@ -427,12 +421,15 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 
             out_path = root / "logs" / "ci" / module.today_str() / "prototype-implementation-phase-a-real-e2e-loop" / "codex-output.txt"
 
-            def fake_run(cmd, *, cwd):
+            codex_calls: list[dict[str, object]] = []
+
+            def fake_run_llm_exec(**kwargs):
+                codex_calls.append(kwargs)
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 out_path.write_text("Day 4 implementation completed.\n", encoding="utf-8")
-                return 1, "tool failed but files are already valid\n"
+                return 1, "tool failed but files are already valid\n", ["codex", "exec", "-"]
 
-            with mock.patch.object(module, "_run", side_effect=fake_run):
+            with mock.patch.object(module, "run_llm_exec", side_effect=fake_run_llm_exec):
                 rc, output = module._run_day4_codex_implementation(
                     root=root,
                     payload={"slug": slug, "success_criteria": ["done"]},
@@ -442,6 +439,10 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual(0, rc)
         self.assertIn("Day 4 implementation completed.", output)
         self.assertIn("DAY4_IMPLEMENTATION_RECOVERED codex_exit_code=1", output)
+        self.assertEqual("workspace-write", codex_calls[0]["codex_sandbox"])
+        self.assertEqual("-o", codex_calls[0]["codex_output_arg"])
+        self.assertEqual("--cd", codex_calls[0]["codex_cd_arg"])
+        self.assertIn("prototype lane 的 Day 4 最小实现步骤", str(codex_calls[0]["prompt"]))
 
     def test_day4_codex_should_apply_fallback_when_only_scaffold_script_remains(self) -> None:
         module = _load_module("prototype_workflow_router_day4_fallback", "scripts/python/run_prototype_workflow.py")
@@ -479,11 +480,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
 
             out_path = root / "logs" / "ci" / module.today_str() / "prototype-implementation-phase-a-real-e2e-loop" / "codex-output.txt"
 
-            def fake_run(cmd, *, cwd):
-                module.write_text(out_path, "Day 4 implementation incomplete.\n")
-                return 0, "codex left scaffold in place\n"
+            codex_calls: list[dict[str, object]] = []
 
-            with mock.patch.object(module, "_run", side_effect=fake_run):
+            def fake_run_llm_exec(**kwargs):
+                codex_calls.append(kwargs)
+                module.write_text(out_path, "Day 4 implementation incomplete.\n")
+                return 0, "codex left scaffold in place\n", ["codex", "exec", "-"]
+
+            with mock.patch.object(module, "run_llm_exec", side_effect=fake_run_llm_exec):
                 rc, output = module._run_day4_codex_implementation(
                     root=root,
                     payload={"slug": slug, "success_criteria": ["done"]},
@@ -496,6 +500,9 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertIn("DAY4_IMPLEMENTATION_FALLBACK applied=minimal_runtime_script", output)
         self.assertIn("EnsureRuntimeUi", rewritten)
         self.assertNotIn("Prototype scaffold ready: replace this scene with the minimum playable loop.", rewritten)
+        self.assertEqual("workspace-write", codex_calls[0]["codex_sandbox"])
+        self.assertEqual("-o", codex_calls[0]["codex_output_arg"])
+        self.assertIn("prototype lane 的 Day 4 最小实现步骤", str(codex_calls[0]["prompt"]))
 
     def test_confirmation_message_should_tolerate_non_dict_llm_dimensions(self) -> None:
         module = _load_module("prototype_workflow_router_confirmation_llm_shape", "scripts/python/run_prototype_workflow.py")

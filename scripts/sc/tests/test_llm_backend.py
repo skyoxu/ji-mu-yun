@@ -82,6 +82,39 @@ class LlmBackendTests(unittest.TestCase):
         self.assertIn('model_reasoning_effort="low"', cmd)
         run_mock.assert_called_once()
 
+    def test_run_llm_exec_should_support_workspace_write_codex_protocol(self) -> None:
+        proc = subprocess.CompletedProcess(args=["codex"], returncode=0, stdout="ok", stderr="")
+        with mock.patch.object(llm_backend.shutil, "which", return_value="codex"), mock.patch.object(
+            llm_backend.subprocess, "run", return_value=proc
+        ) as run_mock:
+            rc, out, cmd = llm_backend.run_llm_exec(
+                backend="codex-cli",
+                root=REPO_ROOT,
+                prompt="hello",
+                output_last_message=REPO_ROOT / "codex-output.txt",
+                timeout_sec=10,
+                codex_model="gpt-5.5",
+                codex_configs=['model_reasoning_effort="high"', 'approval_policy="never"'],
+                codex_json=True,
+                codex_sandbox="workspace-write",
+                codex_skip_git_repo_check=True,
+                codex_output_arg="-o",
+                codex_cd_arg="--cd",
+            )
+
+        self.assertEqual(0, rc)
+        self.assertEqual("ok", out)
+        self.assertIn("--json", cmd)
+        self.assertIn("gpt-5.5", cmd)
+        self.assertIn("--sandbox", cmd)
+        self.assertIn("workspace-write", cmd)
+        self.assertIn("--skip-git-repo-check", cmd)
+        self.assertIn("--cd", cmd)
+        self.assertIn("-o", cmd)
+        self.assertEqual("-", cmd[-1])
+        run_mock.assert_called_once()
+        self.assertEqual("hello", run_mock.call_args.kwargs["input"])
+
     def test_run_llm_exec_should_invoke_openai_backend_and_write_output(self) -> None:
         class _FakeResponses:
             def create(self, **kwargs):

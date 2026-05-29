@@ -234,15 +234,14 @@ class OverlayGeneratorPromptingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             out_last_message = Path(tmp_dir) / "nested" / "page.output.json"
 
-            class FakeCompletedProcess:
-                def __init__(self) -> None:
-                    self.returncode = 0
-                    self.stdout = "ok"
+            calls = []
 
-            with (
-                patch.object(prompting.shutil, "which", return_value="C:/fake/codex.cmd"),
-                patch.object(prompting.subprocess, "run", return_value=FakeCompletedProcess()),
-            ):
+            def fake_run_llm_exec(**kwargs):
+                calls.append(kwargs)
+                kwargs["output_last_message"].parent.mkdir(parents=True, exist_ok=True)
+                return 0, "ok", ["codex", "exec", "-"]
+
+            with patch.object(prompting, "run_llm_exec", side_effect=fake_run_llm_exec):
                 rc, trace_out, cmd = prompting.run_codex_exec(
                     repo_root=Path(tmp_dir),
                     prompt="{}",
@@ -253,7 +252,11 @@ class OverlayGeneratorPromptingTests(unittest.TestCase):
             self.assertEqual(0, rc)
             self.assertEqual("ok", trace_out)
             self.assertTrue(out_last_message.parent.exists())
-            self.assertIn(str(out_last_message), cmd)
+            self.assertEqual(["codex", "exec", "-"], cmd)
+            self.assertEqual("codex-cli", calls[0]["backend"])
+            self.assertEqual(Path(tmp_dir), calls[0]["root"])
+            self.assertEqual("{}", calls[0]["prompt"])
+            self.assertEqual(out_last_message, calls[0]["output_last_message"])
 
 
 if __name__ == "__main__":

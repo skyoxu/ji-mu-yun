@@ -138,7 +138,7 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(project.RepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -532,7 +532,7 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-        var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(projectRepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -640,7 +640,7 @@ public sealed class PrototypeWorkflowService
         try
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
-            process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), timeout.Token);
+            process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), timeout.Token);
         }
         catch (OperationCanceledException)
         {
@@ -728,7 +728,7 @@ public sealed class PrototypeWorkflowService
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
             codexResult = await _processRunner.RunAsync(
-                ApplyCodexRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
                 timeout.Token);
         }
         catch (OperationCanceledException)
@@ -816,65 +816,16 @@ public sealed class PrototypeWorkflowService
 
     private HostedProcessCommand BuildCodexRepairCommand(string prompt, string outputPath, string model, string repositoryRoot)
     {
-        return new HostedProcessCommand(
-            ResolveCodexCommand(),
-            [
-                "exec",
-                "--json",
-                "--sandbox",
-                "workspace-write",
-                "-m",
-                model,
-                "-c",
-                "approval_policy=\"never\"",
-                "-c",
-                $"model_reasoning_effort=\"{RepairReasoningEffort}\"",
-                "--cd",
-                repositoryRoot,
-                "-o",
-                outputPath,
-                "-"
-            ],
+        return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repositoryRoot,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            outputPath,
+            prompt,
+            model,
+            RepairReasoningEffort,
+            ExtraEnvironment: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["PHASEA_CODEX_DEFAULT_MODEL"] = model,
-                ["PHASEA_CODEX_REASONING_EFFORT"] = RepairReasoningEffort,
-                ["PATH"] = ResolveCodexPath()
-            },
-            prompt);
-    }
-
-    private static string ResolveCodexPath()
-    {
-        var currentPath = Environment.GetEnvironmentVariable("PATH") ?? "";
-        var configuredRipgrepDir = Environment.GetEnvironmentVariable("PHASEA_RIPGREP_DIR");
-        var defaultRipgrepDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "npm",
-            "node_modules",
-            "@openai",
-            "codex",
-            "node_modules",
-            "@openai",
-            "codex-win32-x64",
-            "vendor",
-            "x86_64-pc-windows-msvc",
-            "path");
-        var ripgrepDir = !string.IsNullOrWhiteSpace(configuredRipgrepDir)
-            ? configuredRipgrepDir
-            : defaultRipgrepDir;
-        if (!Directory.Exists(ripgrepDir))
-        {
-            return currentPath;
-        }
-
-        var paths = currentPath.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return paths.Contains(ripgrepDir, StringComparer.OrdinalIgnoreCase)
-            ? currentPath
-            : string.IsNullOrWhiteSpace(currentPath)
-                ? ripgrepDir
-                : $"{ripgrepDir}{Path.PathSeparator}{currentPath}";
+                ["PATH"] = CodexHostedProcessCommandFactory.ResolvePathWithRipgrep()
+            }));
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)
@@ -901,11 +852,6 @@ public sealed class PrototypeWorkflowService
         return credential.BillingKeyName is null && credential.CodexHomePath is null
             ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
             : credential;
-    }
-
-    private static HostedProcessCommand ApplyCodexRuntime(HostedProcessCommand command, AiCodeMirrorRuntimeCredential credential)
-    {
-        return command with { Environment = CodexRuntimeEnvironment.Merge(command.Environment, credential) };
     }
 
     private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
@@ -1305,12 +1251,6 @@ public sealed class PrototypeWorkflowService
         }
 
         return null;
-    }
-
-    private static string ResolveCodexCommand()
-    {
-        var configured = Environment.GetEnvironmentVariable("PHASEA_CODEX_COMMAND");
-        return string.IsNullOrWhiteSpace(configured) ? "codex" : configured;
     }
 
     private static string ResolvePrototypeSlug(string repositoryRoot, string prototypeRecordPath, string fallbackSlug)

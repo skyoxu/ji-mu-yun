@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import json
-import shutil
-import subprocess
 from pathlib import Path
 from typing import Any
 
+from _llm_backend import run_llm_exec
 from _overlay_generator_contract import REQUIRED_CHECKLIST_HEADINGS
 from _overlay_generator_support import extract_json_object
 
@@ -246,38 +245,13 @@ def build_overlay_page_patch_prompt(
 
 
 def run_codex_exec(*, repo_root: Path, prompt: str, out_last_message: Path, timeout_sec: int) -> tuple[int, str, list[str]]:
-    exe = shutil.which("codex")
-    if not exe:
-        return 127, "codex executable not found in PATH\n", ["codex"]
-    out_last_message.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [
-        exe,
-        "exec",
-        "-s",
-        "read-only",
-        "-C",
-        str(repo_root),
-        "--output-last-message",
-        str(out_last_message),
-        "-",
-    ]
-    try:
-        proc = subprocess.run(
-            cmd,
-            input=prompt,
-            text=True,
-            encoding="utf-8",
-            errors="ignore",
-            cwd=str(repo_root),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=timeout_sec,
-        )
-    except subprocess.TimeoutExpired:
-        return 124, "codex exec timeout\n", cmd
-    except Exception as exc:  # noqa: BLE001
-        return 1, f"codex exec failed to start: {exc}\n", cmd
-    return proc.returncode or 0, proc.stdout or "", cmd
+    return run_llm_exec(
+        backend="codex-cli",
+        root=repo_root,
+        prompt=prompt,
+        output_last_message=out_last_message,
+        timeout_sec=timeout_sec,
+    )
 
 
 def parse_and_validate_plan(
