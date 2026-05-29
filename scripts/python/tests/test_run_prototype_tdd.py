@@ -39,6 +39,67 @@ class PrototypeTddTests(unittest.TestCase):
             resolved,
         )
 
+    def test_dotnet_build_hygiene_removes_target_project_generated_dirs_only(self) -> None:
+        module = _load_module("run_prototype_tdd_hygiene_test_module", "scripts/python/run_prototype_tdd.py")
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            project_dir = repo_root / "Game.Core"
+            test_project_dir = repo_root / "Game.Core.Tests"
+            other_dir = repo_root / "Other.Project"
+            (project_dir / "obj").mkdir(parents=True)
+            (project_dir / "bin").mkdir(parents=True)
+            (project_dir / "buildcache").mkdir(parents=True)
+            (project_dir / "Game.Core.csproj").write_text("<Project />", encoding="utf-8")
+            (test_project_dir / "obj").mkdir(parents=True)
+            (test_project_dir / "bin").mkdir(parents=True)
+            (test_project_dir / "Game.Core.Tests.csproj").write_text(
+                '<Project><ItemGroup><ProjectReference Include="..\\Game.Core\\Game.Core.csproj" /></ItemGroup></Project>',
+                encoding="utf-8",
+            )
+            (other_dir / "obj").mkdir(parents=True)
+            (other_dir / "buildcache").mkdir(parents=True)
+            (other_dir / "Other.Project.csproj").write_text("<Project />", encoding="utf-8")
+
+            result = module._dotnet_build_hygiene(repo_root, ["Game.Core.Tests/Game.Core.Tests.csproj"])
+
+            self.assertTrue(result["enabled"])
+            self.assertEqual(
+                sorted(result["cleaned_paths"]),
+                [
+                    "Game.Core.Tests/bin",
+                    "Game.Core.Tests/obj",
+                    "Game.Core/bin",
+                    "Game.Core/buildcache",
+                    "Game.Core/obj",
+                ],
+            )
+            self.assertFalse((project_dir / "obj").exists())
+            self.assertFalse((project_dir / "bin").exists())
+            self.assertFalse((project_dir / "buildcache").exists())
+            self.assertFalse((test_project_dir / "obj").exists())
+            self.assertFalse((test_project_dir / "bin").exists())
+            self.assertTrue((other_dir / "obj").exists())
+            self.assertTrue((other_dir / "buildcache").exists())
+
+    def test_main_accepts_relative_out_dir(self) -> None:
+        module = _load_module("run_prototype_tdd_relative_out_test_module", "scripts/python/run_prototype_tdd.py")
+        with tempfile.TemporaryDirectory() as td:
+            repo_root = Path(td)
+            with mock.patch.object(module, "repo_root", return_value=repo_root):
+                rc = module.main([
+                    "--slug",
+                    "demo",
+                    "--stage",
+                    "green",
+                    "--create-record-only",
+                    "--skip-record",
+                    "--out-dir",
+                    "logs/ci/demo-out",
+                ])
+
+            self.assertEqual(rc, 0)
+            self.assertTrue((repo_root / "logs" / "ci" / "demo-out" / "summary.json").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

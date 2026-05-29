@@ -31,6 +31,34 @@ def _load_module(name: str, relative_path: str):
     return module
 
 
+def _rpg_battle_scene_contract_nodes() -> str:
+    return (
+        "[node name=\"BattleStatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/BattleScene\"]\n"
+        "[node name=\"BattleLogLabel\" type=\"Label\" parent=\"CanvasLayer/UI/BattleScene\"]\n"
+        "[node name=\"ActionsVBox\" type=\"VBoxContainer\" parent=\"CanvasLayer/UI/BattleScene\"]\n"
+        "[node name=\"AttackButton\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/ActionsVBox\"]\n"
+        "[node name=\"RetryButton\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/ActionsVBox\"]\n"
+        "[node name=\"RewardVBox\" type=\"VBoxContainer\" parent=\"CanvasLayer/UI/BattleScene\"]\n"
+        "[node name=\"RewardInfoLabel\" type=\"Label\" parent=\"CanvasLayer/UI/BattleScene/RewardVBox\"]\n"
+        "[node name=\"RewardButton1\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/RewardVBox\"]\n"
+        "[node name=\"RewardButton2\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/RewardVBox\"]\n"
+        "[node name=\"RewardButton3\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/RewardVBox\"]\n"
+    )
+
+
+def _rpg_battle_script_contract_bindings() -> str:
+    return (
+        "GetNode<Label>(\"CanvasLayer/UI/BattleScene/BattleStatusLabel\"); "
+        "GetNode<Label>(\"CanvasLayer/UI/BattleScene/BattleLogLabel\"); "
+        "GetNode<Button>(\"CanvasLayer/UI/BattleScene/ActionsVBox/AttackButton\"); "
+        "GetNode<Button>(\"CanvasLayer/UI/BattleScene/ActionsVBox/RetryButton\"); "
+        "GetNode<Label>(\"CanvasLayer/UI/BattleScene/RewardVBox/RewardInfoLabel\"); "
+        "GetNode<Button>(\"CanvasLayer/UI/BattleScene/RewardVBox/RewardButton1\"); "
+        "GetNode<Button>(\"CanvasLayer/UI/BattleScene/RewardVBox/RewardButton2\"); "
+        "GetNode<Button>(\"CanvasLayer/UI/BattleScene/RewardVBox/RewardButton3\"); "
+    )
+
+
 class PrototypeWorkflowRouterTests(unittest.TestCase):
     def test_configure_stdio_utf8_should_reconfigure_stdout_and_stderr(self) -> None:
         module = _load_module("prototype_workflow_router_stdio", "scripts/python/run_prototype_workflow.py")
@@ -839,11 +867,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                 "[node name=\"StatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
-                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                + _rpg_battle_scene_contract_nodes(),
                 encoding="utf-8",
             )
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
-                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); "
+                    + _rpg_battle_script_contract_bindings()
+                    + "}\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
                 encoding="utf-8",
             )
             (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
@@ -885,11 +916,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                 "[node name=\"RpgMapAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
-                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                + _rpg_battle_scene_contract_nodes(),
                 encoding="utf-8",
             )
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
-                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); "
+                    + _rpg_battle_script_contract_bindings()
+                    + "}\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
                 encoding="utf-8",
             )
             (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
@@ -971,11 +1005,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                 "[node name=\"StatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
-                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                + _rpg_battle_scene_contract_nodes(),
             )
             module.write_text(
                 root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs",
-                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\nnamespace Game.Godot.Prototypes;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); "
+                    + _rpg_battle_script_contract_bindings()
+                    + "}\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
             )
             module.write_text(
                 root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs",
@@ -1758,11 +1795,14 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                 "[node name=\"StatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgPlayerAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
                 "[node name=\"RpgEnemyAsset\" type=\"ColorRect\" parent=\"CanvasLayer/UI/MapScene\"]\n"
-                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n",
+                "[node name=\"BattleScene\" type=\"Control\" parent=\"CanvasLayer/UI\"]\n"
+                + _rpg_battle_scene_contract_nodes(),
                 encoding="utf-8",
             )
             (root / "Game.Godot" / "Prototypes" / "dq-rpg" / "Scripts" / f"{class_name}.cs").write_text(
-                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); }\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
+                "using Godot;\n\npublic partial class DqRpgPrototype : Node2D\n{\n    private Button? _retryButton;\n    private string _rewardText = \"reward\";\n    private void BindNodes() { GetNode<Control>(\"CanvasLayer/UI/MapScene\"); GetNode<Control>(\"CanvasLayer/UI/BattleScene\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/Title\"); GetNode<Label>(\"CanvasLayer/UI/MapScene/StatusLabel\"); GetNode<Button>(\"CanvasLayer/UI/StartPanel/StartVBox/StartButton\").Text = \"Start Adventure\"; GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgMapAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgPlayerAsset\"); GetNode<ColorRect>(\"CanvasLayer/UI/MapScene/RpgEnemyAsset\"); "
+                    + _rpg_battle_script_contract_bindings()
+                    + "}\n    private void ReadMovementInput() { }\n    private void StartEncounter() { }\n    private void Attack() { }\n    private void Restart() { }\n}\n",
                 encoding="utf-8",
             )
             (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(

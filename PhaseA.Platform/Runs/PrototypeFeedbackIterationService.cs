@@ -59,10 +59,12 @@ public sealed class PrototypeFeedbackIterationService
     }
 
     public async Task<PrototypeFeedbackResult> SubmitAsync(
+        string accountId,
         string projectId,
         PrototypeFeedbackRequest request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
@@ -73,7 +75,7 @@ public sealed class PrototypeFeedbackIterationService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

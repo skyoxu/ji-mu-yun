@@ -203,6 +203,26 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task GetProjectRunsForAccountAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var owner = await store.EnsureSingleAdminAsync();
+        var other = await store.CreateUserAccountAsync("runs-readback-other", 1);
+        var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
+        var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
+        var service = new ArtifactReadbackService(store, options);
+
+        var result = await service.GetProjectRunsForAccountAsync(other.AccountId, ownerProject);
+
+        result.Should().BeNull();
+        (await service.GetProjectRunsForAccountAsync(owner, ownerProject))!.Runs.Should().Contain(run => run.RunId == ownerRun);
+    }
+
+    [Fact]
     public async Task Readback_ReturnsAccountScopedLlmUsage()
     {
         using var database = TempSqliteDatabase.Create();

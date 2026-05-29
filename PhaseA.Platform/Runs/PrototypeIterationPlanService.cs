@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
@@ -30,6 +31,12 @@ public sealed class PrototypeIterationPlanService
         "GdUnit",
         "Godot/GdUnit"
     ];
+    private static readonly CodexChatClientOptions PlanningCodexOptions = new(
+        IgnoreRules: true,
+        ReasoningEffort: "minimal");
+    private static readonly string PlanningAnalysisSchemaPath = EnsurePlanningAnalysisSchemaFile();
+    private static readonly string GoalPlanSchemaPath = EnsureGoalPlanSchemaFile();
+    private static readonly string EvaluationSchemaPath = EnsureEvaluationSchemaFile();
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
@@ -144,7 +151,9 @@ public sealed class PrototypeIterationPlanService
             }).ToArray(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-        return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis);
+
+        var evaluation = await EvaluateAsync(accountId, projectId, ToPrototypeProgress(planningContext), cancellationToken);
+        return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis, evaluation);
     }
 
     private async Task<List<PrototypeIterationPlanGoalResult>> BuildGoalsForProjectAsync(
@@ -157,13 +166,9 @@ public sealed class PrototypeIterationPlanService
     {
         if (PrototypeRouteSkillPolicy.IsRpgProject(project))
         {
-            var planned = await TryBuildRpgGoalsFromModelAsync(project, planningContext, message, cancellationToken);
-            if (planned.Count > 0)
-            {
-                return planned;
-            }
-
-            return BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext);
+            var scaffold = BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext);
+            var refined = await TryRefineRpgGoalsWithModelAsync(project, planningContext, message, scaffold, cancellationToken);
+            return refined.Count > 0 ? refined : scaffold;
         }
 
         var goals = BuildGoals(message, sourceKind);
@@ -210,10 +215,13 @@ public sealed class PrototypeIterationPlanService
         }
 
         var modelPrompt = BuildPlanningAnalysisPrompt(project, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
+        var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var completion = await _codexChatClient.CompleteAsync(
-            project.RepoPath,
+            promptRoot,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             modelPrompt,
+            options,
             billingApiKeyName: project.AccountId,
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
@@ -231,10 +239,11 @@ public sealed class PrototypeIterationPlanService
         };
     }
 
-    private async Task<List<PrototypeIterationPlanGoalResult>> TryBuildRpgGoalsFromModelAsync(
+    private async Task<List<PrototypeIterationPlanGoalResult>> TryRefineRpgGoalsWithModelAsync(
         ProjectSnapshot project,
         IterationPlanningContext planningContext,
         string message,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
         CancellationToken cancellationToken)
     {
         if (_codexChatClient is null)
@@ -242,11 +251,14 @@ public sealed class PrototypeIterationPlanService
             return [];
         }
 
-        var prompt = BuildRpgGoalPrompt(project, planningContext, message);
+        var prompt = BuildRpgGoalRefinementPrompt(project, planningContext, message, scaffold);
+        var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
+        var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var completion = await _codexChatClient.CompleteAsync(
-            project.RepoPath,
+            promptRoot,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             prompt,
+            options,
             billingApiKeyName: project.AccountId,
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
@@ -254,7 +266,7 @@ public sealed class PrototypeIterationPlanService
             return [];
         }
 
-        return ParseGoalPlan(completion.AssistantMessage);
+        return ParseRefinedRpgGoalPlan(completion.AssistantMessage, scaffold);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgGoalsFromContext(
@@ -301,7 +313,14 @@ public sealed class PrototypeIterationPlanService
 
         goals.Add(new PrototypeIterationPlanGoalResult(
             4,
-            "RPG Step 4: reward 3-choice and return-to-map validation",
+            "RPG Step 4: main prototype scene and scene switching validation",
+            "把主原型入口、MapScene、BattleScene 与返回路径的串联单独作为一步验证，确认当前 prototype 不是只在局部场景可用，而是能从真实入口完成场景切换。",
+            "完成并验证：主原型场景能从 Start Adventure 进入地图、从地图进入战斗，并在结算后回到正确的 RPG 流程场景。",
+            "pending"));
+
+        goals.Add(new PrototypeIterationPlanGoalResult(
+            5,
+            "RPG Step 5: reward 3-choice and return-to-map validation",
             "把奖励 3 选 1 作为独立 step 验证：胜利后出现三个奖励选项，选择后状态发生变化，并回到地图继续闭环。",
             "完成并验证：reward 3-choice、state change、return-to-map loop 全部成立。",
             "pending"));
@@ -309,8 +328,8 @@ public sealed class PrototypeIterationPlanService
         if (missingWinFail)
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                5,
-                "RPG Step 5: win/fail condition visibility and consistency",
+                6,
+                "RPG Step 6: win/fail condition visibility and consistency",
                 "把需求表单中的胜利/失败条件明确暴露给玩家，并校验提示文案与实际玩法结算一致。",
                 "完成并验证：玩家可以从界面或流程中清楚理解当前 prototype 的胜负条件。",
                 "pending"));
@@ -318,8 +337,8 @@ public sealed class PrototypeIterationPlanService
         else if (missingRewards)
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                5,
-                "RPG Step 5: reward understanding evidence polish",
+                6,
+                "RPG Step 6: reward understanding evidence polish",
                 "在奖励闭环已经跑通的基础上，补齐玩家可见的奖励理解证据和前台反馈，避免奖励效果只在内部状态里存在。",
                 "完成并验证：奖励差异、选择结果和回到地图后的变化都能被玩家直接看懂。",
                 "pending"));
@@ -327,8 +346,8 @@ public sealed class PrototypeIterationPlanService
         else
         {
             goals.Add(new PrototypeIterationPlanGoalResult(
-                5,
-                "RPG Step 5: polish user-facing readability",
+                6,
+                "RPG Step 6: polish user-facing readability",
                 "修正 completion、sidecar、提示信息中的乱码或表达不清问题，让前台和日志证据都可直接阅读。",
                 "完成并验证：关键中文产物可读，前台反馈与日志摘要一致。",
                 "pending"));
@@ -415,6 +434,8 @@ public sealed class PrototypeIterationPlanService
             field, status, evidence, missingReason
 
             Rules:
+            - Use only the data provided in this prompt.
+            - Do not read files, inspect the repository, call tools, or ask for more context.
             - status must be one of completed, partial, missing.
             - Judge completion against the current prototype result, not only the form text.
             - Focus on prototype-form fields, map/battle/reward loop, and win/fail expectations for RPG.
@@ -444,7 +465,11 @@ public sealed class PrototypeIterationPlanService
             """;
     }
 
-    private static string BuildRpgGoalPrompt(ProjectSnapshot project, IterationPlanningContext planningContext, string message)
+    private static string BuildRpgGoalRefinementPrompt(
+        ProjectSnapshot project,
+        IterationPlanningContext planningContext,
+        string message,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
     {
         var analysisJson = JsonSerializer.Serialize(new
         {
@@ -456,22 +481,34 @@ public sealed class PrototypeIterationPlanService
             planningContext.TemplateId,
             fieldCoverage = planningContext.FieldCoverage
         });
+        var scaffoldJson = JsonSerializer.Serialize(scaffold.Select(goal => new
+        {
+            goal.GoalIndex,
+            goal.Title,
+            goal.Description,
+            goal.AcceptanceHint
+        }).ToArray());
 
         return $"""
-            You are generating an iteration plan for an RPG Godot prototype.
+            You are refining a server-generated iteration plan for an RPG Godot prototype.
             Output JSON only. Do not explain. Do not use Markdown.
             Return these keys only:
             goals
 
-            goals must be an array of 3 to 6 objects with:
+            goals must be an array with the exact same number of items as the scaffold, and each object must contain:
             title, description, acceptanceHint
 
             Rules:
-            - Base the plan on the current prototype state, not on a generic from-scratch RPG template.
-            - If the prototype already succeeded once, prefer convergence/refinement steps over scene creation steps.
-            - Use the route skill and current field coverage to decide the smallest accurate next steps.
-            - Final step must still be full playable acceptance.
+            - Use only the data provided in this prompt.
+            - Do not read files, inspect the repository, call tools, or ask for more context.
+            - Do not generate a new plan from scratch.
+            - Keep the exact scaffold order.
+            - Keep every title exactly unchanged from the scaffold.
+            - Only refine description and acceptanceHint so they better reflect the current prototype state, prototype-form coverage, and RPG route-skill contract.
+            - If the prototype already succeeded once, keep the convergence/closure framing already present in the scaffold.
+            - If some user fields are still only partial, mention the most important missing runtime proof in the relevant later steps.
             - Keep each goal narrow enough to execute independently.
+            - Final step must remain full playable acceptance.
 
             Project:
             - Name: {project.Name}
@@ -483,6 +520,9 @@ public sealed class PrototypeIterationPlanService
 
             Planning analysis:
             {analysisJson}
+
+            Goal scaffold that must be preserved:
+            {scaffoldJson}
             """;
     }
 
@@ -566,6 +606,37 @@ public sealed class PrototypeIterationPlanService
         {
             return [];
         }
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> ParseRefinedRpgGoalPlan(
+        string? assistantMessage,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
+    {
+        var parsed = ParseGoalPlan(assistantMessage);
+        if (parsed.Count != scaffold.Count)
+        {
+            return [];
+        }
+
+        var refined = new List<PrototypeIterationPlanGoalResult>(scaffold.Count);
+        for (var index = 0; index < scaffold.Count; index++)
+        {
+            var expected = scaffold[index];
+            var actual = parsed[index];
+            if (!string.Equals(actual.Title, expected.Title, StringComparison.Ordinal))
+            {
+                return [];
+            }
+
+            refined.Add(new PrototypeIterationPlanGoalResult(
+                expected.GoalIndex,
+                expected.Title,
+                string.IsNullOrWhiteSpace(actual.Description) ? expected.Description : actual.Description,
+                string.IsNullOrWhiteSpace(actual.AcceptanceHint) ? expected.AcceptanceHint : actual.AcceptanceHint,
+                "pending"));
+        }
+
+        return refined;
     }
 
     private static PlanningFieldCoverage[] BuildDeterministicFieldCoverage(ProjectPrototypeDraftSnapshot? draft)
@@ -919,7 +990,8 @@ public sealed class PrototypeIterationPlanService
             }
         }
 
-        var rpgPlanIssue = isRpgProject ? FindRpgPlanContractIssue(goals) : null;
+        var rpgPlanningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
+        var rpgPlanIssue = isRpgProject ? FindRpgPlanContractIssue(goals, rpgPlanningAnalysis, details.Session.SourceMessage) : null;
         if (rpgPlanIssue is not null)
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
@@ -967,10 +1039,13 @@ public sealed class PrototypeIterationPlanService
         }
 
         var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
+        var promptRoot = EnsureIterationPlanPromptWorkspace(project, "plan-evaluation");
+        var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
         var completion = await _codexChatClient.CompleteAsync(
-            project.RepoPath,
+            promptRoot,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             BuildRpgPlanEvaluationPrompt(project, details, prototypeProgress, planningAnalysis),
+            options,
             billingApiKeyName: project.AccountId,
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
@@ -1149,7 +1224,10 @@ public sealed class PrototypeIterationPlanService
                 text.Contains("交付验收", StringComparison.Ordinal));
     }
 
-    private static string? FindRpgPlanContractIssue(ProjectIterationGoalSnapshot[] goals)
+    private static string? FindRpgPlanContractIssue(
+        ProjectIterationGoalSnapshot[] goals,
+        PrototypeIterationPlanningAnalysisResult? planningAnalysis,
+        string? sourceMessage)
     {
         var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
         var missing = new List<string>();
@@ -1193,12 +1271,91 @@ public sealed class PrototypeIterationPlanService
             missing.Add("final full playable acceptance step with Start Adventure visible-map validation");
         }
 
+        var explicitContractRuleIssues = FindMissingExplicitContractRules(combined, planningAnalysis, sourceMessage);
+        missing.AddRange(explicitContractRuleIssues);
+
         if (missing.Count == 0)
         {
             return null;
         }
 
         return $"Missing RPG contract steps: {string.Join(", ", missing)}.";
+    }
+
+    private static List<string> FindMissingExplicitContractRules(
+        string combined,
+        PrototypeIterationPlanningAnalysisResult? planningAnalysis,
+        string? sourceMessage)
+    {
+        var missing = new List<string>();
+        var evidenceTexts = new List<(string Field, string Evidence)>();
+        if (planningAnalysis is not null && planningAnalysis.FieldCoverage.Count > 0)
+        {
+            foreach (var item in planningAnalysis.FieldCoverage)
+            {
+                if (!string.Equals(item.Status, "completed", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(item.Status, "partial", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var evidence = (item.Evidence ?? string.Empty).Trim();
+                if (!string.IsNullOrWhiteSpace(evidence))
+                {
+                    evidenceTexts.Add((((item.Field ?? string.Empty).Trim().ToLowerInvariant()), evidence));
+                }
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(sourceMessage))
+        {
+            evidenceTexts.Add(("source_message", sourceMessage.Trim()));
+        }
+
+        foreach (var (field, evidence) in evidenceTexts)
+        {
+            var checksWinFail = field is "win_fail_conditions" or "source_message";
+            var checksFlowRules = field is "game_feature" or "core_gameplay_loop" or "source_message";
+
+            if (checksWinFail)
+            {
+                if (ContainsAny(evidence, "15场", "15 battles", "15 battle") &&
+                    !ContainsAny(combined, "15场", "15 battles", "15 battle"))
+                {
+                    missing.Add("explicit 15-battle victory rule coverage");
+                }
+
+                if (ContainsAny(evidence, "任一战斗失败", "任一", "any battle loss", "any-loss defeat", "game loss") &&
+                    !ContainsAny(combined, "任一战斗失败", "any battle loss", "any-loss defeat", "game loss", "失败即"))
+                {
+                    missing.Add("explicit any-loss defeat rule coverage");
+                }
+            }
+
+            if (checksFlowRules)
+            {
+                if (ContainsAny(evidence, "10%", "10 %") &&
+                    !ContainsAny(combined, "10%", "10 %"))
+                {
+                    missing.Add("explicit encounter probability rule coverage");
+                }
+
+                if (ContainsAny(evidence, "10步", "10 steps", "10-step") &&
+                    !ContainsAny(combined, "10步", "10 steps", "10-step"))
+                {
+                    missing.Add("explicit guaranteed encounter rule coverage");
+                }
+
+                if (ContainsAny(evidence, "每个怪物", "下一个怪物", "+5", "+2", "enemy", "怪物") &&
+                    ContainsAny(evidence, "5点生命", "5 hp", "+5 hp", "2点攻击", "2 atk", "+2 atk") &&
+                    !ContainsAny(combined, "5点生命", "5 hp", "+5 hp", "2点攻击", "2 atk", "+2 atk", "enemy scaling", "怪物成长"))
+                {
+                    missing.Add("explicit enemy scaling rule coverage");
+                }
+            }
+        }
+
+        return missing.Distinct(StringComparer.Ordinal).ToList();
     }
 
     private static string? FindRpgPlanAcceptanceBoundaryIssue(ProjectIterationGoalSnapshot[] goals)
@@ -1269,6 +1426,8 @@ public sealed class PrototypeIterationPlanService
             decision, summary, reason, suggestedAction, suggestedPromptForRegeneration
 
             Rules:
+            - Use only the data provided in this prompt.
+            - Do not read files, inspect the repository, call tools, or ask for more context.
             - decision must be one of: ready_to_execute, should_refine_plan.
             - Use the current prototype result, planning analysis, and RPG type requirements.
             - If the plan is generic, misses MapScene/BattleScene/reward loop/win-fail visibility/final acceptance coverage, or is misordered, return should_refine_plan.
@@ -1536,6 +1695,22 @@ public sealed class PrototypeIterationPlanService
         return evaluation;
     }
 
+    private static PrototypeWorkflowProgress ToPrototypeProgress(IterationPlanningContext context)
+    {
+        return new PrototypeWorkflowProgress(
+            context.LatestPrototypeStatus,
+            context.LatestPrototypeStatus,
+            "",
+            "done",
+            null,
+            null,
+            null,
+            context.LatestPrototypeCompletionSummary,
+            "system",
+            "recommended",
+            context.AnalysisSummary);
+    }
+
     private static string NormalizePlanningMessage(string? message, string? sourceKind)
     {
         var value = message?.Trim() ?? string.Empty;
@@ -1608,6 +1783,117 @@ public sealed class PrototypeIterationPlanService
         string SourceMessage,
         string SourceKind,
         string RouteSkillId);
+
+    private static string EnsurePlanningAnalysisSchemaFile()
+    {
+        var schemaDir = Path.Combine(Path.GetTempPath(), "phase-a-platform-schemas");
+        Directory.CreateDirectory(schemaDir);
+        var schemaPath = Path.Combine(schemaDir, "prototype-iteration-planning-analysis.schema.json");
+        var schema = new JsonObject
+        {
+            ["type"] = "object",
+            ["additionalProperties"] = false,
+            ["properties"] = new JsonObject
+            {
+                ["analysisSummary"] = new JsonObject
+                {
+                    ["type"] = "string",
+                    ["minLength"] = 1
+                },
+                ["fieldCoverage"] = new JsonObject
+                {
+                    ["type"] = "array",
+                    ["items"] = new JsonObject
+                    {
+                        ["type"] = "object",
+                        ["additionalProperties"] = false,
+                        ["properties"] = new JsonObject
+                        {
+                            ["field"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                            ["status"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("completed", "partial", "missing") },
+                            ["evidence"] = new JsonObject { ["type"] = new JsonArray("string", "null") },
+                            ["missingReason"] = new JsonObject { ["type"] = new JsonArray("string", "null") }
+                        },
+                        ["required"] = new JsonArray("field", "status", "evidence", "missingReason")
+                    }
+                }
+            },
+            ["required"] = new JsonArray("analysisSummary", "fieldCoverage")
+        };
+
+        File.WriteAllText(schemaPath, schema.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
+        return schemaPath;
+    }
+
+    private static string EnsureGoalPlanSchemaFile()
+    {
+        var schemaDir = Path.Combine(Path.GetTempPath(), "phase-a-platform-schemas");
+        Directory.CreateDirectory(schemaDir);
+        var schemaPath = Path.Combine(schemaDir, "prototype-iteration-goal-plan.schema.json");
+        var schema = new JsonObject
+        {
+            ["type"] = "object",
+            ["additionalProperties"] = false,
+            ["properties"] = new JsonObject
+            {
+                ["goals"] = new JsonObject
+                {
+                    ["type"] = "array",
+                    ["minItems"] = 3,
+                    ["maxItems"] = 6,
+                    ["items"] = new JsonObject
+                    {
+                        ["type"] = "object",
+                        ["additionalProperties"] = false,
+                        ["properties"] = new JsonObject
+                        {
+                            ["title"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                            ["description"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                            ["acceptanceHint"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 }
+                        },
+                        ["required"] = new JsonArray("title", "description", "acceptanceHint")
+                    }
+                }
+            },
+            ["required"] = new JsonArray("goals")
+        };
+
+        File.WriteAllText(schemaPath, schema.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
+        return schemaPath;
+    }
+
+    private static string EnsureEvaluationSchemaFile()
+    {
+        var schemaDir = Path.Combine(Path.GetTempPath(), "phase-a-platform-schemas");
+        Directory.CreateDirectory(schemaDir);
+        var schemaPath = Path.Combine(schemaDir, "prototype-iteration-evaluation.schema.json");
+        var schema = new JsonObject
+        {
+            ["type"] = "object",
+            ["additionalProperties"] = false,
+            ["properties"] = new JsonObject
+            {
+                ["decision"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("ready_to_execute", "should_refine_plan") },
+                ["summary"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                ["reason"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                ["suggestedAction"] = new JsonObject { ["type"] = "string", ["minLength"] = 1 },
+                ["suggestedPromptForRegeneration"] = new JsonObject { ["type"] = new JsonArray("string", "null") }
+            },
+            ["required"] = new JsonArray("decision", "summary", "reason", "suggestedAction", "suggestedPromptForRegeneration")
+        };
+
+        File.WriteAllText(schemaPath, schema.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
+        return schemaPath;
+    }
+
+    private static string EnsureIterationPlanPromptWorkspace(ProjectSnapshot project, string purpose)
+    {
+        var repoParent = Path.GetDirectoryName(project.RepoPath);
+        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
+        var root = Path.Combine(workspaceRoot, "_phasea_llm", purpose);
+        Directory.CreateDirectory(root);
+        return root;
+    }
 }
 
 public sealed record PrototypeIterationPlanDetails(

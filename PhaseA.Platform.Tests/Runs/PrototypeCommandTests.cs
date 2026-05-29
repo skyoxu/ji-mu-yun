@@ -72,12 +72,12 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner("demo");
         var service = Service(store, options, runner);
 
-        var result = await service.RunTddAsync(projectId, new PrototypeTddRequest("demo", "green"));
-        var second = await service.CreateSceneAsync(projectId, new PrototypeSceneRequest("demo"));
+        var result = await service.RunTddAsync(accountId, projectId, new PrototypeTddRequest("demo", "green"));
+        var second = await service.CreateSceneAsync(accountId, projectId, new PrototypeSceneRequest("demo"));
 
         result.Status.Should().Be("succeeded");
         result.Artifacts.Select(a => a.ArtifactType).Should().Contain(["prototype-tdd-summary", "prototype-tdd-report", "prototype-sidecar-json"]);
@@ -93,12 +93,12 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
         var service = Service(store, options, new FakeHostedProcessRunner("demo"));
 
-        var result = await service.RunTddAsync(projectId, new PrototypeTddRequest("demo", "red"));
+        var result = await service.RunTddAsync(accountId, projectId, new PrototypeTddRequest("demo", "red"));
 
         result.Status.Should().Be("blocked");
         result.ExitCode.Should().Be(423);
@@ -111,6 +111,14 @@ public sealed class PrototypeCommandTests
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         return store;
+    }
+
+    private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
+    {
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
+        return (accountId, result.ProjectId!);
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)

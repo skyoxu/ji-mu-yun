@@ -78,13 +78,14 @@ public sealed class PrototypeWorkflowService
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
-    public async Task<PrototypeWorkflowResult> RunAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
+    public async Task<PrototypeWorkflowResult> RunAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
@@ -206,16 +207,17 @@ public sealed class PrototypeWorkflowService
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
 
-        return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressAsync(projectId, cancellationToken));
+        return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressForProjectAsync(project, cancellationToken));
     }
 
-    public async Task<PrototypeWorkflowResult> QueueAsync(string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
+    public async Task<PrototypeWorkflowResult> QueueAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
@@ -251,7 +253,7 @@ public sealed class PrototypeWorkflowService
         if (!locked)
         {
             await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
-            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressAsync(projectId, cancellationToken));
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressForProjectAsync(project, cancellationToken));
         }
 
         _ = Task.Run(async () =>
@@ -290,16 +292,17 @@ public sealed class PrototypeWorkflowService
             "",
             [],
             [],
-            await GetProgressAsync(projectId, cancellationToken));
+            await GetProgressForProjectAsync(project, cancellationToken));
     }
 
-    public async Task<PrototypeWorkflowResult> RepairAsync(string projectId, PrototypeRepairRequest request, CancellationToken cancellationToken = default)
+    public async Task<PrototypeWorkflowResult> RepairAsync(string accountId, string projectId, PrototypeRepairRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
@@ -339,7 +342,7 @@ public sealed class PrototypeWorkflowService
         if (!locked)
         {
             await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
-            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressAsync(projectId, cancellationToken));
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressForProjectAsync(project, cancellationToken));
         }
         await SetProgressAsync(runId, "queued", "repair", "已提交原型修复，等待 runner。", cancellationToken);
 
@@ -377,15 +380,16 @@ public sealed class PrototypeWorkflowService
             "",
             [],
             [],
-            await GetProgressAsync(projectId, cancellationToken));
+            await GetProgressForProjectAsync(project, cancellationToken));
     }
 
-    public async Task<PrototypeWorkflowResult> ValidateAsync(string projectId, CancellationToken cancellationToken = default)
+    public async Task<PrototypeWorkflowResult> ValidateAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
@@ -454,20 +458,26 @@ public sealed class PrototypeWorkflowService
             cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
-        return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressAsync(projectId, cancellationToken));
+        return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressForProjectAsync(project, cancellationToken));
     }
 
-    public async Task<PrototypeWorkflowProgress> GetProgressAsync(string projectId, CancellationToken cancellationToken = default)
+    public async Task<PrototypeWorkflowProgress> GetProgressAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }
 
-        var runs = await _metadataStore.ListRunsForProjectAsync(projectId, cancellationToken);
+        return await GetProgressForProjectAsync(project, cancellationToken);
+    }
+
+    private async Task<PrototypeWorkflowProgress> GetProgressForProjectAsync(ProjectSnapshot project, CancellationToken cancellationToken)
+    {
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
         var run = runs.FirstOrDefault(item => item.RunType == RunType);
         if (run is null)
         {
@@ -517,11 +527,10 @@ public sealed class PrototypeWorkflowService
 
         _workspaceSeeder.EnsureSeeded(projectRepoPath);
         EnsureGameTypeTemplateBaseline(projectRepoPath, request);
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
-        var runtimeCredential = project is null
-            ? new AiCodeMirrorRuntimeCredential(projectId, null, null)
-            : await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
-        var billingApiKeyName = runtimeCredential.BillingKeyName ?? projectId;
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None)
+            ?? throw new InvalidOperationException("Project not found.");
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+        var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
         var process = await _processRunner.RunAsync(ApplyCodexRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
@@ -556,10 +565,7 @@ public sealed class PrototypeWorkflowService
             godot_smoke = smoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
-        if (project is not null)
-        {
-            WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, prototypeContractPath, slug, validation, smoke);
-        }
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, prototypeContractPath, slug, validation, smoke);
         await SetProgressAsync(
             runId,
             status,

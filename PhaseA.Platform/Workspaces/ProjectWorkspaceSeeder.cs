@@ -22,6 +22,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         ".vscode",
         "bin",
         "obj",
+        "buildcache",
         "logs",
         "TestResults"
     ];
@@ -39,6 +40,15 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     [
         "Directory.Build.props",
         "Directory.Build.targets"
+    ];
+
+    private static readonly string[] BootstrapBaselineRelativeFiles =
+    [
+        "AGENTS.md",
+        "README.md",
+        "Game.sln",
+        "project.godot",
+        "Game.Core.Tests/Game.Core.Tests.csproj"
     ];
 
     private static readonly string[] SeededPrototypeTemplateDirectories =
@@ -73,6 +83,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
         if (Directory.Exists(targetRoot) && Directory.EnumerateFileSystemEntries(targetRoot).Any())
         {
+            EnsureBootstrapBaseline(sourceRoot, targetRoot);
             SyncManagedFiles(sourceRoot, targetRoot);
             SyncManagedDirectories(sourceRoot, targetRoot);
             RestoreWorkspaceJunctions(sourceRoot, targetRoot);
@@ -84,6 +95,36 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
         RestoreWorkspaceJunctions(sourceRoot, targetRoot);
         EnsureRuntimeLogsAreGodotIgnored(targetRoot);
+    }
+
+    private static void EnsureBootstrapBaseline(string sourceRoot, string targetRoot)
+    {
+        if (!NeedsBootstrapBaseline(sourceRoot, targetRoot))
+        {
+            return;
+        }
+
+        CopyDirectory(sourceRoot, sourceRoot, targetRoot, overwriteFiles: false);
+    }
+
+    private static bool NeedsBootstrapBaseline(string sourceRoot, string targetRoot)
+    {
+        foreach (var relativePath in BootstrapBaselineRelativeFiles)
+        {
+            var sourcePath = Path.Combine(sourceRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(sourcePath))
+            {
+                continue;
+            }
+
+            var targetPath = Path.Combine(targetRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(targetPath))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void SyncManagedFiles(string sourceRoot, string targetRoot)
@@ -151,6 +192,11 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
     private static bool TryCopyFileWithLockTolerance(string repositoryRoot, string sourcePath, string destinationPath, bool overwriteFiles)
     {
+        if (!overwriteFiles && File.Exists(destinationPath))
+        {
+            return true;
+        }
+
         var relativePath = Path.GetRelativePath(repositoryRoot, sourcePath)
             .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         var tolerateLockedFile = IsLockTolerantManagedPath(relativePath);

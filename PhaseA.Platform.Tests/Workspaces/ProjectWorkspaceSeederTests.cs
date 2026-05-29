@@ -85,6 +85,45 @@ public sealed class ProjectWorkspaceSeederTests
     }
 
     [Fact]
+    public void EnsureSeeded_RestoresBootstrapBaselineIntoNonEmptyWorkspace()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Core.Tests"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "scripts", "python"));
+        File.WriteAllText(Path.Combine(sourceRoot, "AGENTS.md"), "source agents\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "README.md"), "source readme\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "Game.sln"), "source solution\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "project.godot"), "source project\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "Game.Core.Tests", "Game.Core.Tests.csproj"), "<Project />\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "scripts", "python", "project_health_scan.py"), "print('ok')\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        Directory.CreateDirectory(Path.Combine(targetRepo, "scripts", "python"));
+        File.WriteAllText(Path.Combine(targetRepo, "scripts", "python", "project_health_scan.py"), "existing helper\n");
+        File.WriteAllText(Path.Combine(targetRepo, "local-note.txt"), "keep me\n");
+
+        var seeder = new ProjectWorkspaceSeeder(options);
+
+        seeder.EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("source agents\n");
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("source readme\n");
+        File.ReadAllText(Path.Combine(targetRepo, "Game.sln")).Should().Be("source solution\n");
+        File.ReadAllText(Path.Combine(targetRepo, "project.godot")).Should().Be("source project\n");
+        File.ReadAllText(Path.Combine(targetRepo, "Game.Core.Tests", "Game.Core.Tests.csproj")).Should().Be("<Project />\n");
+        File.ReadAllText(Path.Combine(targetRepo, "scripts", "python", "project_health_scan.py")).Should().Be("print('ok')\n");
+        File.ReadAllText(Path.Combine(targetRepo, "local-note.txt")).Should().Be("keep me\n");
+    }
+
+    [Fact]
     public void EnsureSeeded_CreatesLogsGdignoreForFreshWorkspace()
     {
         using var source = TempDirectory.Create("phase-a-source");
@@ -153,7 +192,9 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Godot", "Prototypes", "DefaultRpgTemplate"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Godot", "Prototypes", "dq-rpg"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Core", "Prototypes"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Core", "buildcache", "int", "Debug", "net8.0"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Core.Tests", "Prototypes"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Core.Tests", "buildcache", "int", "Debug", "net8.0"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot", "tests", "Prototype", "DefaultRpgPrototype"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "docs", "prototypes"));
@@ -162,8 +203,10 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn"), "[gd_scene]\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Core", "Prototypes", "DefaultRpgPrototypeLoop.cs"), "default\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs"), "generated\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "Game.Core", "buildcache", "int", "Debug", "net8.0", "Game.Core.AssemblyInfo.cs"), "generated assembly info\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Core.Tests", "Prototypes", "DefaultRpgPrototypeLoopTests.cs"), "default test\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"), "generated test\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "Game.Core.Tests", "buildcache", "int", "Debug", "net8.0", "Game.Core.Tests.AssemblyInfo.cs"), "generated test assembly info\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "tests", "Prototype", "DefaultRpgPrototype", "test_default_rpg_prototype_scene.gd"), "default gd\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype", "test_dq_rpg_prototype_scene.gd"), "generated gd\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototypes", "README.md"), "readme\n");
@@ -185,8 +228,10 @@ public sealed class ProjectWorkspaceSeederTests
         File.Exists(Path.Combine(targetRepo, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn")).Should().BeFalse();
         File.Exists(Path.Combine(targetRepo, "Game.Core", "Prototypes", "DefaultRpgPrototypeLoop.cs")).Should().BeTrue();
         File.Exists(Path.Combine(targetRepo, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs")).Should().BeFalse();
+        Directory.Exists(Path.Combine(targetRepo, "Game.Core", "buildcache")).Should().BeFalse();
         File.Exists(Path.Combine(targetRepo, "Game.Core.Tests", "Prototypes", "DefaultRpgPrototypeLoopTests.cs")).Should().BeTrue();
         File.Exists(Path.Combine(targetRepo, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs")).Should().BeFalse();
+        Directory.Exists(Path.Combine(targetRepo, "Game.Core.Tests", "buildcache")).Should().BeFalse();
         File.Exists(Path.Combine(targetRepo, "Tests.Godot", "tests", "Prototype", "DefaultRpgPrototype", "test_default_rpg_prototype_scene.gd")).Should().BeTrue();
         File.Exists(Path.Combine(targetRepo, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype", "test_dq_rpg_prototype_scene.gd")).Should().BeFalse();
         File.Exists(Path.Combine(targetRepo, "docs", "prototypes", "README.md")).Should().BeTrue();

@@ -25,7 +25,7 @@ public sealed class ChatServiceTests
             var projectId = await CreateProjectAsync(store, options, accountId);
             var service = Service(store, options, new FakeChatClient("reply"));
 
-            var result = await service.SendAsync(projectId, new ChatRequest("hello"));
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello"));
 
             result.Status.Should().Be("llm_binding_required");
             result.ExitCode.Should().Be(402);
@@ -56,7 +56,7 @@ public sealed class ChatServiceTests
                 "env:PHASEA_TEST_TOKEN_MISSING"));
             var service = Service(store, options, new FakeChatClient("reply"));
 
-            var result = await service.SendAsync(projectId, new ChatRequest("hello"));
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello"));
 
             result.Status.Should().Be("llm_token_unresolved");
             result.ExitCode.Should().Be(424);
@@ -90,7 +90,7 @@ public sealed class ChatServiceTests
             var client = new FakeChatClient("assistant reply");
             var service = Service(store, options, client);
 
-            var result = await service.SendAsync(projectId, new ChatRequest("hello", "gpt-5.4"));
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello", "gpt-5.4"));
 
             result.Status.Should().Be("succeeded");
             result.AssistantMessage.Should().Be("assistant reply");
@@ -125,7 +125,7 @@ public sealed class ChatServiceTests
         var codex = new FakeCodexChatClient("codex says hello");
         var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
 
-        var result = await service.SendAsync(projectId, new ChatRequest("hello codex", "gpt-5.4-mini"));
+        var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello codex", "gpt-5.4-mini"));
 
         result.Status.Should().Be("succeeded");
         result.AssistantMessage.Should().Be("codex says hello");
@@ -147,6 +147,27 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
+    public async Task SendAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var ownerAccountId = await store.EnsureSingleAdminAsync();
+        var otherAccount = await store.CreateUserAccountAsync("chat-other-account", 1);
+        var projectId = await CreateProjectAsync(store, options, ownerAccountId);
+        var binding = new LlmBindingService(store, options);
+        var codex = new FakeCodexChatClient("should not run");
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("should not run"), codex);
+
+        var act = () => service.SendAsync(otherAccount.AccountId, projectId, new ChatRequest("hello"));
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
+        codex.CallCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task SendAsync_RedactsSensitivePathsScriptsAndCommands_FromCodexReply()
     {
         using var database = TempSqliteDatabase.Create();
@@ -160,7 +181,7 @@ public sealed class ChatServiceTests
             "请查看 C:\\jimuyun\\secret\\repo\\scripts\\python\\dev_cli.py，然后运行 dotnet test PhaseA.Platform.Tests\\PhaseA.Platform.Tests.csproj --no-restore。");
         var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
 
-        var result = await service.SendAsync(projectId, new ChatRequest("怎么验证？", "gpt-5.4"));
+        var result = await service.SendAsync(accountId, projectId, new ChatRequest("怎么验证？", "gpt-5.4"));
 
         result.AssistantMessage.Should().NotContain("C:\\");
         result.AssistantMessage.Should().NotContain("dev_cli.py");
@@ -183,7 +204,7 @@ public sealed class ChatServiceTests
         var codex = new FakeCodexChatClient("codex says hello");
         var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
 
-        var result = await service.SendAsync(projectId, new ChatRequest("hello codex", "not-allowed-model"));
+        var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello codex", "not-allowed-model"));
 
         result.Status.Should().Be("succeeded");
         result.Model.Should().Be(CodexModelCatalog.DefaultModel());
@@ -203,7 +224,7 @@ public sealed class ChatServiceTests
         var codex = new FakeCodexChatClient("codex says hello");
         var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
 
-        await service.SendAsync(projectId, new ChatRequest("help design", "gpt-5.4", SkillActionId: "game-design-master"));
+        await service.SendAsync(accountId, projectId, new ChatRequest("help design", "gpt-5.4", SkillActionId: "game-design-master"));
 
         codex.LastPrompt.Should().Contain("游戏策划大师");
         codex.LastPrompt.Should().Contain("$bmad-agent-game-designer");
@@ -224,7 +245,7 @@ public sealed class ChatServiceTests
             var client = new FakeChatClient("should not be called");
             var service = Service(store, options, client);
 
-            var result = await service.SendAsync(projectId, new ChatRequest("hello local"));
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello local"));
 
             result.Status.Should().Be("succeeded");
             result.AssistantMessage.Should().Contain("hello local").And.Contain("Phase A");
@@ -254,7 +275,7 @@ public sealed class ChatServiceTests
             var projectId = await CreateProjectAsync(store, options, accountId);
             var service = Service(store, options, new FakeChatClient("should not be called"));
 
-            var result = await service.SendAsync(projectId, new ChatRequest("help"));
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("help"));
 
             result.Status.Should().Be("succeeded");
             result.AssistantMessage.Should().Contain("Phase A").And.Contain("LLM");
@@ -320,6 +341,7 @@ public sealed class ChatServiceTests
 
         public string? LastPrompt { get; private set; }
         public string? LastBillingApiKeyName { get; private set; }
+        public int CallCount { get; private set; }
 
         public Task<CodexChatClientResult> CompleteAsync(
             string projectRoot,
@@ -329,6 +351,7 @@ public sealed class ChatServiceTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
+            CallCount++;
             LastModel = model;
             LastPrompt = prompt;
             LastBillingApiKeyName = billingApiKeyName;

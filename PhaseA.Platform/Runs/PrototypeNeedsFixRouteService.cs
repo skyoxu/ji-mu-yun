@@ -72,6 +72,7 @@ public sealed class PrototypeNeedsFixRouteService
 
         var feedback = BuildFeedback(project, request.Feedback, readme, prototypeContract, stepState, executeNextGoalState, prototypeState, goal);
         var quickFixResult = await _quickFixService.SubmitAsync(
+            project.AccountId,
             project.ProjectId,
             new PrototypeFeedbackRequest(
                 feedback,
@@ -134,6 +135,7 @@ public sealed class PrototypeNeedsFixRouteService
 
         var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _contractService.Read(project), _stateWriter.ReadLatestPrototypeState(project));
         var quickFixResult = await _quickFixService.SubmitAsync(
+            project.AccountId,
             project.ProjectId,
             new PrototypeFeedbackRequest(
                 feedback,

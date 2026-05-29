@@ -43,11 +43,13 @@ public sealed class SkillActionService
     }
 
     public async Task<SkillActionRunResult> RunAsync(
+        string accountId,
         string projectId,
         string actionId,
         SkillActionRunRequest request,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(actionId);
         ArgumentNullException.ThrowIfNull(request);
@@ -59,7 +61,7 @@ public sealed class SkillActionService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

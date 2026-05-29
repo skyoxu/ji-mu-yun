@@ -24,7 +24,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4", "map-making-master"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4", "map-making-master"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -63,7 +63,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
 
         result.Status.Should().Be("prototype_not_ready");
         result.RunId.Should().BeEmpty();
@@ -86,7 +86,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("project_busy");
@@ -108,7 +108,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var runner = new ThrowingHostedProcessRunner();
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -133,6 +133,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
         var result = await service.SubmitAsync(
+            accountId,
             projectId,
             new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4"),
             callerCancellation.Token);

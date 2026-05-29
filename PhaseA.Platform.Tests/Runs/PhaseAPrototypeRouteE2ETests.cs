@@ -49,7 +49,7 @@ public sealed class PhaseAPrototypeRouteE2ETests
             new ProjectWorkspaceSeeder(options),
             new GameTypeTemplateCatalog(options),
             routeStateWriter);
-        var prototype = await prototypeWorkflow.RunAsync(project.ProjectId, PrototypeRequest());
+        var prototype = await prototypeWorkflow.RunAsync(accountId, project.ProjectId, PrototypeRequest());
         prototype.Status.Should().Be("succeeded");
         routeStateWriter.ReadLatestPrototypeState(project).Should().Contain(prototype.RunId);
 

@@ -57,7 +57,7 @@ REMAINING: none
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
 
@@ -73,6 +73,31 @@ REMAINING: none
             "prototype-quick-fix-result-log",
             "prototype-quick-fix-codex-output"
         ]);
+    }
+
+    [Fact]
+    public async Task SubmitAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var ownerAccountId = await store.EnsureSingleAdminAsync();
+        var otherAccount = await store.CreateUserAccountAsync("quick-fix-other-account", 1);
+        var projectId = await CreateProjectAsync(store, options, ownerAccountId, prototypeSucceeded: true);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var act = () => service.SubmitAsync(
+            otherAccount.AccountId,
+            projectId,
+            new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
+        runner.Commands.Should().BeEmpty();
     }
 
     [Fact]
@@ -98,7 +123,7 @@ REMAINING: none
         var runner = new QuickFixNavigationFailHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("修复 Start Adventure 后空白。", "gpt-5.4", "normal"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("修复 Start Adventure 后空白。", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -125,7 +150,7 @@ REMAINING: none
         var runner = new TimeoutHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -150,6 +175,7 @@ REMAINING: none
         var service = new PrototypeQuickFixService(store, options, runner);
 
         var result = await service.SubmitAsync(
+            accountId,
             projectId,
             new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"),
             callerCancellation.Token);
@@ -182,7 +208,7 @@ REMAINING: none
         var runner = new GoalRepairSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
             "gpt-5.4",
             "normal",
@@ -226,7 +252,7 @@ REMAINING: none
         var runner = new OffTopicSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
@@ -241,7 +267,7 @@ REMAINING: none
     }
 
 [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFourRewardLoop()
+    public async Task SubmitAsync_GoalRepair_ShouldRunGodotSmoke_ForStepFiveRewardLoop()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -257,9 +283,9 @@ REMAINING: none
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need engine verification for reward loop.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
@@ -280,11 +306,11 @@ REMAINING: none
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
@@ -292,7 +318,7 @@ REMAINING: none
     }
 
     [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldAcceptStepFourRewardEntryMethodSignature()
+    public async Task SubmitAsync_GoalRepair_ShouldAcceptStepFiveRewardEntryMethodSignature()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -308,9 +334,9 @@ REMAINING: none
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new
@@ -341,11 +367,11 @@ public sealed class DqRpgPrototype
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
@@ -353,7 +379,7 @@ public sealed class DqRpgPrototype
     }
 
     [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldKeepStepFourNeedsFix_WhenRewardContractIsMissing()
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepFiveNeedsFix_WhenRewardContractIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -369,9 +395,9 @@ public sealed class DqRpgPrototype
         var planService = new PrototypeIterationPlanService(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG reward loop to a clean return-to-map validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 4);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         EnsureRpgAcceptanceMarkers(project.RepoPath);
@@ -382,11 +408,11 @@ public sealed class DqRpgPrototype
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 4, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("completed");
@@ -422,7 +448,7 @@ public sealed class DqRpgPrototype
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
@@ -470,7 +496,7 @@ public sealed class DqRpgPrototype
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
@@ -502,7 +528,7 @@ public sealed class DqRpgPrototype
         var runner = new StructuredCompletedHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
             "gpt-5.4",
             "normal",
@@ -533,7 +559,7 @@ public sealed class DqRpgPrototype
         var runner = new GoalRepairNeedsFixHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
             "gpt-5.4",
             "normal",
@@ -566,7 +592,7 @@ public sealed class DqRpgPrototype
         var runner = new StructuredCompletedButMissingGameplayVerificationHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
             "gpt-5.4",
             "normal",
@@ -599,7 +625,7 @@ public sealed class DqRpgPrototype
         var runner = new ImmediateCanceledHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
             "gpt-5.4",
             "normal",
@@ -646,7 +672,7 @@ public sealed class DqRpgPrototype
         var runner = new OffTopicSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
-        var result = await service.SubmitAsync(projectId, new PrototypeFeedbackRequest(
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
             "gpt-5.4",
             "normal",

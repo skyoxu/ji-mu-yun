@@ -55,6 +55,36 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldAutoEvaluateAndPersistLatestEvaluation()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please complete the first full playable loop: stable movement, visible encounter trigger, one battle, reward 3 choices, then return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().NotBeNullOrWhiteSpace();
+
+        var latest = await service.GetLatestAsync(accountId, projectId);
+        latest.Should().NotBeNull();
+        latest!.LatestEvaluation.Should().NotBeNull();
+        latest.LatestEvaluation!.Decision.Should().Be(result.LatestEvaluation.Decision);
+    }
+
+    [Fact]
     public async Task EvaluateAsync_ShouldBeReadyToExecute_WhenPendingGoalIsFocused()
     {
         using var database = TempSqliteDatabase.Create();
@@ -236,13 +266,70 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCountGreaterOrEqualTo(5);
+        result.Goals.Should().HaveCountGreaterOrEqualTo(6);
         result.Goals[0].Title.Should().Be("RPG Step 1: foundation asset usage and UI contract");
         result.Goals[1].Title.Should().Be("RPG Step 2: Start Adventure to visible MapScene validation");
         result.Goals[2].Title.Should().Be("RPG Step 3: BattleScene loop validation");
-        result.Goals[3].Title.Should().Be("RPG Step 4: reward 3-choice and return-to-map validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: main prototype scene and scene switching validation");
+        result.Goals[4].Title.Should().Be("RPG Step 5: reward 3-choice and return-to-map validation");
         result.Goals[0].Title.Should().NotContain("对齐原型合同");
         result.Goals.Last().Title.Should().Contain("RPG Final Step");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldRejectModelGeneratedGenericRpgPlan_AndKeepServerScaffold()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new GenericRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Improve the first playable loop: movement, encounter, battle, reward, and return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Title.Should().Be("RPG Step 1: basic assets and UI validation");
+        result.Goals[1].Title.Should().Be("RPG Step 2: Start Adventure to visible MapScene validation");
+        result.Goals[2].Title.Should().Be("RPG Step 3: BattleScene creation and validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: main prototype scene and scene switching validation");
+        result.Goals[4].Title.Should().Be("RPG Step 5: reward loop and return-to-map validation");
+        result.Goals[5].Title.Should().Be("RPG Final Step: full playable prototype acceptance");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldAcceptModelRefinement_OnlyWhenTitlesMatchScaffold()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new MatchingRpgRefinementCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Improve the first playable loop: movement, encounter, battle, reward, and return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Description.Should().Contain("user-facing map");
+        result.Goals[5].AcceptanceHint.Should().Contain("contract-specific runtime proof");
     }
 
     [Fact]
@@ -291,7 +378,8 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new LlmEvaluationCodexClient());
+        var codex = new LlmEvaluationCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -314,6 +402,11 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Summary.Should().Contain("需要重拆");
         result.Reason.Should().Contain("MapScene");
         result.SuggestedPromptForRegeneration.Should().Contain("Start Adventure");
+        codex.LastPrompt.Should().Contain("Use only the data provided in this prompt.");
+        codex.LastPrompt.Should().Contain("Do not read files, inspect the repository, call tools, or ask for more context.");
+        codex.LastOptions.Should().NotBeNull();
+        codex.LastOptions!.IgnoreRules.Should().BeTrue();
+        codex.LastOptions.ReasoningEffort.Should().Be("minimal");
     }
 
     [Fact]
@@ -418,6 +511,80 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_ShouldRefineRpgPlan_WhenExplicitWinFailRulesAreNotNamedInGoals()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Please continue the RPG loop and explicitly keep these hard rules: win after 15 battles, any battle loss means game loss, every movement increases encounter chance by 10%, and encounter must happen within 10 steps.",
+            "Demo Game: improve RPG loop with explicit hard rules.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: foundation asset usage and UI contract", "Validate map, player, enemy assets and readable UI.", "Foundation assets and UI pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Start Adventure opens visible MapScene with movement.", "Visible MapScene validation pass."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene loop validation", "Validate BattleScene with one readable battle.", "BattleScene proves battle settlement."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect menu, map, battle, and return path.", "Main prototype scene switches correctly."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, and package readiness.", "Final acceptance passes.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("should_refine_plan");
+        result.Reason.Should().Contain("15-battle");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldAllowRpgPlan_WhenExplicitRulesAreNamedInGoals()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: foundation asset usage and UI contract", "Validate map, player, enemy assets and readable UI.", "Foundation assets and UI pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Start Adventure opens visible MapScene with movement and 10% encounter progress.", "Visible MapScene and 10% encounter validation pass."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene loop validation", "Validate BattleScene with one readable battle and any-loss defeat settlement.", "BattleScene proves battle settlement and any-loss defeat rule."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect menu, map, battle, and return path.", "Main prototype scene switches correctly."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Step 6: explicit win/fail and scaling rule validation", "Show and validate win after 15 battles, guaranteed encounter within 10 steps, and enemy scaling with +5 HP and +2 ATK each battle.", "15 battles, 10 steps, and enemy scaling rules are all visible and validated."),
+                new ProjectIterationGoalCreateCommand(7, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, 15 battles rule, and package readiness.", "Final acceptance passes with explicit rule coverage.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
     public async Task CreateAsync_FinalGoal_ShouldCarryPrototypeInputContractInstruction()
     {
         using var database = TempSqliteDatabase.Create();
@@ -503,6 +670,9 @@ public sealed class PrototypeIterationPlanServiceTests
 
     private sealed class LlmEvaluationCodexClient : ICodexChatClient
     {
+        public string? LastPrompt { get; private set; }
+        public CodexChatClientOptions? LastOptions { get; private set; }
+
         public Task<CodexChatClientResult> CompleteAsync(
             string projectRoot,
             string model,
@@ -511,6 +681,8 @@ public sealed class PrototypeIterationPlanServiceTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
+            LastPrompt = prompt;
+            LastOptions = options;
             const string json = """
             {
               "decision": "should_refine_plan",
@@ -521,6 +693,93 @@ public sealed class PrototypeIterationPlanServiceTests
             }
             """;
             return Task.FromResult(new CodexChatClientResult(true, json, null, 0, "", ""));
+        }
+    }
+
+    private sealed class GenericRpgPlanCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            const string payload =
+                """
+                {
+                  "goals": [
+                    {
+                      "title": "RPG Godot 原型迭代计划",
+                      "description": "给出一个通用的 RPG 原型计划。",
+                      "acceptanceHint": "通用计划"
+                    },
+                    {
+                      "title": "迭代 1：可玩底座",
+                      "description": "实现基础地图与移动。",
+                      "acceptanceHint": "可玩"
+                    },
+                    {
+                      "title": "迭代 2：探索-战斗闭环",
+                      "description": "加入遇敌与战斗。",
+                      "acceptanceHint": "闭环"
+                    }
+                  ]
+                }
+                """;
+            return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
+        }
+    }
+
+    private sealed class MatchingRpgRefinementCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            const string payload =
+                """
+                {
+                  "goals": [
+                    {
+                      "title": "RPG Step 1: basic assets and UI validation",
+                      "description": "Confirm the current prototype already shows the required foundation assets and readable UI markers on the user-facing map before changing later scenes.",
+                      "acceptanceHint": "Pass only when map, player, enemy asset usage and readable map, battle, reward UI markers are visible in the current prototype scene."
+                    },
+                    {
+                      "title": "RPG Step 2: Start Adventure to visible MapScene validation",
+                      "description": "Verify the real Start Adventure entry reveals a visible user-facing map, enables movement, and exposes the first encounter trigger.",
+                      "acceptanceHint": "Pass only when Start Adventure opens a visible map and proves movement plus encounter entry."
+                    },
+                    {
+                      "title": "RPG Step 3: BattleScene creation and validation",
+                      "description": "Validate one dedicated battle scene with readable action resolution and terminal settlement.",
+                      "acceptanceHint": "Pass only when one BattleScene run reaches a readable settlement."
+                    },
+                    {
+                      "title": "RPG Step 4: main prototype scene and scene switching validation",
+                      "description": "Check the main prototype scene routes menu, map, battle, and return flow without hiding state transitions.",
+                      "acceptanceHint": "Pass only when the main prototype scene can switch between menu, map, battle, and return flow."
+                    },
+                    {
+                      "title": "RPG Step 5: reward loop and return-to-map validation",
+                      "description": "Prove the reward 3-choice step changes visible state and returns the player to the active map loop.",
+                      "acceptanceHint": "Pass only when reward choice, visible state change, and return-to-map all work."
+                    },
+                    {
+                      "title": "RPG Final Step: full playable prototype acceptance",
+                      "description": "Run final acceptance across map, battle, reward return, navigation, and contract-specific runtime proof.",
+                      "acceptanceHint": "Pass only when the full prototype, Start Adventure visible-map validation, and contract-specific runtime proof all pass."
+                    }
+                  ]
+                }
+                """;
+            return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
         }
     }
 

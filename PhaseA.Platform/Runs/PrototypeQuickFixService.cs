@@ -72,19 +72,22 @@ public sealed class PrototypeQuickFixService
     }
 
     public async Task<PrototypeFeedbackResult> SubmitAsync(
+        string accountId,
         string projectId,
         PrototypeFeedbackRequest request,
         CancellationToken cancellationToken = default)
     {
-        return await SubmitAsync(projectId, request, requireSucceededPrototypeRun: true, cancellationToken);
+        return await SubmitAsync(accountId, projectId, request, requireSucceededPrototypeRun: true, cancellationToken);
     }
 
     internal async Task<PrototypeFeedbackResult> SubmitAsync(
+        string accountId,
         string projectId,
         PrototypeFeedbackRequest request,
         bool requireSucceededPrototypeRun,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
@@ -95,7 +98,7 @@ public sealed class PrototypeQuickFixService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

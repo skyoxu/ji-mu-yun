@@ -67,12 +67,14 @@ public sealed class ProjectDraftImportService
     }
 
     public async Task<ProjectDraftImportResult> AnalyzeAsync(
+        string accountId,
         string projectId,
         string fileName,
         byte[] content,
         string? model,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         var basic = ImportPlainText(fileName, content);
@@ -82,7 +84,7 @@ public sealed class ProjectDraftImportService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

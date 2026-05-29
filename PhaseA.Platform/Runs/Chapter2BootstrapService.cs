@@ -46,12 +46,13 @@ public sealed class Chapter2BootstrapService
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
-    public async Task<Chapter2BootstrapResult> RunAsync(string projectId, CancellationToken cancellationToken = default)
+    public async Task<Chapter2BootstrapResult> RunAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

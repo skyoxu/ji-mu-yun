@@ -9,6 +9,9 @@ public sealed class PrototypeRepairPlanService
 {
     private const string SourceKind = "repair_plan";
     private const string ExecuteRunType = "prototype-repair-step";
+    private static readonly CodexChatClientOptions RepairPlanningCodexOptions = new(
+        IgnoreRules: true,
+        ReasoningEffort: "minimal");
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeQuickFixService _quickFixService;
@@ -149,6 +152,7 @@ public sealed class PrototypeRepairPlanService
 
         var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context);
         var result = await _quickFixService.SubmitAsync(
+            project.AccountId,
             project.ProjectId,
             new PrototypeFeedbackRequest(feedback, request.Model, null, null),
             requireSucceededPrototypeRun: false,
@@ -250,6 +254,16 @@ public sealed class PrototypeRepairPlanService
     {
         if (context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh")
         {
+            if (ShouldUseBuildCleanupRepairPlan(context))
+            {
+                return BuildRpgBuildCleanupRepairGoals(context);
+            }
+
+            if (ShouldUseSceneNodeContractRepairPlan(context))
+            {
+                return BuildRpgSceneNodeContractRepairGoals(context);
+            }
+
             var planned = await TryBuildRpgRepairGoalsFromModelAsync(project, context, cancellationToken);
             if (planned.Count > 0)
             {
@@ -276,6 +290,7 @@ public sealed class PrototypeRepairPlanService
             project.RepoPath,
             PrototypeModelPolicy.Normalize("gpt-5.4"),
             BuildRpgRepairGoalPrompt(project, context),
+            RepairPlanningCodexOptions,
             billingApiKeyName: project.AccountId,
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
@@ -288,6 +303,11 @@ public sealed class PrototypeRepairPlanService
 
     private static List<PrototypeRepairGoalResult> BuildRpgRepairGoals(PrototypeRepairPlanContext context)
     {
+        if (ShouldUseNavigationFirstRepairPlan(context))
+        {
+            return BuildRpgNavigationFirstRepairGoals(context);
+        }
+
         var goals = new List<PrototypeRepairGoalResult>();
         void Add(string title, string description, string acceptance)
         {
@@ -326,6 +346,208 @@ public sealed class PrototypeRepairPlanService
         Add(
             "执行最终全量验收",
             "运行 RPG 类型要求的最终 smoke/导航/可见性/合同一致性验收，确认修复闭环。",
+            "最终验收通过后，原型修复才算完成。");
+
+        return goals;
+    }
+
+    private static bool ShouldUseBuildCleanupRepairPlan(PrototypeRepairPlanContext context)
+    {
+        var failureText = context.FailureText;
+        var hasDuplicateAssemblySignal = ContainsAny(
+            failureText,
+            "CS0579",
+            "AssemblyInfo",
+            "TargetFrameworkAttribute",
+            ".NETCoreApp,Version",
+            "duplicate assembly attribute");
+        var hasGeneratedBuildPath = ContainsAny(
+            failureText,
+            @"Game.Core\obj\Debug",
+            "Game.Core/obj/Debug",
+            @"Game.Core\obj\Release",
+            "Game.Core/obj/Release",
+            @"Game.Core.Tests\obj\Debug",
+            "Game.Core.Tests/obj/Debug",
+            @"Game.Core.Tests\obj\Release",
+            "Game.Core.Tests/obj/Release",
+            @"buildcache\int",
+            "buildcache/int");
+
+        return hasDuplicateAssemblySignal && hasGeneratedBuildPath;
+    }
+
+    private static bool ShouldUseSceneNodeContractRepairPlan(PrototypeRepairPlanContext context)
+    {
+        if (HasEvidenceRecoveryFailure(context))
+        {
+            return false;
+        }
+
+        return ContainsAny(
+            context.FailureText,
+            "Node not found",
+            "get_node",
+            "BattleStatusLabel",
+            "relative to",
+            "scene/main/node.cpp",
+            "rpg_scene_node_contract_drift",
+            "rpg_script_node_contract_drift");
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRpgBuildCleanupRepairGoals(PrototypeRepairPlanContext context)
+    {
+        var goals = new List<PrototypeRepairGoalResult>();
+
+        void Add(string title, string description, string acceptance)
+        {
+            goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
+        }
+
+        Add(
+            "Build cleanup: remove stale generated build dirs first",
+            BuildRpgBuildCleanupRepairDescription(context),
+            """
+            This step passes only when the repository-local Game.Core and Game.Core.Tests obj/bin/buildcache directories are safely cleaned, generated AssemblyInfo files are not compiled from stale output, and the CS0579 duplicate assembly attribute failure is gone.
+            """);
+
+        Add(
+            "Rerun prototype TDD green after build cleanup",
+            "Rerun the RPG prototype TDD green lane and confirm the dotnet verification step passes before treating any remaining failure as a gameplay or scene contract issue.",
+            """
+            This step passes only when the latest prototype TDD green run no longer fails in the dotnet build/test step with CS0579, AssemblyInfo, TargetFrameworkAttribute, or obj/bin/buildcache contamination signals.
+            """);
+
+        Add(
+            "Inspect RPG scene and gameplay only if TDD still fails",
+            "If the clean build passes but the prototype still fails, inspect the remaining failure output and repair the concrete RPG scene, navigation, battle, reward, or form-traceability contract named by that new evidence.",
+            """
+            This step is started only after the build contamination is cleared. It passes when any remaining RPG contract failure is repaired against the current failure evidence instead of against a generic template.
+            """);
+
+        Add(
+            "Final full acceptance after clean verification",
+            "Run the final RPG prototype acceptance after build cleanup and any evidence-driven gameplay repair are complete.",
+            "The repair is complete only when the final prototype route and verification evidence are green with no build contamination recurrence.");
+
+        return goals;
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRpgSceneNodeContractRepairGoals(PrototypeRepairPlanContext context)
+    {
+        var goals = new List<PrototypeRepairGoalResult>();
+
+        void Add(string title, string description, string acceptance)
+        {
+            goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
+        }
+
+        Add(
+            "Repair RPG scene/script node contract mismatch",
+            BuildRpgSceneNodeContractRepairDescription(context),
+            """
+            This step passes only when the node path named by the latest Godot error exists in the active prototype scene or the script binding is corrected to the real contract path, with no Node not found errors during prototype navigation smoke.
+            """);
+
+        Add(
+            "Rerun Start Adventure navigation and BattleScene smoke",
+            "Rerun the user-facing Start Adventure path and verify MapScene remains visible, then trigger the BattleScene path that previously required the missing node.",
+            """
+            This step passes only when Start Adventure to visible MapScene still passes and the BattleScene UI path no longer crashes on missing labels or stale script bindings.
+            """);
+
+        Add(
+            "Verify RPG reward and win/fail contract after node repair",
+            "After the scene/script binding is stable, verify reward 3-choice return-to-map plus the concrete form rules for 15-battle victory and any-loss defeat.",
+            """
+            This step passes only when reward 3-choice, return-to-map, 15 battles victory, and any-loss defeat are visible in runtime behavior, UI/state feedback, or explicit evidence.
+            """);
+
+        Add(
+            "Final full acceptance after scene contract repair",
+            "Run the final RPG prototype acceptance after the node contract repair and follow-up gameplay checks are complete.",
+            "The repair is complete only when the final prototype route and verification evidence are green with no Node not found or scene/script contract drift recurrence.");
+
+        return goals;
+    }
+
+    private static bool ShouldUseNavigationFirstRepairPlan(PrototypeRepairPlanContext context)
+    {
+        var failure = context.FailureText;
+        if (string.IsNullOrWhiteSpace(failure))
+        {
+            return false;
+        }
+
+        var hasNavigationSignal =
+            ContainsAny(failure,
+                "Start Adventure",
+                "MapScene",
+                "visible map",
+                "visible MapScene",
+                "navigation",
+                "main menu") ||
+            ContainsAny(context.FailedRun.ProgressLabel ?? string.Empty,
+                "navigation",
+                "MapScene");
+
+        if (!hasNavigationSignal)
+        {
+            return false;
+        }
+
+        return !HasEvidenceRecoveryFailure(context);
+    }
+
+    private static bool HasEvidenceRecoveryFailure(PrototypeRepairPlanContext context)
+    {
+        return ContainsAny(
+            context.FailureText,
+            "Permission denied",
+            "permission denied",
+            "Access is denied",
+            "write failure",
+            "cache lock",
+            "build failure",
+            "missing completion artifacts",
+            "missing artifact",
+            "artifact write");
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRpgNavigationFirstRepairGoals(PrototypeRepairPlanContext context)
+    {
+        var goals = new List<PrototypeRepairGoalResult>();
+
+        void Add(string title, string description, string acceptance)
+        {
+            goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
+        }
+
+        Add(
+            "修复 Start Adventure 到可见 MapScene 入口",
+            BuildRpgNavigationRepairDescription(context),
+            """
+            This step passes only when Start Adventure consistently reveals the real playable MapScene, hides stale menu-only state, and exposes visible map markers from the user-facing entry path.
+            """);
+
+        Add(
+            "修复 RPG 奖励闭环与地图返回",
+            BuildRpgRewardLoopRepairDescription(context),
+            """
+            This step passes only when battle victory leads to a readable reward 3-choice flow, one choice can be applied, and the player returns to the active map loop.
+            Do not silently downgrade the reward step to a template-default omission when the project contract explicitly requires it.
+            """);
+
+        Add(
+            "修复 RPG 胜负条件与表单硬约束落地",
+            BuildRpgWinFailRepairDescription(context),
+            """
+            This step passes only when concrete user form values such as 15-battle victory, any-loss defeat, encounter rules, and stat rules are reflected in gameplay behavior, readable UI/state feedback, or explicit needs-fix blockers.
+            """);
+
+        Add(
+            "执行最终全量验收",
+            "运行 RPG 类型要求的最终 smoke、导航、可见性、奖励闭环、胜负条件与合同一致性验收，确认修复闭环。",
             "最终验收通过后，原型修复才算完成。");
 
         return goals;
@@ -384,6 +606,38 @@ public sealed class PrototypeRepairPlanService
             """;
     }
 
+    private static string BuildRpgBuildCleanupRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            The latest RPG prototype failure is a .NET build contamination failure, not a gameplay-design failure. Clean the repo-local build outputs before changing scene or gameplay logic.
+
+            Required focus:
+            - Remove stale obj/bin/buildcache directories only inside the current prototype repository and targeted dotnet projects.
+            - Verify generated AssemblyInfo and TargetFrameworkAttribute files are not duplicated by stale output.
+            - Rerun the dotnet verification step and keep the latest log as evidence.
+            - Do not start RPG scene/gameplay repair until CS0579 is gone.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgSceneNodeContractRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            The latest RPG prototype failure is a Godot scene/script node contract mismatch, not a build-cache failure. Repair the missing node path or script binding named by the engine error before changing broader gameplay.
+
+            Required focus:
+            - Use the latest Godot error as the source of truth.
+            - If a required UI node such as BattleStatusLabel is missing, add it at the path expected by the active prototype script or update the script to the authoritative scene path.
+            - Keep Start Adventure -> visible MapScene behavior intact.
+            - Do not treat .godot/mono/temp/obj/Debug source-generator stack paths as CS0579 build contamination.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
     private static string BuildRpgSceneContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
@@ -417,6 +671,63 @@ public sealed class PrototypeRepairPlanService
             - User form fields override RPG defaults and template examples.
             - Encounter probability, guaranteed encounter, player stats, enemy stats, reward choices, return-to-map flow, and win/fail rules must match concrete project values when present.
             - Any concrete non-empty input field that cannot be implemented must become an explicit needs-fix blocker, not a silent omission.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgNavigationRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the user-facing RPG entry path first.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Priority requirements:
+            - Start Adventure must reveal the real playable MapScene from the main prototype shell.
+            - The map must be visibly present to the player, not only instantiated in the scene tree.
+            - Keep the repair focused on navigation and map visibility before broader gameplay expansion.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgRewardLoopRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the RPG reward loop strictly against the project contract.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Contract requirements:
+            - When the project contract explicitly requires reward 3-choice, do not skip or downgrade it to a template-default omission.
+            - Victory must lead to reward selection and then return the player to the active map loop.
+            - Reward flow must remain visible and understandable to the player.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgWinFailRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair win/fail rules and concrete project-specific gameplay constraints.
+
+            Route skill:
+            - {context.RouteSkill.RouteSkillId}
+            - {context.RouteSkill.RouteSkillContract}
+
+            Contract requirements:
+            - Concrete user form values override RPG defaults and examples.
+            - Win after 15 battles, any-loss defeat, encounter rules, enemy scaling, and visible battle outcome rules must match the project contract when present.
+            - Update implementation, player-facing summary, and test evidence together so the playable loop description does not drift from runtime behavior.
 
             Latest failure evidence:
             {Trim(context.FailureText, 2400)}
@@ -484,6 +795,8 @@ public sealed class PrototypeRepairPlanService
             title, description, acceptanceHint
 
             Rules:
+            - Use only the data provided in this prompt.
+            - Do not read files, inspect the repository, call tools, or ask for more context.
             - Base the plan on the latest failed blocker, not on a generic RPG template.
             - First goal must target the concrete failed blocker with the highest repair value.
             - If the failure is main-menu/navigation/map-visibility related, do not start with evidence, TDD, permission, cache, or build-recovery steps.
@@ -653,6 +966,25 @@ public sealed class PrototypeRepairPlanService
         }
 
         return null;
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        foreach (var needle in needles)
+        {
+            if (!string.IsNullOrWhiteSpace(needle) &&
+                text.Contains(needle, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

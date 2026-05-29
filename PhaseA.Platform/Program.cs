@@ -271,10 +271,11 @@ app.MapGet("/api/admin/llm-runs", async (
 
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
+    HttpContext context,
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
-    var result = await readback.GetProjectRunsAsync(projectId, cancellationToken);
+    var result = await readback.GetProjectRunsForAccountAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
@@ -323,14 +324,22 @@ app.MapGet("/api/projects/{projectId}/asset-preview", async (
         : Results.File(result.Content, result.ContentType, result.FileName);
 });
 
-app.MapPost("/api/projects/{projectId}/asset-preview-ticket", (
+app.MapPost("/api/projects/{projectId}/asset-preview-ticket", async (
     string projectId,
     AssetPreviewTicketRequest request,
-    [FromServices] ProjectAssetPreviewTicketService tickets) =>
+    HttpContext context,
+    [FromServices] ProjectAssetPreviewTicketService tickets,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
 {
     if (string.IsNullOrWhiteSpace(request.ResourcePath))
     {
         return Results.BadRequest(new { error = "resource_path_required" });
+    }
+
+    if (!await store.ProjectBelongsToAccountAsync(CurrentAccountId(context), projectId, cancellationToken))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
     }
 
     return Results.Ok(new
@@ -393,11 +402,19 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
         : Results.File(result.Content, result.ContentType, result.FileName);
 });
 
-app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", (
+app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", async (
     string projectId,
     string fileName,
-    [FromServices] ProjectPackageDownloadTicketService tickets) =>
+    HttpContext context,
+    [FromServices] ProjectPackageDownloadTicketService tickets,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
 {
+    if (!await store.ProjectBelongsToAccountAsync(CurrentAccountId(context), projectId, cancellationToken))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
     return Results.Ok(new
     {
         downloadUrl = $"/projects/{projectId}/packages/{Uri.EscapeDataString(fileName)}?ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, fileName))}"
@@ -854,11 +871,12 @@ app.MapPost("/api/projects/{projectId}/chat", async (
 {
     try
     {
-        var result = await chat.SendAsync(projectId, request, cancellationToken);
+        var accountId = CurrentAccountId(context);
+        var result = await chat.SendAsync(accountId, projectId, request, cancellationToken);
         if (result.Status == "succeeded")
         {
-            await chatHistory.AppendAsync(CurrentAccountId(context), projectId, "user", request.Message, null, cancellationToken);
-            await chatHistory.AppendAsync(CurrentAccountId(context), projectId, "assistant", result.AssistantMessage, null, cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, null, cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", result.AssistantMessage, null, cancellationToken);
         }
 
         return result.Status switch
@@ -934,8 +952,9 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
 {
     try
     {
-        var progress = await prototypeWorkflow.GetProgressAsync(projectId, cancellationToken);
-        var result = await iterationPlans.EvaluateAsync(CurrentAccountId(context), projectId, progress, cancellationToken);
+        var accountId = CurrentAccountId(context);
+        var progress = await prototypeWorkflow.GetProgressAsync(accountId, projectId, cancellationToken);
+        var result = await iterationPlans.EvaluateAsync(accountId, projectId, progress, cancellationToken);
         return Results.Ok(result);
     }
     catch (InvalidOperationException ex)
@@ -985,7 +1004,7 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     {
         var accountId = CurrentAccountId(context);
         await chatHistory.AppendAsync(accountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
-        var result = await feedbackIterations.SubmitAsync(projectId, request, cancellationToken);
+        var result = await feedbackIterations.SubmitAsync(accountId, projectId, request, cancellationToken);
         if (result.Status == "completed" || result.Status == "failed")
         {
             await chatHistory.AppendAsync(
@@ -1121,12 +1140,13 @@ app.MapPost("/api/projects/{projectId}/skill-actions/{actionId}", async (
     string projectId,
     string actionId,
     SkillActionRunRequest request,
+    HttpContext context,
     [FromServices] SkillActionService skillActions,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await skillActions.RunAsync(projectId, actionId, request, cancellationToken);
+        var result = await skillActions.RunAsync(CurrentAccountId(context), projectId, actionId, request, cancellationToken);
         return result.Status switch
         {
             "succeeded" => Results.Ok(result),
@@ -1177,6 +1197,7 @@ app.MapPost("/api/projects", async (
 app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
     string projectId,
     HttpRequest request,
+    HttpContext context,
     [FromServices] ProjectDraftImportService draftImport,
     CancellationToken cancellationToken) =>
 {
@@ -1197,7 +1218,7 @@ app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
     await stream.CopyToAsync(memory, cancellationToken);
     try
     {
-        var result = await draftImport.AnalyzeAsync(projectId, file.FileName, memory.ToArray(), form["model"].FirstOrDefault(), cancellationToken);
+        var result = await draftImport.AnalyzeAsync(CurrentAccountId(context), projectId, file.FileName, memory.ToArray(), form["model"].FirstOrDefault(), cancellationToken);
         return result.Status switch
         {
             "succeeded" => Results.Ok(result),
@@ -1241,12 +1262,13 @@ app.MapDelete("/api/projects/{projectId}", async (
 
 app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
     string projectId,
+    HttpContext context,
     [FromServices] Chapter2BootstrapService chapter2,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await chapter2.RunAsync(projectId, cancellationToken);
+        var result = await chapter2.RunAsync(CurrentAccountId(context), projectId, cancellationToken);
         return result.Status switch
         {
             "succeeded" or "already_succeeded" => Results.Ok(result),
@@ -1263,12 +1285,13 @@ app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
 app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
     string projectId,
     PrototypeWorkflowRequest request,
+    HttpContext context,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await prototypeWorkflow.QueueAsync(projectId, request, cancellationToken);
+        var result = await prototypeWorkflow.QueueAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         if (result.Status == "missing_required_fields")
         {
             return Results.BadRequest(result);
@@ -1284,12 +1307,13 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
 
 app.MapGet("/api/projects/{projectId}/prototype-7day-playable/progress", async (
     string projectId,
+    HttpContext context,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        return Results.Ok(await prototypeWorkflow.GetProgressAsync(projectId, cancellationToken));
+        return Results.Ok(await prototypeWorkflow.GetProgressAsync(CurrentAccountId(context), projectId, cancellationToken));
     }
     catch (InvalidOperationException ex)
     {
@@ -1300,12 +1324,13 @@ app.MapGet("/api/projects/{projectId}/prototype-7day-playable/progress", async (
 app.MapPost("/api/projects/{projectId}/prototype-7day-playable/repair", async (
     string projectId,
     PrototypeRepairRequest request,
+    HttpContext context,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await prototypeWorkflow.RepairAsync(projectId, request, cancellationToken);
+        var result = await prototypeWorkflow.RepairAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -1316,12 +1341,13 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/repair", async (
 
 app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async (
     string projectId,
+    HttpContext context,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await prototypeWorkflow.ValidateAsync(projectId, cancellationToken);
+        var result = await prototypeWorkflow.ValidateAsync(CurrentAccountId(context), projectId, cancellationToken);
         return result.Status switch
         {
             "succeeded" or "failed" => Results.Ok(result),
@@ -1339,12 +1365,13 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async 
 app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
     string projectId,
     PrototypeTddRequest request,
+    HttpContext context,
     [FromServices] PrototypeCommandService prototypeCommands,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await prototypeCommands.RunTddAsync(projectId, request, cancellationToken);
+        var result = await prototypeCommands.RunTddAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -1356,12 +1383,13 @@ app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
 app.MapPost("/api/projects/{projectId}/prototype-scene", async (
     string projectId,
     PrototypeSceneRequest request,
+    HttpContext context,
     [FromServices] PrototypeCommandService prototypeCommands,
     CancellationToken cancellationToken) =>
 {
     try
     {
-        var result = await prototypeCommands.CreateSceneAsync(projectId, request, cancellationToken);
+        var result = await prototypeCommands.CreateSceneAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)

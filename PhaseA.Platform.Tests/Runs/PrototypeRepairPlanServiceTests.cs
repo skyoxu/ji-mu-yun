@@ -60,7 +60,8 @@ public sealed class PrototypeRepairPlanServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedNavigationPrototypeRunAsync(store, projectId);
         var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
-        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, new LlmRepairPlanCodexClient());
+        var codex = new LlmRepairPlanCodexClient();
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
 
         var result = await service.CreateAsync(accountId, projectId);
 
@@ -72,6 +73,119 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Goals[3].Title.Should().Contain("reward 3-choice");
         result.Goals[0].Title.Should().NotContain("证据");
         result.Goals[0].Title.Should().NotContain("TDD");
+        codex.LastPrompt.Should().Contain("Use only the data provided in this prompt.");
+        codex.LastPrompt.Should().Contain("Do not read files, inspect the repository, call tools, or ask for more context.");
+        codex.LastOptions.Should().NotBeNull();
+        codex.LastOptions!.IgnoreRules.Should().BeTrue();
+        codex.LastOptions.ReasoningEffort.Should().Be("minimal");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseNavigationFirstFallbackRepairPlan_WhenNavigationFailureHasNoCodex()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedNavigationPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(4);
+        result.Goals[0].Title.Should().Contain("Start Adventure");
+        result.Goals[0].Title.Should().Contain("MapScene");
+        result.Goals[0].Title.Should().NotContain("证据");
+        result.Goals[0].Title.Should().NotContain("TDD");
+        result.Goals[1].Title.Should().Contain("奖励");
+        result.Goals[2].Description.Should().Contain("15 battles");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseBuildCleanupRepairPlan_WhenFailureIsDuplicateAssemblyAttributes()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedBuildContaminationPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var codex = new LlmRepairPlanCodexClient();
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(4);
+        result.Goals[0].Title.Should().Contain("Build cleanup");
+        result.Goals[0].Description.Should().Contain("CS0579");
+        result.Goals[0].Description.Should().Contain("obj/bin/buildcache");
+        result.Goals[0].Title.Should().NotContain("Start Adventure");
+        result.Goals[0].Title.Should().NotContain("gameplay");
+        codex.LastPrompt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldNotUseBuildCleanupRepairPlan_WhenGodotStackMentionsTempObjDebug()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedGodotNodePrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(4);
+        result.Goals[0].Title.Should().NotContain("Build cleanup");
+        result.Goals[0].Title.Should().Contain("scene/script node contract");
+        result.Goals[0].Description.Should().Contain("BattleStatusLabel");
+        result.Goals[0].Description.Should().Contain(".godot/mono/temp/obj/Debug");
+        result.Goals[1].Title.Should().Contain("Start Adventure");
+        result.Goals[1].Title.Should().Contain("BattleScene");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldPrioritizeConcreteAssertionFailures_WhenFailureAlreadyNamesMapAnd15Battles()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedPlayableLoopPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(4);
+        result.Goals[0].Title.Should().Contain("Start Adventure");
+        result.Goals[0].AcceptanceHint.Should().Contain("MapScene");
+        result.Goals[1].Description.Should().Contain("reward 3-choice");
+        result.Goals[2].Description.Should().Contain("15 battles");
+        result.Goals[2].Description.Should().Contain("any-loss defeat");
     }
 
     [Fact]
@@ -149,6 +263,64 @@ public sealed class PrototypeRepairPlanServiceTests
             """);
     }
 
+    private static async Task SeedFailedBuildContaminationPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            """
+            PROTOTYPE_TDD status=unexpected_red stage=green expected=pass
+            Game.Core\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs(4,12): error CS0579: Duplicate 'global::System.Runtime.Versioning.TargetFrameworkAttribute' attribute
+            Game.Core\obj\Debug\net8.0\Game.Core.AssemblyInfo.cs(13,12): error CS0579: Duplicate 'System.Reflection.AssemblyCompanyAttribute' attribute
+            Game.Core\buildcache\int\Debug\net8.0\Game.Core.AssemblyInfo.cs(13,12): error CS0579: Duplicate 'System.Reflection.AssemblyCompanyAttribute' attribute
+            """,
+            "",
+            "{\"prototype_tdd\":{\"status\":\"unexpected_red\"}}");
+    }
+
+    private static async Task SeedFailedGodotNodePrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            "MAIN_MENU_PROTOTYPE_NAV FAIL",
+            """
+            RPG_START_ADVENTURE_MAP_VISIBLE PASS
+            MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn
+            ERROR: Node not found: "CanvasLayer/UI/BattleScene/BattleStatusLabel" (relative to "/root/Main/ScreenRoot/DqRpgPrototype").
+            [8] Game.Godot.Prototypes.DqRpgPrototype.InvokeGodotClassMethod() (C:\repo\.godot\mono\temp\obj\Debug\Godot.SourceGenerators\Generated.cs:220)
+            """,
+            """
+            {"godot_smoke":{"ran":true,"exit_code":1,"reason":"node_not_found","scene":"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"}}
+            """);
+    }
+
+    private static async Task SeedFailedPlayableLoopPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            """
+            PROTOTYPE_TDD status=unexpected_red stage=green expected=pass
+            Start Adventure clicked but visible MapScene markers were not found after navigation.
+            Assert.Contains() Failure: Sub-string not found
+            Not found: "15 battles"
+            """,
+            "",
+            """
+            {"prototype_completion":{"succeeded":false,"error":"prototype_workflow_failed"},"godot_smoke":{"ran":false,"reason":"prototype_workflow_failed","scene":null}}
+            """);
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
@@ -177,6 +349,9 @@ public sealed class PrototypeRepairPlanServiceTests
 
     private sealed class LlmRepairPlanCodexClient : ICodexChatClient
     {
+        public string? LastPrompt { get; private set; }
+        public CodexChatClientOptions? LastOptions { get; private set; }
+
         public Task<CodexChatClientResult> CompleteAsync(
             string projectRoot,
             string model,
@@ -185,6 +360,8 @@ public sealed class PrototypeRepairPlanServiceTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
+            LastPrompt = prompt;
+            LastOptions = options;
             const string json = """
             {
               "goals": [

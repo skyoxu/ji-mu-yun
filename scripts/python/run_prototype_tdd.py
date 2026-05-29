@@ -587,6 +587,106 @@ def _build_dotnet_steps(*, targets: list[str], configuration: str, filter_expr: 
     return steps
 
 
+def _safe_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def _project_dirs_from_solution(solution_path: Path) -> list[Path]:
+    if not solution_path.is_file():
+        return []
+    project_dirs: list[Path] = []
+    pattern = re.compile(r'"([^"]+\.csproj)"', re.IGNORECASE)
+    try:
+        text = solution_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    for match in pattern.finditer(text):
+        project_path = (solution_path.parent / match.group(1).replace("\\", os.sep)).resolve()
+        if project_path.is_file():
+            project_dirs.append(project_path.parent)
+    return project_dirs
+
+
+def _project_paths_from_solution(solution_path: Path) -> list[Path]:
+    if not solution_path.is_file():
+        return []
+    project_paths: list[Path] = []
+    pattern = re.compile(r'"([^"]+\.csproj)"', re.IGNORECASE)
+    try:
+        text = solution_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    for match in pattern.finditer(text):
+        project_path = (solution_path.parent / match.group(1).replace("\\", os.sep)).resolve()
+        if project_path.is_file():
+            project_paths.append(project_path)
+    return project_paths
+
+
+def _collect_project_dirs(root: Path, project_path: Path, seen: set[str]) -> list[Path]:
+    project_path = project_path.resolve()
+    key = os.path.normcase(os.path.normpath(str(project_path)))
+    if key in seen or not project_path.is_file() or not _safe_relative_to(project_path, root):
+        return []
+    seen.add(key)
+
+    project_dirs = [project_path.parent]
+    try:
+        text = project_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return project_dirs
+
+    for include in re.findall(r'<ProjectReference\s+[^>]*Include="([^"]+)"', text, flags=re.IGNORECASE):
+        reference_path = (project_path.parent / include.replace("\\", os.sep)).resolve()
+        project_dirs.extend(_collect_project_dirs(root, reference_path, seen))
+    return project_dirs
+
+
+def _dotnet_build_hygiene(root: Path, targets: list[str]) -> dict[str, object]:
+    root = root.resolve()
+    candidate_dirs: list[Path] = []
+    seen_projects: set[str] = set()
+    for target in targets:
+        target_path = (root / target).resolve()
+        if target_path.suffix.lower() == ".sln":
+            for project_path in _project_paths_from_solution(target_path):
+                candidate_dirs.extend(_collect_project_dirs(root, project_path, seen_projects))
+        elif target_path.suffix.lower() == ".csproj":
+            candidate_dirs.extend(_collect_project_dirs(root, target_path, seen_projects))
+        elif target_path.is_dir():
+            candidate_dirs.append(target_path)
+
+    cleaned: list[str] = []
+    skipped: list[str] = []
+    seen: set[str] = set()
+    for project_dir in candidate_dirs:
+        if not _safe_relative_to(project_dir, root):
+            skipped.append(str(project_dir))
+            continue
+        for leaf_name in ("obj", "bin", "buildcache"):
+            leaf = (project_dir / leaf_name).resolve()
+            key = os.path.normcase(os.path.normpath(str(leaf)))
+            if key in seen:
+                continue
+            seen.add(key)
+            if leaf.name not in {"obj", "bin", "buildcache"} or not _safe_relative_to(leaf, root):
+                skipped.append(str(leaf))
+                continue
+            if leaf.exists():
+                shutil.rmtree(leaf)
+                cleaned.append(str(leaf.relative_to(root)).replace("\\", "/"))
+
+    return {
+        "enabled": bool(targets),
+        "cleaned_paths": cleaned,
+        "skipped_paths": skipped,
+    }
+
+
 def _build_gdunit_step(*, godot_bin: str, gdunit_paths: list[str], timeout_sec: int, report_dir: str) -> dict[str, object]:
     cmd = [
         "py",
@@ -705,7 +805,12 @@ def main(argv: list[str] | None = None) -> int:
     dotnet_bin = _resolve_dotnet(root)
     process_env = _build_process_env(root, dotnet_bin)
     slug = _sanitize_slug(args.slug)
-    out_dir = Path(args.out_dir) if str(args.out_dir or "").strip() else (root / "logs" / "ci" / today_str() / f"prototype-tdd-{slug}-{args.stage}")
+    if str(args.out_dir or "").strip():
+        out_dir = Path(args.out_dir)
+        if not out_dir.is_absolute():
+            out_dir = root / out_dir
+    else:
+        out_dir = root / "logs" / "ci" / today_str() / f"prototype-tdd-{slug}-{args.stage}"
     ensure_dir(out_dir)
 
     prototype_record = _ensure_record(
@@ -764,7 +869,9 @@ def main(argv: list[str] | None = None) -> int:
         print("PROTOTYPE_TDD ERROR: provide at least one --dotnet-target or --gdunit-path, or use --create-record-only.", file=sys.stderr)
         return 2
 
+    build_hygiene: dict[str, object] = {"enabled": False, "cleaned_paths": [], "skipped_paths": []}
     if not args.create_record_only:
+        build_hygiene = _dotnet_build_hygiene(root, [str(item) for item in args.dotnet_target])
         for index, step in enumerate(steps, start=1):
             log_path = out_dir / f"step-{index:02d}-{step['name']}.log"
             command = _rewrite_command_for_environment([str(item) for item in step["cmd"]], dotnet_bin=dotnet_bin)
@@ -790,6 +897,7 @@ def main(argv: list[str] | None = None) -> int:
         "prototype_record": prototype_record,
         "steps": steps,
         "create_record_only": bool(args.create_record_only),
+        "build_hygiene": build_hygiene,
     }
     payload["prototype_intake"] = _load_prototype_intake(root=root, prototype_record=prototype_record, slug=slug)
     summary_rel = str((out_dir / "summary.json").relative_to(root)).replace("\\", "/") if (out_dir / "summary.json").is_relative_to(root) else str(out_dir / "summary.json")

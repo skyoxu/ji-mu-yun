@@ -71,7 +71,7 @@ public sealed class ProjectDraftImportServiceTests
             """);
         var service = new ProjectDraftImportService(store, options, codex);
 
-        var result = await service.AnalyzeAsync(projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("make a game"), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("make a game"), "gpt-5.4");
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -91,6 +91,33 @@ public sealed class ProjectDraftImportServiceTests
     }
 
     [Fact]
+    public async Task AnalyzeAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var ownerAccountId = await store.EnsureSingleAdminAsync();
+        var otherAccount = await store.CreateUserAccountAsync("draft-other-account", 1);
+        var projectId = await CreateProjectAsync(store, options, ownerAccountId);
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var codex = new FakeCodex("{}");
+        var service = new ProjectDraftImportService(store, options, codex);
+
+        var act = () => service.AnalyzeAsync(
+            otherAccount.AccountId,
+            projectId,
+            "draft.txt",
+            System.Text.Encoding.UTF8.GetBytes("make a game"),
+            "gpt-5.4");
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
+        codex.Prompts.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task AnalyzeAsync_AcceptsJsonEmbeddedInCodexText()
     {
         using var database = TempSqliteDatabase.Create();
@@ -107,7 +134,7 @@ public sealed class ProjectDraftImportServiceTests
             """);
         var service = new ProjectDraftImportService(store, options, codex);
 
-        var result = await service.AnalyzeAsync(projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("prototype idea"), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("prototype idea"), "gpt-5.4");
 
         result.Status.Should().Be("succeeded");
         result.PrototypeSlug.Should().Be("embedded-json");
@@ -134,7 +161,7 @@ public sealed class ProjectDraftImportServiceTests
             "\u6838\u5fc3\u4f53\u9a8c\u662f\u627e\u5230\u5b9d\u7bb1\u3001\u63d0\u5347\u89d2\u8272\u3001\u51fb\u8d25 boss\u3002",
             "\u73a9\u5bb6\u5e94\u8be5\u80fd\u5728\u77ed\u65f6\u95f4\u5185\u5b8c\u6210\u4e00\u6b21\u6218\u6597\u5faa\u73af\u3002");
 
-        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
         var persisted = await service.GetLatestAsync(accountId, projectId);
 
         result.Status.Should().Be("succeeded");
@@ -227,7 +254,7 @@ public sealed class ProjectDraftImportServiceTests
             "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
             "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
 
-        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
 
         result.Status.Should().Be("succeeded");
         result.Warnings.Should().NotContain("llm_json_parse_failed");
@@ -267,7 +294,7 @@ public sealed class ProjectDraftImportServiceTests
             "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
             "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
 
-        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
 
         result.Status.Should().Be("succeeded");
         result.CoveragePercent.Should().Be(78);
@@ -315,7 +342,7 @@ public sealed class ProjectDraftImportServiceTests
             "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
             "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
 
-        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
 
         result.Status.Should().Be("succeeded");
         result.CoveragePercent.Should().Be(92);
@@ -353,7 +380,7 @@ public sealed class ProjectDraftImportServiceTests
             "核心玩法循环：（1.地图移动；2.概率撞怪；3.打赢怪物；4.选择成长。）",
             "胜利/失败条件：（打赢15场战斗赢得游戏胜利；任一战斗失败就游戏失败）");
 
-        var result = await service.AnalyzeAsync(projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
+        var result = await service.AnalyzeAsync(accountId, projectId, "rpg.txt", System.Text.Encoding.UTF8.GetBytes(draft), "gpt-5.4");
 
         result.Status.Should().Be("succeeded");
         result.CoveragePercent.Should().Be(74);

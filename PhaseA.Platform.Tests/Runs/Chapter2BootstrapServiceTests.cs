@@ -19,13 +19,13 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "hard checks ok\n", "")
         ], writeProjectHealth: true);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId);
+        var result = await service.RunAsync(accountId, projectId);
 
         result.Status.Should().Be("succeeded");
         result.ExitCode.Should().Be(0);
@@ -54,13 +54,13 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(7, "", "hard checks failed\n")
         ]);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId);
+        var result = await service.RunAsync(accountId, projectId);
 
         result.Status.Should().Be("failed");
         result.ExitCode.Should().Be(7);
@@ -80,14 +80,14 @@ public sealed class Chapter2BootstrapServiceTests
         WriteProjectHealthArtifacts(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "hard checks ok\n", "")
         ]);
         var service = Service(store, options, runner);
-        var first = await service.RunAsync(projectId);
+        var first = await service.RunAsync(accountId, projectId);
 
-        var second = await service.RunAsync(projectId);
+        var second = await service.RunAsync(accountId, projectId);
 
         second.Status.Should().Be("already_succeeded");
         second.RunId.Should().Be(first.RunId);
@@ -104,7 +104,7 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
         var runner = new FakeHostedProcessRunner([
@@ -112,7 +112,7 @@ public sealed class Chapter2BootstrapServiceTests
         ]);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId);
+        var result = await service.RunAsync(accountId, projectId);
 
         result.Status.Should().Be("blocked");
         result.ExitCode.Should().Be(423);
@@ -129,7 +129,7 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new HangingHostedProcessRunner();
         var service = new Chapter2BootstrapService(
             store,
@@ -140,7 +140,7 @@ public sealed class Chapter2BootstrapServiceTests
             new ProjectWorkspaceSeeder(options),
             TimeSpan.FromMilliseconds(50));
 
-        var result = await service.RunAsync(projectId);
+        var result = await service.RunAsync(accountId, projectId);
 
         result.Status.Should().Be("failed");
         result.ExitCode.Should().Be(124);
@@ -157,6 +157,14 @@ public sealed class Chapter2BootstrapServiceTests
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         return store;
+    }
+
+    private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
+    {
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
+        return (accountId, result.ProjectId!);
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)

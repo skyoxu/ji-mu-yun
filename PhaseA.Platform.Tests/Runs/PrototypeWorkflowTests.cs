@@ -66,11 +66,11 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: false));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: false));
 
         result.Status.Should().Be("succeeded");
         result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
@@ -132,6 +132,45 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (ownerAccountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var otherAccount = await store.CreateUserAccountAsync("workflow-other-account", 1);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var act = () => service.QueueAsync(otherAccount.AccountId, projectId, ValidRequest(confirm: true));
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
+        runner.Commands.Should().BeEmpty();
+        _ = ownerAccountId;
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (_, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var otherAccount = await store.CreateUserAccountAsync("workflow-progress-other", 1);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+
+        var act = () => service.GetProgressAsync(otherAccount.AccountId, projectId);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
+    }
+
+    [Fact]
     public void PrototypeContractPromptBlock_RequiresInputTraceabilityForAllTopLevelRoutes()
     {
         var contract = new PrototypeContractSnapshot(
@@ -169,11 +208,11 @@ public sealed class PrototypeWorkflowTests
         SeedRepoRpgTemplate(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var project = await store.GetProjectSnapshotAsync(projectId);
 
         result.Status.Should().Be("succeeded");
@@ -192,7 +231,7 @@ public sealed class PrototypeWorkflowTests
         SeedRepoRpgTemplate(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var existingScene = Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "DefaultRpgPrototype.tscn");
         Directory.CreateDirectory(Path.GetDirectoryName(existingScene)!);
@@ -200,7 +239,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
 
         result.Status.Should().Be("succeeded");
         File.ReadAllText(existingScene).Should().Be("user-owned-scene\n");
@@ -214,11 +253,11 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writeActiveState: false);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -234,14 +273,14 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             workflowExitCode: 1,
             writeActiveState: false,
             workflowStderrOverride: "PROTOTYPE_TDD status=unexpected_red stage=green expected=pass");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -258,15 +297,15 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             workflowExitCode: 1,
             writeActiveState: false,
             workflowStdoutOverride: "PROTOTYPE_TDD status=unexpected_green stage=red expected=fail out=logs/ci/demo");
         var service = Service(store, options, runner);
 
-        _ = await service.RunAsync(projectId, ValidRequest(confirm: true));
-        var progress = await service.GetProgressAsync(projectId);
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var progress = await service.GetProgressAsync(accountId, projectId);
 
         progress.Status.Should().Be("failed");
         progress.Failure.Should().Be("TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。");
@@ -280,14 +319,14 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(skippedDays: [3, 4]);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
-        var progress = await service.GetProgressAsync(projectId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
 
         result.Status.Should().Be("succeeded");
         run!.Status.Should().Be("succeeded");
@@ -305,13 +344,13 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(mainMenuNavigationExitCode: 9, mainMenuNavigationStderrOverride: "MAIN_MENU_PROTOTYPE_NAV FAIL prototype_scene_not_loaded");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
-        var progress = await service.GetProgressAsync(projectId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
 
         result.Status.Should().Be("failed");
         run!.Status.Should().Be("failed");
@@ -329,11 +368,11 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(skippedDays: [2]);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -349,11 +388,11 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(smokeExitCode: 1, smokeStdoutOverride: "SMOKE PASS (any output)\n");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -369,14 +408,14 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 1,
             smokeStdoutOverride: "SMOKE PASS (any output)\n",
             smokeStderrOverride: "ERROR: No loader found for resource: res://Game.Godot/Prototypes/dq-rpg/Assets/Player/map_player.png\n");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -393,13 +432,13 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writePrototypeScene: false);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
-        var progress = await service.GetProgressAsync(projectId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
 
         result.Status.Should().Be("failed");
         run!.Status.Should().Be("failed");
@@ -417,11 +456,11 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writePackagingArtifacts: false);
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -437,12 +476,12 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
-        var idle = await service.GetProgressAsync(projectId);
-        var result = await service.RunAsync(projectId, ValidRequest(confirm: false));
-        var finished = await service.GetProgressAsync(projectId);
+        var idle = await service.GetProgressAsync(accountId, projectId);
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: false));
+        var finished = await service.GetProgressAsync(accountId, projectId);
 
         idle.Status.Should().Be("idle");
         finished.Status.Should().Be("succeeded");
@@ -466,15 +505,15 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        _ = await service.RunAsync(projectId, ValidRequest(confirm: true));
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
         runner.Commands.Should().HaveCount(3);
 
-        var result = await service.ValidateAsync(projectId);
-        var progress = await service.GetProgressAsync(projectId);
+        var result = await service.ValidateAsync(accountId, projectId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -498,14 +537,14 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
         (await store.TryAcquireRunnerLockAsync(projectId, lockRunId)).Should().BeTrue();
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.QueueAsync(projectId, ValidRequest(confirm: true));
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
 
         result.Status.Should().Be("project_busy");
         result.ExitCode.Should().Be(423);
@@ -520,7 +559,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var draftRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
         await store.UpsertProjectPrototypeDraftAsync(
@@ -548,7 +587,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.QueueAsync(projectId, new PrototypeWorkflowRequest(
+        var result = await service.QueueAsync(accountId, projectId, new PrototypeWorkflowRequest(
             Slug: "",
             GameName: null,
             GameType: null,
@@ -580,7 +619,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         await store.MarkRunStartedAsync(failedRunId);
@@ -594,7 +633,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
@@ -615,7 +654,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-rpgdemo1.md";
         WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
@@ -631,7 +670,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner(completedThroughDay: 7);
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
@@ -649,7 +688,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
         WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
@@ -681,7 +720,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
@@ -702,7 +741,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
         WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
@@ -754,7 +793,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
 
@@ -775,7 +814,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
         WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
@@ -815,7 +854,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
 
         result.Status.Should().Be("queued");
@@ -831,7 +870,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
         WritePrototypeRecord(project!.RepoPath, prototypeRecordPath, "# Prototype: dq-rpg\n");
@@ -863,7 +902,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner(mainMenuNavigationExitCode: 14, mainMenuNavigationStderrOverride: "MAIN_MENU_PROTOTYPE_NAV FAIL rpg_map_visible_markers_missing_after_start");
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
         await WaitForCommandsAsync(runner, 3);
         var repairRun = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
         var messages = await store.ListProjectChatMessagesAsync(project.AccountId, projectId, 10);
@@ -886,7 +925,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         await store.MarkRunStartedAsync(failedRunId);
@@ -909,7 +948,7 @@ public sealed class PrototypeWorkflowTests
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
 
-        var result = await service.RepairAsync(projectId, new PrototypeRepairRequest("gpt-5.4"));
+        var result = await service.RepairAsync(accountId, projectId, new PrototypeRepairRequest("gpt-5.4"));
 
         result.Status.Should().Be("prototype_repair_not_available");
         runner.Commands.Should().BeEmpty();
@@ -923,10 +962,10 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
-        var result = await service.RunAsync(projectId, ValidRequest() with { ScoreEngine = "codex" });
+        var result = await service.RunAsync(accountId, projectId, ValidRequest() with { ScoreEngine = "codex" });
 
         result.Status.Should().Be("llm_binding_required");
         result.ExitCode.Should().Be(402);
@@ -940,8 +979,7 @@ public sealed class PrototypeWorkflowTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
-        var projectId = await CreateProjectAsync(store, options);
-        var accountId = (await store.GetProjectSnapshotAsync(projectId))!.AccountId;
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         await new LlmBindingService(store, options).BindAsync(accountId, new LlmBindingRequest(
             "new-api",
             "https://new-api.example.com/v1",
@@ -949,7 +987,7 @@ public sealed class PrototypeWorkflowTests
             "host-secret:new-api-user-1"));
         var service = Service(store, options, new FakeHostedProcessRunner());
 
-        var result = await service.RunAsync(projectId, ValidRequest() with { ScoreEngine = "codex" });
+        var result = await service.RunAsync(accountId, projectId, ValidRequest() with { ScoreEngine = "codex" });
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -994,6 +1032,14 @@ public sealed class PrototypeWorkflowTests
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         return store;
+    }
+
+    private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")
+    {
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
+        return (accountId, result.ProjectId!);
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")

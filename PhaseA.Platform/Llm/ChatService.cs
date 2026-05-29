@@ -53,8 +53,9 @@ public sealed class ChatService
         _skillActionCatalog = skillActionCatalog;
     }
 
-    public async Task<ChatResult> SendAsync(string projectId, ChatRequest request, CancellationToken cancellationToken = default)
+    public async Task<ChatResult> SendAsync(string accountId, string projectId, ChatRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
@@ -69,7 +70,7 @@ public sealed class ChatService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

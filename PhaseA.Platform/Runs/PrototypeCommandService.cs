@@ -40,8 +40,9 @@ public sealed class PrototypeCommandService
         _workspaceSeeder = workspaceSeeder;
     }
 
-    public async Task<HostedCommandResult> RunTddAsync(string projectId, PrototypeTddRequest request, CancellationToken cancellationToken = default)
+    public async Task<HostedCommandResult> RunTddAsync(string accountId, string projectId, PrototypeTddRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         var missing = PrototypeCommandValidation.MissingTddFields(request);
         if (missing.Count > 0)
         {
@@ -49,6 +50,7 @@ public sealed class PrototypeCommandService
         }
 
         return await RunLockedAsync(
+            accountId,
             projectId,
             $"prototype-tdd-{request.Stage!.ToLowerInvariant()}",
             PrototypeRecordWriter.SanitizeSlug(request.Slug!),
@@ -56,8 +58,9 @@ public sealed class PrototypeCommandService
             cancellationToken);
     }
 
-    public async Task<HostedCommandResult> CreateSceneAsync(string projectId, PrototypeSceneRequest request, CancellationToken cancellationToken = default)
+    public async Task<HostedCommandResult> CreateSceneAsync(string accountId, string projectId, PrototypeSceneRequest request, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         var missing = PrototypeCommandValidation.MissingSceneFields(request);
         if (missing.Count > 0)
         {
@@ -65,6 +68,7 @@ public sealed class PrototypeCommandService
         }
 
         return await RunLockedAsync(
+            accountId,
             projectId,
             "prototype-scene",
             PrototypeRecordWriter.SanitizeSlug(request.Slug!),
@@ -73,6 +77,7 @@ public sealed class PrototypeCommandService
     }
 
     private async Task<HostedCommandResult> RunLockedAsync(
+        string accountId,
         string projectId,
         string runType,
         string slug,
@@ -80,7 +85,7 @@ public sealed class PrototypeCommandService
         CancellationToken cancellationToken)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
         }

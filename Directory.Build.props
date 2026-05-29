@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <GeneratedWorkspaceExcludes>artifacts/**;.verify/**;logs/**;obj_verify/**;bin_verify/**;temp-obj/**;.codex-temp/**;.codex-test/**;artifacts\**;.verify\**;logs\**;obj_verify\**;bin_verify\**;temp-obj\**;.codex-temp\**;.codex-test\**;**/artifacts/**;**/.verify/**;**/logs/**;**/obj_verify/**;**/bin_verify/**;**/temp-obj/**;**/.codex-temp/**;**/.codex-test/**;**\artifacts\**;**\.verify\**;**\logs\**;**\obj_verify\**;**\bin_verify\**;**\temp-obj\**;**\.codex-temp\**;**\.codex-test\**</GeneratedWorkspaceExcludes>
-    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedWorkspaceExcludes);obj/**;bin/**;obj\**;bin\**;**/obj/**;**/bin/**;**\obj\**;**\bin\**</DefaultItemExcludes>
+    <GeneratedWorkspaceExcludes>artifacts/**;.verify/**;logs/**;obj_verify/**;bin_verify/**;temp-obj/**;buildcache/**;.codex-temp/**;.codex-test/**;artifacts\**;.verify\**;logs\**;obj_verify\**;bin_verify\**;temp-obj\**;buildcache\**;.codex-temp\**;.codex-test\**;**/artifacts/**;**/.verify/**;**/logs/**;**/obj_verify/**;**/bin_verify/**;**/temp-obj/**;**/buildcache/**;**/.codex-temp/**;**/.codex-test/**;**\artifacts\**;**\.verify\**;**\logs\**;**\obj_verify\**;**\bin_verify\**;**\temp-obj\**;**\buildcache\**;**\.codex-temp\**;**\.codex-test\**</GeneratedWorkspaceExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedWorkspaceExcludes);obj/**;bin/**;buildcache/**;obj\**;bin\**;buildcache\**;**/obj/**;**/bin/**;**/buildcache/**;**\obj\**;**\bin\**;**\buildcache\**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="$(GeneratedWorkspaceExcludes)" />

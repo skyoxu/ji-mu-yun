@@ -5,7 +5,8 @@ public sealed record PrototypeIterationPlanResult(
     string Status,
     string Summary,
     IReadOnlyList<PrototypeIterationPlanGoalResult> Goals,
-    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);
+    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
+    PrototypeIterationPlanEvaluationResult? LatestEvaluation = null);
 
 public sealed record PrototypeIterationPlanGoalResult(
     int GoalIndex,

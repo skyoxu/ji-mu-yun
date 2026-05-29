@@ -96,7 +96,9 @@ public sealed class ProjectInitializationService
             var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
             var chapter2 = scope.ServiceProvider.GetRequiredService<Chapter2BootstrapService>();
             await metadataStore.SetProjectBootstrapStatusAsync(projectId, "running", null);
-            var result = await chapter2.RunAsync(projectId);
+            var project = await metadataStore.GetProjectSnapshotAsync(projectId)
+                ?? throw new InvalidOperationException("Project not found.");
+            var result = await chapter2.RunAsync(project.AccountId, projectId);
             if (result.Status is "succeeded" or "already_succeeded")
             {
                 await metadataStore.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);

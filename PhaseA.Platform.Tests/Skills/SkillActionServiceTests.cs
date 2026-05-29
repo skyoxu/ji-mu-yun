@@ -26,7 +26,7 @@ public sealed class SkillActionServiceTests
         var runner = new FakeHostedProcessRunner("skill output");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, "game-design-master", new SkillActionRunRequest("Focus on combat loop."));
+        var result = await service.RunAsync(accountId, projectId, "game-design-master", new SkillActionRunRequest("Focus on combat loop."));
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -74,9 +74,35 @@ public sealed class SkillActionServiceTests
         var runner = new FakeHostedProcessRunner("skill output");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(projectId, "not-whitelisted", new SkillActionRunRequest("$prototype-rpg-godot-zh"));
+        var result = await service.RunAsync(accountId, projectId, "not-whitelisted", new SkillActionRunRequest("$prototype-rpg-godot-zh"));
 
         result.Status.Should().Be("skill_action_not_allowed");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_RejectsProjectOwnedByAnotherAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var ownerAccountId = await store.EnsureSingleAdminAsync();
+        var otherAccount = await store.CreateUserAccountAsync("skill-other-account", 1);
+        var projectId = await CreateProjectAsync(store, options, ownerAccountId);
+        var runner = new FakeHostedProcessRunner("should not run");
+        var service = Service(store, options, runner);
+
+        var act = () => service.RunAsync(
+            otherAccount.AccountId,
+            projectId,
+            "game-design-master",
+            new SkillActionRunRequest("Focus on combat loop."));
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Project not found.");
         runner.Commands.Should().BeEmpty();
     }
 
