@@ -633,6 +633,67 @@ offset_right = 440.0
 offset_bottom = 340.0
 color = Color(0.556863, 0.219608, 0.721569, 1)
 
+[node name="BattleStatusLabel" type="Label" parent="CanvasLayer/UI/BattleScene"]
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 496.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 18
+text = "Battle ready"
+
+[node name="BattleLogLabel" type="Label" parent="CanvasLayer/UI/BattleScene"]
+offset_left = 24.0
+offset_top = 360.0
+offset_right = 496.0
+offset_bottom = 432.0
+autowrap_mode = 3
+text = "Press Attack to resolve the current turn."
+
+[node name="ActionsVBox" type="VBoxContainer" parent="CanvasLayer/UI/BattleScene"]
+offset_left = 24.0
+offset_top = 440.0
+offset_right = 220.0
+offset_bottom = 512.0
+theme_override_constants/separation = 8
+
+[node name="AttackButton" type="Button" parent="CanvasLayer/UI/BattleScene/ActionsVBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "Attack"
+
+[node name="RetryButton" type="Button" parent="CanvasLayer/UI/BattleScene/ActionsVBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+text = "Retry"
+
+[node name="RewardVBox" type="VBoxContainer" parent="CanvasLayer/UI/BattleScene"]
+visible = false
+offset_left = 232.0
+offset_top = 360.0
+offset_right = 496.0
+offset_bottom = 512.0
+theme_override_constants/separation = 8
+
+[node name="RewardInfoLabel" type="Label" parent="CanvasLayer/UI/BattleScene/RewardVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Choose one reward."
+
+[node name="RewardButton1" type="Button" parent="CanvasLayer/UI/BattleScene/RewardVBox"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Reward 1"
+
+[node name="RewardButton2" type="Button" parent="CanvasLayer/UI/BattleScene/RewardVBox"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Reward 2"
+
+[node name="RewardButton3" type="Button" parent="CanvasLayer/UI/BattleScene/RewardVBox"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Reward 3"
+
 [node name="HeaderLabel" type="Label" parent="CanvasLayer/UI"]
 offset_left = 24.0
 offset_top = 20.0
@@ -674,43 +735,3 @@ grow_vertical = 2
 bbcode_enabled = false
 scroll_active = true
 fit_content = false
-
-[node name="RewardPanel" type="PanelContainer" parent="CanvasLayer/UI"]
-visible = false
-offset_left = 212.0
-offset_top = 180.0
-offset_right = 804.0
-offset_bottom = 500.0
-
-[node name="RewardVBox" type="VBoxContainer" parent="CanvasLayer/UI/RewardPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 12
-
-[node name="RewardTitle" type="Label" parent="CanvasLayer/UI/RewardPanel/RewardVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Select One Reward"
-
-[node name="RewardOption1" type="Button" parent="CanvasLayer/UI/RewardPanel/RewardVBox"]
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-text = "1"
-
-[node name="RewardOption2" type="Button" parent="CanvasLayer/UI/RewardPanel/RewardVBox"]
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-text = "2"
-
-[node name="RewardOption3" type="Button" parent="CanvasLayer/UI/RewardPanel/RewardVBox"]
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-text = "3"

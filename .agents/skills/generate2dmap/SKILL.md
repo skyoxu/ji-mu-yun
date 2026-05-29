@@ -29,7 +29,7 @@ This skill is image-generation-first for visual assets. Use the repo-local aiart
 Default command:
 
 ```bash
-py -3 C:\Users\weiruan\.codex\skills\generate2dmap\scripts\generate_map_image.py \
+py -3 C:\jimuyun\.agents\skills\generate2dmap\scripts\generate_map_image.py \
   --repo-root <repo-root> \
   --prompt-file <prompt.txt> \
   --out <asset.png> \

@@ -19,15 +19,20 @@ public partial class DqRpgPrototype : Node2D
     private Label _headerLabel = default!;
     private Label _statsLabel = default!;
     private Label _objectiveLabel = default!;
+    private Label _battleStatusLabel = default!;
+    private Label _battleLogLabel = default!;
+    private Label _rewardInfoLabel = default!;
     private RichTextLabel _logLabel = default!;
     private ColorRect _mapAsset = default!;
     private ColorRect _playerToken = default!;
     private ColorRect _enemyToken = default!;
     private ColorRect _chestToken = default!;
     private ColorRect _enemyMapToken = default!;
-    private PanelContainer _rewardPanel = default!;
+    private Control _rewardPanel = default!;
     private PanelContainer _startPanel = default!;
     private Button _startButton = default!;
+    private Button _attackButton = default!;
+    private Button _retryButton = default!;
     private Button[] _rewardButtons = [];
 
     private Vector2I _playerGrid = new(1, 1);
@@ -43,10 +48,15 @@ public partial class DqRpgPrototype : Node2D
         _headerLabel = GetNode<Label>("CanvasLayer/UI/HeaderLabel");
         _statsLabel = GetNode<Label>("CanvasLayer/UI/StatsLabel");
         _objectiveLabel = GetNode<Label>("CanvasLayer/UI/ObjectiveLabel");
+        _battleStatusLabel = GetNode<Label>("CanvasLayer/UI/BattleScene/BattleStatusLabel");
+        _battleLogLabel = GetNode<Label>("CanvasLayer/UI/BattleScene/BattleLogLabel");
+        _rewardInfoLabel = GetNode<Label>("CanvasLayer/UI/BattleScene/RewardVBox/RewardInfoLabel");
         _logLabel = GetNode<RichTextLabel>("CanvasLayer/UI/LogPanel/LogLabel");
-        _rewardPanel = GetNode<PanelContainer>("CanvasLayer/UI/RewardPanel");
+        _rewardPanel = GetNode<Control>("CanvasLayer/UI/BattleScene/RewardVBox");
         _startPanel = GetNode<PanelContainer>("CanvasLayer/UI/StartPanel");
         _startButton = GetNode<Button>("CanvasLayer/UI/StartPanel/StartVBox/StartButton");
+        _attackButton = GetNode<Button>("CanvasLayer/UI/BattleScene/ActionsVBox/AttackButton");
+        _retryButton = GetNode<Button>("CanvasLayer/UI/BattleScene/ActionsVBox/RetryButton");
         _mapAsset = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgMapAsset");
         _playerToken = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgPlayerAsset");
         _enemyToken = GetNode<ColorRect>("CanvasLayer/UI/BattleScene/EnemyToken");
@@ -54,12 +64,14 @@ public partial class DqRpgPrototype : Node2D
         _enemyMapToken = GetNode<ColorRect>("CanvasLayer/UI/MapScene/RpgEnemyAsset");
         _rewardButtons =
         [
-            GetNode<Button>("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption1"),
-            GetNode<Button>("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption2"),
-            GetNode<Button>("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption3")
+            GetNode<Button>("CanvasLayer/UI/BattleScene/RewardVBox/RewardButton1"),
+            GetNode<Button>("CanvasLayer/UI/BattleScene/RewardVBox/RewardButton2"),
+            GetNode<Button>("CanvasLayer/UI/BattleScene/RewardVBox/RewardButton3")
         ];
 
         _startButton.Pressed += StartRun;
+        _attackButton.Pressed += ResolveCurrentBattle;
+        _retryButton.Pressed += RestartRun;
         for (var i = 0; i < _rewardButtons.Length; i++)
         {
             var index = i;
@@ -241,6 +253,9 @@ public partial class DqRpgPrototype : Node2D
         }
 
         _rewardPanel.Visible = true;
+        _rewardInfoLabel.Text = _rewardFromChest
+            ? "Choose one chest reward, then return to the map."
+            : "Choose one battle reward, then return to the map.";
     }
 
     private void SelectReward(int rewardIndex)
@@ -335,12 +350,15 @@ public partial class DqRpgPrototype : Node2D
     private void RefreshView()
     {
         var mapVisible = _hasStarted && (_state.Phase == "map" || _state.Phase == "reward" || _state.IsGameOver || _state.IsVictory);
+        var rewardVisible = _hasStarted && _rewardPanel.Visible && !_state.IsGameOver && !_state.IsVictory;
         GetNode<Control>("CanvasLayer/UI/MapScene").Visible = mapVisible;
-        GetNode<Control>("CanvasLayer/UI/BattleScene").Visible = _hasStarted && _state.Phase == "battle";
-        _rewardPanel.Visible = _hasStarted && _rewardPanel.Visible && !_state.IsGameOver && !_state.IsVictory;
+        GetNode<Control>("CanvasLayer/UI/BattleScene").Visible = _hasStarted && (_state.Phase == "battle" || rewardVisible);
+        _rewardPanel.Visible = rewardVisible;
         _startPanel.Visible = !_hasStarted;
         _enemyMapToken.Visible = _hasStarted && _state.Phase != "battle";
         _enemyToken.Visible = _hasStarted && _state.Phase == "battle";
+        _attackButton.Disabled = !_hasStarted || _state.Phase != "battle" || rewardVisible || _state.IsGameOver || _state.IsVictory;
+        _retryButton.Visible = _hasStarted && (_state.IsGameOver || _state.IsVictory || _state.Phase == "battle");
 
         _headerLabel.Text = !_hasStarted ? "DQ RPG Prototype - Start" : _state.Phase switch
         {
@@ -353,6 +371,9 @@ public partial class DqRpgPrototype : Node2D
         _statsLabel.Text = $"HP: {_state.PlayerHp}   ATK: {_state.PlayerAttack}   Wins: {_state.BattlesWon}/{DqRpgPrototypeLoop.WinBattleTarget}   Chests: {_state.ChestsOpened}";
 
         _objectiveLabel.Text = BuildObjectiveText();
+        _battleStatusLabel.Text = _currentEncounter is null
+            ? _objectiveLabel.Text
+            : $"{_currentEncounter.Name} HP: {_currentEncounter.Hp} ATK: {_currentEncounter.Attack}";
         var enemyModulate = _currentEncounter?.Kind switch
         {
             "boss" => new Color(0.82f, 0.20f, 0.20f),
@@ -410,6 +431,7 @@ public partial class DqRpgPrototype : Node2D
         builder.Append("- ");
         builder.Append(line);
         _logLabel.Text = builder.ToString();
+        _battleLogLabel.Text = builder.ToString();
         _logLabel.ScrollToLine(_logLabel.GetLineCount());
     }
 }

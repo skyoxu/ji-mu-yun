@@ -1059,6 +1059,10 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual(expected_core, core_text)
         self.assertEqual(expected_dotnet_test, dotnet_test_text)
         self.assertEqual(expected_gdunit_test, gdunit_test_text)
+        self.assertIn("[node name=\"BattleStatusLabel\" type=\"Label\" parent=\"CanvasLayer/UI/BattleScene\"]", scene_text)
+        self.assertIn("[node name=\"RewardButton3\" type=\"Button\" parent=\"CanvasLayer/UI/BattleScene/RewardVBox\"]", scene_text)
+        self.assertIn("CanvasLayer/UI/BattleScene/RewardVBox/RewardButton3", script_text)
+        self.assertNotIn("CanvasLayer/UI/RewardPanel/RewardVBox/RewardOption", script_text)
 
     def test_baseline_repo_root_should_prefer_phasea_repository_root_env(self) -> None:
         module = _load_module("prototype_workflow_router_phasea_repo_root", "scripts/python/run_prototype_workflow.py")
