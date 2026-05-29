@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -22,7 +23,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         await service.CreateAsync(
             accountId,
@@ -65,7 +66,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         var result = await service.CreateAsync(
             accountId,
@@ -95,7 +96,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -132,7 +133,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         var result = await service.CreateAsync(
             accountId,
@@ -161,7 +162,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         var result = await service.CreateAsync(
             accountId,
@@ -197,7 +198,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         var result = await service.CreateAsync(
             accountId,
@@ -217,7 +218,7 @@ public sealed class PrototypeIterationPlanServiceTests
             .And.NotContain("scene switching");
         result.Goals[1].Title.Should().Contain("Start Adventure");
         result.Goals[1].Title.Should().Contain("MapScene");
-        result.Goals[1].Description.Should().Contain("clicking Start Adventure");
+        result.Goals[1].Description.Should().Contain("Start Adventure");
         result.Goals[1].AcceptanceHint.Should().Contain("visible RPG MapScene");
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("BattleScene", StringComparison.OrdinalIgnoreCase));
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("scene switching", StringComparison.OrdinalIgnoreCase));
@@ -239,7 +240,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         await store.MarkRunStartedAsync(runId);
@@ -277,7 +278,7 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldRejectModelGeneratedGenericRpgPlan_AndKeepServerScaffold()
+    public async Task CreateAsync_ShouldReturnLlmFailed_WhenModelGeneratedPlanDoesNotMatchRpgScaffold()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -296,14 +297,9 @@ public sealed class PrototypeIterationPlanServiceTests
                 "Improve the first playable loop: movement, encounter, battle, reward, and return to the map.",
                 "completion_suggestion"));
 
-        result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(6);
-        result.Goals[0].Title.Should().Be("RPG Step 1: basic assets and UI validation");
-        result.Goals[1].Title.Should().Be("RPG Step 2: Start Adventure to visible MapScene validation");
-        result.Goals[2].Title.Should().Be("RPG Step 3: BattleScene creation and validation");
-        result.Goals[3].Title.Should().Be("RPG Step 4: main prototype scene and scene switching validation");
-        result.Goals[4].Title.Should().Be("RPG Step 5: reward loop and return-to-map validation");
-        result.Goals[5].Title.Should().Be("RPG Final Step: full playable prototype acceptance");
+        result.Status.Should().Be("llm_failed");
+        result.Goals.Should().BeEmpty();
+        result.Summary.Should().Contain("goal_plan_parse_failed");
     }
 
     [Fact]
@@ -343,7 +339,12 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new RpgEvaluationCodexClient(
+            "should_refine_plan",
+            "当前计划仍需重拆。",
+            "Missing RPG contract steps: MapScene, BattleScene, reward loop.",
+            "请重拆 RPG 计划。",
+            "Regenerate the RPG iteration plan."));
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -410,7 +411,7 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_ShouldFallbackToDeterministicRules_WhenLlmEvaluationFails()
+    public async Task EvaluateAsync_ShouldReturnLlmFailed_WhenRpgLlmEvaluationFails()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -439,8 +440,37 @@ public sealed class PrototypeIterationPlanServiceTests
             projectId,
             new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
 
-        result.Decision.Should().Be("should_refine_plan");
-        result.Reason.Should().Contain("Missing RPG contract steps");
+        result.Decision.Should().Be("llm_failed");
+        result.Reason.Should().Contain("codex_failed");
+        result.SuggestedAction.Should().Contain("修复 LLM");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldReturnLlmFailed_WhenRpgPlanningAnalysisFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new FailedEvaluationCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Improve the first playable loop: movement, encounter, battle, reward, and return to the map.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("llm_failed");
+        result.SessionId.Should().BeEmpty();
+        result.Goals.Should().BeEmpty();
+        result.Summary.Should().Contain("codex_failed");
+        var latest = await service.GetLatestAsync(accountId, projectId);
+        latest.Should().BeNull();
     }
 
     [Fact]
@@ -454,7 +484,12 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new RpgEvaluationCodexClient(
+            "should_refine_plan",
+            "当前计划仍需重拆。",
+            "acceptance boundary mismatch: first step crosses scene and full-playable boundaries.",
+            "请重拆 RPG 计划。",
+            "Regenerate the RPG iteration plan."));
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -492,7 +527,7 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
 
         await service.CreateAsync(
             accountId,
@@ -521,7 +556,12 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new RpgEvaluationCodexClient(
+            "should_refine_plan",
+            "当前计划缺少显式胜负规则覆盖。",
+            "Missing explicit 15-battle victory rule coverage.",
+            "请重拆 RPG 计划。",
+            "Regenerate the RPG iteration plan with explicit win/fail rules."));
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -558,7 +598,12 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new RpgEvaluationCodexClient(
+            "ready_to_execute",
+            "当前计划可执行。",
+            "The plan explicitly covers RPG rules.",
+            "可以直接执行下一目标。",
+            null));
 
         await store.CreateProjectIterationSessionAsync(
             accountId,
@@ -613,7 +658,7 @@ public sealed class PrototypeIterationPlanServiceTests
                 true),
             "docs/prototypes/2026-05-24-rpg-contract-demo.md",
             "rpg-contract-demo");
-        var service = new PrototypeIterationPlanService(store);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient(includeContractInstruction: true));
 
         var result = await service.CreateAsync(
             accountId,
@@ -693,6 +738,189 @@ public sealed class PrototypeIterationPlanServiceTests
             }
             """;
             return Task.FromResult(new CodexChatClientResult(true, json, null, 0, "", ""));
+        }
+    }
+
+    private sealed class SuccessfulRpgPlanCodexClient : ICodexChatClient
+    {
+        private readonly bool _includeContractInstruction;
+
+        public SuccessfulRpgPlanCodexClient(bool includeContractInstruction = false)
+        {
+            _includeContractInstruction = includeContractInstruction;
+        }
+
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                const string analysis =
+                    """
+                    {
+                      "analysisSummary": "LLM planning analysis ok.",
+                      "fieldCoverage": [
+                        { "field": "hypothesis", "status": "partial", "evidence": "prototype request", "missingReason": null },
+                        { "field": "reward_loop", "status": "partial", "evidence": "reward 3-choice", "missingReason": null },
+                        { "field": "win_fail_conditions", "status": "partial", "evidence": "win/fail rules", "missingReason": null }
+                      ]
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, analysis, null, 0, "", ""));
+            }
+
+            if (options?.OutputSchemaPath?.Contains("goal-plan", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var finalDescription = _includeContractInstruction
+                    ? "Run final acceptance across map, battle, reward return, navigation, input_traceability, and contract-specific runtime proof."
+                    : "Run final acceptance across map, battle, reward return, navigation, and contract-specific runtime proof.";
+                var finalAcceptance = _includeContractInstruction
+                    ? "Pass only when the full prototype and project-specific prototype contract fields pass."
+                    : "Pass only when the full RPG playable prototype, Start Adventure visible-map validation, and contract-specific runtime proof all pass.";
+                if (prompt.Contains("RPG Step 1: foundation asset usage and UI contract", StringComparison.Ordinal))
+                {
+                    var closurePayload = $$"""
+                    {
+                      "goals": [
+                        {
+                          "title": "RPG Step 1: foundation asset usage and UI contract",
+                          "description": "Confirm foundation asset usage and UI contract from the current succeeded prototype.",
+                          "acceptanceHint": "Pass only when map/player/enemy assets and the RPG UI contract are visible and validated."
+                        },
+                        {
+                          "title": "RPG Step 2: Start Adventure to visible MapScene validation",
+                          "description": "Verify Start Adventure reveals a visible map and playable movement path.",
+                          "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene and movement plus encounter entry are proven."
+                        },
+                        {
+                          "title": "RPG Step 3: BattleScene loop validation",
+                          "description": "Validate one readable battle loop from the current prototype.",
+                          "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback and settlement."
+                        },
+                        {
+                          "title": "RPG Step 4: main prototype scene and scene switching validation",
+                          "description": "Check menu, map, battle, reward, and return transitions from the main prototype scene.",
+                          "acceptanceHint": "Pass only when the main prototype scene switches through the RPG flow correctly."
+                        },
+                        {
+                          "title": "RPG Step 5: reward 3-choice and return-to-map validation",
+                          "description": "Prove reward 3-choice changes state and returns to the active map loop.",
+                          "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
+                        },
+                        {
+                          "title": "RPG Step 6: win/fail condition visibility and consistency",
+                          "description": "Show and validate the current prototype win/fail conditions.",
+                          "acceptanceHint": "Pass only when players can understand win/fail conditions from the visible prototype."
+                        },
+                        {
+                          "title": "RPG Final Step: full playable prototype acceptance",
+                          "description": "{{finalDescription}}",
+                          "acceptanceHint": "{{finalAcceptance}}"
+                        }
+                      ]
+                    }
+                    """;
+                    return Task.FromResult(new CodexChatClientResult(true, closurePayload, null, 0, "", ""));
+                }
+
+                var payload = $$"""
+                {
+                  "goals": [
+                    {
+                      "title": "RPG Step 1: basic assets and UI validation",
+                      "description": "Confirm the current prototype already shows the required foundation assets and readable UI markers on the user-facing map before changing later scenes.",
+                      "acceptanceHint": "Pass only when map, player, enemy asset usage and readable map, battle, reward UI markers are visible in the current prototype scene."
+                    },
+                    {
+                      "title": "RPG Step 2: Start Adventure to visible MapScene validation",
+                      "description": "Verify the real Start Adventure entry reveals a visible user-facing map, enables movement, and exposes the first encounter trigger.",
+                      "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene and proves movement plus encounter entry."
+                    },
+                    {
+                      "title": "RPG Step 3: BattleScene creation and validation",
+                      "description": "Validate one dedicated battle scene with readable action resolution and terminal settlement.",
+                      "acceptanceHint": "Pass only when one BattleScene run reaches a readable settlement."
+                    },
+                    {
+                      "title": "RPG Step 4: main prototype scene and scene switching validation",
+                      "description": "Check the main prototype scene routes menu, map, battle, and return flow without hiding state transitions.",
+                      "acceptanceHint": "Pass only when the main prototype scene can switch between menu, map, battle, and return flow."
+                    },
+                    {
+                      "title": "RPG Step 5: reward loop and return-to-map validation",
+                      "description": "Prove the reward 3-choice step changes visible state and returns the player to the active map loop.",
+                      "acceptanceHint": "Pass only when reward choice, visible state change, and return-to-map all work."
+                    },
+                    {
+                      "title": "RPG Final Step: full playable prototype acceptance",
+                      "description": "{{finalDescription}}",
+                      "acceptanceHint": "{{finalAcceptance}}"
+                    }
+                  ]
+                }
+                """;
+                return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
+            }
+
+            const string evaluation =
+                """
+                {
+                  "decision": "ready_to_execute",
+                  "summary": "当前计划可执行。",
+                  "reason": "The plan is focused and ordered.",
+                  "suggestedAction": "可以执行下一目标。",
+                  "suggestedPromptForRegeneration": null
+                }
+                """;
+            return Task.FromResult(new CodexChatClientResult(true, evaluation, null, 0, "", ""));
+        }
+    }
+
+    private sealed class RpgEvaluationCodexClient : ICodexChatClient
+    {
+        private readonly string _decision;
+        private readonly string _summary;
+        private readonly string _reason;
+        private readonly string _suggestedAction;
+        private readonly string? _suggestedPrompt;
+
+        public RpgEvaluationCodexClient(
+            string decision,
+            string summary,
+            string reason,
+            string suggestedAction,
+            string? suggestedPrompt)
+        {
+            _decision = decision;
+            _summary = summary;
+            _reason = reason;
+            _suggestedAction = suggestedAction;
+            _suggestedPrompt = suggestedPrompt;
+        }
+
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            var payload = $$"""
+            {
+              "decision": "{{_decision}}",
+              "summary": "{{_summary}}",
+              "reason": "{{_reason}}",
+              "suggestedAction": "{{_suggestedAction}}",
+              "suggestedPromptForRegeneration": {{(_suggestedPrompt is null ? "null" : JsonSerializer.Serialize(_suggestedPrompt))}}
+            }
+            """;
+            return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
         }
     }
 

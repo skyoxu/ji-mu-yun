@@ -580,7 +580,7 @@ public sealed class BrowserUiRenderer
                   const hasPending = goals.some(goal => goal.status === "pending");
                   const evaluationDecision = currentIterationPlanDecision();
                   const shouldRefinePlan = evaluationDecision === "should_refine_plan";
-                  const blockedByCurrentGoal = evaluationDecision === "blocked_by_current_goal";
+                  const blockedByCurrentGoal = evaluationDecision === "blocked_by_current_goal" || evaluationDecision === "llm_failed";
                   const canCreateNewPlan = (!hasPending && !hasNeedsFix) || shouldRefinePlan;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
@@ -606,7 +606,7 @@ public sealed class BrowserUiRenderer
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
                   $("evaluateIterationPlanFromChat").textContent = "评估当前计划是否值得继续";
-                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || shouldRefinePlan || isGlobalBusy();
+                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy();
                   $("executeIterationGoal").textContent = hasNeedsFix
                     ? "请先修复当前目标"
                     : shouldRefinePlan
@@ -679,7 +679,9 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   const decision = String(evaluation.decision || "").trim().toLowerCase();
-                  const actionHint = decision === "should_refine_plan"
+                  const actionHint = decision === "llm_failed"
+                    ? "LLM 调用失败，需先修复 LLM 后再继续；系统不会用本地规则替代评估。"
+                    : decision === "should_refine_plan"
                     ? "推荐先点击“按评估重拆迭代计划”，不要直接执行下一目标。"
                     : decision === "ready_to_execute"
                       ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
@@ -722,6 +724,9 @@ public sealed class BrowserUiRenderer
 
                 function resolveIterationPlanEvaluationSuggestedFeedback(evaluation) {
                   const decision = String(evaluation?.decision || "").trim().toLowerCase();
+                  if (decision === "llm_failed") {
+                    return "";
+                  }
                   if (decision === "should_refine_plan") {
                     return String(evaluation?.suggestedPromptForRegeneration || state.nextSuggestedFeedback || defaultNextSuggestedFeedback()).trim();
                   }
@@ -2114,6 +2119,9 @@ public sealed class BrowserUiRenderer
                   const decision = currentIterationPlanDecision();
                   const hasNeedsFix = goals.some(goal => goal.status === "needs_fix" || goal.status === "failed");
                   const hasPending = goals.some(goal => goal.status === "pending");
+                  if (decision === "llm_failed") {
+                    return { label: "LLM 调用失败，先修复", action: "", source: "当前计划评估", disabled: true };
+                  }
                   if (decision === "should_refine_plan") {
                     return { label: "按评估重拆迭代计划", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() };
                   }

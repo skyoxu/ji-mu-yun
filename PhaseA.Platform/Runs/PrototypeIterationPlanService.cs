@@ -104,8 +104,49 @@ public sealed class PrototypeIterationPlanService
         }
 
         var prototypeContract = _contractService.Read(project);
-        var planningContext = await BuildPlanningContextAsync(project, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
-        var goals = await BuildGoalsForProjectAsync(project, prototypeContract, message, sourceKind, planningContext, cancellationToken);
+        IterationPlanningContext planningContext;
+        try
+        {
+            planningContext = await BuildPlanningContextAsync(project, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
+        }
+        catch (PrototypeIterationPlanLlmException ex) when (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "llm_failed",
+                $"迭代计划生成需要 LLM 成功参与，但当前调用失败：{ex.Message}",
+                [],
+                null,
+                null);
+        }
+
+        List<PrototypeIterationPlanGoalResult> goals;
+        try
+        {
+            goals = await BuildGoalsForProjectAsync(project, prototypeContract, message, sourceKind, planningContext, cancellationToken);
+        }
+        catch (PrototypeIterationPlanLlmException ex) when (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "llm_failed",
+                $"迭代计划生成需要 LLM 成功细化目标，但当前调用失败：{ex.Message}",
+                [],
+                ToPlanningAnalysisResult(planningContext),
+                null);
+        }
+
+        if (PrototypeRouteSkillPolicy.IsRpgProject(project) && goals.Count == 0)
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "llm_failed",
+                "迭代计划生成需要 LLM 成功细化目标，但当前没有得到可用目标。",
+                [],
+                ToPlanningAnalysisResult(planningContext),
+                null);
+        }
+
         var overallGoal = BuildOverallGoal(project.GameName, message);
         var created = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -167,8 +208,7 @@ public sealed class PrototypeIterationPlanService
         if (PrototypeRouteSkillPolicy.IsRpgProject(project))
         {
             var scaffold = BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext);
-            var refined = await TryRefineRpgGoalsWithModelAsync(project, planningContext, message, scaffold, cancellationToken);
-            return refined.Count > 0 ? refined : scaffold;
+            return await RefineRpgGoalsWithRequiredModelAsync(project, planningContext, message, scaffold, cancellationToken);
         }
 
         var goals = BuildGoals(message, sourceKind);
@@ -211,6 +251,11 @@ public sealed class PrototypeIterationPlanService
 
         if (_codexChatClient is null)
         {
+            if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+            {
+                throw new PrototypeIterationPlanLlmException("planning_analysis_llm_client_missing");
+            }
+
             return fallback;
         }
 
@@ -226,6 +271,12 @@ public sealed class PrototypeIterationPlanService
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
         {
+            PersistCodexFailure(promptRoot, "planning-analysis", completion);
+            if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+            {
+                throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "planning_analysis_llm_failed");
+            }
+
             return fallback with
             {
                 AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, completion.FailureCode)
@@ -233,13 +284,19 @@ public sealed class PrototypeIterationPlanService
         }
 
         var parsed = TryParsePlanningContext(completion.AssistantMessage, fallback);
+        if (parsed is null && PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            PersistCodexFailure(promptRoot, "planning-analysis-parse", completion);
+            throw new PrototypeIterationPlanLlmException("planning_analysis_parse_failed");
+        }
+
         return parsed ?? fallback with
         {
             AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_parse_failed")
         };
     }
 
-    private async Task<List<PrototypeIterationPlanGoalResult>> TryRefineRpgGoalsWithModelAsync(
+    private async Task<List<PrototypeIterationPlanGoalResult>> RefineRpgGoalsWithRequiredModelAsync(
         ProjectSnapshot project,
         IterationPlanningContext planningContext,
         string message,
@@ -248,7 +305,7 @@ public sealed class PrototypeIterationPlanService
     {
         if (_codexChatClient is null)
         {
-            return [];
+            throw new PrototypeIterationPlanLlmException("goal_plan_llm_client_missing");
         }
 
         var prompt = BuildRpgGoalRefinementPrompt(project, planningContext, message, scaffold);
@@ -263,10 +320,18 @@ public sealed class PrototypeIterationPlanService
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
         {
-            return [];
+            PersistCodexFailure(promptRoot, "goal-plan", completion);
+            throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "goal_plan_llm_failed");
         }
 
-        return ParseRefinedRpgGoalPlan(completion.AssistantMessage, scaffold);
+        var parsed = ParseRefinedRpgGoalPlan(completion.AssistantMessage, scaffold);
+        if (parsed.Count == 0)
+        {
+            PersistCodexFailure(promptRoot, "goal-plan-parse", completion);
+            throw new PrototypeIterationPlanLlmException("goal_plan_parse_failed");
+        }
+
+        return parsed;
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgGoalsFromContext(
@@ -983,11 +1048,8 @@ public sealed class PrototypeIterationPlanService
         var isRpgProject = PrototypeRouteSkillPolicy.IsRpgProject(project);
         if (isRpgProject)
         {
-            var llmEvaluation = await TryEvaluateRpgPlanWithModelAsync(project, details, prototypeProgress, cancellationToken);
-            if (llmEvaluation is not null)
-            {
-                return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
-            }
+            var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, details, prototypeProgress, cancellationToken);
+            return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
         }
 
         var rpgPlanningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
@@ -1027,7 +1089,7 @@ public sealed class PrototypeIterationPlanService
             null));
     }
 
-    private async Task<PrototypeIterationPlanEvaluationResult?> TryEvaluateRpgPlanWithModelAsync(
+    private async Task<PrototypeIterationPlanEvaluationResult> EvaluateRpgPlanWithRequiredModelAsync(
         ProjectSnapshot project,
         ProjectIterationSessionDetails details,
         PrototypeWorkflowProgress? prototypeProgress,
@@ -1035,7 +1097,7 @@ public sealed class PrototypeIterationPlanService
     {
         if (_codexChatClient is null)
         {
-            return null;
+            return BuildLlmFailedEvaluation("plan_evaluation_llm_client_missing");
         }
 
         var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
@@ -1050,10 +1112,18 @@ public sealed class PrototypeIterationPlanService
             cancellationToken: cancellationToken);
         if (!completion.Succeeded)
         {
-            return null;
+            PersistCodexFailure(promptRoot, "plan-evaluation", completion);
+            return BuildLlmFailedEvaluation(completion.FailureCode ?? "plan_evaluation_llm_failed");
         }
 
-        return ParseModelEvaluation(completion.AssistantMessage);
+        var parsed = ParseModelEvaluation(completion.AssistantMessage);
+        if (parsed is null)
+        {
+            PersistCodexFailure(promptRoot, "plan-evaluation-parse", completion);
+            return BuildLlmFailedEvaluation("plan_evaluation_parse_failed");
+        }
+
+        return parsed;
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildGoals(string message, string sourceKind)
@@ -1678,6 +1748,51 @@ public sealed class PrototypeIterationPlanService
              description.Contains("任一战斗失败即失败", StringComparison.Ordinal));
     }
 
+    private static PrototypeIterationPlanEvaluationResult BuildLlmFailedEvaluation(string failureCode)
+    {
+        var code = string.IsNullOrWhiteSpace(failureCode) ? "llm_failed" : failureCode.Trim();
+        return new PrototypeIterationPlanEvaluationResult(
+            "llm_failed",
+            "迭代计划评估需要 LLM 成功参与，但当前调用失败。",
+            $"LLM 调用失败：{code}。系统不会使用本地规则假装评估成功。",
+            "请先修复 LLM 调用，再重新评估当前迭代计划。",
+            null);
+    }
+
+    private static void PersistCodexFailure(string promptRoot, string purpose, CodexChatClientResult completion)
+    {
+        try
+        {
+            var dir = Path.Combine(promptRoot, "logs", "phase-a-chat");
+            Directory.CreateDirectory(dir);
+            var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
+            var prefix = Path.Combine(dir, $"{stamp}-{purpose}");
+            File.WriteAllText(
+                $"{prefix}.failure.json",
+                JsonSerializer.Serialize(new
+                {
+                    purpose,
+                    completion.FailureCode,
+                    completion.ExitCode,
+                    outputLength = completion.AssistantMessage?.Length ?? 0,
+                    stdoutLength = completion.Stdout?.Length ?? 0,
+                    stderrLength = completion.Stderr?.Length ?? 0
+                }, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText($"{prefix}.stdout.txt", completion.Stdout ?? "");
+            File.WriteAllText($"{prefix}.stderr.txt", completion.Stderr ?? "");
+            if (!string.IsNullOrWhiteSpace(completion.AssistantMessage))
+            {
+                File.WriteAllText($"{prefix}.output.txt", completion.AssistantMessage);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
     private async Task<PrototypeIterationPlanEvaluationResult> PersistEvaluationAsync(
         ProjectIterationSessionDetails details,
         PrototypeIterationPlanEvaluationResult evaluation,
@@ -1840,7 +1955,7 @@ public sealed class PrototypeIterationPlanService
                 {
                     ["type"] = "array",
                     ["minItems"] = 3,
-                    ["maxItems"] = 6,
+                    ["maxItems"] = 8,
                     ["items"] = new JsonObject
                     {
                         ["type"] = "object",
@@ -1902,3 +2017,11 @@ public sealed record PrototypeIterationPlanDetails(
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
     PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);
+
+internal sealed class PrototypeIterationPlanLlmException : Exception
+{
+    public PrototypeIterationPlanLlmException(string message)
+        : base(message)
+    {
+    }
+}
