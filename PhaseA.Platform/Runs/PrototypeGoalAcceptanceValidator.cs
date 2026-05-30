@@ -135,6 +135,12 @@ internal static class PrototypeGoalAcceptanceValidator
             return null;
         }
 
+        var routeTitle = ResolveRpgRouteGoalTitle(goal);
+        if (routeTitle is not null)
+        {
+            return routeTitle;
+        }
+
         var semantic = ResolveRpgGoalSemantic(goal);
         if (semantic is not null)
         {
@@ -144,26 +150,28 @@ internal static class PrototypeGoalAcceptanceValidator
         return goal.GoalIndex switch
         {
             1 => new AcceptanceContract(
-                "rpg-step1-basic-assets-ui-validation",
-                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count"],
-                AssetUsageAcceptance: true),
-            2 => new AcceptanceContract(
-                "rpg-step2-start-adventure-visible-mapscene",
+                "rpg-step1-navigation-encounter-entry",
                 ["MoveOnMap", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"],
                 MapEntryAcceptance: true),
-            3 => new AcceptanceContract(
-                "rpg-step3-battlescene-settlement",
+            2 => new AcceptanceContract(
+                "rpg-step2-battlescene-settlement",
                 ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
                 BattleSceneAcceptance: true),
-            4 => new AcceptanceContract(
-                "rpg-step4-main-scene-switching",
-                ["MoveOnMap", "ResolveAttackTurn", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
-                MapEntryAcceptance: true,
-                BattleSceneAcceptance: true),
-            5 => new AcceptanceContract(
-                "rpg-step5-reward-loop-return-map",
+            3 => new AcceptanceContract(
+                "rpg-step3-reward-loop-return-map",
                 ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"],
                 RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true),
+            4 => new AcceptanceContract(
+                "rpg-step4-main-loop-scene-switching",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true,
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true),
+            5 => new AcceptanceContract(
+                "rpg-step5-win-fail-visibility",
+                ["VictoryBattleCount", "IsVictory", "IsGameOver"],
                 StaticAcceptanceOnly: true),
             6 => new AcceptanceContract(
                 "rpg-final-full-playable-acceptance",
@@ -176,6 +184,61 @@ internal static class PrototypeGoalAcceptanceValidator
                 FinalAcceptance: true),
             _ => null
         };
+    }
+
+    private static AcceptanceContract? ResolveRpgRouteGoalTitle(ProjectIterationGoalSnapshot goal)
+    {
+        var title = goal.Title ?? "";
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return null;
+        }
+
+        if (ContainsAny(title, "RPG Step 1: Start Adventure to visible MapScene", "rpg-step1-navigation-encounter-entry"))
+        {
+            return new AcceptanceContract(
+                "rpg-step1-navigation-encounter-entry",
+                ["MoveOnMap", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"],
+                MapEntryAcceptance: true);
+        }
+
+        if (ContainsAny(title, "RPG Step 2: BattleScene loop validation", "rpg-step2-battlescene-settlement"))
+        {
+            return new AcceptanceContract(
+                "rpg-step2-battlescene-settlement",
+                ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
+                BattleSceneAcceptance: true);
+        }
+
+        if (ContainsAny(title, "RPG Step 3: reward 3-choice and return-to-map validation", "rpg-step3-reward-loop-return-map"))
+        {
+            return new AcceptanceContract(
+                "rpg-step3-reward-loop-return-map",
+                ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"],
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true);
+        }
+
+        if (ContainsAny(title, "RPG Step 4: main loop scene switching validation", "rpg-step4-main-loop-scene-switching"))
+        {
+            return new AcceptanceContract(
+                "rpg-step4-main-loop-scene-switching",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: true,
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true);
+        }
+
+        if (ContainsAny(title, "RPG Step 5: win/fail visibility and readability validation", "rpg-step5-win-fail-visibility"))
+        {
+            return new AcceptanceContract(
+                "rpg-step5-win-fail-visibility",
+                ["VictoryBattleCount", "IsVictory", "IsGameOver"],
+                StaticAcceptanceOnly: true);
+        }
+
+        return null;
     }
 
     private static AcceptanceContract? ResolveRpgGoalSemantic(ProjectIterationGoalSnapshot goal)
@@ -209,10 +272,10 @@ internal static class PrototypeGoalAcceptanceValidator
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(text, "奖励 3 选 1", "三选一", "reward 3", "3-choice", "three reward", "奖励回路", "reward loop"))
+        if (ContainsAny(text, "奖励 3 选 1", "三选一", "reward 3", "3-choice", "three reward", "奖励回路", "reward loop", "return-to-map"))
         {
             return new AcceptanceContract(
-                "rpg-step5-reward-loop-return-map",
+                "rpg-step3-reward-loop-return-map",
                 ["RewardOptions.Count", "ApplyReward", "Battle reward selected", "Return to the map"],
                 RewardFlowAcceptance: true,
                 StaticAcceptanceOnly: true);
@@ -238,7 +301,7 @@ internal static class PrototypeGoalAcceptanceValidator
         if (ContainsAny(text, "地图移动", "遇敌", "map", "encounter", "visible map", "start adventure"))
         {
             return new AcceptanceContract(
-                "rpg-step2-start-adventure-visible-mapscene",
+                "rpg-step1-navigation-encounter-entry",
                 ["MoveOnMap", "ShouldReachRewardPhase_AfterWinningTheFirstEncounter"],
                 MapEntryAcceptance: true);
         }
@@ -246,7 +309,7 @@ internal static class PrototypeGoalAcceptanceValidator
         if (ContainsAny(text, "战斗", "battle", "结算", "settlement", "BattleScene".ToLowerInvariant()))
         {
             return new AcceptanceContract(
-                "rpg-step3-battlescene-settlement",
+                "rpg-step2-battlescene-settlement",
                 ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
                 BattleSceneAcceptance: true);
         }
@@ -254,16 +317,18 @@ internal static class PrototypeGoalAcceptanceValidator
         if (ContainsAny(text, "场景切换", "scene switching", "main prototype scene", "主原型"))
         {
             return new AcceptanceContract(
-                "rpg-step4-main-scene-switching",
-                ["MoveOnMap", "ResolveAttackTurn", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
+                "rpg-step4-main-loop-scene-switching",
+                ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count", "ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward"],
                 MapEntryAcceptance: true,
-                BattleSceneAcceptance: true);
+                BattleSceneAcceptance: true,
+                RewardFlowAcceptance: true,
+                StaticAcceptanceOnly: true);
         }
 
         if (ContainsAny(text, "assets", "素材", "ui", "基础界面", "基础素材"))
         {
             return new AcceptanceContract(
-                "rpg-step1-basic-assets-ui-validation",
+                "rpg-asset-usage-validation",
                 ["MoveOnMap", "ResolveAttackTurn", "RewardOptions.Count"],
                 AssetUsageAcceptance: true);
         }
@@ -273,20 +338,8 @@ internal static class PrototypeGoalAcceptanceValidator
 
     private static bool IsRpgProject(ProjectSnapshot project)
     {
-        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
-        if (text.Contains("rpg", StringComparison.Ordinal) ||
-            text.Contains("dragon quest", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        if (text.Contains("勇者", StringComparison.Ordinal) ||
-            text.Contains("斗恶龙", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return File.Exists(Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"));
+        return PrototypeRouteSkillPolicy.IsRpgProject(project) ||
+               File.Exists(Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"));
     }
 
     private static bool HasRequiredMarkers(string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)

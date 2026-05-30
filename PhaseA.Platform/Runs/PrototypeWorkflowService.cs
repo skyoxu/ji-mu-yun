@@ -2155,6 +2155,7 @@ public sealed class PrototypeWorkflowService
         {
             route = RunType,
             route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
             run_id = runId,
             status,
             exit_code = exitCode,

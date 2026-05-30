@@ -44,6 +44,7 @@ builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
 builder.Services.AddSingleton<Chapter2BootstrapService>();
 builder.Services.AddSingleton<HeavyRunnerQueueService>();
 builder.Services.AddSingleton<PrototypeRecordWriter>();
+builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeRouteStateWriter>();

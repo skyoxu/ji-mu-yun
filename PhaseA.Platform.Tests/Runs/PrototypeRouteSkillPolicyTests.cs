@@ -23,7 +23,51 @@ public sealed class PrototypeRouteSkillPolicyTests
         context.SkillRelativePath.Should().Be(".agents/skills/prototype-rpg-godot-zh/SKILL.md");
         context.ContractRelativePath.Should().Be(".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md");
         prompt.Should().Contain("MandatorySkillEntry: $prototype-rpg-godot-zh");
+        prompt.Should().Contain("GameTypeId: rpg");
+        prompt.Should().Contain("ProfileId: godot-rpg-v1");
+        prompt.Should().Contain("RouteSetId: rpg-prototype-routes-v1");
+        prompt.Should().Contain("PromptProtocolId: rpg-prompt-protocol-v1");
+        prompt.Should().Contain("ILlmRouteEngine");
+        prompt.Should().Contain("CodexHostedProcessCommandFactory");
         prompt.Should().Contain("do not run a bare/generic prototype route");
+    }
+
+    [Fact]
+    public void ResolveProfile_ShouldExposeRpgRouteProtocol()
+    {
+        var project = Project(
+            name: "rpgdemo26",
+            gameName: "rpgdemo26",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+
+        var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+
+        profile.GameTypeId.Should().Be("rpg");
+        profile.ProfileId.Should().Be("godot-rpg-v1");
+        profile.RouteSetId.Should().Be("rpg-prototype-routes-v1");
+        profile.PlannerId.Should().Be("rpg-iteration-planner-v1");
+        profile.EvaluatorId.Should().Be("rpg-plan-evaluator-v1");
+        profile.ExecutorId.Should().Be("rpg-goal-executor-v1");
+        profile.NeedsFixId.Should().Be("rpg-needs-fix-v1");
+        profile.FinalAcceptanceId.Should().Be("rpg-final-acceptance-v1");
+    }
+
+    [Fact]
+    public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForNonRpgProject()
+    {
+        var project = Project(
+            name: "action-demo",
+            gameName: "Action Demo",
+            gameTypeSource: "Action",
+            repoPath: Path.GetTempPath());
+
+        var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+
+        profile.GameTypeId.Should().Be("default");
+        profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
+        profile.RouteSetId.Should().Be("default-prototype-routes-v1");
+        profile.RouteSkill.ContractRelativePath.Should().BeNull();
     }
 
     [Fact]

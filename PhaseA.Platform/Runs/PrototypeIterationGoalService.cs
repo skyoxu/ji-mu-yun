@@ -76,11 +76,25 @@ public sealed class PrototypeIterationGoalService
             return new PrototypeIterationGoalExecutionResult("", "", "", "missing_plan", "当前项目还没有迭代计划。", 0, false, "failed");
         }
 
+        var blockingEvaluation = BuildBlockingEvaluationResult(details);
+        if (blockingEvaluation is not null)
+        {
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+                details.Session.SessionId,
+                blockingEvaluation.SessionStatus,
+                blockingEvaluation.GoalIndex,
+                blockingEvaluation.Summary,
+                details.Session.LatestEvaluationJson,
+                null,
+                CancellationToken.None);
+            return blockingEvaluation;
+        }
+
         var needsFixGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal));
         if (needsFixGoal is not null)
         {
             var summary = $"当前计划存在需要修复的目标 {needsFixGoal.GoalIndex}。请先修复当前目标，不要继续执行下一目标。";
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", needsFixGoal.GoalIndex, summary, null, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", needsFixGoal.GoalIndex, summary, details.Session.LatestEvaluationJson, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, needsFixGoal.GoalId, "", "needs_fix", summary, needsFixGoal.GoalIndex, true, "needs_fix");
         }
 
@@ -91,6 +105,7 @@ public sealed class PrototypeIterationGoalService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
+        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
         if (!routeSkill.IsAvailable)
         {
@@ -108,7 +123,7 @@ public sealed class PrototypeIterationGoalService
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", null, null, CancellationToken.None);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备目标 {nextGoal.GoalIndex}。", CancellationToken.None);
 
         try
@@ -144,7 +159,7 @@ public sealed class PrototypeIterationGoalService
                 await _metadataStore.CompleteRunAsync(runId, "failed", 424, "", "prototype route state missing", missingPrototypeEvidenceJson, CancellationToken.None);
                 await _metadataStore.UpdateRunProgressAsync(runId, "needs_fix", "prototype_required", failure, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "needs_fix", failure, null, CancellationToken.None);
-                await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
+                await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", nextGoal.GoalIndex, failure, details.Session.LatestEvaluationJson, null, CancellationToken.None);
                 _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
                 {
                     route = "execute-next-goal",
@@ -165,7 +180,7 @@ public sealed class PrototypeIterationGoalService
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
-            var prompt = BuildPrompt(project, details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState);
+            var prompt = BuildPrompt(project, routeProfile, details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
@@ -274,14 +289,15 @@ public sealed class PrototypeIterationGoalService
                 sessionStatus,
                 nextGoal.GoalIndex,
                 sessionSummary,
-                null,
+                refreshed?.Session.LatestEvaluationJson ?? details.Session.LatestEvaluationJson,
                 hasNeedsFix || hasMoreGoals ? null : now,
                 CancellationToken.None);
             PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, nextGoal, goalOutcome.GoalStatus, publicSummary, now, sessionSummary);
             _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
             {
                 route = "execute-next-goal",
-                route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+                route_skill = routeProfile.RouteSkill,
+                game_type_profile = routeProfile,
                 project_id = project.ProjectId,
                 session_id = details.Session.SessionId,
                 goal_id = nextGoal.GoalId,
@@ -326,7 +342,7 @@ public sealed class PrototypeIterationGoalService
             await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype iteration goal exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(runId, "failed", "timeout", failure, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, details.Session.LatestEvaluationJson, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -342,13 +358,59 @@ public sealed class PrototypeIterationGoalService
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(runId, "failed", "error", failure, CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "failed", failure, null, CancellationToken.None);
-            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, null, null, CancellationToken.None);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "paused_for_review", nextGoal.GoalIndex, failure, details.Session.LatestEvaluationJson, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "failed", failure, nextGoal.GoalIndex, true, "paused_for_review");
         }
         finally
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
+    }
+
+    private static PrototypeIterationGoalExecutionResult? BuildBlockingEvaluationResult(ProjectIterationSessionDetails details)
+    {
+        if (details.LatestEvaluation is null)
+        {
+            return null;
+        }
+
+        var decision = details.LatestEvaluation.Decision.Trim().ToLowerInvariant();
+        var nextGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal));
+        var goalId = nextGoal?.GoalId ?? "";
+        var goalIndex = nextGoal?.GoalIndex ?? details.Session.CurrentGoalIndex;
+        var hasMoreGoals = details.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal));
+
+        return decision switch
+        {
+            "should_refine_plan" => new PrototypeIterationGoalExecutionResult(
+                details.Session.SessionId,
+                goalId,
+                "",
+                "plan_needs_refinement",
+                "当前迭代计划评估建议先重拆计划，系统已停止执行旧目标。请按评估建议重新生成迭代计划。",
+                goalIndex,
+                hasMoreGoals,
+                "plan_needs_refinement"),
+            "llm_failed" => new PrototypeIterationGoalExecutionResult(
+                details.Session.SessionId,
+                goalId,
+                "",
+                "plan_evaluation_failed",
+                "当前迭代计划评估失败，系统已停止执行旧目标。请先修复评估调用并重新评估计划。",
+                goalIndex,
+                hasMoreGoals,
+                "plan_evaluation_failed"),
+            "blocked_by_current_goal" => new PrototypeIterationGoalExecutionResult(
+                details.Session.SessionId,
+                goalId,
+                "",
+                "blocked_by_current_goal",
+                "当前评估显示已有目标阻塞，系统已停止执行下一目标。请先处理当前阻塞项。",
+                goalIndex,
+                hasMoreGoals,
+                "needs_fix"),
+            _ => null
+        };
     }
 
     private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)
@@ -389,6 +451,7 @@ public sealed class PrototypeIterationGoalService
 
     private static string BuildPrompt(
         ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile,
         ProjectIterationSessionSnapshot session,
         ProjectIterationGoalSnapshot goal,
         string projectReadme,
@@ -401,6 +464,10 @@ public sealed class PrototypeIterationGoalService
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
 
             Mandatory rules:
+            - RouteProfileId: {routeProfile.ProfileId}
+            - RouteSetId: {routeProfile.RouteSetId}
+            - ExecutorId: {routeProfile.ExecutorId}
+            - Use this game-type executor protocol for the current goal only.
             - Execute only the current goal. Do not expand into later goals.
             - Consume Project README, prototype route state, and iteration plan route state below only as read-only recovery context.
             - Use the prototype route state as the baseline implementation and recovery context, not as a repair target.

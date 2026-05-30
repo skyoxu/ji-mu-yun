@@ -37,6 +37,7 @@ public sealed class PrototypeContractService
         ArgumentNullException.ThrowIfNull(request);
 
         var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
+        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var payload = new
         {
             schema_version = 1,
@@ -46,6 +47,7 @@ public sealed class PrototypeContractService
             game_type = FirstNonEmpty(request.GameType, request.GameTypeSource, project.GameTypeSource),
             game_type_source = FirstNonEmpty(request.GameTypeSource, project.GameTypeSource),
             route_skill = routeSkill,
+            game_type_profile = routeProfile,
             slug,
             prototype_record = prototypeRecordPath,
             hard_rules = new[]

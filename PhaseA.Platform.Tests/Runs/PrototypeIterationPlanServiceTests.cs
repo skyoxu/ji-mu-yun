@@ -209,17 +209,22 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(6);
-        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("assets", StringComparison.OrdinalIgnoreCase));
+        result.Goals[0].Title.Should().Be("RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry");
         string.Join(" ", result.Goals[0].Title, result.Goals[0].Description, result.Goals[0].AcceptanceHint)
             .Should()
-            .NotContain("MapScene")
+            .Contain("Start Adventure")
+            .And.Contain("MapScene")
+            .And.Contain("stable movement")
+            .And.Contain("encounter entry")
+            .And.Contain("asset")
             .And.NotContain("BattleScene")
             .And.NotContain("full playable")
             .And.NotContain("scene switching");
-        result.Goals[1].Title.Should().Contain("Start Adventure");
-        result.Goals[1].Title.Should().Contain("MapScene");
-        result.Goals[1].Description.Should().Contain("Start Adventure");
-        result.Goals[1].AcceptanceHint.Should().Contain("visible RPG MapScene");
+        result.Goals[1].Title.Should().Be("RPG Step 2: BattleScene loop validation");
+        result.Goals[1].Description.Should().Contain("enemy asset");
+        result.Goals[2].Title.Should().Be("RPG Step 3: reward 3-choice and return-to-map validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: main loop scene switching validation");
+        result.Goals[4].Title.Should().Be("RPG Step 5: win/fail visibility and readability validation");
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("BattleScene", StringComparison.OrdinalIgnoreCase));
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("scene switching", StringComparison.OrdinalIgnoreCase));
         result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("reward", StringComparison.OrdinalIgnoreCase));
@@ -267,14 +272,71 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCountGreaterOrEqualTo(6);
-        result.Goals[0].Title.Should().Be("RPG Step 1: foundation asset usage and UI contract");
-        result.Goals[1].Title.Should().Be("RPG Step 2: Start Adventure to visible MapScene validation");
-        result.Goals[2].Title.Should().Be("RPG Step 3: BattleScene loop validation");
-        result.Goals[3].Title.Should().Be("RPG Step 4: main prototype scene and scene switching validation");
-        result.Goals[4].Title.Should().Be("RPG Step 5: reward 3-choice and return-to-map validation");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Title.Should().Be("RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry");
+        result.Goals[1].Title.Should().Be("RPG Step 2: BattleScene loop validation");
+        result.Goals[2].Title.Should().Be("RPG Step 3: reward 3-choice and return-to-map validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: main loop scene switching validation");
+        result.Goals[4].Title.Should().Be("RPG Step 5: win/fail visibility and readability validation");
         result.Goals[0].Title.Should().NotContain("对齐原型合同");
         result.Goals.Last().Title.Should().Contain("RPG Final Step");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUsePreviousRefinementEvaluation_AsHardRegenerationGuidance()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(runId, "succeeded", 0, "ok", "", "{}");
+        var previous = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Improve the RPG playable loop.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: foundation asset usage and UI contract", "Validate foundation assets first.", "Foundation assets pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Validate visible map later.", "Visible map passes.")
+            ]);
+        var evaluationJson = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+            "should_refine_plan",
+            "The plan must be regenerated.",
+            "The latest prototype gap is navigation and visible-map related, so Step 1 must target Start Adventure to visible MapScene and stable movement.",
+            "Regenerate the plan with the navigation blocker first.",
+            "Regenerate the RPG iteration plan: first priority must combine Start Adventure to visible MapScene, stable movement, and encounter entry before assets/UI polish."));
+        await store.UpdateProjectIterationSessionStatusAsync(previous.SessionId, "ready", 0, "needs refinement", evaluationJson);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please continue refining the current RPG prototype after the first successful playable loop.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Title.Should().Be("RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry");
+        result.Goals[0].Description.Should().Contain("Start Adventure");
+        result.Goals[0].Description.Should().Contain("visible MapScene");
+        result.Goals[0].Description.Should().Contain("encounter entry");
+        result.Goals[0].AcceptanceHint.Should().Contain("move continuously");
+        result.Goals[0].AcceptanceHint.Should().Contain("first encounter entry");
+        result.Goals[1].Title.Should().Be("RPG Step 2: BattleScene loop validation");
+        result.Goals[2].Title.Should().Be("RPG Step 3: reward 3-choice and return-to-map validation");
+        result.Goals[3].Title.Should().Be("RPG Step 4: main loop scene switching validation");
+        result.Goals[0].Title.ToLowerInvariant().Should().NotContain("foundation asset");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
     }
 
     [Fact]
@@ -324,7 +386,9 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(6);
-        result.Goals[0].Description.Should().Contain("user-facing map");
+        result.Goals[0].Description.Should().Contain("visible MapScene");
+        result.Goals[0].AcceptanceHint.Should().Contain("asset");
+        result.Goals[1].AcceptanceHint.Should().Contain("enemy asset");
         result.Goals[5].AcceptanceHint.Should().Contain("contract-specific runtime proof");
     }
 
@@ -353,9 +417,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve RPG loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Improve map movement and encounter trigger.", "Movement and encounter work."),
-                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Improve one battle and settlement.", "Battle reaches settlement."),
-                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Improve reward choice and return to map.", "Reward returns to map.")
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", "Start Adventure opens a visible MapScene with stable movement, map/player assets, and encounter entry.", "Visible MapScene, stable movement, assets, and encounter entry pass."),
+                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Polish one map label.", "The map label is readable.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -369,7 +432,7 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_ShouldPreferLlmEvaluation_ForRpgPlans()
+    public async Task EvaluateAsync_ShouldUseLlmEvaluation_AfterRpgPlanPassesLocalRouteGuard()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -389,9 +452,12 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve RPG loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Contract alignment first.", "Align contract."),
-                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Reward readability.", "Reward is readable."),
-                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Battle follow-up.", "Battle loop works.")
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", "Start Adventure opens a visible MapScene with stable movement, map/player assets, and encounter entry.", "Visible MapScene, stable movement, assets, and encounter entry pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: BattleScene loop validation", "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.", "BattleScene settlement and enemy asset usage pass."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: reward 3-choice and return-to-map validation", "Validate reward 3-choice state change and return-to-map.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main loop scene switching validation", "Validate main loop scene switching from Start Adventure to map, encounter, BattleScene, reward, and return-to-map.", "Main loop scene switching passes."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: win/fail visibility and readability validation", "Show victory, failure, defeat, and encounter rules clearly.", "Win/fail and encounter rule feedback pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, project contract, and asset usage pass.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -430,9 +496,12 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve RPG loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "Goal 1", "Improve map movement and encounter trigger.", "Movement and encounter work."),
-                new ProjectIterationGoalCreateCommand(2, "Goal 2", "Improve one battle and settlement.", "Battle reaches settlement."),
-                new ProjectIterationGoalCreateCommand(3, "Goal 3", "Improve reward choice and return to map.", "Reward returns to map.")
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", "Start Adventure opens a visible MapScene with stable movement, map/player assets, and encounter entry.", "Visible MapScene, stable movement, assets, and encounter entry pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: BattleScene loop validation", "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.", "BattleScene settlement and enemy asset usage pass."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: reward 3-choice and return-to-map validation", "Validate reward 3-choice state change and return-to-map.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main loop scene switching validation", "Validate main loop scene switching from Start Adventure to map, encounter, BattleScene, reward, and return-to-map.", "Main loop scene switching passes."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: win/fail visibility and readability validation", "Show victory, failure, defeat, and encounter rules clearly.", "Win/fail and encounter rule feedback pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, project contract, and asset usage pass.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -570,12 +639,12 @@ public sealed class PrototypeIterationPlanServiceTests
             "Please continue the RPG loop and explicitly keep these hard rules: win after 15 battles, any battle loss means game loss, every movement increases encounter chance by 10%, and encounter must happen within 10 steps.",
             "Demo Game: improve RPG loop with explicit hard rules.",
             [
-                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: foundation asset usage and UI contract", "Validate map, player, enemy assets and readable UI.", "Foundation assets and UI pass."),
-                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Start Adventure opens visible MapScene with movement.", "Visible MapScene validation pass."),
-                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene loop validation", "Validate BattleScene with one readable battle.", "BattleScene proves battle settlement."),
-                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect menu, map, battle, and return path.", "Main prototype scene switches correctly."),
-                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
-                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", "Start Adventure opens visible MapScene with stable movement, map/player assets, and encounter progress.", "Visible MapScene, stable movement, assets, and encounter validation pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: BattleScene loop validation", "Validate BattleScene with one readable battle and enemy asset usage.", "BattleScene proves battle settlement."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main loop scene switching validation", "Connect Start Adventure, map, encounter, BattleScene, reward, and return-to-map.", "Main loop scene switching passes."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: win/fail visibility and readability validation", "Show encounter rules and failure feedback, but omit explicit 15-battle victory wording.", "Win/fail and encounter rule feedback pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, project contract, and asset usage pass.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -612,13 +681,12 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve RPG loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: foundation asset usage and UI contract", "Validate map, player, enemy assets and readable UI.", "Foundation assets and UI pass."),
-                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: Start Adventure to visible MapScene validation", "Start Adventure opens visible MapScene with movement and 10% encounter progress.", "Visible MapScene and 10% encounter validation pass."),
-                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene loop validation", "Validate BattleScene with one readable battle and any-loss defeat settlement.", "BattleScene proves battle settlement and any-loss defeat rule."),
-                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect menu, map, battle, and return path.", "Main prototype scene switches correctly."),
-                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
-                new ProjectIterationGoalCreateCommand(6, "RPG Step 6: explicit win/fail and scaling rule validation", "Show and validate win after 15 battles, guaranteed encounter within 10 steps, and enemy scaling with +5 HP and +2 ATK each battle.", "15 battles, 10 steps, and enemy scaling rules are all visible and validated."),
-                new ProjectIterationGoalCreateCommand(7, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, 15 battles rule, and package readiness.", "Final acceptance passes with explicit rule coverage.")
+                new ProjectIterationGoalCreateCommand(1, "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", "Start Adventure opens visible MapScene with stable movement, map/player assets, 10% encounter progress, and guaranteed encounter within 10 steps.", "Visible MapScene, 10% encounter progress, 10 steps, stable movement, assets, and encounter validation pass."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: BattleScene loop validation", "Validate BattleScene with one readable battle, enemy asset usage, any-loss defeat settlement, and enemy scaling with +5 HP and +2 ATK each battle.", "BattleScene proves battle settlement, any-loss defeat rule, and enemy scaling."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: reward 3-choice and return-to-map validation", "Reward 3-choice returns to map and keeps the loop active.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main loop scene switching validation", "Connect Start Adventure, map, encounter, BattleScene, reward, and return-to-map.", "Main loop scene switching passes."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: win/fail visibility and readability validation", "Show and validate win after 15 battles, guaranteed encounter within 10 steps, and any battle loss means game loss.", "15 battles, 10 steps, and any-loss defeat rules are all visible and validated."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, reward return-to-map, 15 battles rule, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, explicit rule coverage, project contract, and asset usage pass.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -782,84 +850,79 @@ public sealed class PrototypeIterationPlanServiceTests
                 var finalAcceptance = _includeContractInstruction
                     ? "Pass only when the full prototype and project-specific prototype contract fields pass."
                     : "Pass only when the full RPG playable prototype, Start Adventure visible-map validation, and contract-specific runtime proof all pass.";
-                if (prompt.Contains("RPG Step 1: foundation asset usage and UI contract", StringComparison.Ordinal))
+                if (prompt.Contains("RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry", StringComparison.Ordinal))
                 {
-                    var closurePayload = $$"""
+                    var navigationFirstPayload = $$"""
                     {
                       "goals": [
                         {
-                          "title": "RPG Step 1: foundation asset usage and UI contract",
-                          "description": "Confirm foundation asset usage and UI contract from the current succeeded prototype.",
-                          "acceptanceHint": "Pass only when map/player/enemy assets and the RPG UI contract are visible and validated."
+                          "title": "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
+                          "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene, proves stable controllable movement, shows map/player asset usage, and exposes first encounter entry.",
+                          "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene, the player can move continuously, map/player assets are visible, and first encounter entry is exposed."
                         },
                         {
-                          "title": "RPG Step 2: Start Adventure to visible MapScene validation",
-                          "description": "Verify Start Adventure reveals a visible map and playable movement path.",
-                          "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene and movement plus encounter entry are proven."
+                          "title": "RPG Step 2: BattleScene loop validation",
+                          "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
+                          "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
                         },
                         {
-                          "title": "RPG Step 3: BattleScene loop validation",
-                          "description": "Validate one readable battle loop from the current prototype.",
-                          "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback and settlement."
-                        },
-                        {
-                          "title": "RPG Step 4: main prototype scene and scene switching validation",
-                          "description": "Check menu, map, battle, reward, and return transitions from the main prototype scene.",
-                          "acceptanceHint": "Pass only when the main prototype scene switches through the RPG flow correctly."
-                        },
-                        {
-                          "title": "RPG Step 5: reward 3-choice and return-to-map validation",
+                          "title": "RPG Step 3: reward 3-choice and return-to-map validation",
                           "description": "Prove reward 3-choice changes state and returns to the active map loop.",
                           "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
                         },
                         {
-                          "title": "RPG Step 6: win/fail condition visibility and consistency",
-                          "description": "Show and validate the current prototype win/fail conditions.",
-                          "acceptanceHint": "Pass only when players can understand win/fail conditions from the visible prototype."
+                          "title": "RPG Step 4: main loop scene switching validation",
+                          "description": "Connect Start Adventure, map, encounter, battle, reward, and return-to-map after the reward loop is proven.",
+                          "acceptanceHint": "Pass only when scene switching covers the full first RPG loop."
+                        },
+                        {
+                          "title": "RPG Step 5: win/fail visibility and readability validation",
+                          "description": "Show and validate 15-battle victory, any-loss defeat, and encounter rules.",
+                          "acceptanceHint": "Pass only when players can understand win/fail and encounter rules."
                         },
                         {
                           "title": "RPG Final Step: full playable prototype acceptance",
                           "description": "{{finalDescription}}",
-                          "acceptanceHint": "{{finalAcceptance}}"
+                          "acceptanceHint": "{{finalAcceptance}} map/player/enemy asset usage remains visible."
                         }
                       ]
                     }
                     """;
-                    return Task.FromResult(new CodexChatClientResult(true, closurePayload, null, 0, "", ""));
+                    return Task.FromResult(new CodexChatClientResult(true, navigationFirstPayload, null, 0, "", ""));
                 }
 
                 var payload = $$"""
                 {
                   "goals": [
                     {
-                      "title": "RPG Step 1: basic assets and UI validation",
-                      "description": "Confirm the current prototype already shows the required foundation assets and readable UI markers on the user-facing map before changing later scenes.",
-                      "acceptanceHint": "Pass only when map, player, enemy asset usage and readable map, battle, reward UI markers are visible in the current prototype scene."
+                      "title": "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
+                      "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene, proves stable controllable movement, shows map/player asset usage, and exposes first encounter entry.",
+                      "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene, the player can move continuously, map/player assets are visible, and first encounter entry is exposed."
                     },
                     {
-                      "title": "RPG Step 2: Start Adventure to visible MapScene validation",
-                      "description": "Verify the real Start Adventure entry reveals a visible user-facing map, enables movement, and exposes the first encounter trigger.",
-                      "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene and proves movement plus encounter entry."
+                      "title": "RPG Step 2: BattleScene loop validation",
+                      "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
+                      "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
                     },
                     {
-                      "title": "RPG Step 3: BattleScene creation and validation",
-                      "description": "Validate one dedicated battle scene with readable action resolution and terminal settlement.",
-                      "acceptanceHint": "Pass only when one BattleScene run reaches a readable settlement."
+                      "title": "RPG Step 3: reward 3-choice and return-to-map validation",
+                      "description": "Prove reward 3-choice changes state and returns to the active map loop.",
+                      "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
                     },
                     {
-                      "title": "RPG Step 4: main prototype scene and scene switching validation",
-                      "description": "Check the main prototype scene routes menu, map, battle, and return flow without hiding state transitions.",
-                      "acceptanceHint": "Pass only when the main prototype scene can switch between menu, map, battle, and return flow."
+                      "title": "RPG Step 4: main loop scene switching validation",
+                      "description": "Connect Start Adventure, map, encounter, battle, reward, and return-to-map after the reward loop is proven.",
+                      "acceptanceHint": "Pass only when scene switching covers the full first RPG loop."
                     },
                     {
-                      "title": "RPG Step 5: reward loop and return-to-map validation",
-                      "description": "Prove the reward 3-choice step changes visible state and returns the player to the active map loop.",
-                      "acceptanceHint": "Pass only when reward choice, visible state change, and return-to-map all work."
+                      "title": "RPG Step 5: win/fail visibility and readability validation",
+                      "description": "Show and validate 15-battle victory, any-loss defeat, and encounter rules.",
+                      "acceptanceHint": "Pass only when players can understand win/fail and encounter rules."
                     },
                     {
                       "title": "RPG Final Step: full playable prototype acceptance",
                       "description": "{{finalDescription}}",
-                      "acceptanceHint": "{{finalAcceptance}}"
+                      "acceptanceHint": "{{finalAcceptance}} map/player/enemy asset usage remains visible."
                     }
                   ]
                 }
@@ -975,34 +1038,34 @@ public sealed class PrototypeIterationPlanServiceTests
                 {
                   "goals": [
                     {
-                      "title": "RPG Step 1: basic assets and UI validation",
-                      "description": "Confirm the current prototype already shows the required foundation assets and readable UI markers on the user-facing map before changing later scenes.",
-                      "acceptanceHint": "Pass only when map, player, enemy asset usage and readable map, battle, reward UI markers are visible in the current prototype scene."
+                      "title": "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
+                      "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene, proves stable controllable movement, shows map/player asset usage, and exposes first encounter entry.",
+                      "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene, the player can move continuously, map/player assets are visible, and first encounter entry is exposed."
                     },
                     {
-                      "title": "RPG Step 2: Start Adventure to visible MapScene validation",
-                      "description": "Verify the real Start Adventure entry reveals a visible user-facing map, enables movement, and exposes the first encounter trigger.",
-                      "acceptanceHint": "Pass only when Start Adventure opens a visible map and proves movement plus encounter entry."
+                      "title": "RPG Step 2: BattleScene loop validation",
+                      "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
+                      "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
                     },
                     {
-                      "title": "RPG Step 3: BattleScene creation and validation",
-                      "description": "Validate one dedicated battle scene with readable action resolution and terminal settlement.",
-                      "acceptanceHint": "Pass only when one BattleScene run reaches a readable settlement."
+                      "title": "RPG Step 3: reward 3-choice and return-to-map validation",
+                      "description": "Prove reward 3-choice changes state and returns to the active map loop.",
+                      "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
                     },
                     {
-                      "title": "RPG Step 4: main prototype scene and scene switching validation",
-                      "description": "Check the main prototype scene routes menu, map, battle, and return flow without hiding state transitions.",
-                      "acceptanceHint": "Pass only when the main prototype scene can switch between menu, map, battle, and return flow."
+                      "title": "RPG Step 4: main loop scene switching validation",
+                      "description": "Connect Start Adventure, map, encounter, battle, reward, and return-to-map after the reward loop is proven.",
+                      "acceptanceHint": "Pass only when scene switching covers the full first RPG loop."
                     },
                     {
-                      "title": "RPG Step 5: reward loop and return-to-map validation",
-                      "description": "Prove the reward 3-choice step changes visible state and returns the player to the active map loop.",
-                      "acceptanceHint": "Pass only when reward choice, visible state change, and return-to-map all work."
+                      "title": "RPG Step 5: win/fail visibility and readability validation",
+                      "description": "Show and validate victory, failure, defeat, and encounter rules.",
+                      "acceptanceHint": "Pass only when players can understand victory, failure, defeat, and encounter rule feedback."
                     },
                     {
                       "title": "RPG Final Step: full playable prototype acceptance",
                       "description": "Run final acceptance across map, battle, reward return, navigation, and contract-specific runtime proof.",
-                      "acceptanceHint": "Pass only when the full prototype, Start Adventure visible-map validation, and contract-specific runtime proof all pass."
+                      "acceptanceHint": "Pass only when the full playable prototype, Start Adventure visible-map validation, contract-specific runtime proof, and map/player/enemy asset usage all pass."
                     }
                   ]
                 }

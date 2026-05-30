@@ -824,6 +824,10 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  const evaluationDecision = currentIterationPlanDecision();
+                  if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆迭代计划，已停止执行旧目标。");
+                  if (evaluationDecision === "llm_failed") return out("当前迭代计划评估失败，请先修复评估调用并重新评估计划。");
+                  if (evaluationDecision === "blocked_by_current_goal") return out("当前评估显示已有目标阻塞，请先处理当前阻塞项。");
                   setLocalBusy(true, "正在执行下一目标，请等待当前任务执行完毕。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan/execute-next`, {

@@ -167,6 +167,7 @@ public sealed class PrototypeQuickFixService
             var now = DateTimeOffset.UtcNow.ToString("O");
             var skillAction = ResolveSkillAction(request.SkillActionId);
             var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
+            var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
             var executionWorkspace = PrepareExecutionWorkspace(project, targetGoal, runId, codexOutputAbsolutePath);
 
             await File.WriteAllTextAsync(
@@ -308,6 +309,7 @@ public sealed class PrototypeQuickFixService
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
                 route_skill = routeSkill,
+                game_type_profile = routeProfile,
                 prototype_contract = prototypeContract.RelativePath,
                 prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
                 skill_action_id = skillAction?.ActionId,
@@ -574,6 +576,7 @@ public sealed class PrototypeQuickFixService
             result_log = resultRelativePath,
             codex_output = codexOutputRelativePath,
             route_skill = routeSkill,
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
             skill_action_id = skillAction?.ActionId,
             skill_name = skillAction?.SkillName,
             quick_fix = true,

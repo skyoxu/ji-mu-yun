@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -75,6 +76,9 @@ public sealed class PrototypeIterationGoalServiceTests
         run.ProgressLabel.Should().Be("目标 1 已完成。");
         details.Should().NotBeNull();
         details!.Session.Status.Should().Be("paused_for_review");
+        details.Session.LatestEvaluationJson.Should().NotBeNullOrWhiteSpace();
+        details.LatestEvaluation.Should().NotBeNull();
+        details.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
         details.Goals[0].Status.Should().Be("succeeded");
         details.Goals[1].Status.Should().Be("pending");
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
@@ -89,6 +93,98 @@ public sealed class PrototypeIterationGoalServiceTests
             "prototype-iteration-goal-result",
             "prototype-iteration-goal-codex-output"
         ]);
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldBlockOldGoals_WhenEvaluationRequiresPlanRefinement()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修主菜单入口。再修地图移动。最后补提示文案。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var evaluationJson = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+            "should_refine_plan",
+            "Step 1 has the wrong priority.",
+            "The playable path must start from Start Adventure into visible map movement and encounter entry.",
+            "Regenerate the iteration plan before executing old goals.",
+            "Start with Start Adventure -> visible MapScene -> movement -> encounter entry."));
+        await store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            details.Session.Status,
+            details.Session.CurrentGoalIndex,
+            details.Session.LatestSummary,
+            evaluationJson,
+            details.Session.CompletedUtc);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("plan_needs_refinement");
+        result.RunId.Should().BeEmpty();
+        result.GoalIndex.Should().Be(1);
+        result.SessionStatus.Should().Be("plan_needs_refinement");
+        runner.Commands.Should().BeEmpty();
+        refreshed.Should().NotBeNull();
+        refreshed!.Session.Status.Should().Be("plan_needs_refinement");
+        refreshed.Session.LatestEvaluationJson.Should().Be(evaluationJson);
+        refreshed.LatestEvaluation!.Decision.Should().Be("should_refine_plan");
+        refreshed.Goals[0].Status.Should().Be("pending");
+    }
+
+    [Theory]
+    [InlineData(1, "rpg-step1-navigation-encounter-entry")]
+    [InlineData(2, "rpg-step2-battlescene-settlement")]
+    [InlineData(3, "rpg-step3-reward-loop-return-map")]
+    [InlineData(4, "rpg-step4-main-loop-scene-switching")]
+    public async Task ExecuteNextAsync_ShouldUseRpgRouteAcceptanceKinds_ForNavigationFirstSteps(
+        int goalIndex,
+        string expectedAcceptanceKind)
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict route-profile steps."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < goalIndex))
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
+        }
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project);
+        new PrototypeContractService().WriteFromRequest(project, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        stateWriter.WritePrototypeState(project, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.GoalIndex.Should().Be(goalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == goalIndex).Status.Should().Be("succeeded");
+        run!.EvidenceJson.Should().Contain($"\"acceptance_validation\":\"{expectedAcceptanceKind}\"");
+        run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
     }
 
     [Fact]

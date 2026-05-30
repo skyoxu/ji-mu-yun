@@ -89,6 +89,7 @@ public sealed class PrototypeRepairPlanService
             status = "ready",
             summary,
             route_skill = routeSkill.Context,
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
             prototype_contract = prototypeContract.RelativePath,
             goals = goals.Select(goal => new
             {

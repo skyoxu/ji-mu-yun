@@ -93,6 +93,7 @@ public sealed class PrototypeNeedsFixRouteService
         {
             route = "needs-fix",
             route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
             project_id = project.ProjectId,
             session_id = details.Session.SessionId,
             goal_id = goal.GoalId,
@@ -150,6 +151,7 @@ public sealed class PrototypeNeedsFixRouteService
             route = "needs-fix",
             scope = "project",
             route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
             project_id = project.ProjectId,
             session_id = details.Session.SessionId,
             run_id = quickFixResult.RunId,
