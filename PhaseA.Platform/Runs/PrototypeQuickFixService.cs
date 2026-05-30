@@ -587,7 +587,9 @@ public sealed class PrototypeQuickFixService
             acceptance_validation = acceptanceValidation.Kind,
             acceptance_validation_status = acceptanceValidation.Status,
             acceptance_validation_reason = acceptanceValidation.Reason,
-            godot_smoke_validation = godotSmokeValidation.ToEvidence()
+            godot_smoke_validation = godotSmokeValidation.ToEvidence(),
+            post_acceptance_validation_status = goalRepairOutcome.GoalStatus == "succeeded" ? "passed" : "failed",
+            post_acceptance_validation_reason = goalRepairOutcome.GoalStatus == "succeeded" ? null : "godot_smoke_validation_failed"
         });
         await _metadataStore.CompleteRunAsync(runId, "completed", 0, "Preflight validation passed.", "", evidenceJson, cancellationToken);
         var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);

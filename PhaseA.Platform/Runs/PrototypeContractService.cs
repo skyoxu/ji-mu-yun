@@ -115,7 +115,7 @@ public sealed class PrototypeContractService
             - Mandatory: consume form_fields and input_traceability before planning, coding, validating, or repairing.
             - Mandatory: verify the current route output against this contract before reporting succeeded.
             - Mandatory: if any non-empty field is not reflected in gameplay, UI, scene flow, tests, or final acceptance, report needs_fix instead of succeeded.
-            {TrimForPrompt(contract.Json)}
+            {TrimForPrompt(CompactForPrompt(contract.Json))}
             """;
     }
 
@@ -173,10 +173,35 @@ public sealed class PrototypeContractService
         return values.Select(value => value?.Trim()).FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";
     }
 
+    private static string CompactForPrompt(string value)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            var root = document.RootElement;
+            var compact = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            foreach (var propertyName in new[] { "form_fields", "input_traceability", "route_skill", "game_type_profile" })
+            {
+                if (root.TryGetProperty(propertyName, out var property))
+                {
+                    compact[propertyName] = property.Clone();
+                }
+            }
+
+            return compact.Count == 0
+                ? value
+                : JsonSerializer.Serialize(compact, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return value;
+        }
+    }
+
     private static string TrimForPrompt(string value)
     {
         var trimmed = value.Trim();
-        return trimmed.Length <= 5000 ? trimmed : trimmed[..5000];
+        return trimmed.Length <= 3500 ? trimmed : trimmed[..3500];
     }
 }
 

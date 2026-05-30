@@ -310,9 +310,12 @@ texture = ExtResource("1_enemy")
         Write(root, "Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs", """
 public sealed class DqRpgPrototype
 {
+    public void Ready() { StartButton.Pressed += StartRun; _mapScene = GetNode<MapScene>("CanvasLayer/UI/MapScene"); }
     public void StartRun() { ShowMapScene(); }
     public void ShowMapScene() { _mapScene.Visible = true; }
     private dynamic _mapScene;
+    private dynamic StartButton;
+    private T GetNode<T>(string path) => default!;
     public void ShowRewardScene(System.Collections.Generic.IReadOnlyList<string> rewards) { if (rewards.Count <= 0) return; ShowMapScene(); }
 }
 """);
@@ -323,6 +326,7 @@ public sealed class MapScene
     public void GridToPosition() { }
     public void EncounterEntered() { }
     public void ShowRewardReturnStatus() { _player.Visible = true; }
+    private object TrackLayer = new();
     private dynamic _player;
 }
 """);
