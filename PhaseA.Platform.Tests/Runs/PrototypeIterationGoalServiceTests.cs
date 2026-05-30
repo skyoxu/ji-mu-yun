@@ -84,6 +84,10 @@ public sealed class PrototypeIterationGoalServiceTests
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
         codexCommand.StandardInput.Should().Contain("prototype-baseline");
         codexCommand.StandardInput.Should().Contain("Project prototype contract");
+        codexCommand.StandardInput.Should().Contain("Platform hard acceptance for RPG Step 1");
+        codexCommand.StandardInput.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
+        codexCommand.StandardInput.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
+        codexCommand.StandardInput.Should().Contain("RpgPlayerAsset");
         codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
@@ -184,6 +188,40 @@ public sealed class PrototypeIterationGoalServiceTests
         result.GoalIndex.Should().Be(goalIndex);
         refreshed!.Goals.Single(goal => goal.GoalIndex == goalIndex).Status.Should().Be("succeeded");
         run!.EvidenceJson.Should().Contain($"\"acceptance_validation\":\"{expectedAcceptanceKind}\"");
+        run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldAcceptCurrentRpgMapEntryContractShape()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Build the RPG map entry step."));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        WriteCurrentRpgMapEntryShape(project.RepoPath);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project);
+        stateWriter.WritePrototypeState(project, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.GoalIndex.Should().Be(1);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("succeeded");
+        run!.EvidenceJson.Should().Contain("\"acceptance_validation\":\"rpg-step1-navigation-encounter-entry\"");
         run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
     }
 
@@ -653,6 +691,82 @@ visible = false
             Directory.CreateDirectory(path);
             File.WriteAllText(Path.Combine(path, assetFile), "asset\n");
         }
+    }
+
+    private static void WriteCurrentRpgMapEntryShape(string repoPath)
+    {
+        var scenePath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg");
+        var scriptPath = Path.Combine(scenePath, "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    private MapScene _mapScene = default!;
+    private bool _hasStarted;
+    public void Ready()
+    {
+        _mapScene = GetNode<MapScene>("CanvasLayer/UI/MapScene");
+        _startButton.Pressed += StartRun;
+        _mapScene.EncounterTriggered += OnEncounterTriggered;
+    }
+    private void StartRun()
+    {
+        _hasStarted = true;
+        _mapScene.StartAdventure(0);
+        RefreshView();
+    }
+    private void RefreshView()
+    {
+        var mapVisible = _hasStarted;
+        _mapScene.Visible = mapVisible;
+    }
+}
+""");
+        File.WriteAllText(Path.Combine(scenePath, "MapScene.tscn"), """
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs" id="script_map"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="3"]
+
+[node name="MapScene" type="Control"]
+script = ExtResource("script_map")
+[node name="TrackLayer" type="Control" parent="."]
+custom_minimum_size = Vector2(600, 600)
+[node name="RpgMapAsset" type="TextureRect" parent="TrackLayer"]
+texture = ExtResource("1")
+[node name="Grid" type="GridContainer" parent="TrackLayer"]
+[node name="Overlay" type="Control" parent="TrackLayer"]
+[node name="RpgPlayerAsset" type="TextureRect" parent="TrackLayer"]
+texture = ExtResource("2")
+[node name="RpgEnemyAsset" type="TextureRect" parent="TrackLayer"]
+texture = ExtResource("3")
+""");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), """
+public sealed class MapScene
+{
+    public event System.Action<string>? EncounterTriggered;
+    private object TrackLayer = new();
+    private dynamic _playerToken;
+    public void StartAdventure(int battlesWon = 0)
+    {
+        Visible = true;
+        _playerToken.Visible = true;
+    }
+    public bool TryHandleMapKey(object keycode)
+    {
+        MoveOnMap();
+        return true;
+    }
+    private void MoveOnMap()
+    {
+        _playerToken.Position = GridToPosition();
+        EncounterTriggered?.Invoke("traversal_charge");
+    }
+    private object GridToPosition() => new();
+}
+""");
     }
 
     private static void WriteMismatchedRpgAssetScene(string repoPath)

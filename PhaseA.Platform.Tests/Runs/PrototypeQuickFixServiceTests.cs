@@ -160,6 +160,54 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldPromoteGoal_WhenTimedOutRepairAlreadyPassesValidation()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair map entry smoke validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new TimedOutValidatedGoalRepairRunner();
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current Godot smoke failure.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("succeeded");
+        run!.Status.Should().Be("completed");
+        run.ExitCode.Should().Be(0);
+        run.EvidenceJson.Should().Contain("prototype_quick_fix_timeout_validated_after_cancel");
+        runner.Commands.Should().Contain(command => command.Arguments.Contains("exec"));
+        runner.Commands.Should().Contain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
+    }
+
+    [Fact]
     public async Task SubmitAsync_ShouldCompleteEvenWhenCallerTokenIsCanceledAfterRunStarts()
     {
         using var database = TempSqliteDatabase.Create();
@@ -231,7 +279,55 @@ REMAINING: none
     }
 
     [Fact]
-    public async Task SubmitAsync_GoalRepair_ShouldKeepStepTwoNeedsFix_WhenMapEntryContractIsMissing()
+    public async Task SubmitAsync_GoalRepair_ShouldContinueToCodex_WhenPreflightGodotSmokeFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair map entry smoke validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new QuickFixNavigationFailHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current Godot smoke failure.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+        var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
+        codexCommand.StandardInput.Should().Contain("Latest Godot smoke validation failed after platform static acceptance");
+        codexCommand.StandardInput.Should().Contain("prototype_main_menu_navigation_failed");
+        run!.EvidenceJson.Should().NotContain("\"preflight\":true");
+        run.EvidenceJson.Should().Contain("\"godot_smoke_validation\"");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepOneNeedsFix_WhenMapEntryContractIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -246,9 +342,9 @@ REMAINING: none
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG map entry step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 2);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_map_entry_contract", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 2, "Goal 2 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -256,14 +352,17 @@ REMAINING: none
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 2, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("needs_fix");
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 2).Status.Should().Be("needs_fix");
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("needs_fix");
         result.AssistantMessage.Should().Contain("missing_rpg_");
-        runner.LastPrompt.Should().Contain("Platform hard acceptance");
+        runner.LastPrompt.Should().Contain("Platform hard acceptance for RPG Step 1");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
+        runner.LastPrompt.Should().Contain("RpgPlayerAsset");
     }
 
 [Fact]
@@ -945,6 +1044,11 @@ public static class PrototypeCatalog
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
             if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
@@ -1086,6 +1190,48 @@ not ready
         {
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             return new HostedProcessResult(0, "", "");
+        }
+    }
+
+    private sealed class TimedOutValidatedGoalRepairRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+        private bool _codexStarted;
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                if (!_codexStarted)
+                {
+                    return Task.FromResult(new HostedProcessResult(14, "", "MAIN_MENU_PROTOTYPE_NAV FAIL\nERROR: missing map asset before repair"));
+                }
+
+                return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", ""));
+            }
+
+            _codexStarted = true;
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Map navigation is repaired.
+CHANGED: Updated RPG map entry wiring.
+            VERIFY: Godot gameplay verification passed for map movement and first encounter trigger.
+REMAINING: none
+""");
+            throw new OperationCanceledException(cancellationToken);
         }
     }
 

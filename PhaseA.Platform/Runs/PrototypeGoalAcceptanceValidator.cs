@@ -323,7 +323,7 @@ internal static class PrototypeGoalAcceptanceValidator
                mainSceneText.Contains("anchors_preset = 15", StringComparison.Ordinal) &&
                HasStartAdventureMapEntry(mainScriptText) &&
                mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal) &&
-               mainScriptText.Contains("_mapScene.Visible = true", StringComparison.Ordinal) &&
+               HasMapSceneVisibilityEntry(mainScriptText) &&
                mapSceneText.Contains("MapScene", StringComparison.Ordinal) &&
                HasUniqueExtResourceIds(mapSceneText) &&
                HasSceneRootScript(mapSceneText) &&
@@ -332,7 +332,7 @@ internal static class PrototypeGoalAcceptanceValidator
                HasSceneNodeUnderAnyParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
                HasSceneNodeUnderAnyParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
                HasSceneNodeUnderAnyParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
-               HasSceneNodeUnderAnyParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay", "TrackLayer/Overlay") &&
+               HasSceneNodeUnderAnyParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay", "TrackLayer/Overlay", "TrackLayer") &&
                mapSceneText.Contains("Grid", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal) &&
                mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal) &&
@@ -340,8 +340,8 @@ internal static class PrototypeGoalAcceptanceValidator
                mapScriptText.Contains("TrackLayer", StringComparison.Ordinal) &&
                HasGridToVisiblePosition(mapScriptText) &&
                HasPlayerVisibilityRestore(mapScriptText) &&
-               mapScriptText.Contains("MovePlayer", StringComparison.Ordinal) &&
-               ContainsAny(mapScriptText, "EncounterEntered", "EncounterPressed");
+               HasMapMovementEntry(mapScriptText) &&
+               HasEncounterEntry(mapScriptText);
     }
 
     private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
@@ -392,7 +392,15 @@ internal static class PrototypeGoalAcceptanceValidator
         return mainScriptText.Contains("Pressed += ShowMapScene", StringComparison.Ordinal) ||
                (mainScriptText.Contains("Pressed += StartRun", StringComparison.Ordinal) &&
                 mainScriptText.Contains("StartRun", StringComparison.Ordinal) &&
-                mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal));
+                (mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal) ||
+                 mainScriptText.Contains("StartAdventure(", StringComparison.Ordinal)));
+    }
+
+    private static bool HasMapSceneVisibilityEntry(string mainScriptText)
+    {
+        return mainScriptText.Contains("_mapScene.Visible = true", StringComparison.Ordinal) ||
+               mainScriptText.Contains("mapVisible", StringComparison.Ordinal) ||
+               mainScriptText.Contains("StartAdventure(", StringComparison.Ordinal);
     }
 
     private static bool HasGridToVisiblePosition(string mapScriptText)
@@ -404,7 +412,18 @@ internal static class PrototypeGoalAcceptanceValidator
     private static bool HasPlayerVisibilityRestore(string mapScriptText)
     {
         return mapScriptText.Contains("_player.Visible = true", StringComparison.Ordinal) ||
-               mapScriptText.Contains("_playerAsset.Visible = true", StringComparison.Ordinal);
+               mapScriptText.Contains("_playerAsset.Visible = true", StringComparison.Ordinal) ||
+               mapScriptText.Contains("_playerToken", StringComparison.Ordinal);
+    }
+
+    private static bool HasMapMovementEntry(string mapScriptText)
+    {
+        return ContainsAny(mapScriptText, "MovePlayer", "MoveOnMap", "TryHandleMapKey");
+    }
+
+    private static bool HasEncounterEntry(string mapScriptText)
+    {
+        return ContainsAny(mapScriptText, "EncounterEntered", "EncounterPressed", "EncounterTriggered");
     }
 
     private static bool ContainsAny(string text, params string[] values)

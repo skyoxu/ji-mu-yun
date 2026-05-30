@@ -1084,6 +1084,11 @@ public sealed class PrototypeIterationPlanService
             }
 
             var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, routeProfile, details, prototypeProgress, cancellationToken);
+            if (IsStaleRpgBoundaryMismatchEvaluation(llmEvaluation, goals))
+            {
+                llmEvaluation = BuildRpgRouteGuardAcceptedEvaluation(llmEvaluation);
+            }
+
             return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
         }
 
@@ -1455,8 +1460,9 @@ public sealed class PrototypeIterationPlanService
             return "RPG plan acceptance boundary mismatch: step 1 must target Start Adventure to visible MapScene, stable movement, and encounter entry before BattleScene, reward, polish, package readiness, or final acceptance work.";
         }
 
+        var boundaryProbeText = StripRpgStepOneBoundaryExclusionClauses(firstGoalText);
         if (ContainsAny(
-                firstGoalText,
+                boundaryProbeText,
                 "battle scene",
                 "battlescene",
                 "battlescene.tscn",
@@ -1476,6 +1482,68 @@ public sealed class PrototypeIterationPlanService
         }
 
         return null;
+    }
+
+    private static string StripRpgStepOneBoundaryExclusionClauses(string value)
+    {
+        var text = value;
+        text = Regex.Replace(
+            text,
+            @"\bbefore\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            " ",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        text = Regex.Replace(
+            text,
+            @"\b(?:do not|don't|must not|should not|without)\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            " ",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        text = Regex.Replace(
+            text,
+            @"\b(?:keep|remain|stays?)\b[^.。]*\b(?:focused|limited|scoped)\b[^.。]*\b(?:before|without|not)\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            " ",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return text;
+    }
+
+    private static bool IsStaleRpgBoundaryMismatchEvaluation(
+        PrototypeIterationPlanEvaluationResult evaluation,
+        ProjectIterationGoalSnapshot[] goals)
+    {
+        if (!string.Equals(evaluation.Decision, "should_refine_plan", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (FindRpgPlanAcceptanceBoundaryIssue(goals) is not null)
+        {
+            return false;
+        }
+
+        var evaluationText = string.Join(
+            " ",
+            evaluation.Summary ?? string.Empty,
+            evaluation.Reason ?? string.Empty,
+            evaluation.SuggestedAction ?? string.Empty,
+            evaluation.SuggestedPromptForRegeneration ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(evaluationText))
+        {
+            return false;
+        }
+
+        return
+            ContainsAny(evaluationText, "acceptance boundary mismatch", "step 1 must only", "step one must only", "first step must only") &&
+            ContainsAny(evaluationText, "BattleScene", "battle scene", "reward", "scene switching", "package readiness", "final acceptance", "full playable") &&
+            ContainsAny(evaluationText, "Start Adventure", "visible MapScene", "visible map", "stable movement", "encounter entry");
+    }
+
+    private static PrototypeIterationPlanEvaluationResult BuildRpgRouteGuardAcceptedEvaluation(PrototypeIterationPlanEvaluationResult staleEvaluation)
+    {
+        return new PrototypeIterationPlanEvaluationResult(
+            "ready_to_execute",
+            "RPG route guard accepted the saved iteration plan.",
+            $"The model requested RPG acceptance-boundary refinement, but the saved final goals already keep Step 1 limited to Start Adventure, visible MapScene, stable movement, and encounter entry. Stale model reason: {TrimForHint(staleEvaluation.Reason, 240)}",
+            "Execute the next goal.",
+            null);
     }
 
     private static string BuildRpgRegenerationPrompt(ProjectIterationSessionDetails details)

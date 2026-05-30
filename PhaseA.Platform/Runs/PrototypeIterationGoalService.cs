@@ -459,6 +459,8 @@ public sealed class PrototypeIterationGoalService
         string prototypeState,
         string iterationPlanState)
     {
+        var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
         return $"""
             You are running the Phase A execute-next-goal top-level route.
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
@@ -509,6 +511,8 @@ public sealed class PrototypeIterationGoalService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
+
+            {platformAcceptanceBlock}
 
             Output format:
             STATUS: completed|needs_fix

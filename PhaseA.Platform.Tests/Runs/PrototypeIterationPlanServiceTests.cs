@@ -340,6 +340,53 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldIgnoreStaleRpgBoundaryEvaluation_WhenSavedPlanAlreadyMatchesStrictRoute()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new StaleBoundaryRpgPlanCodexClient());
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(runId, "succeeded", 0, "ok", "", "{}");
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please continue refining the current RPG prototype after the first successful playable loop.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(6);
+        result.Goals[0].Title.Should().Be("RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry");
+        string.Join(" ", result.Goals[0].Title, result.Goals[0].Description, result.Goals[0].AcceptanceHint)
+            .Should()
+            .Contain("Start Adventure")
+            .And.Contain("visible MapScene")
+            .And.Contain("stable movement")
+            .And.Contain("encounter entry")
+            .And.NotContain("BattleScene")
+            .And.NotContain("reward")
+            .And.NotContain("final acceptance");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+        result.LatestEvaluation.Reason.Should().Contain("saved final goals already keep Step 1 limited");
+        result.LatestEvaluation.SuggestedPromptForRegeneration.Should().BeNull();
+
+        var latest = await service.GetLatestAsync(accountId, projectId);
+        latest.Should().NotBeNull();
+        latest!.LatestEvaluation.Should().NotBeNull();
+        latest.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldReturnLlmFailed_WhenModelGeneratedPlanDoesNotMatchRpgScaffold()
     {
         using var database = TempSqliteDatabase.Create();
@@ -583,6 +630,52 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Decision.Should().Be("should_refine_plan");
         result.Reason.Should().Contain("acceptance boundary mismatch");
         result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldAllowRpgPlan_WhenStepOneOnlyMentionsLaterWorkAsExclusion()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new RpgEvaluationCodexClient(
+            "ready_to_execute",
+            "The RPG plan can execute.",
+            "The saved goals keep Step 1 focused and split later work into later steps.",
+            "Execute the next goal.",
+            null));
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Win after 15 battles; any battle loss means game loss.",
+            "Demo Game: improve RPG loop.",
+            [
+                new ProjectIterationGoalCreateCommand(
+                    1,
+                    "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
+                    "Resolve the first RPG route blocker as the initial convergence step: Start Adventure opens a visible MapScene, shows runtime map/player assets, proves stable controllable movement, and exposes the first encounter entry. Keep this step tightly focused on map start, movement stability, and encounter entry because those are still the primary unproven runtime blockers before battle, reward, or broader loop closure work.",
+                    "Pass only when Start Adventure opens a visible RPG MapScene, runtime evidence proves the player can move continuously and controllably on that map, map/player asset usage is visible, and actual traversal reaches a clear first encounter entry."),
+                new ProjectIterationGoalCreateCommand(2, "RPG Step 2: BattleScene loop validation", "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.", "BattleScene settlement and enemy asset usage pass."),
+                new ProjectIterationGoalCreateCommand(3, "RPG Step 3: reward 3-choice and return-to-map validation", "Validate reward 3-choice state change and return-to-map.", "Reward 3-choice and return-to-map pass."),
+                new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main loop scene switching validation", "Validate main loop scene switching from Start Adventure to map, encounter, BattleScene, reward, and return-to-map.", "Main loop scene switching passes."),
+                new ProjectIterationGoalCreateCommand(5, "RPG Step 5: win/fail visibility and readability validation", "Show and validate win after 15 battles, any battle loss means game loss, and encounter rules clearly.", "Win after 15 battles, any-loss defeat, and encounter rule feedback pass."),
+                new ProjectIterationGoalCreateCommand(6, "RPG Final Step: full playable prototype acceptance", "Run final acceptance across Start Adventure visible map, battle, reward return-to-map, win after 15 battles, any battle loss means game loss, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, explicit rule coverage, project contract, and asset usage pass.")
+            ]);
+
+        var result = await service.EvaluateAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
+
+        result.Decision.Should().Be("ready_to_execute");
+        result.Reason.Should().Contain("focused");
     }
 
     [Fact]
@@ -984,6 +1077,87 @@ public sealed class PrototypeIterationPlanServiceTests
             }
             """;
             return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
+        }
+    }
+
+    private sealed class StaleBoundaryRpgPlanCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                const string analysis =
+                    """
+                    {
+                      "analysisSummary": "LLM planning analysis ok.",
+                      "fieldCoverage": [
+                        { "field": "reward_loop", "status": "partial", "evidence": "reward 3-choice", "missingReason": null },
+                        { "field": "win_fail_conditions", "status": "partial", "evidence": "win/fail rules", "missingReason": null }
+                      ]
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, analysis, null, 0, "", ""));
+            }
+
+            if (options?.OutputSchemaPath?.Contains("goal-plan", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                const string goals =
+                    """
+                    {
+                      "goals": [
+                        {
+                          "title": "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
+                          "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene, proves stable movement, shows map/player asset usage, and exposes encounter entry.",
+                          "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene, movement stays stable, map/player assets are visible, and encounter entry is exposed."
+                        },
+                        {
+                          "title": "RPG Step 2: BattleScene loop validation",
+                          "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
+                          "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
+                        },
+                        {
+                          "title": "RPG Step 3: reward 3-choice and return-to-map validation",
+                          "description": "Prove reward 3-choice changes state and returns to the active map loop.",
+                          "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
+                        },
+                        {
+                          "title": "RPG Step 4: main loop scene switching validation",
+                          "description": "Connect Start Adventure, map, encounter, BattleScene, reward, and return-to-map after the reward loop is proven.",
+                          "acceptanceHint": "Pass only when scene switching covers the full first RPG loop."
+                        },
+                        {
+                          "title": "RPG Step 5: win/fail visibility and readability validation",
+                          "description": "Show and validate 15-battle victory, any-loss defeat, and encounter rules.",
+                          "acceptanceHint": "Pass only when players can understand win/fail and encounter rules."
+                        },
+                        {
+                          "title": "RPG Final Step: full playable prototype acceptance",
+                          "description": "Run final acceptance across Start Adventure visible map, battle, reward return, navigation, and contract-specific runtime proof.",
+                          "acceptanceHint": "Pass only when the full RPG playable prototype, Start Adventure visible-map validation, contract-specific runtime proof, and map/player/enemy asset usage all pass."
+                        }
+                      ]
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, goals, null, 0, "", ""));
+            }
+
+            const string evaluation =
+                """
+                {
+                  "decision": "should_refine_plan",
+                  "summary": "The RPG plan still needs refinement.",
+                  "reason": "RPG plan acceptance boundary mismatch: step 1 must only validate Start Adventure to visible MapScene, stable movement, and encounter entry. BattleScene, reward, scene switching, package readiness, and final acceptance requirements must be split into later steps.",
+                  "suggestedAction": "Regenerate the RPG iteration plan.",
+                  "suggestedPromptForRegeneration": "Regenerate the plan so Step 1 only covers Start Adventure, visible MapScene, stable movement, and encounter entry before BattleScene, reward, scene switching, and final acceptance."
+                }
+                """;
+            return Task.FromResult(new CodexChatClientResult(true, evaluation, null, 0, "", ""));
         }
     }
 

@@ -152,23 +152,31 @@ public sealed class PrototypeQuickFixService
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
         await SetProgressAsync(runId, "running", "prepare", "正在准备快速修复任务。", CancellationToken.None);
 
+        string submittedRelativePath = "";
+        string resultRelativePath = "";
+        string codexOutputRelativePath = "";
+        string resultAbsolutePath = "";
+        string codexOutputAbsolutePath = "";
+        string now = DateTimeOffset.UtcNow.ToString("O");
+        SkillActionDefinition? skillAction = null;
+        ExecutionWorkspace? executionWorkspace = null;
+
         try
         {
             var relativeDir = Path.Combine("logs", "phase-a-quick-fix", project.ProjectId, runId);
             var absoluteDir = Path.Combine(project.RepoPath, relativeDir);
             Directory.CreateDirectory(absoluteDir);
 
-            var submittedRelativePath = ToSlash(Path.Combine(relativeDir, "submitted-feedback.md"));
-            var resultRelativePath = ToSlash(Path.Combine(relativeDir, "result-log.md"));
-            var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
+            submittedRelativePath = ToSlash(Path.Combine(relativeDir, "submitted-feedback.md"));
+            resultRelativePath = ToSlash(Path.Combine(relativeDir, "result-log.md"));
+            codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
             var submittedAbsolutePath = Path.Combine(project.RepoPath, submittedRelativePath.Replace('/', Path.DirectorySeparatorChar));
-            var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
-            var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
-            var now = DateTimeOffset.UtcNow.ToString("O");
-            var skillAction = ResolveSkillAction(request.SkillActionId);
+            resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            skillAction = ResolveSkillAction(request.SkillActionId);
             var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
             var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
-            var executionWorkspace = PrepareExecutionWorkspace(project, targetGoal, runId, codexOutputAbsolutePath);
+            executionWorkspace = PrepareExecutionWorkspace(project, targetGoal, runId, codexOutputAbsolutePath);
 
             await File.WriteAllTextAsync(
                 submittedAbsolutePath,
@@ -176,6 +184,7 @@ public sealed class PrototypeQuickFixService
                 Encoding.UTF8,
                 CancellationToken.None);
 
+            PrototypeGoalGodotSmokeValidationResult? preflightGodotSmokeFailure = null;
             var preflightResult = targetGoal is null || iterationDetails is null
                 ? null
                 : await TryCompleteAlreadySatisfiedGoalAsync(
@@ -191,6 +200,7 @@ public sealed class PrototypeQuickFixService
                     routeSkill,
                     skillAction,
                     now,
+                    smokeFailure => preflightGodotSmokeFailure = smokeFailure,
                     CancellationToken.None);
             if (preflightResult is not null)
             {
@@ -205,7 +215,9 @@ public sealed class PrototypeQuickFixService
             timeout.CancelAfter(effectiveTimeout);
             var prototypeContract = _contractService.Read(project);
             await SetProgressAsync(runId, "running", "godot_diagnostic", "Checking recent Godot validation errors before repair.", CancellationToken.None);
-            var godotDiagnostic = await GodotFailureDiagnosticService.AnalyzeLatestAsync(_metadataStore, project, CancellationToken.None);
+            var godotDiagnostic = preflightGodotSmokeFailure is null
+                ? await GodotFailureDiagnosticService.AnalyzeLatestAsync(_metadataStore, project, CancellationToken.None)
+                : BuildGodotDiagnosticFromSmokeFailure(preflightGodotSmokeFailure);
             var godotCleanup = await GodotFailureDiagnosticService.CleanupIfRecommendedAsync(project, godotDiagnostic, CancellationToken.None);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup);
             await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
@@ -410,17 +422,37 @@ public sealed class PrototypeQuickFixService
         }
         catch (OperationCanceledException)
         {
-            var evidenceJson = JsonSerializer.Serialize(new
-            {
-                run_type = RunType,
-                failure_code = "prototype_quick_fix_timeout"
-            });
             var effectiveTimeout = goalRepairMode
                 ? Max(_executionTimeout, DefaultGoalRepairExecutionTimeout)
                 : _executionTimeout;
-            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null)
             {
+                var timeoutRecovery = await TryCompleteTimedOutGoalIfValidatedAsync(
+                    project,
+                    iterationDetails,
+                    targetGoal,
+                    runId,
+                    submittedRelativePath,
+                    resultRelativePath,
+                    resultAbsolutePath,
+                    codexOutputRelativePath,
+                    codexOutputAbsolutePath,
+                    executionWorkspace,
+                    skillAction,
+                    now,
+                    effectiveTimeout,
+                    CancellationToken.None);
+                if (timeoutRecovery is not null)
+                {
+                    return timeoutRecovery;
+                }
+
+                var evidenceJson = JsonSerializer.Serialize(new
+                {
+                    run_type = RunType,
+                    failure_code = "prototype_quick_fix_timeout"
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
                 var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小奖励闭环：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。";
                 var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
@@ -431,6 +463,12 @@ public sealed class PrototypeQuickFixService
                 return new PrototypeFeedbackResult(runId, "failed", "当前目标修复超时。系统没有切换到后续目标，你可以继续再次修复当前 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
 
+            var timeoutEvidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = RunType,
+                failure_code = "prototype_quick_fix_timeout"
+            });
+            await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", timeoutEvidenceJson, CancellationToken.None);
             await SetProgressAsync(runId, "failed", "timeout", "快速修复超时，请改用正式反馈或缩小问题范围。", CancellationToken.None);
             return new PrototypeFeedbackResult(runId, "failed", "快速修复超时。请改用正式反馈，或把问题描述得更小、更明确。", []);
         }
@@ -498,7 +536,8 @@ public sealed class PrototypeQuickFixService
         object routeSkill,
         SkillActionDefinition? skillAction,
         string now,
-        CancellationToken cancellationToken)
+        Action<PrototypeGoalGodotSmokeValidationResult>? onGodotSmokeFailure = null,
+        CancellationToken cancellationToken = default)
     {
         await SetProgressAsync(runId, "running", "preflight", $"正在检查目标 {targetGoal.GoalIndex} 是否已经满足验收。", cancellationToken);
         var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, cancellationToken);
@@ -525,6 +564,11 @@ public sealed class PrototypeQuickFixService
         else if (godotSmokeValidation.Required)
         {
             assistantMessage = AppendGodotSmokeValidationFailure(assistantMessage, godotSmokeValidation);
+            if (godotSmokeValidation.Smoke.Ran)
+            {
+                onGodotSmokeFailure?.Invoke(godotSmokeValidation);
+                return null;
+            }
         }
 
         var goalRepairOutcome = godotSmokeValidation.Passed
@@ -640,9 +684,186 @@ public sealed class PrototypeQuickFixService
             targetGoal.GoalIndex);
     }
 
+    private static GodotFailureDiagnostic BuildGodotDiagnosticFromSmokeFailure(PrototypeGoalGodotSmokeValidationResult validation)
+    {
+        var smoke = validation.Smoke;
+        var excerpt = string.Join(
+            Environment.NewLine,
+            new[]
+            {
+                $"Reason: {smoke.Reason}",
+                $"Scene: {smoke.ScenePath}",
+                TrimForPromptExcerpt(smoke.Stdout, 700),
+                TrimForPromptExcerpt(smoke.Stderr, 700)
+            }.Where(static value => !string.IsNullOrWhiteSpace(value)));
+
+        return new GodotFailureDiagnostic(
+            true,
+            false,
+            "Latest Godot smoke validation failed after platform static acceptance. The repair must fix scene, script, resource, or runtime wiring so the gameplay smoke passes.",
+            excerpt,
+            null);
+    }
+
+    private async Task<PrototypeFeedbackResult?> TryCompleteTimedOutGoalIfValidatedAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails iterationDetails,
+        ProjectIterationGoalSnapshot targetGoal,
+        string runId,
+        string submittedRelativePath,
+        string resultRelativePath,
+        string resultAbsolutePath,
+        string codexOutputRelativePath,
+        string codexOutputAbsolutePath,
+        ExecutionWorkspace? executionWorkspace,
+        SkillActionDefinition? skillAction,
+        string now,
+        TimeSpan effectiveTimeout,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (executionWorkspace?.SyncBack == true && Directory.Exists(executionWorkspace.RootPath))
+            {
+                SyncFocusedWorkspaceBack(executionWorkspace, project.RepoPath);
+            }
+
+            if (executionWorkspace is not null && File.Exists(executionWorkspace.CodexOutputPath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
+                File.Copy(executionWorkspace.CodexOutputPath, codexOutputAbsolutePath, overwrite: true);
+            }
+
+            var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, cancellationToken);
+            if (!acceptanceValidation.Passed)
+            {
+                return null;
+            }
+
+            var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
+            var godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, cancellationToken);
+            if (!godotSmokeValidation.Passed)
+            {
+                return null;
+            }
+
+            var codexOutput = File.Exists(codexOutputAbsolutePath)
+                ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
+                : "Codex repair timed out after writing changes, but platform validation passed afterward.";
+            if (!File.Exists(codexOutputAbsolutePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
+                await File.WriteAllTextAsync(codexOutputAbsolutePath, codexOutput, Encoding.UTF8, cancellationToken);
+            }
+
+            var assistantMessage = $"""
+                目标 {targetGoal.GoalIndex} 修复已通过平台复验。
+                本次修复进程超过 {effectiveTimeout.TotalSeconds:0} 秒后被终止，但文件变更已经落盘，并且当前目标的静态验收与 Godot smoke 验证均已通过。
+                """;
+            await File.WriteAllTextAsync(
+                resultAbsolutePath,
+                BuildResultLog(
+                    project,
+                    runId,
+                    "Timed-out repair validated after cancellation",
+                    assistantMessage,
+                    PrototypeModelPolicy.Normalize(null),
+                    new HostedProcessResult(408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout."),
+                    codexOutput,
+                    now,
+                    skillAction,
+                    targetGoal,
+                    new GoalRepairOutcome("succeeded", true)),
+                Encoding.UTF8,
+                cancellationToken);
+
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-quick-fix-submission",
+                submittedRelativePath,
+                "Prototype quick fix submission"), cancellationToken);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-quick-fix-result-log",
+                resultRelativePath,
+                "Prototype quick fix result log"), cancellationToken);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "prototype-quick-fix-codex-output",
+                codexOutputRelativePath,
+                "Prototype quick fix Codex output"), cancellationToken);
+
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = RunType,
+                failure_code = "prototype_quick_fix_timeout_validated_after_cancel",
+                quick_fix = true,
+                goal_repair = true,
+                goal_id = targetGoal.GoalId,
+                goal_index = targetGoal.GoalIndex,
+                goal_repair_status = "succeeded",
+                acceptance_validation = acceptanceValidation.Kind,
+                acceptance_validation_status = acceptanceValidation.Status,
+                acceptance_validation_reason = acceptanceValidation.Reason,
+                godot_smoke_validation = godotSmokeValidation.ToEvidence()
+            });
+            await _metadataStore.CompleteRunAsync(
+                runId,
+                "completed",
+                0,
+                "Timed-out repair passed platform validation after cancellation.",
+                "",
+                evidenceJson,
+                cancellationToken);
+
+            var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
+            await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "succeeded", assistantMessage, now, cancellationToken);
+            await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair-timeout-validated", cancellationToken);
+
+            var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+            var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
+            var sessionStatus = hasMoreGoals ? "paused_for_review" : "completed";
+            var sessionSummary = hasMoreGoals
+                ? $"目标 {targetGoal.GoalIndex} 已通过超时后复验。请确认后决定是否继续目标 {targetGoal.GoalIndex + 1}。"
+                : "所有迭代目标已完成。";
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+                iterationDetails.Session.SessionId,
+                sessionStatus,
+                targetGoal.GoalIndex,
+                sessionSummary,
+                refreshed?.Session.LatestEvaluationJson,
+                sessionStatus == "completed" ? now : null,
+                cancellationToken);
+            PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "succeeded", assistantMessage, now, sessionSummary);
+            await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "succeeded", sessionSummary, assistantMessage, [], cancellationToken);
+            await SetProgressAsync(runId, "completed", "", $"目标 {targetGoal.GoalIndex} 已通过超时后复验。", cancellationToken);
+
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+            return new PrototypeFeedbackResult(runId, "completed", assistantMessage, artifacts, sessionStatus, "succeeded", targetGoal.GoalIndex);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
     private Task SetProgressAsync(string runId, string step, string substep, string label, CancellationToken cancellationToken)
     {
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
+    }
+
+    private static string TrimForPromptExcerpt(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
@@ -846,7 +1067,7 @@ public sealed class PrototypeQuickFixService
             - LastRunOutcome: {runMemory.LastRunOutcome}
             """;
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
-        var platformAcceptanceBlock = BuildPlatformAcceptanceBlock(goal);
+        var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
 
         return $"""
@@ -910,41 +1131,6 @@ public sealed class PrototypeQuickFixService
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
             """;
-    }
-
-    private static string BuildPlatformAcceptanceBlock(ProjectIterationGoalSnapshot goal)
-    {
-        return goal.GoalIndex == 2
-            ? """
-            Platform hard acceptance for RPG Step 2:
-            - A dedicated MapScene scene and matching script must exist; do not keep all map behavior only inside the main prototype scene.
-            - The main prototype scene must keep the Start Adventure button and host a MapScene instance under CanvasLayer/UI.
-            - Pressing Start Adventure must call ShowMapScene and make CanvasLayer/UI/MapScene visible.
-            - MapScene must provide a fixed-size TrackLayer so the map background, grid, overlay, player, and enemy share one coordinate space.
-            - MapScene must expose recognizable RpgMapAsset, Grid, Overlay, RpgPlayerAsset, and RpgEnemyAsset nodes.
-            - The MapScene script must move the player, convert grid coordinates to visible positions, keep the player visible, and expose the first-encounter entry.
-            - If any of these contracts are missing, output STATUS: needs_fix; do not treat static review or skipped runtime validation as completed.
-            """
-            : goal.GoalIndex == 5
-            ? """
-            平台对 RPG Step 5 的强制验收契约：
-            - 主原型场景脚本必须有一个明确的奖励展示入口，接收战斗胜利产生的 rewards 列表，并在 rewards.Count > 0 时显示奖励选择。
-            - 奖励展示入口必须能被平台识别为 ShowRewardScene(rewards)，不要只把奖励逻辑散落在战斗结束分支里。
-            - 选择奖励后必须应用 3 选 1 成长：+5 HP、+2 ATK、+1 DEF 三者之一，并让玩家状态变化可见。
-            - 选择奖励后必须关闭奖励 UI，回到地图场景，并确保玩家仍可见、仍可继续移动。
-            - 地图场景脚本必须提供可识别的奖励后返回状态刷新入口 ShowRewardReturnStatus，用于显示玩家已经回到地图循环。
-            - 核心 loop 和对应原型测试必须保留 RewardOptions.Count、ApplyReward、Battle reward selected、Return to the map 这些可验收标记。
-            - 不要把“测试依赖不可用”当作已完成；如果结构契约没满足，应继续修当前 step。
-            """
-            : goal.GoalIndex == 6
-                ? """
-            平台对 RPG Final Step 的强制验收契约：
-            - 必须通过完整 RPG 原型验收：地图场景、战斗场景、奖励闭环、主菜单进入原型、Start Adventure 后地图可见、Godot smoke、打包准备。
-            - Main.tscn 根级 VBox、Overlays、ScreenRoot 必须存在，并且默认 visible = false。
-            - 不要删除 ScreenRoot 或导航 wiring；只把默认可见性关闭，运行时需要时再由导航逻辑显示。
-            - 如果 Main.tscn 默认宿主 UI 仍可见，必须输出 STATUS: needs_fix。
-            """
-            : "";
     }
 
     private static bool RequiresHardPlatformAcceptance(
