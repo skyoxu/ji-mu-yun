@@ -1944,6 +1944,7 @@ public sealed class BrowserUiRenderer
                     showInitialization("running", "");
                     await pollProjectInitializationResult();
                   } catch (error) {
+                    showCreationFailure(projectCreationErrorMessage(error));
                     showError(error);
                   } finally {
                     setLocalBusy(false);
@@ -1977,6 +1978,27 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                   }
+                }
+
+                function projectCreationErrorMessage(error) {
+                  const payload = error?.payload || {};
+                  const code = payload.failureCode || payload.error || error?.status || "unknown_error";
+                  if (code === "project_initialization_in_progress") {
+                    return "已有项目仍在初始化中，暂时不能创建新项目。系统会自动清理中断的初始化；如果页面一直停留在这里，请刷新后重试。";
+                  }
+                  if (code === "project_quota_exceeded") {
+                    return `项目数量已达到上限${payload.projectLimit ? `（${payload.projectLimit} 个）` : ""}，请先删除旧项目后再创建。`;
+                  }
+                  if (code === "game_name_required") {
+                    return "请填写游戏名称。";
+                  }
+                  if (code === "game_type_source_required") {
+                    return "请填写游戏类型/玩法方向。";
+                  }
+                  if (code === "git_url_not_allowed") {
+                    return "当前入口不允许从浏览器提交 Git URL。";
+                  }
+                  return `创建请求失败：${code}`;
                 }
 
                 async function deleteProject(projectId) {

@@ -366,6 +366,26 @@ public sealed class ProjectCreationServiceTests
         stale.Should().ContainSingle(item => item.ProjectId == created.ProjectId && item.RunId == runId);
     }
 
+    [Fact]
+    public async Task ListOrphanedProjectInitializationsAsync_FindsRunningProjectWithoutBootstrapRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        var orphaned = await store.ListOrphanedProjectInitializationsAsync();
+
+        orphaned.Should().ContainSingle(item =>
+            item.ProjectId == created.ProjectId &&
+            item.RunId == "" &&
+            item.RunStatus == "missing");
+    }
+
     private static ProjectCreationRequest Request(string gameName)
     {
         return new ProjectCreationRequest(null, gameName, "manual", null, null, null, null);

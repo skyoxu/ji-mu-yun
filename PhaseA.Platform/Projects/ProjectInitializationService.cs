@@ -40,10 +40,16 @@ public sealed class ProjectInitializationService
     {
         using var scope = _scopeFactory.CreateScope();
         var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
-        var staleProjects = await metadataStore.ListStaleProjectInitializationsAsync(maxAge, cancellationToken);
+        var staleProjects = maxAge == TimeSpan.Zero
+            ? (await metadataStore.ListOrphanedProjectInitializationsAsync(cancellationToken))
+                .Concat(await metadataStore.ListStaleProjectInitializationsAsync(maxAge, cancellationToken))
+                .ToArray()
+            : await metadataStore.ListStaleProjectInitializationsAsync(maxAge, cancellationToken);
         foreach (var stale in staleProjects)
         {
-            var failure = maxAge == TimeSpan.Zero
+            var failure = string.IsNullOrWhiteSpace(stale.RunId)
+                ? "Project initialization was interrupted before the Chapter 2 bootstrap run was created."
+                : maxAge == TimeSpan.Zero
                 ? "Project initialization was interrupted because the service restarted before completion."
                 : $"Project initialization timed out after {StaleInitializationAge.TotalMinutes:0} minutes.";
             _logger.LogWarning(

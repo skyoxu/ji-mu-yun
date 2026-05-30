@@ -30,6 +30,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("currentProjectPanel");
         html.Should().Contain("initStatusPanel");
         html.Should().Contain("pollProjectInitializationResult");
+        html.Should().Contain("projectCreationErrorMessage");
+        html.Should().Contain("project_initialization_in_progress");
+        html.Should().Contain("project_quota_exceeded");
         html.Should().Contain("showLoggedOut");
         html.Should().Contain("logout");
         html.Should().Contain("退出登录");

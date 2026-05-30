@@ -483,6 +483,58 @@ public sealed class PhaseAMetadataStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<StaleProjectInitializationSnapshot>> ListOrphanedProjectInitializationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                p.id,
+                p.account_id,
+                p.name,
+                p.game_name,
+                p.game_type_source,
+                p.template_rule_id,
+                w.root_path,
+                '',
+                'missing',
+                p.created_utc,
+                NULL
+            FROM projects p
+            INNER JOIN workspaces w ON w.project_id = p.id
+            WHERE p.bootstrap_status = 'running'
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM runs r
+                  WHERE r.project_id = p.id
+                    AND r.run_type = 'chapter2-bootstrap'
+              )
+            ORDER BY p.created_utc ASC;
+            """;
+
+        var stale = new List<StaleProjectInitializationSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            stale.Add(new StaleProjectInitializationSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.IsDBNull(10) ? null : reader.GetString(10)));
+        }
+
+        return stale;
+    }
+
     public async Task<IReadOnlyList<StaleProjectInitializationSnapshot>> ListStaleProjectInitializationsAsync(
         TimeSpan maxAge,
         CancellationToken cancellationToken = default)
