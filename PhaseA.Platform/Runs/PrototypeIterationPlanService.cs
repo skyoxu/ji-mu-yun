@@ -99,6 +99,7 @@ public sealed class PrototypeIterationPlanService
         }
         var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var routeStrategy = GameTypeRouteStrategies.Resolve(project, routeProfile);
         var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
         if (!routeSkillAvailability.IsAvailable)
         {
@@ -111,9 +112,9 @@ public sealed class PrototypeIterationPlanService
         IterationPlanningContext planningContext;
         try
         {
-            planningContext = await BuildPlanningContextAsync(project, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
+            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
         }
-        catch (PrototypeIterationPlanLlmException ex) when (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
             return new PrototypeIterationPlanResult(
                 "",
@@ -127,9 +128,9 @@ public sealed class PrototypeIterationPlanService
         List<PrototypeIterationPlanGoalResult> goals;
         try
         {
-            goals = await BuildGoalsForProjectAsync(project, prototypeContract, message, sourceKind, planningContext, regenerationGuidance, cancellationToken);
+            goals = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, message, sourceKind, planningContext, regenerationGuidance, cancellationToken);
         }
-        catch (PrototypeIterationPlanLlmException ex) when (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
             return new PrototypeIterationPlanResult(
                 "",
@@ -140,7 +141,7 @@ public sealed class PrototypeIterationPlanService
                 null);
         }
 
-        if (PrototypeRouteSkillPolicy.IsRpgProject(project) && goals.Count == 0)
+        if (routeStrategy.RequiresNonEmptyIterationGoals && goals.Count == 0)
         {
             return new PrototypeIterationPlanResult(
                 "",
@@ -204,6 +205,8 @@ public sealed class PrototypeIterationPlanService
 
     private async Task<List<PrototypeIterationPlanGoalResult>> BuildGoalsForProjectAsync(
         ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile,
+        IGameTypeRouteStrategy routeStrategy,
         PrototypeContractSnapshot prototypeContract,
         string message,
         string sourceKind,
@@ -211,10 +214,11 @@ public sealed class PrototypeIterationPlanService
         string? regenerationGuidance,
         CancellationToken cancellationToken)
     {
-        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (routeStrategy.UsesSpecializedIterationPlanning &&
+            string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             var scaffold = BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext, regenerationGuidance);
-            return await RefineRpgGoalsWithRequiredModelAsync(project, planningContext, message, scaffold, regenerationGuidance, cancellationToken);
+            return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, cancellationToken);
         }
 
         var goals = BuildGoals(message, sourceKind);
@@ -223,6 +227,8 @@ public sealed class PrototypeIterationPlanService
 
     private async Task<IterationPlanningContext> BuildPlanningContextAsync(
         ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile,
+        IGameTypeRouteStrategy routeStrategy,
         PrototypeRouteSkillContext routeSkill,
         PrototypeContractSnapshot prototypeContract,
         string message,
@@ -257,7 +263,7 @@ public sealed class PrototypeIterationPlanService
 
         if (_llmRouteEngine is null)
         {
-            if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+            if (routeStrategy.RequiresModelBackedIterationPlanning)
             {
                 throw new PrototypeIterationPlanLlmException("planning_analysis_llm_client_missing");
             }
@@ -265,7 +271,7 @@ public sealed class PrototypeIterationPlanService
             return fallback;
         }
 
-        var modelPrompt = BuildPlanningAnalysisPrompt(project, PrototypeRouteSkillPolicy.ResolveProfile(project), prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -280,7 +286,7 @@ public sealed class PrototypeIterationPlanService
             cancellationToken);
         if (!completion.Succeeded)
         {
-            if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+            if (routeStrategy.RequiresModelBackedIterationPlanning)
             {
                 throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "planning_analysis_llm_failed");
             }
@@ -292,7 +298,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var parsed = TryParsePlanningContext(completion.JsonObjectText ?? completion.AssistantMessage, fallback);
-        if (parsed is null && PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (parsed is null && routeStrategy.RequiresModelBackedIterationPlanning)
         {
             throw new PrototypeIterationPlanLlmException("planning_analysis_parse_failed");
         }
@@ -305,6 +311,7 @@ public sealed class PrototypeIterationPlanService
 
     private async Task<List<PrototypeIterationPlanGoalResult>> RefineRpgGoalsWithRequiredModelAsync(
         ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile,
         IterationPlanningContext planningContext,
         string message,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
@@ -316,7 +323,7 @@ public sealed class PrototypeIterationPlanService
             throw new PrototypeIterationPlanLlmException("goal_plan_llm_client_missing");
         }
 
-        var prompt = BuildRpgGoalRefinementPrompt(project, PrototypeRouteSkillPolicy.ResolveProfile(project), planningContext, message, scaffold, regenerationGuidance);
+        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -1059,8 +1066,10 @@ public sealed class PrototypeIterationPlanService
                 null));
         }
 
-        var isRpgProject = PrototypeRouteSkillPolicy.IsRpgProject(project);
-        if (isRpgProject)
+        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var routeStrategy = GameTypeRouteStrategies.Resolve(project, routeProfile);
+        if (routeStrategy.UsesSpecializedPlanEvaluation &&
+            string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             var rpgPlanningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
             var rpgPlanIssue = FindRpgPlanContractIssue(goals, rpgPlanningAnalysis, details.Session.SourceMessage);
@@ -1074,7 +1083,7 @@ public sealed class PrototypeIterationPlanService
                     BuildRpgRegenerationPrompt(details)));
             }
 
-            var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, details, prototypeProgress, cancellationToken);
+            var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, routeProfile, details, prototypeProgress, cancellationToken);
             return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
         }
 
@@ -1085,7 +1094,7 @@ public sealed class PrototypeIterationPlanService
                                        && goals.Length <= 3
                                        && firstGoalLooksTooLarge;
 
-        if (!isRpgProject && (firstGoalLooksTooLarge || overallLooksLarge || recommendedButStillBroad))
+        if (firstGoalLooksTooLarge || overallLooksLarge || recommendedButStillBroad)
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
@@ -1105,6 +1114,7 @@ public sealed class PrototypeIterationPlanService
 
     private async Task<PrototypeIterationPlanEvaluationResult> EvaluateRpgPlanWithRequiredModelAsync(
         ProjectSnapshot project,
+        GameTypeRouteProfile routeProfile,
         ProjectIterationSessionDetails details,
         PrototypeWorkflowProgress? prototypeProgress,
         CancellationToken cancellationToken)
@@ -1115,7 +1125,6 @@ public sealed class PrototypeIterationPlanService
         }
 
         var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
-        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "plan-evaluation");
         var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -1211,12 +1220,6 @@ public sealed class PrototypeIterationPlanService
         }
 
         return goals;
-    }
-
-    private static bool IsRpgProject(ProjectSnapshot project)
-    {
-        return PrototypeRouteSkillPolicy.IsRpgProject(project) ||
-               File.Exists(Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"));
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgContractGoals(

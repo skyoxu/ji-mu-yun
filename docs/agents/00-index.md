@@ -114,3 +114,4 @@ Use this after Chapter 6 has closed the current completed backlog slice and you 
 ## Prototype And Game Type Guides
 - `docs/game-type-guides/README.md` stores the extracted 24 BMAD/GDS game type guides.
 - `.agents/skills/prototype-7day-playable-godot-zh/SKILL.md` routes the Chinese 7-day playable prototype lane.
+- [../workflows/game-type-route-profile-guide.md](../workflows/game-type-route-profile-guide.md) describes how to add new game type route profiles and strategies.
