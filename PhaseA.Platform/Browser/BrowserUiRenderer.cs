@@ -1998,6 +1998,9 @@ public sealed class BrowserUiRenderer
                   if (code === "git_url_not_allowed") {
                     return "当前入口不允许从浏览器提交 Git URL。";
                   }
+                  if (code === "project_creation_failed") {
+                    return payload.detail ? `项目工作区初始化失败：${payload.detail}` : "项目工作区初始化失败，请查看最新失败详情后重试。";
+                  }
                   return `创建请求失败：${code}`;
                 }
 

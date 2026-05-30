@@ -33,6 +33,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("projectCreationErrorMessage");
         html.Should().Contain("project_initialization_in_progress");
         html.Should().Contain("project_quota_exceeded");
+        html.Should().Contain("project_creation_failed");
         html.Should().Contain("showLoggedOut");
         html.Should().Contain("logout");
         html.Should().Contain("退出登录");

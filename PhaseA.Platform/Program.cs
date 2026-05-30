@@ -1167,6 +1167,7 @@ app.MapPost("/api/projects", async (
     HttpContext context,
     [FromServices] ProjectCreationService projects,
     [FromServices] ProjectInitializationService initialization,
+    [FromServices] ILoggerFactory loggerFactory,
     CancellationToken cancellationToken) =>
 {
     if (ProjectCreationRequestJsonPolicy.ContainsForbiddenGitUrl(payload))
@@ -1184,16 +1185,32 @@ app.MapPost("/api/projects", async (
         return Results.BadRequest(new { error = "invalid_project_request" });
     }
 
-    var result = await projects.CreateProjectAsync(CurrentAccountId(context), request, cancellationToken);
-    if (!result.Succeeded)
+    try
     {
-        return result.FailureCode == "project_initialization_in_progress"
-            ? Results.Json(result, statusCode: StatusCodes.Status409Conflict)
-            : Results.BadRequest(result);
-    }
+        var result = await projects.CreateProjectAsync(CurrentAccountId(context), request, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return result.FailureCode == "project_initialization_in_progress"
+                ? Results.Json(result, statusCode: StatusCodes.Status409Conflict)
+                : Results.BadRequest(result);
+        }
 
-    initialization.StartChapter2Bootstrap(result.ProjectId!);
-    return Results.Ok(result);
+        initialization.StartChapter2Bootstrap(result.ProjectId!);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        loggerFactory.CreateLogger("PhaseA.ProjectCreation")
+            .LogError(ex, "Unhandled project creation request failure.");
+        return Results.Json(
+            new
+            {
+                error = "project_creation_failed",
+                failureCode = "project_creation_failed",
+                detail = ex.Message
+            },
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (

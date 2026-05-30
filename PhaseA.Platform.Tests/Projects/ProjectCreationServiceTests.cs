@@ -4,6 +4,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Projects;
@@ -76,6 +77,35 @@ public sealed class ProjectCreationServiceTests
         result.Succeeded.Should().BeFalse();
         result.FailureCode.Should().Be("git_url_not_allowed");
         Directory.GetDirectories(workspaceRoot.Path).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_WhenWorkspaceSeedingFails_RecordsFailureAndDeletesProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ThrowingWorkspaceSeeder());
+
+        var result = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        result.Succeeded.Should().BeFalse();
+        result.FailureCode.Should().Be("project_creation_failed");
+        (await store.ListProjectsAsync(accountId)).Should().BeEmpty();
+        (await store.ListOrphanedProjectInitializationsAsync()).Should().BeEmpty();
+        var failure = await store.GetLatestProjectCreationFailureAsync(accountId);
+        failure.Should().NotBeNull();
+        failure!.ProjectName.Should().Be("Game One");
+        failure.GameName.Should().Be("Game One");
+        failure.FailureError.Should().Contain("Project workspace initialization failed before Chapter 2 bootstrap could start.");
+        failure.FailureError.Should().Contain("seed failed");
     }
 
     [Fact]
@@ -422,6 +452,14 @@ public sealed class ProjectCreationServiceTests
             {
                 Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class ThrowingWorkspaceSeeder : IProjectWorkspaceSeeder
+    {
+        public void EnsureSeeded(string projectRepoPath)
+        {
+            throw new IOException("seed failed");
         }
     }
 }

@@ -89,20 +89,37 @@ public sealed class ProjectCreationService
             return result;
         }
 
-        Directory.CreateDirectory(layout.RepoPath);
-        Directory.CreateDirectory(layout.RuntimePath);
-        Directory.CreateDirectory(layout.MetaPath);
-        _workspaceSeeder.EnsureSeeded(layout.RepoPath);
-        _routeStateWriter.WriteProjectReadme(
-            layout.RepoPath,
-            projectId,
-            accountId,
-            command.ProjectName,
-            command.GameName,
-            command.GameTypeSource,
-            command.TemplateRuleId,
-            result.WorkspaceId ?? string.Empty,
-            layout.MetaPath);
+        try
+        {
+            Directory.CreateDirectory(layout.RepoPath);
+            Directory.CreateDirectory(layout.RuntimePath);
+            Directory.CreateDirectory(layout.MetaPath);
+            _workspaceSeeder.EnsureSeeded(layout.RepoPath);
+            _routeStateWriter.WriteProjectReadme(
+                layout.RepoPath,
+                projectId,
+                accountId,
+                command.ProjectName,
+                command.GameName,
+                command.GameTypeSource,
+                command.TemplateRuleId,
+                result.WorkspaceId ?? string.Empty,
+                layout.MetaPath);
+        }
+        catch (Exception ex)
+        {
+            await _metadataStore.RecordProjectCreationFailureAsync(new ProjectCreationFailureCommand(
+                accountId,
+                projectId,
+                command.ProjectName,
+                command.GameName,
+                command.GameTypeSource,
+                command.TemplateRuleId,
+                command.WorkspaceRootPath,
+                $"Project workspace initialization failed before Chapter 2 bootstrap could start. {ex.GetType().Name}: {ex.Message}"), cancellationToken);
+            await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
+            return ProjectCreationResult.Failure("project_creation_failed");
+        }
 
         return result;
     }
