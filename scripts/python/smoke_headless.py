@@ -60,6 +60,46 @@ def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
         gdignore.write_text("", encoding="utf-8")
 
 
+def _ensure_non_runtime_dirs_godot_ignored(project_root: Path) -> list[str]:
+    ignored_dirs = [
+        ".agents",
+        "backup",
+        "docs",
+        "logs",
+        "_bmad",
+    ]
+    written: list[str] = []
+    for relative in ignored_dirs:
+        directory = project_root / relative
+        if not directory.is_dir():
+            continue
+        gdignore = directory / ".gdignore"
+        if not gdignore.exists():
+            gdignore.write_text("", encoding="utf-8")
+            written.append(gdignore.relative_to(project_root).as_posix())
+    return written
+
+
+def _strip_utf8_bom_from_godot_text_resources(project_root: Path) -> list[str]:
+    resource_roots = [
+        project_root / "Game.Godot",
+        project_root / "Tests.Godot",
+    ]
+    suffixes = {".gd", ".tscn", ".tres"}
+    fixed: list[str] = []
+    for root in resource_roots:
+        if not root.is_dir():
+            continue
+        for path in root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in suffixes:
+                continue
+            data = path.read_bytes()
+            if data.startswith(b"\xef\xbb\xbf"):
+                path.write_bytes(data[3:])
+                fixed.append(path.relative_to(project_root).as_posix())
+    return fixed
+
+
 def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
     if process.poll() is not None:
         return
@@ -104,7 +144,23 @@ def _build_output_has_success(stdout: str, stderr: str) -> bool:
     return (
         "[ done ]" in combined
         and "dotnet_build_project" in combined
+        and not _build_output_has_failure(stdout, stderr)
     )
+
+
+def _build_output_has_failure(stdout: str, stderr: str) -> bool:
+    combined = f"{stdout}\n{stderr}".lower()
+    failure_markers = (
+        "error:",
+        "parse error:",
+        "is not compiling",
+        "build callback failed",
+        "aborting",
+        "cannot instantiate c# script",
+        "failed to create an autoload",
+        "failed to instantiate an autoload",
+    )
+    return any(marker in combined for marker in failure_markers)
 
 
 def _is_prototype_scene(scene: str) -> bool:
@@ -122,6 +178,8 @@ def _has_runtime_failure(output: str) -> bool:
         "failed loading resource",
         "can't load",
         "cannot load",
+        "nodes with non-equal opposite anchors",
+        "c# backtrace",
     )
     return any(marker in lowered for marker in failure_markers)
 
@@ -152,7 +210,10 @@ def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWA
         _cleanup_godot_processes(godot_bin)
         prewarm_stderr += "\n[smoke_headless] godot build-solutions prewarm timed out; falling back to dotnet build."
 
-    if prewarm_returncode == 0 or _build_output_has_success(prewarm_stdout, prewarm_stderr):
+    if (
+        (prewarm_returncode == 0 or _build_output_has_success(prewarm_stdout, prewarm_stderr))
+        and not _build_output_has_failure(prewarm_stdout, prewarm_stderr)
+    ):
         _stop_dotnet_build_server(project_root)
         return True, "godot-build-solutions", prewarm_stdout, prewarm_stderr
 
@@ -165,7 +226,7 @@ def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWA
     stderr = prewarm_stderr + (("\n" + fallback_stderr) if fallback_stderr else "")
     if fallback_returncode == 124:
         stderr += "\n[smoke_headless] dotnet prewarm fallback timed out."
-    if fallback_returncode == 0:
+    if fallback_returncode == 0 and not _build_output_has_failure(stdout, stderr):
         _stop_dotnet_build_server(project_root)
         return True, "dotnet-build", stdout, stderr
 
@@ -203,6 +264,8 @@ def _run_smoke(
     dest = Path("logs") / "ci" / day / "smoke" / ts
     dest.mkdir(parents=True, exist_ok=True)
     _ensure_runtime_logs_godot_ignored(project_root)
+    gdignore_written = _ensure_non_runtime_dirs_godot_ignored(project_root)
+    bom_fixed = _strip_utf8_bom_from_godot_text_resources(project_root)
 
     out_path = dest / "headless.out.log"
     err_path = dest / "headless.err.log"
@@ -214,6 +277,10 @@ def _run_smoke(
     cmd = [str(bin_path), "--headless", "--path", project_path, "--scene", scene]
     cmd_text = " ".join(cmd)
     print(f"[smoke_headless] starting Godot: {' '.join(cmd)} (timeout={timeout_sec}s)")
+    if bom_fixed:
+        print(f"[smoke_headless] stripped UTF-8 BOM from {len(bom_fixed)} Godot text resources")
+    if gdignore_written:
+        print(f"[smoke_headless] wrote {len(gdignore_written)} non-runtime .gdignore files")
     _cleanup_godot_processes(str(bin_path))
     prewarm_ok, prewarm_mode, prewarm_stdout, prewarm_stderr = _prewarm_csharp(str(bin_path), project_root, timeout_sec)
     prewarm_out_path.write_text(prewarm_stdout, encoding="utf-8", errors="ignore")

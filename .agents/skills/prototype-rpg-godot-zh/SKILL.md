@@ -122,6 +122,36 @@ Treat these as repo-relative defaults. When a project slug is created, copy or a
 - Keep tests focused on prototype-lane behavior, intake parsing, routing, and the minimal playable loop.
 - Do not expand into full RPG progression, economy, or long-term content systems unless explicitly requested.
 
+## RPG Validation And Repair Routes
+
+- When the top-level router identifies `game_type` as RPG, keep prototype creation, iteration planning, needs-fix, quick-fix, repair-plan, execute-repair-step, revalidation, and final acceptance on the RPG route profile.
+- RPG revalidation must include the project-specific GdUnit behavior suite when it exists. For the current default RPG slice, use `tests/Prototype/DqRpgPrototype` relative to `Tests.Godot`; do not pass `Tests.Godot/tests/...` as the `--add` path.
+- Treat `No test cases found` as validation failure even if the wrapper exits 0.
+- Treat `GDUNIT_DONE rc=<nonzero>` as validation failure even if the wrapper normalized process exit code is 0.
+- Treat Godot `ERROR:`, `SCRIPT ERROR`, `Parse Error`, missing resource, and `Node not found` markers from GdUnit console output as repair evidence. Do not hide them behind a generic "playable loop incomplete" diagnosis.
+- Do not weaken, delete, or bypass the project-specific GdUnit tests to get green. Repair runtime assets, scenes, scripts, and contract drift instead.
+
+## RPG GdUnit Repair Priority
+
+When RPG project-specific GdUnit validation fails, repair in this order:
+
+1. Runtime assets and Godot imports:
+   - Restore or copy missing PNG assets into the active prototype slug, for example `Game.Godot/Prototypes/<slug>/Assets/`.
+   - Fix scene `ext_resource` paths before changing gameplay logic.
+   - Run Godot import through the project workflow after adding or restoring assets.
+2. Scene node contract:
+   - Ensure test-validated nodes exist at the authoritative path or update scene, script, and tests together to one contract.
+   - For the default `dq-rpg` contract, GdUnit may require `CanvasLayer/UI/MapScene/RpgMapAsset`, `RpgPlayerAsset`, `RpgEnemyAsset`, `ChestToken`, and `CanvasLayer/UI/BattleScene/EnemyToken`.
+3. Script/runtime errors:
+   - Fix invalid calls such as invoking `_UnhandledInput` on a `Control` base that does not expose it.
+   - Keep map movement, encounter entry, battle, reward selection, and return-to-map callable through the same prototype shell used by tests.
+4. Gameplay/input contract:
+   - Preserve concrete user inputs such as reward 3-choice, visible battle comprehension, encounter rules, and win/fail conditions.
+   - Do not replace a project contract such as "15 battles to win" with a shorter RPG template default.
+5. Final validation:
+   - Re-run the RPG GdUnit suite and then the platform revalidation route.
+   - The repair is complete only when project-specific GdUnit, smoke/navigation, and frontend revalidation all pass.
+
 ## Repo-Relative References
 
 - Skill file: `.agents/skills/prototype-rpg-godot-zh/SKILL.md`

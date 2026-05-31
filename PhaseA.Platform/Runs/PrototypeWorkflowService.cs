@@ -425,10 +425,19 @@ public sealed class PrototypeWorkflowService
         var smoke = validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
             ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, cancellationToken)
             : PrototypeGodotSmokeResult.NotRun("prototype_completion_validation_failed");
-        var status = validation.Succeeded && smoke.ExitCode == 0 ? "succeeded" : "failed";
-        var exitCode = ResolveRunExitCode(0, smoke.ExitCode, validation.Succeeded);
-        var stdout = CombineProcessText("Prototype validation-only acceptance executed.", smoke.Stdout);
-        var stderr = CombineProcessText(validation.Error ?? "", smoke.Stderr);
+        var rpgGdUnitValidation = validation.Succeeded && smoke.ExitCode == 0
+            ? await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(_options, _processRunner, project, slug, cancellationToken)
+            : PrototypeRpgGdUnitValidationResult.NotRequired("prototype_smoke_validation_failed");
+        var status = validation.Succeeded && smoke.ExitCode == 0 && rpgGdUnitValidation.Passed ? "succeeded" : "failed";
+        var validationExitCode = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed && rpgGdUnitValidation.ExitCode == 0
+            ? 1
+            : Math.Max(smoke.ExitCode, rpgGdUnitValidation.ExitCode);
+        var exitCode = ResolveRunExitCode(0, validationExitCode, validation.Succeeded && rpgGdUnitValidation.Passed);
+        var stdout = CombineProcessText(CombineProcessText("Prototype validation-only acceptance executed.", smoke.Stdout), rpgGdUnitValidation.Stdout);
+        var rpgValidationFailure = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed
+            ? $"RPG project-specific GdUnit validation failed: {rpgGdUnitValidation.Reason}"
+            : "";
+        var stderr = CombineProcessText(CombineProcessText(validation.Error ?? "", smoke.Stderr), CombineProcessText(rpgValidationFailure, rpgGdUnitValidation.Stderr));
         var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug, prototypeRecordPath);
 
         foreach (var artifact in discoveredArtifacts)
@@ -446,15 +455,20 @@ public sealed class PrototypeWorkflowService
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
             prototype_completion = validation.ToEvidence(),
-            godot_smoke = smoke.ToEvidence()
+            godot_smoke = smoke.ToEvidence(),
+            rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
-        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
+        WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke, rpgGdUnitValidation);
         await SetProgressAsync(
             runId,
             status,
             "validation",
-            status == "succeeded" ? "Prototype validation passed." : "Prototype validation failed. Generate or continue a repair plan before packaging.",
+            status == "succeeded"
+                ? "Prototype validation passed."
+                : rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed
+                    ? "RPG behavior validation failed. Generate or continue a repair plan before packaging."
+                    : "Prototype validation failed. Generate or continue a repair plan before packaging.",
             cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
@@ -539,7 +553,7 @@ public sealed class PrototypeWorkflowService
             ? ValidateCompletedPrototypeState(projectRepoPath, slug)
             : PrototypeCompletionValidation.Failure("prototype_workflow_failed");
         var smoke = process.ExitCode == 0 && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
-            ? await RunPostPrototypeGodotSmokeAsync(projectRepoPath, validation.SmokeScene, CancellationToken.None)
+            ? await RunQueuedPostPrototypeGodotSmokeAsync(projectRepoPath, validation.SmokeScene, CancellationToken.None)
             : PrototypeGodotSmokeResult.NotRun(process.ExitCode != 0 ? "prototype_workflow_failed" : "prototype_completion_validation_failed");
         var status = process.ExitCode == 0 && smoke.ExitCode == 0 && validation.Succeeded ? "succeeded" : "failed";
         var exitCode = ResolveRunExitCode(process.ExitCode, smoke.ExitCode, validation.Succeeded);
@@ -857,6 +871,11 @@ public sealed class PrototypeWorkflowService
     private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
     {
         return await PrototypeGodotSmokeService.RunAsync(_options, _processRunner, projectRepoPath, scenePath, cancellationToken);
+    }
+
+    private async Task<PrototypeGodotSmokeResult> RunQueuedPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
+    {
+        return await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(_options, _processRunner, projectRepoPath, scenePath, cancellationToken);
     }
 
     private static string CombineProcessText(string primary, string secondary)
@@ -2149,7 +2168,8 @@ public sealed class PrototypeWorkflowService
         string prototypeContractPath,
         string slug,
         PrototypeCompletionValidation validation,
-        PrototypeGodotSmokeResult smoke)
+        PrototypeGodotSmokeResult smoke,
+        PrototypeRpgGdUnitValidationResult? rpgGdUnitValidation = null)
     {
         _routeStateWriter.WritePrototypeState(project, new
         {
@@ -2164,6 +2184,7 @@ public sealed class PrototypeWorkflowService
             slug,
             prototype_completion = validation.ToEvidence(),
             godot_smoke = smoke.ToEvidence(),
+            rpg_gdunit_validation = rpgGdUnitValidation?.ToEvidence(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
     }

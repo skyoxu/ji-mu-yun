@@ -111,8 +111,8 @@ public sealed class PrototypeIterationGoalServiceTests
             command.Arguments.Any(argument => argument.EndsWith("Game.Core.Tests.csproj", StringComparison.Ordinal)));
         coreTestCommand.Arguments.Should().Contain("-m:1");
         coreTestCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
-        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
-        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
         runner.Commands.Should().Contain(command =>
             command.FileName == "dotnet" &&
             command.Arguments.SequenceEqual(new[] { "build-server", "shutdown" }));

@@ -36,6 +36,60 @@ prototype_main_menu_navigation_smoke = _load_module(
 
 
 class RunGdUnitTests(unittest.TestCase):
+    def test_godot_example_scene_files_should_not_start_with_utf8_bom(self) -> None:
+        scene_files = sorted((REPO_ROOT / "Game.Godot" / "Examples").rglob("*.tscn"))
+
+        self.assertTrue(scene_files)
+        offenders = [
+            str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+            for path in scene_files
+            if path.read_bytes().startswith(b"\xef\xbb\xbf")
+        ]
+        self.assertEqual([], offenders)
+
+    def test_godot_smoke_runners_should_strip_utf8_bom_from_text_resources(self) -> None:
+        smoke_headless = _load_module("smoke_headless_bom_cleanup_test_module", "scripts/python/smoke_headless.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            scene = root / "Game.Godot" / "Examples" / "Demo.tscn"
+            scene.parent.mkdir(parents=True)
+            scene.write_bytes(b"\xef\xbb\xbf[gd_scene format=3]\n")
+
+            smoke_fixed = smoke_headless._strip_utf8_bom_from_godot_text_resources(root)
+
+            self.assertEqual(["Game.Godot/Examples/Demo.tscn"], smoke_fixed)
+            self.assertEqual(b"[gd_scene format=3]\n", scene.read_bytes())
+
+            scene.write_bytes(b"\xef\xbb\xbf[gd_scene format=3]\n")
+            navigation_fixed = prototype_main_menu_navigation_smoke._strip_utf8_bom_from_godot_text_resources(root)
+
+            self.assertEqual(["Game.Godot/Examples/Demo.tscn"], navigation_fixed)
+            self.assertEqual(b"[gd_scene format=3]\n", scene.read_bytes())
+
+    def test_godot_smoke_runners_should_ignore_non_runtime_dirs(self) -> None:
+        smoke_headless = _load_module("smoke_headless_gdignore_non_runtime_test_module", "scripts/python/smoke_headless.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            for relative in [".agents", "backup", "docs", "logs", "_bmad"]:
+                (root / relative).mkdir(parents=True)
+
+            smoke_written = smoke_headless._ensure_non_runtime_dirs_godot_ignored(root)
+
+            self.assertEqual(
+                [".agents/.gdignore", "backup/.gdignore", "docs/.gdignore", "logs/.gdignore", "_bmad/.gdignore"],
+                smoke_written,
+            )
+            for relative in smoke_written:
+                self.assertTrue((root / relative).exists())
+
+            for relative in smoke_written:
+                (root / relative).unlink()
+            navigation_written = prototype_main_menu_navigation_smoke._ensure_non_runtime_dirs_godot_ignored(root)
+
+            self.assertEqual(smoke_written, navigation_written)
+            for relative in navigation_written:
+                self.assertTrue((root / relative).exists())
+
     def test_copy_reports_best_effort_should_collect_failures_and_continue(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             src_root = Path(tmpdir) / "src"
@@ -117,6 +171,32 @@ class RunGdUnitTests(unittest.TestCase):
         self.assertIn("_prewarm_csharp(str(bin_path), project_root, timeout_sec)", source)
         self.assertIn("prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))", navigation_source)
         self.assertIn("prewarm_timeout_sec,", navigation_source)
+
+    def test_godot_smoke_prewarm_should_not_treat_failed_godot_build_as_success(self) -> None:
+        smoke_headless = _load_module("smoke_headless_prewarm_failure_test_module", "scripts/python/smoke_headless.py")
+        stdout = "Godot Engine\n[ DONE ] dotnet_build_project"
+        stderr = "ERROR: Failed to create an autoload, script 'res://Game.Godot/Adapters/EventBusAdapter.cs' is not compiling."
+
+        self.assertFalse(smoke_headless._build_output_has_success(stdout, stderr))
+        self.assertTrue(smoke_headless._build_output_has_failure(stdout, stderr))
+
+    def test_godot_smoke_prewarm_should_fail_on_scene_parse_errors_even_when_dotnet_fallback_passes(self) -> None:
+        smoke_headless = _load_module("smoke_headless_parse_error_test_module", "scripts/python/smoke_headless.py")
+        stdout = "Godot Engine\nBuild succeeded."
+        stderr = "ERROR: res://Game.Godot/Examples/UI/ScorePanel.tscn:1 - Parse Error: Expected '['."
+
+        self.assertTrue(smoke_headless._build_output_has_failure(stdout, stderr))
+
+    def test_godot_smoke_runtime_should_fail_on_anchor_warning_with_backtrace(self) -> None:
+        smoke_headless = _load_module("smoke_headless_runtime_warning_test_module", "scripts/python/smoke_headless.py")
+        output = "WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready().\nC# backtrace"
+
+        self.assertTrue(smoke_headless._has_runtime_failure(output))
+
+    def test_navigation_smoke_should_fail_on_grab_focus_warning(self) -> None:
+        output = "WARNING: This control can't grab focus. Use set_focus_mode().\nC# backtrace"
+
+        self.assertTrue(prototype_main_menu_navigation_smoke._has_godot_errors(output))
 
     def test_godot_runners_should_create_logs_gdignore(self) -> None:
         smoke_headless = _load_module("smoke_headless_gdignore_test_module", "scripts/python/smoke_headless.py")

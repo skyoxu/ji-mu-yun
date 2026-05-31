@@ -189,6 +189,40 @@ public sealed class PrototypeRepairPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldUseConcreteRpgGdUnitRepairPlan_WhenValidationFailed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        SeedGdUnitConsole(project!.RepoPath);
+        await SeedFailedRpgGdUnitPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var codex = new LlmRepairPlanCodexClient();
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(5);
+        result.Goals[0].Title.Should().Contain("runtime assets");
+        result.Goals[0].Description.Should().Contain("showcase_map_overworld.png");
+        result.Goals[1].Title.Should().Contain("scene node contract");
+        result.Goals[1].Description.Should().Contain("CanvasLayer/UI/MapScene/RpgEnemyAsset");
+        result.Goals[2].Description.Should().Contain("_UnhandledInput");
+        result.Goals[3].Description.Should().Contain("15-battle victory");
+        result.Goals[3].Description.Should().NotContain("5 battles");
+        result.Goals[3].Description.Should().NotContain("5 场");
+        result.Goals[4].Description.Should().Contain("tests/Prototype/DqRpgPrototype");
+        codex.LastPrompt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldFallbackToDefaultPrototypeSkill_WhenProjectIsNotRpg()
     {
         using var database = TempSqliteDatabase.Create();
@@ -318,6 +352,59 @@ public sealed class PrototypeRepairPlanServiceTests
             "",
             """
             {"prototype_completion":{"succeeded":false,"error":"prototype_workflow_failed"},"godot_smoke":{"ran":false,"reason":"prototype_workflow_failed","scene":null}}
+            """);
+    }
+
+    private static async Task SeedFailedRpgGdUnitPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            "Prototype validation-only acceptance executed.",
+            "RPG project-specific GdUnit validation failed: rpg_project_specific_gdunit_failed",
+            """
+            {
+              "prototype_completion": {
+                "succeeded": true,
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              },
+              "godot_smoke": {
+                "ran": true,
+                "exit_code": 0,
+                "reason": "strict_headless_main_menu_navigation"
+              },
+              "rpg_gdunit_validation": {
+                "required": true,
+                "ran": true,
+                "passed": false,
+                "exit_code": 1,
+                "reason": "rpg_project_specific_gdunit_failed",
+                "gdunit_path": "tests/Prototype/DqRpgPrototype",
+                "report_dir": "logs/e2e/2026-05-31/gdunit-dq-rpg-prototype"
+              }
+            }
+            """);
+    }
+
+    private static void SeedGdUnitConsole(string repoPath)
+    {
+        var reportDir = Path.Combine(repoPath, "logs", "e2e", "2026-05-31", "gdunit-dq-rpg-prototype");
+        Directory.CreateDirectory(reportDir);
+        File.WriteAllText(
+            Path.Combine(reportDir, "gdunit-console.txt"),
+            """
+            ERROR: Failed loading resource: res://Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png.
+            ERROR: res://Game.Godot/Prototypes/dq-rpg/MapScene.tscn:67 - Parse Error: [ext_resource] referenced non-existent resource at: res://Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png.
+            ERROR: Node not found: "CanvasLayer/UI/MapScene/RpgEnemyAsset" (relative to "/root/test_dq_rpg_prototype_scene/DqRpgPrototype").
+            SCRIPT ERROR: Invalid call. Nonexistent function '_UnhandledInput' in base 'Control'.
+            """);
+        File.WriteAllText(
+            Path.Combine(reportDir, "run-summary.json"),
+            """
+            {"rc":1,"normalized_rc":0,"added":["tests/Prototype/DqRpgPrototype"]}
             """);
     }
 

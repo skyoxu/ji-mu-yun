@@ -171,6 +171,31 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueAsync_FailsPostCompletionDirectSmoke_WhenGodotReportsError()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 1,
+            smokeStderrOverride: "ERROR: Cannot instantiate C# script because the associated class could not be found.");
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        await WaitForCommandsAsync(runner, 2);
+        var run = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
+
+        run!.Status.Should().Be("failed");
+        run.ExitCode.Should().Be(1);
+        run.EvidenceJson.Should().Contain("strict_headless_prototype_scene");
+        runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands.Should().NotContain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
+    }
+
+    [Fact]
     public void PrototypeContractPromptBlock_RequiresInputTraceabilityForAllTopLevelRoutes()
     {
         var contract = new PrototypeContractSnapshot(
@@ -425,6 +450,29 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task RunAsync_FailsPrototypeSmoke_WhenGodotReportsErrorWithZeroExitCode()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 0,
+            smokeStdoutOverride: "SMOKE PASS (prototype scene alive)\n",
+            smokeStderrOverride: "ERROR: res://Game.Godot/Examples/UI/ScorePanel.tscn:1 - Parse Error: Expected '['.\n");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("Parse Error");
+    }
+
+    [Fact]
     public async Task RunAsync_FailsWhenResolvedPrototypeSceneIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
@@ -519,14 +567,93 @@ public sealed class PrototypeWorkflowTests
         result.Status.Should().Be("succeeded");
         result.ExitCode.Should().Be(0);
         result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
-        runner.Commands.Should().HaveCount(5);
+        runner.Commands.Should().HaveCount(6);
         runner.Commands.Skip(3).SelectMany(command => command.Arguments).Should().NotContain("run-prototype-workflow");
         runner.Commands[3].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands[4].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
+        runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
         run!.EvidenceJson.Should().Contain("\"validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
+        run.EvidenceJson.Should().Contain("\"passed\":true");
         run.Status.Should().Be("succeeded");
         progress.Status.Should().Be("succeeded");
         progress.RunId.Should().Be(result.RunId);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_FailsRpgValidation_WhenProjectSpecificGdUnitFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(gdUnitExitCode: 1, gdUnitStderrOverride: "Node not found: CanvasLayer/UI/MapScene/RpgEnemyAsset");
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        runner.Commands.Should().HaveCount(3);
+
+        var result = await service.ValidateAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(1);
+        runner.Commands.Should().HaveCount(6);
+        runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
+        run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
+        run.EvidenceJson.Should().Contain("\"reason\":\"rpg_project_specific_gdunit_failed\"");
+        run.StderrText.Should().Contain("RPG project-specific GdUnit validation failed");
+        run.StderrText.Should().Contain("Node not found");
+        progress.Status.Should().Be("failed");
+        progress.Label.Should().Be("RPG behavior validation failed. Generate or continue a repair plan before packaging.");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_FailsRpgValidation_WhenGdUnitFindsNoTests()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(gdUnitStdoutOverride: "No test cases found");
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+
+        var result = await service.ValidateAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(1);
+        run!.EvidenceJson.Should().Contain("\"reason\":\"rpg_project_specific_gdunit_no_tests_found\"");
+    }
+
+    [Fact]
+    public async Task ValidateAsync_FailsRpgValidation_WhenGdUnitWrapperReportsFailureInStdout()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(gdUnitStdoutOverride: "GDUNIT_DONE rc=1 out=logs/e2e/2026-05-31");
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+
+        var result = await service.ValidateAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(1);
+        run!.EvidenceJson.Should().Contain("\"exit_code\":1");
+        run.EvidenceJson.Should().Contain("\"reason\":\"rpg_project_specific_gdunit_failed\"");
     }
 
     [Fact]
@@ -1189,6 +1316,9 @@ public sealed class PrototypeWorkflowTests
         private readonly int _mainMenuNavigationExitCode;
         private readonly string? _mainMenuNavigationStdoutOverride;
         private readonly string? _mainMenuNavigationStderrOverride;
+        private readonly int _gdUnitExitCode;
+        private readonly string? _gdUnitStdoutOverride;
+        private readonly string? _gdUnitStderrOverride;
         private readonly int _workflowExitCode;
         private readonly string? _workflowStdoutOverride;
         private readonly string? _workflowStderrOverride;
@@ -1206,6 +1336,9 @@ public sealed class PrototypeWorkflowTests
             int mainMenuNavigationExitCode = 0,
             string? mainMenuNavigationStdoutOverride = null,
             string? mainMenuNavigationStderrOverride = null,
+            int gdUnitExitCode = 0,
+            string? gdUnitStdoutOverride = null,
+            string? gdUnitStderrOverride = null,
             int workflowExitCode = 0,
             string? workflowStdoutOverride = null,
             string? workflowStderrOverride = null)
@@ -1222,6 +1355,9 @@ public sealed class PrototypeWorkflowTests
             _mainMenuNavigationExitCode = mainMenuNavigationExitCode;
             _mainMenuNavigationStdoutOverride = mainMenuNavigationStdoutOverride;
             _mainMenuNavigationStderrOverride = mainMenuNavigationStderrOverride;
+            _gdUnitExitCode = gdUnitExitCode;
+            _gdUnitStdoutOverride = gdUnitStdoutOverride;
+            _gdUnitStderrOverride = gdUnitStderrOverride;
             _workflowExitCode = workflowExitCode;
             _workflowStdoutOverride = workflowStdoutOverride;
             _workflowStderrOverride = workflowStderrOverride;
@@ -1246,6 +1382,14 @@ public sealed class PrototypeWorkflowTests
                     _mainMenuNavigationExitCode,
                     _mainMenuNavigationStdoutOverride ?? (_mainMenuNavigationExitCode == 0 ? "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn\n" : ""),
                     _mainMenuNavigationStderrOverride ?? (_mainMenuNavigationExitCode == 0 ? "" : "MAIN_MENU_PROTOTYPE_NAV FAIL\n")));
+            }
+
+            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    _gdUnitExitCode,
+                    _gdUnitStdoutOverride ?? (_gdUnitExitCode == 0 ? "GdUnit tests: 6 passed\n" : ""),
+                    _gdUnitStderrOverride ?? (_gdUnitExitCode == 0 ? "" : "GdUnit tests failed\n")));
             }
 
             if (command.Arguments.Contains("exec"))
@@ -1321,6 +1465,7 @@ public sealed class PrototypeWorkflowTests
             {
                 Write(scenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
             }
+            Write($"Tests.Godot/tests/Prototype/{ToPascalCase(slug)}/test_{slug.Replace('-', '_')}_prototype_scene.gd", "extends Node\n");
             if (_writePackagingArtifacts)
             {
                 Write(
@@ -1397,8 +1542,14 @@ public sealed class PrototypeWorkflowTests
         private static string BuildPrototypeScene(string slug)
         {
             var parts = slug.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
-            var pascal = string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+            var pascal = ToPascalCase(slug);
             return $"res://Game.Godot/Prototypes/{slug}/{pascal}Prototype.tscn";
+        }
+
+        private static string ToPascalCase(string slug)
+        {
+            var parts = slug.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
+            return string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
         }
 
         private static string? ExtractSlug(IReadOnlyList<string> arguments, string workingDirectory)

@@ -246,6 +246,59 @@ def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
         _write_text(gdignore, "")
 
 
+def _ensure_non_runtime_dirs_godot_ignored(project_root: Path) -> list[str]:
+    ignored_dirs = [
+        ".agents",
+        "backup",
+        "docs",
+        "logs",
+        "_bmad",
+    ]
+    written: list[str] = []
+    for relative in ignored_dirs:
+        directory = project_root / relative
+        if not directory.is_dir():
+            continue
+        gdignore = directory / ".gdignore"
+        if not gdignore.exists():
+            _write_text(gdignore, "")
+            written.append(gdignore.relative_to(project_root).as_posix())
+    return written
+
+
+def _strip_utf8_bom_from_godot_text_resources(project_root: Path) -> list[str]:
+    resource_roots = [
+        project_root / "Game.Godot",
+        project_root / "Tests.Godot",
+    ]
+    suffixes = {".gd", ".tscn", ".tres"}
+    fixed: list[str] = []
+    for root in resource_roots:
+        if not root.is_dir():
+            continue
+        for path in root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in suffixes:
+                continue
+            data = path.read_bytes()
+            if data.startswith(b"\xef\xbb\xbf"):
+                path.write_bytes(data[3:])
+                fixed.append(path.relative_to(project_root).as_posix())
+    return fixed
+
+
+def _has_godot_errors(output: str) -> bool:
+    godot_error_markers = (
+        "ERROR:",
+        "SCRIPT ERROR:",
+        "Parse Error:",
+        "Failed to instantiate",
+        "Cannot instantiate",
+        "This control can't grab focus",
+        "C# backtrace",
+    )
+    return any(marker in output for marker in godot_error_markers)
+
+
 def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
     if process.poll() is not None:
         return
@@ -320,6 +373,12 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
         log_path = dest / "combined.log"
         summary_path = dest / "summary.json"
         _write_text(temp_script, SCRIPT_TEXT)
+        gdignore_written = _ensure_non_runtime_dirs_godot_ignored(project_root)
+        bom_fixed = _strip_utf8_bom_from_godot_text_resources(project_root)
+        if bom_fixed:
+            print(f"[prototype_main_menu_navigation] stripped UTF-8 BOM from {len(bom_fixed)} Godot text resources")
+        if gdignore_written:
+            print(f"[prototype_main_menu_navigation] wrote {len(gdignore_written)} non-runtime .gdignore files")
 
         prewarm_cmd = [str(bin_path), "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
         prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
@@ -392,14 +451,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
         combined = stdout + ("\n" + stderr if stderr else "")
         _write_text(log_path, combined)
 
-        godot_error_markers = (
-            "ERROR:",
-            "SCRIPT ERROR:",
-            "Parse Error:",
-            "Failed to instantiate",
-            "Cannot instantiate",
-        )
-        has_godot_errors = any(marker in combined for marker in godot_error_markers)
+        has_godot_errors = _has_godot_errors(combined)
         rpg_start_required = "/dq-rpg/" in expected_scene
         rpg_start_passed = (not rpg_start_required) or "RPG_START_ADVENTURE_MAP_VISIBLE PASS" in combined
         passed = (

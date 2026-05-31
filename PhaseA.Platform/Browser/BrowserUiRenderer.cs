@@ -2688,7 +2688,7 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   setLocalBusy(true, "原型重新验收中，请等待当前任务执行完毕。");
                   $("validatePrototype").textContent = "验收中...";
-                  showPrototypeNotice("正在重新验收当前原型；该操作只运行平台验收和 Godot smoke，不会调用 Codex。", "info");
+                  showPrototypeNotice("正在重新验收当前原型；该操作会运行平台验收、Godot smoke 和项目专属行为验收，不会调用 Codex。", "info");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate`, { method: "POST" });
                     out(result);
@@ -2696,6 +2696,10 @@ public sealed class BrowserUiRenderer
                     await loadPrototypeProgress();
                     await loadProjectPackages();
                     await refreshAssetInventoryAvailability();
+                    if (result.status === "failed") {
+                      const label = result.progress?.label || result.stderr || "原型验收失败，请查看运行记录并生成修复计划。";
+                      showPrototypeNotice(label, "warn");
+                    }
                   } catch (error) {
                     showError(error);
                     await loadPrototypeProgress();

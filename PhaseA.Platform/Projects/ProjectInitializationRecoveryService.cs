@@ -10,7 +10,7 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
     private static readonly TimeSpan DefaultRunTimeout = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan PrototypeWorkflowTimeout = TimeSpan.FromHours(2);
     private static readonly TimeSpan PrototypeFeedbackTimeout = TimeSpan.FromHours(1);
-    private static readonly TimeSpan PrototypeQuickFixTimeout = TimeSpan.FromMinutes(3);
+    private static readonly TimeSpan PrototypeQuickFixTimeout = TimeSpan.FromMinutes(15);
 
     private readonly ProjectInitializationService _initializationService;
     private readonly PhaseAMetadataStore _metadataStore;
@@ -81,6 +81,11 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
             "prototype-quick-fix" => PrototypeQuickFixTimeout,
             _ => DefaultRunTimeout
         };
+    }
+
+    public static TimeSpan? SelectTimeoutForTesting(InterruptedRunSnapshot run)
+    {
+        return SelectTimeout(run);
     }
 
     private static string BuildFailureMessage(InterruptedRunSnapshot run)

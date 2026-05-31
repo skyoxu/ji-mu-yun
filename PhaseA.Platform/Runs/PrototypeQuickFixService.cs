@@ -220,7 +220,10 @@ public sealed class PrototypeQuickFixService
                 ? await GodotFailureDiagnosticService.AnalyzeLatestAsync(_metadataStore, project, CancellationToken.None)
                 : BuildGodotDiagnosticFromSmokeFailure(preflightGodotSmokeFailure);
             var godotCleanup = await GodotFailureDiagnosticService.CleanupIfRecommendedAsync(project, godotDiagnostic, CancellationToken.None);
-            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup);
+            var currentAcceptanceValidation = targetGoal is null
+                ? PrototypeGoalAcceptanceValidationResult.NotRun()
+                : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
+            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
             await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
@@ -258,7 +261,7 @@ public sealed class PrototypeQuickFixService
                 godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal!, prototypeState, _options, _processRunner, CancellationToken.None);
                 if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
                 {
-                    assistantMessage = AppendGodotSmokeValidationSummary(assistantMessage, targetGoal!, godotSmokeValidation);
+                    assistantMessage = BuildValidatedGoalRepairSummary(targetGoal!);
                     codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
                 }
                 else if (godotSmokeValidation.Required)
@@ -701,7 +704,7 @@ public sealed class PrototypeQuickFixService
         return new GodotFailureDiagnostic(
             true,
             false,
-            "Latest Godot smoke validation failed after platform static acceptance. The repair must fix scene, script, resource, or runtime wiring so the gameplay smoke passes.",
+            "Latest Godot smoke validation failed after platform static acceptance. The repair must fix the concrete Godot stderr item. Scene parse errors in Game.Godot/Examples usually mean .tscn files start with UTF-8 BOM and must be rewritten without BOM. A Control anchor warning with C# backtrace means the named script line must stop setting Size directly on a Control with non-equal opposite anchors; use fixed anchors, CustomMinimumSize, or deferred sizing for that node. A Control can't grab focus warning means the named script line must stop calling GrabFocus on a non-focusable container or configure an appropriate focus mode before requesting focus.",
             excerpt,
             null);
     }
@@ -738,13 +741,45 @@ public sealed class PrototypeQuickFixService
             var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, cancellationToken);
             if (!acceptanceValidation.Passed)
             {
-                return null;
+                return await CompleteTimedOutGoalValidationFailureAsync(
+                    project,
+                    iterationDetails,
+                    targetGoal,
+                    runId,
+                    submittedRelativePath,
+                    resultRelativePath,
+                    resultAbsolutePath,
+                    codexOutputRelativePath,
+                    codexOutputAbsolutePath,
+                    skillAction,
+                    now,
+                    effectiveTimeout,
+                    acceptanceValidation,
+                    PrototypeGoalGodotSmokeValidationResult.NotRequired(),
+                    "platform_acceptance_validation_failed",
+                    cancellationToken);
             }
 
             var godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal, cancellationToken);
             if (!godotSmokeValidation.Passed)
             {
-                return null;
+                return await CompleteTimedOutGoalValidationFailureAsync(
+                    project,
+                    iterationDetails,
+                    targetGoal,
+                    runId,
+                    submittedRelativePath,
+                    resultRelativePath,
+                    resultAbsolutePath,
+                    codexOutputRelativePath,
+                    codexOutputAbsolutePath,
+                    skillAction,
+                    now,
+                    effectiveTimeout,
+                    acceptanceValidation,
+                    godotSmokeValidation,
+                    godotSmokeValidation.Smoke.Reason,
+                    cancellationToken);
             }
 
             var codexOutput = File.Exists(codexOutputAbsolutePath)
@@ -848,6 +883,134 @@ public sealed class PrototypeQuickFixService
         {
             return null;
         }
+    }
+
+    private async Task<PrototypeFeedbackResult> CompleteTimedOutGoalValidationFailureAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails iterationDetails,
+        ProjectIterationGoalSnapshot targetGoal,
+        string runId,
+        string submittedRelativePath,
+        string resultRelativePath,
+        string resultAbsolutePath,
+        string codexOutputRelativePath,
+        string codexOutputAbsolutePath,
+        SkillActionDefinition? skillAction,
+        string now,
+        TimeSpan effectiveTimeout,
+        PrototypeGoalAcceptanceValidationResult acceptanceValidation,
+        PrototypeGoalGodotSmokeValidationResult godotSmokeValidation,
+        string? postAcceptanceReason,
+        CancellationToken cancellationToken)
+    {
+        var codexOutput = File.Exists(codexOutputAbsolutePath)
+            ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
+            : "Codex repair timed out after writing changes, and platform validation still needs repair.";
+        if (!File.Exists(codexOutputAbsolutePath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
+            await File.WriteAllTextAsync(codexOutputAbsolutePath, codexOutput, Encoding.UTF8, cancellationToken);
+        }
+
+        var validationReason = !acceptanceValidation.Passed
+            ? acceptanceValidation.Reason ?? acceptanceValidation.Status
+            : postAcceptanceReason ?? godotSmokeValidation.Smoke.Reason;
+        var timeoutFocus = BuildGoalRepairTimeoutFocus(targetGoal);
+        var assistantMessage = $"""
+            目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus}
+
+            Goal {targetGoal.GoalIndex} repair timed out after {effectiveTimeout.TotalSeconds:0} seconds and still needs repair.
+
+            Platform acceptance:
+            STATUS: {(acceptanceValidation.Passed ? "passed" : "needs_fix")}
+            REASON: {acceptanceValidation.Reason ?? acceptanceValidation.Status}
+
+            Platform engine validation:
+            STATUS: {(godotSmokeValidation.Passed ? "passed" : "needs_fix")}
+            VERIFY: Godot smoke validation must pass before this goal can move forward.
+            REMAINING: Continue repairing the current goal; do not advance to later goals yet.
+            REASON: {validationReason}
+            """;
+
+        await File.WriteAllTextAsync(
+            resultAbsolutePath,
+            BuildResultLog(
+                project,
+                runId,
+                "Timed-out repair still needs validation fixes",
+                assistantMessage,
+                PrototypeModelPolicy.Normalize(null),
+                new HostedProcessResult(408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout."),
+                codexOutput,
+                now,
+                skillAction,
+                targetGoal,
+                new GoalRepairOutcome("needs_fix", false)),
+            Encoding.UTF8,
+            cancellationToken);
+
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-submission",
+            submittedRelativePath,
+            "Prototype quick fix submission"), cancellationToken);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-result-log",
+            resultRelativePath,
+            "Prototype quick fix result log"), cancellationToken);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+            runId,
+            project.ProjectId,
+            "prototype-quick-fix-codex-output",
+            codexOutputRelativePath,
+            "Prototype quick fix Codex output"), cancellationToken);
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            failure_code = "prototype_quick_fix_timeout_validation_failed_after_cancel",
+            quick_fix = true,
+            goal_repair = true,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            goal_repair_status = "needs_fix",
+            acceptance_validation = acceptanceValidation.Kind,
+            acceptance_validation_status = acceptanceValidation.Status,
+            acceptance_validation_reason = acceptanceValidation.Reason,
+            godot_smoke_validation = godotSmokeValidation.ToEvidence(),
+            post_acceptance_validation_status = "failed",
+            post_acceptance_validation_reason = validationReason
+        });
+        await _metadataStore.CompleteRunAsync(
+            runId,
+            "failed",
+            408,
+            "",
+            $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout; post-timeout validation still failed: {validationReason}",
+            evidenceJson,
+            cancellationToken);
+
+        var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
+        var sessionSummary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus} 验证原因：{validationReason}";
+        await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", assistantMessage, null, cancellationToken);
+        await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair-timeout-validation-failed", cancellationToken);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+            iterationDetails.Session.SessionId,
+            "needs_fix",
+            targetGoal.GoalIndex,
+            sessionSummary,
+            iterationDetails.Session.LatestEvaluationJson,
+            null,
+            cancellationToken);
+        PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", assistantMessage, now, sessionSummary);
+        await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "needs_fix", sessionSummary, assistantMessage, [sessionSummary], cancellationToken);
+        await SetProgressAsync(runId, "failed", "validation", $"Goal {targetGoal.GoalIndex} timed out and still needs validation repair.", cancellationToken);
+
+        var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        return new PrototypeFeedbackResult(runId, "failed", assistantMessage, artifacts, "needs_fix", "needs_fix", targetGoal.GoalIndex);
     }
 
     private Task SetProgressAsync(string runId, string step, string substep, string label, CancellationToken cancellationToken)
@@ -1012,11 +1175,12 @@ public sealed class PrototypeQuickFixService
         ProjectRunMemorySnapshot? runMemory = null,
         PrototypeContractSnapshot? prototypeContract = null,
         GodotFailureDiagnostic? godotDiagnostic = null,
-        GodotCacheCleanupResult? godotCleanup = null)
+        GodotCacheCleanupResult? godotCleanup = null,
+        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null)
     {
         if (goal is not null)
         {
-            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory, prototypeContract, godotDiagnostic, godotCleanup);
+            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
         }
 
         var skillInstruction = skillAction is null
@@ -1038,6 +1202,10 @@ public sealed class PrototypeQuickFixService
             - 优先修改少量文件，优先修接线、常量、菜单入口、状态显示、文本或小型前端逻辑。
             - 如果当前是 RPG 原型，Start Adventure 后必须让 MapScene 可见，并且必须保留 Grid，再满足以下两套可见验收标记之一：旧合同 `Title + StatusLabel`，或当前 HUD 合同 `HeaderLabel + StatsLabel + ObjectiveLabel`。
             - 如果当前是 RPG 原型，不要随意再造第三套近似命名；应复用上述两套合同之一，并保持节点命名与验收脚本一致。
+            - 如果 Godot stderr 指向 `.tscn:1 - Parse Error: Expected '['`，检查对应场景文件是否以 UTF-8 BOM 开头；Godot 文本场景必须以 `[` 作为第一个字节级字符。
+            - 如果 Godot stderr 指向 `Nodes with non-equal opposite anchors` 和 C# backtrace，修复 backtrace 中的脚本行，不要在 `_Ready()` 直接给非等锚点 Control 设置 `Size`。
+            - 如果 Godot stderr 指向 `This control can't grab focus` 和 C# backtrace，修复 backtrace 中的脚本行：不要对不可聚焦的容器直接调用 `GrabFocus()`，或先配置合适的 focus mode。
+            - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
             - 如果问题超出小修范围，不要展开大工程，只输出简短结论，说明应改走正式反馈。
             - 输出必须面向浏览器用户，不要包含路径、命令、脚本名、日志名、环境变量。
 
@@ -1125,7 +1293,8 @@ public sealed class PrototypeQuickFixService
         ProjectRunMemorySnapshot? runMemory,
         PrototypeContractSnapshot? prototypeContract,
         GodotFailureDiagnostic? godotDiagnostic = null,
-        GodotCacheCleanupResult? godotCleanup = null)
+        GodotCacheCleanupResult? godotCleanup = null,
+        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null)
     {
         var memoryBlock = runMemory is null
             ? "暂无结构化运行记忆，直接按当前目标执行。"
@@ -1142,6 +1311,7 @@ public sealed class PrototypeQuickFixService
             """;
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
         var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+        var currentPlatformAcceptanceBlock = BuildCurrentPlatformAcceptanceBlock(currentAcceptanceValidation);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
 
         return $"""
@@ -1157,10 +1327,14 @@ public sealed class PrototypeQuickFixService
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
             - 如果当前目标是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
+            - 仅当 Godot stderr 明确指出 `Game.Godot/Examples/**.tscn:1 - Parse Error: Expected '['` 时，允许把被点名的示例场景重写为无 UTF-8 BOM 的 Godot 文本场景；不要借机改示例内容。
             - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复目标。
             - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前目标的完成内容，除非当前目标标题和验收提示明确要求。
             - 如果当前目标是玩法/Godot/RPG 目标，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
             - Main.tscn SOP：原型相关修复必须保持根级 VBox、Overlays、ScreenRoot 默认 visible = false；final/full-playable 目标必须修到这一点通过。
+            - Godot stderr 属于当前目标验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
+            - `This control can't grab focus` 也属于当前目标验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
+            - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
             - 对玩法/Godot/RPG 目标，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
             - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前目标的唯一剩余问题。
             - 优先用最小改动完成目标。
@@ -1183,6 +1357,8 @@ public sealed class PrototypeQuickFixService
 
             {platformAcceptanceBlock}
 
+            {currentPlatformAcceptanceBlock}
+
             用户触发这次修复时附带的说明：
             {feedback}
 
@@ -1204,6 +1380,26 @@ public sealed class PrototypeQuickFixService
             CHANGED: 用 1-3 行列出本轮实际完成的改动
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
+            """;
+    }
+
+    private static string BuildCurrentPlatformAcceptanceBlock(PrototypeGoalAcceptanceValidationResult? validation)
+    {
+        if (validation is null || string.Equals(validation.Status, "not_run", StringComparison.Ordinal))
+        {
+            return """
+                Current platform acceptance diagnosis before repair:
+                - Status: not_run
+                - Reason: no target-specific acceptance contract was available before repair.
+                """;
+        }
+
+        return $"""
+            Current platform acceptance diagnosis before repair:
+            - Kind: {validation.Kind}
+            - Status: {validation.Status}
+            - Reason: {validation.Reason ?? validation.Status}
+            - If Status is failed, repair the listed reason items before reporting STATUS: completed.
             """;
     }
 
@@ -1455,6 +1651,20 @@ public sealed class PrototypeQuickFixService
 
             Platform engine validation:
             Goal {goal.GoalIndex} passed Godot smoke validation.
+            """;
+    }
+
+    private static string BuildValidatedGoalRepairSummary(ProjectIterationGoalSnapshot goal)
+    {
+        return $"""
+            目标 {goal.GoalIndex} 修复已完成。
+
+            平台验收：
+            目标 {goal.GoalIndex} 的最小玩法验收已通过。
+
+            Platform engine validation:
+            Goal {goal.GoalIndex} passed Godot smoke validation.
+            当前目标可以进入下一步。
             """;
     }
 

@@ -30,9 +30,10 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, assetUsageFailureReason);
         }
 
-        if (contract.MapEntryAcceptance && !HasRpgMapEntryAcceptanceFiles(project.RepoPath))
+        var mapEntryFailureReason = GetRpgMapEntryAcceptanceFailureReason(project.RepoPath);
+        if (contract.MapEntryAcceptance && mapEntryFailureReason is not null)
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_map_entry_contract");
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, mapEntryFailureReason);
         }
 
         if (contract.BattleSceneAcceptance && !HasRpgBattleSceneAcceptanceFiles(project.RepoPath))
@@ -82,7 +83,6 @@ internal static class PrototypeGoalAcceptanceValidator
         {
             await ShutdownDotnetBuildServerAsync(project.RepoPath, processRunner, linked.Token);
             var validationEnvironment = PrototypeValidationProcessEnvironment.Create(project.RepoPath);
-            var buildProperties = BuildValidationOutputProperties(validationEnvironment);
             var result = await processRunner.RunAsync(
                 new HostedProcessCommand(
                     "dotnet",
@@ -92,8 +92,7 @@ internal static class PrototypeGoalAcceptanceValidator
                         "--filter",
                         "FullyQualifiedName~DqRpgPrototypeLoopTests",
                         "-m:1",
-                        "-p:BuildInParallel=false",
-                        ..buildProperties
+                        "-p:BuildInParallel=false"
                     ],
                     project.RepoPath,
                     validationEnvironment),
@@ -136,32 +135,6 @@ internal static class PrototypeGoalAcceptanceValidator
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "acceptance_validation_timeout");
         }
-    }
-
-    private static string[] BuildValidationOutputProperties(IReadOnlyDictionary<string, string> environment)
-    {
-        if (!environment.TryGetValue("PHASEA_VALIDATION_BUILD_ROOT", out var buildRoot) ||
-            string.IsNullOrWhiteSpace(buildRoot))
-        {
-            return [];
-        }
-
-        var intermediateRoot = Path.Combine(buildRoot, "obj");
-        var outputRoot = Path.Combine(buildRoot, "bin");
-        Directory.CreateDirectory(intermediateRoot);
-        Directory.CreateDirectory(outputRoot);
-        return
-        [
-            $"-p:BaseIntermediateOutputPath={EnsureTrailingSeparator(intermediateRoot)}",
-            $"-p:BaseOutputPath={EnsureTrailingSeparator(outputRoot)}"
-        ];
-    }
-
-    private static string EnsureTrailingSeparator(string path)
-    {
-        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
-            ? path
-            : path + Path.DirectorySeparatorChar;
     }
 
     private static async Task ShutdownDotnetBuildServerAsync(
@@ -355,20 +328,24 @@ internal static class PrototypeGoalAcceptanceValidator
             RegexOptions.CultureInvariant);
     }
 
-    private static bool HasRpgMapEntryAcceptanceFiles(string repoPath)
+    private static string? GetRpgMapEntryAcceptanceFailureReason(string repoPath)
     {
         var mainScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
         var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
         var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
-        if (new[] { mainScene, mainScript, mapScene }.Any(path => !File.Exists(path)))
+        var missingFiles = new[] { mainScene, mainScript, mapScene }
+            .Where(path => !File.Exists(path))
+            .Select(path => Path.GetRelativePath(repoPath, path).Replace('\\', '/'))
+            .ToList();
+        if (missingFiles.Count > 0)
         {
-            return false;
+            return "missing_rpg_map_entry_contract: " + string.Join("; ", missingFiles.Select(path => $"missing_file={path}"));
         }
 
         var mapScript = ResolveSceneScriptPath(repoPath, mapScene, Path.Combine("Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"));
         if (string.IsNullOrWhiteSpace(mapScript) || !File.Exists(mapScript))
         {
-            return false;
+            return "missing_rpg_map_entry_contract: missing_file=Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs";
         }
 
         var mainSceneText = File.ReadAllText(mainScene);
@@ -376,32 +353,50 @@ internal static class PrototypeGoalAcceptanceValidator
         var mapSceneText = File.ReadAllText(mapScene);
         var mapScriptText = File.ReadAllText(mapScript);
 
-        return mainSceneText.Contains("StartButton", StringComparison.Ordinal) &&
-               mainSceneText.Contains("Start Adventure", StringComparison.Ordinal) &&
-               mainSceneText.Contains("MapScene", StringComparison.Ordinal) &&
-               mainSceneText.Contains("parent=\"CanvasLayer/UI\"", StringComparison.Ordinal) &&
-               mainSceneText.Contains("anchors_preset = 15", StringComparison.Ordinal) &&
-               HasStartAdventureMapEntry(mainScriptText) &&
-               mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal) &&
-               HasMapSceneVisibilityEntry(mainScriptText) &&
-               mapSceneText.Contains("MapScene", StringComparison.Ordinal) &&
-               HasUniqueExtResourceIds(mapSceneText) &&
-               HasSceneRootScript(mapSceneText) &&
-               mapSceneText.Contains("TrackLayer", StringComparison.Ordinal) &&
-               mapSceneText.Contains("custom_minimum_size = Vector2(600, 600)", StringComparison.Ordinal) &&
-               HasSceneNodeUnderAnyParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
-               HasSceneNodeUnderAnyParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
-               HasSceneNodeUnderAnyParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer") &&
-               HasSceneNodeUnderAnyParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay", "TrackLayer/Overlay", "TrackLayer") &&
-               mapSceneText.Contains("Grid", StringComparison.Ordinal) &&
-               mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal) &&
-               mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal) &&
-               mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal) &&
-               mapScriptText.Contains("TrackLayer", StringComparison.Ordinal) &&
-               HasGridToVisiblePosition(mapScriptText) &&
-               HasPlayerVisibilityRestore(mapScriptText) &&
-               HasMapMovementEntry(mapScriptText) &&
-               HasEncounterEntry(mapScriptText);
+        var missing = new List<string>();
+        AddMissing(missing, mainSceneText.Contains("StartButton", StringComparison.Ordinal), "main_scene_missing_StartButton");
+        AddMissing(missing, mainSceneText.Contains("Start Adventure", StringComparison.Ordinal), "main_scene_missing_Start_Adventure_text");
+        AddMissing(missing, mainSceneText.Contains("MapScene", StringComparison.Ordinal), "main_scene_missing_MapScene_instance");
+        AddMissing(missing, mainSceneText.Contains("parent=\"CanvasLayer/UI\"", StringComparison.Ordinal), "main_scene_MapScene_not_under_CanvasLayer_UI");
+        AddMissing(missing, mainSceneText.Contains("anchors_preset = 15", StringComparison.Ordinal), "main_scene_missing_full_viewport_anchor");
+        AddMissing(missing, HasStartAdventureMapEntry(mainScriptText), "main_script_StartButton_not_wired_to_ShowMapScene_or_StartRun");
+        AddMissing(missing, mainScriptText.Contains("CanvasLayer/UI/MapScene", StringComparison.Ordinal), "main_script_missing_CanvasLayer_UI_MapScene_lookup");
+        AddMissing(missing, HasMapSceneVisibilityEntry(mainScriptText), "main_script_missing_MapScene_visible_true_entry");
+        AddMissing(missing, mapSceneText.Contains("MapScene", StringComparison.Ordinal), "map_scene_missing_MapScene_root");
+        AddMissing(missing, HasUniqueExtResourceIds(mapSceneText), "map_scene_ext_resource_ids_not_unique");
+        AddMissing(missing, HasSceneRootScript(mapSceneText), "map_scene_root_missing_script_ext_resource");
+        AddMissing(missing, mapSceneText.Contains("TrackLayer", StringComparison.Ordinal), "map_scene_missing_TrackLayer");
+        AddMissing(missing, mapSceneText.Contains("custom_minimum_size = Vector2(600, 600)", StringComparison.Ordinal), "map_scene_missing_600x600_custom_minimum_size");
+        AddMissing(missing, HasSceneNodeUnderAnyParent(mapSceneText, "RpgMapAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer"), "map_scene_RpgMapAsset_not_under_TrackLayer");
+        AddMissing(missing, HasSceneNodeUnderAnyParent(mapSceneText, "Grid", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer"), "map_scene_Grid_not_under_TrackLayer");
+        AddMissing(missing, HasSceneNodeUnderAnyParent(mapSceneText, "Overlay", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer", "TrackLayer"), "map_scene_Overlay_not_under_TrackLayer");
+        AddMissing(missing, HasSceneNodeUnderAnyParent(mapSceneText, "RpgPlayerAsset", "Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer/Overlay", "TrackLayer/Overlay", "TrackLayer"), "map_scene_RpgPlayerAsset_not_under_TrackLayer_or_Overlay");
+        AddMissing(missing, mapSceneText.Contains("Grid", StringComparison.Ordinal), "map_scene_missing_Grid");
+        AddMissing(missing, mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal), "map_scene_missing_RpgMapAsset");
+        AddMissing(missing, mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal), "map_scene_missing_RpgPlayerAsset");
+        AddMissing(missing, mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal), "map_scene_missing_RpgEnemyAsset");
+        AddMissing(missing, mapScriptText.Contains("TrackLayer", StringComparison.Ordinal), "map_script_missing_TrackLayer_lookup");
+        AddMissing(missing, HasGridToVisiblePosition(mapScriptText), "map_script_missing_GridToPosition_or_MapTokenPosition");
+        AddMissing(missing, HasPlayerVisibilityRestore(mapScriptText), "map_script_missing_player_visibility_restore");
+        AddMissing(missing, HasMapMovementEntry(mapScriptText), "map_script_missing_MovePlayer_or_MoveOnMap_or_TryHandleMapKey");
+        AddMissing(missing, HasEncounterEntry(mapScriptText), "map_script_missing_EncounterEntered_or_EncounterPressed_or_EncounterTriggered");
+
+        return missing.Count == 0
+            ? null
+            : "missing_rpg_map_entry_contract: " + string.Join("; ", missing);
+    }
+
+    private static bool HasRpgMapEntryAcceptanceFiles(string repoPath)
+    {
+        return GetRpgMapEntryAcceptanceFailureReason(repoPath) is null;
+    }
+
+    private static void AddMissing(List<string> missing, bool condition, string reason)
+    {
+        if (!condition)
+        {
+            missing.Add(reason);
+        }
     }
 
     private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
@@ -519,8 +514,8 @@ internal static class PrototypeGoalAcceptanceValidator
     {
         return mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal) ||
                (mainScriptText.Contains("ApplyReward", StringComparison.Ordinal) &&
-                mainScriptText.Contains("RefreshView()", StringComparison.Ordinal) &&
-                ContainsAny(mainScriptText, "ResumeAfterReward", "ShowRewardReturnStatus"));
+                 mainScriptText.Contains("RefreshView()", StringComparison.Ordinal) &&
+                 ContainsAny(mainScriptText, "ResumeAfterReward", "ShowRewardReturnStatus", "ApplyState"));
     }
 
     private static bool HasBattleSceneOwnedRewardEntry(string repoPath, string mainScriptText)

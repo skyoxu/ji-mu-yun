@@ -72,6 +72,16 @@ The router must have these fields before it can proceed beyond intake:
 - If a non-empty user field cannot be reflected in gameplay, UI, scene flow, tests, or final acceptance, mark the relevant goal `needs_fix` and report the missing field coverage instead of reporting success.
 - Iteration-plan generation must read the latest prototype outcome and imported draft coverage before deciding the next goals. The plan must be state-aware, not only type-template-aware.
 
+## Top-Level Route Coordination
+
+- Treat prototype creation, revalidation, repair-plan generation, execute-repair-step, quick-fix, needs-fix, iteration-plan generation/evaluation, and final acceptance as separate top-level routes sharing one prototype contract.
+- When the frontend asks to revalidate a completed prototype, run validation only: completion-state checks, Godot smoke/navigation checks, and any game-type-specific hard validation. Do not call Codex during revalidation.
+- If revalidation fails, generate or continue a repair plan from the latest failed run. Do not generate a normal polish iteration plan until the failed validation blocker is removed.
+- Repair-plan generation must use the latest failed run evidence as source of truth, including route state, prototype contract, Godot smoke output, and game-type-specific validation evidence.
+- Execute-repair-step must run only the current repair step. It must not regenerate the prototype, regenerate the iteration plan, regenerate the repair plan, or modify Phase A platform code.
+- Quick-fix and needs-fix routes must keep the same route skill and game-type profile as the project. They must not fall back to generic prototype defaults when a specific game type has been resolved.
+- Final acceptance must be stricter than prototype creation success. A completed Day 7 route is not sufficient when later revalidation exposes a game-type-specific failure.
+
 The last three correspond to the user-facing pause sequence:
 
 1. Game feature

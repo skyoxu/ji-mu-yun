@@ -61,7 +61,7 @@ public sealed class PrototypeRepairPlanService
         }
 
         var prototypeContract = _contractService.Read(project);
-        var failureText = BuildFailureText(failedRun);
+        var failureText = BuildFailureText(project, failedRun);
         var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeSkill.Context);
         var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复步骤。请逐项执行，最后一步必须做全量验收。";
@@ -221,10 +221,68 @@ public sealed class PrototypeRepairPlanService
              run.RunType.Contains("needs-fix", StringComparison.OrdinalIgnoreCase)));
     }
 
-    private static string BuildFailureText(RunSnapshot run)
+    private static string BuildFailureText(ProjectSnapshot project, RunSnapshot run)
     {
-        return string.Join("\n", run.ProgressLabel, run.StderrText, run.StdoutText, run.EvidenceJson)
+        return string.Join("\n", run.ProgressLabel, run.StderrText, run.StdoutText, run.EvidenceJson, BuildGdUnitFailureContext(project, run))
             .Trim();
+    }
+
+    private static string BuildGdUnitFailureContext(ProjectSnapshot project, RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson) ||
+            !run.EvidenceJson.Contains("rpg_gdunit_validation", StringComparison.OrdinalIgnoreCase))
+        {
+            return "";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty("rpg_gdunit_validation", out var validation) ||
+                validation.ValueKind != JsonValueKind.Object)
+            {
+                return "";
+            }
+
+            var gdUnitPath = ReadString(validation, "gdunit_path");
+            var reportDir = ReadString(validation, "report_dir");
+            var reason = ReadString(validation, "reason");
+            var lines = new List<string>
+            {
+                "RPG GdUnit validation context:",
+                $"- reason: {reason}",
+                $"- gdunit_path: {gdUnitPath}",
+                $"- report_dir: {reportDir}"
+            };
+
+            var consolePath = ResolveReportFile(project.RepoPath, reportDir, "gdunit-console.txt");
+            if (!string.IsNullOrWhiteSpace(consolePath) && File.Exists(consolePath))
+            {
+                lines.Add("- gdunit_console_summary:");
+                lines.AddRange(ExtractGdUnitErrorSummary(File.ReadAllText(consolePath), maxLines: 40).Select(line => $"  {line}"));
+            }
+
+            var summaryPath = ResolveReportFile(project.RepoPath, reportDir, "run-summary.json");
+            if (!string.IsNullOrWhiteSpace(summaryPath) && File.Exists(summaryPath))
+            {
+                lines.Add("- gdunit_run_summary:");
+                lines.Add($"  {Trim(File.ReadAllText(summaryPath), 1200)}");
+            }
+
+            return string.Join("\n", lines);
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
+        catch (IOException)
+        {
+            return "";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return "";
+        }
     }
 
     private static string BuildSourceMessage(RunSnapshot run, string failureText, PrototypeRouteSkillContext routeSkill)
@@ -259,6 +317,11 @@ public sealed class PrototypeRepairPlanService
             if (ShouldUseBuildCleanupRepairPlan(context))
             {
                 return BuildRpgBuildCleanupRepairGoals(context);
+            }
+
+            if (ShouldUseRpgGdUnitValidationRepairPlan(context))
+            {
+                return BuildRpgGdUnitValidationRepairGoals(context);
             }
 
             if (ShouldUseSceneNodeContractRepairPlan(context))
@@ -398,6 +461,69 @@ public sealed class PrototypeRepairPlanService
             "scene/main/node.cpp",
             "rpg_scene_node_contract_drift",
             "rpg_script_node_contract_drift");
+    }
+
+    private static bool ShouldUseRpgGdUnitValidationRepairPlan(PrototypeRepairPlanContext context)
+    {
+        if (HasEvidenceRecoveryFailure(context))
+        {
+            return false;
+        }
+
+        return ContainsAny(
+            context.FailureText,
+            "rpg_gdunit_validation",
+            "rpg_project_specific_gdunit_failed",
+            "RPG GdUnit validation context",
+            "tests/Prototype/DqRpgPrototype",
+            "gdunit-console.txt");
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildRpgGdUnitValidationRepairGoals(PrototypeRepairPlanContext context)
+    {
+        var goals = new List<PrototypeRepairGoalResult>();
+
+        void Add(string title, string description, string acceptance)
+        {
+            goals.Add(new PrototypeRepairGoalResult(goals.Count + 1, title, description, acceptance, "pending"));
+        }
+
+        Add(
+            "Repair RPG runtime assets and Godot imports for GdUnit",
+            BuildRpgGdUnitAssetRepairDescription(context),
+            """
+            This step passes only when the active dq-rpg scenes no longer reference missing PNG or .ctex resources and GdUnit can load MapScene.tscn and BattleScene.tscn without ext_resource parse errors.
+            """);
+
+        Add(
+            "Repair RPG scene node contract expected by DqRpgPrototype tests",
+            BuildRpgGdUnitNodeRepairDescription(context),
+            """
+            This step passes only when the node paths required by the project-specific GdUnit suite exist or the tests and scripts are updated together to a single authoritative RPG contract, with no Node not found errors.
+            """);
+
+        Add(
+            "Repair RPG script input and loop behavior under the validated scene contract",
+            BuildRpgGdUnitScriptRepairDescription(context),
+            """
+            This step passes only when the Invalid call to _UnhandledInput is gone and the map movement, encounter entry, battle, reward 3-choice, and return-to-map behaviors work through the same scene path used by GdUnit.
+            """);
+
+        Add(
+            "Preserve project input contract while fixing RPG behavior",
+            BuildRpgGdUnitContractRepairDescription(context),
+            """
+            This step passes only when concrete project values such as 15-battle victory, any-loss defeat, reward 3-choice, and visible battle comprehension are preserved in runtime/UI/test evidence; do not replace them with shorter template-default victory counts.
+            """);
+
+        Add(
+            "Rerun RPG project-specific GdUnit and final prototype acceptance",
+            BuildRpgGdUnitFinalAcceptanceDescription(context),
+            """
+            The repair is complete only when `tests/Prototype/DqRpgPrototype` runs with rc=0, no "No test cases found", no Godot ERROR/SCRIPT ERROR markers, and the front-end "重新验收原型" route succeeds.
+            """);
+
+        return goals;
     }
 
     private static List<PrototypeRepairGoalResult> BuildRpgBuildCleanupRepairGoals(PrototypeRepairPlanContext context)
@@ -637,6 +763,87 @@ public sealed class PrototypeRepairPlanService
             - If a required UI node such as BattleStatusLabel is missing, add it at the path expected by the active prototype script or update the script to the authoritative scene path.
             - Keep Start Adventure -> visible MapScene behavior intact.
             - Do not treat .godot/mono/temp/obj/Debug source-generator stack paths as CS0579 build contamination.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgGdUnitAssetRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            The latest RPG project-specific GdUnit validation failed while loading concrete Godot resources. Repair resource references before broad gameplay redesign.
+
+            Required focus:
+            - Fix missing runtime assets or scene ext_resource paths named in the GdUnit console summary.
+            - Ensure MapScene.tscn and BattleScene.tscn do not reference missing PNG files or stale .godot/imported .ctex files.
+            - Run Godot import through the project workflow after copying or restoring assets.
+            - Do not mark this step complete if Parse Error or Failed loading resource remains.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 3600)}
+            """;
+    }
+
+    private static string BuildRpgGdUnitNodeRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair the RPG scene/node contract that the project-specific DqRpgPrototype GdUnit tests validate.
+
+            Required focus:
+            - Required test paths include CanvasLayer/UI/MapScene/RpgMapAsset, RpgPlayerAsset, RpgEnemyAsset, ChestToken, and CanvasLayer/UI/BattleScene/EnemyToken when named by the latest failure.
+            - Keep the scene script and test contract aligned; do not move nodes without updating the authoritative scene path used by runtime code and tests together.
+            - Preserve Start Adventure -> visible MapScene behavior.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 3600)}
+            """;
+    }
+
+    private static string BuildRpgGdUnitScriptRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair script/runtime errors exposed by RPG GdUnit after the resource and node contract is stable.
+
+            Required focus:
+            - Remove invalid calls such as calling _UnhandledInput on a Control base that does not expose that function.
+            - Keep movement, encounter entry, battle resolution, reward 3-choice, and return-to-map callable through the same prototype shell used by the test.
+            - Do not bypass failing behavior by weakening or deleting project-specific GdUnit tests.
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 3600)}
+            """;
+    }
+
+    private static string BuildRpgGdUnitContractRepairDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Repair gameplay behavior without drifting from the project prototype contract.
+
+            Required focus:
+            - Concrete project input values override RPG defaults and template examples.
+            - Preserve reward 3-choice and visible battle comprehension.
+            - Preserve the project win/fail condition from the contract; do not replace 15-battle victory with a shorter RPG template-default victory count unless the user contract says so.
+            - Any unimplemented concrete input must become an explicit needs-fix blocker.
+
+            Prototype contract:
+            {Trim(context.Contract.Json ?? "", 2400)}
+
+            Latest failure evidence:
+            {Trim(context.FailureText, 2400)}
+            """;
+    }
+
+    private static string BuildRpgGdUnitFinalAcceptanceDescription(PrototypeRepairPlanContext context)
+    {
+        return $"""
+            Run final RPG validation against the same blocker that generated this repair plan.
+
+            Required validation:
+            - Project-specific GdUnit path: tests/Prototype/DqRpgPrototype.
+            - Treat wrapper output GDUNIT_DONE rc=1 as failure even when normalized_rc is 0.
+            - Treat No test cases found as failure.
+            - Re-run the front-end prototype validation route after GdUnit is clean.
 
             Latest failure evidence:
             {Trim(context.FailureText, 2400)}
@@ -925,6 +1132,59 @@ public sealed class PrototypeRepairPlanService
     private static string Trim(string value, int maxLength)
     {
         return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
+    private static string? ReadString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
+    }
+
+    private static string? ResolveReportFile(string repoPath, string? reportDir, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(reportDir))
+        {
+            return null;
+        }
+
+        var relative = reportDir.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+        var path = Path.Combine(repoPath, relative, fileName);
+        return Path.GetFullPath(path);
+    }
+
+    private static IReadOnlyList<string> ExtractGdUnitErrorSummary(string consoleText, int maxLines)
+    {
+        var lines = new List<string>();
+        foreach (var rawLine in consoleText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var line = rawLine.Trim();
+            if (!ContainsAny(
+                    line,
+                    "ERROR:",
+                    "SCRIPT ERROR",
+                    "Node not found",
+                    "Parse Error",
+                    "Invalid call",
+                    "No test cases found",
+                    "GDUNIT_DONE"))
+            {
+                continue;
+            }
+
+            if (lines.Any(existing => string.Equals(existing, line, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            lines.Add(Trim(line, 500));
+            if (lines.Count >= maxLines)
+            {
+                break;
+            }
+        }
+
+        return lines;
     }
 
     private static bool ContainsAny(string text, params string[] needles)
