@@ -37,10 +37,10 @@ internal static class PrototypeGodotSmokeService
                 "--strict"
             ],
             projectRepoPath,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            PrototypeValidationProcessEnvironment.Create(projectRepoPath, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["GODOT_BIN"] = options.GodotBin
-            });
+            }));
 
         var result = await processRunner.RunAsync(command, cancellationToken);
         var sceneSmokeExitCode = ResolvePrototypeSmokeExitCode(result);
@@ -64,10 +64,10 @@ internal static class PrototypeGodotSmokeService
                 "15"
             ],
             projectRepoPath,
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            PrototypeValidationProcessEnvironment.Create(projectRepoPath, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["GODOT_BIN"] = options.GodotBin
-            });
+            }));
         var navigationResult = await processRunner.RunAsync(navigationCommand, cancellationToken);
         var navigationExitCode = navigationResult.ExitCode;
         var stdout = CombineProcessText(result.Stdout, navigationResult.Stdout);

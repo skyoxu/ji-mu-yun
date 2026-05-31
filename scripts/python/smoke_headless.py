@@ -140,12 +140,13 @@ def _stop_dotnet_build_server(project_root: Path) -> None:
         pass
 
 
-def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str, str]:
+def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWARM_TIMEOUT_SEC) -> tuple[bool, str, str, str]:
+    prewarm_timeout = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))
     prewarm_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
     prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
         prewarm_cmd,
         project_root,
-        PREWARM_TIMEOUT_SEC,
+        prewarm_timeout,
     )
     if prewarm_returncode == 124:
         _cleanup_godot_processes(godot_bin)
@@ -158,7 +159,7 @@ def _prewarm_csharp(godot_bin: str, project_root: Path) -> tuple[bool, str, str,
     fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
         ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
         project_root,
-        PREWARM_TIMEOUT_SEC,
+        prewarm_timeout,
     )
     stdout = prewarm_stdout + (("\n" + fallback_stdout) if fallback_stdout else "")
     stderr = prewarm_stderr + (("\n" + fallback_stderr) if fallback_stderr else "")
@@ -214,7 +215,7 @@ def _run_smoke(
     cmd_text = " ".join(cmd)
     print(f"[smoke_headless] starting Godot: {' '.join(cmd)} (timeout={timeout_sec}s)")
     _cleanup_godot_processes(str(bin_path))
-    prewarm_ok, prewarm_mode, prewarm_stdout, prewarm_stderr = _prewarm_csharp(str(bin_path), project_root)
+    prewarm_ok, prewarm_mode, prewarm_stdout, prewarm_stderr = _prewarm_csharp(str(bin_path), project_root, timeout_sec)
     prewarm_out_path.write_text(prewarm_stdout, encoding="utf-8", errors="ignore")
     prewarm_err_path.write_text(prewarm_stderr, encoding="utf-8", errors="ignore")
     if not prewarm_ok:

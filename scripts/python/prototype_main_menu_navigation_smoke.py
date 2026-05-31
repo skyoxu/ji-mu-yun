@@ -303,6 +303,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
     if timeout_sec <= 0:
         print("[prototype_main_menu_navigation] --timeout-sec must be greater than 0", file=sys.stderr)
         return 2
+    prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))
 
     day = _dt.date.today().strftime("%Y-%m-%d")
     ts = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -324,7 +325,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
         prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
             prewarm_cmd,
             project_root,
-            PREWARM_TIMEOUT_SEC,
+            prewarm_timeout_sec,
             env=process_env,
         )
         prewarm_mode = "godot-build-solutions"
@@ -335,7 +336,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
                 [dotnet_bin, "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
                 project_root,
-                PREWARM_TIMEOUT_SEC,
+                prewarm_timeout_sec,
                 env=process_env,
             )
             prewarm_mode = "dotnet-build"

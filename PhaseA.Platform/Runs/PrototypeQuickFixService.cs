@@ -14,6 +14,7 @@ public sealed class PrototypeQuickFixService
     private const string ReasoningEffort = "low";
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(300);
     private static readonly TimeSpan DefaultGoalRepairExecutionTimeout = TimeSpan.FromMinutes(12);
+    private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(45);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -453,12 +454,13 @@ public sealed class PrototypeQuickFixService
                     failure_code = "prototype_quick_fix_timeout"
                 });
                 await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
-                var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小奖励闭环：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。";
+                var timeoutFocus = BuildGoalRepairTimeoutFocus(targetGoal);
+                var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus}";
                 var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", "继续修复当前 step 的最小奖励闭环，不要推进后续目标。", summary, [summary], CancellationToken.None);
+                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", $"继续修复当前 step 的最小验收范围：{timeoutFocus}", summary, [summary], CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "timeout", $"目标 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前目标修复超时。系统没有切换到后续目标，你可以继续再次修复当前 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
@@ -554,8 +556,7 @@ public sealed class PrototypeQuickFixService
             """;
         var codexOutput = "Preflight validation passed before running Codex.";
         var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
-        var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
-        godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, cancellationToken);
+        godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal, cancellationToken);
         if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
         {
             assistantMessage = AppendGodotSmokeValidationSummary(assistantMessage, targetGoal, godotSmokeValidation);
@@ -740,8 +741,7 @@ public sealed class PrototypeQuickFixService
                 return null;
             }
 
-            var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
-            var godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, cancellationToken);
+            var godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal, cancellationToken);
             if (!godotSmokeValidation.Passed)
             {
                 return null;
@@ -855,6 +855,66 @@ public sealed class PrototypeQuickFixService
         return _metadataStore.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
     }
 
+    private async Task<PrototypeGoalGodotSmokeValidationResult> ValidateGoalGodotSmokeWithTimeoutAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot targetGoal,
+        CancellationToken cancellationToken)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(GodotSmokeValidationTimeout);
+        var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
+        try
+        {
+            return await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, timeout.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            var scenePath = ResolveSmokeSceneForTimeout(prototypeState);
+            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(new PrototypeGodotSmokeResult(
+                true,
+                124,
+                "",
+                $"Godot smoke validation exceeded the {GodotSmokeValidationTimeout.TotalSeconds:0} second timeout.",
+                "godot_smoke_validation_timeout",
+                scenePath));
+        }
+    }
+
+    private static string? ResolveSmokeSceneForTimeout(string prototypeStateJson)
+    {
+        if (string.IsNullOrWhiteSpace(prototypeStateJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(prototypeStateJson);
+            var root = document.RootElement;
+            if (root.TryGetProperty("prototype_completion", out var completion) &&
+                completion.ValueKind == JsonValueKind.Object &&
+                completion.TryGetProperty("smoke_scene", out var completionScene) &&
+                completionScene.ValueKind == JsonValueKind.String)
+            {
+                return completionScene.GetString();
+            }
+
+            if (root.TryGetProperty("godot_smoke", out var smoke) &&
+                smoke.ValueKind == JsonValueKind.Object &&
+                smoke.TryGetProperty("scene", out var scene) &&
+                scene.ValueKind == JsonValueKind.String)
+            {
+                return scene.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return null;
+    }
+
     private static string TrimForPromptExcerpt(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -864,6 +924,20 @@ public sealed class PrototypeQuickFixService
 
         var trimmed = value.Trim();
         return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+    }
+
+    private static string BuildGoalRepairTimeoutFocus(ProjectIterationGoalSnapshot goal)
+    {
+        return goal.GoalIndex switch
+        {
+            1 => "Start Adventure 后显示 MapScene、玩家可见、稳定移动并触发首次遇敌。",
+            2 => "创建独立 BattleScene 场景与脚本，完成敌人展示、攻击反馈以及胜利或失败结算；不要推进奖励选择。",
+            3 => "胜利后显示 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。",
+            4 => "串联 Start Adventure、地图、遇敌、战斗、奖励选择和返回地图的首轮场景切换。",
+            5 => "让 15 场胜利、任一失败和遇敌规则对玩家清晰可读。",
+            6 => "完成 RPG 原型端到端验收、Godot smoke 和最终可玩证明。",
+            _ => string.IsNullOrWhiteSpace(goal.AcceptanceHint) ? goal.Description : goal.AcceptanceHint
+        };
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)

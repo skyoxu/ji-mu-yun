@@ -90,6 +90,32 @@ public sealed class PrototypeIterationGoalServiceTests
         codexCommand.StandardInput.Should().Contain("RpgPlayerAsset");
         codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
+        var godotBuildCommand = runner.Commands.Single(command =>
+            command.FileName == "dotnet" &&
+            command.Arguments.Contains("build") &&
+            command.Arguments.Any(argument => argument.EndsWith("GodotGame.csproj", StringComparison.Ordinal)));
+        godotBuildCommand.Arguments.Should().NotContain("--no-restore");
+        godotBuildCommand.Arguments.Should().Contain("-p:UseSharedCompilation=false");
+        godotBuildCommand.Arguments.Should().Contain("-p:NodeReuse=false");
+        godotBuildCommand.Arguments.Should().Contain("-m:1");
+        godotBuildCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
+        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Environment["UseSharedCompilation"].Should().Be("false");
+        godotBuildCommand.Environment["MSBUILDDISABLENODEREUSE"].Should().Be("1");
+        godotBuildCommand.Environment["TEMP"].Should().Contain("phase-a-validation-temp");
+        godotBuildCommand.Environment["PHASEA_VALIDATION_BUILD_ROOT"].Should().Contain("phase-a-validation-build");
+        var coreTestCommand = runner.Commands.Single(command =>
+            command.FileName == "dotnet" &&
+            command.Arguments.Contains("test") &&
+            command.Arguments.Any(argument => argument.EndsWith("Game.Core.Tests.csproj", StringComparison.Ordinal)));
+        coreTestCommand.Arguments.Should().Contain("-m:1");
+        coreTestCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
+        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        runner.Commands.Should().Contain(command =>
+            command.FileName == "dotnet" &&
+            command.Arguments.SequenceEqual(new[] { "build-server", "shutdown" }));
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("prototype_contract");
         artifacts.Select(a => a.ArtifactType).Should().Contain([
