@@ -192,7 +192,7 @@ internal static class PrototypeGodotSmokeService
         var reportDir = Path.Combine(
             "logs",
             "e2e",
-            DateTimeOffset.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            DateTimeOffset.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             $"gdunit-{NormalizeReportSlug(slug)}-prototype");
         var command = new HostedProcessCommand(
             options.PythonCommand,
@@ -205,6 +205,7 @@ internal static class PrototypeGodotSmokeService
                 gdUnitRelativePath,
                 "--timeout-sec",
                 "120",
+                "--prewarm",
                 "--rd",
                 reportDir.Replace('\\', '/')
             ],

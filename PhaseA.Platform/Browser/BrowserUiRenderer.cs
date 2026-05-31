@@ -530,10 +530,27 @@ public sealed class BrowserUiRenderer
                     <div class="card">
                       <strong>repair-step${String(goal.goalIndex || 0).padStart(2, "0")} · ${escapeHtml(goal.status || "pending")}</strong>
                       <p>${escapeHtml(goal.title || "")}</p>
-                      <p class="muted">${escapeHtml(goal.description || "")}</p>
+                      <p class="muted">${escapeHtml(repairGoalDisplayText(goal.description || ""))}</p>
                       ${goal.acceptanceHint ? `<p class="muted">验收：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
                       ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
                     </div>`).join("");
+                }
+
+                function repairGoalDisplayText(description) {
+                  const text = String(description || "").replace(/\r/g, "").trim();
+                  const evidenceMarkers = [
+                    "\nLatest failure evidence:",
+                    "\nFailure evidence:",
+                    "\nPrototype contract:",
+                    "\nRPG GdUnit validation context:"
+                  ];
+                  let end = text.length;
+                  evidenceMarkers.forEach(marker => {
+                    const index = text.indexOf(marker);
+                    if (index >= 0) end = Math.min(end, index);
+                  });
+                  const concise = text.slice(0, end).trim() || text;
+                  return concise.length > 900 ? `${concise.slice(0, 900).trim()}...` : concise;
                 }
 
                 function focusRepairPlanPanel() {

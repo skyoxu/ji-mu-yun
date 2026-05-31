@@ -36,7 +36,7 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(4);
         result.Goals[0].Title.Should().Contain("恢复原型运行证据");
-        result.Goals[0].Description.Should().Contain("Permission denied");
+        result.Goals[0].Description.Should().NotContain("Permission denied");
         result.Goals[1].Title.Should().Contain("修复 RPG 场景与节点合同");
         result.Goals[2].Title.Should().Contain("修复 RPG 玩法合同");
         result.Goals[3].Title.Should().Contain("最终全量验收");
@@ -44,7 +44,10 @@ public sealed class PrototypeRepairPlanServiceTests
         stateJson.GetProperty("route_skill").GetProperty("routeSkillId").GetString().Should().Be("prototype-rpg-godot-zh");
         stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复步骤");
         stateJson.GetProperty("goals").GetArrayLength().Should().Be(4);
-        stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().Contain("Permission denied");
+        stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().NotContain("Permission denied");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        details!.Session.SourceMessage.Should().Contain("Permission denied");
+        details.Session.SourceMessage.Should().Contain("failure_signals");
     }
 
     [Fact]
@@ -211,14 +214,17 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(5);
         result.Goals[0].Title.Should().Contain("runtime assets");
-        result.Goals[0].Description.Should().Contain("showcase_map_overworld.png");
+        result.Goals[0].Description.Should().NotContain("showcase_map_overworld.png");
         result.Goals[1].Title.Should().Contain("scene node contract");
-        result.Goals[1].Description.Should().Contain("CanvasLayer/UI/MapScene/RpgEnemyAsset");
+        result.Goals[1].Description.Should().Contain("RpgEnemyAsset");
         result.Goals[2].Description.Should().Contain("_UnhandledInput");
         result.Goals[3].Description.Should().Contain("15-battle victory");
         result.Goals[3].Description.Should().NotContain("5 battles");
         result.Goals[3].Description.Should().NotContain("5 场");
         result.Goals[4].Description.Should().Contain("tests/Prototype/DqRpgPrototype");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        details!.Session.SourceMessage.Should().Contain("showcase_map_overworld.png");
+        details.Session.SourceMessage.Should().Contain("CanvasLayer/UI/MapScene/RpgEnemyAsset");
         codex.LastPrompt.Should().BeNull();
     }
 
@@ -243,9 +249,11 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Goals.Should().HaveCount(3);
         result.Goals[0].Title.Should().Contain("恢复原型运行证据");
         result.Goals[0].Description.Should().Contain("default prototype route skill");
-        result.Goals[0].Description.Should().Contain("Permission denied");
+        result.Goals[0].Description.Should().NotContain("Permission denied");
         result.Goals[1].Title.Should().Contain("修复通用原型合同缺口");
         result.Goals[2].Title.Should().Contain("最终全量验收");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        details!.Session.SourceMessage.Should().Contain("Permission denied");
     }
 
     [Fact]
@@ -267,6 +275,59 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Status.Should().Be("missing_failure");
         result.Summary.Should().Contain("没有可用于生成修复计划的失败记录");
         result.Goals.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldUseGoalRepairMode_ForRepairPlanStep()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedPrototypeRunAsync(store, projectId);
+        var runner = new GoalRepairPromptCaptureRunner();
+        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+        await service.CreateAsync(accountId, projectId);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
+
+        result.GoalIndex.Should().Be(1);
+        runner.LastPrompt.Should().Contain("这是目标级 needs-fix 修复，不是 90 秒快速修复");
+        runner.LastPrompt.Should().Contain("Run the execute-repair-step top-level route.");
+        runner.LastPrompt.Should().Contain("Repair evidence context:");
+        runner.LastPrompt.Should().Contain("Permission denied");
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldKeepStepNeedsFix_WhenQuickFixCompletedButGoalStillNeedsFix()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedPrototypeRunAsync(store, projectId);
+        var runner = new GoalRepairPromptCaptureRunner();
+        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
+        await service.CreateAsync(accountId, projectId);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+
+        result.Status.Should().Be("completed");
+        result.SessionStatus.Should().Be("needs_fix");
+        details!.Session.Status.Should().Be("needs_fix");
+        details.Goals[0].Status.Should().Be("needs_fix");
+        details.Goals[0].CompletedUtc.Should().BeNull();
     }
 
     private static async Task SeedFailedPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
@@ -431,6 +492,35 @@ public sealed class PrototypeRepairPlanServiceTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("This test should not execute hosted processes.");
+        }
+    }
+
+    private sealed class GoalRepairPromptCaptureRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.Arguments.Contains("-"))
+            {
+                LastPrompt = command.StandardInput ?? "";
+                var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(outputPath))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+                    File.WriteAllText(outputPath, """
+                    STATUS: needs_fix
+                    SUMMARY: Current repair step still needs work.
+                    CHANGED: inspected current step
+                    VERIFY: platform validation still pending
+                    REMAINING: continue current step
+                    """);
+                }
+
+                return Task.FromResult(new HostedProcessResult(0, "codex ok", ""));
+            }
+
+            return Task.FromResult(new HostedProcessResult(1, "", "validation failed"));
         }
     }
 

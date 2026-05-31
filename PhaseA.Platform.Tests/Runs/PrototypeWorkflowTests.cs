@@ -572,6 +572,7 @@ public sealed class PrototypeWorkflowTests
         runner.Commands[3].Arguments.Should().Contain("scripts/python/smoke_headless.py");
         runner.Commands[4].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
         runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
+        runner.Commands[5].Arguments.Should().Contain("--prewarm");
         run!.EvidenceJson.Should().Contain("\"validation_only\":true");
         run.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
         run.EvidenceJson.Should().Contain("\"passed\":true");
@@ -603,6 +604,7 @@ public sealed class PrototypeWorkflowTests
         result.ExitCode.Should().Be(1);
         runner.Commands.Should().HaveCount(6);
         runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
+        runner.Commands[5].Arguments.Should().Contain("--prewarm");
         run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
         run.EvidenceJson.Should().Contain("\"reason\":\"rpg_project_specific_gdunit_failed\"");
         run.StderrText.Should().Contain("RPG project-specific GdUnit validation failed");

@@ -260,6 +260,88 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldPromoteStepOne_WhenRpgGdUnitHasOnlyBehaviorAssertionFailures()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var details = await CreateRpgGdUnitRepairSessionAsync(store, accountId, projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new GoalRepairStepOneBehaviorGdUnitFailRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
+        run.EvidenceJson.Should().Contain("\"passed\":false");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepStepOneNeedsFix_WhenRpgGdUnitHasInfrastructureFailures()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var details = await CreateRpgGdUnitRepairSessionAsync(store, accountId, projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new GoalRepairStepOneInfrastructureGdUnitFailRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("RPG GdUnit validation");
+    }
+
+    [Fact]
     public async Task SubmitAsync_ShouldCompleteEvenWhenCallerTokenIsCanceledAfterRunStarts()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1201,6 +1283,7 @@ public sealed class DqRpgPrototype
         EnsureRpgAcceptanceMarkers(project.RepoPath);
         EnsureRpgPrototypeContractValues(project.MetaPath);
         WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
 
         var runner = new GoalRepairStep5HostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
@@ -1213,6 +1296,160 @@ public sealed class DqRpgPrototype
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepFinalStepNeedsFix_WhenRpgGdUnitFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Last();
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need final validation.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal final needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+        SeedLatestRpgGdUnitFailureReport(project.RepoPath);
+
+        var runner = new GoalRepairFinalGdUnitFailRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("RPG GdUnit validation");
+        result.AssistantMessage.Should().Contain("GDUNIT_FAILURES");
+        result.AssistantMessage.Should().Contain("Read the three reward cards");
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+        refreshed!.Goals.Last().Status.Should().Be("needs_fix");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldIncludeLatestRpgGdUnitFailuresInFinalRepairPrompt()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Last();
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need final validation.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal final needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+        SeedLatestRpgGdUnitFailureReport(project.RepoPath);
+
+        var runner = new GoalRepairFinalGdUnitFailRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        _ = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        runner.LastPrompt.Should().Contain("Latest RPG GdUnit validation context");
+        runner.LastPrompt.Should().Contain("\"failures\":27");
+        runner.LastPrompt.Should().Contain("Encounter ready");
+        runner.LastPrompt.Should().Contain("Read the three reward cards");
+        runner.LastPrompt.Should().Contain("BattleScene finished");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldUseLocalDateForRpgGdUnitReportDir()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Last();
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need final validation.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal final needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+        var localDateBefore = DateTimeOffset.Now.ToString("yyyy-MM-dd");
+
+        _ = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        var localDateAfter = DateTimeOffset.Now.ToString("yyyy-MM-dd");
+        var gdUnitCommand = runner.Commands.Single(command => command.Arguments.Contains("scripts/python/run_gdunit.py"));
+        gdUnitCommand.Arguments.Should().Contain("--prewarm");
+        var reportDir = gdUnitCommand.Arguments.SkipWhile(arg => arg != "--rd").Skip(1).First();
+        reportDir.Should().BeOneOf(
+            $"logs/e2e/{localDateBefore}/gdunit-dq-rpg-prototype",
+            $"logs/e2e/{localDateAfter}/gdunit-dq-rpg-prototype");
     }
 
     [Fact]
@@ -1410,6 +1647,85 @@ public sealed class DqRpgPrototype
         }
 
         return result.ProjectId!;
+    }
+
+    private static async Task<ProjectIterationSessionDetails> CreateRpgGdUnitRepairSessionAsync(
+        PhaseAMetadataStore store,
+        string accountId,
+        string projectId)
+    {
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "prototype-repair-plan",
+            "Repair RPG GdUnit validation failure.",
+            "Repair RPG project-specific GdUnit validation.",
+            [
+                new ProjectIterationGoalCreateCommand(
+                    1,
+                    "Repair RPG runtime assets and Godot imports for GdUnit",
+                    "Fix missing runtime assets, scene ext_resource paths, and Godot import visibility before broad gameplay redesign.",
+                    "This step passes only when the active dq-rpg scenes no longer reference missing PNG or .ctex resources and GdUnit can load MapScene.tscn and BattleScene.tscn without ext_resource parse errors."),
+                new ProjectIterationGoalCreateCommand(
+                    2,
+                    "Repair RPG scene node contract for GdUnit",
+                    "Fix node paths required by the project-specific GdUnit suite.",
+                    "This step passes only when the node paths required by the project-specific GdUnit suite exist or tests and scripts are updated together."),
+                new ProjectIterationGoalCreateCommand(
+                    3,
+                    "Rerun RPG project-specific GdUnit and final prototype acceptance",
+                    "Run final acceptance across the full playable RPG prototype.",
+                    "Final RPG GdUnit and prototype acceptance pass.")
+            ]);
+        return (await store.GetLatestProjectIterationSessionAsync(projectId))!;
+    }
+
+    private static void SeedLatestRpgGdUnitFailureReport(string repoPath)
+    {
+        var reportDir = Path.Combine(repoPath, "logs", "e2e", "2099-01-01", "gdunit-dq-rpg-prototype");
+        Directory.CreateDirectory(reportDir);
+        WriteRpgGdUnitFailureReport(reportDir);
+    }
+
+    private static void SeedRpgGdUnitFailureReportForCommand(HostedProcessCommand command)
+    {
+        var relativeReportDir = command.Arguments.SkipWhile(arg => arg != "--rd").Skip(1).FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(relativeReportDir))
+        {
+            return;
+        }
+
+        var reportDir = Path.Combine(command.WorkingDirectory, relativeReportDir.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(reportDir);
+        WriteRpgGdUnitFailureReport(reportDir);
+    }
+
+    private static void WriteRpgGdUnitFailureReport(string reportDir)
+    {
+        File.WriteAllText(Path.Combine(reportDir, "run-summary.json"), """
+{"rc":100,"normalized_rc":100,"strict_exit_code":false,"results":{"tests":6,"failures":27,"errors":0},"prewarm_rc":0,"prewarm_attempts":1}
+""");
+        File.WriteAllText(Path.Combine(reportDir, "gdunit-console.txt"), """
+res://tests/Prototype/DqRpgPrototype/test_dq_rpg_prototype_scene.gd > test_map_scene_moves_player_and_reaches_first_encounter_with_traversal FAILED
+Report:
+  Expecting:
+  'Position (9, 1)  Encounter chance 80%'
+  do contains
+  'Encounter ready'
+res://tests/Prototype/DqRpgPrototype/test_dq_rpg_prototype_scene.gd > test_full_first_loop_proves_scene_switching_from_start_to_reward_and_back FAILED
+Report:
+  Expecting:
+  'Use WASD to move. Watch encounter chance and step progress in the map panel until battle triggers.'
+  do contains
+  'Read the three reward cards'
+Report:
+  Expecting:
+  '- Adventure started.'
+  do contains
+  'BattleScene finished'
+Statistics: 6 test cases | 0 errors | 27 failures | 0 flaky | 0 skipped | 0 orphans |
+Exit code: 100
+""");
     }
 
     private static JsonElement ReadPlanningAnalysis(string metaPath)
@@ -1784,6 +2100,11 @@ ready to continue
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
+            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "GDUNIT_DONE rc=0", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
@@ -1793,6 +2114,131 @@ CHANGED: Updated the reward loop.
 VERIFY: Platform acceptance validation passed for the current gameplay goal.
 REMAINING: none
 """);
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class GoalRepairStepOneBehaviorGdUnitFailRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(100, """
+                    Expecting:
+                     'Use WASD to explore the map.' do contains 'Read the three reward cards'
+                    Statistics: 6 test cases | 0 errors | 27 failures
+                    Exit code: 100
+                    """, ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Goal 1 asset/import repair is complete.
+CHANGED: Fixed resource import setup for the RPG test project.
+VERIFY: Platform acceptance validation passed for the current gameplay goal.
+REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class GoalRepairStepOneInfrastructureGdUnitFailRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(1, """
+                    ERROR: Failed loading resource: res://Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png.
+                    ERROR: res://Game.Godot/Prototypes/dq-rpg/MapScene.tscn Parse Error: [ext_resource] referenced non-existent resource.
+                    ERROR: Node not found: Panel/Margin/VBox/TrackFrame/TrackMargin/TrackLayer.
+                    GDUNIT_DONE rc=1
+                    """, ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Goal 1 asset/import repair attempted.
+CHANGED: Updated resource import setup for the RPG test project.
+VERIFY: Platform acceptance validation passed for the current gameplay goal.
+REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class GoalRepairFinalGdUnitFailRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                SeedRpgGdUnitFailureReportForCommand(command);
+                return Task.FromResult(new HostedProcessResult(0, "GDUNIT_DONE rc=1", ""));
+            }
+
+            LastPrompt = command.StandardInput ?? "";
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+            STATUS: completed
+            SUMMARY: Final RPG repair attempted.
+            CHANGED: Updated final RPG validation target.
+            VERIFY: Platform acceptance validation passed for the current gameplay goal.
+            REMAINING: none
+            """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }
     }

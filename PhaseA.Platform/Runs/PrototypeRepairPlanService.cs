@@ -156,17 +156,29 @@ public sealed class PrototypeRepairPlanService
         var result = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
-            new PrototypeFeedbackRequest(feedback, request.Model, null, null),
+            new PrototypeFeedbackRequest(
+                feedback,
+                request.Model,
+                null,
+                new PrototypeGoalRepairContext(
+                    details.Session.SessionId,
+                    current.GoalId,
+                    current.GoalIndex,
+                    current.Title,
+                    current.Description,
+                    current.AcceptanceHint,
+                    current.ResultSummary)),
             requireSucceededPrototypeRun: false,
             cancellationToken);
 
-        var completed = string.Equals(result.Status, "completed", StringComparison.OrdinalIgnoreCase);
-        var goalStatus = completed ? "succeeded" : "needs_fix";
+        var runCompleted = string.Equals(result.Status, "completed", StringComparison.OrdinalIgnoreCase);
+        var goalStatus = NormalizeRepairGoalStatus(result.IterationGoalStatus, runCompleted);
+        var goalCompleted = string.Equals(goalStatus, "succeeded", StringComparison.OrdinalIgnoreCase);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(
             current.GoalId,
             goalStatus,
             result.AssistantMessage,
-            completed ? DateTimeOffset.UtcNow.ToString("O") : null,
+            goalCompleted ? DateTimeOffset.UtcNow.ToString("O") : null,
             CancellationToken.None);
         if (!string.IsNullOrWhiteSpace(result.RunId))
         {
@@ -178,7 +190,7 @@ public sealed class PrototypeRepairPlanService
         var hasNeedsFix = refreshed.Goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.OrdinalIgnoreCase));
         var hasPending = refreshed.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.OrdinalIgnoreCase));
         var sessionStatus = hasNeedsFix ? "needs_fix" : hasPending ? "paused_for_review" : "completed";
-        var summary = completed
+        var summary = goalCompleted
             ? $"修复步骤 {current.GoalIndex} 已完成。"
             : $"修复步骤 {current.GoalIndex} 仍需继续修复。";
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(refreshed.Session.SessionId, sessionStatus, current.GoalIndex, summary, null, sessionStatus == "completed" ? DateTimeOffset.UtcNow.ToString("O") : null, CancellationToken.None);
@@ -199,6 +211,24 @@ public sealed class PrototypeRepairPlanService
         });
 
         return new PrototypeRepairStepExecutionResult(refreshed.Session.SessionId, current.GoalId, result.RunId, result.Status, summary, current.GoalIndex, true, sessionStatus);
+    }
+
+    private static string NormalizeRepairGoalStatus(string? iterationGoalStatus, bool runCompleted)
+    {
+        if (string.Equals(iterationGoalStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+        {
+            return "succeeded";
+        }
+
+        if (string.Equals(iterationGoalStatus, "needs_fix", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(iterationGoalStatus, "failed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(iterationGoalStatus, "running", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(iterationGoalStatus, "pending", StringComparison.OrdinalIgnoreCase))
+        {
+            return "needs_fix";
+        }
+
+        return runCompleted ? "succeeded" : "needs_fix";
     }
 
     private async Task<ProjectSnapshot> RequireProjectAsync(string accountId, string projectId, CancellationToken cancellationToken)
@@ -293,7 +323,8 @@ public sealed class PrototypeRepairPlanService
             source_run_type = run.RunType,
             source_status = run.Status,
             route_skill = routeSkill.RouteSkillId,
-            failure_excerpt = Trim(failureText, 4000)
+            failure_excerpt = Trim(failureText, 4000),
+            failure_signals = ExtractRepairEvidenceSummary(failureText, maxLines: 40)
         });
     }
 
@@ -725,9 +756,6 @@ public sealed class PrototypeRepairPlanService
             - {context.RouteSkill.RouteSkillGuide}
             - {context.RouteSkill.RouteSkillContract}
 
-            Failure evidence:
-            {context.FailureText}
-
             Required repair scope:
             - Read the current project README and prototype contract first.
             - Use the latest failed run output as the source of truth for what broke.
@@ -748,8 +776,8 @@ public sealed class PrototypeRepairPlanService
             - Rerun the dotnet verification step and keep the latest log as evidence.
             - Do not start RPG scene/gameplay repair until CS0579 is gone.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact compiler error and generated build path.
             """;
     }
 
@@ -764,8 +792,8 @@ public sealed class PrototypeRepairPlanService
             - Keep Start Adventure -> visible MapScene behavior intact.
             - Do not treat .godot/mono/temp/obj/Debug source-generator stack paths as CS0579 build contamination.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact Godot node/script error and stack context.
             """;
     }
 
@@ -780,8 +808,8 @@ public sealed class PrototypeRepairPlanService
             - Run Godot import through the project workflow after copying or restoring assets.
             - Do not mark this step complete if Parse Error or Failed loading resource remains.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 3600)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact missing resource, parse error, and GdUnit console lines.
             """;
     }
 
@@ -795,8 +823,8 @@ public sealed class PrototypeRepairPlanService
             - Keep the scene script and test contract aligned; do not move nodes without updating the authoritative scene path used by runtime code and tests together.
             - Preserve Start Adventure -> visible MapScene behavior.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 3600)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact node path mismatch reported by GdUnit.
             """;
     }
 
@@ -810,8 +838,8 @@ public sealed class PrototypeRepairPlanService
             - Keep movement, encounter entry, battle resolution, reward 3-choice, and return-to-map callable through the same prototype shell used by the test.
             - Do not bypass failing behavior by weakening or deleting project-specific GdUnit tests.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 3600)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact script/runtime error reported by GdUnit.
             """;
     }
 
@@ -826,11 +854,9 @@ public sealed class PrototypeRepairPlanService
             - Preserve the project win/fail condition from the contract; do not replace 15-battle victory with a shorter RPG template-default victory count unless the user contract says so.
             - Any unimplemented concrete input must become an explicit needs-fix blocker.
 
-            Prototype contract:
-            {Trim(context.Contract.Json ?? "", 2400)}
-
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Contract source:
+            - Use the current prototype contract JSON and route skill contract as authoritative project input.
+            - Use the repair plan source failure record for the latest validation blocker.
             """;
     }
 
@@ -845,8 +871,8 @@ public sealed class PrototypeRepairPlanService
             - Treat No test cases found as failure.
             - Re-run the front-end prototype validation route after GdUnit is clean.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact validation blocker that must become green.
             """;
     }
 
@@ -865,8 +891,8 @@ public sealed class PrototypeRepairPlanService
             - Map, player, and enemy asset instances must use the RPG contract naming rules.
             - Main.tscn default-hidden VBox, Overlays, and ScreenRoot SOP must remain preserved where applicable.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact scene or script contract mismatch.
             """;
     }
 
@@ -884,8 +910,8 @@ public sealed class PrototypeRepairPlanService
             - Encounter probability, guaranteed encounter, player stats, enemy stats, reward choices, return-to-map flow, and win/fail rules must match concrete project values when present.
             - Any concrete non-empty input field that cannot be implemented must become an explicit needs-fix blocker, not a silent omission.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record and prototype contract for the latest concrete gameplay drift.
             """;
     }
 
@@ -903,8 +929,8 @@ public sealed class PrototypeRepairPlanService
             - The map must be visibly present to the player, not only instantiated in the scene tree.
             - Keep the repair focused on navigation and map visibility before broader gameplay expansion.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record for the exact navigation or map visibility blocker.
             """;
     }
 
@@ -922,8 +948,8 @@ public sealed class PrototypeRepairPlanService
             - Victory must lead to reward selection and then return the player to the active map loop.
             - Reward flow must remain visible and understandable to the player.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record and prototype contract for the current reward-loop blocker.
             """;
     }
 
@@ -941,8 +967,8 @@ public sealed class PrototypeRepairPlanService
             - Win after 15 battles, any-loss defeat, encounter rules, enemy scaling, and visible battle outcome rules must match the project contract when present.
             - Update implementation, player-facing summary, and test evidence together so the playable loop description does not drift from runtime behavior.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record and prototype contract for the current win/fail blocker.
             """;
     }
 
@@ -954,9 +980,6 @@ public sealed class PrototypeRepairPlanService
             Route skill:
             - {context.RouteSkill.RouteSkillId}
             - {context.RouteSkill.RouteSkillGuide}
-
-            Failure evidence:
-            {context.FailureText}
 
             Required repair scope:
             - Read the current project README and prototype contract first.
@@ -980,8 +1003,8 @@ public sealed class PrototypeRepairPlanService
             - The playable loop, UI feedback, and validation evidence must match the project prototype contract.
             - Do not invent type-specific steps unless the project contract demands them.
 
-            Latest failure evidence:
-            {Trim(context.FailureText, 2400)}
+            Evidence source:
+            - Use the repair plan source failure record and prototype contract for the latest generic prototype blocker.
             """;
     }
 
@@ -1104,11 +1127,17 @@ public sealed class PrototypeRepairPlanService
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
 
+            Repair evidence context:
+            {details.Session.SourceMessage}
+
             Mandatory rules:
             - Execute only the current repair step.
             - Do not regenerate the prototype, iteration plan, or repair plan.
             - Do not repair PhaseA platform code, docs, scripts, deployment, or route code.
             - Change only hosted game project files needed for this repair step.
+            - Godot project root is project.godot at repository root, not Game.Godot/project.godot.
+            - GdUnit project root is Tests.Godot; runtime assets are visible through Tests.Godot/Game.Godot.
+            - If repairing asset import failures, run the import/prewarm against Tests.Godot and verify Tests.Godot/.godot/imported contains the required imported resources.
             - Keep output browser-safe: no paths, command lines, script names, logs, or environment values.
 
             Project:
@@ -1168,6 +1197,45 @@ public sealed class PrototypeRepairPlanService
                     "Invalid call",
                     "No test cases found",
                     "GDUNIT_DONE"))
+            {
+                continue;
+            }
+
+            if (lines.Any(existing => string.Equals(existing, line, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            lines.Add(Trim(line, 500));
+            if (lines.Count >= maxLines)
+            {
+                break;
+            }
+        }
+
+        return lines;
+    }
+
+    private static IReadOnlyList<string> ExtractRepairEvidenceSummary(string failureText, int maxLines)
+    {
+        var lines = new List<string>();
+        foreach (var rawLine in failureText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var line = rawLine.Trim();
+            if (!ContainsAny(
+                    line,
+                    "ERROR:",
+                    "SCRIPT ERROR",
+                    "Parse Error",
+                    "Node not found",
+                    "Invalid call",
+                    "Permission denied",
+                    "CS0579",
+                    "GDUNIT_DONE",
+                    "No test cases found",
+                    "rpg_project_specific_gdunit_failed",
+                    "prototype_main_menu_navigation_failed",
+                    "visible MapScene markers were not found"))
             {
                 continue;
             }

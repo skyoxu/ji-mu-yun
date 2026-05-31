@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -8,7 +9,7 @@ using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Runs;
 
-public sealed class PrototypeQuickFixService
+public sealed partial class PrototypeQuickFixService
 {
     private const string RunType = "prototype-quick-fix";
     private const string ReasoningEffort = "low";
@@ -116,7 +117,7 @@ public sealed class PrototypeQuickFixService
         var goalRepairMode = request.GoalRepair is not null;
         if (goalRepairMode)
         {
-            iterationDetails = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+            iterationDetails = await ResolveGoalRepairSessionAsync(project.ProjectId, request.GoalRepair!, cancellationToken);
             if (iterationDetails is null)
             {
                 return new PrototypeFeedbackResult("", "missing_plan", "当前项目还没有可修复的迭代计划。", []);
@@ -250,6 +251,7 @@ public sealed class PrototypeQuickFixService
                 ? PrototypeGoalAcceptanceValidationResult.NotRun()
                 : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
             var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
+            var rpgGdUnitValidation = PrototypeRpgGdUnitValidationResult.NotRequired("not_final_rpg_acceptance_goal");
             var projectSmokeValidation = targetGoal is null
                 ? await ValidateProjectSmokeAfterQuickFixAsync(project, CancellationToken.None)
                 : PrototypeGoalGodotSmokeValidationResult.NotRequired();
@@ -263,6 +265,13 @@ public sealed class PrototypeQuickFixService
                 {
                     assistantMessage = BuildValidatedGoalRepairSummary(targetGoal!);
                     codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
+                    rpgGdUnitValidation = await ValidateGoalRpgGdUnitAsync(project, targetGoal!, CancellationToken.None);
+                    var rpgGdUnitBlocksGoal = IsRpgGdUnitBlockingForGoal(targetGoal!, rpgGdUnitValidation);
+                    if (rpgGdUnitBlocksGoal)
+                    {
+                        assistantMessage = AppendRpgGdUnitValidationFailure(project, assistantMessage, rpgGdUnitValidation);
+                        codexOutput = AppendRpgGdUnitValidationFailureEvidence(project, codexOutput, rpgGdUnitValidation);
+                    }
                 }
                 else if (godotSmokeValidation.Required)
                 {
@@ -285,7 +294,7 @@ public sealed class PrototypeQuickFixService
             var goalRepairOutcome = targetGoal is null
                 ? null
                 : acceptanceValidation.Passed
-                    ? godotSmokeValidation.Passed
+                    ? godotSmokeValidation.Passed && !IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation)
                         ? new GoalRepairOutcome("succeeded", true)
                         : new GoalRepairOutcome("needs_fix", false)
                     : RequiresHardPlatformAcceptance(targetGoal, acceptanceValidation)
@@ -340,6 +349,7 @@ public sealed class PrototypeQuickFixService
                 acceptance_validation_reason = acceptanceValidation.Reason,
                 godot_diagnostic = GodotFailureDiagnosticService.ToEvidence(godotDiagnostic, godotCleanup),
                 godot_smoke_validation = godotSmokeValidation.ToEvidence(),
+                rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence(),
                 project_smoke_validation = projectSmokeValidation.ToEvidence()
             });
             var nonGoalSmokeFailed = targetGoal is null && projectSmokeValidation.Required && !projectSmokeValidation.Passed;
@@ -559,11 +569,19 @@ public sealed class PrototypeQuickFixService
             """;
         var codexOutput = "Preflight validation passed before running Codex.";
         var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
+        var rpgGdUnitValidation = PrototypeRpgGdUnitValidationResult.NotRequired("not_final_rpg_acceptance_goal");
         godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal, cancellationToken);
         if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
         {
             assistantMessage = AppendGodotSmokeValidationSummary(assistantMessage, targetGoal, godotSmokeValidation);
             codexOutput = AppendGodotSmokeValidationEvidence(codexOutput);
+            rpgGdUnitValidation = await ValidateGoalRpgGdUnitAsync(project, targetGoal, cancellationToken);
+            if (IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation))
+            {
+                assistantMessage = AppendRpgGdUnitValidationFailure(project, assistantMessage, rpgGdUnitValidation);
+                codexOutput = AppendRpgGdUnitValidationFailureEvidence(project, codexOutput, rpgGdUnitValidation);
+                return null;
+            }
         }
         else if (godotSmokeValidation.Required)
         {
@@ -636,6 +654,7 @@ public sealed class PrototypeQuickFixService
             acceptance_validation_status = acceptanceValidation.Status,
             acceptance_validation_reason = acceptanceValidation.Reason,
             godot_smoke_validation = godotSmokeValidation.ToEvidence(),
+            rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence(),
             post_acceptance_validation_status = goalRepairOutcome.GoalStatus == "succeeded" ? "passed" : "failed",
             post_acceptance_validation_reason = goalRepairOutcome.GoalStatus == "succeeded" ? null : "godot_smoke_validation_failed"
         });
@@ -782,6 +801,28 @@ public sealed class PrototypeQuickFixService
                     cancellationToken);
             }
 
+            var rpgGdUnitValidation = await ValidateGoalRpgGdUnitAsync(project, targetGoal, cancellationToken);
+            if (IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation))
+            {
+                return await CompleteTimedOutGoalValidationFailureAsync(
+                    project,
+                    iterationDetails,
+                    targetGoal,
+                    runId,
+                    submittedRelativePath,
+                    resultRelativePath,
+                    resultAbsolutePath,
+                    codexOutputRelativePath,
+                    codexOutputAbsolutePath,
+                    skillAction,
+                    now,
+                    effectiveTimeout,
+                    acceptanceValidation,
+                    godotSmokeValidation,
+                    rpgGdUnitValidation.Reason,
+                    cancellationToken);
+            }
+
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
                 : "Codex repair timed out after writing changes, but platform validation passed afterward.";
@@ -843,7 +884,8 @@ public sealed class PrototypeQuickFixService
                 acceptance_validation = acceptanceValidation.Kind,
                 acceptance_validation_status = acceptanceValidation.Status,
                 acceptance_validation_reason = acceptanceValidation.Reason,
-                godot_smoke_validation = godotSmokeValidation.ToEvidence()
+                godot_smoke_validation = godotSmokeValidation.ToEvidence(),
+                rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(
                 runId,
@@ -1043,6 +1085,111 @@ public sealed class PrototypeQuickFixService
         }
     }
 
+    private async Task<PrototypeRpgGdUnitValidationResult> ValidateGoalRpgGdUnitAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot targetGoal,
+        CancellationToken cancellationToken)
+    {
+        if (!RequiresRpgGdUnitValidation(project, targetGoal))
+        {
+            return PrototypeRpgGdUnitValidationResult.NotRequired("not_final_rpg_acceptance_goal");
+        }
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(150));
+        try
+        {
+            return await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(
+                _options,
+                _processRunner,
+                project,
+                "dq-rpg",
+                timeout.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return PrototypeRpgGdUnitValidationResult.RequiredResult(
+                false,
+                124,
+                "",
+                "RPG GdUnit validation timed out.",
+                "rpg_project_specific_gdunit_timeout",
+                "tests/Prototype/DqRpgPrototype",
+                null);
+        }
+    }
+
+    private static bool RequiresRpgGdUnitValidation(ProjectSnapshot project, ProjectIterationGoalSnapshot targetGoal)
+    {
+        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            return false;
+        }
+
+        var text = string.Join(" ", targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint);
+        return text.Contains("GdUnit", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("final prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("full playable prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("最终验收", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("全量验收", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRpgGdUnitBlockingForGoal(
+        ProjectIterationGoalSnapshot targetGoal,
+        PrototypeRpgGdUnitValidationResult validation)
+    {
+        if (!validation.Required || validation.Passed)
+        {
+            return false;
+        }
+
+        if (RequiresFullRpgGdUnitValidation(targetGoal))
+        {
+            return true;
+        }
+
+        return HasBlockingRpgGdUnitInfrastructureFailure(validation);
+    }
+
+    private static bool RequiresFullRpgGdUnitValidation(ProjectIterationGoalSnapshot targetGoal)
+    {
+        var text = string.Join(" ", targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint);
+        return text.Contains("final prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("full playable prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("Rerun RPG project-specific GdUnit", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("最终验收", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("全量验收", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasBlockingRpgGdUnitInfrastructureFailure(PrototypeRpgGdUnitValidationResult validation)
+    {
+        if (!validation.Ran)
+        {
+            return false;
+        }
+
+        var combined = string.Join(
+            "\n",
+            new[] { validation.Stdout, validation.Stderr, validation.Reason }.Where(static value => !string.IsNullOrWhiteSpace(value)));
+        var blockingMarkers = new[]
+        {
+            "Failed loading resource",
+            "Unable to open file",
+            "Parse Error",
+            "referenced non-existent resource",
+            "Cannot instantiate C# script",
+            "Node not found",
+            "NullReferenceException",
+            "SCRIPT ERROR",
+            "Invalid call",
+            "No test cases found",
+            "rpg_gdunit_tests_missing",
+            "rpg_project_specific_gdunit_timeout"
+        };
+
+        return blockingMarkers.Any(marker => combined.Contains(marker, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string? ResolveSmokeSceneForTimeout(string prototypeStateJson)
     {
         if (string.IsNullOrWhiteSpace(prototypeStateJson))
@@ -1101,6 +1248,29 @@ public sealed class PrototypeQuickFixService
             6 => "完成 RPG 原型端到端验收、Godot smoke 和最终可玩证明。",
             _ => string.IsNullOrWhiteSpace(goal.AcceptanceHint) ? goal.Description : goal.AcceptanceHint
         };
+    }
+
+    private async Task<ProjectIterationSessionDetails?> ResolveGoalRepairSessionAsync(
+        string projectId,
+        PrototypeGoalRepairContext goalRepair,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(goalRepair.SessionId))
+        {
+            foreach (var sourceKind in new string?[] { null, "repair_plan" })
+            {
+                var details = sourceKind is null
+                    ? await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken)
+                    : await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, sourceKind, cancellationToken);
+                if (details is not null &&
+                    string.Equals(details.Session.SessionId, goalRepair.SessionId, StringComparison.Ordinal))
+                {
+                    return details;
+                }
+            }
+        }
+
+        return await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
@@ -1313,6 +1483,7 @@ public sealed class PrototypeQuickFixService
         var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
         var currentPlatformAcceptanceBlock = BuildCurrentPlatformAcceptanceBlock(currentAcceptanceValidation);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
+        var rpgGdUnitContextBlock = BuildRpgGdUnitRepairContextBlock(project, goal);
 
         return $"""
             你正在执行积木云 Phase A 的单目标迭代修复任务。
@@ -1320,6 +1491,7 @@ public sealed class PrototypeQuickFixService
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             {contractBlock}
             {godotDiagnosticBlock}
+            {rpgGdUnitContextBlock}
             Mandatory rules:
             - 这次只处理当前目标，不要顺手扩展到后续目标。
             - 这是目标级 needs-fix 修复，不是 90 秒快速修复；允许为了完成当前 step 做必要的局部实现，但仍禁止扩大到后续目标。
@@ -1382,6 +1554,136 @@ public sealed class PrototypeQuickFixService
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
             """;
     }
+
+    private static string BuildRpgGdUnitRepairContextBlock(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        if (!PrototypeRouteSkillPolicy.IsRpgProject(project) ||
+            !RequiresRpgGdUnitValidation(project, goal))
+        {
+            return "";
+        }
+
+        var reportRoot = Path.Combine(project.RepoPath, "logs", "e2e");
+        if (!Directory.Exists(reportRoot))
+        {
+            return """
+                Latest RPG GdUnit validation context:
+                - No logs/e2e RPG GdUnit report directory was found yet.
+                """;
+        }
+
+        var summaryPath = Directory
+            .EnumerateFiles(reportRoot, "run-summary.json", SearchOption.AllDirectories)
+            .Where(path => path.Contains("gdunit", StringComparison.OrdinalIgnoreCase))
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(file => file.LastWriteTimeUtc)
+            .FirstOrDefault();
+        var reportDir = summaryPath?.Directory;
+        var consolePath = reportDir is null
+            ? null
+            : Path.Combine(reportDir.FullName, "gdunit-console.txt");
+
+        var lines = new List<string>
+        {
+            "Latest RPG GdUnit validation context:",
+            "- This is the authoritative current blocker for RPG GdUnit/final repair goals; do not infer stale resource-link blockers when this context says tests executed."
+        };
+
+        if (summaryPath is not null)
+        {
+            lines.Add($"- run_summary: {TrimForPromptExcerpt(File.ReadAllText(summaryPath.FullName, Encoding.UTF8), 1200)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(consolePath) && File.Exists(consolePath))
+        {
+            lines.Add("- gdunit_console_failure_summary:");
+            foreach (var line in ExtractGdUnitPromptSummary(File.ReadAllText(consolePath, Encoding.UTF8), 60))
+            {
+                lines.Add($"  {line}");
+            }
+        }
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static IReadOnlyList<string> ExtractGdUnitPromptSummary(string consoleText, int maxLines)
+    {
+        if (string.IsNullOrWhiteSpace(consoleText))
+        {
+            return [];
+        }
+
+        var cleaned = AnsiEscapeRegex().Replace(consoleText, "");
+        var result = new List<string>();
+        var captureFailure = false;
+        foreach (var rawLine in cleaned.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var line = rawLine.Trim();
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            var isImportant = ContainsAny(
+                line,
+                "Statistics:",
+                "Overall Summary:",
+                "Exit code:",
+                "ERROR:",
+                "SCRIPT ERROR",
+                "Node not found",
+                "Parse Error",
+                "Invalid call",
+                "No test cases found",
+                "FAILED",
+                "Expecting:",
+                "do contains");
+            if (line.StartsWith("res://tests/Prototype/DqRpgPrototype/", StringComparison.OrdinalIgnoreCase))
+            {
+                isImportant = true;
+                captureFailure = line.Contains("FAILED", StringComparison.OrdinalIgnoreCase);
+            }
+            else if (line.StartsWith("Report:", StringComparison.OrdinalIgnoreCase))
+            {
+                isImportant = true;
+                captureFailure = true;
+            }
+            else if (captureFailure && (line.StartsWith("'", StringComparison.Ordinal) || line.Contains(" but is ", StringComparison.OrdinalIgnoreCase)))
+            {
+                isImportant = true;
+            }
+
+            if (!isImportant)
+            {
+                continue;
+            }
+
+            AddDistinctPromptLine(result, TrimForPromptExcerpt(line, 500));
+            if (result.Count >= maxLines)
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    private static void AddDistinctPromptLine(List<string> lines, string line)
+    {
+        if (!string.IsNullOrWhiteSpace(line) &&
+            !lines.Any(existing => string.Equals(existing, line, StringComparison.OrdinalIgnoreCase)))
+        {
+            lines.Add(line);
+        }
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [GeneratedRegex(@"\x1B\[[0-?]*[ -/]*[@-~]", RegexOptions.Compiled)]
+    private static partial Regex AnsiEscapeRegex();
 
     private static string BuildCurrentPlatformAcceptanceBlock(PrototypeGoalAcceptanceValidationResult? validation)
     {
@@ -1690,6 +1992,77 @@ public sealed class PrototypeQuickFixService
             VERIFY: Godot smoke validation passed for the current gameplay goal.
             REMAINING: none
             """;
+    }
+
+    private static string AppendRpgGdUnitValidationFailure(
+        ProjectSnapshot project,
+        string assistantMessage,
+        PrototypeRpgGdUnitValidationResult validation)
+    {
+        var summary = BuildRpgGdUnitFailureSummaryForUser(project, validation);
+        return $"""
+            RPG GdUnit validation:
+            STATUS: needs_fix
+            VERIFY: Project-specific RPG GdUnit validation did not pass.
+            REMAINING: Continue repairing the current final validation step until the RPG GdUnit suite passes.
+            REASON: {validation.Reason}
+            {summary}
+            """;
+    }
+
+    private static string AppendRpgGdUnitValidationFailureEvidence(
+        ProjectSnapshot project,
+        string codexOutput,
+        PrototypeRpgGdUnitValidationResult validation)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        var summary = BuildRpgGdUnitFailureSummaryForUser(project, validation);
+        return $"""
+            {prefix}STATUS: needs_fix
+            VERIFY: Project-specific RPG GdUnit validation failed.
+            REASON: {validation.Reason}
+            {summary}
+            """;
+    }
+
+    private static string BuildRpgGdUnitFailureSummaryForUser(ProjectSnapshot project, PrototypeRpgGdUnitValidationResult validation)
+    {
+        if (!validation.Required || validation.Passed)
+        {
+            return "";
+        }
+
+        var summaryPath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "run-summary.json");
+        var consolePath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "gdunit-console.txt");
+        var lines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(summaryPath) && File.Exists(summaryPath))
+        {
+            lines.Add($"GDUNIT_SUMMARY: {TrimForPromptExcerpt(File.ReadAllText(summaryPath, Encoding.UTF8), 700)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(consolePath) && File.Exists(consolePath))
+        {
+            var failures = ExtractGdUnitPromptSummary(File.ReadAllText(consolePath, Encoding.UTF8), 16);
+            if (failures.Count > 0)
+            {
+                lines.Add("GDUNIT_FAILURES:");
+                lines.AddRange(failures.Select(line => $"- {line}"));
+            }
+        }
+
+        return lines.Count == 0 ? "" : string.Join(Environment.NewLine, lines);
+    }
+
+    private static string? ResolveRpgGdUnitReportFile(string repoPath, string? reportDir, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(reportDir) || Path.IsPathRooted(reportDir))
+        {
+            return null;
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(repoPath, reportDir.Replace('/', Path.DirectorySeparatorChar), fileName));
+        var repoRoot = Path.GetFullPath(repoPath);
+        return fullPath.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase) ? fullPath : null;
     }
 
     private static string AppendProjectSmokeValidationSummary(string assistantMessage)
