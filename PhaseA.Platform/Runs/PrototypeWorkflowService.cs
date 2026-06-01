@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -523,7 +524,89 @@ public sealed class PrototypeWorkflowService
             packaging?.TddRedCount,
             packaging?.TddGreenCount,
             packaging?.TddRefactorCount,
-            packaging?.PlaytestFocusPoints);
+            packaging?.PlaytestFocusPoints,
+            ReadPrototypeFormSnapshot(project.RepoPath, run));
+    }
+
+    private static PrototypeWorkflowFormSnapshot? ReadPrototypeFormSnapshot(string repositoryRoot, RunSnapshot run)
+    {
+        var relativePath = ReadPrototypeRecordPathFromRun(run);
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        var normalized = relativePath.Replace('\\', '/').TrimStart('/');
+        if (normalized.Contains("..", StringComparison.Ordinal) ||
+            !normalized.StartsWith("docs/prototypes/", StringComparison.OrdinalIgnoreCase) ||
+            !normalized.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var absolutePath = Path.Combine(repositoryRoot, normalized.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(absolutePath))
+        {
+            return null;
+        }
+
+        var markdown = File.ReadAllText(absolutePath, Encoding.UTF8);
+        return new PrototypeWorkflowFormSnapshot(
+            PrototypeSlug: ReadPrototypeField(markdown, "slug"),
+            Hypothesis: ReadPrototypeField(markdown, "hypothesis"),
+            CorePlayerFantasy: ReadPrototypeField(markdown, "core_player_fantasy"),
+            MinimumPlayableLoop: ReadPrototypeField(markdown, "minimum_playable_loop"),
+            SuccessCriteria: SplitSuccessCriteria(ReadPrototypeField(markdown, "success_criteria")),
+            GameFeature: ReadPrototypeField(markdown, "game_feature"),
+            CoreGameplayLoop: ReadPrototypeField(markdown, "core_gameplay_loop"),
+            WinFailConditions: ReadPrototypeField(markdown, "win_fail_conditions"),
+            SourcePath: normalized);
+    }
+
+    private static string? ReadPrototypeRecordPathFromRun(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("prototype_record", out var element)
+                ? element.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadPrototypeField(string markdown, string field)
+    {
+        var pattern = @"^\|\s*" + Regex.Escape(field) + @"\s*\|\s*(.*?)\s*\|";
+        var match = Regex.Match(markdown, pattern, RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var value = match.Groups[1].Value.Trim();
+        return string.Equals(value, "TBD", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : value.Replace("<br>", "\n", StringComparison.OrdinalIgnoreCase).Replace("\\|", "|", StringComparison.Ordinal);
+    }
+
+    private static IReadOnlyList<string>? SplitSuccessCriteria(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var items = value.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return items.Length == 0 ? null : items;
     }
 
     private async Task RunQueuedAsync(

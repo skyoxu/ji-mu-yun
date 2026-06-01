@@ -11,6 +11,7 @@ using PhaseA.Platform.Skills;
 using PhaseA.Platform.Workspaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using System.Text;
 using System.Text.Json;
 
@@ -93,11 +94,19 @@ if (interruptedRunCount > 0)
     app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
 }
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "PhaseA.Platform", "wwwroot")),
+    RequestPath = ""
+});
+
 app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/healthz" ||
         context.Request.Path == "/" ||
         context.Request.Path == "/ui" ||
+        context.Request.Path == "/ui-v2" ||
+        context.Request.Path.StartsWithSegments("/ui-v2/icons") ||
         context.Request.Path == "/downloads" ||
         context.Request.Path == "/assets" ||
         context.Request.Path == "/admin/llm-usage" ||
@@ -151,6 +160,12 @@ app.MapGet("/ui", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/ui-v2", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderShellV2(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/api/projects", async (

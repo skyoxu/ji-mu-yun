@@ -6,6 +6,511 @@ namespace PhaseA.Platform.Browser;
 
 public sealed class BrowserUiRenderer
 {
+    public string RenderShellV2()
+    {
+        return RenderShell()
+            .Replace("<h2>自由对话</h2>", "<h2>自由聊天</h2>")
+            .Replace("</style>", """
+                body.v2-detail #projectDetailPanel {
+                  display: grid;
+                  gap: 0.9rem;
+                  align-items: start;
+                }
+                body.v2-detail #v2ProgressShell { grid-column: 1; }
+                body.v2-detail #v2ContentGrid {
+                  display: grid;
+                  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                  gap: 0.9rem;
+                  align-items: start;
+                }
+                body.v2-detail #chatPanel { grid-column: 1; grid-row: 1; align-self: start; }
+                body.v2-detail #v2IterationPanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail #v2RepairPanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail #v2AcceptancePanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail #currentProjectPanel,
+                body.v2-detail #prototypeWorkflowPanel,
+                body.v2-detail #prototypeCommandPanel,
+                body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail #outputPanel { grid-column: 1 / -1; }
+                body.v2-detail .v2-progress-row { display: grid; grid-template-columns: repeat(8, minmax(5.6rem, 1fr)); gap: 0.45rem; overflow-x: auto; padding-bottom: 0.1rem; }
+                body.v2-detail .v2-step-button { position: relative; min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.45rem 0.3rem 0.62rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
+                body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
+                body.v2-detail .v2-step-icon { width: 3.25rem; height: 3.25rem; background-image: var(--icon-sheet); background-size: 900% 100%; background-position: calc(var(--step-index) * -100%) 0; background-repeat: no-repeat; }
+                body.v2-detail .v2-step-button.pending { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
+                body.v2-detail .v2-step-button.done,
+                body.v2-detail .v2-step-button.fix { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
+                body.v2-detail .v2-step-label { font-size: 0.78rem; line-height: 1.15; text-align: center; white-space: nowrap; }
+                body.v2-detail .v2-step-mark { position: absolute; left: 50%; bottom: 0.12rem; transform: translateX(-50%); width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
+                body.v2-detail .v2-step-button.done .v2-step-mark { background: #15905f; }
+                body.v2-detail .v2-step-button.fix .v2-step-mark { background: #b73732; }
+                body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
+                body.v2-detail .v2-next { margin-top: 0.7rem; }
+                body.v2-detail .v2-action-row,
+                body.v2-detail .v2-chat-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
+                body.v2-detail .v2-skill-row { display: grid; grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr); gap: 0.6rem; align-items: stretch; }
+                body.v2-detail .v2-skill-row #chatSkillDescription { margin: 0; }
+                body.v2-detail #currentProjectPanel > button { display: none; }
+                body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked input,
+                body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked textarea,
+                body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked select,
+                body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked button { opacity: 0.55; }
+                body.v2-detail .v2-action-row button,
+                body.v2-detail .v2-chat-controls button,
+                body.v2-detail .v2-chat-controls label,
+                body.v2-detail .v2-chat-controls select { width: auto; }
+                body.v2-detail .v2-chat-controls label { min-width: 9rem; }
+                body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 7rem; }
+                @media (max-width: 1000px) {
+                  body.v2-detail #v2ContentGrid,
+                  body.v2-detail .v2-summary-grid,
+                  body.v2-detail .v2-skill-row { grid-template-columns: 1fr; }
+                  body.v2-detail #chatPanel,
+                  body.v2-detail #v2IterationPanel,
+                  body.v2-detail #v2RepairPanel,
+                  body.v2-detail #v2AcceptancePanel,
+                  body.v2-detail #currentProjectPanel,
+                  body.v2-detail #prototypeWorkflowPanel,
+                  body.v2-detail #prototypeCommandPanel,
+                  body.v2-detail #runsPanel,
+                  body.v2-detail #outputPanel { grid-column: 1; grid-row: auto; }
+                  body.v2-detail .v2-chat-controls #sendChat { margin-left: 0; }
+                }
+              </style>
+              """)
+            .Replace("<section id=\"currentProjectPanel\" class=\"stack\">", """
+                  <section id="v2ProgressShell" class="stack">
+                    <div id="v2ProgressSteps" class="v2-progress-row"></div>
+                    <div class="v2-summary-grid">
+                      <article class="card"><strong>最新进度</strong><p id="v2ProgressDescription" class="muted">尚未读取项目进度。</p></article>
+                      <article class="card"><strong>更新时间</strong><p id="v2ProgressUpdated" class="muted">-</p></article>
+                      <article class="card"><strong>项目健康检查</strong><p id="v2ProjectHealth" class="muted">-</p></article>
+                    </div>
+                    <div class="card v2-next"><strong>下一步建议</strong><p id="v2NextSuggestion" class="muted">点击按钮后扫描项目进度并给出下一步建议。</p><button id="v2JudgeNextStep" class="ghost" type="button">扫描项目判断下一步建议</button></div>
+                  </section>
+                  <section id="currentProjectPanel" class="stack">
+                  """)
+            .Replace("</body>", """
+              <script>
+                document.body.classList.add("v2-detail");
+                const v2Steps = [
+                  ["new-project", "游戏项目详情", 0],
+                  ["create-prototype", "创建游戏原型", 1],
+                  ["prototype-acceptance", "原型验收", 2],
+                  ["execute-or-repair", "原型验收修复", 4],
+                  ["iteration-plan", "生成迭代计划", 3],
+                  ["asset-inventory", "确认素材清单", 6],
+                  ["package-project", "打包项目文件", 7],
+                  ["download-project", "下载项目文件", 8]
+                ];
+                let v2SelectedStep = "create-prototype";
+                let v2NextSuggestionHasLlmResult = false;
+                function v2StepStatus(stepId) {
+                  const progressStatus = state?.prototypeFailure ? "failed" : "";
+                  const progressText = $("prototypeProgress")?.textContent || "";
+                  const succeeded = progressText.includes("succeeded") || $("prototypeAcceptanceSummary")?.textContent?.includes("默认场景");
+                  const failed = progressText.includes("failed") || !!state?.prototypeFailure;
+                  if (stepId === "new-project") return state.projectId ? "done" : "fix";
+                  if (stepId === "create-prototype") return !state.projectId || progressText.includes("idle") || progressStatus === "failed" ? "fix" : "done";
+                  if (stepId === "prototype-acceptance") return succeeded ? "done" : failed ? "fix" : "pending";
+                  if (stepId === "iteration-plan") return state.iterationPlan?.goals?.length ? "done" : succeeded ? "fix" : "pending";
+                  if (stepId === "execute-or-repair") {
+                    const goals = state.repairPlan?.goals || [];
+                    if (failed) return "fix";
+                    if (goals.some(goal => goal.status === "needs_fix" || goal.status === "failed")) return "fix";
+                    if (goals.length && goals.every(goal => goal.status === "succeeded" || goal.status === "completed")) return "done";
+                    return "pending";
+                  }
+                  if (stepId === "asset-inventory") return state.assetInventory ? "done" : succeeded ? "fix" : "pending";
+                  if (stepId === "package-project") return succeeded ? "action" : "pending";
+                  if (stepId === "download-project") return state.packageList?.length ? "action" : "pending";
+                  return "pending";
+                }
+                function v2ShowStep(stepId) {
+                  v2SelectedStep = stepId;
+                  const show = id => $(id)?.classList.remove("hidden");
+                  const hide = id => $(id)?.classList.add("hidden");
+                  ["v2IterationPanel", "v2RepairPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
+                  show("chatPanel");
+                  if (stepId === "new-project") show("currentProjectPanel");
+                  if (stepId === "create-prototype") show("prototypeWorkflowPanel");
+                  if (stepId === "prototype-acceptance") show("v2AcceptancePanel");
+                  if (stepId === "asset-inventory" || stepId === "package-project" || stepId === "download-project") show("currentProjectPanel");
+                  if (stepId === "iteration-plan") show("v2IterationPanel");
+                  if (stepId === "execute-or-repair") show("v2RepairPanel");
+                  v2ApplyPrototypeFormLock();
+                  v2RunStepAction(stepId);
+                  v2RenderProgress();
+                }
+                function v2RunStepAction(stepId) {
+                  if (!state.projectId) return;
+                  if (stepId === "asset-inventory") {
+                    $("loadAssetInventory")?.click();
+                    return;
+                  }
+                  if (stepId === "package-project") {
+                    $("createProjectPackage")?.click();
+                    return;
+                  }
+                  if (stepId === "download-project") {
+                    $("openProjectDownloads")?.click();
+                  }
+                }
+                function v2CreateIterationPanel() {
+                  if ($("v2IterationPanel")) return;
+                  const chatPanel = $("chatPanel");
+                  if (!chatPanel) return;
+                  const panel = document.createElement("section");
+                  panel.id = "v2IterationPanel";
+                  panel.className = "stack hidden";
+                  panel.setAttribute("aria-label", "迭代计划");
+                  chatPanel.insertAdjacentElement("afterend", panel);
+                  const firstChatRecordHeading = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "聊天记录");
+                  const iterationStart = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "主流程：迭代计划");
+                  if (!iterationStart || !firstChatRecordHeading) return;
+                  let current = iterationStart;
+                  while (current && current !== firstChatRecordHeading) {
+                    const next = current.nextElementSibling;
+                    panel.appendChild(current);
+                    current = next;
+                  }
+                  v2ArrangeIterationPanel();
+                }
+                function v2EnsureContentGrid() {
+                  if ($("v2ContentGrid")) return;
+                  const detailPanel = $("projectDetailPanel");
+                  const progressShell = $("v2ProgressShell");
+                  if (!detailPanel || !progressShell) return;
+                  const grid = document.createElement("div");
+                  grid.id = "v2ContentGrid";
+                  grid.className = "v2-content-grid";
+                  progressShell.insertAdjacentElement("afterend", grid);
+                  v2CreateAcceptancePanel();
+                  ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
+                    const element = $(id);
+                    if (element) grid.appendChild(element);
+                  });
+                }
+                function v2CreateAcceptancePanel() {
+                  if ($("v2AcceptancePanel")) return;
+                  const summary = $("prototypeAcceptanceSummary");
+                  if (!summary) return;
+                  const panel = document.createElement("section");
+                  panel.id = "v2AcceptancePanel";
+                  panel.className = "stack hidden";
+                  panel.innerHTML = "<h2>原型验收结果</h2>";
+                  summary.insertAdjacentElement("beforebegin", panel);
+                  panel.appendChild(summary);
+                  const actions = document.createElement("div");
+                  actions.className = "v2-action-row";
+                  const rerun = document.createElement("button");
+                  rerun.id = "v2RevalidatePrototype";
+                  rerun.className = "secondary";
+                  rerun.type = "button";
+                  rerun.textContent = "重新触发原型验收";
+                  rerun.onclick = v2ValidatePrototypeIfAllowed;
+                  actions.appendChild(rerun);
+                  panel.appendChild(actions);
+                }
+                function v2IterationPlanAllowsAcceptance() {
+                  const goals = state.iterationPlan?.goals;
+                  if (!Array.isArray(goals) || goals.length === 0) return true;
+                  return goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+                function v2ValidatePrototypeIfAllowed() {
+                  if (!v2IterationPlanAllowsAcceptance()) {
+                    v2NextSuggestionHasLlmResult = false;
+                    $("v2NextSuggestion").textContent = "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
+                    out("请先完成迭代计划，再进行原型验收。");
+                    return;
+                  }
+                  $("validatePrototype")?.click();
+                }
+                function v2ArrangeIterationPanel() {
+                  const panel = $("v2IterationPanel");
+                  if (!panel || $("v2IterationMainActions")) return;
+                  const mainActions = document.createElement("div");
+                  mainActions.id = "v2IterationMainActions";
+                  mainActions.className = "v2-action-row";
+                  const createPlan = $("createIterationPlan");
+                  const evaluatePlan = $("evaluateIterationPlan");
+                  const executeGoal = $("executeIterationGoal");
+                  createPlan?.insertAdjacentElement("beforebegin", mainActions);
+                  [createPlan, evaluatePlan, executeGoal].filter(Boolean).forEach(button => mainActions.appendChild(button));
+
+                  v2CreateRepairPanel();
+                }
+                function v2CreateRepairPanel() {
+                  if ($("v2RepairPanel")) return;
+                  const createRepair = $("createRepairPlan");
+                  if (!createRepair) return;
+                  const panel = document.createElement("section");
+                  panel.id = "v2RepairPanel";
+                  panel.className = "stack hidden";
+                  $("v2IterationPanel").insertAdjacentElement("afterend", panel);
+                  const repairHeading = Array.from($("v2IterationPanel").querySelectorAll("h2")).find(heading => heading.textContent.trim() === "异常修复计划");
+                  let current = repairHeading;
+                  while (current) {
+                    const next = current.nextElementSibling;
+                    panel.appendChild(current);
+                    if (current.id === "repairPlanGoals") break;
+                    current = next;
+                  }
+                  const actions = document.createElement("div");
+                  actions.id = "v2RepairActions";
+                  actions.className = "v2-action-row";
+                  createRepair?.insertAdjacentElement("beforebegin", actions);
+                  [createRepair, $("executeRepairStep")].filter(Boolean).forEach(button => actions.appendChild(button));
+                }
+                function v2ArrangeChatPanel() {
+                  const chatPanel = $("chatPanel");
+                  if (!chatPanel) return;
+                  const title = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "自由聊天");
+                  title?.classList.add("hidden");
+                  if (title?.nextElementSibling?.tagName === "P") title.nextElementSibling.classList.add("hidden");
+                  const flowTitle = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "流程记录");
+                  flowTitle?.classList.add("hidden");
+                  $("feedbackSummary")?.classList.add("hidden");
+                  $("feedbackRecords")?.classList.add("hidden");
+                  $("evaluateIterationPlanFromChat")?.classList.add("hidden");
+                  if (!$("v2SkillRow")) {
+                    const skillRow = document.createElement("div");
+                    skillRow.id = "v2SkillRow";
+                    skillRow.className = "v2-skill-row";
+                    const skillLabel = $("chatSkillMode")?.closest("label");
+                    const skillDescription = $("chatSkillDescription");
+                    skillLabel?.insertAdjacentElement("beforebegin", skillRow);
+                    [skillLabel, skillDescription].filter(Boolean).forEach(element => skillRow.appendChild(element));
+                  }
+                  if ($("v2ChatControls")) return;
+                  const messageLabel = $("chatMessage")?.closest("label");
+                  const controls = document.createElement("div");
+                  controls.id = "v2ChatControls";
+                  controls.className = "v2-chat-controls";
+                  messageLabel?.insertAdjacentElement("afterend", controls);
+                  $("submitFormalFeedback")?.classList.add("hidden");
+                  if (!$("v2CreateIterationPlanFromChat")) {
+                    const createPlanButton = document.createElement("button");
+                    createPlanButton.id = "v2CreateIterationPlanFromChat";
+                    createPlanButton.className = "ghost";
+                    createPlanButton.type = "button";
+                    createPlanButton.textContent = "用聊天内容创建新迭代计划";
+                    createPlanButton.onclick = v2CreateIterationPlanFromChat;
+                    controls.appendChild(createPlanButton);
+                  }
+                  [$("syncChatHistory"), $("v2CreateIterationPlanFromChat"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
+                  v2RenderChatIterationPlanButtonState();
+                }
+                function v2IterationPlanExists() {
+                  return Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.length > 0;
+                }
+                function v2IterationPlanCompleted() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  return goals.length > 0 && goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+                function v2PrototypeValidationPassedForPlanning() {
+                  return state.prototypeReadyForFeedback && !state.v2PrototypeValidationInvalidatedByIteration;
+                }
+                function v2PrototypeValidationInvalidationKey() {
+                  return `phaseA:v2PrototypeValidationInvalidated:${state.projectId || "none"}`;
+                }
+                function v2LoadPrototypeValidationInvalidation() {
+                  state.v2PrototypeValidationInvalidatedByIteration = localStorage.getItem(v2PrototypeValidationInvalidationKey()) === "true";
+                }
+                function v2SetPrototypeValidationInvalidated(value) {
+                  state.v2PrototypeValidationInvalidatedByIteration = !!value;
+                  if (!state.projectId) return;
+                  if (value) localStorage.setItem(v2PrototypeValidationInvalidationKey(), "true");
+                  else localStorage.removeItem(v2PrototypeValidationInvalidationKey());
+                }
+                function v2CanCreateIterationPlanFromChat() {
+                  return v2IterationPlanExists() && v2IterationPlanCompleted() && v2PrototypeValidationPassedForPlanning() && !isGlobalBusy();
+                }
+                function v2RenderChatIterationPlanButtonState() {
+                  const button = $("v2CreateIterationPlanFromChat");
+                  if (!button) return;
+                  button.disabled = !v2CanCreateIterationPlanFromChat();
+                  button.title = !v2IterationPlanExists()
+                    ? "当前还没有迭代计划。"
+                    : !v2IterationPlanCompleted()
+                      ? "请先完成当前迭代计划。"
+                      : !v2PrototypeValidationPassedForPlanning()
+                        ? "请先完成原型验收。"
+                        : "";
+                }
+                async function v2CreateIterationPlanFromChat() {
+                  if (!guardGlobalAction()) return;
+                  if (!v2CanCreateIterationPlanFromChat()) {
+                    out("需要满足：已有迭代计划、当前迭代计划已完成、原型验收通过。");
+                    return;
+                  }
+                  const message = $("chatMessage").value.trim();
+                  if (!message) return out("请先在聊天输入框填写新的迭代目标。");
+                  await submitIterationPlanFromFeedback(message, "正在根据聊天内容创建新的迭代计划...", "manual_feedback");
+                  v2RenderChatIterationPlanButtonState();
+                }
+                function v2PrototypeStatus() {
+                  const text = $("prototypeProgress")?.textContent || "";
+                  if (text.includes("succeeded")) return "succeeded";
+                  if (text.includes("running")) return "running";
+                  if (text.includes("failed")) return "failed";
+                  if (text.includes("idle")) return "idle";
+                  return state.v2PrototypeStatus || "";
+                }
+                function v2ShouldLockPrototypeForm() {
+                  const status = v2PrototypeStatus();
+                  return !!state.projectId && status !== "" && !["idle", "failed"].includes(status);
+                }
+                function v2ApplyPrototypeFormLock() {
+                  const locked = v2ShouldLockPrototypeForm();
+                  $("prototypeWorkflowPanel")?.classList.toggle("v2-prototype-locked", locked);
+                  prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = locked; });
+                  if ($("draftFile")) $("draftFile").disabled = locked;
+                  if ($("importDraft")) $("importDraft").disabled = locked;
+                  if ($("runPrototype")) {
+                    $("runPrototype").disabled = locked || isGlobalBusy();
+                    $("runPrototype").textContent = locked ? "原型已创建，不能重复创建" : "运行原型路线";
+                  }
+                }
+                function v2ApplyPrototypeFormSnapshot(progress) {
+                  const form = progress?.form;
+                  if (!form) return;
+                  if (form.prototypeSlug) $("protoSlug").value = form.prototypeSlug;
+                  if (form.hypothesis) $("hypothesis").value = form.hypothesis;
+                  if (form.corePlayerFantasy) $("corePlayerFantasy").value = form.corePlayerFantasy;
+                  if (form.minimumPlayableLoop) $("minimumPlayableLoop").value = form.minimumPlayableLoop;
+                  if (Array.isArray(form.successCriteria) && form.successCriteria.length) $("successCriteria").value = form.successCriteria.join("\n");
+                  if (form.gameFeature) $("gameFeature").value = form.gameFeature;
+                  if (form.coreGameplayLoop) $("coreGameplayLoop").value = form.coreGameplayLoop;
+                  if (form.winFailConditions) $("winFailConditions").value = form.winFailConditions;
+                  if (form.sourcePath) {
+                    $("draftImportStatus").className = "card muted";
+                    $("draftImportStatus").textContent = `已载入原型记录：${form.sourcePath}`;
+                  }
+                }
+                function v2BuildNextStepJudgementPrompt() {
+                  return [
+                    "请扫描当前 Phase A 游戏项目的页面进度摘要、原型进度、验收摘要、迭代计划状态、修复计划状态、项目健康摘要和素材/打包状态，判断真正的下一步。",
+                    "请只输出给普通用户看的中文结论，格式为：",
+                    "判断：一句话说明当前应该做什么。",
+                    "原因：列出 2-4 条依据。",
+                    "建议按钮/位置：说明用户下一步应该点击顶部哪个进度图标或哪个面板按钮。",
+                    "",
+                    `当前顶部步骤：${v2SelectedStep}`,
+                    `原型进度：${$("prototypeProgress")?.textContent?.trim() || ""}`,
+                    `验收摘要：${$("prototypeAcceptanceSummary")?.textContent?.trim() || ""}`,
+                    `迭代计划：${$("iterationPlanStatus")?.textContent?.trim() || ""}`,
+                    `迭代评估：${$("iterationPlanEvaluation")?.textContent?.trim() || ""}`,
+                    `修复计划：${$("repairPlanStatus")?.textContent?.trim() || ""}`,
+                    `项目健康：${$("projectHealthSummary")?.textContent?.trim() || ""}`,
+                    `素材清单：${$("assetInventoryStatus")?.textContent?.trim() || ""}`,
+                    `打包状态：${$("projectPackageStatus")?.textContent?.trim() || ""}`
+                  ].join("\n");
+                }
+                async function v2JudgeNextStepWithLlm() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const button = $("v2JudgeNextStep");
+                  button.disabled = true;
+                  button.textContent = "判断中...";
+                  v2NextSuggestionHasLlmResult = false;
+                  $("v2NextSuggestion").textContent = "正在扫描项目进度并判断下一步建议...";
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/chat`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        message: v2BuildNextStepJudgementPrompt(),
+                        model: $("globalModel").value || null,
+                        skillActionId: $("chatSkillMode").value || "normal",
+                        history: []
+                      })
+                    });
+                    v2NextSuggestionHasLlmResult = true;
+                    $("v2NextSuggestion").textContent = result.assistantMessage || "LLM 未返回判断结果。";
+                    out(result);
+                    await loadRuns();
+                  } catch (error) {
+                    $("v2NextSuggestion").textContent = "项目扫描判断失败，请检查模型配置或稍后重试。";
+                    showError(error);
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "扫描项目判断下一步建议";
+                  }
+                }
+                function v2RenderProgress() {
+                  const shell = $("v2ProgressSteps");
+                  if (!shell) return;
+                  shell.innerHTML = v2Steps.map(([id, label, iconIndex], index) => {
+                    const status = v2StepStatus(id);
+                    const mark = status === "done" ? "✓" : status === "fix" ? "×" : "";
+                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
+                  }).join("");
+                  document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step));
+                  const progress = $("prototypeProgress")?.textContent?.trim() || "尚未开始 7 步可玩原型。";
+                  $("v2ProgressDescription").textContent = progress.slice(0, 220);
+                  const updatedMatch = progress.match(/更新时间：([^\n]+)/);
+                  $("v2ProgressUpdated").textContent = updatedMatch ? updatedMatch[1] : "暂无更新时间";
+                  $("v2ProjectHealth").textContent = $("projectHealthSummary")?.textContent?.trim().slice(0, 160) || "暂未读取";
+                  v2RenderChatIterationPlanButtonState();
+                }
+                const v2OriginalShowProjectDetail = showProjectDetail;
+                showProjectDetail = function() {
+                  v2CreateIterationPanel();
+                  v2ArrangeChatPanel();
+                  v2EnsureContentGrid();
+                  v2OriginalShowProjectDetail();
+                  v2LoadPrototypeValidationInvalidation();
+                  v2EnsureContentGrid();
+                  $("chatPanel")?.classList.remove("hidden");
+                  if (($("prototypeProgress")?.textContent || "").includes("尚未开始")) v2SelectedStep = "create-prototype";
+                  v2ShowStep(v2SelectedStep);
+                  v2ApplyPrototypeFormLock();
+                };
+                const v2OriginalUpdateChatPanelVisibility = updateChatPanelVisibility;
+                updateChatPanelVisibility = function(progress) {
+                  state.v2PrototypeStatus = progress?.status || "";
+                  v2CreateIterationPanel();
+                  v2ArrangeChatPanel();
+                  v2EnsureContentGrid();
+                  v2OriginalUpdateChatPanelVisibility(progress);
+                  v2EnsureContentGrid();
+                  $("chatPanel")?.classList.remove("hidden");
+                  if (v2SelectedStep === "create-prototype") $("prototypeWorkflowPanel")?.classList.remove("hidden");
+                  v2ApplyPrototypeFormSnapshot(progress);
+                  v2ApplyPrototypeFormLock();
+                  v2RenderProgress();
+                };
+                const v2OriginalSubmitIterationPlanFromFeedback = submitIterationPlanFromFeedback;
+                submitIterationPlanFromFeedback = async function(message, busyText, sourceKind = "manual_feedback") {
+                  await v2OriginalSubmitIterationPlanFromFeedback(message, busyText, sourceKind);
+                  if (state.iterationPlan?.session) {
+                    v2SetPrototypeValidationInvalidated(true);
+                    setFormalFeedbackAvailability(false);
+                  }
+                  v2RenderChatIterationPlanButtonState();
+                };
+                const v2OriginalValidatePrototype = validatePrototype;
+                validatePrototype = async function() {
+                  await v2OriginalValidatePrototype();
+                  if (state.prototypeReadyForFeedback) {
+                    v2SetPrototypeValidationInvalidated(false);
+                  }
+                  v2RenderChatIterationPlanButtonState();
+                };
+                const v2OriginalSetPrototypeFormLocked = setPrototypeFormLocked;
+                setPrototypeFormLocked = function(locked) {
+                  v2OriginalSetPrototypeFormLocked(locked);
+                  v2ApplyPrototypeFormLock();
+                };
+                v2CreateIterationPanel();
+                v2ArrangeChatPanel();
+                v2EnsureContentGrid();
+                $("v2JudgeNextStep").onclick = v2JudgeNextStepWithLlm;
+                setInterval(v2RenderProgress, 2000);
+              </script>
+            </body>
+            """);
+    }
+
     public string RenderShell()
     {
         return """
@@ -41,14 +546,39 @@ public sealed class BrowserUiRenderer
                 header {
                   padding: 2.2rem clamp(1rem, 4vw, 4rem) 1rem;
                   display: grid;
-                  gap: 0.6rem;
+                  gap: 0.8rem;
+                }
+                .header-row {
+                  display: grid;
+                  grid-template-columns: minmax(0, 1fr) auto;
+                  gap: 1rem;
+                  align-items: start;
+                }
+                .top-actions {
+                  display: flex;
+                  flex-wrap: wrap;
+                  justify-content: flex-end;
+                  align-items: end;
+                  gap: 0.5rem;
+                  max-width: min(100%, 42rem);
+                }
+                .top-actions label {
+                  min-width: 8rem;
+                }
+                .top-actions select {
+                  min-width: 7rem;
+                }
+                .top-actions button {
+                  width: auto;
+                  min-width: 6.5rem;
+                  white-space: nowrap;
                 }
                 h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.5rem); letter-spacing: -0.06em; }
                 h2 { margin: 0 0 1rem; font-size: 1.15rem; }
                 p { color: var(--muted); }
                 main {
                   display: grid;
-                  grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr);
+                  grid-template-columns: minmax(0, 1fr);
                   gap: 1rem;
                   padding: 1rem clamp(1rem, 4vw, 4rem) 4rem;
                   width: 100%;
@@ -169,6 +699,9 @@ public sealed class BrowserUiRenderer
                   display: grid;
                   gap: 0.8rem;
                 }
+                .modal-card.modal-card-large { width: min(58rem, 100%); }
+                .modal-scroll { max-height: min(70vh, 42rem); overflow-y: auto; padding-right: 0.25rem; }
+                .login-shell { max-width: 34rem; justify-self: center; width: 100%; }
                 .token-box {
                   min-height: 7rem;
                   font-family: Consolas, "Courier New", monospace;
@@ -177,14 +710,26 @@ public sealed class BrowserUiRenderer
                 }
                 .hidden { display: none !important; }
                 @media (max-width: 920px) {
-                  main, .grid, .health-grid { grid-template-columns: 1fr; }
+                  .header-row, main, .grid, .health-grid { grid-template-columns: 1fr; }
+                  .top-actions { justify-content: stretch; }
+                  .top-actions button, .top-actions label, .top-actions select { width: 100%; }
                 }
               </style>
             </head>
             <body>
               <header>
-                <h1>积木云 Phase A 原型控制台</h1>
-                <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
+                <div class="header-row">
+                  <div>
+                    <h1>积木云 Phase A 原型控制台</h1>
+                    <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
+                  </div>
+                  <div id="userTopActions" class="top-actions hidden">
+                    <label class="user-only-action">模型选择 <select id="globalModel"><option value="gpt-5.4" selected>5.4</option><option value="gpt-5.5">5.5</option></select></label>
+                    <button id="openCreateProjectPage" class="secondary user-only-action" data-global-action="true">创建项目</button>
+                    <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
+                    <button id="logout" class="danger-button">退出登录</button>
+                  </div>
+                </div>
                 <div id="activeRunBanner" class="busy-banner hidden"></div>
               </header>
               <div id="oneTimeTokenModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="oneTimeTokenTitle">
@@ -199,45 +744,34 @@ public sealed class BrowserUiRenderer
                   <p id="oneTimeTokenCopyStatus" class="muted"></p>
                 </div>
               </div>
+              <div id="projectListModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="projectListTitle">
+                <div class="modal-card modal-card-large">
+                  <section id="projectListPanel" class="stack">
+                    <h2 id="projectListTitle">项目列表</h2>
+                    <div class="split-actions">
+                      <button id="refreshProjects" class="ghost">刷新项目列表</button>
+                      <button id="closeProjectListModal" class="ghost">关闭</button>
+                    </div>
+                    <div id="projects" class="card-list modal-scroll"></div>
+                  </section>
+                </div>
+              </div>
               <main>
-                <aside class="stack">
-                  <section id="globalModelPanel" class="stack hidden">
-                    <h2>全局模型</h2>
-                    <label>模型选择 <select id="globalModel"><option value="gpt-5.4" selected>gpt-5.4</option><option value="gpt-5.5">gpt-5.5</option></select></label>
-                    <p class="muted">该模型同时用于 7 步可玩原型、自由对话和正式反馈提交。</p>
-                  </section>
-                  <section id="stepsPanel" class="stack">
-                    <h2>使用步骤</h2>
-                    <p>1. Paste an access token and save it. 2. Create or select a project. 3. Run the prototype workflow. 4. Review runs, outputs, and downloadable artifacts.</p>
-                    <p class="muted">当前 Phase A 只提供固定工作流按钮，不是 Codex CLI 式自由对话窗口。</p>
-                  </section>
-                  <section id="sessionPanel" class="stack">
-                    <h2>会话</h2>
-                    <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
-                    <button id="saveToken">验证并进入</button>
-                    <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
-                  </section>
-                  <section id="createProjectPanel" class="stack hidden">
-                    <h2>创建项目</h2>
-                    <label>项目名 <input id="projectName" placeholder="可选，不填会自动生成"></label>
-                    <label>游戏名 <input id="gameName" placeholder="例如：Demo Game"></label>
-                    <label>游戏类型/玩法方向 <input id="gameTypeSource" placeholder="例如：RPG、塔防、Roguelike、平台跳跃、解谜冒险"></label>
-                    <button id="createProject" data-global-action="true">创建项目</button>
-                  </section>
-                  <section id="codexConfigPanel" class="stack hidden">
-                    <h2>Codex 配置</h2>
-                    <p class="muted">自由对话复用服务器本机 Codex CLI 的登录态、provider 和配置；浏览器用户只能从服务器允许的模型列表中选择。</p>
-                    <p class="muted">当前后端以只读方式调用 codex exec。聊天不会直接修改文件；需要执行工作流时仍使用页面上的固定按钮。</p>
-                    <div id="llmBindingStatus" class="hidden"></div>
-                    <div id="llmUsageStatus" class="hidden"></div>
-                    <button id="logout" class="danger-button">退出登录</button>
-                  </section>
-                  <section id="projectListPanel" class="hidden">
-                    <h2>项目列表</h2>
-                    <button id="refreshProjects" class="ghost">刷新项目列表</button>
-                    <div id="projects" class="card-list"></div>
-                  </section>
-                </aside>
+                <section id="sessionPanel" class="stack login-shell">
+                  <h2>会话</h2>
+                  <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
+                  <button id="saveToken">验证并进入</button>
+                  <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
+                </section>
+                <section id="createProjectPanel" class="stack hidden">
+                  <h2 id="createProjectTitle">创建项目</h2>
+                  <label>项目名 <input id="projectName" placeholder="可选，不填会自动生成"></label>
+                  <label>游戏名 <input id="gameName" placeholder="例如：Demo Game"></label>
+                  <label>游戏类型/玩法方向 <input id="gameTypeSource" placeholder="例如：RPG、塔防、Roguelike、平台跳跃、解谜冒险"></label>
+                  <button id="createProject" data-global-action="true">创建项目</button>
+                </section>
+                <div id="llmBindingStatus" class="hidden"></div>
+                <div id="llmUsageStatus" class="hidden"></div>
                 <div id="adminPanel" class="stack hidden">
                   <section id="accountAdminPanel" class="stack hidden">
                     <h2>Account Admin</h2>
@@ -381,6 +915,32 @@ public sealed class BrowserUiRenderer
                 const out = value => $("output").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
                 const token = () => $("token").value.trim();
                 const headers = () => ({ "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" });
+
+                function setModalVisible(id, visible) {
+                  $(id).classList.toggle("hidden", !visible);
+                }
+
+                function closeUserModals() {
+                  setModalVisible("projectListModal", false);
+                }
+
+                function setUserTopActionsVisible(visible, logoutOnly = false) {
+                  $("userTopActions").classList.toggle("hidden", !visible);
+                  document.querySelectorAll("#userTopActions .user-only-action").forEach(element => {
+                    element.classList.toggle("hidden", logoutOnly);
+                  });
+                }
+
+                function showCreateProjectPage() {
+                  closeUserModals();
+                  $("sessionPanel").classList.add("hidden");
+                  $("adminPanel").classList.add("hidden");
+                  $("createProjectPanel").classList.remove("hidden");
+                }
+
+                function hideCreateProjectPage() {
+                  $("createProjectPanel").classList.add("hidden");
+                }
 
                 function setTokenFromStorage() {
                   $("token").value = localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
@@ -581,7 +1141,7 @@ public sealed class BrowserUiRenderer
                     $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
                     $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
-                    $("createIterationPlan").textContent = "生成迭代计划";
+                    $("createIterationPlan").textContent = "生成新的迭代计划";
                     $("evaluateIterationPlan").disabled = true;
                     $("evaluateIterationPlan").textContent = "请先生成迭代计划";
                     $("evaluateIterationPlanFromChat").disabled = true;
@@ -612,13 +1172,7 @@ public sealed class BrowserUiRenderer
                       : ""}
                   `;
                   $("createIterationPlan").disabled = !canCreateNewPlan || blockedByCurrentGoal || isGlobalBusy();
-                  $("createIterationPlan").textContent = shouldRefinePlan
-                    ? "按评估重拆迭代计划"
-                    : canCreateNewPlan
-                      ? "生成新的迭代计划"
-                      : hasNeedsFix
-                        ? "当前计划需先修复"
-                        : "当前已有未完成计划";
+                  $("createIterationPlan").textContent = "根据评估更新迭代计划";
                   $("evaluateIterationPlan").disabled = isGlobalBusy();
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
@@ -984,17 +1538,15 @@ public sealed class BrowserUiRenderer
                   state.activeRun = null;
                   state.localBusy = false;
                   state.iterationPlan = null;
-                  $("stepsPanel").classList.remove("hidden");
+                  closeUserModals();
+                  setUserTopActionsVisible(false);
                   $("sessionPanel").classList.remove("hidden");
+                  hideCreateProjectPage();
                   $("adminPanel").classList.add("hidden");
-                  $("globalModelPanel").classList.add("hidden");
-                  $("createProjectPanel").classList.add("hidden");
-                  $("codexConfigPanel").classList.add("hidden");
                   $("accountAdminPanel").classList.add("hidden");
                   $("prototypeCommandPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
                   state.nextSuggestedFeedback = "";
-                  $("projectListPanel").classList.add("hidden");
                   applyGlobalBusyState();
                   $("sessionStatus").textContent = "Please paste an access token to sign in.";
                 }
@@ -1003,16 +1555,14 @@ public sealed class BrowserUiRenderer
                   state.authenticated = true;
                   state.role = role;
                   const isAdmin = role === "admin";
-                  $("stepsPanel").classList.add("hidden");
                   $("sessionPanel").classList.add("hidden");
+                  hideCreateProjectPage();
                   $("adminPanel").classList.remove("hidden");
-                  $("globalModelPanel").classList.remove("hidden");
-                  $("createProjectPanel").classList.toggle("hidden", isAdmin);
+                  setUserTopActionsVisible(true, isAdmin);
+                  if (isAdmin) closeUserModals();
                   $("loadRuns").classList.toggle("hidden", !isAdmin);
                   $("runsPanel").classList.toggle("hidden", !isAdmin);
                   $("outputPanel").classList.toggle("hidden", !isAdmin);
-                  if (isAdmin) $("projectListPanel").classList.add("hidden");
-                  $("codexConfigPanel").classList.remove("hidden");
                   $("accountAdminPanel").classList.toggle("hidden", !isAdmin);
                   $("prototypeCommandPanel").classList.toggle("hidden", !isAdmin);
                   $("chatPanel").classList.add("hidden");
@@ -1031,12 +1581,12 @@ public sealed class BrowserUiRenderer
 
                 function showInitialization(status, error) {
                   showAdminShell();
-                  $("createProjectPanel").classList.add("hidden");
-                  $("projectListPanel").classList.add("hidden");
+                  closeUserModals();
                   $("projectDetailPanel").classList.add("hidden");
                   $("initStatusPanel").classList.remove("hidden");
                   if (status === "failed") {
-                    $("createProjectPanel").classList.remove("hidden");
+                    showCreateProjectPage();
+                    $("adminPanel").classList.remove("hidden");
                     $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(error || "初始化失败，请查看运行记录。")}`;
                     return;
                   }
@@ -1062,8 +1612,9 @@ public sealed class BrowserUiRenderer
                 }
 
                 function showCreationFailure(error) {
+                  showCreateProjectPage();
+                  $("adminPanel").classList.remove("hidden");
                   $("initStatusPanel").classList.remove("hidden");
-                  $("createProjectPanel").classList.remove("hidden");
                   $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(error || "初始化失败，失败项目已自动清理。")}`;
                 }
 
@@ -1795,14 +2346,14 @@ public sealed class BrowserUiRenderer
                   return payload;
                 }
 
-                async function refreshProjects() {
+                async function refreshProjects(options = {}) {
+                  const autoSelect = options.autoSelect !== false;
                   try {
                     const session = await api("/api/session");
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
                       state.projects = [];
-                      $("projectListPanel").classList.add("hidden");
-                      $("createProjectPanel").classList.add("hidden");
+                      closeUserModals();
                       out("Admin project creation and project list are disabled. Use Account Admin on the right.");
                       return;
                     }
@@ -1821,8 +2372,6 @@ public sealed class BrowserUiRenderer
 
                     const visibleProjects = listableProjects(projects);
                     const latestFailure = visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
-                    $("projectListPanel").classList.toggle("hidden", visibleProjects.length === 0);
-                    $("createProjectPanel").classList.remove("hidden");
                     const health = await loadProjectHealthSummary();
                     $("projects").innerHTML = visibleProjects.map(p => `
                       <div class="card">
@@ -1843,6 +2392,10 @@ public sealed class BrowserUiRenderer
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
+                    } else if (visibleProjects.length === 0) {
+                      showCreateProjectPage();
+                    } else if (autoSelect) {
+                      selectDefaultProject(visibleProjects);
                     }
                     out(projects);
                   } catch (error) {
@@ -1851,6 +2404,30 @@ public sealed class BrowserUiRenderer
                     showLoggedOut();
                     showError(error);
                   }
+                }
+
+                function selectDefaultProject(projects) {
+                  if (!Array.isArray(projects) || projects.length === 0) return;
+                  if (state.projectId && projects.some(project => project.projectId === state.projectId)) return;
+                  const latest = latestProject(projects);
+                  if (latest?.projectId) selectProject(latest.projectId);
+                }
+
+                function latestProject(projects) {
+                  const datedProjects = projects
+                    .map((project, index) => ({ project, index, timestamp: projectTimestamp(project) }))
+                    .filter(item => Number.isFinite(item.timestamp));
+                  if (datedProjects.length > 0) {
+                    return datedProjects.sort((a, b) => b.timestamp - a.timestamp || b.index - a.index)[0].project;
+                  }
+                  return projects[projects.length - 1];
+                }
+
+                function projectTimestamp(project) {
+                  const value = project.updatedUtc || project.updatedAtUtc || project.lastUpdatedUtc || project.modifiedUtc || project.createdUtc || project.createdAtUtc;
+                  if (!value) return Number.NaN;
+                  const timestamp = Date.parse(value);
+                  return Number.isFinite(timestamp) ? timestamp : Number.NaN;
                 }
 
                 async function loadLatestProjectCreationFailure() {
@@ -1888,6 +2465,8 @@ public sealed class BrowserUiRenderer
                   state.projectId = projectId;
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
+                  setModalVisible("projectListModal", false);
+                  hideCreateProjectPage();
                   loadChatHistoryForProject(projectId);
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
@@ -2965,7 +3544,13 @@ public sealed class BrowserUiRenderer
                   state.projects = [];
                   showLoggedOut();
                 };
-                $("refreshProjects").onclick = refreshProjects;
+                $("openCreateProjectPage").onclick = () => showCreateProjectPage();
+                $("openProjectListModal").onclick = async () => {
+                  setModalVisible("projectListModal", true);
+                  await refreshProjects({ autoSelect: false });
+                };
+                $("closeProjectListModal").onclick = () => setModalVisible("projectListModal", false);
+                $("refreshProjects").onclick = () => refreshProjects({ autoSelect: false });
                 $("createProject").onclick = createProject;
                 $("createUserAccount").onclick = createUserAccount;
                 $("copyOneTimeToken").onclick = async () => {

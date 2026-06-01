@@ -543,6 +543,16 @@ public sealed class PrototypeWorkflowTests
         finished.TddGreenCount.Should().Be(1);
         finished.TddRefactorCount.Should().Be(0);
         finished.PlaytestFocusPoints.Should().NotBeNullOrEmpty();
+        finished.Form.Should().NotBeNull();
+        finished.Form!.PrototypeSlug.Should().Be("demo-prototype");
+        finished.Form.Hypothesis.Should().Be("A tiny loop can prove the combat fantasy.");
+        finished.Form.CorePlayerFantasy.Should().Be("Player feels tactical pressure in one minute.");
+        finished.Form.MinimumPlayableLoop.Should().Be("Enter room, fight one enemy, win or fail.");
+        finished.Form.SuccessCriteria.Should().Equal("Player completes one loop.", "Outcome is clear.");
+        finished.Form.GameFeature.Should().Be("One-room tactical combat.");
+        finished.Form.CoreGameplayLoop.Should().Be("Move, choose action, resolve enemy response.");
+        finished.Form.WinFailConditions.Should().Be("Win by defeating enemy; fail when health reaches zero.");
+        finished.Form.SourcePath.Should().StartWith("docs/prototypes/");
     }
 
     [Fact]

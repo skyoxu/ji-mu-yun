@@ -18,4 +18,16 @@ public sealed record PrototypeWorkflowProgress(
     int? TddRedCount = null,
     int? TddGreenCount = null,
     int? TddRefactorCount = null,
-    IReadOnlyList<string>? PlaytestFocusPoints = null);
+    IReadOnlyList<string>? PlaytestFocusPoints = null,
+    PrototypeWorkflowFormSnapshot? Form = null);
+
+public sealed record PrototypeWorkflowFormSnapshot(
+    string? PrototypeSlug,
+    string? Hypothesis,
+    string? CorePlayerFantasy,
+    string? MinimumPlayableLoop,
+    IReadOnlyList<string>? SuccessCriteria,
+    string? GameFeature,
+    string? CoreGameplayLoop,
+    string? WinFailConditions,
+    string? SourcePath);
