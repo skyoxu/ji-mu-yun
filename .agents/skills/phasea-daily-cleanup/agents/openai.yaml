@@ -1,0 +1,3 @@
+display_name: Phase A Daily Cleanup
+short_description: Clean Phase A local runtime clutter.
+default_prompt: Run a dry-run Phase A daily cleanup report for this repository, then ask before applying deletions.
