@@ -107,7 +107,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadServerChatHistoryForProject");
         html.Should().Contain("renderChatHistory");
         html.Should().Contain("v2OriginalShowProjectDetail");
-        html.Should().Contain("v2SelectedStep = \"create-prototype\"");
+        html.Should().Contain("v2SelectedStep = \"new-project\"");
+        html.Should().NotContain("<strong>最新进度</strong>");
+        html.Should().NotContain("<strong>更新时间</strong>");
+        html.Should().NotContain("<strong>项目健康检查</strong>");
+        html.Should().NotContain("v2ProgressDescription");
+        html.Should().NotContain("v2ProgressUpdated");
+        html.Should().NotContain("v2ProjectHealth");
         html.Should().Contain("/api/projects/${state.projectId}/prototype-7day-playable/progress");
     }
 

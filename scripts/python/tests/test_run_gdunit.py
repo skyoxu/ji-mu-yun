@@ -162,15 +162,18 @@ class RunGdUnitTests(unittest.TestCase):
         self.assertLess(source.index("PREWARM_TIMEOUT_SEC = 120"), source.index('if __name__ == "__main__":'))
         self.assertEqual(120, prototype_main_menu_navigation_smoke.PREWARM_TIMEOUT_SEC)
 
-    def test_godot_smoke_prewarm_should_respect_requested_timeout_cap(self) -> None:
+    def test_godot_smoke_prewarm_should_use_independent_compile_timeout(self) -> None:
         smoke_headless = _load_module("smoke_headless_prewarm_cap_test_module", "scripts/python/smoke_headless.py")
         source = Path(smoke_headless.__file__).read_text(encoding="utf-8")
         navigation_source = Path(prototype_main_menu_navigation_smoke.__file__).read_text(encoding="utf-8")
 
-        self.assertIn("prewarm_timeout = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))", source)
+        self.assertIn("prewarm_timeout = max(1, PREWARM_TIMEOUT_SEC)", source)
         self.assertIn("_prewarm_csharp(str(bin_path), project_root, timeout_sec)", source)
         self.assertIn("prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))", navigation_source)
         self.assertIn("prewarm_timeout_sec,", navigation_source)
+        self.assertIn('["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"]', source)
+        self.assertIn('return True, "dotnet-build", dotnet_stdout, dotnet_stderr', source)
+        self.assertIn('godot build-solutions prewarm timed out', source)
 
     def test_godot_smoke_prewarm_should_not_treat_failed_godot_build_as_success(self) -> None:
         smoke_headless = _load_module("smoke_headless_prewarm_failure_test_module", "scripts/python/smoke_headless.py")

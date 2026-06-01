@@ -1,4 +1,4 @@
-﻿extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
+extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
 
 func _new_db(name: String) -> Node:
     var db: Node = null

@@ -66,6 +66,7 @@ def _ensure_non_runtime_dirs_godot_ignored(project_root: Path) -> list[str]:
         "backup",
         "docs",
         "logs",
+        "PhaseA.Platform/wwwroot",
         "_bmad",
     ]
     written: list[str] = []
@@ -199,36 +200,35 @@ def _stop_dotnet_build_server(project_root: Path) -> None:
 
 
 def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWARM_TIMEOUT_SEC) -> tuple[bool, str, str, str]:
-    prewarm_timeout = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))
-    prewarm_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
-    prewarm_returncode, prewarm_stdout, prewarm_stderr = _run_captured_process(
-        prewarm_cmd,
-        project_root,
-        prewarm_timeout,
-    )
-    if prewarm_returncode == 124:
-        _cleanup_godot_processes(godot_bin)
-        prewarm_stderr += "\n[smoke_headless] godot build-solutions prewarm timed out; falling back to dotnet build."
-
-    if (
-        (prewarm_returncode == 0 or _build_output_has_success(prewarm_stdout, prewarm_stderr))
-        and not _build_output_has_failure(prewarm_stdout, prewarm_stderr)
-    ):
-        _stop_dotnet_build_server(project_root)
-        return True, "godot-build-solutions", prewarm_stdout, prewarm_stderr
-
-    fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
+    prewarm_timeout = max(1, PREWARM_TIMEOUT_SEC)
+    dotnet_returncode, dotnet_stdout, dotnet_stderr = _run_captured_process(
         ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
         project_root,
         prewarm_timeout,
     )
-    stdout = prewarm_stdout + (("\n" + fallback_stdout) if fallback_stdout else "")
-    stderr = prewarm_stderr + (("\n" + fallback_stderr) if fallback_stderr else "")
-    if fallback_returncode == 124:
-        stderr += "\n[smoke_headless] dotnet prewarm fallback timed out."
-    if fallback_returncode == 0 and not _build_output_has_failure(stdout, stderr):
+    if dotnet_returncode == 0 and not _build_output_has_failure(dotnet_stdout, dotnet_stderr):
         _stop_dotnet_build_server(project_root)
-        return True, "dotnet-build", stdout, stderr
+        return True, "dotnet-build", dotnet_stdout, dotnet_stderr
+    if dotnet_returncode == 124:
+        dotnet_stderr += "\n[smoke_headless] dotnet prewarm timed out; falling back to godot build-solutions."
+
+    godot_cmd = [godot_bin, "--headless", "--path", str(project_root), "--build-solutions", "--quit"]
+    godot_returncode, godot_stdout, godot_stderr = _run_captured_process(
+        godot_cmd,
+        project_root,
+        prewarm_timeout,
+    )
+    if godot_returncode == 124:
+        _cleanup_godot_processes(godot_bin)
+        godot_stderr += "\n[smoke_headless] godot build-solutions prewarm timed out."
+    stdout = dotnet_stdout + (("\n" + godot_stdout) if godot_stdout else "")
+    stderr = dotnet_stderr + (("\n" + godot_stderr) if godot_stderr else "")
+    if (
+        (godot_returncode == 0 or _build_output_has_success(godot_stdout, godot_stderr))
+        and not _build_output_has_failure(godot_stdout, godot_stderr)
+    ):
+        _stop_dotnet_build_server(project_root)
+        return True, "godot-build-solutions", stdout, stderr
 
     _stop_dotnet_build_server(project_root)
     return False, "dotnet-build", stdout, stderr

@@ -80,11 +80,6 @@ public sealed class BrowserUiRenderer
             .Replace("<section id=\"currentProjectPanel\" class=\"stack\">", """
                   <section id="v2ProgressShell" class="stack">
                     <div id="v2ProgressSteps" class="v2-progress-row"></div>
-                    <div class="v2-summary-grid">
-                      <article class="card"><strong>最新进度</strong><p id="v2ProgressDescription" class="muted">尚未读取项目进度。</p></article>
-                      <article class="card"><strong>更新时间</strong><p id="v2ProgressUpdated" class="muted">-</p></article>
-                      <article class="card"><strong>项目健康检查</strong><p id="v2ProjectHealth" class="muted">-</p></article>
-                    </div>
                     <div class="card v2-next"><strong>下一步建议</strong><p id="v2NextSuggestion" class="muted">点击按钮后扫描项目进度并给出下一步建议。</p><button id="v2JudgeNextStep" class="ghost" type="button">扫描项目判断下一步建议</button></div>
                   </section>
                   <section id="currentProjectPanel" class="stack">
@@ -102,7 +97,7 @@ public sealed class BrowserUiRenderer
                   ["package-project", "打包项目文件", 7],
                   ["download-project", "下载项目文件", 8]
                 ];
-                let v2SelectedStep = "create-prototype";
+                let v2SelectedStep = "new-project";
                 let v2NextSuggestionHasLlmResult = false;
                 function v2StepStatus(stepId) {
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
@@ -445,11 +440,6 @@ public sealed class BrowserUiRenderer
                     return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step));
-                  const progress = $("prototypeProgress")?.textContent?.trim() || "尚未开始 7 步可玩原型。";
-                  $("v2ProgressDescription").textContent = progress.slice(0, 220);
-                  const updatedMatch = progress.match(/更新时间：([^\n]+)/);
-                  $("v2ProgressUpdated").textContent = updatedMatch ? updatedMatch[1] : "暂无更新时间";
-                  $("v2ProjectHealth").textContent = $("projectHealthSummary")?.textContent?.trim().slice(0, 160) || "暂未读取";
                   v2RenderChatIterationPlanButtonState();
                 }
                 const v2OriginalShowProjectDetail = showProjectDetail;
@@ -461,7 +451,6 @@ public sealed class BrowserUiRenderer
                   v2LoadPrototypeValidationInvalidation();
                   v2EnsureContentGrid();
                   $("chatPanel")?.classList.remove("hidden");
-                  if (($("prototypeProgress")?.textContent || "").includes("尚未开始")) v2SelectedStep = "create-prototype";
                   v2ShowStep(v2SelectedStep);
                   v2ApplyPrototypeFormLock();
                 };

@@ -234,10 +234,10 @@ public sealed class PrototypeNeedsFixRouteService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
-            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary)}
+            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 650)}
 
             Recovery source consumed: {sourceLabel}
-            {TrimForPrompt(sourceState, 1000)}
+            {TrimForPrompt(sourceState, 500)}
 
             User feedback:
             {userFeedback?.Trim()}
@@ -286,7 +286,7 @@ public sealed class PrototypeNeedsFixRouteService
             """;
     }
 
-    private static string BuildCompactSummary(string? value)
+    private static string BuildCompactSummary(string? value, int maxLength = 1200)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -301,7 +301,7 @@ public sealed class PrototypeNeedsFixRouteService
             .Where(line => !line.StartsWith("{", StringComparison.Ordinal))
             .Take(8);
         var summary = string.Join(" ", lines);
-        return summary.Length <= 1200 ? summary : summary[..1200];
+        return summary.Length <= maxLength ? summary : summary[..maxLength];
     }
 
     private static string CompactRouteState(string value)
@@ -323,7 +323,7 @@ public sealed class PrototypeNeedsFixRouteService
                 ["goal_index"] = ReadInt(root, "goal_index"),
                 ["iteration_session_status"] = ReadString(root, "iteration_session_status"),
                 ["iteration_goal_status"] = ReadString(root, "iteration_goal_status"),
-                ["summary"] = BuildCompactSummary(ReadString(root, "summary"))
+                ["summary"] = BuildCompactSummary(ReadString(root, "summary"), 450)
             };
 
             return JsonSerializer.Serialize(compact.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value));

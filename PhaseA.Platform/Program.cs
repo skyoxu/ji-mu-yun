@@ -106,6 +106,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/" ||
         context.Request.Path == "/ui" ||
         context.Request.Path == "/ui-v2" ||
+        context.Request.Path == "/backup" ||
         context.Request.Path.StartsWithSegments("/ui-v2/icons") ||
         context.Request.Path == "/downloads" ||
         context.Request.Path == "/assets" ||
@@ -153,19 +154,25 @@ app.MapGet("/healthz", () => Results.Ok(new
 app.MapGet("/", (
     [FromServices] BrowserUiRenderer ui) =>
 {
-    return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
+    return Results.Content(ui.RenderShellV2(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/ui", (
     [FromServices] BrowserUiRenderer ui) =>
 {
-    return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
+    return Results.Content(ui.RenderShellV2(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/ui-v2", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderShellV2(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/backup", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderShell(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/api/projects", async (

@@ -1,4 +1,4 @@
-﻿extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
+extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
 
 func _remove_flags_file() -> void:
     var rel := "user://config/features.json"

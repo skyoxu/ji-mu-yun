@@ -1,4 +1,4 @@
-﻿extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
+extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"
 
 func before() -> void:
     var helper = preload("res://Game.Godot/Adapters/Db/DbTestHelper.cs").new()
