@@ -75,6 +75,7 @@ builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
+builder.Services.AddSingleton(new ChatConcurrencyLimiter(8, 2));
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
@@ -1010,6 +1011,7 @@ app.MapPost("/api/projects/{projectId}/chat", async (
             "succeeded" => Results.Ok(result),
             "llm_binding_required" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
             "llm_token_unresolved" => Results.Json(result, statusCode: StatusCodes.Status424FailedDependency),
+            "chat_concurrency_limit_exceeded" or "user_chat_concurrency_limit_exceeded" => Results.Json(result, statusCode: StatusCodes.Status429TooManyRequests),
             "missing_message" or "message_too_long" => Results.BadRequest(result),
             _ when result.FailureCode is "llm_run_stop_loss_exceeded" or "llm_daily_stop_loss_exceeded" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
             _ => Results.BadRequest(result)

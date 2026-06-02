@@ -4,7 +4,9 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Skills;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Llm;
@@ -413,6 +415,72 @@ public sealed class ChatServiceTests
                 Attachments: Enumerable.Range(1, 6).Select(index => new TextAttachment($"{index}.txt", "content")).ToArray()));
 
         result.Status.Should().Be("too_many_attachments");
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsWhenGlobalChatConcurrencyLimitIsReached()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var binding = new LlmBindingService(store, options);
+        var limiter = new ChatConcurrencyLimiter(1, 1);
+        var acquired = await limiter.TryAcquireAsync(accountId);
+        await using var lease = acquired.Lease;
+        var codex = new FakeCodexChatClient("codex should not run");
+        var service = new ChatService(
+            store,
+            options,
+            binding,
+            new LlmStopLossService(store, options),
+            new FakeChatClient("new-api should not be called"),
+            codex,
+            new ProjectWorkspaceSeeder(options),
+            new SkillActionCatalog(),
+            concurrencyLimiter: limiter);
+
+        var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello"));
+
+        result.Status.Should().Be("chat_concurrency_limit_exceeded");
+        result.ExitCode.Should().Be(429);
+        codex.CallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsWhenAccountChatConcurrencyLimitIsReached()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var binding = new LlmBindingService(store, options);
+        var limiter = new ChatConcurrencyLimiter(8, 2);
+        var first = await limiter.TryAcquireAsync(accountId);
+        var second = await limiter.TryAcquireAsync(accountId);
+        await using var firstLease = first.Lease;
+        await using var secondLease = second.Lease;
+        var codex = new FakeCodexChatClient("codex should not run");
+        var service = new ChatService(
+            store,
+            options,
+            binding,
+            new LlmStopLossService(store, options),
+            new FakeChatClient("new-api should not be called"),
+            codex,
+            new ProjectWorkspaceSeeder(options),
+            new SkillActionCatalog(),
+            concurrencyLimiter: limiter);
+
+        var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello"));
+
+        result.Status.Should().Be("user_chat_concurrency_limit_exceeded");
+        result.ExitCode.Should().Be(429);
+        codex.CallCount.Should().Be(0);
     }
 
     [Fact]

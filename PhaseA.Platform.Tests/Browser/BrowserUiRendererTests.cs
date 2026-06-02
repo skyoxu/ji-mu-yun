@@ -105,6 +105,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("chatAttachmentFiles");
         html.Should().Contain("currentChatAttachmentsForRun");
         html.Should().Contain("attachments: currentChatAttachmentsForRun()");
+        html.Should().Contain("removeChatAttachment");
+        html.Should().Contain("existing.concat(attachments)");
+        html.Should().Contain("data-index=\"${index}\"");
         html.Should().Contain("最多只能导入 5 个 TXT 参考文件。");
         html.Should().Contain("clearChatAttachments();");
         html.Should().Contain("history: state.chatHistory.slice(-3)");
@@ -128,6 +131,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("syncChatHistory");
         html.Should().Contain("chatAttachmentFiles");
         html.Should().Contain("clearChatAttachments");
+        html.Should().Contain("v2ChatAttachmentPanel");
+        html.IndexOf("id=\"chatMessage\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"chatAttachmentFiles\"", StringComparison.Ordinal));
+        html.IndexOf("id=\"chatAttachmentFiles\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"createGddDocument\"", StringComparison.Ordinal));
         html.Should().Contain("loadServerChatHistoryForProject");
         html.Should().Contain("renderChatHistory");
         html.Should().Contain("v2OriginalShowProjectDetail");
@@ -358,7 +364,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("syncChatHistory");
         html.Should().Contain("同步记录");
         html.Should().Contain("下载记录");
-        html.Should().Contain("创建策划GDD文档");
+        html.Should().Contain("创建策划文档");
         html.Should().Contain("服务器聊天记录已同步。");
         html.Should().Contain("未输入优化目标，已使用当前下一步建议生成迭代计划。");
         html.Should().Contain("typedMessage ? \"manual_feedback\" : \"completion_suggestion\"");

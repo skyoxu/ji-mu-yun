@@ -51,6 +51,7 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-next { margin-top: 0.7rem; }
                 body.v2-detail .v2-action-row,
                 body.v2-detail .v2-chat-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
+                body.v2-detail .v2-chat-attachments { display: grid; gap: 0.5rem; }
                 body.v2-detail .v2-skill-row { display: grid; grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr); gap: 0.6rem; align-items: stretch; }
                 body.v2-detail .v2-skill-row #chatSkillDescription { margin: 0; }
                 body.v2-detail #currentProjectPanel > button { display: none; }
@@ -294,10 +295,18 @@ public sealed class BrowserUiRenderer
                   }
                   if ($("v2ChatControls")) return;
                   const messageLabel = $("chatMessage")?.closest("label");
+                  if (!$("v2ChatAttachmentPanel")) {
+                    const attachmentPanel = document.createElement("div");
+                    attachmentPanel.id = "v2ChatAttachmentPanel";
+                    attachmentPanel.className = "v2-chat-attachments";
+                    messageLabel?.insertAdjacentElement("afterend", attachmentPanel);
+                    [$("chatAttachmentFiles")?.closest("label"), $("chatAttachmentStatus"), $("clearChatAttachments")].filter(Boolean).forEach(element => attachmentPanel.appendChild(element));
+                  }
+                  const attachmentPanel = $("v2ChatAttachmentPanel");
                   const controls = document.createElement("div");
                   controls.id = "v2ChatControls";
                   controls.className = "v2-chat-controls";
-                  messageLabel?.insertAdjacentElement("afterend", controls);
+                  (attachmentPanel || messageLabel)?.insertAdjacentElement("afterend", controls);
                   $("submitFormalFeedback")?.classList.add("hidden");
                   if (!$("v2CreateIterationPlanFromChat")) {
                     const createPlanButton = document.createElement("button");
@@ -883,14 +892,14 @@ public sealed class BrowserUiRenderer
                     <div id="repairPlanStatus" class="card muted">尚未生成修复计划。</div>
                     <div id="repairPlanGoals" class="card-list"></div>
                     <h2>聊天记录</h2>
-                    <label>导入 TXT 参考文件，最多 5 个 <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
-                    <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件。</div>
-                    <button id="clearChatAttachments" class="ghost">清空参考文件</button>
                     <button id="syncChatHistory" class="ghost">同步记录</button>
                     <button id="downloadChatHistory" class="ghost">下载记录</button>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
-                    <button id="createGddDocument" class="ghost" data-global-action="true">创建策划GDD文档</button>
+                    <label>导入 TXT 参考文件，最多 5 个 <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
+                    <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件。</div>
+                    <button id="clearChatAttachments" class="ghost">清空参考文件</button>
+                    <button id="createGddDocument" class="ghost" data-global-action="true">创建策划文档</button>
                     <button id="sendChat" class="secondary">发送消息</button>
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
@@ -1484,15 +1493,28 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   status.className = "card";
-                  status.innerHTML = `<strong>已导入 ${escapeHtml(String(files.length))} 个 TXT 参考文件</strong><p class="muted">${files.map(file => escapeHtml(file.fileName)).join("、")}</p>`;
+                  status.innerHTML = `
+                    <strong>已导入 ${escapeHtml(String(files.length))} 个 TXT 参考文件</strong>
+                    <div class="card-list">
+                      ${files.map((file, index) => `
+                        <div class="card">
+                          <strong>${escapeHtml(file.fileName)}</strong>
+                          <p class="muted">${escapeHtml(String(file.content?.length || 0))} 字符</p>
+                          <button class="ghost removeChatAttachment" type="button" data-index="${index}">移除</button>
+                        </div>
+                      `).join("")}
+                    </div>`;
+                  document.querySelectorAll(".removeChatAttachment").forEach(button => {
+                    button.onclick = () => removeChatAttachment(Number(button.dataset.index));
+                  });
                 }
 
                 async function loadChatAttachmentFiles() {
                   const input = $("chatAttachmentFiles");
                   const files = Array.from(input?.files || []);
-                  if (files.length > 5) {
+                  const existing = state.chatAttachments || [];
+                  if (existing.length + files.length > 5) {
                     input.value = "";
-                    state.chatAttachments = [];
                     renderChatAttachments();
                     return out("最多只能导入 5 个 TXT 参考文件。");
                   }
@@ -1501,13 +1523,21 @@ public sealed class BrowserUiRenderer
                     const isTxt = file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt");
                     if (!isTxt) {
                       input.value = "";
-                      state.chatAttachments = [];
                       renderChatAttachments();
                       return out("只能导入 TXT 参考文件。");
                     }
                     attachments.push({ fileName: file.name, content: await file.text() });
                   }
-                  state.chatAttachments = attachments;
+                  state.chatAttachments = existing.concat(attachments);
+                  input.value = "";
+                  renderChatAttachments();
+                }
+
+                function removeChatAttachment(index) {
+                  const files = state.chatAttachments || [];
+                  if (index < 0 || index >= files.length) return;
+                  state.chatAttachments = files.filter((_, currentIndex) => currentIndex !== index);
+                  if ($("chatAttachmentFiles")) $("chatAttachmentFiles").value = "";
                   renderChatAttachments();
                 }
 
@@ -1751,7 +1781,7 @@ public sealed class BrowserUiRenderer
                     clearChatAttachments();
                     setLocalBusy(false);
                     button.disabled = false;
-                    button.textContent = "创建策划GDD文档";
+                    button.textContent = "创建策划文档";
                     await refreshActiveRun();
                   }
                 }

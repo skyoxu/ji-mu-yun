@@ -25,6 +25,7 @@ public sealed class ChatService
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
+    private readonly ChatConcurrencyLimiter _concurrencyLimiter;
 
     public ChatService(
         PhaseAMetadataStore metadataStore,
@@ -46,7 +47,8 @@ public sealed class ChatService
         ICodexChatClient codexChatClient,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        ChatConcurrencyLimiter? concurrencyLimiter = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -56,6 +58,7 @@ public sealed class ChatService
         _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
+        _concurrencyLimiter = concurrencyLimiter ?? new ChatConcurrencyLimiter();
     }
 
     public async Task<ChatResult> SendAsync(string accountId, string projectId, ChatRequest request, CancellationToken cancellationToken = default)
@@ -78,6 +81,14 @@ public sealed class ChatService
         {
             return new ChatResult("", "too_many_attachments", 2, null, "too_many_attachments", request.Model);
         }
+
+        var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
+        if (concurrency.Lease is null)
+        {
+            return new ChatResult("", concurrency.FailureCode!, 429, null, concurrency.FailureCode, request.Model);
+        }
+
+        await using var concurrencyLease = concurrency.Lease;
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
