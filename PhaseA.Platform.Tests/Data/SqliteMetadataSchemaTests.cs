@@ -32,6 +32,7 @@ public sealed class SqliteMetadataSchemaTests
             "account_llm_bindings",
             "aicodemirror_key_pool",
             "project_chat_messages",
+            "project_chat_memories",
             "admin_account_audit_events",
             "project_prototype_drafts",
             "project_iteration_sessions",
@@ -336,6 +337,29 @@ public sealed class SqliteMetadataSchemaTests
         messages.Select(message => message.Content).Should().Equal("world", "latest");
         messages.Select(message => message.Role).Should().Equal("assistant", "user");
         otherAccountMessages.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProjectChatMemory_IsAccountAndProjectScoped()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+
+        await store.UpsertProjectChatMemoryAsync(accountId, project.ProjectId!, "memory v1", "session-1");
+        await store.UpsertProjectChatMemoryAsync(accountId, project.ProjectId!, "memory v2", "session-2");
+
+        var memory = await store.GetProjectChatMemoryAsync(accountId, project.ProjectId!);
+        var otherAccountMemory = await store.GetProjectChatMemoryAsync("other-account", project.ProjectId!);
+
+        memory.Should().NotBeNull();
+        memory!.MemorySummary.Should().Be("memory v2");
+        memory.ProviderSessionRef.Should().Be("session-2");
+        otherAccountMemory.Should().BeNull();
     }
 
     [Fact]

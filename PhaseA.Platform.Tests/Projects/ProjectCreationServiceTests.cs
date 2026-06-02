@@ -240,6 +240,7 @@ public sealed class ProjectCreationServiceTests
         await store.CompleteRunAsync(runId, "succeeded", 0, "ok", "", "{}", CancellationToken.None);
         await store.AddArtifactAsync(new ArtifactCreationCommand(runId, first.ProjectId!, "sample", "logs/ci/sample.txt", "sample"));
         await store.AddProjectChatMessageAsync(accountId, first.ProjectId!, "user", "hello", retainLatest: 10);
+        await store.UpsertProjectChatMemoryAsync(accountId, first.ProjectId!, "project chat memory", "session-ref");
         await store.UpsertProjectPrototypeDraftAsync(
             first.ProjectId!,
             "succeeded",
@@ -296,6 +297,7 @@ public sealed class ProjectCreationServiceTests
         (await store.GetRunSnapshotAsync(runId)).Should().BeNull();
         (await store.ListArtifactsForRunAsync(runId)).Should().BeEmpty();
         (await store.ListProjectChatMessagesAsync(accountId, first.ProjectId!, limit: 10)).Should().BeEmpty();
+        (await store.GetProjectChatMemoryAsync(accountId, first.ProjectId!)).Should().BeNull();
         (await store.GetProjectPrototypeDraftAsync(first.ProjectId!)).Should().BeNull();
         (await store.GetLatestProjectIterationSessionAsync(first.ProjectId!)).Should().BeNull();
         (await store.GetProjectRunMemoryAsync(first.ProjectId!, "prototype")).Should().BeNull();

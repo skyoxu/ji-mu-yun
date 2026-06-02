@@ -56,6 +56,7 @@ builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
 builder.Services.AddSingleton<PrototypeIterationPlanService>();
 builder.Services.AddSingleton<PrototypeIterationGoalService>();
 builder.Services.AddSingleton<PrototypeRepairPlanService>();
+builder.Services.AddSingleton<GameDesignDocumentService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -321,6 +322,107 @@ app.MapGet("/api/projects/{projectId}/packages", async (
 {
     var result = await packages.ListPackagesAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd", async (
+    string projectId,
+    GameDesignDocumentRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var accountId = CurrentAccountId(context);
+        var result = await gdd.CreateAsync(accountId, projectId, request, cancellationToken);
+        if (result.Status == "succeeded")
+        {
+            await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "gdd-request", cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", result.Summary, "gdd-result", cancellationToken);
+        }
+
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/projects/{projectId}/gdd", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var result = await gdd.ReadAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "gdd_not_found" })
+        : Results.Ok(new
+        {
+            fileName = result.FileName,
+            relativePath = result.RelativePath,
+            sizeBytes = result.SizeBytes,
+            lastUpdatedUtc = result.LastUpdatedUtc,
+            downloadUrl = $"/api/projects/{projectId}/gdd/download"
+        });
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/download", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var result = await gdd.ReadAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "gdd_not_found" })
+        : Results.File(result.Content, result.ContentType, result.FileName);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/download-ticket", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] ProjectPackageDownloadTicketService tickets,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (!await store.ProjectBelongsToAccountAsync(CurrentAccountId(context), projectId, cancellationToken))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return Results.Ok(new
+    {
+        downloadUrl = $"/projects/{projectId}/gdd/GDD.md?ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, "GDD.md"))}"
+    });
+});
+
+app.MapGet("/projects/{projectId}/gdd/GDD.md", async (
+    string projectId,
+    HttpRequest request,
+    [FromServices] ProjectPackageDownloadTicketService tickets,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, projectId, "GDD.md"))
+    {
+        return Results.Unauthorized();
+    }
+
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var result = await gdd.ReadAsync(project.AccountId, projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "gdd_not_found" })
+        : Results.File(result.Content, result.ContentType, result.FileName);
 });
 
 app.MapGet("/api/projects/{projectId}/asset-inventory", async (

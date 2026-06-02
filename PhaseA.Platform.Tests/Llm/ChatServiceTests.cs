@@ -113,6 +113,142 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
+    public async Task SendAsync_UsesProjectChatMemory_AndOnlyRecentThreeMessages_WhenNewApiBackendIsSelected()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var variableName = "PHASEA_TEST_TOKEN_" + Guid.NewGuid().ToString("N").ToUpperInvariant();
+        Environment.SetEnvironmentVariable(variableName, "test-token");
+        Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
+        try
+        {
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var accountId = await store.EnsureSingleAdminAsync();
+            var projectId = await CreateProjectAsync(store, options, accountId);
+            await store.UpsertLlmBindingAsync(new LlmBindingCommand(
+                accountId,
+                "new-api",
+                "https://new-api.example.com/v1",
+                "new-api-user-1",
+                $"env:{variableName}"));
+            await store.UpsertProjectChatMemoryAsync(accountId, projectId, "The user prefers fast concise RPG feedback.", "previous-session");
+            var client = new FakeChatClient("assistant reply");
+            var service = Service(store, options, client);
+            var history = Enumerable.Range(1, 6)
+                .Select(index => new ChatMessage(index % 2 == 0 ? "assistant" : "user", $"history-{index}"))
+                .ToArray();
+
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello", "gpt-5.4", history));
+
+            result.Status.Should().Be("succeeded");
+            client.LastMessages.Should().Contain(message => message.Role == "system" && message.Content.Contains("The user prefers fast concise RPG feedback", StringComparison.Ordinal));
+            client.LastMessages.Should().NotContain(message => message.Content == "history-1");
+            client.LastMessages.Should().NotContain(message => message.Content == "history-2");
+            client.LastMessages.Should().NotContain(message => message.Content == "history-3");
+            client.LastMessages.Should().Contain(message => message.Content == "history-4");
+            client.LastMessages.Should().Contain(message => message.Content == "history-5");
+            client.LastMessages.Should().Contain(message => message.Content == "history-6");
+            var updatedMemory = await store.GetProjectChatMemoryAsync(accountId, projectId);
+            updatedMemory.Should().NotBeNull();
+            updatedMemory!.MemorySummary.Should().Contain("hello");
+            updatedMemory.MemorySummary.Should().Contain("assistant reply");
+            updatedMemory.ProviderSessionRef.Should().Be("req-test");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variableName, null);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", null);
+        }
+    }
+
+    [Fact]
+    public async Task SendAsync_DoesNotPersistTxtAttachmentContentIntoProjectChatMemory_WhenNewApiBackendIsSelected()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var variableName = "PHASEA_TEST_TOKEN_" + Guid.NewGuid().ToString("N").ToUpperInvariant();
+        Environment.SetEnvironmentVariable(variableName, "test-token");
+        Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
+        try
+        {
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var accountId = await store.EnsureSingleAdminAsync();
+            var projectId = await CreateProjectAsync(store, options, accountId);
+            await store.UpsertLlmBindingAsync(new LlmBindingCommand(
+                accountId,
+                "new-api",
+                "https://new-api.example.com/v1",
+                "new-api-user-1",
+                $"env:{variableName}"));
+            var client = new FakeChatClient("assistant reply");
+            var service = Service(store, options, client);
+
+            var result = await service.SendAsync(
+                accountId,
+                projectId,
+                new ChatRequest(
+                    "use the imported reference",
+                    "gpt-5.4",
+                    Attachments: [new TextAttachment("secret-notes.txt", "Sensitive imported reference content.")]));
+
+            result.Status.Should().Be("succeeded");
+            client.LastMessages.Should().Contain(message => message.Content.Contains("Sensitive imported reference content.", StringComparison.Ordinal));
+            var memory = await store.GetProjectChatMemoryAsync(accountId, projectId);
+            memory.Should().BeNull();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variableName, null);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", null);
+        }
+    }
+
+    [Fact]
+    public async Task SendAsync_CapsProjectChatMemory_WhenNewApiBackendIsSelected()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var variableName = "PHASEA_TEST_TOKEN_" + Guid.NewGuid().ToString("N").ToUpperInvariant();
+        Environment.SetEnvironmentVariable(variableName, "test-token");
+        Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
+        try
+        {
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var accountId = await store.EnsureSingleAdminAsync();
+            var projectId = await CreateProjectAsync(store, options, accountId);
+            await store.UpsertLlmBindingAsync(new LlmBindingCommand(
+                accountId,
+                "new-api",
+                "https://new-api.example.com/v1",
+                "new-api-user-1",
+                $"env:{variableName}"));
+            await store.UpsertProjectChatMemoryAsync(
+                accountId,
+                projectId,
+                string.Join("\n", Enumerable.Range(1, 20).Select(index => $"old memory line {index}: {new string('x', 120)}")),
+                null);
+            var client = new FakeChatClient(new string('y', 2000));
+            var service = Service(store, options, client);
+
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest(new string('z', 2000), "gpt-5.4"));
+
+            result.Status.Should().Be("succeeded");
+            var memory = await store.GetProjectChatMemoryAsync(accountId, projectId);
+            memory.Should().NotBeNull();
+            memory!.MemorySummary.Length.Should().BeLessThanOrEqualTo(1500);
+            memory.MemorySummary.Should().Contain("...");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variableName, null);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", null);
+        }
+    }
+
+    [Fact]
     public async Task SendAsync_UsesCodexCliBackend_ByDefault()
     {
         using var database = TempSqliteDatabase.Create();
@@ -228,6 +364,55 @@ public sealed class ChatServiceTests
 
         codex.LastPrompt.Should().Contain("游戏策划大师");
         codex.LastPrompt.Should().Contain("$bmad-agent-game-designer");
+    }
+
+    [Fact]
+    public async Task SendAsync_IncludesTxtAttachmentsInCodexPrompt()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var binding = new LlmBindingService(store, options);
+        var codex = new FakeCodexChatClient("codex says hello");
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+
+        await service.SendAsync(
+            accountId,
+            projectId,
+            new ChatRequest(
+                "summarize references",
+                "gpt-5.4",
+                Attachments: [new TextAttachment("notes.txt", "Important boss design reference.")]));
+
+        codex.LastPrompt.Should().Contain("notes.txt");
+        codex.LastPrompt.Should().Contain("Important boss design reference.");
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsMoreThanFiveTxtAttachments()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var binding = new LlmBindingService(store, options);
+        var codex = new FakeCodexChatClient("codex should not run");
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+
+        var result = await service.SendAsync(
+            accountId,
+            projectId,
+            new ChatRequest(
+                "summarize references",
+                "gpt-5.4",
+                Attachments: Enumerable.Range(1, 6).Select(index => new TextAttachment($"{index}.txt", "content")).ToArray()));
+
+        result.Status.Should().Be("too_many_attachments");
     }
 
     [Fact]

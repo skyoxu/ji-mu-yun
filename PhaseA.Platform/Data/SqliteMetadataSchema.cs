@@ -414,6 +414,18 @@ public static class SqliteMetadataSchema
         );
         """,
         """
+        CREATE TABLE IF NOT EXISTS project_chat_memories (
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            memory_summary TEXT NOT NULL DEFAULT '',
+            provider_session_ref TEXT NULL,
+            updated_utc TEXT NOT NULL,
+            PRIMARY KEY (account_id, project_id),
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """,
+        """
         CREATE TABLE IF NOT EXISTS admin_account_audit_events (
             id TEXT PRIMARY KEY,
             actor_account_id TEXT NOT NULL,
@@ -524,6 +536,7 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
         "CREATE INDEX IF NOT EXISTS ix_aicodemirror_key_pool_account ON aicodemirror_key_pool(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
+        "CREATE INDEX IF NOT EXISTS ix_project_chat_memories_project ON project_chat_memories(project_id);",
         "CREATE INDEX IF NOT EXISTS ix_admin_account_audit_events_created ON admin_account_audit_events(created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",

@@ -33,14 +33,18 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
                 body.v2-detail .v2-progress-row { display: grid; grid-template-columns: repeat(8, minmax(5.6rem, 1fr)); gap: 0.45rem; overflow-x: auto; padding-bottom: 0.1rem; }
-                body.v2-detail .v2-step-button { position: relative; min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.45rem 0.3rem 0.62rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
+                body.v2-detail .v2-step-button { position: relative; min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
                 body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
+                body.v2-detail .v2-step-number { color: #15905f; font-size: 0.82rem; line-height: 1; font-weight: 800; }
                 body.v2-detail .v2-step-icon { width: 3.25rem; height: 3.25rem; background-image: var(--icon-sheet); background-size: 900% 100%; background-position: calc(var(--step-index) * -100%) 0; background-repeat: no-repeat; }
-                body.v2-detail .v2-step-button.pending { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
+                body.v2-detail .v2-step-button.pending,
+                body.v2-detail .v2-step-button.action { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
                 body.v2-detail .v2-step-button.done,
                 body.v2-detail .v2-step-button.fix { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
                 body.v2-detail .v2-step-label { font-size: 0.78rem; line-height: 1.15; text-align: center; white-space: nowrap; }
                 body.v2-detail .v2-step-mark { position: absolute; left: 50%; bottom: 0.12rem; transform: translateX(-50%); width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
+                body.v2-detail .v2-step-button.pending .v2-step-mark,
+                body.v2-detail .v2-step-button.action .v2-step-mark { background: #a8afad; }
                 body.v2-detail .v2-step-button.done .v2-step-mark { background: #15905f; }
                 body.v2-detail .v2-step-button.fix .v2-step-mark { background: #b73732; }
                 body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
@@ -59,7 +63,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls label,
                 body.v2-detail .v2-chat-controls select { width: auto; }
                 body.v2-detail .v2-chat-controls label { min-width: 9rem; }
-                body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 7rem; }
+                body.v2-detail .v2-chat-controls #createGddDocument { margin-left: auto; }
+                body.v2-detail .v2-chat-controls #sendChat { min-width: 7rem; }
                 @media (max-width: 1000px) {
                   body.v2-detail #v2ContentGrid,
                   body.v2-detail .v2-summary-grid,
@@ -73,7 +78,7 @@ public sealed class BrowserUiRenderer
                   body.v2-detail #prototypeCommandPanel,
                   body.v2-detail #runsPanel,
                   body.v2-detail #outputPanel { grid-column: 1; grid-row: auto; }
-                  body.v2-detail .v2-chat-controls #sendChat { margin-left: 0; }
+                  body.v2-detail .v2-chat-controls #createGddDocument { margin-left: 0; }
                 }
               </style>
               """)
@@ -99,15 +104,26 @@ public sealed class BrowserUiRenderer
                 ];
                 let v2SelectedStep = "new-project";
                 let v2NextSuggestionHasLlmResult = false;
+                function v2HasPackages() {
+                  if (Array.isArray(state.packageList)) return state.packageList.length > 0;
+                  return Array.isArray(state.packageList?.packages) && state.packageList.packages.length > 0;
+                }
+                function v2AssetInventoryConfirmed() {
+                  return !!state.assetInventory?.canReadInventory;
+                }
                 function v2StepStatus(stepId) {
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
                   const progressText = $("prototypeProgress")?.textContent || "";
-                  const succeeded = progressText.includes("succeeded") || $("prototypeAcceptanceSummary")?.textContent?.includes("默认场景");
-                  const failed = progressText.includes("failed") || !!state?.prototypeFailure;
-                  if (stepId === "new-project") return state.projectId ? "done" : "fix";
-                  if (stepId === "create-prototype") return !state.projectId || progressText.includes("idle") || progressStatus === "failed" ? "fix" : "done";
+                  const prototypeStatus = String(state?.v2PrototypeStatus || "").trim().toLowerCase();
+                  const succeeded = prototypeStatus === "succeeded";
+                  const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
+                  if (stepId === "new-project") return state.projectId ? "done" : "pending";
+                  if (stepId === "create-prototype") {
+                    if (!state.projectId || progressText.includes("idle") || !prototypeStatus) return "pending";
+                    return failed ? "fix" : succeeded ? "done" : "pending";
+                  }
                   if (stepId === "prototype-acceptance") return succeeded ? "done" : failed ? "fix" : "pending";
-                  if (stepId === "iteration-plan") return state.iterationPlan?.goals?.length ? "done" : succeeded ? "fix" : "pending";
+                  if (stepId === "iteration-plan") return state.iterationPlan?.goals?.length ? "done" : "pending";
                   if (stepId === "execute-or-repair") {
                     const goals = state.repairPlan?.goals || [];
                     if (failed) return "fix";
@@ -115,9 +131,9 @@ public sealed class BrowserUiRenderer
                     if (goals.length && goals.every(goal => goal.status === "succeeded" || goal.status === "completed")) return "done";
                     return "pending";
                   }
-                  if (stepId === "asset-inventory") return state.assetInventory ? "done" : succeeded ? "fix" : "pending";
-                  if (stepId === "package-project") return succeeded ? "action" : "pending";
-                  if (stepId === "download-project") return state.packageList?.length ? "action" : "pending";
+                  if (stepId === "asset-inventory") return v2AssetInventoryConfirmed() ? "done" : "pending";
+                  if (stepId === "package-project") return v2HasPackages() ? "done" : "pending";
+                  if (stepId === "download-project") return v2HasPackages() ? "action" : "pending";
                   return "pending";
                 }
                 function v2ShowStep(stepId) {
@@ -288,11 +304,11 @@ public sealed class BrowserUiRenderer
                     createPlanButton.id = "v2CreateIterationPlanFromChat";
                     createPlanButton.className = "ghost";
                     createPlanButton.type = "button";
-                    createPlanButton.textContent = "用聊天内容创建新迭代计划";
+                    createPlanButton.textContent = "创建新迭代计划";
                     createPlanButton.onclick = v2CreateIterationPlanFromChat;
                     controls.appendChild(createPlanButton);
                   }
-                  [$("syncChatHistory"), $("v2CreateIterationPlanFromChat"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("syncChatHistory"), $("downloadChatHistory"), $("v2CreateIterationPlanFromChat"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
                   v2RenderChatIterationPlanButtonState();
                 }
@@ -437,7 +453,7 @@ public sealed class BrowserUiRenderer
                   shell.innerHTML = v2Steps.map(([id, label, iconIndex], index) => {
                     const status = v2StepStatus(id);
                     const mark = status === "done" ? "✓" : status === "fix" ? "×" : "";
-                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
+                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step));
                   v2RenderChatIterationPlanButtonState();
@@ -867,10 +883,15 @@ public sealed class BrowserUiRenderer
                     <div id="repairPlanStatus" class="card muted">尚未生成修复计划。</div>
                     <div id="repairPlanGoals" class="card-list"></div>
                     <h2>聊天记录</h2>
-                    <button id="syncChatHistory" class="ghost">同步服务器聊天记录</button>
+                    <label>导入 TXT 参考文件，最多 5 个 <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
+                    <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件。</div>
+                    <button id="clearChatAttachments" class="ghost">清空参考文件</button>
+                    <button id="syncChatHistory" class="ghost">同步记录</button>
+                    <button id="downloadChatHistory" class="ghost">下载记录</button>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
-                    <button id="sendChat" class="secondary" data-global-action="true">发送消息</button>
+                    <button id="createGddDocument" class="ghost" data-global-action="true">创建策划GDD文档</button>
+                    <button id="sendChat" class="secondary">发送消息</button>
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
                     <h2>流程记录</h2>
@@ -889,7 +910,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1348,7 +1369,7 @@ public sealed class BrowserUiRenderer
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
                       method: "POST",
-                      body: JSON.stringify({ message, sourceKind })
+                      body: JSON.stringify({ message, sourceKind, attachments: currentChatAttachmentsForRun() })
                     });
                     state.iterationPlan = {
                       session: {
@@ -1374,6 +1395,7 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     showError(error);
                   } finally {
+                    clearChatAttachments();
                     setLocalBusy(false);
                     await loadIterationPlan();
                     await refreshActiveRun();
@@ -1450,6 +1472,53 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                     await refreshActiveRun();
                   }
+                }
+
+                function renderChatAttachments() {
+                  const status = $("chatAttachmentStatus");
+                  if (!status) return;
+                  const files = state.chatAttachments || [];
+                  if (!files.length) {
+                    status.className = "card muted";
+                    status.textContent = "未导入 TXT 参考文件。";
+                    return;
+                  }
+                  status.className = "card";
+                  status.innerHTML = `<strong>已导入 ${escapeHtml(String(files.length))} 个 TXT 参考文件</strong><p class="muted">${files.map(file => escapeHtml(file.fileName)).join("、")}</p>`;
+                }
+
+                async function loadChatAttachmentFiles() {
+                  const input = $("chatAttachmentFiles");
+                  const files = Array.from(input?.files || []);
+                  if (files.length > 5) {
+                    input.value = "";
+                    state.chatAttachments = [];
+                    renderChatAttachments();
+                    return out("最多只能导入 5 个 TXT 参考文件。");
+                  }
+                  const attachments = [];
+                  for (const file of files) {
+                    const isTxt = file.type === "text/plain" || file.name.toLowerCase().endsWith(".txt");
+                    if (!isTxt) {
+                      input.value = "";
+                      state.chatAttachments = [];
+                      renderChatAttachments();
+                      return out("只能导入 TXT 参考文件。");
+                    }
+                    attachments.push({ fileName: file.name, content: await file.text() });
+                  }
+                  state.chatAttachments = attachments;
+                  renderChatAttachments();
+                }
+
+                function clearChatAttachments() {
+                  state.chatAttachments = [];
+                  if ($("chatAttachmentFiles")) $("chatAttachmentFiles").value = "";
+                  renderChatAttachments();
+                }
+
+                function currentChatAttachmentsForRun() {
+                  return (state.chatAttachments || []).map(file => ({ fileName: file.fileName, content: file.content }));
                 }
 
                 function saveChatHistoryForProject() {
@@ -1610,11 +1679,9 @@ public sealed class BrowserUiRenderer
 
 
                 async function sendChat() {
-                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const message = $("chatMessage").value.trim();
                   if (!message) return out("请输入消息。");
-                  setLocalBusy(true);
                   $("sendChat").disabled = true;
                   $("sendChat").textContent = "发送中...";
                   try {
@@ -1622,7 +1689,8 @@ public sealed class BrowserUiRenderer
                       message,
                       model: $("globalModel").value || null,
                       skillActionId: $("chatSkillMode").value || "normal",
-                      history: state.chatHistory.slice(-10)
+                      attachments: currentChatAttachmentsForRun(),
+                      history: state.chatHistory.slice(-3)
                     };
                     state.chatHistory.push({ role: "user", content: message });
                     renderChatHistory();
@@ -1651,10 +1719,91 @@ public sealed class BrowserUiRenderer
                     showError(error);
                   }
                   finally {
-                    setLocalBusy(false);
+                    clearChatAttachments();
                     $("sendChat").disabled = false;
                     $("sendChat").textContent = "发送消息";
                     await refreshActiveRun();
+                  }
+                }
+
+                async function createGddDocument() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const message = $("chatMessage").value.trim();
+                  const button = $("createGddDocument");
+                  setLocalBusy(true, "正在创建策划 GDD 文档，请等待当前任务执行完毕。");
+                  button.disabled = true;
+                  button.textContent = "创建中...";
+                  try {
+                    const payload = {
+                      message,
+                      model: $("globalModel").value || null,
+                      attachments: currentChatAttachmentsForRun()
+                    };
+                    const result = await api(`/api/projects/${state.projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
+                    out(result.summary || "策划 GDD 文档已创建。");
+                    await loadServerChatHistoryForProject(state.projectId);
+                    await loadRuns();
+                    await loadProjectPackages();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    clearChatAttachments();
+                    setLocalBusy(false);
+                    button.disabled = false;
+                    button.textContent = "创建策划GDD文档";
+                    await refreshActiveRun();
+                  }
+                }
+
+                function chatHistoryDownloadFileName() {
+                  const project = state.projects.find(item => item.projectId === state.projectId);
+                  const base = (project?.name || project?.gameName || state.projectId || "chat-history")
+                    .replace(/[^\p{L}\p{N}._-]+/gu, "-")
+                    .replace(/^-+|-+$/g, "") || "chat-history";
+                  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+                  return `${base}-chat-history-${stamp}.json`;
+                }
+
+                async function downloadChatHistory() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const button = $("downloadChatHistory");
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "下载中...";
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/chat-history`);
+                    const messages = (result.messages || [])
+                      .map(message => ({
+                        role: message.role,
+                        content: sanitizePublicChatContent(message.content),
+                        kind: message.kind || null,
+                        createdUtc: message.createdUtc || null,
+                        continueConsumed: !!message.continueConsumed,
+                        suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || "")
+                      }))
+                      .filter(isStoredChatMessage);
+                    const payload = {
+                      projectId: state.projectId,
+                      exportedAt: new Date().toISOString(),
+                      messageCount: messages.length,
+                      messages
+                    };
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = url;
+                    anchor.download = chatHistoryDownloadFileName();
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    URL.revokeObjectURL(url);
+                    out("记录已下载。");
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
                   }
                 }
 
@@ -3569,7 +3718,12 @@ public sealed class BrowserUiRenderer
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("importDraft").onclick = importDraft;
                 $("sendChat").onclick = sendChat;
+                $("createGddDocument").onclick = createGddDocument;
                 $("syncChatHistory").onclick = syncChatHistory;
+                $("downloadChatHistory").onclick = downloadChatHistory;
+                $("chatAttachmentFiles").onchange = loadChatAttachmentFiles;
+                $("clearChatAttachments").onclick = clearChatAttachments;
+                renderChatAttachments();
                 $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
@@ -3599,10 +3753,125 @@ public sealed class BrowserUiRenderer
 
     public string RenderProject(ProjectSnapshot project, IReadOnlyList<RunReadbackItem> runs)
     {
+        var steps = BuildProjectDetailSteps(project, runs);
+        var progressItems = string.Join("", steps.Select(step => $"""
+            <a class="detail-step {step.Status}" href="{step.Href}">
+              <span class="detail-step-number">{step.Number}</span>
+              <span class="detail-step-icon" aria-hidden="true"></span>
+              <span class="detail-step-label">{Encode(step.Label)}</span>
+              <span class="detail-step-mark">{Encode(step.Mark)}</span>
+            </a>
+            """));
         var runItems = string.Join("", runs.Select(run =>
             $"<li><a href=\"/runs/{Encode(run.RunId)}\">{Encode(run.RunType)}</a> - {Encode(run.Status)}</li>"));
-        return WrapSimplePage(Encode(project.Name), $"<h1>{Encode(project.Name)}</h1><p>{Encode(project.GameName)}</p><ul>{runItems}</ul>");
+        var body = $$"""
+            <style>
+              :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #15905f; --danger: #b73732; --pending: #a8afad; }
+              * { box-sizing: border-box; }
+              body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
+              main { max-width: 96rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; display: grid; gap: 1rem; }
+              h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: 0; }
+              p { color: var(--muted); }
+              .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
+              .detail-progress { display: grid; grid-template-columns: repeat(8, minmax(5.6rem, 1fr)); gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem; }
+              .detail-step { min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--muted); text-decoration: none; background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
+              .detail-step-number { color: var(--accent); font-size: 0.82rem; line-height: 1; font-weight: 800; }
+              .detail-step-icon { width: 2rem; height: 2rem; border-radius: 999px; background: #eef0ec; border: 2px solid var(--pending); }
+              .detail-step-label { min-height: 2.2rem; display: grid; place-items: center; text-align: center; font-size: 0.86rem; line-height: 1.2; }
+              .detail-step-mark { width: 1.15rem; height: 1.15rem; border-radius: 999px; display: grid; place-items: center; color: #fff; font-size: 0.8rem; font-weight: 800; background: var(--pending); }
+              .detail-step.done { color: var(--ink); }
+              .detail-step.done .detail-step-icon { border-color: var(--accent); background: #e6f4ef; }
+              .detail-step.done .detail-step-mark { background: var(--accent); }
+              .detail-step.fix { color: var(--ink); }
+              .detail-step.fix .detail-step-icon { border-color: var(--danger); background: #fae9e6; }
+              .detail-step.fix .detail-step-mark { background: var(--danger); }
+              .detail-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+              .detail-meta div { display: grid; gap: 0.15rem; }
+              .detail-meta strong { color: var(--muted); font-size: 0.82rem; }
+              ul { margin: 0; padding-left: 1.2rem; }
+            </style>
+            <main>
+              <header>
+                <h1>{{Encode(project.Name)}}</h1>
+                <p>{{Encode(project.GameName)}}</p>
+              </header>
+              <section class="card detail-progress" aria-label="项目进度">
+                {{progressItems}}
+              </section>
+              <section class="card detail-meta">
+                <div><strong>项目类型</strong><span>{{Encode(project.GameTypeSource)}}</span></div>
+                <div><strong>初始化状态</strong><span>{{Encode(project.BootstrapStatus)}}</span></div>
+                <div><strong>项目 ID</strong><span>{{Encode(project.ProjectId)}}</span></div>
+              </section>
+              <section class="card">
+                <h2>执行记录</h2>
+                <ul>{{runItems}}</ul>
+              </section>
+            </main>
+            """;
+        return WrapSimplePage(Encode(project.Name), body);
     }
+
+    private static IReadOnlyList<ProjectDetailStep> BuildProjectDetailSteps(ProjectSnapshot project, IReadOnlyList<RunReadbackItem> runs)
+    {
+        var latestPrototype = LatestRun(runs, "prototype-7day-playable");
+        var latestRepair = LatestRun(runs, "prototype-repair-step", "prototype-quick-fix");
+        var latestIteration = LatestRun(runs, "prototype-iteration-goal", "prototype-feedback-iteration");
+        var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
+        var latestPackage = LatestRun(runs, "project-package");
+        var prototypeFailed = latestPrototype?.Status == "failed";
+
+        return
+        [
+            new ProjectDetailStep(1, "游戏项目详情", "done", "/", "✓"),
+            CreateRunStep(2, "创建游戏原型", latestPrototype, "/#prototypeWorkflowPanel"),
+            CreateAcceptanceStep(latestPrototype, "/#prototypeWorkflowPanel"),
+            prototypeFailed && latestRepair is null
+                ? new ProjectDetailStep(4, "原型验收修复", "fix", "/#v2RepairPanel", "×")
+                : CreateRunStep(4, "原型验收修复", latestRepair, "/#v2RepairPanel"),
+            CreateRunStep(5, "生成迭代计划", latestIteration, "/#v2IterationPanel"),
+            CreateRunStep(6, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
+            CreateRunStep(7, "打包项目文件", latestPackage, "/#createProjectPackage"),
+            new ProjectDetailStep(8, "下载项目文件", "pending", $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}", "")
+        ];
+    }
+
+    private static ProjectDetailStep CreateAcceptanceStep(RunReadbackItem? prototypeRun, string href)
+    {
+        if (prototypeRun is null || string.IsNullOrWhiteSpace(prototypeRun.ProgressStep))
+        {
+            return new ProjectDetailStep(3, "原型验收", "pending", href, "");
+        }
+
+        return prototypeRun.Status switch
+        {
+            "succeeded" => new ProjectDetailStep(3, "原型验收", "done", href, "✓"),
+            "failed" => new ProjectDetailStep(3, "原型验收", "fix", href, "×"),
+            _ => new ProjectDetailStep(3, "原型验收", "pending", href, "")
+        };
+    }
+
+    private static ProjectDetailStep CreateRunStep(int number, string label, RunReadbackItem? run, string href)
+    {
+        if (run is null)
+        {
+            return new ProjectDetailStep(number, label, "pending", href, "");
+        }
+
+        return run.Status switch
+        {
+            "succeeded" => new ProjectDetailStep(number, label, "done", href, "✓"),
+            "failed" => new ProjectDetailStep(number, label, "fix", href, "×"),
+            _ => new ProjectDetailStep(number, label, "pending", href, "")
+        };
+    }
+
+    private static RunReadbackItem? LatestRun(IReadOnlyList<RunReadbackItem> runs, params string[] runTypes)
+    {
+        return runs.FirstOrDefault(run => runTypes.Contains(run.RunType, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private sealed record ProjectDetailStep(int Number, string Label, string Status, string Href, string Mark);
 
     public string RenderRun(RunSnapshot run, IReadOnlyList<ArtifactSnapshot> artifacts)
     {
@@ -3638,6 +3907,7 @@ public sealed class BrowserUiRenderer
                 p { color: var(--muted); }
                 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
                 .package { display: grid; gap: 0.45rem; }
+                .downloads-grid { display: grid; gap: 1rem; }
                 button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
                 .danger { color: var(--danger); }
@@ -3651,7 +3921,10 @@ public sealed class BrowserUiRenderer
                   <p>按版本号/时间戳从近到远列出所有已打包的项目文件。压缩包只包含项目相关文件，不包含平台工程代码。</p>
                 </header>
                 <section id="status" class="card muted">正在读取项目文件包列表...</section>
-                <section id="packages" class="card"></section>
+                <section class="downloads-grid">
+                  <section id="gddDownload" class="card"></section>
+                  <section id="packages" class="card"></section>
+                </section>
               </main>
               <script>
                 const params = new URLSearchParams(location.search);
@@ -3685,6 +3958,24 @@ public sealed class BrowserUiRenderer
                   document.querySelectorAll("[data-download-url]").forEach(button => {
                     button.onclick = () => downloadPackage(button, button.dataset.downloadUrl, button.dataset.fileName);
                   });
+                  await loadGddDownload();
+                }
+                async function loadGddDownload() {
+                  const response = await fetch(`/api/projects/${projectId}/gdd`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
+                  if (!response.ok) {
+                    $("gddDownload").innerHTML = "<strong>策划 GDD 文档</strong><p class='muted'>还没有创建 GDD.md。</p>";
+                    return;
+                  }
+
+                  const payload = await response.json();
+                  $("gddDownload").innerHTML = `
+                    <article class="package">
+                      <strong>策划 GDD 文档</strong>
+                      <span class="muted">${escapeHtml(payload.lastUpdatedUtc || "未知时间")} · ${escapeHtml(payload.relativePath || "docs/gdd/GDD.md")} · ${payload.sizeBytes || 0} bytes</span>
+                      <button id="downloadGddDocument">下载 GDD.md</button>
+                    </article>
+                  `;
+                  $("downloadGddDocument").onclick = () => downloadGddDocument($("downloadGddDocument"));
                 }
                 function disabledText(reason) {
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
@@ -3723,6 +4014,38 @@ public sealed class BrowserUiRenderer
                     $("status").textContent = "下载已提交给浏览器。如果没有看到下载，请检查浏览器下载拦截或下载目录。";
                   } catch {
                     $("status").innerHTML = "<span class='danger'>下载失败：浏览器未能读取项目文件。</span>";
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
+                }
+                async function downloadGddDocument(button) {
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "下载准备中...";
+                  $("status").textContent = "正在准备策划 GDD 文档下载。";
+                  try {
+                    const response = await fetch(`/api/projects/${projectId}/gdd/download-ticket`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, cache: "no-store" });
+                    if (!response.ok) {
+                      $("status").innerHTML = "<span class='danger'>下载失败：还没有可下载的 GDD.md。</span>";
+                      return;
+                    }
+
+                    const payload = await response.json();
+                    if (!payload.downloadUrl) {
+                      $("status").innerHTML = "<span class='danger'>下载失败：没有获得下载链接。</span>";
+                      return;
+                    }
+                    const anchor = document.createElement("a");
+                    anchor.href = payload.downloadUrl;
+                    anchor.download = "GDD.md";
+                    anchor.style.display = "none";
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    $("status").textContent = "GDD.md 已提交给浏览器下载。";
+                  } catch {
+                    $("status").innerHTML = "<span class='danger'>下载失败：浏览器未能读取 GDD.md。</span>";
                   } finally {
                     button.disabled = false;
                     button.textContent = originalText;

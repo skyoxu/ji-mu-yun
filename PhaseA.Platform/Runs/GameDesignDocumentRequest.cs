@@ -1,6 +1,6 @@
 namespace PhaseA.Platform.Runs;
 
-public sealed record PrototypeIterationPlanRequest(
+public sealed record GameDesignDocumentRequest(
     string? Message,
-    string? SourceKind = null,
+    string? Model = null,
     IReadOnlyList<TextAttachment>? Attachments = null);

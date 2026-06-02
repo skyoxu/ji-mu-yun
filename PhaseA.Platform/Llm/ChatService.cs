@@ -11,7 +11,11 @@ public sealed class ChatService
     private const string RunType = "prototype-chat";
     private const decimal EstimatedChatCostCny = 0.10m;
     private const int MaxMessageLength = 8000;
-    private const int MaxHistoryMessages = 10;
+    private const int MaxHistoryMessages = 3;
+    private const int MaxTextAttachments = 5;
+    private const int MaxTextAttachmentChars = 12000;
+    private const int MaxChatMemoryChars = 1500;
+    private const int MaxMemorySourceChars = 400;
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
@@ -70,6 +74,11 @@ public sealed class ChatService
             return new ChatResult("", "message_too_long", 2, null, "message_too_long", request.Model);
         }
 
+        if ((request.Attachments?.Count ?? 0) > MaxTextAttachments)
+        {
+            return new ChatResult("", "too_many_attachments", 2, null, "too_many_attachments", request.Model);
+        }
+
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
@@ -118,7 +127,9 @@ public sealed class ChatService
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
-        var messages = BuildMessages(request);
+        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, cancellationToken);
+        var memorySummary = memory?.MemorySummary;
+        var messages = BuildMessages(request, memorySummary);
         var completion = await _chatClient.CompleteAsync(binding, token, model, messages, cancellationToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var exitCode = completion.Succeeded ? 0 : 1;
@@ -132,7 +143,8 @@ public sealed class ChatService
             gateway_provider = binding.GatewayProvider,
             external_account_ref = binding.ExternalAccountRef,
             message_length = request.Message!.Length,
-            history_count = request.History?.Count ?? 0
+            history_count = Math.Min(request.History?.Count ?? 0, MaxHistoryMessages),
+            memory_chars = memorySummary?.Length ?? 0
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
         await _metadataStore.RecordRunLlmAuditAsync(
@@ -142,6 +154,13 @@ public sealed class ChatService
             model,
             LlmStopLossService.BuildCostJson(estimate, stopLoss),
             cancellationToken);
+
+        if (completion.Succeeded &&
+            !string.IsNullOrWhiteSpace(sanitizedAssistantMessage) &&
+            ShouldUpdateProjectChatMemory(request))
+        {
+            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, completion.RequestId, cancellationToken);
+        }
 
         return new ChatResult(runId, status, exitCode, sanitizedAssistantMessage, completion.FailureCode, model);
     }
@@ -157,7 +176,9 @@ public sealed class ChatService
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var skillAction = ResolveSkillAction(request.SkillActionId);
-        var prompt = BuildCodexPrompt(project, request, skillAction);
+        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, cancellationToken);
+        var memorySummary = memory?.MemorySummary;
+        var prompt = BuildCodexPrompt(project, request, skillAction, memorySummary);
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
                 EnsureChatPromptWorkspace(project),
@@ -180,7 +201,8 @@ public sealed class ChatService
             skill_action_id = skillAction?.ActionId,
             skill_name = skillAction?.SkillName,
             message_length = request.Message!.Length,
-            history_count = request.History?.Count ?? 0,
+            history_count = Math.Min(request.History?.Count ?? 0, MaxHistoryMessages),
+            memory_chars = memorySummary?.Length ?? 0,
             failure_code = completion.FailureCode
         });
         await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, stdout, stderr, evidenceJson, cancellationToken);
@@ -197,6 +219,13 @@ public sealed class ChatService
                 projectId: project.ProjectId,
                 providerBilling: completion.RawResult?.ProviderBilling),
             cancellationToken);
+
+        if (completion.Succeeded &&
+            !string.IsNullOrWhiteSpace(sanitizedAssistantMessage) &&
+            ShouldUpdateProjectChatMemory(request))
+        {
+            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, null, cancellationToken);
+        }
 
         return new ChatResult(runId, status, completion.ExitCode, sanitizedAssistantMessage, completion.FailureCode, model);
     }
@@ -312,17 +341,31 @@ public sealed class ChatService
         return CodexModelCatalog.IsAllowed(model) ? model : CodexModelCatalog.DefaultModel();
     }
 
-    private static string BuildCodexPrompt(ProjectSnapshot project, ChatRequest request, SkillActionDefinition? skillAction)
+    private static string BuildChatMemoryContext(string? memorySummary)
     {
-        var history = string.Join(
+        return string.IsNullOrWhiteSpace(memorySummary)
+            ? "无。"
+            : memorySummary.Trim();
+    }
+
+    private static string BuildRecentHistoryText(ChatRequest request)
+    {
+        return string.Join(
             Environment.NewLine,
             (request.History ?? [])
                 .TakeLast(MaxHistoryMessages)
                 .Where(message => !string.IsNullOrWhiteSpace(message.Content))
                 .Select(message => $"{message.Role}: {message.Content.Trim()}"));
+    }
+
+    private static string BuildCodexPrompt(ProjectSnapshot project, ChatRequest request, SkillActionDefinition? skillAction, string? memorySummary)
+    {
+        var history = BuildRecentHistoryText(request);
         var skillInstruction = skillAction is null
             ? "能力模式：普通模式。不要激活任何 $skill，只按通用 Phase A 原型顾问方式回答。"
             : $"能力模式：{skillAction.Label}。请按白名单 skill ${skillAction.SkillName} 的职责与语气回答，但保持只读建议，不要声称已经修改文件或执行命令。";
+        var attachmentContext = BuildAttachmentPromptBlock(request.Attachments);
+        var chatMemoryContext = BuildChatMemoryContext(memorySummary);
 
         return $"""
             请直接回答这个网页聊天用户的问题：{request.Message!.Trim()}
@@ -343,12 +386,44 @@ public sealed class ChatService
 
             {skillInstruction}
 
-            最近对话历史仅供语义参考，不要回答历史里的旧问题：
+            当前项目自由聊天记忆，仅供理解用户偏好和之前讨论，不要主动复述：
+            {chatMemoryContext}
+
+            本次导入 TXT 参考资料：
+            {attachmentContext}
+
+            最近少量对话历史仅供语义参考，不要回答历史里的旧问题：
             {history}
             """;
     }
 
-    private static IReadOnlyList<ChatMessage> BuildMessages(ChatRequest request)
+    private static string BuildAttachmentPromptBlock(IReadOnlyList<TextAttachment>? attachments)
+    {
+        if (attachments is null || attachments.Count == 0)
+        {
+            return "无。";
+        }
+
+        var usable = attachments
+            .Take(MaxTextAttachments)
+            .Where(item => !string.IsNullOrWhiteSpace(item.Content))
+            .Select((item, index) =>
+            {
+                var fileName = string.IsNullOrWhiteSpace(item.FileName) ? $"attachment-{index + 1}.txt" : item.FileName.Trim();
+                var content = item.Content!.Trim();
+                if (content.Length > MaxTextAttachmentChars)
+                {
+                    content = content[..MaxTextAttachmentChars] + "\n[truncated]";
+                }
+
+                return $"[{index + 1}] {fileName}\n{content}";
+            })
+            .ToArray();
+
+        return usable.Length == 0 ? "无。" : string.Join("\n\n", usable);
+    }
+
+    private static IReadOnlyList<ChatMessage> BuildMessages(ChatRequest request, string? memorySummary)
     {
         var messages = new List<ChatMessage>
         {
@@ -356,6 +431,13 @@ public sealed class ChatService
                 "system",
                 "You are the Phase A prototype assistant for Ji Mu Yun. Reply in Chinese. Help the user clarify requirements, prototype ideas, and console usage. Do not claim that you can execute server commands from chat. Never reveal local paths, project paths, script names, file names, command lines, tool calls, environment variable names, or internal log locations. If execution is needed, tell the user to use the fixed workflow buttons or ask for a confirmed workflow feature.")
         };
+
+        if (!string.IsNullOrWhiteSpace(memorySummary))
+        {
+            messages.Add(new ChatMessage(
+                "system",
+                $"Current project free-chat memory for continuity only. Do not repeat it unless directly useful:\n{memorySummary.Trim()}"));
+        }
 
         foreach (var message in (request.History ?? []).TakeLast(MaxHistoryMessages))
         {
@@ -366,8 +448,78 @@ public sealed class ChatService
             }
         }
 
-        messages.Add(new ChatMessage("user", request.Message!.Trim()));
+        var attachmentContext = BuildAttachmentPromptBlock(request.Attachments);
+        var userMessage = attachmentContext == "无。"
+            ? request.Message!.Trim()
+            : $"""
+                {request.Message!.Trim()}
+
+                本次导入 TXT 参考资料：
+                {attachmentContext}
+                """;
+        messages.Add(new ChatMessage("user", userMessage));
         return messages;
+    }
+
+    private async Task UpdateProjectChatMemoryAsync(
+        ProjectSnapshot project,
+        ChatRequest request,
+        string assistantMessage,
+        string? providerSessionRef,
+        CancellationToken cancellationToken)
+    {
+        var previous = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, cancellationToken);
+        var summary = BuildUpdatedChatMemory(previous?.MemorySummary, request.Message ?? "", assistantMessage);
+        await _metadataStore.UpsertProjectChatMemoryAsync(project.AccountId, project.ProjectId, summary, providerSessionRef, cancellationToken);
+    }
+
+    private static bool ShouldUpdateProjectChatMemory(ChatRequest request)
+    {
+        return request.Attachments is null || request.Attachments.Count == 0;
+    }
+
+    private static string BuildUpdatedChatMemory(string? previousMemory, string userMessage, string assistantMessage)
+    {
+        var lines = new List<string>();
+        if (!string.IsNullOrWhiteSpace(previousMemory))
+        {
+            lines.AddRange(previousMemory.Split('\n').Select(line => line.Trim()).Where(line => line.Length > 0));
+        }
+
+        var user = CompactMemoryText(userMessage);
+        var assistant = CompactMemoryText(assistantMessage);
+        if (!string.IsNullOrWhiteSpace(user) || !string.IsNullOrWhiteSpace(assistant))
+        {
+            lines.Add($"最近讨论：用户提到“{user}”；助手回应“{assistant}”。");
+        }
+
+        var compact = new List<string>();
+        foreach (var line in lines.AsEnumerable().Reverse())
+        {
+            if (compact.Contains(line, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            compact.Add(line);
+            var candidate = string.Join("\n", compact.AsEnumerable().Reverse());
+            if (candidate.Length > MaxChatMemoryChars)
+            {
+                compact.RemoveAt(compact.Count - 1);
+                break;
+            }
+        }
+
+        return string.Join("\n", compact.AsEnumerable().Reverse());
+    }
+
+    private static string CompactMemoryText(string value)
+    {
+        var sanitized = PublicChatSanitizer.Sanitize(value)
+            .Replace("\r", " ", StringComparison.Ordinal)
+            .Replace("\n", " ", StringComparison.Ordinal)
+            .Trim();
+        return sanitized.Length <= MaxMemorySourceChars ? sanitized : sanitized[..MaxMemorySourceChars] + "...";
     }
 
 }

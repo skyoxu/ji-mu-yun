@@ -1,5 +1,6 @@
 using FluentAssertions;
 using PhaseA.Platform.Browser;
+using PhaseA.Platform.Data;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Browser;
@@ -57,6 +58,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
         html.Should().Contain("workflow-icons-color.png");
         html.Should().Contain("workflow-icons-gray.png");
+        html.Should().Contain("v2-step-number");
+        html.Should().Contain("${index + 1}");
+        html.Should().Contain(".v2-step-button.pending .v2-step-mark");
+        html.Should().Contain(".v2-step-button.action .v2-step-mark");
         html.Should().Contain("游戏项目详情");
         html.Should().Contain("创建游戏原型");
         html.Should().Contain("生成迭代计划");
@@ -69,8 +74,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("确认素材清单");
         html.Should().Contain("打包项目文件");
         html.Should().Contain("下载项目文件");
-        html.Should().Contain("if (stepId === \"package-project\") return succeeded ? \"action\" : \"pending\"");
-        html.Should().Contain("if (stepId === \"download-project\") return state.packageList?.length ? \"action\" : \"pending\"");
+        html.Should().Contain("if (stepId === \"new-project\") return state.projectId ? \"done\" : \"pending\"");
+        html.Should().Contain("if (stepId === \"iteration-plan\") return state.iterationPlan?.goals?.length ? \"done\" : \"pending\"");
+        html.Should().Contain("function v2AssetInventoryConfirmed()");
+        html.Should().Contain("if (stepId === \"asset-inventory\") return v2AssetInventoryConfirmed() ? \"done\" : \"pending\"");
+        html.Should().Contain("if (stepId === \"package-project\") return v2HasPackages() ? \"done\" : \"pending\"");
+        html.Should().Contain("if (stepId === \"download-project\") return v2HasPackages() ? \"action\" : \"pending\"");
         html.Should().Contain("const mark = status === \"done\" ? \"✓\" : status === \"fix\" ? \"×\" : \"\"");
         html.Should().Contain("flowTitle?.classList.add(\"hidden\")");
         html.Should().Contain("$(\"feedbackSummary\")?.classList.add(\"hidden\")");
@@ -89,7 +98,20 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2-skill-row");
         html.Should().Contain("skillDescription");
         html.Should().Contain("v2CreateIterationPlanFromChat");
-        html.Should().Contain("用聊天内容创建新迭代计划");
+        html.Should().Contain("创建新迭代计划");
+        html.Should().Contain("downloadChatHistory");
+        html.Should().Contain("messageCount: messages.length");
+        html.Should().Contain("const result = await api(`/api/projects/${state.projectId}/chat-history`);");
+        html.Should().Contain("chatAttachmentFiles");
+        html.Should().Contain("currentChatAttachmentsForRun");
+        html.Should().Contain("attachments: currentChatAttachmentsForRun()");
+        html.Should().Contain("最多只能导入 5 个 TXT 参考文件。");
+        html.Should().Contain("clearChatAttachments();");
+        html.Should().Contain("history: state.chatHistory.slice(-3)");
+        html.Should().NotContain("history: state.chatHistory.slice(-10)");
+        html.Should().Contain("记录已下载。");
+        html.Should().Contain("createGddDocument");
+        html.Should().Contain("/api/projects/${state.projectId}/gdd");
         html.Should().Contain("v2CanCreateIterationPlanFromChat");
         html.Should().Contain("v2IterationPlanExists");
         html.Should().Contain("v2IterationPlanCompleted");
@@ -104,6 +126,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("margin-left: auto");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\")?.classList.add(\"hidden\")");
         html.Should().Contain("syncChatHistory");
+        html.Should().Contain("chatAttachmentFiles");
+        html.Should().Contain("clearChatAttachments");
         html.Should().Contain("loadServerChatHistoryForProject");
         html.Should().Contain("renderChatHistory");
         html.Should().Contain("v2OriginalShowProjectDetail");
@@ -115,6 +139,39 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("v2ProgressUpdated");
         html.Should().NotContain("v2ProjectHealth");
         html.Should().Contain("/api/projects/${state.projectId}/prototype-7day-playable/progress");
+    }
+
+    [Fact]
+    public void RenderProject_IncludesDefaultDetailProgressWithPendingUnrunSteps()
+    {
+        var project = new ProjectSnapshot(
+            "project-1",
+            "account-1",
+            "Demo Project",
+            "Demo Game",
+            "rpg",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\project-1",
+            "C:\\workspaces\\project-1\\runtime",
+            "C:\\workspaces\\project-1\\.phasea");
+
+        var html = new BrowserUiRenderer().RenderProject(project, []);
+
+        html.Should().Contain("detail-progress");
+        html.Should().Contain("detail-step-number\">1</span>");
+        html.Should().Contain("detail-step-number\">8</span>");
+        html.Should().Contain("打包项目文件");
+        html.Should().Contain("detail-step pending");
+        html.Should().NotContain("detail-step fix");
+        html.Should().NotContain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
+        html.Should().NotContain("detail-step done\" href=\"/assets?projectId=project-1\"");
+        html.Should().NotContain("detail-step done\" href=\"/#createProjectPackage\"");
     }
 
     [Fact]
@@ -269,6 +326,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("可以点击“生成修复计划”");
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
+        html.Should().Contain("<button id=\"sendChat\" class=\"secondary\">发送消息</button>");
+        html.Should().NotContain("<button id=\"sendChat\" class=\"secondary\" data-global-action=\"true\">");
         html.Should().Contain("accountAdminPanel");
         html.IndexOf("id=\"accountAdminPanel\"", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("id=\"adminPanel\"", StringComparison.Ordinal));
         html.Should().Contain("setUserTopActionsVisible(true, isAdmin)");
@@ -297,7 +356,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("downloadAccountAuditCsv");
         html.Should().Contain("/api/admin/account-audit.csv");
         html.Should().Contain("syncChatHistory");
-        html.Should().Contain("同步服务器聊天记录");
+        html.Should().Contain("同步记录");
+        html.Should().Contain("下载记录");
+        html.Should().Contain("创建策划GDD文档");
         html.Should().Contain("服务器聊天记录已同步。");
         html.Should().Contain("未输入优化目标，已使用当前下一步建议生成迭代计划。");
         html.Should().Contain("typedMessage ? \"manual_feedback\" : \"completion_suggestion\"");
@@ -474,6 +535,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("下载准备中...");
         html.Should().Contain("download-ticket");
         html.Should().Contain("/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(fileName)}/download-ticket");
+        html.Should().Contain("/api/projects/${projectId}/gdd/download-ticket");
+        html.Should().Contain("下载 GDD.md");
         html.Should().Contain("cache: \"no-store\"");
         html.Should().NotContain("URL.createObjectURL");
         html.Should().Contain("下载失败：");

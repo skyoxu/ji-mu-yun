@@ -2238,6 +2238,80 @@ public sealed class PhaseAMetadataStore
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task<ProjectChatMemorySnapshot?> GetProjectChatMemoryAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT account_id, project_id, memory_summary, provider_session_ref, updated_utc
+            FROM project_chat_memories
+            WHERE account_id = $account_id
+              AND project_id = $project_id;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectChatMemorySnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.IsDBNull(3) ? null : reader.GetString(3),
+            reader.GetString(4));
+    }
+
+    public async Task UpsertProjectChatMemoryAsync(
+        string accountId,
+        string projectId,
+        string memorySummary,
+        string? providerSessionRef,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        memorySummary = memorySummary.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_chat_memories (
+                account_id,
+                project_id,
+                memory_summary,
+                provider_session_ref,
+                updated_utc)
+            VALUES (
+                $account_id,
+                $project_id,
+                $memory_summary,
+                $provider_session_ref,
+                $updated_utc)
+            ON CONFLICT(account_id, project_id) DO UPDATE SET
+                memory_summary = excluded.memory_summary,
+                provider_session_ref = excluded.provider_session_ref,
+                updated_utc = excluded.updated_utc;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$memory_summary", memorySummary);
+        command.Parameters.AddWithValue("$provider_session_ref", (object?)providerSessionRef ?? DBNull.Value);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<ProjectIterationSessionSnapshot> CreateProjectIterationSessionAsync(
         string accountId,
         string projectId,

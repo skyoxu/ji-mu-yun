@@ -9,6 +9,8 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeIterationPlanService
 {
+    private const int MaxTextAttachments = 5;
+    private const int MaxTextAttachmentChars = 12000;
     private static readonly Regex SplitRegex = new(@"[。！？!?]\s*|\r?\n+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
     private static readonly Regex NumberedGoalRegex = new(
         @"(?:^|\n)\s*(?:step\s*)?\d{1,2}\s*[\.\):\-:：、]?\s*(.+?)(?=(?:\n\s*(?:step\s*)?\d{1,2}\s*[\.\):\-:：、]?\s*)|\z)",
@@ -86,6 +88,14 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", [], null);
         }
 
+        if ((request.Attachments?.Count ?? 0) > MaxTextAttachments)
+        {
+            return new PrototypeIterationPlanResult("", "too_many_attachments", "最多只能导入 5 个 TXT 参考文件。", [], null);
+        }
+
+        var attachmentContext = BuildAttachmentPromptBlock(request.Attachments);
+        var promptMessage = AppendAttachmentContext(message, attachmentContext);
+
         var sourceKind = string.IsNullOrWhiteSpace(request.SourceKind) ? "manual_feedback" : request.SourceKind.Trim();
         if (string.Equals(sourceKind, "completion_suggestion", StringComparison.OrdinalIgnoreCase) &&
             IsInternalExecutionSuggestion(message))
@@ -107,12 +117,12 @@ public sealed class PrototypeIterationPlanService
         }
 
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
-        var regenerationGuidance = BuildPlanRegenerationGuidance(previousIterationPlan, message, sourceKind);
+        var regenerationGuidance = BuildPlanRegenerationGuidance(previousIterationPlan, promptMessage, sourceKind);
         var prototypeContract = _contractService.Read(project);
         IterationPlanningContext planningContext;
         try
         {
-            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, message, sourceKind, cancellationToken);
+            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -128,7 +138,7 @@ public sealed class PrototypeIterationPlanService
         List<PrototypeIterationPlanGoalResult> goals;
         try
         {
-            goals = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, message, sourceKind, planningContext, regenerationGuidance, cancellationToken);
+            goals = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -969,6 +979,47 @@ public sealed class PrototypeIterationPlanService
     {
         var trimmed = value.Trim();
         return trimmed.Length <= 5000 ? trimmed : trimmed[..5000];
+    }
+
+    private static string AppendAttachmentContext(string message, string attachmentContext)
+    {
+        if (string.IsNullOrWhiteSpace(attachmentContext) || attachmentContext == "无。")
+        {
+            return message;
+        }
+
+        return $"""
+            {message}
+
+            本次导入 TXT 参考资料：
+            {attachmentContext}
+            """;
+    }
+
+    private static string BuildAttachmentPromptBlock(IReadOnlyList<TextAttachment>? attachments)
+    {
+        if (attachments is null || attachments.Count == 0)
+        {
+            return "无。";
+        }
+
+        var usable = attachments
+            .Take(MaxTextAttachments)
+            .Where(item => !string.IsNullOrWhiteSpace(item.Content))
+            .Select((item, index) =>
+            {
+                var fileName = string.IsNullOrWhiteSpace(item.FileName) ? $"attachment-{index + 1}.txt" : item.FileName.Trim();
+                var content = item.Content!.Trim();
+                if (content.Length > MaxTextAttachmentChars)
+                {
+                    content = content[..MaxTextAttachmentChars] + "\n[truncated]";
+                }
+
+                return $"[{index + 1}] {fileName}\n{content}";
+            })
+            .ToArray();
+
+        return usable.Length == 0 ? "无。" : string.Join("\n\n", usable);
     }
 
     public async Task<PrototypeIterationPlanDetails?> GetLatestAsync(

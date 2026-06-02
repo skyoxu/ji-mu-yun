@@ -85,6 +85,39 @@ public sealed class PrototypeIterationPlanServiceTests
         latest.LatestEvaluation!.Decision.Should().Be(result.LatestEvaluation.Decision);
     }
 
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseTxtAttachmentsForPromptOnly()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var codex = new SuccessfulRpgPlanCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Plan the next RPG loop improvement.",
+                "manual_feedback",
+                [new TextAttachment("notes.txt", "Important boss design reference.")]));
+
+        result.Status.Should().Be("ready");
+        codex.LastGoalPlanPrompt.Should().Contain("notes.txt");
+        codex.LastGoalPlanPrompt.Should().Contain("Important boss design reference.");
+
+        var latest = await store.GetLatestProjectIterationSessionAsync(projectId);
+        latest.Should().NotBeNull();
+        latest!.Session.SourceMessage.Should().Be("Plan the next RPG loop improvement.");
+        latest.Session.SourceMessage.Should().NotContain("Important boss design reference.");
+    }
+
     [Fact]
     public async Task EvaluateAsync_ShouldBeReadyToExecute_WhenPendingGoalIsFocused()
     {
@@ -906,6 +939,9 @@ public sealed class PrototypeIterationPlanServiceTests
     {
         private readonly bool _includeContractInstruction;
 
+        public string? LastPrompt { get; private set; }
+        public string? LastGoalPlanPrompt { get; private set; }
+
         public SuccessfulRpgPlanCodexClient(bool includeContractInstruction = false)
         {
             _includeContractInstruction = includeContractInstruction;
@@ -919,6 +955,7 @@ public sealed class PrototypeIterationPlanServiceTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
+            LastPrompt = prompt;
             if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
             {
                 const string analysis =
@@ -937,6 +974,7 @@ public sealed class PrototypeIterationPlanServiceTests
 
             if (options?.OutputSchemaPath?.Contains("goal-plan", StringComparison.OrdinalIgnoreCase) == true)
             {
+                LastGoalPlanPrompt = prompt;
                 var finalDescription = _includeContractInstruction
                     ? "Run final acceptance across map, battle, reward return, navigation, input_traceability, and contract-specific runtime proof."
                     : "Run final acceptance across map, battle, reward return, navigation, and contract-specific runtime proof.";
