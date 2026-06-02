@@ -49,9 +49,18 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-step-button.fix .v2-step-mark { background: #b73732; }
                 body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
                 body.v2-detail .v2-next { margin-top: 0.7rem; }
-                body.v2-detail .v2-action-row,
-                body.v2-detail .v2-chat-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
-                body.v2-detail .v2-chat-attachments { display: grid; gap: 0.5rem; }
+                body.v2-detail .v2-action-row { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
+                body.v2-detail .v2-chat-composer { display: grid; gap: 0.55rem; border: 1px solid var(--line); border-radius: 0.9rem; background: #fffdf8; padding: 0.65rem; box-shadow: inset 0 0 0 1px rgba(23, 33, 27, 0.025); }
+                body.v2-detail .v2-chat-composer .v2-message-field { margin: 0; display: block; }
+                body.v2-detail .v2-chat-composer #chatMessage { min-height: 4.25rem; max-height: 11rem; width: 100%; border: 0; border-radius: 0.55rem; padding: 0.45rem 0.35rem; background: transparent; resize: none; overflow-y: auto; box-shadow: none; }
+                body.v2-detail .v2-chat-composer #chatMessage:focus { outline: 2px solid rgba(15, 107, 87, 0.16); }
+                body.v2-detail .v2-chat-attachments { display: grid; gap: 0.45rem; }
+                body.v2-detail .v2-attachment-list { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; min-height: 1.35rem; }
+                body.v2-detail .v2-attachment-chip { display: inline-flex; align-items: center; gap: 0.35rem; max-width: 100%; border: 1px solid var(--line); border-radius: 999px; background: #f7efe2; color: var(--ink); padding: 0.24rem 0.28rem 0.24rem 0.55rem; font-size: 0.82rem; line-height: 1.15; }
+                body.v2-detail .v2-attachment-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 12rem; }
+                body.v2-detail .v2-attachment-meta { color: var(--muted); font-size: 0.76rem; }
+                body.v2-detail .v2-attachment-remove { width: 1.35rem; height: 1.35rem; min-width: 1.35rem; border-radius: 999px; padding: 0; display: grid; place-items: center; }
+                body.v2-detail .v2-chat-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
                 body.v2-detail .v2-skill-row { display: grid; grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr); gap: 0.6rem; align-items: stretch; }
                 body.v2-detail .v2-skill-row #chatSkillDescription { margin: 0; }
                 body.v2-detail #currentProjectPanel > button { display: none; }
@@ -62,10 +71,10 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-action-row button,
                 body.v2-detail .v2-chat-controls button,
                 body.v2-detail .v2-chat-controls label,
-                body.v2-detail .v2-chat-controls select { width: auto; }
-                body.v2-detail .v2-chat-controls label { min-width: 9rem; }
-                body.v2-detail .v2-chat-controls #createGddDocument { margin-left: auto; }
-                body.v2-detail .v2-chat-controls #sendChat { min-width: 7rem; }
+                body.v2-detail .v2-chat-controls select { width: auto; min-height: 2.35rem; padding: 0.5rem 0.72rem; border-radius: 999px; font-size: 0.88rem; }
+                body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
+                body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
+                body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
                 @media (max-width: 1000px) {
                   body.v2-detail #v2ContentGrid,
                   body.v2-detail .v2-summary-grid,
@@ -79,7 +88,7 @@ public sealed class BrowserUiRenderer
                   body.v2-detail #prototypeCommandPanel,
                   body.v2-detail #runsPanel,
                   body.v2-detail #outputPanel { grid-column: 1; grid-row: auto; }
-                  body.v2-detail .v2-chat-controls #createGddDocument { margin-left: 0; }
+                  body.v2-detail .v2-chat-controls #sendChat { margin-left: 0; }
                 }
               </style>
               """)
@@ -273,6 +282,12 @@ public sealed class BrowserUiRenderer
                   createRepair?.insertAdjacentElement("beforebegin", actions);
                   [createRepair, $("executeRepairStep")].filter(Boolean).forEach(button => actions.appendChild(button));
                 }
+                function resizeChatComposer() {
+                  const textarea = $("chatMessage");
+                  if (!textarea) return;
+                  textarea.style.height = "auto";
+                  textarea.style.height = `${Math.min(textarea.scrollHeight, 176)}px`;
+                }
                 function v2ArrangeChatPanel() {
                   const chatPanel = $("chatPanel");
                   if (!chatPanel) return;
@@ -295,19 +310,36 @@ public sealed class BrowserUiRenderer
                   }
                   if ($("v2ChatControls")) return;
                   const messageLabel = $("chatMessage")?.closest("label");
+                  messageLabel?.classList.add("v2-message-field");
+                  if (messageLabel?.childNodes?.[0]?.nodeType === Node.TEXT_NODE) messageLabel.childNodes[0].textContent = "";
+                  if (!$("v2ChatComposer")) {
+                    const composer = document.createElement("div");
+                    composer.id = "v2ChatComposer";
+                    composer.className = "v2-chat-composer";
+                    ($("chatHistory") || chatPanel).insertAdjacentElement("afterend", composer);
+                    if (messageLabel) composer.appendChild(messageLabel);
+                  }
+                  const composer = $("v2ChatComposer");
                   if (!$("v2ChatAttachmentPanel")) {
                     const attachmentPanel = document.createElement("div");
                     attachmentPanel.id = "v2ChatAttachmentPanel";
                     attachmentPanel.className = "v2-chat-attachments";
-                    messageLabel?.insertAdjacentElement("afterend", attachmentPanel);
-                    [$("chatAttachmentFiles")?.closest("label"), $("chatAttachmentStatus"), $("clearChatAttachments")].filter(Boolean).forEach(element => attachmentPanel.appendChild(element));
+                    composer?.appendChild(attachmentPanel);
+                    [$("chatAttachmentStatus")].filter(Boolean).forEach(element => attachmentPanel.appendChild(element));
                   }
                   const attachmentPanel = $("v2ChatAttachmentPanel");
                   const controls = document.createElement("div");
                   controls.id = "v2ChatControls";
                   controls.className = "v2-chat-controls";
-                  (attachmentPanel || messageLabel)?.insertAdjacentElement("afterend", controls);
+                  composer?.appendChild(controls);
                   $("submitFormalFeedback")?.classList.add("hidden");
+                  const attachLabel = $("chatAttachmentFiles")?.closest("label");
+                  if (attachLabel) {
+                    attachLabel.className = "v2-attach-button";
+                    if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "+";
+                    attachLabel.title = "导入 TXT 参考文件";
+                  }
+                  if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
                   if (!$("v2CreateIterationPlanFromChat")) {
                     const createPlanButton = document.createElement("button");
                     createPlanButton.id = "v2CreateIterationPlanFromChat";
@@ -317,8 +349,10 @@ public sealed class BrowserUiRenderer
                     createPlanButton.onclick = v2CreateIterationPlanFromChat;
                     controls.appendChild(createPlanButton);
                   }
-                  [$("syncChatHistory"), $("downloadChatHistory"), $("v2CreateIterationPlanFromChat"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("chatAttachmentFiles")?.closest("label"), $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("v2CreateIterationPlanFromChat"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
+                  $("chatMessage").addEventListener("input", resizeChatComposer);
+                  resizeChatComposer();
                   v2RenderChatIterationPlanButtonState();
                 }
                 function v2IterationPlanExists() {
@@ -659,7 +693,21 @@ public sealed class BrowserUiRenderer
                 .metric strong { display: block; font-size: 1.15rem; }
                 .metric span, .metric strong { overflow-wrap: anywhere; word-break: break-word; }
                 .chat-frame { overflow: visible; }
-                .chat-scroll { min-height: 16rem; max-height: 24rem; overflow-y: auto; padding-right: 0.25rem; }
+                .chat-scroll { min-height: 16rem; max-height: 24rem; overflow-y: auto; padding-right: 0.25rem; align-content: start; }
+                .v2-chat-message { display: grid; gap: 0.2rem; max-width: min(100%, 46rem); white-space: pre-wrap; line-height: 1.5; overflow-wrap: anywhere; }
+                .v2-chat-message-user { justify-self: end; width: fit-content; max-width: min(82%, 34rem); background: #eef0ec; border: 1px solid #d9ded8; border-radius: 0.85rem; padding: 0.55rem 0.72rem; color: var(--ink); }
+                .v2-chat-message-assistant { justify-self: start; width: 100%; padding: 0.35rem 0.05rem; color: var(--ink); background: transparent; border: 0; box-shadow: none; }
+                .v2-chat-message-assistant p { margin: 0.25rem 0 0.55rem; }
+                .v2-chat-message-assistant h3,
+                .v2-chat-message-assistant h4 { margin: 0.7rem 0 0.35rem; line-height: 1.25; letter-spacing: 0; }
+                .v2-chat-message-assistant ul,
+                .v2-chat-message-assistant ol { margin: 0.25rem 0 0.65rem; padding-left: 1.3rem; }
+                .v2-chat-message-assistant li { margin: 0.16rem 0; }
+                .v2-chat-message-assistant code { border: 1px solid var(--line); border-radius: 0.35rem; background: #f3ead9; padding: 0.08rem 0.28rem; font-family: Consolas, "Courier New", monospace; font-size: 0.9em; }
+                .v2-chat-message-assistant pre { max-height: 18rem; margin: 0.45rem 0 0.7rem; overflow: auto; white-space: pre; background: #1e2620; color: #edf4ec; border-radius: 0.65rem; padding: 0.75rem; }
+                .v2-chat-message-assistant pre code { border: 0; background: transparent; color: inherit; padding: 0; }
+                .v2-chat-message-pending { color: var(--muted); }
+                .v2-chat-pending-label { color: var(--muted); font-size: 0.78rem; }
                 .feedback-scroll { max-height: 14rem; overflow-y: auto; padding-right: 0.25rem; }
                 .status-ok { color: var(--accent); }
                 .status-warn { color: var(--accent-2); }
@@ -896,11 +944,11 @@ public sealed class BrowserUiRenderer
                     <button id="downloadChatHistory" class="ghost">下载记录</button>
                     <div id="chatHistory" class="card-list chat-scroll"></div>
                     <label>消息 <textarea id="chatMessage" placeholder="例如：帮我把这个原型想法拆成最小可玩循环"></textarea></label>
-                    <label>导入 TXT 参考文件，最多 5 个 <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
-                    <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件。</div>
-                    <button id="clearChatAttachments" class="ghost">清空参考文件</button>
+                    <label>+ <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
+                    <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件，只支持 TXT 文件导入。</div>
+                    <button id="clearChatAttachments" class="ghost hidden">清空参考文件</button>
                     <button id="createGddDocument" class="ghost" data-global-action="true">创建策划文档</button>
-                    <button id="sendChat" class="secondary">发送消息</button>
+                    <button id="sendChat" class="secondary">发送</button>
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
                     <h2>流程记录</h2>
@@ -970,12 +1018,109 @@ public sealed class BrowserUiRenderer
                   state.chatHistory.forEach(message => {
                     if (typeof message.content === "string") message.content = sanitizePublicChatContent(message.content);
                   });
-                  $("chatHistory").innerHTML = state.chatHistory.map((message, index) => `
-                    <div class="card">
-                      <strong>${message.role === "assistant" ? "助手" : "我"}${message.pending ? " · 生成中" : ""}</strong>
-                      <span>${escapeHtml(message.content)}</span>
-                    </div>
-                  `).join("") || "<p class='muted'>还没有对话。</p>";
+                  $("chatHistory").innerHTML = state.chatHistory.map((message, index) => {
+                    const roleClass = message.role === "user" ? "v2-chat-message-user" : "v2-chat-message-assistant";
+                    const pendingClass = message.pending ? " v2-chat-message-pending" : "";
+                    const pendingLabel = message.pending ? "<span class=\"v2-chat-pending-label\">生成中</span>" : "";
+                    const contentHtml = message.role === "user"
+                      ? `<span>${escapeHtml(message.content)}</span>`
+                      : renderAssistantChatContent(message.content);
+                    return `
+                      <div class="v2-chat-message ${roleClass}${pendingClass}">
+                        ${pendingLabel}
+                        ${contentHtml}
+                      </div>
+                    `;
+                  }).join("") || "<p class='muted'>还没有对话。</p>";
+                }
+
+                function renderAssistantChatContent(content) {
+                  const lines = String(content || "").replace(/\r/g, "").split("\n");
+                  const parts = [];
+                  let paragraph = [];
+                  let listItems = [];
+                  let listType = "";
+                  let codeLines = [];
+                  let inCode = false;
+
+                  const flushParagraph = () => {
+                    if (!paragraph.length) return;
+                    parts.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+                    paragraph = [];
+                  };
+                  const flushList = () => {
+                    if (!listItems.length) return;
+                    const tag = listType === "ol" ? "ol" : "ul";
+                    parts.push(`<${tag}>${listItems.map(item => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</${tag}>`);
+                    listItems = [];
+                    listType = "";
+                  };
+                  const flushCode = () => {
+                    parts.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+                    codeLines = [];
+                  };
+
+                  for (const rawLine of lines) {
+                    const line = rawLine.trimEnd();
+                    if (line.trim().startsWith("```")) {
+                      if (inCode) {
+                        flushCode();
+                        inCode = false;
+                      } else {
+                        flushParagraph();
+                        flushList();
+                        inCode = true;
+                        codeLines = [];
+                      }
+                      continue;
+                    }
+                    if (inCode) {
+                      codeLines.push(rawLine);
+                      continue;
+                    }
+                    if (!line.trim()) {
+                      flushParagraph();
+                      flushList();
+                      continue;
+                    }
+                    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+                    if (heading) {
+                      flushParagraph();
+                      flushList();
+                      const tag = heading[1].length === 1 ? "h3" : "h4";
+                      parts.push(`<${tag}>${renderInlineMarkdown(heading[2])}</${tag}>`);
+                      continue;
+                    }
+                    const bullet = line.match(/^[-*]\s+(.+)$/);
+                    if (bullet) {
+                      flushParagraph();
+                      if (listType && listType !== "ul") flushList();
+                      listType = "ul";
+                      listItems.push(bullet[1]);
+                      continue;
+                    }
+                    const ordered = line.match(/^\d+[\.)]\s+(.+)$/);
+                    if (ordered) {
+                      flushParagraph();
+                      if (listType && listType !== "ol") flushList();
+                      listType = "ol";
+                      listItems.push(ordered[1]);
+                      continue;
+                    }
+                    paragraph.push(line.trim());
+                  }
+
+                  if (inCode) flushCode();
+                  flushParagraph();
+                  flushList();
+                  return parts.join("") || "<p></p>";
+                }
+
+                function renderInlineMarkdown(value) {
+                  let html = escapeHtml(value || "");
+                  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+                  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+                  return html;
                 }
 
                 function applyChatWorkflowActions() {
@@ -1488,22 +1633,19 @@ public sealed class BrowserUiRenderer
                   if (!status) return;
                   const files = state.chatAttachments || [];
                   if (!files.length) {
-                    status.className = "card muted";
-                    status.textContent = "未导入 TXT 参考文件。";
+                    status.className = "v2-attachment-list muted";
+                    status.textContent = "未导入 TXT 参考文件，只支持 TXT 文件导入。";
                     return;
                   }
-                  status.className = "card";
+                  status.className = "v2-attachment-list";
                   status.innerHTML = `
-                    <strong>已导入 ${escapeHtml(String(files.length))} 个 TXT 参考文件</strong>
-                    <div class="card-list">
-                      ${files.map((file, index) => `
-                        <div class="card">
-                          <strong>${escapeHtml(file.fileName)}</strong>
-                          <p class="muted">${escapeHtml(String(file.content?.length || 0))} 字符</p>
-                          <button class="ghost removeChatAttachment" type="button" data-index="${index}">移除</button>
-                        </div>
-                      `).join("")}
-                    </div>`;
+                    ${files.map((file, index) => `
+                      <span class="v2-attachment-chip">
+                        <span class="v2-attachment-name">${escapeHtml(file.fileName)}</span>
+                        <span class="v2-attachment-meta">${escapeHtml(String(file.content?.length || 0))} 字符</span>
+                        <button class="ghost v2-attachment-remove removeChatAttachment" type="button" title="移除 ${escapeHtml(file.fileName)}" data-index="${index}">×</button>
+                      </span>
+                    `).join("")}`;
                   document.querySelectorAll(".removeChatAttachment").forEach(button => {
                     button.onclick = () => removeChatAttachment(Number(button.dataset.index));
                   });
@@ -1751,7 +1893,7 @@ public sealed class BrowserUiRenderer
                   finally {
                     clearChatAttachments();
                     $("sendChat").disabled = false;
-                    $("sendChat").textContent = "发送消息";
+                    $("sendChat").textContent = "发送";
                     await refreshActiveRun();
                   }
                 }

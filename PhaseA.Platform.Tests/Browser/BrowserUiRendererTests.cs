@@ -94,6 +94,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("show(\"v2IterationPanel\")");
         html.Should().Contain("v2ArrangeChatPanel");
         html.Should().Contain("v2ChatControls");
+        html.Should().Contain("v2ChatComposer");
+        html.Should().Contain("v2-chat-composer");
+        html.Should().Contain("resizeChatComposer");
         html.Should().Contain("v2SkillRow");
         html.Should().Contain("v2-skill-row");
         html.Should().Contain("skillDescription");
@@ -108,6 +111,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("removeChatAttachment");
         html.Should().Contain("existing.concat(attachments)");
         html.Should().Contain("data-index=\"${index}\"");
+        html.Should().Contain("v2-attachment-chip");
+        html.Should().Contain("v2-attachment-remove");
+        html.Should().Contain("v2-attach-button");
+        html.Should().Contain("color: var(--danger)");
+        html.Should().Contain("attachLabel.title = \"导入 TXT 参考文件\"");
+        html.Should().Contain("未导入 TXT 参考文件，只支持 TXT 文件导入。");
+        html.Should().Contain("id=\"clearChatAttachments\" class=\"ghost hidden\"");
         html.Should().Contain("最多只能导入 5 个 TXT 参考文件。");
         html.Should().Contain("clearChatAttachments();");
         html.Should().Contain("history: state.chatHistory.slice(-3)");
@@ -136,6 +146,14 @@ public sealed class BrowserUiRendererTests
         html.IndexOf("id=\"chatAttachmentFiles\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"createGddDocument\"", StringComparison.Ordinal));
         html.Should().Contain("loadServerChatHistoryForProject");
         html.Should().Contain("renderChatHistory");
+        html.Should().Contain("v2-chat-message-user");
+        html.Should().Contain("v2-chat-message-assistant");
+        html.Should().Contain("fit-content");
+        html.Should().Contain("renderAssistantChatContent");
+        html.Should().Contain("renderInlineMarkdown");
+        html.Should().Contain("<pre><code>");
+        html.Should().Contain("<li>${renderInlineMarkdown(item)}</li>");
+        html.Should().NotContain("message.role === \"assistant\" ? \"助手\" : \"我\"");
         html.Should().Contain("v2OriginalShowProjectDetail");
         html.Should().Contain("v2SelectedStep = \"new-project\"");
         html.Should().NotContain("<strong>最新进度</strong>");
@@ -332,7 +350,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("可以点击“生成修复计划”");
         html.Should().NotContain("建议删除该项目后重新创建");
         html.Should().Contain("sendChat");
-        html.Should().Contain("<button id=\"sendChat\" class=\"secondary\">发送消息</button>");
+        html.Should().Contain("<button id=\"sendChat\" class=\"secondary\">发送</button>");
         html.Should().NotContain("<button id=\"sendChat\" class=\"secondary\" data-global-action=\"true\">");
         html.Should().Contain("accountAdminPanel");
         html.IndexOf("id=\"accountAdminPanel\"", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("id=\"adminPanel\"", StringComparison.Ordinal));
