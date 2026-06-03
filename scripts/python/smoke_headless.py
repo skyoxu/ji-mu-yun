@@ -140,6 +140,23 @@ def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[
         return 124, prefix_stdout + (stdout or ""), prefix_stderr + (stderr or "")
 
 
+def _msbuild_isolation_args(scope: str) -> list[str]:
+    build_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+    if not build_root:
+        return []
+    safe_scope = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in scope).strip("_") or "validation"
+    obj_root = Path(build_root) / safe_scope / "obj" / "$(MSBuildProjectName)"
+    bin_root = Path(build_root) / safe_scope / "bin" / "$(MSBuildProjectName)"
+    return [
+        f"-p:BaseIntermediateOutputPath={obj_root}{os.sep}",
+        f"-p:BaseOutputPath={bin_root}{os.sep}",
+        "-p:UseSharedCompilation=false",
+        "-p:NodeReuse=false",
+        "-m:1",
+        "-p:BuildInParallel=false",
+    ]
+
+
 def _build_output_has_success(stdout: str, stderr: str) -> bool:
     combined = f"{stdout}\n{stderr}".lower()
     return (
@@ -202,7 +219,7 @@ def _stop_dotnet_build_server(project_root: Path) -> None:
 def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWARM_TIMEOUT_SEC) -> tuple[bool, str, str, str]:
     prewarm_timeout = max(1, PREWARM_TIMEOUT_SEC)
     dotnet_returncode, dotnet_stdout, dotnet_stderr = _run_captured_process(
-        ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
+        ["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal", *_msbuild_isolation_args("smoke-headless")],
         project_root,
         prewarm_timeout,
     )

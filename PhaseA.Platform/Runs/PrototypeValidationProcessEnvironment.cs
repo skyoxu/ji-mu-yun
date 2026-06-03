@@ -2,6 +2,8 @@ namespace PhaseA.Platform.Runs;
 
 internal static class PrototypeValidationProcessEnvironment
 {
+    private const string BuildRootEnvironmentKey = "PHASEA_VALIDATION_BUILD_ROOT";
+
     public static Dictionary<string, string> Create(string repoPath, IReadOnlyDictionary<string, string>? extra = null)
     {
         var tempRoot = Path.Combine(repoPath, "logs", "phase-a-validation-temp");
@@ -13,7 +15,7 @@ internal static class PrototypeValidationProcessEnvironment
         {
             ["TMP"] = tempRoot,
             ["TEMP"] = tempRoot,
-            ["PHASEA_VALIDATION_BUILD_ROOT"] = buildRoot,
+            [BuildRootEnvironmentKey] = buildRoot,
             ["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1",
             ["DOTNET_NOLOGO"] = "1",
             ["MSBUILDDISABLENODEREUSE"] = "1",
@@ -29,5 +31,42 @@ internal static class PrototypeValidationProcessEnvironment
         }
 
         return environment;
+    }
+
+    public static string[] CreateMsBuildIsolationArguments(IReadOnlyDictionary<string, string> environment, string scope)
+    {
+        if (!environment.TryGetValue(BuildRootEnvironmentKey, out var buildRoot) ||
+            string.IsNullOrWhiteSpace(buildRoot))
+        {
+            return [];
+        }
+
+        var safeScope = string.Join(
+            "_",
+            scope.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        if (string.IsNullOrWhiteSpace(safeScope))
+        {
+            safeScope = "validation";
+        }
+
+        var intermediateRoot = EnsureTrailingSeparator(Path.Combine(buildRoot, safeScope, "obj", "$(MSBuildProjectName)"));
+        var outputRoot = EnsureTrailingSeparator(Path.Combine(buildRoot, safeScope, "bin", "$(MSBuildProjectName)"));
+        Directory.CreateDirectory(Path.Combine(buildRoot, safeScope));
+        return
+        [
+            $"-p:BaseIntermediateOutputPath={intermediateRoot}",
+            $"-p:BaseOutputPath={outputRoot}",
+            "-p:UseSharedCompilation=false",
+            "-p:NodeReuse=false",
+            "-m:1",
+            "-p:BuildInParallel=false"
+        ];
+    }
+
+    private static string EnsureTrailingSeparator(string path)
+    {
+        return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)
+            ? path
+            : path + Path.DirectorySeparatorChar;
     }
 }

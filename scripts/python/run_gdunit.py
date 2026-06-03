@@ -70,6 +70,23 @@ def _build_process_env(root: str, dotnet_bin: str) -> dict[str, str]:
     return env
 
 
+def _msbuild_isolation_args(scope: str) -> list[str]:
+    build_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+    if not build_root:
+        return []
+    safe_scope = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in scope).strip("_") or "validation"
+    obj_root = os.path.join(build_root, safe_scope, "obj", "$(MSBuildProjectName)")
+    bin_root = os.path.join(build_root, safe_scope, "bin", "$(MSBuildProjectName)")
+    return [
+        f"-p:BaseIntermediateOutputPath={obj_root}{os.sep}",
+        f"-p:BaseOutputPath={bin_root}{os.sep}",
+        "-p:UseSharedCompilation=false",
+        "-p:NodeReuse=false",
+        "-m:1",
+        "-p:BuildInParallel=false",
+    ]
+
+
 def _copy_reports_best_effort(src_root: str, dest_root: str) -> list[tuple[str, str, str]]:
     failures: list[tuple[str, str, str]] = []
     if not os.path.isdir(src_root):
@@ -326,7 +343,7 @@ def main():
                 # Prefer project build; if solution exists, add as secondary
                 build_logs = []
                 for item in (dotnet_projects or [sln] if os.path.isfile(sln) else []):
-                    rc_b, out_b = run_cmd([dotnet_bin, 'build', item, '-c', 'Debug', '-v', 'minimal'], cwd=root, timeout=600_000, env=process_env)
+                    rc_b, out_b = run_cmd([dotnet_bin, 'build', item, '-c', 'Debug', '-v', 'minimal', *_msbuild_isolation_args('gdunit-fallback')], cwd=root, timeout=600_000, env=process_env)
                     build_logs.append((item, rc_b, out_b))
                 # Persist build logs
                 agg = []

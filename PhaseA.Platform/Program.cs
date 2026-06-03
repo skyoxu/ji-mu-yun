@@ -1184,11 +1184,15 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
                 projectId,
                 "assistant",
                 result.Summary,
-                result.Status == "completed" ? "needs-fix-route-result" : "needs-fix-route-failed",
+                result.IterationGoalStatus == "succeeded" || result.Status == "succeeded" || result.Status == "completed"
+                    ? "needs-fix-route-result"
+                    : "needs-fix-route-failed",
                 cancellationToken);
         }
 
-        return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status is "completed" or "succeeded" or "needs_fix"
+            ? Results.Ok(result)
+            : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {

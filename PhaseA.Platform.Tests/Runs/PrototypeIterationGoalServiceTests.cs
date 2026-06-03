@@ -99,8 +99,10 @@ public sealed class PrototypeIterationGoalServiceTests
         godotBuildCommand.Arguments.Should().Contain("-p:NodeReuse=false");
         godotBuildCommand.Arguments.Should().Contain("-m:1");
         godotBuildCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
-        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
-        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
+        godotBuildCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
         godotBuildCommand.Environment["UseSharedCompilation"].Should().Be("false");
         godotBuildCommand.Environment["MSBUILDDISABLENODEREUSE"].Should().Be("1");
         godotBuildCommand.Environment["TEMP"].Should().Contain("phase-a-validation-temp");
@@ -111,8 +113,10 @@ public sealed class PrototypeIterationGoalServiceTests
             command.Arguments.Any(argument => argument.EndsWith("Game.Core.Tests.csproj", StringComparison.Ordinal)));
         coreTestCommand.Arguments.Should().Contain("-m:1");
         coreTestCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
-        coreTestCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
-        coreTestCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
+        coreTestCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
+        coreTestCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
         runner.Commands.Should().Contain(command =>
             command.FileName == "dotnet" &&
             command.Arguments.SequenceEqual(new[] { "build-server", "shutdown" }));

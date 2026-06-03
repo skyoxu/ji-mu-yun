@@ -177,7 +177,7 @@ public sealed class PrototypeWorkflowService
             runId,
             status,
             "",
-            status == "succeeded" ? "原型路线已完成。" : "原型路线失败，请查看运行记录错误输出。",
+            status == "succeeded" ? "原型骨架创建已完成。" : "原型骨架创建失败，请查看运行记录错误输出。",
             cancellationToken);
         if (usesLlm && llmEstimate is not null && stopLoss is not null)
         {
@@ -276,7 +276,7 @@ public sealed class PrototypeWorkflowService
             catch (Exception ex)
             {
                 await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
-                await SetProgressAsync(runId, "failed", "", "原型路线失败，请查看运行记录错误输出。", CancellationToken.None);
+                await SetProgressAsync(runId, "failed", "", "原型骨架创建失败，请查看运行记录错误输出。", CancellationToken.None);
             }
             finally
             {
@@ -496,9 +496,10 @@ public sealed class PrototypeWorkflowService
         var run = runs.FirstOrDefault(item => item.RunType == RunType);
         if (run is null)
         {
-            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始 7 日可玩原型路线。", null, null, null, null, null, null, null);
+            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始原型骨架创建。", null, null, null, null, null, null, null);
         }
 
+        run = await RecoverCompletedPrototypeRunIfNeededAsync(project, run, cancellationToken);
         var step = string.IsNullOrWhiteSpace(run.ProgressStep) ? run.Status : run.ProgressStep;
         var label = string.IsNullOrWhiteSpace(run.ProgressLabel) ? DefaultLabel(run.Status) : run.ProgressLabel;
         var completionSummary = ReadCompletionSummaryFromRun(run);
@@ -526,6 +527,106 @@ public sealed class PrototypeWorkflowService
             packaging?.TddRefactorCount,
             packaging?.PlaytestFocusPoints,
             ReadPrototypeFormSnapshot(project.RepoPath, run));
+    }
+
+    private async Task<RunSnapshot> RecoverCompletedPrototypeRunIfNeededAsync(ProjectSnapshot project, RunSnapshot run, CancellationToken cancellationToken)
+    {
+        if (!IsUnfinishedRunStatus(run.Status) || !string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return run;
+        }
+
+        var recovered = TryBuildRecoveredCompletion(project.RepoPath);
+        if (recovered is null)
+        {
+            return run;
+        }
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            prototype_record = recovered.PrototypeRecordPath,
+            prototype_contract = "",
+            slug = recovered.Slug,
+            prototype_artifacts = recovered.Artifacts,
+            prototype_completion = recovered.Validation.ToEvidence(),
+            godot_smoke = PrototypeGodotSmokeResult.NotRun("recovered_from_completion_artifacts").ToEvidence(),
+            recovered_from_completion_artifacts = true
+        });
+        await _metadataStore.CompleteRunAsync(
+            run.RunId,
+            "succeeded",
+            0,
+            "Recovered completed prototype workflow from active prototype artifacts.",
+            "",
+            evidenceJson,
+            cancellationToken);
+        await SetProgressAsync(run.RunId, "succeeded", "", "原型骨架创建已完成。", cancellationToken);
+        return await _metadataStore.GetRunSnapshotAsync(run.RunId, cancellationToken) ?? run;
+    }
+
+    private static bool IsUnfinishedRunStatus(string status)
+    {
+        return string.Equals(status, "queued", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "running", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static RecoveredPrototypeCompletion? TryBuildRecoveredCompletion(string repositoryRoot)
+    {
+        var activeRoot = Path.Combine(repositoryRoot, "logs", "ci", "active-prototypes");
+        if (!Directory.Exists(activeRoot))
+        {
+            return null;
+        }
+
+        foreach (var activePath in Directory.EnumerateFiles(activeRoot, "*.active.json")
+                     .OrderByDescending(File.GetLastWriteTimeUtc))
+        {
+            var slug = Path.GetFileNameWithoutExtension(activePath).Replace(".active", "", StringComparison.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                continue;
+            }
+
+            var validation = ValidateCompletedPrototypeState(repositoryRoot, slug);
+            if (!validation.Succeeded)
+            {
+                continue;
+            }
+
+            var prototypeRecordPath = TryReadPrototypeFileFromActiveState(activePath);
+            var packagingPath = Path.Combine("logs", "ci", "active-prototypes", $"{PrototypeRecordWriter.SanitizeSlug(slug)}.packaging.json")
+                .Replace('\\', '/');
+            var completionPath = Path.Combine("logs", "ci", "active-prototypes", $"{PrototypeRecordWriter.SanitizeSlug(slug)}.completion.md")
+                .Replace('\\', '/');
+            var artifacts = new[] { prototypeRecordPath, packagingPath, completionPath }
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            return new RecoveredPrototypeCompletion(slug, prototypeRecordPath ?? "", artifacts, validation);
+        }
+
+        return null;
+    }
+
+    private static string? TryReadPrototypeFileFromActiveState(string activePath)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(activePath, Encoding.UTF8));
+            return document.RootElement.TryGetProperty("prototype_file", out var element) && element.ValueKind == JsonValueKind.String
+                ? element.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
     }
 
     private static PrototypeWorkflowFormSnapshot? ReadPrototypeFormSnapshot(string repositoryRoot, RunSnapshot run)
@@ -667,7 +768,7 @@ public sealed class PrototypeWorkflowService
             runId,
             status,
             "",
-            status == "succeeded" ? "原型路线已完成。" : "原型路线失败，请查看运行记录错误输出。",
+            status == "succeeded" ? "原型骨架创建已完成。" : "原型骨架创建失败，请查看运行记录错误输出。",
             CancellationToken.None);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
@@ -1934,10 +2035,10 @@ public sealed class PrototypeWorkflowService
         return status switch
         {
             "queued" => "已提交，等待 runner。",
-            "running" => "原型路线运行中。",
-            "succeeded" => "原型路线已完成。",
-            "failed" => "原型路线失败。",
-            _ => "尚未开始 7 日可玩原型路线。"
+            "running" => "原型骨架创建运行中。",
+            "succeeded" => "原型骨架创建已完成。",
+            "failed" => "原型骨架创建失败。",
+            _ => "尚未开始原型骨架创建。"
         };
     }
 
@@ -1958,7 +2059,7 @@ public sealed class PrototypeWorkflowService
     {
         var processTrace = FirstNonEmpty(run.StderrText, run.StdoutText);
         var translatedTrace = TranslateFailureForUser(processTrace);
-        if (!string.Equals(translatedTrace, "原型路线失败，请查看运行记录。", StringComparison.Ordinal))
+        if (!string.Equals(translatedTrace, "原型骨架创建失败，请查看运行记录。", StringComparison.Ordinal))
         {
             return translatedTrace;
         }
@@ -1967,7 +2068,7 @@ public sealed class PrototypeWorkflowService
             TryReadFailureCodeFromEvidence(run.EvidenceJson),
             run.StderrText,
             run.StdoutText,
-            "原型路线失败。");
+            "原型骨架创建失败。");
         return TranslateFailureForUser(rawFailure);
     }
 
@@ -2009,7 +2110,7 @@ public sealed class PrototypeWorkflowService
     {
         if (string.IsNullOrWhiteSpace(rawFailure))
         {
-            return "原型路线失败。";
+            return "原型骨架创建失败。";
         }
 
         if (rawFailure.Contains("prototype_valid_godot_scene_missing", StringComparison.OrdinalIgnoreCase) ||
@@ -2036,7 +2137,7 @@ public sealed class PrototypeWorkflowService
 
         if (rawFailure.Contains("prototype_completion_steps_missing", StringComparison.OrdinalIgnoreCase))
         {
-            return "7步原型执行记录缺失。";
+            return "原型骨架创建执行记录缺失。";
         }
 
         if (rawFailure.Contains("prototype_completion_step_not_ok", StringComparison.OrdinalIgnoreCase))
@@ -2046,7 +2147,7 @@ public sealed class PrototypeWorkflowService
                 return "TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。";
             }
 
-            return "7步原型未完整跑通，至少有一个步骤未达到成功条件。";
+            return "原型骨架创建未完整跑通，至少有一个步骤未达到成功条件。";
         }
 
         if (rawFailure.Contains("PROTOTYPE_TDD status=unexpected_green", StringComparison.OrdinalIgnoreCase) &&
@@ -2090,7 +2191,7 @@ public sealed class PrototypeWorkflowService
             return "原型验收未通过。";
         }
 
-        return "原型路线失败，请查看运行记录。";
+        return "原型骨架创建失败，请查看运行记录。";
     }
 
     private async Task<PrototypeWorkflowRequest> EnrichRequestFromLatestDraftAsync(
@@ -2412,6 +2513,12 @@ public sealed class PrototypeWorkflowService
             };
         }
     }
+
+    private sealed record RecoveredPrototypeCompletion(
+        string Slug,
+        string PrototypeRecordPath,
+        IReadOnlyList<string> Artifacts,
+        PrototypeCompletionValidation Validation);
 
     private sealed record PrototypePackagingSummaryReadback(
         string? DefaultScene,

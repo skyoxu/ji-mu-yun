@@ -86,7 +86,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
-        result.Status.Should().Be("completed");
+        result.Status.Should().Be("needs_fix");
         result.Summary.Should().Contain("完成报告");
         result.Summary.Should().Contain("STATUS: completed");
         result.Summary.Should().NotContain("Project README:");
@@ -126,10 +126,40 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
-        result.Status.Should().Be("completed");
+        result.Status.Should().Be("needs_fix");
         runner.Prompt.Should().Contain("current execute next goal step state");
         runner.Prompt.Should().Contain("\"route\":\"execute-next-goal\"");
         runner.Prompt.Should().NotContain("prototype-fallback");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldExposeNeedsFixStatus_WhenGoalRepairStillNeedsFix()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteProjectReadme(project!);
+        writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
+        writer.WriteExecuteNextGoalState(project!, 1, new { route = "execute-next-goal", goal_index = 1, marker = "execute-next-current-step" });
+        var runner = new NeedsFixRunner();
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+
+        var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var state = writer.ReadLatestNeedsFixState(project!, 1);
+
+        result.Status.Should().Be("needs_fix");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        details!.Goals[0].Status.Should().Be("needs_fix");
+        state.Should().Contain("\"status\": \"needs_fix\"");
+        state.Should().Contain("\"iteration_goal_status\": \"needs_fix\"");
     }
 
     private static async Task<string> CreateProjectWithNeedsFixGoalAsync(
@@ -197,6 +227,17 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "STATUS: completed\nSUMMARY: Current step completed.\nCHANGED: gameplay\nVERIFY: quick pass\nREMAINING: none\n");
+            return Task.FromResult(new HostedProcessResult(0, "ok", ""));
+        }
+    }
+
+    private sealed class NeedsFixRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, "STATUS: needs_fix\nSUMMARY: Current step still needs repair.\nCHANGED: none\nVERIFY: blocked\nREMAINING: continue fixing this step\n");
             return Task.FromResult(new HostedProcessResult(0, "ok", ""));
         }
     }

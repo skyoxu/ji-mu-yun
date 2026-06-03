@@ -238,6 +238,23 @@ def _build_process_env(dotnet_bin: str) -> dict[str, str]:
     return env
 
 
+def _msbuild_isolation_args(scope: str) -> list[str]:
+    build_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+    if not build_root:
+        return []
+    safe_scope = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in scope).strip("_") or "validation"
+    obj_root = Path(build_root) / safe_scope / "obj" / "$(MSBuildProjectName)"
+    bin_root = Path(build_root) / safe_scope / "bin" / "$(MSBuildProjectName)"
+    return [
+        f"-p:BaseIntermediateOutputPath={obj_root}{os.sep}",
+        f"-p:BaseOutputPath={bin_root}{os.sep}",
+        "-p:UseSharedCompilation=false",
+        "-p:NodeReuse=false",
+        "-m:1",
+        "-p:BuildInParallel=false",
+    ]
+
+
 def _ensure_runtime_logs_godot_ignored(project_root: Path) -> None:
     logs_root = project_root / "logs"
     _ensure_dir(logs_root)
@@ -393,7 +410,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             prewarm_stderr += "\n[prototype_main_menu_navigation] godot build-solutions prewarm timed out."
         if prewarm_returncode != 0:
             fallback_returncode, fallback_stdout, fallback_stderr = _run_captured_process(
-                [dotnet_bin, "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"],
+                [dotnet_bin, "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal", *_msbuild_isolation_args("navigation-smoke")],
                 project_root,
                 prewarm_timeout_sec,
                 env=process_env,

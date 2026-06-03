@@ -220,10 +220,10 @@ public static class GameTypeRouteProfiles
         "default-prompt-protocol-v1",
         new PrototypeRouteSkillContext(
             "prototype-7day-playable-godot-zh",
-            "7步可玩原型 skill",
+            "原型骨架创建 skill",
             "默认原型路由技能",
             "用来统一约束 prototype / iteration-plan / execute-next-goal / needs-fix 四条流水线。",
-            "7步可玩原型通用验收",
+            "原型骨架创建通用验收",
             null),
         "default-iteration-planner-v1",
         "default-plan-evaluator-v1",

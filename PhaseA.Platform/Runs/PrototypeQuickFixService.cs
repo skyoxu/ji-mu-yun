@@ -107,7 +107,7 @@ public sealed partial class PrototypeQuickFixService
 
         if (requireSucceededPrototypeRun && !await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
-            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先完成 7 步可玩原型，再使用快速修复。", []);
+            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先完成原型骨架创建，再使用快速修复。", []);
         }
 
         ProjectIterationSessionDetails? iterationDetails = null;
@@ -291,8 +291,17 @@ public sealed partial class PrototypeQuickFixService
             }
             await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "目标修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
 
+            var mutationGuardValidation = PrototypeRepairMutationGuard.Validate(project, targetGoal);
+            if (!mutationGuardValidation.Passed)
+            {
+                assistantMessage = AppendMutationGuardFailure(assistantMessage, mutationGuardValidation);
+                codexOutput = AppendMutationGuardFailureEvidence(codexOutput, mutationGuardValidation);
+            }
+
             var goalRepairOutcome = targetGoal is null
                 ? null
+                : !mutationGuardValidation.Passed
+                    ? new GoalRepairOutcome("needs_fix", false)
                 : acceptanceValidation.Passed
                     ? godotSmokeValidation.Passed && !IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation)
                         ? new GoalRepairOutcome("succeeded", true)
@@ -347,6 +356,8 @@ public sealed partial class PrototypeQuickFixService
                 acceptance_validation = acceptanceValidation.Kind,
                 acceptance_validation_status = acceptanceValidation.Status,
                 acceptance_validation_reason = acceptanceValidation.Reason,
+                acceptance_validation_details = acceptanceValidation.Details,
+                mutation_guard = mutationGuardValidation.ToEvidence(),
                 godot_diagnostic = GodotFailureDiagnosticService.ToEvidence(godotDiagnostic, godotCleanup),
                 godot_smoke_validation = godotSmokeValidation.ToEvidence(),
                 rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence(),
@@ -561,6 +572,12 @@ public sealed partial class PrototypeQuickFixService
             return null;
         }
 
+        var mutationGuardValidation = PrototypeRepairMutationGuard.Validate(project, targetGoal);
+        if (!mutationGuardValidation.Passed)
+        {
+            return null;
+        }
+
         var assistantMessage = $"""
             当前目标已经通过平台验收。
 
@@ -653,6 +670,7 @@ public sealed partial class PrototypeQuickFixService
             acceptance_validation = acceptanceValidation.Kind,
             acceptance_validation_status = acceptanceValidation.Status,
             acceptance_validation_reason = acceptanceValidation.Reason,
+            acceptance_validation_details = acceptanceValidation.Details,
             godot_smoke_validation = godotSmokeValidation.ToEvidence(),
             rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence(),
             post_acceptance_validation_status = goalRepairOutcome.GoalStatus == "succeeded" ? "passed" : "failed",
@@ -884,6 +902,7 @@ public sealed partial class PrototypeQuickFixService
                 acceptance_validation = acceptanceValidation.Kind,
                 acceptance_validation_status = acceptanceValidation.Status,
                 acceptance_validation_reason = acceptanceValidation.Reason,
+                acceptance_validation_details = acceptanceValidation.Details,
                 godot_smoke_validation = godotSmokeValidation.ToEvidence(),
                 rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence()
             });
@@ -1022,6 +1041,7 @@ public sealed partial class PrototypeQuickFixService
             acceptance_validation = acceptanceValidation.Kind,
             acceptance_validation_status = acceptanceValidation.Status,
             acceptance_validation_reason = acceptanceValidation.Reason,
+            acceptance_validation_details = acceptanceValidation.Details,
             godot_smoke_validation = godotSmokeValidation.ToEvidence(),
             post_acceptance_validation_status = "failed",
             post_acceptance_validation_reason = validationReason
@@ -1493,12 +1513,15 @@ public sealed partial class PrototypeQuickFixService
             {godotDiagnosticBlock}
             {rpgGdUnitContextBlock}
             Mandatory rules:
+            - Do not define or shadow xUnit types. Never add `namespace Xunit`, `FactAttribute`, `TheoryAttribute`, `InlineDataAttribute`, or `Assert` classes in project tests. Use the existing `using Xunit;` and package references.
             - 这次只处理当前目标，不要顺手扩展到后续目标。
             - 这是目标级 needs-fix 修复，不是 90 秒快速修复；允许为了完成当前 step 做必要的局部实现，但仍禁止扩大到后续目标。
             - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
             - 如果当前目标是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
+            - Godot C# 项目结构：可构建项目是仓库根目录的 GodotGame.csproj；Game.Godot/ 只是运行时场景和脚本目录，不是独立 C# 项目。不要执行或引用 Game.Godot/Game.Godot.csproj。
+            - 不要在本路由中执行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些本地验证命令会写入 obj/bin/.godot 并可能触发文件锁。修复完成后由平台统一执行隔离验收。
             - 仅当 Godot stderr 明确指出 `Game.Godot/Examples/**.tscn:1 - Parse Error: Expected '['` 时，允许把被点名的示例场景重写为无 UTF-8 BOM 的 Godot 文本场景；不要借机改示例内容。
             - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复目标。
             - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前目标的完成内容，除非当前目标标题和验收提示明确要求。
@@ -1507,6 +1530,7 @@ public sealed partial class PrototypeQuickFixService
             - Godot stderr 属于当前目标验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
             - `This control can't grab focus` 也属于当前目标验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
             - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
+            - 不要自行运行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些验证由平台在隔离输出目录中执行。
             - 对玩法/Godot/RPG 目标，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
             - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前目标的唯一剩余问题。
             - 优先用最小改动完成目标。
@@ -1701,6 +1725,7 @@ public sealed partial class PrototypeQuickFixService
             - Kind: {validation.Kind}
             - Status: {validation.Status}
             - Reason: {validation.Reason ?? validation.Status}
+            - Details: {validation.Details ?? "none"}
             - If Status is failed, repair the listed reason items before reporting STATUS: completed.
             """;
     }
@@ -1928,6 +1953,7 @@ public sealed partial class PrototypeQuickFixService
             平台验收：
             目标 {goal.GoalIndex} 没有通过平台验收，当前目标仍保持 needs_fix。
             原因：{validation.Reason ?? validation.Status}
+            细节：{validation.Details ?? "none"}
             """;
     }
 
@@ -1940,7 +1966,47 @@ public sealed partial class PrototypeQuickFixService
             {prefix}STATUS: needs_fix
             VERIFY: Platform acceptance validation failed for the current gameplay goal.
             REASON: {validation.Reason ?? validation.Status}
+            DETAILS: {validation.Details ?? "none"}
             """;
+    }
+
+    private static string AppendMutationGuardFailure(
+        string assistantMessage,
+        PrototypeRepairMutationGuardResult validation)
+    {
+        return $"""
+            {assistantMessage.Trim()}
+
+            Platform mutation guard:
+            STATUS: needs_fix
+            VERIFY: Prototype repair must not define or shadow test framework types.
+            REMAINING: Remove the local xUnit shim/shadow definitions and use the existing xUnit package references.
+            REASON: {validation.Reason ?? validation.Status}
+            DETAILS: {BuildMutationGuardDetails(validation)}
+            """;
+    }
+
+    private static string AppendMutationGuardFailureEvidence(
+        string codexOutput,
+        PrototypeRepairMutationGuardResult validation)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return $"""
+            {prefix}STATUS: needs_fix
+            VERIFY: Prototype mutation guard failed.
+            REASON: {validation.Reason ?? validation.Status}
+            DETAILS: {BuildMutationGuardDetails(validation)}
+            """;
+    }
+
+    private static string BuildMutationGuardDetails(PrototypeRepairMutationGuardResult validation)
+    {
+        if (validation.Violations.Count == 0)
+        {
+            return "none";
+        }
+
+        return string.Join("; ", validation.Violations.Select(violation => $"{violation.Path}:{violation.Line}:{violation.Rule}"));
     }
 
     private static string AppendGodotSmokeValidationSummary(

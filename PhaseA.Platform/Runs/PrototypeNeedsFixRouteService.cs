@@ -67,7 +67,7 @@ public sealed class PrototypeNeedsFixRouteService
             : "";
         if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState) && string.IsNullOrWhiteSpace(prototypeState))
         {
-            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型路线产物。请先运行原型创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
+            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
         var feedback = BuildFeedback(project, request.Feedback, readme, prototypeContract, stepState, executeNextGoalState, prototypeState, goal);
@@ -89,6 +89,7 @@ public sealed class PrototypeNeedsFixRouteService
             requireSucceededPrototypeRun: false,
             cancellationToken);
 
+        var routeStatus = NormalizeGoalRouteStatus(quickFixResult.IterationGoalStatus, quickFixResult.Status);
         _stateWriter.WriteNeedsFixState(project, goal.GoalIndex, new
         {
             route = "needs-fix",
@@ -99,7 +100,7 @@ public sealed class PrototypeNeedsFixRouteService
             goal_id = goal.GoalId,
             goal_index = goal.GoalIndex,
             run_id = quickFixResult.RunId,
-            status = quickFixResult.Status,
+            status = routeStatus,
             iteration_session_status = quickFixResult.IterationSessionStatus,
             iteration_goal_status = quickFixResult.IterationGoalStatus,
             summary = BuildCompactSummary(quickFixResult.AssistantMessage),
@@ -114,7 +115,7 @@ public sealed class PrototypeNeedsFixRouteService
 
         return new PrototypeNeedsFixRouteResult(
             quickFixResult.RunId,
-            quickFixResult.Status,
+            routeStatus,
             quickFixResult.AssistantMessage,
             goal.GoalIndex,
             quickFixResult.IterationSessionStatus,
@@ -170,6 +171,19 @@ public sealed class PrototypeNeedsFixRouteService
             quickFixResult.Artifacts);
     }
 
+    private static string NormalizeGoalRouteStatus(string? iterationGoalStatus, string routeStatus)
+    {
+        return iterationGoalStatus switch
+        {
+            "succeeded" => "succeeded",
+            "needs_fix" => "needs_fix",
+            "failed" => "failed",
+            "running" => "running",
+            "pending" => "pending",
+            _ => routeStatus
+        };
+    }
+
     private static ProjectIterationGoalSnapshot? ResolveGoal(ProjectIterationSessionDetails details, PrototypeNeedsFixRouteRequest request)
     {
         if (!string.IsNullOrWhiteSpace(request.GoalId))
@@ -222,7 +236,7 @@ public sealed class PrototypeNeedsFixRouteService
             - Platform route or recovery tests passing does not prove a gameplay goal is complete.
 
             Project README:
-            {TrimForPrompt(projectReadme, 1000)}
+            {TrimForPrompt(projectReadme, 600)}
 
             Project prototype contract:
             - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
@@ -234,7 +248,7 @@ public sealed class PrototypeNeedsFixRouteService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
-            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 650)}
+            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 450)}
 
             Recovery source consumed: {sourceLabel}
             {TrimForPrompt(sourceState, 500)}

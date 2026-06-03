@@ -342,6 +342,62 @@ REMAINING: none
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepNeedsFix_WhenPrototypeTestsShadowXunit()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var pollutedTestPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
+        File.AppendAllText(pollutedTestPath, """
+
+namespace Xunit
+{
+    public sealed class FactAttribute : System.Attribute { }
+    public static class Assert { }
+}
+""");
+        var details = await CreateRpgGdUnitRepairSessionAsync(store, accountId, projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new GoalRepairStepOneBehaviorGdUnitFailRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("Platform mutation guard");
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("needs_fix");
+        run!.EvidenceJson.Should().Contain("\"mutation_guard\"");
+        run.EvidenceJson.Should().Contain("test_framework_shadowing_detected");
+        run.EvidenceJson.Should().Contain("namespace_xunit");
+        run.EvidenceJson.Should().Contain("xunit_assert_shadow");
+    }
+
+    [Fact]
     public async Task SubmitAsync_ShouldCompleteEvenWhenCallerTokenIsCanceledAfterRunStarts()
     {
         using var database = TempSqliteDatabase.Create();

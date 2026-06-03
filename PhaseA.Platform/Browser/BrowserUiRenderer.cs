@@ -40,13 +40,15 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-step-button.pending,
                 body.v2-detail .v2-step-button.action { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
                 body.v2-detail .v2-step-button.done,
-                body.v2-detail .v2-step-button.fix { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
+                body.v2-detail .v2-step-button.fix,
+                body.v2-detail .v2-step-button.continue { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
                 body.v2-detail .v2-step-label { font-size: 0.78rem; line-height: 1.15; text-align: center; white-space: nowrap; }
                 body.v2-detail .v2-step-mark { position: absolute; left: 50%; bottom: 0.12rem; transform: translateX(-50%); width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
                 body.v2-detail .v2-step-button.pending .v2-step-mark,
                 body.v2-detail .v2-step-button.action .v2-step-mark { background: #a8afad; }
                 body.v2-detail .v2-step-button.done .v2-step-mark { background: #15905f; }
                 body.v2-detail .v2-step-button.fix .v2-step-mark { background: #b73732; }
+                body.v2-detail .v2-step-button.continue .v2-step-mark { width: auto; height: auto; background: transparent; color: #15905f; font-size: 1.2rem; letter-spacing: 0.08rem; line-height: 1; }
                 body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
                 body.v2-detail .v2-next { margin-top: 0.7rem; }
                 body.v2-detail .v2-action-row { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
@@ -104,16 +106,15 @@ public sealed class BrowserUiRenderer
                 document.body.classList.add("v2-detail");
                 const v2Steps = [
                   ["new-project", "游戏项目详情", 0],
-                  ["create-prototype", "创建游戏原型", 1],
+                  ["create-prototype", "原型骨架创建", 1],
                   ["prototype-acceptance", "原型验收", 2],
                   ["execute-or-repair", "原型验收修复", 4],
-                  ["iteration-plan", "生成迭代计划", 3],
+                  ["iteration-plan", "完成迭代计划", 3],
                   ["asset-inventory", "确认素材清单", 6],
                   ["package-project", "打包项目文件", 7],
                   ["download-project", "下载项目文件", 8]
                 ];
                 let v2SelectedStep = "new-project";
-                let v2NextSuggestionHasLlmResult = false;
                 function v2HasPackages() {
                   if (Array.isArray(state.packageList)) return state.packageList.length > 0;
                   return Array.isArray(state.packageList?.packages) && state.packageList.packages.length > 0;
@@ -133,7 +134,14 @@ public sealed class BrowserUiRenderer
                     return failed ? "fix" : succeeded ? "done" : "pending";
                   }
                   if (stepId === "prototype-acceptance") return succeeded ? "done" : failed ? "fix" : "pending";
-                  if (stepId === "iteration-plan") return state.iterationPlan?.goals?.length ? "done" : "pending";
+                  if (stepId === "iteration-plan") {
+                    const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                    if (!goals.length) return "pending";
+                    if (goals.some(goal => ["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()))) return "fix";
+                    if (goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) return "done";
+                    if (goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()))) return "continue";
+                    return "pending";
+                  }
                   if (stepId === "execute-or-repair") {
                     const goals = state.repairPlan?.goals || [];
                     if (failed) return "fix";
@@ -239,7 +247,6 @@ public sealed class BrowserUiRenderer
                 }
                 function v2ValidatePrototypeIfAllowed() {
                   if (!v2IterationPlanAllowsAcceptance()) {
-                    v2NextSuggestionHasLlmResult = false;
                     $("v2NextSuggestion").textContent = "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
                     out("请先完成迭代计划，再进行原型验收。");
                     return;
@@ -299,15 +306,6 @@ public sealed class BrowserUiRenderer
                   $("feedbackSummary")?.classList.add("hidden");
                   $("feedbackRecords")?.classList.add("hidden");
                   $("evaluateIterationPlanFromChat")?.classList.add("hidden");
-                  if (!$("v2SkillRow")) {
-                    const skillRow = document.createElement("div");
-                    skillRow.id = "v2SkillRow";
-                    skillRow.className = "v2-skill-row";
-                    const skillLabel = $("chatSkillMode")?.closest("label");
-                    const skillDescription = $("chatSkillDescription");
-                    skillLabel?.insertAdjacentElement("beforebegin", skillRow);
-                    [skillLabel, skillDescription].filter(Boolean).forEach(element => skillRow.appendChild(element));
-                  }
                   if ($("v2ChatControls")) return;
                   const messageLabel = $("chatMessage")?.closest("label");
                   messageLabel?.classList.add("v2-message-field");
@@ -317,6 +315,15 @@ public sealed class BrowserUiRenderer
                     composer.id = "v2ChatComposer";
                     composer.className = "v2-chat-composer";
                     ($("chatHistory") || chatPanel).insertAdjacentElement("afterend", composer);
+                    if (!$("v2SkillRow")) {
+                      const skillRow = document.createElement("div");
+                      skillRow.id = "v2SkillRow";
+                      skillRow.className = "v2-skill-row";
+                      const skillLabel = $("chatSkillMode")?.closest("label");
+                      const skillDescription = $("chatSkillDescription");
+                      [skillLabel, skillDescription].filter(Boolean).forEach(element => skillRow.appendChild(element));
+                      composer.appendChild(skillRow);
+                    }
                     if (messageLabel) composer.appendChild(messageLabel);
                   }
                   const composer = $("v2ChatComposer");
@@ -423,7 +430,7 @@ public sealed class BrowserUiRenderer
                   if ($("importDraft")) $("importDraft").disabled = locked;
                   if ($("runPrototype")) {
                     $("runPrototype").disabled = locked || isGlobalBusy();
-                    $("runPrototype").textContent = locked ? "原型已创建，不能重复创建" : "运行原型路线";
+                    $("runPrototype").textContent = locked ? "原型骨架已创建，不能重复创建" : "运行原型骨架创建";
                   }
                 }
                 function v2ApplyPrototypeFormSnapshot(progress) {
@@ -442,48 +449,58 @@ public sealed class BrowserUiRenderer
                     $("draftImportStatus").textContent = `已载入原型记录：${form.sourcePath}`;
                   }
                 }
-                function v2BuildNextStepJudgementPrompt() {
-                  return [
-                    "请扫描当前 Phase A 游戏项目的页面进度摘要、原型进度、验收摘要、迭代计划状态、修复计划状态、项目健康摘要和素材/打包状态，判断真正的下一步。",
-                    "请只输出给普通用户看的中文结论，格式为：",
-                    "判断：一句话说明当前应该做什么。",
-                    "原因：列出 2-4 条依据。",
-                    "建议按钮/位置：说明用户下一步应该点击顶部哪个进度图标或哪个面板按钮。",
-                    "",
-                    `当前顶部步骤：${v2SelectedStep}`,
-                    `原型进度：${$("prototypeProgress")?.textContent?.trim() || ""}`,
-                    `验收摘要：${$("prototypeAcceptanceSummary")?.textContent?.trim() || ""}`,
-                    `迭代计划：${$("iterationPlanStatus")?.textContent?.trim() || ""}`,
-                    `迭代评估：${$("iterationPlanEvaluation")?.textContent?.trim() || ""}`,
-                    `修复计划：${$("repairPlanStatus")?.textContent?.trim() || ""}`,
-                    `项目健康：${$("projectHealthSummary")?.textContent?.trim() || ""}`,
-                    `素材清单：${$("assetInventoryStatus")?.textContent?.trim() || ""}`,
-                    `打包状态：${$("projectPackageStatus")?.textContent?.trim() || ""}`
-                  ].join("\n");
+                function v2CompletedIterationStatus(status) {
+                  return ["succeeded", "completed", "done"].includes(String(status || "").trim().toLowerCase());
                 }
-                async function v2JudgeNextStepWithLlm() {
+                function v2CurrentPrototypeStatus() {
+                  return String(state?.v2PrototypeStatus || "").trim().toLowerCase();
+                }
+                function v2HasPrototypeSkeleton() {
+                  const status = v2CurrentPrototypeStatus();
+                  return !!status && status !== "idle";
+                }
+                function v2HasFailedPrototypeAcceptance() {
+                  return v2CurrentPrototypeStatus() === "failed" || !!state.prototypeFailure;
+                }
+                function v2BuildLocalNextStepSuggestion() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const hasPlan = !!state.iterationPlan?.session && goals.length > 0;
+                  const allGoalsCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
+                  const hasOpenGoal = hasPlan && goals.some(goal => !v2CompletedIterationStatus(goal.status));
+                  const validationPassed = v2PrototypeValidationPassedForPlanning();
+                  if (!v2HasPrototypeSkeleton()) {
+                    return "建议：请先进行 2. 原型骨架创建。\n\n如果你还没有整理清楚游戏设定，也可以先在自由聊天的能力模式中激活“游戏策划大师”，让它协助你梳理并创建策划文档，再回到 2. 原型骨架创建填写表单。";
+                  }
+                  if (v2HasFailedPrototypeAcceptance()) {
+                    return "建议：请先进行 4. 原型验收修复。\n\n当前原型验收没有通过，需要先生成或执行修复计划，把失败项修到可验收状态，再继续后续流程。";
+                  }
+                  if (validationPassed && !hasPlan) {
+                    return "建议：请先进行 5. 生成迭代计划。\n\n原型验收已经通过，但还没有生成迭代计划。下一步应该把游戏原型需要补齐的功能拆成可执行 step，逐项完成游戏功能。";
+                  }
+                  if (hasOpenGoal) {
+                    return "建议：请先完成当前迭代计划的执行或修复。\n\n当前迭代计划中仍有至少一个 step 不是完成状态。请继续执行下一目标；如果某个 step 进入 needs fix 或失败状态，请先完成对应修复。";
+                  }
+                  if (allGoalsCompleted && !validationPassed) {
+                    return "建议：请重新进行原型验收。\n\n当前迭代计划已经全部完成，但本轮迭代后的原型验收还没有重新通过。请回到 3. 原型验收，确认迭代后的项目仍然可以正常运行。";
+                  }
+                  if (allGoalsCompleted && validationPassed) {
+                    return "建议：可以确认素材清单后打包项目文件。\n\n请依次进行 6. 确认素材清单、7. 打包项目文件、8. 下载项目文件；在下载列表中下载游戏项目压缩包，并在本地 Godot 里试玩和验证。试玩后把结果发到聊天界面，我们再准备第二轮迭代计划。";
+                  }
+                  return "建议：请先刷新项目状态或重新选择项目。\n\n当前页面没有读取到足够的项目状态，无法判断下一步。";
+                }
+                async function v2JudgeNextStepLocally() {
                   if (!state.projectId) return out("请先选择一个项目。");
                   const button = $("v2JudgeNextStep");
                   button.disabled = true;
-                  button.textContent = "判断中...";
-                  v2NextSuggestionHasLlmResult = false;
-                  $("v2NextSuggestion").textContent = "正在扫描项目进度并判断下一步建议...";
+                  button.textContent = "扫描中...";
+                  $("v2NextSuggestion").textContent = "正在扫描项目状态...";
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/chat`, {
-                      method: "POST",
-                      body: JSON.stringify({
-                        message: v2BuildNextStepJudgementPrompt(),
-                        model: $("globalModel").value || null,
-                        skillActionId: $("chatSkillMode").value || "normal",
-                        history: []
-                      })
-                    });
-                    v2NextSuggestionHasLlmResult = true;
-                    $("v2NextSuggestion").textContent = result.assistantMessage || "LLM 未返回判断结果。";
-                    out(result);
-                    await loadRuns();
+                    await loadProjectRuntimeState();
+                    await loadIterationPlan();
+                    await loadRepairPlan();
+                    $("v2NextSuggestion").textContent = v2BuildLocalNextStepSuggestion();
                   } catch (error) {
-                    $("v2NextSuggestion").textContent = "项目扫描判断失败，请检查模型配置或稍后重试。";
+                    $("v2NextSuggestion").textContent = "项目状态扫描失败，请稍后重试或先刷新页面。";
                     showError(error);
                   } finally {
                     button.disabled = false;
@@ -495,7 +512,7 @@ public sealed class BrowserUiRenderer
                   if (!shell) return;
                   shell.innerHTML = v2Steps.map(([id, label, iconIndex], index) => {
                     const status = v2StepStatus(id);
-                    const mark = status === "done" ? "✓" : status === "fix" ? "×" : "";
+                    const mark = status === "done" ? "✓" : status === "fix" ? "×" : status === "continue" ? "•••" : "";
                     return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step));
@@ -552,7 +569,7 @@ public sealed class BrowserUiRenderer
                 v2CreateIterationPanel();
                 v2ArrangeChatPanel();
                 v2EnsureContentGrid();
-                $("v2JudgeNextStep").onclick = v2JudgeNextStepWithLlm;
+                $("v2JudgeNextStep").onclick = v2JudgeNextStepLocally;
                 setInterval(v2RenderProgress, 2000);
               </script>
             </body>
@@ -786,7 +803,7 @@ public sealed class BrowserUiRenderer
                     <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
                   </div>
                   <div id="userTopActions" class="top-actions hidden">
-                    <label class="user-only-action">模型选择 <select id="globalModel"><option value="gpt-5.4" selected>5.4</option><option value="gpt-5.5">5.5</option></select></label>
+                    <label class="user-only-action">模型选择 <select id="globalModel"><option value="gpt-5.5" selected>5.5</option><option value="gpt-5.4">5.4</option></select></label>
                     <button id="openCreateProjectPage" class="secondary user-only-action" data-global-action="true">创建项目</button>
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
                     <button id="logout" class="danger-button">退出登录</button>
@@ -882,14 +899,14 @@ public sealed class BrowserUiRenderer
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
                     <button id="loadAssetInventory" class="ghost" disabled>查看素材清单</button>
-                    <div id="prototypeProgress" class="card muted">尚未开始 7 步可玩原型。</div>
+                    <div id="prototypeProgress" class="card muted">尚未开始原型骨架创建。</div>
                     <div id="prototypeAcceptanceSummary" class="card muted">原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                     <div id="assetInventoryStatus" class="card muted">final step 完成后可查看项目素材清单。</div>
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
-                    <h2>7 步可玩原型</h2>
+                    <h2>原型骨架创建</h2>
                     <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
                     <button id="importDraft" class="ghost" data-global-action="true">分析草稿并回填</button>
                     <div id="draftImportStatus" class="card muted">可选：创建项目后上传 txt 草稿，由后端模型分析后回填原型表单。</div>
@@ -902,7 +919,7 @@ public sealed class BrowserUiRenderer
                     <label>核心玩法循环 <textarea id="coreGameplayLoop" placeholder="输入、反馈、奖励、升级或失败的循环"></textarea></label>
                     <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
                     <button id="repairPrototype" class="ghost hidden" data-global-action="true">生成修复计划</button>
-                    <button id="runPrototype" class="secondary" data-global-action="true">运行原型路线</button>
+                    <button id="runPrototype" class="secondary" data-global-action="true">运行原型骨架创建</button>
                   </section>
                   <section id="prototypeCommandPanel" class="stack hidden">
                     <h2>原型命令</h2>
@@ -2461,7 +2478,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedback() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
                   const feedback = $("chatMessage").value.trim();
                   const goal = currentNeedsFixRouteGoal();
                   if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
@@ -2506,7 +2523,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedbackText(feedback, busyText) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u8fd0\u884c\u5e76\u5b8c\u6210 7 \u6b65\u53ef\u73a9\u539f\u578b\uff0c\u518d\u63d0\u4ea4\u6b63\u5f0f\u53cd\u9988\u3002\u81ea\u7531\u5bf9\u8bdd\u4ecd\u53ef\u4f7f\u7528\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
                   setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
@@ -2570,7 +2587,7 @@ public sealed class BrowserUiRenderer
                 async function submitNeedsFixRouteRequest(payload, busyText) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("\u8bf7\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\uff0c\u518d\u4f7f\u7528 needs-fix \u8def\u7531\u3002");
+                  if (!state.prototypeReadyForFeedback) return out("请先完成原型骨架创建，再使用 needs-fix 路由。");
                   setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
                   try {
@@ -2589,7 +2606,14 @@ public sealed class BrowserUiRenderer
                         goalIndex: payload?.goalIndex || null
                       })
                     });
-                    state.chatHistory.push({ role: "assistant", content: result.summary || "\u672c\u8f6e needs-fix \u8def\u7531\u5df2\u5b8c\u6210\u3002", kind: "needs-fix-route-result" });
+                    const routeStatus = String(result.status || "").trim().toLowerCase();
+                    const goalStatus = String(result.iterationGoalStatus || "").trim().toLowerCase();
+                    const needsMoreFix = goalStatus === "needs_fix" || goalStatus === "failed" || routeStatus === "needs_fix" || routeStatus === "failed";
+                    state.chatHistory.push({
+                      role: "assistant",
+                      content: result.summary || (needsMoreFix ? "本轮 needs-fix 路由已执行，但当前目标仍需继续修复。" : "本轮 needs-fix 路由已完成。"),
+                      kind: needsMoreFix ? "needs-fix-route-failed" : "needs-fix-route-result"
+                    });
                     renderChatHistory();
                     saveChatHistoryForProject();
                     await loadServerChatHistoryForProject(state.projectId);
@@ -2635,7 +2659,7 @@ public sealed class BrowserUiRenderer
                 function renderSelectedSkillAction() {
                   const selected = $("chatSkillMode").value || "normal";
                   if (selected === "normal") {
-                    $("chatSkillDescription").textContent = "普通模式：不激活 skills，按通用 Phase A 原型顾问方式回答。";
+                    $("chatSkillDescription").textContent = "不激活 skills，按通用 Phase A 原型顾问方式回答。";
                     return;
                   }
                   const action = state.skillActions.find(item => item.actionId === selected);
@@ -2643,8 +2667,7 @@ public sealed class BrowserUiRenderer
                     $("chatSkillDescription").textContent = "当前能力不可用，已回退为普通模式。";
                     return;
                   }
-                  const adminLine = state.role === "admin" ? `<p class="muted">actionId: ${escapeHtml(action.actionId)} · skill: ${escapeHtml(action.skillName)} · mode: ${escapeHtml(action.executionMode)}</p>` : "";
-                  $("chatSkillDescription").innerHTML = `<strong>${escapeHtml(action.label)}</strong><p>${escapeHtml(action.description)}</p>${adminLine}`;
+                  $("chatSkillDescription").textContent = action.description || "当前能力暂无说明。";
                 }
 
                 async function api(path, options = {}) {
@@ -3300,7 +3323,7 @@ public sealed class BrowserUiRenderer
                   try {
                     const form = new FormData();
                     form.append("draftFile", file);
-                    form.append("model", $("globalModel").value || "gpt-5.4");
+                    form.append("model", $("globalModel").value || "gpt-5.5");
                     const response = await fetch(`/api/projects/${state.projectId}/prototype-drafts/analyze`, { method: "POST", body: form, headers: { "Authorization": `Bearer ${token()}` } });
                     const payload = await response.json();
                     if (!response.ok) throw payload;
@@ -3419,7 +3442,7 @@ public sealed class BrowserUiRenderer
 
                 async function loadAssetInventory() {
                   if (!state.projectId) return out("请先选择一个项目。");
-                  window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.4")}`, "_blank", "noreferrer");
+                  window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}`, "_blank", "noreferrer");
                 }
 
                 function renderAssetInventory(result, expanded) {
@@ -3505,7 +3528,7 @@ public sealed class BrowserUiRenderer
                     return out({ status: "missing_required_fields", missingRequiredFields: missing });
                   }
                   showPrototypeNotice("正在提交原型创建请求，请不要重复点击。", "info");
-                  setLocalBusy(true, "原型创建中，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "原型骨架创建中，请等待当前任务执行完毕。");
                   setPrototypeFormLocked(true);
                   try {
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable`, { method: "POST", body: JSON.stringify(payload) });
@@ -3575,9 +3598,9 @@ public sealed class BrowserUiRenderer
                   const payload = error?.payload || {};
                   const missing = payload.missingRequiredFields || payload.MissingRequiredFields || [];
                   const message = missing.length
-                    ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型路线。`
+                    ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请补全后再运行原型骨架创建。`
                     : payload.status === "project_busy"
-                      ? "当前项目已有后台任务在执行，请等待顶部状态条消失后再启动原型路线。"
+                      ? "当前项目已有后台任务在执行，请等待顶部状态条消失后再启动原型骨架创建。"
                     : payload.failureCode === "prototype_valid_godot_scene_missing"
                       ? "没有创建有效的godot场景文件"
                       : `原型创建请求失败：${payload.status || payload.error || payload.failureCode || error?.status || "unknown_error"}`;
@@ -3706,7 +3729,7 @@ public sealed class BrowserUiRenderer
                   const routeGoal = currentNeedsFixRouteGoal();
                   $("submitFormalFeedback").disabled = !canSubmit;
                   $("submitFormalFeedback").textContent = !canSubmit
-                    ? "\u9700\u5148\u5b8c\u6210 7 \u6b65\u539f\u578b\u540e\u624d\u80fd\u63d0\u4ea4\u53cd\u9988"
+                    ? "需先完成原型骨架创建后才能提交反馈"
                     : routeGoal
                       ? `提交到 Needs Fix 路由 step ${String(routeGoal.goalIndex || "")}`
                       : "提交反馈到 Needs Fix 路由";
@@ -3788,7 +3811,7 @@ public sealed class BrowserUiRenderer
                 function setPrototypeFormLocked(locked) {
                   prototypeInputIds.forEach(id => $(id).disabled = locked);
                   $("runPrototype").disabled = locked || isGlobalBusy();
-                  $("runPrototype").textContent = locked ? "原型创建中..刷新页面查阅创建进度." : "运行原型路线";
+                  $("runPrototype").textContent = locked ? "原型骨架创建中..刷新页面查阅创建进度." : "运行原型骨架创建";
                   $("repairPrototype").disabled = locked || isGlobalBusy();
                   $("repairPrototype").textContent = locked ? "修复计划处理中..刷新页面查阅进度." : "生成修复计划";
                 }
@@ -3996,12 +4019,12 @@ public sealed class BrowserUiRenderer
         return
         [
             new ProjectDetailStep(1, "游戏项目详情", "done", "/", "✓"),
-            CreateRunStep(2, "创建游戏原型", latestPrototype, "/#prototypeWorkflowPanel"),
+            CreateRunStep(2, "原型骨架创建", latestPrototype, "/#prototypeWorkflowPanel"),
             CreateAcceptanceStep(latestPrototype, "/#prototypeWorkflowPanel"),
             prototypeFailed && latestRepair is null
                 ? new ProjectDetailStep(4, "原型验收修复", "fix", "/#v2RepairPanel", "×")
                 : CreateRunStep(4, "原型验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(5, "生成迭代计划", latestIteration, "/#v2IterationPanel"),
+            CreateRunStep(5, "完成迭代计划", latestIteration, "/#v2IterationPanel"),
             CreateRunStep(6, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
             CreateRunStep(7, "打包项目文件", latestPackage, "/#createProjectPackage"),
             new ProjectDetailStep(8, "下载项目文件", "pending", $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}", "")
@@ -4277,7 +4300,7 @@ public sealed class BrowserUiRenderer
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
-                const model = params.get("model") || "gpt-5.4";
+                const model = params.get("model") || "gpt-5.5";
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));

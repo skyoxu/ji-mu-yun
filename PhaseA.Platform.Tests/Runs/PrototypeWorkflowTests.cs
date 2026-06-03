@@ -556,6 +556,77 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task GetProgressAsync_RecoversRunningRun_WhenCompletionArtifactsExist()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.UpdateRunProgressAsync(runId, "running_step07_review", "", "Step 07：正在生成最终摘要。");
+        var prototypeFile = "docs/prototypes/2026-06-03-demo-prototype.md";
+        WriteFile(Path.Combine(project.RepoPath, prototypeFile.Replace('/', Path.DirectorySeparatorChar)), "# Demo prototype\n");
+        WriteFile(Path.Combine(project.RepoPath, "docs/prototypes/demo-prototype.prototype.json"), """
+        {
+          "prototype_type_kit": {
+            "manifest": {
+              "paths": {
+                "default_scene": "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn"
+              }
+            }
+          }
+        }
+        """);
+        WriteFile(Path.Combine(project.RepoPath, "Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn".Replace('/', Path.DirectorySeparatorChar)), "[gd_scene format=3]\n");
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.packaging.json".Replace('/', Path.DirectorySeparatorChar)), """
+        {
+          "kind": "prototype-packaging-summary",
+          "default_scene": "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn",
+          "default_scene_label": "DemoPrototypePrototype 场景",
+          "tdd_summary_paths": ["logs/ci/2026-06-03/prototype-tdd-demo-prototype-green/summary.json"],
+          "tdd_stage_counts": { "red": 0, "green": 1, "refactor": 0 },
+          "playtest_focus_points": ["确认首分钟目标。"]
+        }
+        """);
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.completion.md".Replace('/', Path.DirectorySeparatorChar)), "# Prototype Completion Report\n");
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.active.json".Replace('/', Path.DirectorySeparatorChar)), $$"""
+        {
+          "status": "completed-through-day",
+          "completed_through_day": 7,
+          "missing_required_fields": [],
+          "prototype_file": "{{prototypeFile}}",
+          "prototype_spec": "docs/prototypes/demo-prototype.prototype.json",
+          "completion_summary": "原型创建完成。\n\n下一步建议：继续试玩。",
+          "steps_run": [
+            { "day": 1, "status": "ok" },
+            { "day": 2, "status": "ok" },
+            { "day": 3, "status": "ok" },
+            { "day": 4, "status": "ok" },
+            { "day": 5, "status": "ok" },
+            { "day": 6, "status": "ok" },
+            { "day": 7, "status": "ok" }
+          ]
+        }
+        """);
+
+        var progress = await service.GetProgressAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(runId);
+
+        progress.Status.Should().Be("succeeded");
+        progress.Step.Should().Be("succeeded");
+        progress.Label.Should().Be("原型骨架创建已完成。");
+        progress.CompletionSummary.Should().Contain("下一步建议");
+        progress.DefaultScene.Should().Be("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
+        run!.Status.Should().Be("succeeded");
+        run.EvidenceJson.Should().Contain("recovered_from_completion_artifacts");
+    }
+
+    [Fact]
     public async Task ValidateAsync_RevalidatesExistingPrototypeWithoutRunningCodex()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1312,6 +1383,12 @@ public sealed class PrototypeWorkflowTests
             ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
         });
+    }
+
+    private static void WriteFile(string path, string content)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, content);
     }
 
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner

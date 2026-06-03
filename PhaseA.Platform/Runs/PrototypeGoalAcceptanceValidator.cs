@@ -83,6 +83,7 @@ internal static class PrototypeGoalAcceptanceValidator
         {
             await ShutdownDotnetBuildServerAsync(project.RepoPath, processRunner, linked.Token);
             var validationEnvironment = PrototypeValidationProcessEnvironment.Create(project.RepoPath);
+            var coreTestIsolationArguments = PrototypeValidationProcessEnvironment.CreateMsBuildIsolationArguments(validationEnvironment, "core-tests");
             var result = await processRunner.RunAsync(
                 new HostedProcessCommand(
                     "dotnet",
@@ -91,20 +92,23 @@ internal static class PrototypeGoalAcceptanceValidator
                         testProject,
                         "--filter",
                         "FullyQualifiedName~DqRpgPrototypeLoopTests",
-                        "-m:1",
-                        "-p:BuildInParallel=false"
+                        .. coreTestIsolationArguments
                     ],
                     project.RepoPath,
                     validationEnvironment),
                 linked.Token);
             if (result.ExitCode != 0)
             {
-                return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "core_tests_failed");
+                return PrototypeGoalAcceptanceValidationResult.Failed(
+                    contract.Kind,
+                    "core_tests_failed",
+                    ExtractDotnetTestFailureDetails(result));
             }
 
             var godotProject = Path.Combine(project.RepoPath, "GodotGame.csproj");
             if (File.Exists(godotProject))
             {
+                var godotBuildIsolationArguments = PrototypeValidationProcessEnvironment.CreateMsBuildIsolationArguments(validationEnvironment, "godot-build");
                 var buildResult = await processRunner.RunAsync(
                     new HostedProcessCommand(
                         "dotnet",
@@ -115,17 +119,17 @@ internal static class PrototypeGoalAcceptanceValidator
                             "Debug",
                             "-v",
                             "minimal",
-                            "-p:UseSharedCompilation=false",
-                            "-p:NodeReuse=false",
-                            "-m:1",
-                            "-p:BuildInParallel=false"
+                            .. godotBuildIsolationArguments
                         ],
                         project.RepoPath,
                         validationEnvironment),
                     linked.Token);
                 if (buildResult.ExitCode != 0)
                 {
-                    return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "godot_project_build_failed");
+                    return PrototypeGoalAcceptanceValidationResult.Failed(
+                        contract.Kind,
+                        "godot_project_build_failed",
+                        ExtractProcessFailureDetails(buildResult));
                 }
             }
 
@@ -159,6 +163,79 @@ internal static class PrototypeGoalAcceptanceValidator
         catch
         {
         }
+    }
+
+    private static string? ExtractDotnetTestFailureDetails(HostedProcessResult result)
+    {
+        var text = string.Join(
+            Environment.NewLine,
+            new[] { result.Stdout, result.Stderr }.Where(value => !string.IsNullOrWhiteSpace(value)));
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var lines = text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var details = new List<string>();
+        foreach (var line in lines)
+        {
+            if (IsDotnetTestFailureSignal(line))
+            {
+                AddDistinctDetail(details, line);
+            }
+
+            if (details.Count >= 12)
+            {
+                break;
+            }
+        }
+
+        return details.Count == 0 ? ExtractProcessFailureDetails(result) : string.Join(" | ", details);
+    }
+
+    private static bool IsDotnetTestFailureSignal(string line)
+    {
+        return line.Contains("失败 ", StringComparison.Ordinal) ||
+               line.Contains("Assert.", StringComparison.Ordinal) ||
+               line.Contains("Expected:", StringComparison.Ordinal) ||
+               line.Contains("Actual:", StringComparison.Ordinal) ||
+               line.Contains("Error Message", StringComparison.OrdinalIgnoreCase) ||
+               line.Contains("错误消息", StringComparison.Ordinal) ||
+               line.Contains("DqRpgPrototypeLoopTests.", StringComparison.Ordinal);
+    }
+
+    private static string? ExtractProcessFailureDetails(HostedProcessResult result)
+    {
+        var text = FirstNonEmpty(result.Stdout, result.Stderr);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        return TrimDetail(text);
+    }
+
+    private static void AddDistinctDetail(List<string> details, string line)
+    {
+        var trimmed = TrimDetail(line);
+        if (!string.IsNullOrWhiteSpace(trimmed) &&
+            !details.Any(existing => string.Equals(existing, trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            details.Add(trimmed);
+        }
+    }
+
+    private static string TrimDetail(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Length <= 280 ? trimmed : trimmed[..280];
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
     }
 
     private static bool HasRequiredMarkers(string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)
@@ -763,7 +840,7 @@ internal static class PrototypeGoalAcceptanceValidator
     private sealed record SceneAssetUsage(string NodeName, string NodeType, string ResourcePath, bool ResourceExists);
 }
 
-internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, string Status, string? Reason = null)
+internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, string Status, string? Reason = null, string? Details = null)
 {
     public bool Passed => string.Equals(Status, "passed", StringComparison.Ordinal);
 
@@ -777,8 +854,8 @@ internal sealed record PrototypeGoalAcceptanceValidationResult(string Kind, stri
         return new PrototypeGoalAcceptanceValidationResult(kind, "passed");
     }
 
-    public static PrototypeGoalAcceptanceValidationResult Failed(string kind, string? reason = null)
+    public static PrototypeGoalAcceptanceValidationResult Failed(string kind, string? reason = null, string? details = null)
     {
-        return new PrototypeGoalAcceptanceValidationResult(kind, "failed", reason);
+        return new PrototypeGoalAcceptanceValidationResult(kind, "failed", reason, details);
     }
 }
