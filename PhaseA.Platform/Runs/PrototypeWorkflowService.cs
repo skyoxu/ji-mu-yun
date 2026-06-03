@@ -916,6 +916,7 @@ public sealed class PrototypeWorkflowService
         var contract = _contractService.Read(project);
         var preferredShellScene = ResolvePreferredPrototypeShellScene(project.RepoPath, slug);
         var previousRepairState = _routeStateWriter.ReadLatestPrototypeRepairState(project);
+        var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, contract);
         var outputPath = CreateShortRuntimeOutputPath(runId);
         var normalizedModel = PrototypeModelPolicy.Normalize(model);
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
@@ -926,7 +927,7 @@ public sealed class PrototypeWorkflowService
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
             codexResult = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, projectExecutionGuide, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
                 timeout.Token);
         }
         catch (OperationCanceledException)
@@ -1147,6 +1148,7 @@ public sealed class PrototypeWorkflowService
         string slug,
         string preferredShellScene,
         string previousRepairState,
+        string projectExecutionGuide,
         RunSnapshot failedRun,
         PrototypeContractSnapshot contract,
         GodotFailureDiagnostic godotDiagnostic,
@@ -1171,6 +1173,9 @@ public sealed class PrototypeWorkflowService
             {PrototypeContractService.BuildPromptBlock(contract)}
             {godotDiagnosticBlock}
 
+            Project Execution Guide:
+            {TrimPromptText(projectExecutionGuide, 2400)}
+
             Previous prototype repair state:
             {TrimRepairStateForPrompt(previousRepairState)}
 
@@ -1179,6 +1184,7 @@ public sealed class PrototypeWorkflowService
 
             Mandatory repair scope:
             - Repair only the hosted Godot prototype project files needed for the failed post-validation.
+            - Use Prototype Chapter 6 Lite semantics: repair the existing prototype route evidence path, update lightweight route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
             - Do not regenerate the iteration plan.
             - Do not rerun or rewrite the prototype TDD red stage.
             - Treat the preferred prototype shell scene as the main navigation entry for smoke verification.
@@ -1355,6 +1361,17 @@ public sealed class PrototypeWorkflowService
 
         var trimmed = value.Trim();
         return trimmed.Length <= 4000 ? trimmed : trimmed[..4000];
+    }
+
+    private static string TrimPromptText(string value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "none";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
     private static string ResolvePreferredPrototypeShellScene(string repositoryRoot, string slug)
@@ -2371,6 +2388,14 @@ public sealed class PrototypeWorkflowService
             rpg_gdunit_validation = rpgGdUnitValidation?.ToEvidence(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
+        _routeStateWriter.WriteProjectExecutionGuide(
+            project,
+            _contractService.Read(project),
+            prototypeRecordPath,
+            slug,
+            RunType,
+            runId,
+            status);
     }
 
     private void EnsureGameTypeTemplateBaseline(string projectRepoPath, PrototypeWorkflowRequest request)

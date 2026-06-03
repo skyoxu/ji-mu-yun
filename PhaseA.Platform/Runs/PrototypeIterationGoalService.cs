@@ -142,6 +142,7 @@ public sealed class PrototypeIterationGoalService
             var now = DateTimeOffset.UtcNow.ToString("O");
             var projectReadme = _stateWriter.ReadProjectReadme(project);
             var prototypeContract = _contractService.Read(project);
+            var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
             var prototypeState = _stateWriter.ReadLatestPrototypeState(project);
             var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
             if (string.IsNullOrWhiteSpace(prototypeState))
@@ -175,12 +176,12 @@ public sealed class PrototypeIterationGoalService
                 return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, runId, "needs_fix", failure, nextGoal.GoalIndex, true, "needs_fix");
             }
 
-            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState, now), Encoding.UTF8, CancellationToken.None);
+            await File.WriteAllTextAsync(goalAbsolutePath, BuildGoalInput(details.Session, nextGoal, projectReadme, projectExecutionGuide, prototypeContract, prototypeState, iterationPlanState, now), Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
-            var prompt = BuildPrompt(project, routeProfile, details.Session, nextGoal, projectReadme, prototypeContract, prototypeState, iterationPlanState);
+            var prompt = BuildPrompt(project, routeProfile, details.Session, nextGoal, projectReadme, projectExecutionGuide, prototypeContract, prototypeState, iterationPlanState);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
@@ -311,6 +312,8 @@ public sealed class PrototypeIterationGoalService
                 consumed = new
                 {
                     project_readme = !string.IsNullOrWhiteSpace(projectReadme),
+                    project_execution_guide = !string.IsNullOrWhiteSpace(projectExecutionGuide),
+                    project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
                     prototype_contract = !string.IsNullOrWhiteSpace(prototypeContract.Json),
                     prototype_contract_path = prototypeContract.RelativePath,
                     prototype_route_state = true,
@@ -455,6 +458,7 @@ public sealed class PrototypeIterationGoalService
         ProjectIterationSessionSnapshot session,
         ProjectIterationGoalSnapshot goal,
         string projectReadme,
+        string projectExecutionGuide,
         PrototypeContractSnapshot prototypeContract,
         string prototypeState,
         string iterationPlanState)
@@ -471,7 +475,9 @@ public sealed class PrototypeIterationGoalService
             - ExecutorId: {routeProfile.ExecutorId}
             - Use this game-type executor protocol for the current goal only.
             - Execute only the current goal. Do not expand into later goals.
-            - Consume Project README, prototype route state, and iteration plan route state below only as read-only recovery context.
+            - Use Prototype Chapter 6 Lite semantics: read recovery context first, execute one step, leave structured route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
+            - Consume Project README, Project Execution Guide, prototype route state, and iteration plan route state below only as read-only recovery context.
+            - The Project Execution Guide is the project-level /new recovery protocol. Use it to locate artifacts and restore route context when no conversational memory is available.
             - Use the prototype route state as the baseline implementation and recovery context, not as a repair target.
             - Use the iteration plan route state as the ordered plan contract, not as a repair target.
             - Do not read or use needs-fix state from another step.
@@ -496,6 +502,9 @@ public sealed class PrototypeIterationGoalService
 
             Project README:
             {TrimForPrompt(projectReadme)}
+
+            Project Execution Guide:
+            {TrimForPrompt(projectExecutionGuide)}
 
             {PrototypeContractService.BuildPromptBlock(prototypeContract)}
 
@@ -529,6 +538,7 @@ public sealed class PrototypeIterationGoalService
         ProjectIterationSessionSnapshot session,
         ProjectIterationGoalSnapshot goal,
         string projectReadme,
+        string projectExecutionGuide,
         PrototypeContractSnapshot prototypeContract,
         string prototypeState,
         string iterationPlanState,
@@ -555,6 +565,10 @@ public sealed class PrototypeIterationGoalService
             ## Project README
 
             {TrimForPrompt(projectReadme)}
+
+            ## Project Execution Guide
+
+            {TrimForPrompt(projectExecutionGuide)}
 
             ## Project Prototype Contract
 

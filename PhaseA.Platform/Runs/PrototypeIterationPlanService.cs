@@ -119,6 +119,7 @@ public sealed class PrototypeIterationPlanService
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         var regenerationGuidance = BuildPlanRegenerationGuidance(previousIterationPlan, promptMessage, sourceKind);
         var prototypeContract = _contractService.Read(project);
+        var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
         IterationPlanningContext planningContext;
         try
         {
@@ -191,6 +192,8 @@ public sealed class PrototypeIterationPlanService
             route = "iteration-plan",
             route_skill = routeSkill,
             game_type_profile = routeProfile,
+            project_execution_guide_present = !string.IsNullOrWhiteSpace(projectExecutionGuide),
+            project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
             prototype_contract = prototypeContract.RelativePath,
             prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
             session_id = created.SessionId,
@@ -254,6 +257,7 @@ public sealed class PrototypeIterationPlanService
                 string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase));
         var draft = await _metadataStore.GetProjectPrototypeDraftAsync(project.ProjectId, cancellationToken);
         var prototypeState = _routeStateWriter.ReadLatestPrototypeState(project);
+        var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
         var template = _templateCatalog?.Find(NormalizeGameType(project.GameTypeSource));
 
         var deterministicFieldCoverage = BuildDeterministicFieldCoverage(draft);
@@ -281,7 +285,7 @@ public sealed class PrototypeIterationPlanService
             return fallback;
         }
 
-        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -333,7 +337,8 @@ public sealed class PrototypeIterationPlanService
             throw new PrototypeIterationPlanLlmException("goal_plan_llm_client_missing");
         }
 
-        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, planningContext, message, scaffold, regenerationGuidance);
+        var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
+        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -468,6 +473,7 @@ public sealed class PrototypeIterationPlanService
     private static string BuildPlanningAnalysisPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
+        string projectExecutionGuide,
         PrototypeContractSnapshot prototypeContract,
         IterationPlanningContext fallback,
         ProjectPrototypeDraftSnapshot? draft,
@@ -511,6 +517,7 @@ public sealed class PrototypeIterationPlanService
             Rules:
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
+            - Use Prototype Chapter 3 Lite semantics: split small ordered prototype goals from context without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
             - status must be one of completed, partial, missing.
             - Judge completion against the current prototype result, not only the form text.
             - Focus on prototype-form fields, map/battle/reward loop, and win/fail expectations for RPG.
@@ -530,6 +537,9 @@ public sealed class PrototypeIterationPlanService
             Source message:
             {fallback.SourceMessage}
 
+            Project execution guide:
+            {TrimForPrompt(projectExecutionGuide)}
+
             Prototype contract:
             {TrimForPrompt(prototypeContract.Json)}
 
@@ -547,6 +557,7 @@ public sealed class PrototypeIterationPlanService
     private static string BuildRpgGoalRefinementPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
+        string projectExecutionGuide,
         IterationPlanningContext planningContext,
         string message,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
@@ -582,6 +593,7 @@ public sealed class PrototypeIterationPlanService
             Rules:
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
+            - Use Prototype Chapter 3 Lite semantics: refine the lightweight iteration plan only, without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
             - Do not generate a new plan from scratch.
             - Keep the exact scaffold order.
             - Keep every title exactly unchanged from the scaffold.
@@ -607,6 +619,9 @@ public sealed class PrototypeIterationPlanService
 
             Regeneration guidance from previous plan evaluation:
             {(string.IsNullOrWhiteSpace(regenerationGuidance) ? "none" : regenerationGuidance.Trim())}
+
+            Project execution guide:
+            {TrimForPrompt(projectExecutionGuide)}
 
             Planning analysis:
             {analysisJson}
@@ -1181,6 +1196,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var planningAnalysis = TryReadPlanningAnalysisFromState(_routeStateWriter.ReadLatestIterationPlanState(project));
+        var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "plan-evaluation");
         var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -1188,7 +1204,7 @@ public sealed class PrototypeIterationPlanService
                 promptRoot,
                 "plan-evaluation",
                 PrototypeModelPolicy.Normalize("gpt-5.4"),
-                BuildRpgPlanEvaluationPrompt(project, routeProfile, details, prototypeProgress, planningAnalysis),
+                BuildRpgPlanEvaluationPrompt(project, routeProfile, projectExecutionGuide, details, prototypeProgress, planningAnalysis),
                 options,
                 project.AccountId,
                 RequireJsonObject: true),
@@ -1613,6 +1629,7 @@ public sealed class PrototypeIterationPlanService
     private static string BuildRpgPlanEvaluationPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
+        string projectExecutionGuide,
         ProjectIterationSessionDetails details,
         PrototypeWorkflowProgress? prototypeProgress,
         PrototypeIterationPlanningAnalysisResult? planningAnalysis)
@@ -1637,6 +1654,7 @@ public sealed class PrototypeIterationPlanService
             Rules:
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
+            - Use Prototype Chapter 3 Lite / Chapter 6 Lite boundaries: evaluate whether the lightweight prototype goals are executable, not whether formal Chapter 3/6 task artifacts exist.
             - decision must be one of: ready_to_execute, should_refine_plan.
             - Use the current prototype result, planning analysis, and RPG type requirements.
             - If the plan is generic, misses MapScene/BattleScene/reward loop/win-fail visibility/final acceptance coverage, or is misordered, return should_refine_plan.
@@ -1654,6 +1672,9 @@ public sealed class PrototypeIterationPlanService
             - PlannerId: {routeProfile.PlannerId}
             - EvaluatorId: {routeProfile.EvaluatorId}
             - Rule: evaluate only against this same game-type route profile; do not invent requirements outside this route set.
+
+            Project execution guide:
+            {TrimForPrompt(projectExecutionGuide)}
 
             Iteration goals:
             {goalsJson}

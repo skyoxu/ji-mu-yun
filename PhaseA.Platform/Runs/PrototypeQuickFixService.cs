@@ -1502,6 +1502,7 @@ public sealed partial class PrototypeQuickFixService
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
         var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
         var currentPlatformAcceptanceBlock = BuildCurrentPlatformAcceptanceBlock(currentAcceptanceValidation);
+        var platformAcceptanceScopeOverrideBlock = BuildPlatformAcceptanceScopeOverrideBlock(currentAcceptanceValidation);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
         var rpgGdUnitContextBlock = BuildRpgGdUnitRepairContextBlock(project, goal);
 
@@ -1555,6 +1556,8 @@ public sealed partial class PrototypeQuickFixService
 
             {currentPlatformAcceptanceBlock}
 
+            {platformAcceptanceScopeOverrideBlock}
+
             用户触发这次修复时附带的说明：
             {feedback}
 
@@ -1577,6 +1580,57 @@ public sealed partial class PrototypeQuickFixService
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
             """;
+    }
+
+    private static string BuildPlatformAcceptanceScopeOverrideBlock(PrototypeGoalAcceptanceValidationResult? validation)
+    {
+        if (!IsCoreTestFailure(validation))
+        {
+            return "";
+        }
+
+        if (IsCoreTestPackageReferenceFailure(validation))
+        {
+            return """
+                Platform acceptance scope override:
+                - The current blocker is core_tests_failed with CS0246 for Xunit or FluentAssertions.
+                - This overrides the generic RPG gameplay-only edit scope for this run.
+                - Required first target: inspect and repair Game.Core.Tests/Game.Core.Tests.csproj PackageReference entries.
+                - Allowed package references include Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio, FluentAssertions, and related test dependencies.
+                - Do not create hand-written Xunit shims, do not delete tests, and do not change gameplay/UI while this blocker remains open.
+                - Report STATUS: needs_fix unless the package-reference blocker has actually been repaired.
+                """;
+        }
+
+        return """
+            Platform acceptance scope override:
+            - The current blocker is core_tests_failed with C# compile errors in PlatformAcceptanceDetails.
+            - This overrides the generic RPG gameplay-only edit scope for this run.
+            - Required first target: repair only the files, symbols, and C# error codes named in Current platform acceptance diagnosis before repair.
+            - If PlatformAcceptanceDetails names Game.Core/Prototypes/DqRpgPrototypeLoop.cs and missing PlayerX/PlayerY on DqRpgPrototypeState, fix that compile contract first.
+            - Do not continue gameplay/UI/content polish while a named C# compile error remains open.
+            - Report STATUS: needs_fix unless the named C# compile errors have actually been repaired.
+            """;
+    }
+
+    private static bool IsCoreTestFailure(PrototypeGoalAcceptanceValidationResult? validation)
+    {
+        return validation is not null &&
+               string.Equals(validation.Status, "failed", StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(validation.Reason, "core_tests_failed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCoreTestPackageReferenceFailure(PrototypeGoalAcceptanceValidationResult? validation)
+    {
+        if (validation is null || !IsCoreTestFailure(validation))
+        {
+            return false;
+        }
+
+        var details = validation.Details ?? "";
+        return details.Contains("CS0246", StringComparison.OrdinalIgnoreCase) &&
+               (details.Contains("Xunit", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("FluentAssertions", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string BuildRpgGdUnitRepairContextBlock(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)

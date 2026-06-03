@@ -129,6 +129,14 @@ public sealed class PrototypeWorkflowTests
         contract.Json.Should().Contain("Move, choose action, resolve enemy response.");
         contract.Json.Should().Contain("Win by defeating enemy; fail when health reaches zero.");
         new PrototypeRouteStateWriter().ReadLatestPrototypeState(project).Should().Contain("prototype_contract");
+        var projectGuidePath = Path.Combine(project.RepoPath, PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        File.Exists(projectGuidePath).Should().BeTrue();
+        var projectGuide = File.ReadAllText(projectGuidePath);
+        projectGuide.Should().Contain("GameTypeId: rpg");
+        projectGuide.Should().Contain("SkillId: prototype-rpg-godot-zh");
+        projectGuide.Should().Contain("Prototype Chapter 3/6 Lite Protocol");
+        projectGuide.Should().Contain("does not create or validate formal acceptance files");
+        projectGuide.Should().Contain("Route Recovery Protocol");
     }
 
     [Fact]

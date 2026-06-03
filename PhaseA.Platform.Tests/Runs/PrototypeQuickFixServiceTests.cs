@@ -654,6 +654,84 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldOverrideScopeForCoreTestPackageFailures()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        EnsureCoreTestsNeedPackageReferences(project.RepoPath);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 6);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core test packages missing", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 6, "Goal 6 needs fix");
+        var runner = new CoreTestPackageFailurePromptRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 6, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        runner.LastPrompt.Should().Contain("Platform acceptance scope override:");
+        runner.LastPrompt.Should().Contain("core_tests_failed with CS0246 for Xunit or FluentAssertions");
+        runner.LastPrompt.Should().Contain("This overrides the generic RPG gameplay-only edit scope");
+        runner.LastPrompt.Should().Contain("Required first target: inspect and repair Game.Core.Tests/Game.Core.Tests.csproj PackageReference entries");
+        runner.LastPrompt.Should().Contain("Do not create hand-written Xunit shims");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldOverrideScopeForNamedCoreCompileFailures()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 6);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core compile error", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 6, "Goal 6 needs fix");
+        var runner = new CoreCompileFailurePromptRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 6, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        runner.LastPrompt.Should().Contain("Platform acceptance scope override:");
+        runner.LastPrompt.Should().Contain("core_tests_failed with C# compile errors");
+        runner.LastPrompt.Should().Contain("repair only the files, symbols, and C# error codes named");
+        runner.LastPrompt.Should().Contain("Game.Core/Prototypes/DqRpgPrototypeLoop.cs");
+        runner.LastPrompt.Should().Contain("PlayerX/PlayerY");
+        runner.LastPrompt.Should().Contain("Do not continue gameplay/UI/content polish");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldRequireDedicatedBattleScene_ForStepTwo()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1869,6 +1947,27 @@ public sealed class DqRpgPrototypeLoop
 """);
     }
 
+    private static void EnsureCoreTestsNeedPackageReferences(string repoPath)
+    {
+        var testProjectRoot = Path.Combine(repoPath, "Game.Core.Tests", "Domain");
+        Directory.CreateDirectory(testProjectRoot);
+        File.WriteAllText(Path.Combine(testProjectRoot, "PackageReferenceFailureTests.cs"), """
+using FluentAssertions;
+using Xunit;
+
+namespace Game.Core.Tests.Domain;
+
+public sealed class PackageReferenceFailureTests
+{
+    [Fact]
+    public void UsesXunitAndFluentAssertions()
+    {
+        true.Should().BeTrue();
+    }
+}
+""");
+    }
+
     private static void EnsureRpgPrototypeContractValues(string metaPath)
     {
         var contractDir = Path.Combine(metaPath, "routes", "prototype-contract");
@@ -2387,6 +2486,76 @@ REMAINING: none
 当前 step 仍需修复。
 还有 remaining blocker。
 not ready
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class CoreTestPackageFailurePromptRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    1,
+                    "",
+                    "Game.Core.Tests/Domain/PackageReferenceFailureTests.cs(1,7): error CS0246: The type or namespace name 'FluentAssertions' could not be found. Game.Core.Tests/Domain/PackageReferenceFailureTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found."));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
+                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
+                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
+            }
+
+            LastPrompt = command.StandardInput ?? "";
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: needs_fix
+SUMMARY: Core test package references still need repair.
+CHANGED: none
+VERIFY: package restore still blocked.
+REMAINING: repair Game.Core.Tests.csproj package references
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class CoreCompileFailurePromptRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    1,
+                    "",
+                    "Game.Core/Prototypes/DqRpgPrototypeLoop.cs(202,99): error CS1061: 'DqRpgPrototypeState' does not contain a definition for 'PlayerX'. Game.Core/Prototypes/DqRpgPrototypeLoop.cs(202,116): error CS1061: 'DqRpgPrototypeState' does not contain a definition for 'PlayerY'."));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
+                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
+                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
+            }
+
+            LastPrompt = command.StandardInput ?? "";
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: needs_fix
+SUMMARY: Core compile errors still need repair.
+CHANGED: none
+VERIFY: core compile still blocked.
+REMAINING: repair DqRpgPrototypeLoop.cs PlayerX/PlayerY compile errors
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }

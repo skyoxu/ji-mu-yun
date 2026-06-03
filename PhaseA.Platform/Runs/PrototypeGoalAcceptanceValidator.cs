@@ -198,6 +198,9 @@ internal static class PrototypeGoalAcceptanceValidator
     private static bool IsDotnetTestFailureSignal(string line)
     {
         return line.Contains("失败 ", StringComparison.Ordinal) ||
+               line.Contains("Failed", StringComparison.OrdinalIgnoreCase) ||
+               line.Contains("InvalidOperationException", StringComparison.Ordinal) ||
+               line.Contains(".cs(", StringComparison.Ordinal) ||
                line.Contains("Assert.", StringComparison.Ordinal) ||
                line.Contains("Expected:", StringComparison.Ordinal) ||
                line.Contains("Actual:", StringComparison.Ordinal) ||
@@ -230,7 +233,7 @@ internal static class PrototypeGoalAcceptanceValidator
     private static string TrimDetail(string value)
     {
         var trimmed = value.Trim();
-        return trimmed.Length <= 280 ? trimmed : trimmed[..280];
+        return trimmed.Length <= 700 ? trimmed : trimmed[..700];
     }
 
     private static string? FirstNonEmpty(params string?[] values)

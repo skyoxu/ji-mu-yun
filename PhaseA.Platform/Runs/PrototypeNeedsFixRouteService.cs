@@ -58,6 +58,7 @@ public sealed class PrototypeNeedsFixRouteService
 
         var readme = _stateWriter.ReadProjectReadme(project);
         var prototypeContract = _contractService.Read(project);
+        var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
         var stepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
         var executeNextGoalState = string.IsNullOrWhiteSpace(stepState)
             ? _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex)
@@ -70,7 +71,10 @@ public sealed class PrototypeNeedsFixRouteService
             return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
-        var feedback = BuildFeedback(project, request.Feedback, readme, prototypeContract, stepState, executeNextGoalState, prototypeState, goal);
+        var repairLedger = _stateWriter.ReadNeedsFixRepairLedger(project, goal.GoalIndex);
+        var repairLedgerBlock = PrototypeNeedsFixRepairLedger.BuildPromptBlock(repairLedger);
+        var previousPlatformRejection = await BuildPreviousPlatformRejectionBlockAsync(details, goal, cancellationToken);
+        var feedback = BuildFeedback(project, request.Feedback, readme, projectExecutionGuide, prototypeContract, stepState, executeNextGoalState, prototypeState, goal, previousPlatformRejection, repairLedgerBlock);
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
@@ -90,6 +94,16 @@ public sealed class PrototypeNeedsFixRouteService
             cancellationToken);
 
         var routeStatus = NormalizeGoalRouteStatus(quickFixResult.IterationGoalStatus, quickFixResult.Status);
+        var latestRun = await _metadataStore.GetRunSnapshotAsync(quickFixResult.RunId, cancellationToken);
+        var updatedRepairLedger = PrototypeNeedsFixRepairLedger.UpdateFromRun(
+            repairLedger,
+            goal.GoalIndex,
+            quickFixResult.RunId,
+            ExtractAssistantClaimedStatus(quickFixResult.AssistantMessage),
+            routeStatus,
+            quickFixResult.IterationGoalStatus,
+            latestRun?.EvidenceJson);
+        _stateWriter.WriteNeedsFixRepairLedger(project, goal.GoalIndex, updatedRepairLedger);
         _stateWriter.WriteNeedsFixState(project, goal.GoalIndex, new
         {
             route = "needs-fix",
@@ -107,8 +121,12 @@ public sealed class PrototypeNeedsFixRouteService
             consumed = new
             {
                 project_readme = !string.IsNullOrWhiteSpace(readme),
+                project_execution_guide = !string.IsNullOrWhiteSpace(projectExecutionGuide),
+                project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
                 prototype_contract = !string.IsNullOrWhiteSpace(prototypeContract.Json),
-                prototype_contract_path = prototypeContract.RelativePath
+                prototype_contract_path = prototypeContract.RelativePath,
+                repair_ledger = true,
+                repair_ledger_path = _stateWriter.GetNeedsFixRepairLedgerRelativePath(goal.GoalIndex)
             },
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
@@ -135,7 +153,8 @@ public sealed class PrototypeNeedsFixRouteService
             return new PrototypeNeedsFixRouteResult("", routeSkill.FailureCode, routeSkill.FailureMessage, 0, details.Session.Status, null, []);
         }
 
-        var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _contractService.Read(project), _stateWriter.ReadLatestPrototypeState(project));
+        var prototypeContract = _contractService.Read(project);
+        var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract), prototypeContract, _stateWriter.ReadLatestPrototypeState(project));
         var quickFixResult = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
@@ -175,7 +194,7 @@ public sealed class PrototypeNeedsFixRouteService
     {
         return iterationGoalStatus switch
         {
-            "succeeded" => "succeeded",
+            "succeeded" => routeStatus,
             "needs_fix" => "needs_fix",
             "failed" => "failed",
             "running" => "running",
@@ -205,15 +224,142 @@ public sealed class PrototypeNeedsFixRouteService
                    !string.Equals(goal.Status, "succeeded", StringComparison.Ordinal));
     }
 
+    private async Task<string> BuildPreviousPlatformRejectionBlockAsync(
+        ProjectIterationSessionDetails details,
+        ProjectIterationGoalSnapshot goal,
+        CancellationToken cancellationToken)
+    {
+        var latestGoalRun = details.GoalRuns
+            .Where(run => string.Equals(run.GoalId, goal.GoalId, StringComparison.Ordinal))
+            .OrderByDescending(run => run.CreatedUtc, StringComparer.Ordinal)
+            .FirstOrDefault();
+        if (latestGoalRun is null)
+        {
+            return "- Status: none";
+        }
+
+        var run = await _metadataStore.GetRunSnapshotAsync(latestGoalRun.RunId, cancellationToken);
+        if (run is null || string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return $"""
+                - Status: unavailable
+                - RunId: {latestGoalRun.RunId}
+                - Rule: Do not infer success from prior assistant text when platform evidence is unavailable.
+                """;
+        }
+
+        return BuildPreviousPlatformRejectionBlock(latestGoalRun.RunId, run.EvidenceJson);
+    }
+
+    private static string BuildPreviousPlatformRejectionBlock(string runId, string evidenceJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            var root = document.RootElement;
+            var goalRepairStatus = ReadString(root, "goal_repair_status");
+            var acceptanceStatus = ReadString(root, "acceptance_validation_status");
+            var acceptanceReason = ReadString(root, "acceptance_validation_reason");
+            var acceptanceDetails = ReadString(root, "acceptance_validation_details");
+            var mutationGuard = BuildMutationGuardSummary(root);
+            var godotSmoke = BuildValidationSummary(root, "godot_smoke_validation");
+            var rpgGdUnit = BuildValidationSummary(root, "rpg_gdunit_validation");
+            var repairFocus = BuildRepairFocusInstruction(acceptanceReason, acceptanceDetails);
+
+            return $"""
+                - RunId: {runId}
+                - GoalRepairStatus: {goalRepairStatus ?? "unknown"}
+                - PlatformAcceptanceStatus: {acceptanceStatus ?? "unknown"}
+                - PlatformAcceptanceReason: {acceptanceReason ?? "unknown"}
+                - PlatformAcceptanceDetails: {TrimForPrompt(acceptanceDetails ?? "none", 1800)}
+                - MutationGuard: {mutationGuard}
+                - GodotSmoke: {godotSmoke}
+                - RpgGdUnit: {rpgGdUnit}
+                - RepairFocus: {repairFocus}
+                - Priority rule: Treat this platform rejection as prior evidence for the next repair. Current platform acceptance diagnosis overrides this prior evidence when they differ. Do not report STATUS: completed until the current platform blocker is actually fixed and platform acceptance can pass.
+                - Forbidden detours: Do not work on unrelated gameplay, UI, route state, recovery summaries, or later goals while this platform blocker remains unresolved.
+                """;
+        }
+        catch (JsonException)
+        {
+            return $"""
+                - RunId: {runId}
+                - Status: evidence_json_unreadable
+                - Rule: Do not infer success from prior assistant text when platform evidence is unreadable.
+                """;
+        }
+    }
+
+    private static string BuildMutationGuardSummary(JsonElement root)
+    {
+        if (!root.TryGetProperty("mutation_guard", out var guard) || guard.ValueKind != JsonValueKind.Object)
+        {
+            return "not_recorded";
+        }
+
+        var status = ReadString(guard, "status") ?? "unknown";
+        var reason = ReadString(guard, "reason") ?? "none";
+        var violations = guard.TryGetProperty("violations", out var violationsElement) && violationsElement.ValueKind == JsonValueKind.Array
+            ? violationsElement.GetArrayLength()
+            : 0;
+        return $"{status}; reason={reason}; violations={violations}";
+    }
+
+    private static string BuildValidationSummary(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out var validation) || validation.ValueKind != JsonValueKind.Object)
+        {
+            return "not_recorded";
+        }
+
+        var required = ReadBool(validation, "required");
+        var ran = ReadBool(validation, "ran");
+        var passed = ReadBool(validation, "passed");
+        var reason = ReadValidationReason(validation);
+        return $"required={required?.ToString() ?? "unknown"}; ran={ran?.ToString() ?? "unknown"}; passed={passed?.ToString() ?? "unknown"}; reason={reason}";
+    }
+
+    private static string BuildRepairFocusInstruction(string? acceptanceReason, string? acceptanceDetails)
+    {
+        var details = acceptanceDetails ?? "";
+        if (string.Equals(acceptanceReason, "core_tests_failed", StringComparison.OrdinalIgnoreCase) &&
+            details.Contains("CS0246", StringComparison.OrdinalIgnoreCase) &&
+            (details.Contains("Xunit", StringComparison.OrdinalIgnoreCase) ||
+             details.Contains("FluentAssertions", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Only repair the core test project dependency failure first. Inspect and fix Game.Core.Tests/Game.Core.Tests.csproj PackageReference entries for xunit, xunit.runner.visualstudio, FluentAssertions, Microsoft.NET.Test.Sdk, and related test packages. Do not delete tests, do not replace xUnit with hand-written shims, and do not change gameplay/UI until package restore and core test compilation can pass.";
+        }
+
+        if (string.Equals(acceptanceReason, "core_tests_failed", StringComparison.OrdinalIgnoreCase))
+        {
+            if (details.Contains("CS", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Only repair the C# compile errors named in PlatformAcceptanceDetails first. Keep changes scoped to the listed files, missing symbols, and error codes. For example, if details name Game.Core/Prototypes/DqRpgPrototypeLoop.cs and missing PlayerX/PlayerY on DqRpgPrototypeState, fix that compile contract before any gameplay/UI/content polish.";
+            }
+
+            return "Only repair the core_tests_failed blocker first. Use PlatformAcceptanceDetails as the source of truth. Do not change unrelated gameplay/UI unless the listed core test failure directly requires it.";
+        }
+
+        if (string.Equals(acceptanceReason, "godot_project_build_failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Only repair the Godot project build blocker first. Use PlatformAcceptanceDetails as the source of truth and keep changes scoped to the files named by the build errors.";
+        }
+
+        return "Repair the listed platform blocker first. Do not infer success from prior assistant summaries.";
+    }
+
     private static string BuildFeedback(
         ProjectSnapshot project,
         string? userFeedback,
         string projectReadme,
+        string projectExecutionGuide,
         PrototypeContractSnapshot prototypeContract,
         string stepState,
         string executeNextGoalState,
         string prototypeState,
-        ProjectIterationGoalSnapshot goal)
+        ProjectIterationGoalSnapshot goal,
+        string previousPlatformRejection,
+        string repairLedger)
     {
         var sourceLabel = !string.IsNullOrWhiteSpace(stepState)
             ? "current needs fix step state"
@@ -230,13 +376,21 @@ public sealed class PrototypeNeedsFixRouteService
 
             Direction lock:
             - The repair target is only the Current goal below.
+            - Use Prototype Chapter 6 Lite semantics: one-step repair plus route state/ledger; no Taskmaster triplets, formal acceptance files, overlays, contracts, or review pipeline artifacts.
             - Project README and Recovery source are read-only recovery context, not repair targets.
+            - Project README, Project Execution Guide, and Recovery source are read-only recovery context, not repair targets.
+            - The Project Execution Guide is the project-level /new recovery protocol. Use it to locate artifacts and restore route context when no conversational memory is available.
             - Do not repair Phase A platform routing, route-state readers, recovery logic, docs, scripts, deployment, or tests unless the Current goal explicitly asks for that.
             - If Current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
             - Platform route or recovery tests passing does not prove a gameplay goal is complete.
 
             Project README:
             {TrimForPrompt(projectReadme, 600)}
+
+            Project Execution Guide:
+            - Path: {PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath}
+            - Route Recovery Protocol: follow the project-level /new recovery order from this guide before changing files.
+            {TrimForPrompt(projectExecutionGuide, 200)}
 
             Project prototype contract:
             - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
@@ -250,6 +404,12 @@ public sealed class PrototypeNeedsFixRouteService
             - AcceptanceHint: {goal.AcceptanceHint}
             - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 450)}
 
+            Previous platform rejection:
+            {previousPlatformRejection}
+
+            Step repair ledger:
+            {repairLedger}
+
             Recovery source consumed: {sourceLabel}
             {TrimForPrompt(sourceState, 500)}
 
@@ -258,6 +418,7 @@ public sealed class PrototypeNeedsFixRouteService
 
             Scope rule:
             Only repair this current step. Do not read or use needs fix state from another step.
+            Current platform acceptance diagnosis overrides previous platform rejection and repair ledger when they differ. The repair ledger is continuity memory, not authority over live validation.
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             """;
@@ -267,6 +428,7 @@ public sealed class PrototypeNeedsFixRouteService
         ProjectSnapshot project,
         string? userFeedback,
         string projectReadme,
+        string projectExecutionGuide,
         PrototypeContractSnapshot prototypeContract,
         string prototypeState)
     {
@@ -275,6 +437,7 @@ public sealed class PrototypeNeedsFixRouteService
 
             Direction lock:
             - This request is still needs-fix-route, but it is not bound to a single iteration step.
+            - Use Prototype Chapter 6 Lite semantics: focused repair plus route state; no Taskmaster triplets, formal acceptance files, overlays, contracts, or review pipeline artifacts.
             - Repair the user's reported runtime issue in the hosted game project.
             - Do not generate or rewrite the iteration plan.
             - Do not repair Phase A platform routing, route-state readers, recovery logic, deployment, or tests.
@@ -283,6 +446,11 @@ public sealed class PrototypeNeedsFixRouteService
 
             Project README:
             {CompactRouteState(projectReadme)}
+
+            Project Execution Guide:
+            - Path: {PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath}
+            - Route Recovery Protocol: follow the project-level /new recovery order from this guide before changing files.
+            {TrimForPrompt(projectExecutionGuide, 200)}
 
             {PrototypeContractService.BuildPromptBlock(prototypeContract)}
 
@@ -367,6 +535,37 @@ public sealed class PrototypeNeedsFixRouteService
             : null;
     }
 
+    private static bool? ReadBool(JsonElement root, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) &&
+               (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
+            ? value.GetBoolean()
+            : null;
+    }
+
+    private static string ReadValidationReason(JsonElement validation)
+    {
+        var topLevelReason = ReadString(validation, "reason");
+        if (!string.IsNullOrWhiteSpace(topLevelReason))
+        {
+            return topLevelReason;
+        }
+
+        if (validation.ValueKind == JsonValueKind.Object &&
+            validation.TryGetProperty("smoke", out var smoke) &&
+            smoke.ValueKind == JsonValueKind.Object)
+        {
+            var smokeReason = ReadString(smoke, "reason");
+            if (!string.IsNullOrWhiteSpace(smokeReason))
+            {
+                return smokeReason;
+            }
+        }
+
+        return "none";
+    }
+
     private static string TrimForPrompt(string value, int maxLength = 4000)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -376,5 +575,24 @@ public sealed class PrototypeNeedsFixRouteService
 
         var trimmed = value.Trim();
         return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+    }
+
+    private static string ExtractAssistantClaimedStatus(string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return "unknown";
+        }
+
+        foreach (var line in assistantMessage.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.StartsWith("STATUS:", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmed["STATUS:".Length..].Trim();
+            }
+        }
+
+        return "unknown";
     }
 }

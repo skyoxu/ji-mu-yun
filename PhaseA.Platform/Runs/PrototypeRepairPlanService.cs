@@ -152,7 +152,8 @@ public sealed class PrototypeRepairPlanService
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, "running", current.ResultSummary, null, cancellationToken);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复步骤 {current.GoalIndex}。", null, null, cancellationToken);
 
-        var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context);
+        var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
+        var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context, projectExecutionGuide);
         var result = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
@@ -1114,7 +1115,7 @@ public sealed class PrototypeRepairPlanService
         return root;
     }
 
-    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill)
+    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill, string projectExecutionGuide)
     {
         return $"""
             Run the execute-repair-step top-level route.
@@ -1132,6 +1133,8 @@ public sealed class PrototypeRepairPlanService
 
             Mandatory rules:
             - Execute only the current repair step.
+            - Read the Project Execution Guide as the project-level /new recovery protocol before changing files.
+            - Use Prototype Chapter 6 Lite semantics: repair one current step, update lightweight route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
             - Do not regenerate the prototype, iteration plan, or repair plan.
             - Do not repair PhaseA platform code, docs, scripts, deployment, or route code.
             - Change only hosted game project files needed for this repair step.
@@ -1143,6 +1146,9 @@ public sealed class PrototypeRepairPlanService
             Project:
             - GameName: {project.GameName}
             - GameType: {project.GameTypeSource}
+
+            Project Execution Guide:
+            {Trim(projectExecutionGuide, 2200)}
 
             Route skill context:
             - RouteSkillId: {routeSkill.RouteSkillId}

@@ -55,7 +55,8 @@ public sealed class PrototypeIterationGoalServiceTests
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WriteProjectReadme(project);
-        new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        var contract = new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        stateWriter.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
@@ -83,6 +84,10 @@ public sealed class PrototypeIterationGoalServiceTests
         details.Goals[1].Status.Should().Be("pending");
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
         codexCommand.StandardInput.Should().Contain("prototype-baseline");
+        codexCommand.StandardInput.Should().Contain("Project Execution Guide");
+        codexCommand.StandardInput.Should().Contain("Route Recovery Protocol");
+        codexCommand.StandardInput.Should().Contain("Prototype Chapter 6 Lite semantics");
+        codexCommand.StandardInput.Should().Contain("formal acceptance files");
         codexCommand.StandardInput.Should().Contain("Project prototype contract");
         codexCommand.StandardInput.Should().Contain("Platform hard acceptance for RPG Step 1");
         codexCommand.StandardInput.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
@@ -122,6 +127,7 @@ public sealed class PrototypeIterationGoalServiceTests
             command.Arguments.SequenceEqual(new[] { "build-server", "shutdown" }));
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
         stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("prototype_contract");
+        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("project_execution_guide");
         artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-iteration-goal-input",
             "prototype-iteration-goal-result",

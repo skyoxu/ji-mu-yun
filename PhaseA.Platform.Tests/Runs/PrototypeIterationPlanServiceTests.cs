@@ -109,6 +109,10 @@ public sealed class PrototypeIterationPlanServiceTests
                 [new TextAttachment("notes.txt", "Important boss design reference.")]));
 
         result.Status.Should().Be("ready");
+        codex.LastPlanningAnalysisPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
+        codex.LastPlanningAnalysisPrompt.Should().Contain("Taskmaster triplets");
+        codex.LastGoalPlanPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
+        codex.LastGoalPlanPrompt.Should().Contain("formal acceptance files");
         codex.LastGoalPlanPrompt.Should().Contain("notes.txt");
         codex.LastGoalPlanPrompt.Should().Contain("Important boss design reference.");
 
@@ -551,6 +555,8 @@ public sealed class PrototypeIterationPlanServiceTests
         result.SuggestedPromptForRegeneration.Should().Contain("Start Adventure");
         codex.LastPrompt.Should().Contain("Use only the data provided in this prompt.");
         codex.LastPrompt.Should().Contain("Do not read files, inspect the repository, call tools, or ask for more context.");
+        codex.LastPrompt.Should().Contain("Prototype Chapter 3 Lite / Chapter 6 Lite boundaries");
+        codex.LastPrompt.Should().Contain("formal Chapter 3/6 task artifacts");
         codex.LastOptions.Should().NotBeNull();
         codex.LastOptions!.IgnoreRules.Should().BeTrue();
         codex.LastOptions.ReasoningEffort.Should().Be("minimal");
@@ -940,6 +946,7 @@ public sealed class PrototypeIterationPlanServiceTests
         private readonly bool _includeContractInstruction;
 
         public string? LastPrompt { get; private set; }
+        public string? LastPlanningAnalysisPrompt { get; private set; }
         public string? LastGoalPlanPrompt { get; private set; }
 
         public SuccessfulRpgPlanCodexClient(bool includeContractInstruction = false)
@@ -958,6 +965,7 @@ public sealed class PrototypeIterationPlanServiceTests
             LastPrompt = prompt;
             if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
             {
+                LastPlanningAnalysisPrompt = prompt;
                 const string analysis =
                     """
                     {
