@@ -149,6 +149,11 @@ public sealed class PrototypeRepairPlanService
             return new PrototypeRepairStepExecutionResult(details.Session.SessionId, "", "", "no_pending_repair_step", "当前修复计划没有待执行步骤。", details.Session.CurrentGoalIndex, false, details.Session.Status);
         }
 
+        if (IsServiceRestartRecoveryGoal(current))
+        {
+            return await CompleteServiceRestartRecoveryStepWithoutCodexAsync(project, details, current, routeSkill.Context, cancellationToken);
+        }
+
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, "running", current.ResultSummary, null, cancellationToken);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复步骤 {current.GoalIndex}。", null, null, cancellationToken);
 
@@ -196,7 +201,7 @@ public sealed class PrototypeRepairPlanService
             : $"修复步骤 {current.GoalIndex} 仍需继续修复。";
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(refreshed.Session.SessionId, sessionStatus, current.GoalIndex, summary, null, sessionStatus == "completed" ? DateTimeOffset.UtcNow.ToString("O") : null, CancellationToken.None);
 
-        _stateWriter.WriteRepairPlanState(project, new
+        _stateWriter.WriteRepairPlanExecutionState(project, current.GoalIndex, new
         {
             route = "execute-repair-step",
             source_kind = SourceKind,
@@ -210,8 +215,77 @@ public sealed class PrototypeRepairPlanService
             summary,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
+        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeSkill.Context));
 
         return new PrototypeRepairStepExecutionResult(refreshed.Session.SessionId, current.GoalId, result.RunId, result.Status, summary, current.GoalIndex, true, sessionStatus);
+    }
+
+    private async Task<PrototypeRepairStepExecutionResult> CompleteServiceRestartRecoveryStepWithoutCodexAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        ProjectIterationGoalSnapshot current,
+        PrototypeRouteSkillContext routeSkill,
+        CancellationToken cancellationToken)
+    {
+        const string status = "blocked_by_revalidation_required";
+        const string sessionStatus = "needs_fix";
+        const string goalStatus = "needs_fix";
+        const string summary = "Service restart recovery requires rerunning prototype acceptance; no hosted game file repair was executed.";
+
+        await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, goalStatus, summary, null, cancellationToken);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, sessionStatus, current.GoalIndex, summary, null, null, cancellationToken);
+
+        var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken)
+            ?? details;
+
+        _stateWriter.WriteRepairPlanExecutionState(project, current.GoalIndex, new
+        {
+            route = "execute-repair-step",
+            source_kind = SourceKind,
+            session_id = refreshed.Session.SessionId,
+            run_id = "",
+            goal_id = current.GoalId,
+            goal_index = current.GoalIndex,
+            status,
+            goal_status = goalStatus,
+            session_status = sessionStatus,
+            summary,
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        });
+        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeSkill));
+
+        return new PrototypeRepairStepExecutionResult(refreshed.Session.SessionId, current.GoalId, "", status, summary, current.GoalIndex, true, sessionStatus);
+    }
+
+    private object BuildRepairPlanState(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails details,
+        string status,
+        string summary,
+        PrototypeRouteSkillContext routeSkill)
+    {
+        return new
+        {
+            route = "repair-plan",
+            source_kind = SourceKind,
+            session_id = details.Session.SessionId,
+            status,
+            summary,
+            source_message = details.Session.SourceMessage,
+            route_skill = routeSkill,
+            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            goals = details.Goals.Select(goal => new
+            {
+                goal.GoalIndex,
+                goal.Title,
+                goal.Description,
+                goal.AcceptanceHint,
+                goal.Status,
+                goal.ResultSummary,
+                goal.CompletedUtc
+            }).ToArray(),
+            updated_utc = DateTimeOffset.UtcNow.ToString("O")
+        };
     }
 
     private static string NormalizeRepairGoalStatus(string? iterationGoalStatus, bool runCompleted)
@@ -346,6 +420,11 @@ public sealed class PrototypeRepairPlanService
     {
         if (context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh")
         {
+            if (ShouldUseServiceRestartRecoveryRepairPlan(context))
+            {
+                return BuildServiceRestartRecoveryRepairGoals(context);
+            }
+
             if (ShouldUseBuildCleanupRepairPlan(context))
             {
                 return BuildRpgBuildCleanupRepairGoals(context);
@@ -371,6 +450,46 @@ public sealed class PrototypeRepairPlanService
         }
 
         return BuildGenericRepairGoals(context);
+    }
+
+    private static bool ShouldUseServiceRestartRecoveryRepairPlan(PrototypeRepairPlanContext context)
+    {
+        return ContainsAny(
+            context.FailureText,
+            "interrupted_by_service_restart",
+            "service_restart_recovery",
+            "service restarted before completion",
+            "Run was interrupted because the service restarted before completion");
+    }
+
+    private static List<PrototypeRepairGoalResult> BuildServiceRestartRecoveryRepairGoals(PrototypeRepairPlanContext context)
+    {
+        return
+        [
+            new PrototypeRepairGoalResult(
+                1,
+                "Recover Step 07 final summary after service restart",
+                $"""
+                The failed run was interrupted by service restart while Step 07 was generating the final summary. Do not start with gameplay, map, battle, reward, evidence, TDD, cache, or build-code edits. First recover the route completion path: preserve the latest successful prototype artifacts, rerun or resume final summary generation, and write the final completion state without losing the prototype contract.
+
+                Failure source:
+                {Trim(context.FailureText, 1200)}
+                """,
+                "This step passes only when the prototype route can reach final summary/completion after service restart recovery instead of stopping at interrupted_by_service_restart.",
+                "pending"),
+            new PrototypeRepairGoalResult(
+                2,
+                "Revalidate existing RPG playable evidence",
+                "Run validation against the existing RPG prototype artifacts before changing gameplay code. Confirm the last green TDD/GdUnit evidence, Godot smoke evidence, prototype record, sidecar contract, and completion artifacts are still present and consistent.",
+                "This step passes only when existing prototype evidence is readable and no stale service-restart failure is being treated as a gameplay defect.",
+                "pending"),
+            new PrototypeRepairGoalResult(
+                3,
+                "Run final RPG acceptance only after recovery",
+                "After the service-restart recovery path is stable, run the final RPG acceptance gate. Only if this acceptance reports concrete map, movement, battle, reward, win/fail, asset, or UI failures should later repair steps modify game files.",
+                "The repair plan is complete only when final RPG acceptance succeeds or reports a new concrete gameplay blocker unrelated to service_restart_recovery.",
+                "pending")
+        ];
     }
 
     private async Task<List<PrototypeRepairGoalResult>> TryBuildRpgRepairGoalsFromModelAsync(
@@ -1117,6 +1236,16 @@ public sealed class PrototypeRepairPlanService
 
     private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill, string projectExecutionGuide)
     {
+        var recoveryOnlyRules = IsServiceRestartRecoveryGoal(goal)
+            ? """
+            Recovery-only step:
+            - The current failure is service_restart_recovery / interrupted_by_service_restart, not a gameplay defect.
+            - Do not add or change map, movement, battle, reward, win/fail, UI, asset, test, or scene files unless the current step explicitly names a concrete gameplay validation failure.
+            - Prefer preserving existing prototype artifacts and reporting that final prototype acceptance must be rerun after service recovery.
+            - If no hosted game file change is required, return STATUS: completed with REMAINING: rerun final prototype acceptance.
+            """
+            : "";
+
         return $"""
             Run the execute-repair-step top-level route.
 
@@ -1142,6 +1271,7 @@ public sealed class PrototypeRepairPlanService
             - GdUnit project root is Tests.Godot; runtime assets are visible through Tests.Godot/Game.Godot.
             - If repairing asset import failures, run the import/prewarm against Tests.Godot and verify Tests.Godot/.godot/imported contains the required imported resources.
             - Keep output browser-safe: no paths, command lines, script names, logs, or environment values.
+            {recoveryOnlyRules}
 
             Project:
             - GameName: {project.GameName}
@@ -1162,6 +1292,16 @@ public sealed class PrototypeRepairPlanService
             Extra user feedback:
             {feedback}
             """;
+    }
+
+    private static bool IsServiceRestartRecoveryGoal(ProjectIterationGoalSnapshot goal)
+    {
+        return ContainsAny(
+            string.Join("\n", goal.Title, goal.Description, goal.AcceptanceHint),
+            "interrupted_by_service_restart",
+            "service_restart_recovery",
+            "service restart",
+            "service-restart");
     }
 
     private static string Trim(string value, int maxLength)

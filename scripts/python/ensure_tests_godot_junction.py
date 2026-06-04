@@ -227,12 +227,21 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = _date_dir(root)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "ensure-tests-godot-junction.json"
-    _write_utf8(out_path, json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    audit_written = True
+    audit_error = ""
+    try:
+        _write_utf8(out_path, json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    except OSError as ex:
+        audit_written = False
+        audit_error = f"{type(ex).__name__}: {ex}"
 
     # ASCII-only summary for logs/CI consoles.
     status = "OK" if report.get("ok") else "FAIL"
     print(f"ensure_tests_godot_junction: {status} action={report.get('action')}")
-    print(f"report={out_path.as_posix()}")
+    if audit_written:
+        print(f"report={out_path.as_posix()}")
+    else:
+        print(f"report_write_warning={audit_error}")
     return 0 if report.get("ok") else 2
 
 

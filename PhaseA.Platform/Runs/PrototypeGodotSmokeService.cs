@@ -146,7 +146,7 @@ internal static class PrototypeGodotSmokeService
         var scenePath = ResolveSmokeScene(prototypeStateJson);
         if (string.IsNullOrWhiteSpace(scenePath))
         {
-            return goal.GoalIndex is 5 or 6
+            return goal.GoalIndex is 5 or 6 or 7
                 ? PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"))
                 : PrototypeGoalGodotSmokeValidationResult.NotRequired();
         }
@@ -245,7 +245,7 @@ internal static class PrototypeGodotSmokeService
             return false;
         }
 
-        return goal.GoalIndex is >= 1 and <= 6;
+        return goal.GoalIndex is >= 1 and <= 7;
     }
 
     private static string? ResolveRpgGdUnitRelativePath(string projectRepoPath, string slug)

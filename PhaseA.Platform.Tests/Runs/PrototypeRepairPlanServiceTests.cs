@@ -111,6 +111,33 @@ public sealed class PrototypeRepairPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldUseServiceRestartRecoveryPlan_WhenRunWasInterruptedByRestart()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedServiceRestartPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var codex = new LlmRepairPlanCodexClient();
+        var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
+
+        var result = await service.CreateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(3);
+        result.Goals[0].Title.Should().Contain("Step 07");
+        result.Goals[0].Description.Should().Contain("interrupted_by_service_restart");
+        result.Goals[0].Description.Should().NotContain("MapScene entry");
+        result.Goals[1].Title.Should().Contain("Revalidate existing RPG playable evidence");
+        codex.LastPrompt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldUseBuildCleanupRepairPlan_WhenFailureIsDuplicateAssemblyAttributes()
     {
         using var database = TempSqliteDatabase.Create();
@@ -330,6 +357,73 @@ public sealed class PrototypeRepairPlanServiceTests
         details.Goals[0].CompletedUtc.Should().BeNull();
     }
 
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldPreserveRepairPlanLatestAndWriteStepSidecar()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedFailedPrototypeRunAsync(store, projectId);
+        var runner = new GoalRepairPromptCaptureRunner();
+        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var writer = new PrototypeRouteStateWriter();
+        var service = new PrototypeRepairPlanService(store, quickFix, writer);
+        await service.CreateAsync(accountId, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
+
+        result.GoalIndex.Should().Be(1);
+        var latest = JsonSerializer.Deserialize<JsonElement>(writer.ReadLatestRepairPlanState(project!));
+        latest.GetProperty("route").GetString().Should().Be("repair-plan");
+        latest.GetProperty("status").GetString().Should().Be("needs_fix");
+        latest.GetProperty("source_message").GetString().Should().Contain("Permission denied");
+        latest.GetProperty("goals").GetArrayLength().Should().BeGreaterThan(1);
+        latest.GetProperty("goals")[0].GetProperty("status").GetString().Should().Be("needs_fix");
+        var stepStatePath = Path.Combine(project!.MetaPath, "routes", "repair-plan", "step-01", "latest.json");
+        File.Exists(stepStatePath).Should().BeTrue();
+        var step = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(stepStatePath));
+        step.GetProperty("route").GetString().Should().Be("execute-repair-step");
+        step.GetProperty("goal_status").GetString().Should().Be("needs_fix");
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldNotCallCodex_WhenRepairStepIsServiceRestartRecovery()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        await SeedServiceRestartPrototypeRunAsync(store, projectId);
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var writer = new PrototypeRouteStateWriter();
+        var service = new PrototypeRepairPlanService(store, quickFix, writer);
+        await service.CreateAsync(accountId, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
+
+        result.Status.Should().Be("blocked_by_revalidation_required");
+        result.RunId.Should().BeEmpty();
+        result.SessionStatus.Should().Be("needs_fix");
+        var latest = JsonSerializer.Deserialize<JsonElement>(writer.ReadLatestRepairPlanState(project!));
+        latest.GetProperty("route").GetString().Should().Be("repair-plan");
+        latest.GetProperty("goals").GetArrayLength().Should().Be(3);
+        var stepStatePath = Path.Combine(project!.MetaPath, "routes", "repair-plan", "step-01", "latest.json");
+        var step = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(stepStatePath));
+        step.GetProperty("status").GetString().Should().Be("blocked_by_revalidation_required");
+        step.GetProperty("run_id").GetString().Should().BeEmpty();
+    }
+
     private static async Task SeedFailedPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
     {
         var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
@@ -341,6 +435,19 @@ public sealed class PrototypeRepairPlanServiceTests
             "Prototype workflow failed.\nDAY4_IMPLEMENTATION_VALIDATION failed",
             "Permission denied\nrpg_scene_node_contract_drift=Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\nrpg_script_node_contract_drift=Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs",
             "{\"prototype_completion\":{\"succeeded\":false,\"error\":\"prototype_workflow_failed\"}}");
+    }
+
+    private static async Task SeedServiceRestartPrototypeRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            500,
+            "Step 07: generating final summary.",
+            "Run was interrupted because the service restarted before completion.",
+            "{\"failure_code\":\"interrupted_by_service_restart\",\"reason\":\"service_restart_recovery\"}");
     }
 
     private static async Task SeedFailedNavigationPrototypeRunAsync(PhaseAMetadataStore store, string projectId)

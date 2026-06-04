@@ -10,9 +10,92 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         ArgumentNullException.ThrowIfNull(goal);
 
         var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
-        if (contract is null || !contract.Kind.StartsWith("rpg-", StringComparison.Ordinal))
+        if (contract is null ||
+            (!contract.Kind.StartsWith("rpg-", StringComparison.Ordinal) &&
+             !contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal)))
         {
             return "";
+        }
+
+        var byKind = contract.Kind switch
+        {
+            "jrpg-opening-context-objective" => """
+                Platform hard acceptance for JRPG opening context:
+                - The prototype entry must communicate who the player is, where they are, and the immediate objective.
+                - The objective must be visible in runtime UI, dialog, or scene text, not only in code or docs.
+                - Do not advance this step into movement, battle, reward, or final acceptance work.
+                - Missing opening objective proof means STATUS: needs_fix.
+                """,
+            "jrpg-field-navigation-stable-control" => """
+                Platform hard acceptance for JRPG field navigation:
+                - Need a visible playable field, town, or map scene after Start Adventure or the project entry.
+                - The player marker or character must be visible and controllable with stable movement.
+                - Runtime visuals must show map/field and player asset usage.
+                - Do not advance this step into encounter, battle, reward, or final acceptance work.
+                - Missing field navigation contract means STATUS: needs_fix.
+                """,
+            "jrpg-interaction-discovery" => """
+                Platform hard acceptance for JRPG interaction and discovery:
+                - The player must be able to discover or interact with at least one meaningful object, NPC, dialog, clue, chest, or inspectable target.
+                - The interaction result must be visible and understandable in runtime UI or scene feedback.
+                - Do not hide conflict, battle, reward, or final acceptance requirements inside this step.
+                - Missing interaction/discovery proof means STATUS: needs_fix.
+                """,
+            "jrpg-conflict-entry-trigger" => """
+                Platform hard acceptance for JRPG conflict entry:
+                - Map, field, town, or interaction progress must expose a clear first conflict, encounter, challenge, or obstacle entry.
+                - The trigger must be visible and verifiable from player action or traversal.
+                - Do not advance this step into battle/challenge settlement or reward selection.
+                - Missing conflict entry proof means STATUS: needs_fix.
+                """,
+            "jrpg-battle-or-challenge-resolution" => """
+                Platform hard acceptance for JRPG battle or challenge resolution:
+                - A readable battle, challenge, or obstacle resolution loop must show player state, opponent/obstacle state, action feedback, and success/failure settlement.
+                - If the project uses BattleScene, keep battle UI and runtime behavior in the dedicated battle scene instead of only inside the main prototype controller.
+                - Do not advance this step into reward selection or return-loop proof unless the project explicitly has no separate reward/return requirement.
+                - Missing resolution proof means STATUS: needs_fix.
+                """,
+            "jrpg-party-character-state-readability" => """
+                Platform hard acceptance for JRPG party or character state:
+                - Player, party, HP, stats, status, equipment, or equivalent character state must be readable at runtime.
+                - State must update or remain visibly consistent after the relevant loop event.
+                - Do not treat code-only state as sufficient player-facing proof.
+                - Missing state readability proof means STATUS: needs_fix.
+                """,
+            "jrpg-growth-reward-consequence-feedback" => """
+                Platform hard acceptance for JRPG growth, reward, or consequence feedback:
+                - The loop must show an understandable reward, growth, item, stat change, experience, skill unlock, or story consequence.
+                - If the route uses the RPG reward contract, victory must expose exactly three understandable reward choices.
+                - Choosing a reward must apply a visible state change when a reward choice is part of the selected capability.
+                - Missing reward/growth/consequence proof means STATUS: needs_fix.
+                """,
+            "jrpg-return-or-continue-loop" => """
+                Platform hard acceptance for JRPG return or continue loop:
+                - After resolution or reward, the prototype must return to the active playable field/map/town or continue to a clear next playable state.
+                - The player must remain visible and controllable when the selected loop expects continued play.
+                - Runtime feedback must make the transition understandable.
+                - Missing return/continue proof means STATUS: needs_fix.
+                """,
+            "jrpg-quest-story-progress" => """
+                Platform hard acceptance for JRPG quest or story progress:
+                - The prototype must show visible quest, story, objective, or narrative progress caused by player action.
+                - The player must understand what changed and what the next objective is.
+                - Do not force BattleScene or reward work unless the project semantics require it.
+                - Missing quest/story progress proof means STATUS: needs_fix.
+                """,
+            "jrpg-final-first-loop-acceptance" => """
+                Platform hard acceptance for JRPG final first-loop acceptance:
+                - The selected first-loop capabilities must work together end-to-end from entry through the final playable state.
+                - Project-specific contract fields, runtime proof, Godot smoke, asset usage, and package readiness must pass.
+                - If the route uses RPG map, battle, reward, or return-loop contracts, those selected capabilities must remain valid.
+                - Main.tscn root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false when final host UI hiding is required.
+                - Missing final first-loop proof means STATUS: needs_fix.
+                """,
+            _ => ""
+        };
+        if (!string.IsNullOrWhiteSpace(byKind))
+        {
+            return byKind;
         }
 
         return goal.GoalIndex switch
@@ -22,11 +105,20 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Need: Game.Godot/Prototypes/dq-rpg/MapScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs.
                 - DqRpgPrototype.tscn keeps Start Adventure and CanvasLayer/UI/MapScene; click shows it via ShowMapScene or StartRun/StartAdventure.
                 - MapScene has TrackLayer with RpgMapAsset, Grid, Overlay, RpgPlayerAsset, RpgEnemyAsset.
-                - MapScene.cs moves player, maps grid positions, and exposes EncounterEntered/EncounterPressed/EncounterTriggered.
+                - MapScene.cs moves player and maps grid positions; do not advance this step into encounter, battle, reward, or final acceptance work.
                 - Missing contract means STATUS: needs_fix.
                 """,
             2 => """
                 Platform hard acceptance for RPG Step 2:
+                - This step is encounter trigger validation, not BattleScene implementation.
+                - Map traversal must expose visible encounter progress and a clear first encounter trigger.
+                - Project-specific encounter probability or guaranteed-step rules must be visible and verifiable.
+                - MapScene.cs must expose EncounterEntered/EncounterPressed/EncounterTriggered or equivalent movement-driven encounter wiring.
+                - Do not advance this step into BattleScene settlement or reward selection.
+                - Missing contract means STATUS: needs_fix.
+                """,
+            3 => """
+                Platform hard acceptance for RPG Step 3:
                 - Need: Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs.
                 - Keep battle UI and battle-side runtime behavior in the dedicated BattleScene instead of leaving the full battle loop only inside DqRpgPrototype.cs.
                 - BattleScene.tscn must expose a recognizable BattleScene node, RpgEnemyAsset, and AttackButton.
@@ -34,8 +126,16 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - The battle loop must show readable enemy presentation, attack feedback, and victory or defeat settlement without advancing into reward selection.
                 - Missing contract means STATUS: needs_fix.
                 """,
-            3 => """
-                Platform hard acceptance for RPG Step 3:
+            4 => """
+                Platform hard acceptance for RPG Step 4:
+                - This step is reward choice understandability, not return-to-map implementation.
+                - ShowRewardScene(rewards) must show exactly three understandable reward choices after a battle victory when rewards.Count > 0.
+                - Each reward choice must communicate its effect clearly enough for the player to choose.
+                - Keep markers: RewardOptions.Count and three visible reward choices.
+                - If reward choices are missing, fewer than three, or unclear to the player, output STATUS: needs_fix.
+                """,
+            5 => """
+                Platform hard acceptance for RPG Step 5:
                 - ShowRewardScene(rewards) must show exactly three understandable reward choices after a battle victory when rewards.Count > 0.
                 - Choosing a reward must apply one visible growth option: +5 HP, +2 ATK, or +1 DEF.
                 - The +5 HP reward must make the post-reward state visibly equal to StartingPlayerHp + 5 for the first battle reward proof, not merely current damaged HP + 5.
@@ -44,8 +144,8 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Keep markers: RewardOptions.Count, ApplyReward, Battle reward selected, Return to the map, ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward.
                 - If reward values, reward UI, or return-to-map proof are missing, output STATUS: needs_fix.
                 """,
-            5 => """
-                Platform hard acceptance for RPG Step 5:
+            6 => """
+                Platform hard acceptance for RPG Step 6:
                 - This step is win/fail visibility and readability, not the reward implementation step.
                 - 15 battle wins must be visibly communicated as the game victory condition.
                 - Any battle loss must visibly communicate game failure and stop the run.
@@ -53,7 +153,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Keep victory/failure markers: VictoryBattleCount, IsVictory, IsGameOver.
                 - If win/fail rules are only in code or docs and not visible to the player, output STATUS: needs_fix.
                 """,
-            6 => """
+            7 => """
                 Platform hard acceptance for RPG Final Step:
                 - Full RPG prototype acceptance must pass: MapScene, BattleScene, reward return-to-map loop, main-menu prototype entry, visible map after Start Adventure, Godot smoke, and package readiness.
                 - Runtime visuals must use real file-backed Texture2D assets for the exact nodes RpgMapAsset, RpgPlayerAsset, and RpgEnemyAsset.

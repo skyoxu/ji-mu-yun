@@ -23,6 +23,26 @@ This contract defines the default implementation expectations for a short playab
 - If the user gives enemy health, attack, reward, or win/fail rules, those concrete values must appear in battle logic, UI/state text, tests, or an explicit needs-fix blocker.
 - A final RPG acceptance pass must fail when a concrete non-empty user field exists only in markdown or metadata and is not represented in scene flow, runtime behavior, UI feedback, test coverage, or a recorded needs-fix reason.
 
+
+### JRPG First-Loop Capability Profile
+
+This RPG route uses a JRPG first-loop capability profile. The profile does not require every RPG project to follow a DQ-like seven-step map-battle-reward script. It requires the implementation and iteration routes to select the capabilities that the project contract actually implies.
+
+Capability vocabulary:
+
+- Opening context and player objective.
+- Field, town, or map navigation with stable control.
+- Interaction/discovery beat such as NPC dialogue, chest, investigation, or objective discovery.
+- Conflict entry when the project asks for encounter, battle, enemy, boss, or challenge.
+- Battle or challenge resolution when a conflict exists.
+- Party or character state readability when HP, stats, equipment, party, or status matter.
+- Growth, reward, or consequence feedback when reward, item, level, choice, experience, or story consequence matters.
+- Return-or-continue loop to the next playable state when the first loop continues.
+- Quest or story progress when narrative or town events are central.
+- Final first-loop acceptance across the selected capabilities.
+
+DQ-like is one possible capability selection. Town-quest, story-event, exploration, or interaction-first JRPG prototypes may omit BattleScene or reward-choice requirements unless the project contract asks for them.
+
 ### Map Scene
 
 - A bounded playable map scene suitable for a short prototype loop.

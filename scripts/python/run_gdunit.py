@@ -79,12 +79,26 @@ def _msbuild_isolation_args(scope: str) -> list[str]:
     bin_root = os.path.join(build_root, safe_scope, "bin", "$(MSBuildProjectName)")
     return [
         f"-p:BaseIntermediateOutputPath={obj_root}{os.sep}",
+        f"-p:IntermediateOutputPath={obj_root}{os.sep}Debug{os.sep}",
         f"-p:BaseOutputPath={bin_root}{os.sep}",
+        f"-p:OutputPath={bin_root}{os.sep}Debug{os.sep}",
         "-p:UseSharedCompilation=false",
         "-p:NodeReuse=false",
         "-m:1",
         "-p:BuildInParallel=false",
     ]
+
+
+def _isolated_godot_user_data_args(root: str, date: str) -> list[str]:
+    base = os.environ.get("PHASEA_GODOT_USER_DATA_ROOT", "").strip()
+    if not base:
+        validation_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+        base = validation_root if validation_root else os.path.join(root, "logs", "e2e", date)
+    run_id = f"gdunit-user-{os.getpid()}-{int(time.time() * 1000)}"
+    user_dir = os.path.join(base, run_id)
+    os.makedirs(user_dir, exist_ok=True)
+    os.makedirs(os.path.join(user_dir, "logs"), exist_ok=True)
+    return ["--user-data-dir", user_dir]
 
 
 def _copy_reports_best_effort(src_root: str, dest_root: str) -> list[tuple[str, str, str]]:
@@ -154,7 +168,7 @@ def run_cmd(args, cwd=None, timeout=600_000, env=None):
     try:
         out, _ = p.communicate(timeout=timeout/1000.0)
     except subprocess.TimeoutExpired:
-        p.kill()
+        _terminate_process_tree(p)
         out, _ = p.communicate()
         return 124, out
     return p.returncode, out
@@ -183,24 +197,41 @@ def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None, env=No
                 low = line.lower()
                 if any(m.lower() in low for m in break_markers):
                     hit_break = True
-                    p.kill()
+                    _terminate_process_tree(p)
                     break
             else:
                 if p.poll() is not None:
                     break
             if dt.datetime.now().timestamp() > end_ts:
-                p.kill()
+                _terminate_process_tree(p)
                 return 124, ''.join(buf_lines)
         out = ''.join(buf_lines)
         if hit_break:
             return 1, out
         return (p.returncode or 0), out
     except Exception:
-        try:
-            p.kill()
-        except Exception:
-            pass
+        _terminate_process_tree(p)
         return 1, ''.join(buf_lines)
+
+
+def _terminate_process_tree(process) -> None:
+    try:
+        pid = getattr(process, "pid", None)
+        if pid and os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(pid)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=20,
+            )
+            return
+    except Exception:
+        pass
+    try:
+        process.kill()
+    except Exception:
+        pass
 
 
 def write_text(path: str, content: str) -> None:
@@ -222,14 +253,18 @@ def _cleanup_godot_processes(godot_bin: str) -> None:
     exe_name = os.path.basename(godot_bin).strip()
     if not exe_name:
         return
+    exe_names = [exe_name]
+    if exe_name.endswith("_console.exe"):
+        exe_names.append(exe_name.replace("_console.exe", ".exe"))
     try:
-        subprocess.run(
-            ["taskkill", "/F", "/IM", exe_name, "/T"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-            timeout=20,
-        )
+        for name in dict.fromkeys(exe_names):
+            subprocess.run(
+                ["taskkill", "/F", "/IM", name, "/T"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=20,
+            )
     except Exception:
         pass
 
@@ -300,6 +335,7 @@ def main():
     date = dt.date.today().strftime('%Y-%m-%d')
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)
+    godot_user_data_args = _isolated_godot_user_data_args(root, date)
 
     ensure_runtime_logs_godot_ignored(root)
     _cleanup_godot_processes(args.godot_bin)
@@ -311,7 +347,7 @@ def main():
     prewarm_rc = None
     prewarm_note = None
     if args.prewarm:
-        pre_cmd = [args.godot_bin, '--headless', '--path', proj, '--build-solutions', '--quit']
+        pre_cmd = [args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--build-solutions', '--quit']
         _rcp, _outp = run_cmd(pre_cmd, cwd=proj, timeout=300_000, env=process_env)
         prewarm_attempts = 1
         prewarm_rc = _rcp
@@ -354,7 +390,7 @@ def main():
 
     # Run tests (Debugger break, fail-fast).
     # Build command with optional -a filters
-    cmd = [args.godot_bin, '--headless', '--path', proj, '-s', '-d', 'res://addons/gdUnit4/bin/GdUnitCmdTool.gd', '--ignoreHeadlessMode']
+    cmd = [args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '-s', '-d', 'res://addons/gdUnit4/bin/GdUnitCmdTool.gd', '--ignoreHeadlessMode']
     for a in args.add:
         apath = a
         if not apath.startswith('res://'):
@@ -370,7 +406,7 @@ def main():
         f.write(out)
 
     # Generate HTML log frame (optional)
-    _rc2, _out2 = run_cmd([args.godot_bin, '--headless', '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
+    _rc2, _out2 = run_cmd([args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
 
     # Archive reports
     reports_dir = os.path.join(proj, 'reports')
@@ -415,6 +451,7 @@ def main():
         'strict_exit_code': strict_exit,
         'dotnet_bin': dotnet_bin,
         'project': proj,
+        'godot_user_data_args': godot_user_data_args,
         'added': args.add,
         'timeout_sec': args.timeout_sec,
         'results': parsed,

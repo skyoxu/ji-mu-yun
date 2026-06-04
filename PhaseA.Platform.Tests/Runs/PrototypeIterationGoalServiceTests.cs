@@ -89,10 +89,9 @@ public sealed class PrototypeIterationGoalServiceTests
         codexCommand.StandardInput.Should().Contain("Prototype Chapter 6 Lite semantics");
         codexCommand.StandardInput.Should().Contain("formal acceptance files");
         codexCommand.StandardInput.Should().Contain("Project prototype contract");
-        codexCommand.StandardInput.Should().Contain("Platform hard acceptance for RPG Step 1");
-        codexCommand.StandardInput.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
-        codexCommand.StandardInput.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
-        codexCommand.StandardInput.Should().Contain("RpgPlayerAsset");
+        codexCommand.StandardInput.Should().Contain("Platform hard acceptance for JRPG field navigation");
+        codexCommand.StandardInput.Should().Contain("visible playable field");
+        codexCommand.StandardInput.Should().Contain("player marker or character");
         codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
         var godotBuildCommand = runner.Commands.Single(command =>
@@ -181,10 +180,9 @@ public sealed class PrototypeIterationGoalServiceTests
     }
 
     [Theory]
-    [InlineData(1, "rpg-step1-navigation-encounter-entry")]
-    [InlineData(2, "rpg-step2-battlescene-settlement")]
-    [InlineData(3, "rpg-step3-reward-loop-return-map")]
-    [InlineData(4, "rpg-step4-main-loop-scene-switching")]
+    [InlineData(1, "jrpg-field-navigation-stable-control")]
+    [InlineData(2, "jrpg-conflict-entry-trigger")]
+    [InlineData(3, "jrpg-battle-or-challenge-resolution")]
     public async Task ExecuteNextAsync_ShouldUseRpgRouteAcceptanceKinds_ForNavigationFirstSteps(
         int goalIndex,
         string expectedAcceptanceKind)
@@ -228,6 +226,59 @@ public sealed class PrototypeIterationGoalServiceTests
     }
 
     [Fact]
+    public async Task ExecuteNextAsync_ShouldUseJrpgGrowthAcceptanceKind_WhenRewardRuntimeMarkersPass()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through movement, encounter, battle, reward, and return to the map."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("growth, reward, or consequence feedback", StringComparison.Ordinal));
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        foreach (var goal in details.Goals.Where(goal => goal.GoalIndex < targetGoal.GoalIndex))
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
+        }
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsureRpgRewardRuntimeMarkers(project.RepoPath);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project);
+        new PrototypeContractService().WriteFromRequest(project, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        stateWriter.WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            marker = "prototype-baseline",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var runner = new StepFiveSmokeHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        run!.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
+        run.EvidenceJson.Should().Contain("\"godot_smoke_validation\":{\"required\":true,\"passed\":true");
+        result.Status.Should().Be("completed");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
+        run.EvidenceJson.Should().Contain("\"acceptance_validation\":\"jrpg-growth-reward-consequence-feedback\"");
+        run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
+    }
+
+    [Fact]
     public async Task ExecuteNextAsync_ShouldAcceptCurrentRpgMapEntryContractShape()
     {
         using var database = TempSqliteDatabase.Create();
@@ -257,7 +308,7 @@ public sealed class PrototypeIterationGoalServiceTests
         result.Status.Should().Be("completed");
         result.GoalIndex.Should().Be(1);
         refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("succeeded");
-        run!.EvidenceJson.Should().Contain("\"acceptance_validation\":\"rpg-step1-navigation-encounter-entry\"");
+        run!.EvidenceJson.Should().Contain("\"acceptance_validation\":\"jrpg-field-navigation-stable-control\"");
         run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
     }
 
@@ -276,7 +327,7 @@ public sealed class PrototypeIterationGoalServiceTests
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 6))
+        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
         {
             await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
         }
@@ -306,8 +357,8 @@ public sealed class PrototypeIterationGoalServiceTests
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("completed");
-        result.GoalIndex.Should().Be(6);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 6).Status.Should().Be("succeeded");
+        result.GoalIndex.Should().Be(7);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 7).Status.Should().Be("succeeded");
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
@@ -329,7 +380,7 @@ public sealed class PrototypeIterationGoalServiceTests
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 6))
+        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
         {
             await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
         }
@@ -348,8 +399,8 @@ public sealed class PrototypeIterationGoalServiceTests
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
-        result.GoalIndex.Should().Be(6);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 6).Status.Should().Be("needs_fix");
+        result.GoalIndex.Should().Be(7);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == 7).Status.Should().Be("needs_fix");
         runner.Commands.Should().ContainSingle(command => command.Arguments.Contains("exec"));
     }
 
@@ -368,7 +419,7 @@ public sealed class PrototypeIterationGoalServiceTests
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 6))
+        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
         {
             await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
         }
@@ -393,8 +444,8 @@ public sealed class PrototypeIterationGoalServiceTests
         var detailsAfter = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
-        result.GoalIndex.Should().Be(6);
-        detailsAfter!.Goals.Single(goal => goal.GoalIndex == 6).ResultSummary.Should().Contain("rpg_form_contract_values_not_reflected");
+        result.GoalIndex.Should().Be(7);
+        detailsAfter!.Goals.Single(goal => goal.GoalIndex == 7).ResultSummary.Should().Contain("rpg_form_contract_values_not_reflected");
     }
 
     [Fact]
@@ -861,6 +912,46 @@ public sealed class DqRpgPrototypeLoop
     // Return to the map
     // IsVictory
     // IsGameOver
+}
+""");
+    }
+
+    private static void EnsureRpgRewardRuntimeMarkers(string repoPath)
+    {
+        var scriptPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    public System.Collections.Generic.IReadOnlyList<object> RewardOptions { get; set; } = System.Array.Empty<object>();
+    void Ready() { _mapScene = GetNode<MapScene>("CanvasLayer/UI/MapScene"); StartButton.Pressed += ShowMapScene; _mapScene.Visible = true; }
+    T GetNode<T>(string path) => default!;
+    dynamic StartButton;
+    dynamic _mapScene;
+    void ShowMapScene() {}
+    void RefreshView() {}
+    void ShowRewardReturnStatus() {}
+    void ShowRewardScene(System.Collections.Generic.IReadOnlyList<object> rewards)
+    {
+        if (rewards.Count > 0 || RewardOptions.Count > 0)
+        {
+            ApplyReward();
+            BattleRewardSelected();
+            ShowMapScene();
+        }
+    }
+    void OnBattleFinished(bool isVictory, System.Collections.Generic.IReadOnlyList<object> rewards)
+    {
+        if (rewards.Count > 0)
+        {
+            ShowRewardScene(rewards);
+            return;
+        }
+        ShowMapScene();
+    }
+    void ApplyReward() { RefreshView(); ShowRewardReturnStatus(); }
+    void BattleRewardSelected() {}
+    // Battle reward selected
 }
 """);
     }

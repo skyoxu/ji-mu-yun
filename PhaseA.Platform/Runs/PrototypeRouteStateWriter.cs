@@ -72,6 +72,12 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "repair-plan", "latest.json"), payload);
     }
 
+    public void WriteRepairPlanExecutionState(ProjectSnapshot project, int goalIndex, object payload)
+    {
+        var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
+        WriteState(project, Path.Combine("routes", "repair-plan", step, "latest.json"), payload);
+    }
+
     public void WriteExecuteNextGoalState(ProjectSnapshot project, int goalIndex, object payload)
     {
         var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";

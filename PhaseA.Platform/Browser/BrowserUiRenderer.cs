@@ -115,6 +115,8 @@ public sealed class BrowserUiRenderer
                   ["download-project", "下载项目文件", 8]
                 ];
                 let v2SelectedStep = "new-project";
+                let v2UserSelectedStep = false;
+                let v2CurrentProjectId = "";
                 function v2HasPackages() {
                   if (Array.isArray(state.packageList)) return state.packageList.length > 0;
                   return Array.isArray(state.packageList?.packages) && state.packageList.packages.length > 0;
@@ -154,21 +156,35 @@ public sealed class BrowserUiRenderer
                   if (stepId === "download-project") return v2HasPackages() ? "action" : "pending";
                   return "pending";
                 }
-                function v2ShowStep(stepId) {
-                  v2SelectedStep = stepId;
+                function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
                   const hide = id => $(id)?.classList.add("hidden");
                   ["v2IterationPanel", "v2RepairPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
                   show("chatPanel");
-                  if (stepId === "new-project") show("currentProjectPanel");
-                  if (stepId === "create-prototype") show("prototypeWorkflowPanel");
-                  if (stepId === "prototype-acceptance") show("v2AcceptancePanel");
-                  if (stepId === "asset-inventory" || stepId === "package-project" || stepId === "download-project") show("currentProjectPanel");
-                  if (stepId === "iteration-plan") show("v2IterationPanel");
-                  if (stepId === "execute-or-repair") show("v2RepairPanel");
+                  if (v2SelectedStep === "new-project") show("currentProjectPanel");
+                  if (v2SelectedStep === "create-prototype") show("prototypeWorkflowPanel");
+                  if (v2SelectedStep === "prototype-acceptance") show("v2AcceptancePanel");
+                  if (v2SelectedStep === "asset-inventory" || v2SelectedStep === "package-project" || v2SelectedStep === "download-project") show("currentProjectPanel");
+                  if (v2SelectedStep === "iteration-plan") show("v2IterationPanel");
+                  if (v2SelectedStep === "execute-or-repair") show("v2RepairPanel");
+                }
+                function v2ShowStep(stepId, userInitiated = false) {
+                  v2SelectedStep = stepId;
+                  if (userInitiated) v2UserSelectedStep = true;
+                  v2ApplySelectedStepVisibility();
                   v2ApplyPrototypeFormLock();
                   v2RunStepAction(stepId);
                   v2RenderProgress();
+                }
+                function v2ShouldDefaultToPrototypeCreation(progress) {
+                  const status = String(progress?.status || "").trim().toLowerCase();
+                  return !status || status === "idle";
+                }
+                function v2SelectDefaultStepForPrototypeProgress(progress) {
+                  if (v2UserSelectedStep || v2SelectedStep !== "new-project") return;
+                  if (v2ShouldDefaultToPrototypeCreation(progress)) {
+                    v2SelectedStep = "create-prototype";
+                  }
                 }
                 function v2RunStepAction(stepId) {
                   if (!state.projectId) return;
@@ -515,11 +531,16 @@ public sealed class BrowserUiRenderer
                     const mark = status === "done" ? "✓" : status === "fix" ? "×" : status === "continue" ? "•••" : "";
                     return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
-                  document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step));
+                  document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
                 }
                 const v2OriginalShowProjectDetail = showProjectDetail;
                 showProjectDetail = function() {
+                  if (v2CurrentProjectId !== state.projectId) {
+                    v2CurrentProjectId = state.projectId;
+                    v2SelectedStep = "new-project";
+                    v2UserSelectedStep = false;
+                  }
                   v2CreateIterationPanel();
                   v2ArrangeChatPanel();
                   v2EnsureContentGrid();
@@ -527,7 +548,8 @@ public sealed class BrowserUiRenderer
                   v2LoadPrototypeValidationInvalidation();
                   v2EnsureContentGrid();
                   $("chatPanel")?.classList.remove("hidden");
-                  v2ShowStep(v2SelectedStep);
+                  v2ApplySelectedStepVisibility();
+                  v2RenderProgress();
                   v2ApplyPrototypeFormLock();
                 };
                 const v2OriginalUpdateChatPanelVisibility = updateChatPanelVisibility;
@@ -539,7 +561,8 @@ public sealed class BrowserUiRenderer
                   v2OriginalUpdateChatPanelVisibility(progress);
                   v2EnsureContentGrid();
                   $("chatPanel")?.classList.remove("hidden");
-                  if (v2SelectedStep === "create-prototype") $("prototypeWorkflowPanel")?.classList.remove("hidden");
+                  v2SelectDefaultStepForPrototypeProgress(progress);
+                  v2ApplySelectedStepVisibility();
                   v2ApplyPrototypeFormSnapshot(progress);
                   v2ApplyPrototypeFormLock();
                   v2RenderProgress();
@@ -1216,6 +1239,7 @@ public sealed class BrowserUiRenderer
                   try {
                     state.iterationPlan = await api(`/api/projects/${state.projectId}/iteration-plan/latest`);
                     state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
+                    syncIterationPlanRegenerationSuggestion();
                   } catch (error) {
                     if (error?.status === 404) {
                       state.iterationPlan = null;
@@ -1353,7 +1377,7 @@ public sealed class BrowserUiRenderer
                       : ""}
                   `;
                   $("createIterationPlan").disabled = !canCreateNewPlan || blockedByCurrentGoal || isGlobalBusy();
-                  $("createIterationPlan").textContent = "根据评估更新迭代计划";
+                  $("createIterationPlan").textContent = shouldRefinePlan ? "按评估重拆迭代计划" : "根据评估更新迭代计划";
                   $("evaluateIterationPlan").disabled = isGlobalBusy();
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
@@ -1446,14 +1470,24 @@ public sealed class BrowserUiRenderer
                     ${evaluation.suggestedAction ? `<p class="muted">建议动作：${escapeHtml(evaluation.suggestedAction)}</p>` : ""}
                     <p class="muted">页面建议：${escapeHtml(actionHint)}</p>
                     ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议重拆提示词：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
+                    ${decision === "should_refine_plan" && evaluation.suggestedPromptForRegeneration ? `<button id="refineIterationPlanFromEvaluation" class="secondary" data-global-action="true">按评估重拆迭代计划</button>` : ""}
                   `;
+                  const refineButton = $("refineIterationPlanFromEvaluation");
+                  if (refineButton) {
+                    refineButton.disabled = isGlobalBusy();
+                    refineButton.onclick = async () => {
+                      const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
+                      if (!evaluationSuggestion) return out("当前没有可用于重拆计划的建议。");
+                      await submitIterationPlanFromFeedback(evaluationSuggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
+                    };
+                  }
                 }
 
                 async function createIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const typedMessage = $("chatMessage").value.trim();
-                  const message = typedMessage || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
+                  const message = typedMessage || currentIterationPlanRegenerationPrompt() || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = typedMessage ? "manual_feedback" : "completion_suggestion";
                   if (!typedMessage) {
                     out("未输入优化目标，已使用当前下一步建议生成迭代计划。");
@@ -1501,6 +1535,7 @@ public sealed class BrowserUiRenderer
                     if (state.iterationPlan) {
                       state.iterationPlan.latestEvaluation = state.iterationPlanEvaluation;
                     }
+                    syncIterationPlanRegenerationSuggestion();
                     renderIterationPlanEvaluation();
                     renderIterationPlan();
                     if (!announceInChat) {
@@ -2869,9 +2904,10 @@ public sealed class BrowserUiRenderer
                       gameTypeSource: $("gameTypeSource").value.trim()
                     };
                     const result = await api("/api/projects", { method: "POST", body: JSON.stringify(payload) });
+                    const createdProjectId = result.projectId || result.ProjectId || "";
                     out(result);
                     showInitialization("running", "");
-                    await pollProjectInitializationResult();
+                    await pollProjectInitializationResult(createdProjectId);
                   } catch (error) {
                     showCreationFailure(projectCreationErrorMessage(error));
                     showError(error);
@@ -2883,7 +2919,7 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function pollProjectInitializationResult(maxAttempts = 24, delayMs = 5000) {
+                async function pollProjectInitializationResult(createdProjectId = "", maxAttempts = 24, delayMs = 5000) {
                   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
                     await new Promise(resolve => setTimeout(resolve, delayMs));
                     try {
@@ -2896,7 +2932,13 @@ public sealed class BrowserUiRenderer
                       const latestFailure = await loadLatestProjectCreationFailure();
                       if (visibleProjects.length > 0) {
                         $("initStatusPanel").classList.add("hidden");
-                        await refreshProjects();
+                        await refreshProjects({ autoSelect: false });
+                        const createdProject = visibleProjects.find(project => project.projectId === createdProjectId);
+                        if (createdProject?.projectId) {
+                          selectProject(createdProject.projectId);
+                        } else {
+                          selectDefaultProject(visibleProjects);
+                        }
                         return;
                       }
                       if (latestFailure?.failureError) {
@@ -2904,9 +2946,11 @@ public sealed class BrowserUiRenderer
                         return;
                       }
                     } catch {
+                      await refreshProjects();
                       return;
                     }
                   }
+                  await refreshProjects();
                 }
 
                 function projectCreationErrorMessage(error) {
@@ -3108,6 +3152,11 @@ public sealed class BrowserUiRenderer
                   const state = feedbackPrimaryActionState();
                   if (!state.action) return out("当前没有可执行的推荐动作。");
                   if (state.action === "refine") {
+                    const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
+                    if (evaluationSuggestion) {
+                      await submitIterationPlanFromFeedback(evaluationSuggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
+                      return;
+                    }
                     const evaluationMessage = state.chatHistory.filter(message => message.role === "assistant" && message.kind === "iteration-plan-evaluation" && !message.continueConsumed).slice(-1)[0];
                     if (evaluationMessage) {
                       await continueSuggestedFeedback(state.chatHistory.indexOf(evaluationMessage));
@@ -3790,6 +3839,19 @@ public sealed class BrowserUiRenderer
 
                 function currentIterationPlanDecision() {
                   return String(state.iterationPlanEvaluation?.decision || "").trim().toLowerCase();
+                }
+
+                function currentIterationPlanRegenerationPrompt() {
+                  const decision = currentIterationPlanDecision();
+                  if (decision !== "should_refine_plan") return "";
+                  return String(state.iterationPlanEvaluation?.suggestedPromptForRegeneration || "").trim();
+                }
+
+                function syncIterationPlanRegenerationSuggestion() {
+                  const suggestion = currentIterationPlanRegenerationPrompt();
+                  if (suggestion) {
+                    state.nextSuggestedFeedback = suggestion;
+                  }
                 }
 
                 function updateContinueSuggestionFromText(text) {

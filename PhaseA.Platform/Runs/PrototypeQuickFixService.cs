@@ -1148,6 +1148,8 @@ public sealed partial class PrototypeQuickFixService
 
         var text = string.Join(" ", targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint);
         return text.Contains("GdUnit", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("final first-loop acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("final first loop acceptance", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("final prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("full playable prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("最终验收", StringComparison.OrdinalIgnoreCase) ||
@@ -1174,7 +1176,9 @@ public sealed partial class PrototypeQuickFixService
     private static bool RequiresFullRpgGdUnitValidation(ProjectIterationGoalSnapshot targetGoal)
     {
         var text = string.Join(" ", targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint);
-        return text.Contains("final prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
+        return text.Contains("final first-loop acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("final first loop acceptance", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("final prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("full playable prototype acceptance", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("Rerun RPG project-specific GdUnit", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("最终验收", StringComparison.OrdinalIgnoreCase) ||
@@ -1790,7 +1794,8 @@ public sealed partial class PrototypeQuickFixService
     {
         return string.Equals(acceptanceValidation.Status, "failed", StringComparison.Ordinal) &&
                goal.GoalIndex is >= 1 and <= 6 &&
-               acceptanceValidation.Kind.StartsWith("rpg-", StringComparison.Ordinal);
+               (acceptanceValidation.Kind.StartsWith("rpg-", StringComparison.Ordinal) ||
+                acceptanceValidation.Kind.StartsWith("jrpg-", StringComparison.Ordinal));
     }
 
     private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)

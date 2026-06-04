@@ -44,6 +44,7 @@ public sealed class PrototypeIterationPlanService
     private readonly PrototypeContractService _contractService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
+    private readonly BmadGameTypeDesignCatalog? _bmadGameTypeDesignCatalog;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
         : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService(), null, null)
@@ -56,13 +57,15 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
         ILlmRouteEngine? llmRouteEngine = null,
-        GameTypeTemplateCatalog? templateCatalog = null)
+        GameTypeTemplateCatalog? templateCatalog = null,
+        BmadGameTypeDesignCatalog? bmadGameTypeDesignCatalog = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
+        _bmadGameTypeDesignCatalog = bmadGameTypeDesignCatalog;
     }
 
     public async Task<PrototypeIterationPlanResult> CreateAsync(
@@ -123,7 +126,7 @@ public sealed class PrototypeIterationPlanService
         IterationPlanningContext planningContext;
         try
         {
-            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, cancellationToken);
+            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, regenerationGuidance, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -136,10 +139,10 @@ public sealed class PrototypeIterationPlanService
                 null);
         }
 
-        List<PrototypeIterationPlanGoalResult> goals;
+        IterationGoalBuildResult goalBuild;
         try
         {
-            goals = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, cancellationToken);
+            goalBuild = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -152,6 +155,7 @@ public sealed class PrototypeIterationPlanService
                 null);
         }
 
+        var goals = goalBuild.Goals;
         if (routeStrategy.RequiresNonEmptyIterationGoals && goals.Count == 0)
         {
             return new PrototypeIterationPlanResult(
@@ -177,7 +181,7 @@ public sealed class PrototypeIterationPlanService
                     goal.AcceptanceHint)).ToArray(),
             cancellationToken);
 
-        var summary = BuildPlanSummary(goals.Count, planningContext);
+        var summary = BuildPlanSummary(goals.Count, planningContext, goalBuild.UsedScaffoldFallback);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, null, cancellationToken);
         var planningAnalysis = ToPlanningAnalysisResult(planningContext);
         _routeStateWriter.WriteIterationPlanAnalysisState(project, new
@@ -185,6 +189,7 @@ public sealed class PrototypeIterationPlanService
             route = "iteration-plan",
             session_id = created.SessionId,
             planning_analysis = planningAnalysis,
+            model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
         _routeStateWriter.WriteIterationPlanState(project, new
@@ -200,6 +205,7 @@ public sealed class PrototypeIterationPlanService
             status = "ready",
             source_kind = sourceKind,
             summary,
+            model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
             planning_analysis = planningAnalysis,
             goals = goals.Select(goal => new
             {
@@ -216,7 +222,7 @@ public sealed class PrototypeIterationPlanService
         return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis, evaluation);
     }
 
-    private async Task<List<PrototypeIterationPlanGoalResult>> BuildGoalsForProjectAsync(
+    private async Task<IterationGoalBuildResult> BuildGoalsForProjectAsync(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         IGameTypeRouteStrategy routeStrategy,
@@ -231,11 +237,16 @@ public sealed class PrototypeIterationPlanService
             string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             var scaffold = BuildRpgGoalsFromContext(message, sourceKind, prototypeContract, planningContext, regenerationGuidance);
+            if (IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
+            {
+                return new IterationGoalBuildResult(scaffold, false);
+            }
+
             return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, cancellationToken);
         }
 
         var goals = BuildGoals(message, sourceKind);
-        return AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract);
+        return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract), false);
     }
 
     private async Task<IterationPlanningContext> BuildPlanningContextAsync(
@@ -246,6 +257,7 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractSnapshot prototypeContract,
         string message,
         string sourceKind,
+        string? regenerationGuidance,
         CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
@@ -277,7 +289,8 @@ public sealed class PrototypeIterationPlanService
 
         if (_llmRouteEngine is null)
         {
-            if (routeStrategy.RequiresModelBackedIterationPlanning)
+            if (routeStrategy.RequiresModelBackedIterationPlanning &&
+                !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
             {
                 throw new PrototypeIterationPlanLlmException("planning_analysis_llm_client_missing");
             }
@@ -285,7 +298,8 @@ public sealed class PrototypeIterationPlanService
             return fallback;
         }
 
-        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var designTemplateGuidance = BuildDesignTemplateGuidance(project, routeProfile);
+        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -300,7 +314,8 @@ public sealed class PrototypeIterationPlanService
             cancellationToken);
         if (!completion.Succeeded)
         {
-            if (routeStrategy.RequiresModelBackedIterationPlanning)
+            if (routeStrategy.RequiresModelBackedIterationPlanning &&
+                !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
             {
                 throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "planning_analysis_llm_failed");
             }
@@ -312,7 +327,9 @@ public sealed class PrototypeIterationPlanService
         }
 
         var parsed = TryParsePlanningContext(completion.JsonObjectText ?? completion.AssistantMessage, fallback);
-        if (parsed is null && routeStrategy.RequiresModelBackedIterationPlanning)
+        if (parsed is null &&
+            routeStrategy.RequiresModelBackedIterationPlanning &&
+            !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
         {
             throw new PrototypeIterationPlanLlmException("planning_analysis_parse_failed");
         }
@@ -323,7 +340,7 @@ public sealed class PrototypeIterationPlanService
         };
     }
 
-    private async Task<List<PrototypeIterationPlanGoalResult>> RefineRpgGoalsWithRequiredModelAsync(
+    private async Task<IterationGoalBuildResult> RefineRpgGoalsWithRequiredModelAsync(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         IterationPlanningContext planningContext,
@@ -338,7 +355,8 @@ public sealed class PrototypeIterationPlanService
         }
 
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
-        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, planningContext, message, scaffold, regenerationGuidance);
+        var designTemplateGuidance = BuildDesignTemplateGuidance(project, routeProfile);
+        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -357,7 +375,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var parsed = ParseRefinedRpgGoalPlan(completion.JsonObjectText ?? completion.AssistantMessage, scaffold);
-        if (parsed.Count == 0)
+        if (parsed.Goals.Count == 0)
         {
             throw new PrototypeIterationPlanLlmException("goal_plan_parse_failed");
         }
@@ -378,76 +396,28 @@ public sealed class PrototypeIterationPlanService
         }
 
         var goals = BuildGoals(message, sourceKind);
-        return BuildRpgContractGoals(message, goals, prototypeContract);
+        _ = goals;
+        return BuildJrpgFirstLoopGoals(message, planningContext, prototypeContract, regenerationGuidance);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgClosureGoals(IterationPlanningContext planningContext, string? regenerationGuidance)
     {
-        return BuildNavigationFirstRpgClosureGoals(planningContext, regenerationGuidance);
+        return BuildJrpgFirstLoopGoals(planningContext.SourceMessage, planningContext, null, regenerationGuidance);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildNavigationFirstRpgClosureGoals(IterationPlanningContext planningContext, string? regenerationGuidance)
     {
-        var guidance = string.IsNullOrWhiteSpace(regenerationGuidance)
-            ? "The previous plan evaluation required Start Adventure to visible MapScene and stable movement before broader polish."
-            : regenerationGuidance.Trim();
-        var missingWinFail = planningContext.FieldCoverage.Any(item => item.Field == "win_fail_conditions" && !string.Equals(item.Status, "completed", StringComparison.OrdinalIgnoreCase));
-        var missingRewards = planningContext.FieldCoverage.Any(item => item.Field == "reward_loop" && !string.Equals(item.Status, "completed", StringComparison.OrdinalIgnoreCase));
-        var ruleCoverage = missingWinFail
-            ? " Keep 15-battle victory and any-loss defeat visible in later validation instead of hiding them in final acceptance."
-            : string.Empty;
-        var rewardCoverage = missingRewards
-            ? " Treat reward 3-choice understandability as an independent runtime proof."
-            : string.Empty;
-
-        return
-        [
-            new PrototypeIterationPlanGoalResult(
-                1,
-                "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
-                $"Resolve the first RPG route blocker as one converged navigation step: the real Start Adventure entry must open a visible MapScene, show the player on the map using the runtime map/player assets, prove sustained controllable movement, and expose the first encounter entry from actual map traversal before any battle, reward, or polish work is mixed in. Guidance: {TrimForHint(guidance, 180)}",
-                "Pass only when Start Adventure opens a visible RPG MapScene, runtime evidence proves the player can move continuously and controllably on that map, map/player asset usage is visible, and actual traversal exposes a clear first encounter entry.",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                2,
-                "RPG Step 2: BattleScene loop validation",
-                "Validate one readable battle after encounter entry, including enemy asset presentation, battle feedback, attack resolution, victory or defeat settlement, and battle-side failure feedback. Do not include reward selection in this step.",
-                "Pass only when BattleScene can complete one readable battle, show enemy asset usage, and show clear settlement feedback.",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                3,
-                "RPG Step 3: reward 3-choice and return-to-map validation",
-                $"Validate the reward loop independently: victory should show three understandable reward choices, choosing one should change visible state, and the flow should return to MapScene for another loop.{rewardCoverage}",
-                "Pass only when reward 3-choice, visible state change, player understanding evidence, and return-to-map loop are all proven.",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                4,
-                "RPG Step 4: main loop scene switching validation",
-                "After reward and return-to-map behavior are proven, validate the main first-loop scene switching chain end to end: Start Adventure, visible MapScene, encounter entry, BattleScene, reward selection, and return to MapScene.",
-                "Pass only when the main prototype scene switching proof covers the full first RPG loop through reward and return-to-map.",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                5,
-                "RPG Step 5: win/fail visibility and readability validation",
-                $"Make the user-facing RPG rules clear and verify they match gameplay feedback: 15 battle wins mean victory, any battle loss means game loss, and key encounter rules are visible enough for the player to understand.{ruleCoverage}",
-                "Pass only when 15-battle victory, any-loss defeat, and encounter rule feedback are visibly understandable and consistent with gameplay.",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                6,
-                "RPG Final Step: full playable prototype acceptance",
-                "Run final acceptance only after the previous runtime proofs exist, covering Start Adventure, visible MapScene, stable movement, encounter entry, BattleScene, reward 3-choice, return-to-map, win/fail visibility, project contract traceability, and Godot validation evidence.",
-                "Pass only when the current RPG prototype is playable end-to-end and all required runtime proofs, map/player/enemy asset usage, user-facing rules, project contract fields, and final acceptance evidence are complete.",
-                "pending")
-        ];
+        return BuildJrpgFirstLoopGoals(planningContext.SourceMessage, planningContext, null, regenerationGuidance);
     }
 
-    private static string BuildPlanSummary(int goalCount, IterationPlanningContext planningContext)
+    private static string BuildPlanSummary(int goalCount, IterationPlanningContext planningContext, bool usedScaffoldFallback)
     {
         var prototypeStatus = string.IsNullOrWhiteSpace(planningContext.LatestPrototypeStatus)
             ? "unknown"
             : planningContext.LatestPrototypeStatus;
         var coverage = planningContext.DraftCoveragePercent;
-        return $"已基于当前原型状态与需求覆盖分析生成 {goalCount} 个迭代目标。当前原型状态：{prototypeStatus}；表单覆盖率：{coverage}%。请先执行目标 1，再逐步推进后续目标。";
+        var degraded = usedScaffoldFallback ? " model_plan_degraded=scaffold_fallback." : "";
+        return $"已基于当前原型状态与需求覆盖分析生成 {goalCount} 个迭代目标。当前原型状态：{prototypeStatus}；表单覆盖率：{coverage}%。请先执行目标 1，再逐步推进后续目标。{degraded}";
     }
 
     private static string BuildFallbackAnalysisSummary(RunSnapshot? latestPrototypeRun, RunSnapshot? latestSuccessfulPrototypeRun, ProjectPrototypeDraftSnapshot? draft)
@@ -470,10 +440,33 @@ public sealed class PrototypeIterationPlanService
             : $"{summary} 模型分析降级为本地规则，原因：{failureCode}。";
     }
 
+    private string BuildDesignTemplateGuidance(ProjectSnapshot project, GameTypeRouteProfile routeProfile)
+    {
+        var entry = _bmadGameTypeDesignCatalog?.Find(routeProfile.GameTypeId)
+            ?? _bmadGameTypeDesignCatalog?.Find(project.GameTypeSource);
+        if (entry is null)
+        {
+            return "No BMAD/GDS game-type design template was loaded. Use only route profile, project execution guide, prototype contract, and user request.";
+        }
+
+        return $"""
+            BMAD/GDS game-type design template:
+            - Id: {entry.Id}
+            - Name: {entry.Name}
+            - Description: {entry.Description}
+            - GenreTags: {entry.GenreTags}
+            - Source: {entry.FragmentRelativePath}
+
+            Template excerpt:
+            {TrimForPrompt(entry.GuideExcerpt)}
+            """;
+    }
+
     private static string BuildPlanningAnalysisPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         string projectExecutionGuide,
+        string designTemplateGuidance,
         PrototypeContractSnapshot prototypeContract,
         IterationPlanningContext fallback,
         ProjectPrototypeDraftSnapshot? draft,
@@ -520,8 +513,9 @@ public sealed class PrototypeIterationPlanService
             - Use Prototype Chapter 3 Lite semantics: split small ordered prototype goals from context without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
             - status must be one of completed, partial, missing.
             - Judge completion against the current prototype result, not only the form text.
-            - Focus on prototype-form fields, map/battle/reward loop, and win/fail expectations for RPG.
+            - Focus on prototype-form fields and the current route profile. For RPG/JRPG, judge only the JRPG first-loop capabilities implied by the project semantics instead of forcing every map/battle/reward template section.
             - Keep evidence and missingReason short and browser-safe.
+            - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not treat it as an executable route profile or a requirement to add every listed GDD section.
 
             Project:
             - Name: {project.Name}
@@ -539,6 +533,9 @@ public sealed class PrototypeIterationPlanService
 
             Project execution guide:
             {TrimForPrompt(projectExecutionGuide)}
+
+            Design template guidance:
+            {designTemplateGuidance}
 
             Prototype contract:
             {TrimForPrompt(prototypeContract.Json)}
@@ -558,6 +555,7 @@ public sealed class PrototypeIterationPlanService
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         string projectExecutionGuide,
+        string designTemplateGuidance,
         IterationPlanningContext planningContext,
         string message,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
@@ -582,7 +580,7 @@ public sealed class PrototypeIterationPlanService
         }).ToArray());
 
         return $"""
-            You are refining a server-generated iteration plan for an RPG Godot prototype.
+            You are refining a server-generated iteration plan for a JRPG first-loop Godot prototype route.
             Output JSON only. Do not explain. Do not use Markdown.
             Return these keys only:
             goals
@@ -601,9 +599,13 @@ public sealed class PrototypeIterationPlanService
             - If the prototype already succeeded once, keep the convergence/closure framing already present in the scaffold.
             - If some user fields are still only partial, mention the most important missing runtime proof in the relevant later steps.
             - Keep each goal narrow enough to execute independently.
-            - Final step must remain full playable acceptance.
+            - Treat RPG as a JRPG first-loop capability profile, not a fixed DQ-like script.
+            - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not turn the whole GDD template into iteration goals.
+            - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
+            - Final step must remain final first-loop acceptance.
             - If regeneration guidance is provided, treat it as a hard constraint from the previous plan evaluation.
-            - When regeneration guidance says the current blocker is Start Adventure, visible MapScene, stable movement, or encounter entry, goal 1 must remain focused on that blocker.
+            - When regeneration guidance says the current blocker is Start Adventure, visible MapScene, or stable movement, goal 1 must remain focused on that blocker.
+            - When regeneration guidance says the current blocker is encounter entry or encounter trigger, keep conflict entry separate from navigation and battle/challenge resolution.
 
             Project:
             - Name: {project.Name}
@@ -622,6 +624,9 @@ public sealed class PrototypeIterationPlanService
 
             Project execution guide:
             {TrimForPrompt(projectExecutionGuide)}
+
+            Design template guidance:
+            {designTemplateGuidance}
 
             Planning analysis:
             {analysisJson}
@@ -713,30 +718,43 @@ public sealed class PrototypeIterationPlanService
         }
     }
 
-    private static List<PrototypeIterationPlanGoalResult> ParseRefinedRpgGoalPlan(
+    private static IterationGoalBuildResult ParseRefinedRpgGoalPlan(
         string? assistantMessage,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
     {
         var parsed = ParseGoalPlan(assistantMessage);
-        if (parsed.Count != scaffold.Count)
+        if (parsed.Count == 0 &&
+            !string.IsNullOrWhiteSpace(assistantMessage) &&
+            scaffold.All(goal => assistantMessage.Contains(goal.Title, StringComparison.Ordinal)))
         {
-            return [];
+            return new IterationGoalBuildResult(CloneScaffoldGoals(scaffold), true);
+        }
+
+        if (parsed.Count < scaffold.Count)
+        {
+            if (IsAcceptableJrpgScaffoldSubset(parsed, scaffold))
+            {
+                return new IterationGoalBuildResult(CloneScaffoldGoals(scaffold), true);
+            }
+
+            return new IterationGoalBuildResult([], false);
         }
 
         var refined = new List<PrototypeIterationPlanGoalResult>(scaffold.Count);
+        var parsedByTitle = parsed
+            .GroupBy(goal => goal.Title, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
         for (var index = 0; index < scaffold.Count; index++)
         {
             var expected = scaffold[index];
-            var actual = parsed[index];
-            if (!string.Equals(actual.Title, expected.Title, StringComparison.Ordinal))
+            if (!parsedByTitle.TryGetValue(expected.Title, out var actual))
             {
-                return [];
-            }
+                if (IsAcceptableJrpgScaffoldSubset(parsed, scaffold))
+                {
+                    return new IterationGoalBuildResult(CloneScaffoldGoals(scaffold), true);
+                }
 
-            var actualText = string.Join(" ", actual.Description, actual.AcceptanceHint);
-            if (WeakensRpgScaffoldContract(expected, actualText))
-            {
-                return [];
+                return new IterationGoalBuildResult([], false);
             }
 
             refined.Add(new PrototypeIterationPlanGoalResult(
@@ -747,7 +765,30 @@ public sealed class PrototypeIterationPlanService
                 "pending"));
         }
 
-        return refined;
+        return new IterationGoalBuildResult(refined, false);
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> CloneScaffoldGoals(IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
+    {
+        return scaffold
+            .Select(goal => new PrototypeIterationPlanGoalResult(goal.GoalIndex, goal.Title, goal.Description, goal.AcceptanceHint, "pending"))
+            .ToList();
+    }
+
+    private static bool IsAcceptableJrpgScaffoldSubset(
+        IReadOnlyList<PrototypeIterationPlanGoalResult> parsed,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
+    {
+        if (parsed.Count < 2 || scaffold.Count < 2)
+        {
+            return false;
+        }
+
+        var firstTitle = scaffold[0].Title;
+        var finalTitle = scaffold[^1].Title;
+        return parsed.Any(goal => string.Equals(goal.Title, firstTitle, StringComparison.Ordinal)) &&
+               parsed.Any(goal => string.Equals(goal.Title, finalTitle, StringComparison.Ordinal)) &&
+               parsed.All(goal => goal.Title.StartsWith("JRPG First Loop:", StringComparison.Ordinal));
     }
 
     private static bool WeakensRpgScaffoldContract(PrototypeIterationPlanGoalResult expected, string actualText)
@@ -770,13 +811,18 @@ public sealed class PrototypeIterationPlanService
 
     private static IEnumerable<string[]> RequiredRpgScaffoldTerms(string expectedText)
     {
-        if (ContainsAny(expectedText, "Start Adventure", "visible MapScene", "stable movement", "encounter entry"))
+        if (ContainsAny(expectedText, "Start Adventure", "visible MapScene", "stable movement"))
         {
             yield return ["Start Adventure"];
             yield return ["visible MapScene", "visible RPG MapScene", "visible map", "non-empty visible MapScene"];
             yield return ["stable movement", "controllable movement", "move continuously", "movement"];
-            yield return ["encounter entry", "first encounter", "encounter"];
             yield return ["asset", "assets", "map/player", "map/player/enemy", "map/player runtime"];
+        }
+
+        if (ContainsAny(expectedText, "encounter trigger", "guaranteed encounter"))
+        {
+            yield return ["encounter trigger", "first encounter", "encounter"];
+            yield return ["guaranteed", "10 steps", "10-step", "probability", "encounter progress"];
         }
 
         if (ContainsAny(expectedText, "BattleScene loop", "BattleScene"))
@@ -786,10 +832,17 @@ public sealed class PrototypeIterationPlanService
             yield return ["enemy asset", "enemy assets", "enemy asset usage", "enemy"];
         }
 
-        if (ContainsAny(expectedText, "reward 3-choice", "return-to-map"))
+        if (ContainsAny(expectedText, "reward 3-choice"))
         {
             yield return ["reward", "3-choice", "three reward", "three choices"];
-            yield return ["return-to-map", "return to MapScene", "return to the map"];
+            yield return ["understandability", "readability", "understandable", "player understanding", "choices are visible"];
+        }
+
+        if (ContainsAny(expectedText, "reward application", "return-to-map"))
+        {
+            yield return ["reward"];
+            yield return ["state change", "changes state", "visible state", "application", "apply", "selection"];
+            yield return ["return-to-map", "return to MapScene", "return to the map", "returns to MapScene", "returns the player to the map"];
         }
 
         if (ContainsAny(expectedText, "main loop scene switching", "scene switching"))
@@ -805,9 +858,9 @@ public sealed class PrototypeIterationPlanService
             yield return ["encounter", "rule"];
         }
 
-        if (ContainsAny(expectedText, "full playable prototype acceptance", "Final Step"))
+        if (ContainsAny(expectedText, "full playable prototype acceptance", "Final Step", "final first-loop acceptance"))
         {
-            yield return ["full playable", "full RPG playable", "full prototype", "final acceptance", "playable end-to-end", "end-to-end"];
+            yield return ["full playable", "full RPG playable", "full prototype", "final acceptance", "playable end-to-end", "end-to-end", "JRPG first-loop prototype", "first-loop prototype"];
             yield return ["project contract", "contract-specific", "input_traceability", "contract fields"];
             yield return ["asset", "assets", "map/player/enemy"];
         }
@@ -1299,48 +1352,183 @@ public sealed class PrototypeIterationPlanService
         List<PrototypeIterationPlanGoalResult> existingGoals,
         PrototypeContractSnapshot prototypeContract)
     {
-        var hint = TrimForHint(message, 96);
-        var contractInstruction = BuildContractGoalInstruction(prototypeContract);
-        return
-        [
-            new PrototypeIterationPlanGoalResult(
-                1,
-                "RPG Step 1: Start Adventure to visible MapScene, stable movement, and encounter entry",
-                $"Create and validate the player's real RPG entry path first: clicking Start Adventure must open a non-empty visible MapScene, show map/player runtime assets, support stable movement, and expose the first encounter entry from actual traversal. {contractInstruction} Source request: {hint}",
-                $"Pass only when Start Adventure opens a visible RPG MapScene, map/player asset usage is visible, runtime evidence proves stable movement, and traversal exposes first encounter entry. {contractInstruction}",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                2,
-                "RPG Step 2: BattleScene loop validation",
-                $"Create and validate a dedicated RPG BattleScene after encounter entry. This step must focus on enemy asset presentation, one readable battle, action resolution, victory/defeat settlement, and battle UI feedback. {contractInstruction}",
-                $"Pass only when the project contains a valid RPG BattleScene, enemy asset usage is visible, and one battle can independently reach settlement. {contractInstruction}",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                3,
-                "RPG Step 3: reward 3-choice and return-to-map validation",
-                $"Validate the RPG reward flow as its own step after battle settlement: victory leads to three reward choices, choosing one changes visible state, and the player returns to the map loop. {contractInstruction}",
-                $"Pass only when reward 3-choice selection, state change, and return-to-map loop are all verified. {contractInstruction}",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                4,
-                "RPG Step 4: main loop scene switching validation",
-                $"Create and validate the main RPG prototype scene that connects Start Adventure, MapScene, encounter entry, BattleScene, reward selection, and return-to-map after each individual scene proof exists. {contractInstruction}",
-                $"Pass only when the main prototype scene switching proof covers the full first RPG loop through reward and return-to-map. {contractInstruction}",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                5,
-                "RPG Step 5: win/fail visibility and readability validation",
-                $"Make the user-facing RPG rules clear and verify they match gameplay feedback, including victory, failure, encounter, and important contract-specific loop rules. {contractInstruction}",
-                $"Pass only when victory, failure, encounter rule feedback, and project-specific RPG loop rules are visibly understandable and consistent with gameplay. {contractInstruction}",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                6,
-                "RPG Final Step: full playable prototype acceptance",
-                $"Run the RPG type-skill final acceptance across the complete prototype: required RPG scenes, actual map/player/enemy asset usage in the current prototype scenes, main menu to prototype navigation, Main.tscn default-hidden VBox/Overlays/ScreenRoot SOP, Start Adventure to visible map, battle entry, reward return-to-map, Godot build, prototype scene smoke, and package readiness. {contractInstruction}",
-                $"Pass only when the full RPG playable prototype is accepted end-to-end: MapScene, BattleScene, reward return-to-map flow, actual Map/Player/Enemy asset usage in current scenes, main menu navigation, Main.tscn root-level VBox/Overlays/ScreenRoot all default to visible = false, Start Adventure visible-map validation, Godot build, prototype scene smoke, package readiness, and all project-specific prototype contract fields pass.",
-                "pending")
-        ];
+        _ = existingGoals;
+        return BuildJrpgFirstLoopGoals(message, null, prototypeContract, null);
     }
+
+    private static List<PrototypeIterationPlanGoalResult> BuildJrpgFirstLoopGoals(
+        string message,
+        IterationPlanningContext? planningContext,
+        PrototypeContractSnapshot? prototypeContract,
+        string? regenerationGuidance)
+    {
+        var selected = SelectJrpgFirstLoopCapabilities(message, planningContext, prototypeContract, regenerationGuidance);
+        var contractInstruction = prototypeContract is null
+            ? "Use the project execution guide, current prototype state, and route-skill contract as hard acceptance input."
+            : BuildContractGoalInstruction(prototypeContract);
+        var hint = TrimForHint(string.Join(" ", message, regenerationGuidance).Trim(), 120);
+        var goals = new List<PrototypeIterationPlanGoalResult>(selected.Count);
+        var index = 1;
+        foreach (var capability in selected)
+        {
+            var description = capability.DescriptionTemplate
+                .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
+                .Replace("{sourceHint}", hint, StringComparison.Ordinal);
+            var acceptance = capability.AcceptanceTemplate
+                .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal);
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                index++,
+                $"JRPG First Loop: {capability.Title}",
+                description,
+                acceptance,
+                "pending"));
+        }
+
+        return goals;
+    }
+
+    private static IReadOnlyList<JrpgFirstLoopCapability> SelectJrpgFirstLoopCapabilities(
+        string message,
+        IterationPlanningContext? planningContext,
+        PrototypeContractSnapshot? prototypeContract,
+        string? regenerationGuidance)
+    {
+        var text = BuildJrpgSelectionText(message, planningContext, prototypeContract, regenerationGuidance);
+        var selectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "field_navigation"
+        };
+
+        var hasConflict = ContainsAny(text, "encounter", "battle", "combat", "enemy", "monster", "boss", "danger", "fight", "battle scene", "battlescene", "遇敌", "战斗", "敌人", "怪物", "首战");
+        var hasReward = ContainsAny(text, "reward", "level", "exp", "growth", "loot", "item", "skill", "choice", "3-choice", "three choices", "奖励", "成长", "经验", "升级", "道具", "技能", "三选一", "选择");
+        var hasOpeningContext = ContainsAny(text, "opening context", "who they control", "hero/context/objective", "player objective", "开场", "玩家身份", "当前目标");
+        var hasStory = ContainsAny(text, "story", "quest", "npc", "dialog", "dialogue", "town", "village", "objective", "cutscene", "narrative", "剧情", "任务", "村庄", "城镇", "对话", "目标", "事件");
+        var hasInteraction = hasStory || ContainsAny(text, "chest", "inspect", "talk", "discover", "interaction", "探索", "宝箱", "调查", "交互", "发现");
+        var hasPartyState = hasConflict || ContainsAny(text, "party", "character", "hero", "hp", "mp", "stat", "status", "equipment", "job", "角色", "队伍", "主角", "生命", "属性", "装备", "职业");
+        var hasReturnLoop = hasConflict || hasReward || ContainsAny(text, "loop", "return", "continue", "repeat", "map loop", "first loop", "闭环", "返回", "继续", "循环", "首轮");
+
+        if (hasOpeningContext)
+        {
+            selectedIds.Add("opening_context");
+        }
+
+        if (hasInteraction)
+        {
+            selectedIds.Add("interaction_discovery");
+        }
+
+        if (hasConflict)
+        {
+            selectedIds.Add("conflict_entry");
+            selectedIds.Add("battle_or_challenge_resolution");
+        }
+
+        if (hasPartyState)
+        {
+            selectedIds.Add("party_or_character_state");
+        }
+
+        if (hasReward)
+        {
+            selectedIds.Add("growth_feedback");
+        }
+
+        if (hasReturnLoop)
+        {
+            selectedIds.Add("return_or_continue_loop");
+        }
+
+        if (hasStory)
+        {
+            selectedIds.Add("quest_or_story_progress");
+        }
+
+        selectedIds.Add("final_first_loop_acceptance");
+        return JrpgFirstLoopCapabilities
+            .Where(capability => selectedIds.Contains(capability.Id))
+            .ToArray();
+    }
+
+    private static string BuildJrpgSelectionText(
+        string message,
+        IterationPlanningContext? planningContext,
+        PrototypeContractSnapshot? prototypeContract,
+        string? regenerationGuidance)
+    {
+        var fieldCoverage = planningContext is null
+            ? string.Empty
+            : string.Join(" ", planningContext.FieldCoverage.Select(item => string.Join(" ", item.Field, item.Status, item.Evidence, item.MissingReason)));
+        return string.Join(
+            " ",
+            message ?? string.Empty,
+            regenerationGuidance ?? string.Empty,
+            planningContext?.AnalysisSummary ?? string.Empty,
+            planningContext?.LatestPrototypeCompletionSummary ?? string.Empty,
+            planningContext?.DraftCoverageSummary ?? string.Empty,
+            planningContext?.PrototypeStateExcerpt ?? string.Empty,
+            fieldCoverage,
+            prototypeContract?.Json ?? string.Empty).ToLowerInvariant();
+    }
+
+    private static readonly JrpgFirstLoopCapability[] JrpgFirstLoopCapabilities =
+    [
+        new(
+            "opening_context",
+            "opening context and player objective",
+            "Establish the short JRPG prototype's immediate context before expanding systems: the player must know who they control, where they are, and what the next objective is. {contractInstruction} Source request: {sourceHint}",
+            "Pass only when the playable scene presents a clear controllable hero/context/objective and the objective maps to the project contract or an explicit needs-fix blocker."),
+        new(
+            "field_navigation",
+            "field navigation and stable control",
+            "Validate the field or town movement layer as its own capability: Start Adventure or the project entry must reveal a non-empty playable field, show the player marker or character, and support stable controllable movement before conflict, rewards, or final acceptance are mixed in. {contractInstruction}",
+            "Pass only when the entry opens a visible playable field/map/town scene, movement is stable, and player/map asset usage is visible."),
+        new(
+            "interaction_discovery",
+            "interaction and discovery beat",
+            "Validate the first meaningful interaction beat, such as talking to an NPC, inspecting an object, opening a chest, or discovering the next objective. Keep it separate from battle settlement and final acceptance unless the project has no interaction requirement. {contractInstruction}",
+            "Pass only when at least one project-relevant interaction is visible, reachable, and changes feedback, objective state, or player understanding."),
+        new(
+            "conflict_entry",
+            "conflict entry trigger",
+            "Validate the transition from navigation or interaction into the first conflict, encounter, challenge, or battle. Include project-specific trigger rules such as probability, scripted contact, or guaranteed steps when present. {contractInstruction}",
+            "Pass only when the player can clearly trigger or reach the first conflict and the trigger rule is visible or validated."),
+        new(
+            "battle_or_challenge_resolution",
+            "battle or challenge resolution",
+            "Validate one readable JRPG conflict resolution: battle/challenge presentation, player and opponent or obstacle state, action feedback, and victory/defeat or success/failure settlement. Do not hide growth or return-loop proof inside this step unless the project truly has no separate reward/return requirement. {contractInstruction}",
+            "Pass only when one conflict or challenge can be resolved with readable state, action feedback, and settlement evidence."),
+        new(
+            "party_or_character_state",
+            "party or character state readability",
+            "Validate the player-facing character state needed for this first loop, such as HP, stats, party member, equipment, passive skill, or status changes. Keep this focused on readability and rule traceability, not full progression systems. {contractInstruction}",
+            "Pass only when the relevant character or party state is visible, understandable, and consistent with the project rules."),
+        new(
+            "growth_feedback",
+            "growth, reward, or consequence feedback",
+            "Validate the first loop's reward, growth, or consequence feedback, such as reward choice, item gain, stat change, experience, skill unlock, or story consequence. {contractInstruction}",
+            "Pass only when the reward/growth/consequence is shown, the player can understand its meaning, and any state change is visible or validated."),
+        new(
+            "return_or_continue_loop",
+            "return or continue loop",
+            "Validate that the player can continue after the first resolution: return to field, continue to the next objective, repeat a loop, or reach a clear next playable state without visual stacking or broken input. {contractInstruction}",
+            "Pass only when the prototype reaches the intended next playable state and navigation/input remain usable."),
+        new(
+            "quest_or_story_progress",
+            "quest or story progress",
+            "Validate the first loop's story or quest progress if the project asks for narrative framing, NPC flow, town events, or objective completion. Keep this scoped to the first playable loop instead of long-form content production. {contractInstruction}",
+            "Pass only when the objective, quest, or story state visibly progresses and remains traceable to the project request."),
+        new(
+            "final_first_loop_acceptance",
+            "final first-loop acceptance",
+            "Run final JRPG first-loop acceptance only after the selected capabilities have evidence. Cover entry, navigation, selected interaction/conflict/growth/story capabilities, project contract traceability, Godot validation evidence, and package readiness. {contractInstruction}",
+            "Pass only when the selected JRPG first-loop capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets are resolved, Godot validation passes, and package readiness is proven.")
+    ];
+
+    private sealed record JrpgFirstLoopCapability(
+        string Id,
+        string Title,
+        string DescriptionTemplate,
+        string AcceptanceTemplate);
 
     private static List<PrototypeIterationPlanGoalResult> AppendGenericFinalAcceptanceGoal(
         List<PrototypeIterationPlanGoalResult> goals,
@@ -1385,6 +1573,13 @@ public sealed class PrototypeIterationPlanService
         string? sourceMessage)
     {
         var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
+        var requirementSource = string.Join(
+            " ",
+            sourceMessage ?? string.Empty,
+            planningAnalysis?.AnalysisSummary ?? string.Empty,
+            planningAnalysis is null ? string.Empty : string.Join(" ", planningAnalysis.FieldCoverage.Select(item => string.Join(" ", item.Field, item.Evidence, item.MissingReason)))).ToLowerInvariant();
+        var requiresConflict = ContainsAny(requirementSource, "encounter", "battle", "combat", "enemy", "monster", "boss", "fight", "遇敌", "战斗", "敌人", "怪物");
+        var requiresReward = ContainsAny(requirementSource, "reward", "growth", "level", "exp", "item", "choice", "3-choice", "奖励", "成长", "升级", "经验", "道具", "选择");
         var missing = new List<string>();
         var boundaryIssue = FindRpgPlanAcceptanceBoundaryIssue(goals);
         if (boundaryIssue is not null)
@@ -1392,38 +1587,32 @@ public sealed class PrototypeIterationPlanService
             return boundaryIssue;
         }
 
-        if (!ContainsAny(combined, "asset", "assets", "material", "materials", "sprite", "sprites", "tileset", "ui", "hud", "素材", "美术", "界面"))
+        if (!ContainsAny(combined, "mapscene", "map scene", "mapscene.tscn", "field navigation", "playable field", "town scene", "visible map", "地图场景", "场域", "城镇") ||
+            !ContainsAny(combined, "start adventure", "project entry", "visible map", "visible-map", "opens a valid visible", "entry opens", "可见地图", "开始冒险", "入口"))
         {
-            missing.Add("map/player/enemy asset usage validation coverage");
+            missing.Add("field navigation and stable control capability");
         }
 
-        if (!ContainsAny(combined, "mapscene", "map scene", "mapscene.tscn", "地图场景") ||
-            !ContainsAny(combined, "start adventure", "visible map", "visible-map", "opens a valid visible", "可见地图", "开始冒险"))
+        if (requiresConflict &&
+            !ContainsAny(combined, "battlescene", "battle scene", "battle or challenge", "challenge resolution", "battlescene.tscn", "战斗场景", "战斗", "挑战"))
         {
-            missing.Add("Start Adventure to visible MapScene first step");
+            missing.Add("battle or challenge resolution capability");
         }
 
-        if (!ContainsAny(combined, "battlescene", "battle scene", "battlescene.tscn", "战斗场景"))
+        if (requiresConflict &&
+            !ContainsAny(combined, "encounter trigger", "first encounter", "guaranteed encounter", "encounter progress", "conflict entry", "10 steps", "10-step"))
         {
-            missing.Add("dedicated BattleScene step");
+            missing.Add("independent conflict entry capability");
+        }
+        if (requiresReward &&
+            !ContainsAny(combined, "reward", "growth", "consequence", "3-choice", "three reward", "three choices", "return-to-map", "return to the map", "奖励", "成长", "后果", "三选一", "3 选 1", "返回地图"))
+        {
+            missing.Add("growth/reward feedback and return-or-continue capability");
         }
 
-        var hasMainScene = ContainsAny(combined, "main prototype", "main scene", "prototype scene", "main loop", "first-loop", "主原型", "主场景", "主循环");
-        var hasSwitching = ContainsAny(combined, "scene switching", "scene switch", "switch into", "return path", "main loop scene switching", "场景切换", "跳转");
-        if (!hasMainScene || !hasSwitching)
+        if (!ContainsAny(combined, "final acceptance", "final first-loop acceptance", "full playable prototype acceptance", "full playable", "package readiness", "交付验收", "全量验收", "最终验收"))
         {
-            missing.Add("main loop scene switching step");
-        }
-
-        if (!ContainsAny(combined, "reward", "3-choice", "three reward", "three choices", "return-to-map", "return to the map", "奖励", "三选一", "3 选 1", "返回地图"))
-        {
-            missing.Add("reward loop and return-to-map step");
-        }
-
-        if (!ContainsAny(combined, "final acceptance", "full playable prototype acceptance", "full playable", "package readiness", "交付验收", "全量验收", "最终验收") ||
-            !ContainsAny(combined, "start adventure", "visible map", "visible-map", "可见地图", "开始冒险"))
-        {
-            missing.Add("final full playable acceptance step with Start Adventure visible-map validation");
+            missing.Add("final first-loop acceptance capability");
         }
 
         var explicitContractRuleIssues = FindMissingExplicitContractRules(combined, planningAnalysis, sourceMessage);
@@ -1522,14 +1711,17 @@ public sealed class PrototypeIterationPlanService
         }
 
         var firstGoalText = string.Join(" ", firstGoal.Title, firstGoal.Description, firstGoal.AcceptanceHint);
-        if (!ContainsAny(firstGoalText, "start adventure", "visible map", "visible mapscene", "mapscene", "stable movement", "encounter entry"))
+        if (!ContainsAny(firstGoalText, "start adventure", "visible map", "visible mapscene", "mapscene", "stable movement"))
         {
-            return "RPG plan acceptance boundary mismatch: step 1 must target Start Adventure to visible MapScene, stable movement, and encounter entry before BattleScene, reward, polish, package readiness, or final acceptance work.";
+            return "RPG plan acceptance boundary mismatch: step 1 must target Start Adventure to visible MapScene and stable movement before encounter, BattleScene, reward, polish, package readiness, or final acceptance work.";
         }
 
         var boundaryProbeText = StripRpgStepOneBoundaryExclusionClauses(firstGoalText);
         if (ContainsAny(
                 boundaryProbeText,
+                "encounter entry",
+                "encounter trigger",
+                "first encounter",
                 "battle scene",
                 "battlescene",
                 "battlescene.tscn",
@@ -1545,10 +1737,106 @@ public sealed class PrototypeIterationPlanService
                 "package readiness",
                 "final acceptance"))
         {
-            return "RPG plan acceptance boundary mismatch: step 1 must only validate Start Adventure to visible MapScene, stable movement, and encounter entry. BattleScene, reward, scene switching, package readiness, and final acceptance requirements must be split into later steps.";
+            return "RPG plan acceptance boundary mismatch: step 1 must only validate Start Adventure to visible MapScene and stable movement. Encounter trigger, BattleScene, reward, scene switching, package readiness, and final acceptance requirements must be split into later steps.";
+        }
+
+        var orderedGoals = goals.OrderBy(goal => goal.GoalIndex).ToArray();
+        var finalGoalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint);
+        if (!ContainsAny(finalGoalText, "final acceptance", "full playable", "package readiness", "final first-loop acceptance", "first-loop acceptance", "end-to-end"))
+        {
+            return "JRPG first-loop plan boundary mismatch: the final goal must be final first-loop acceptance with selected capability, contract, Godot validation, and package readiness coverage.";
+        }
+
+        var selectedCapabilities = ResolveJrpgCapabilitiesFromGoals(orderedGoals);
+        if (!selectedCapabilities.Contains("field_navigation", StringComparer.OrdinalIgnoreCase))
+        {
+            return "JRPG first-loop plan boundary mismatch: the selected capability graph must include field navigation and stable control.";
+        }
+
+        if (!selectedCapabilities.Contains("final_first_loop_acceptance", StringComparer.OrdinalIgnoreCase))
+        {
+            return "JRPG first-loop plan boundary mismatch: the selected capability graph must end with final first-loop acceptance.";
+        }
+
+        var hasConflict = selectedCapabilities.Contains("conflict_entry", StringComparer.OrdinalIgnoreCase) ||
+                          selectedCapabilities.Contains("battle_or_challenge_resolution", StringComparer.OrdinalIgnoreCase);
+        if (hasConflict &&
+            (!selectedCapabilities.Contains("conflict_entry", StringComparer.OrdinalIgnoreCase) ||
+             !selectedCapabilities.Contains("battle_or_challenge_resolution", StringComparer.OrdinalIgnoreCase)))
+        {
+            return "JRPG first-loop plan boundary mismatch: conflict-oriented plans must split conflict entry from battle or challenge resolution.";
+        }
+
+        var hasReward = selectedCapabilities.Contains("growth_feedback", StringComparer.OrdinalIgnoreCase);
+        if (hasReward &&
+            !selectedCapabilities.Contains("return_or_continue_loop", StringComparer.OrdinalIgnoreCase))
+        {
+            return "JRPG first-loop plan boundary mismatch: reward or growth plans must include a return-or-continue loop capability.";
         }
 
         return null;
+    }
+
+    private static HashSet<string> ResolveJrpgCapabilitiesFromGoals(ProjectIterationGoalSnapshot[] goals)
+    {
+        var selected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var goal in goals)
+        {
+            var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
+            if (ContainsAny(text, "final first-loop acceptance", "final acceptance", "full playable", "package readiness", "end-to-end", "最终验收", "全量验收"))
+            {
+                selected.Add("final_first_loop_acceptance");
+                continue;
+            }
+
+            if (ContainsAny(text, "opening context", "player objective", "objective", "hero/context/objective", "目标", "开场"))
+            {
+                selected.Add("opening_context");
+            }
+
+            if (ContainsAny(text, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "field", "movement", "地图", "移动", "场景"))
+            {
+                selected.Add("field_navigation");
+            }
+
+            if (ContainsAny(text, "interaction", "discovery", "npc", "dialog", "chest", "inspect", "交互", "发现", "对话", "宝箱", "调查"))
+            {
+                selected.Add("interaction_discovery");
+            }
+
+            if (ContainsAny(text, "conflict entry", "encounter trigger", "first encounter", "guaranteed encounter", "trigger", "遇敌", "触发"))
+            {
+                selected.Add("conflict_entry");
+            }
+
+            if (ContainsAny(text, "battle or challenge resolution", "battlescene", "battle scene", "battle", "challenge", "settlement", "combat", "战斗", "结算", "挑战"))
+            {
+                selected.Add("battle_or_challenge_resolution");
+            }
+
+            if (ContainsAny(text, "party or character state", "character state", "party", "hp", "stat", "status", "equipment", "角色", "队伍", "属性", "状态", "装备"))
+            {
+                selected.Add("party_or_character_state");
+            }
+
+            if (ContainsAny(text, "growth", "reward", "consequence", "exp", "level", "item gain", "3-choice", "奖励", "成长", "经验", "升级", "道具"))
+            {
+                selected.Add("growth_feedback");
+            }
+
+            if (ContainsAny(text, "return or continue", "return-to-map", "return to the map", "continue loop", "next playable state", "返回", "继续", "循环"))
+            {
+                selected.Add("return_or_continue_loop");
+            }
+
+            if (ContainsAny(text, "quest", "story", "narrative", "objective completion", "剧情", "任务", "叙事"))
+            {
+                selected.Add("quest_or_story_progress");
+            }
+
+        }
+
+        return selected;
     }
 
     private static string StripRpgStepOneBoundaryExclusionClauses(string value)
@@ -1556,17 +1844,17 @@ public sealed class PrototypeIterationPlanService
         var text = value;
         text = Regex.Replace(
             text,
-            @"\bbefore\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            @"\bbefore\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
             " ",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         text = Regex.Replace(
             text,
-            @"\b(?:do not|don't|must not|should not|without)\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            @"\b(?:do not|don't|must not|should not|without)\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
             " ",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         text = Regex.Replace(
             text,
-            @"\b(?:keep|remain|stays?)\b[^.。]*\b(?:focused|limited|scoped)\b[^.。]*\b(?:before|without|not)\b[^.。]*\b(?:battle|battlescene|reward|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
+            @"\b(?:keep|remain|stays?)\b[^.。]*\b(?:focused|limited|scoped)\b[^.。]*\b(?:before|without|not)\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
             " ",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         return text;
@@ -1600,7 +1888,7 @@ public sealed class PrototypeIterationPlanService
         return
             ContainsAny(evaluationText, "acceptance boundary mismatch", "step 1 must only", "step one must only", "first step must only") &&
             ContainsAny(evaluationText, "BattleScene", "battle scene", "reward", "scene switching", "package readiness", "final acceptance", "full playable") &&
-            ContainsAny(evaluationText, "Start Adventure", "visible MapScene", "visible map", "stable movement", "encounter entry");
+            ContainsAny(evaluationText, "Start Adventure", "visible MapScene", "visible map", "stable movement");
     }
 
     private static PrototypeIterationPlanEvaluationResult BuildRpgRouteGuardAcceptedEvaluation(PrototypeIterationPlanEvaluationResult staleEvaluation)
@@ -1608,7 +1896,7 @@ public sealed class PrototypeIterationPlanService
         return new PrototypeIterationPlanEvaluationResult(
             "ready_to_execute",
             "RPG route guard accepted the saved iteration plan.",
-            $"The model requested RPG acceptance-boundary refinement, but the saved final goals already keep Step 1 limited to Start Adventure, visible MapScene, stable movement, and encounter entry. Stale model reason: {TrimForHint(staleEvaluation.Reason, 240)}",
+            $"The model requested RPG acceptance-boundary refinement, but the saved final goals already cover the JRPG first-loop capability graph with the first executable capability limited to Start Adventure, visible MapScene, and stable movement. Stale model reason: {TrimForHint(staleEvaluation.Reason, 240)}",
             "Execute the next goal.",
             null);
     }
@@ -1622,8 +1910,8 @@ public sealed class PrototypeIterationPlanService
         }
 
         return string.IsNullOrWhiteSpace(sourceMessage)
-            ? "Regenerate the RPG iteration plan as strict route-profile steps: Start Adventure to visible MapScene with stable movement and encounter entry first, then BattleScene, reward 3-choice return-to-map, main loop scene switching, win/fail visibility, and final full playable acceptance."
-            : $"Regenerate the RPG iteration plan as strict route-profile steps: Start Adventure to visible MapScene with stable movement and encounter entry first, then BattleScene, reward 3-choice return-to-map, main loop scene switching, win/fail visibility, and final full playable acceptance. Source request: {sourceMessage}";
+            ? "Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route."
+            : $"Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route. Source request: {sourceMessage}";
     }
 
     private static string BuildRpgPlanEvaluationPrompt(
@@ -1646,7 +1934,7 @@ public sealed class PrototypeIterationPlanService
         var planningJson = JsonSerializer.Serialize(planningAnalysis);
 
         return $"""
-            You are evaluating whether an RPG prototype iteration plan is accurate enough to execute as-is.
+            You are evaluating whether an RPG/JRPG prototype iteration plan is accurate enough to execute as-is.
             Output JSON only. Do not explain. Do not use Markdown.
             Return these keys only:
             decision, summary, reason, suggestedAction, suggestedPromptForRegeneration
@@ -1656,9 +1944,13 @@ public sealed class PrototypeIterationPlanService
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite / Chapter 6 Lite boundaries: evaluate whether the lightweight prototype goals are executable, not whether formal Chapter 3/6 task artifacts exist.
             - decision must be one of: ready_to_execute, should_refine_plan.
-            - Use the current prototype result, planning analysis, and RPG type requirements.
-            - If the plan is generic, misses MapScene/BattleScene/reward loop/win-fail visibility/final acceptance coverage, or is misordered, return should_refine_plan.
-            - If the latest prototype gap is navigation or visible-map related, prefer should_refine_plan unless the first steps clearly target that blocker.
+            - Use the current prototype result, planning analysis, and RPG/JRPG type requirements.
+            - Treat the route as a JRPG first-loop capability profile, not a fixed DQ-like 7-step script.
+            - If the plan is generic, misses the selected capability coverage, lacks field navigation, lacks final first-loop acceptance, or merges unrelated boundaries, return should_refine_plan.
+            - If the latest prototype gap is navigation or visible-map related, prefer should_refine_plan unless the first executable capability clearly targets Start Adventure or the project entry into a visible playable field/map/town with stable movement.
+            - Conflict-oriented projects should split conflict entry from battle/challenge resolution.
+            - Reward or growth projects should include growth/reward/consequence feedback and a return-or-continue loop, unless the project explicitly ends after the reward.
+            - Story or town-first JRPGs do not need BattleScene/reward steps unless the source semantics asks for conflict or growth.
             - suggestedPromptForRegeneration should be null only when decision is ready_to_execute.
             - Keep output browser-safe.
 
@@ -1784,6 +2076,31 @@ public sealed class PrototypeIterationPlanService
             "visible MapScene",
             "可见 MapScene",
             "稳定移动");
+    }
+
+    private static bool IsDeterministicRpgRegenerationRequest(string sourceKind, string message, string? regenerationGuidance)
+    {
+        if (!string.Equals(sourceKind, "completion_suggestion", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var combined = string.Join("\n", message ?? string.Empty, regenerationGuidance ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(combined))
+        {
+            return false;
+        }
+
+        return ContainsAny(
+            combined,
+            "strict 7 route-profile",
+            "RPG iteration plan as strict 7",
+            "JRPG first-loop capability steps",
+            "RPG iteration plan as JRPG first-loop capabilities",
+            "visible MapScene with stable movement first",
+            "reward 3-choice understandability fourth",
+            "full playable acceptance seventh",
+            "final first-loop acceptance");
     }
 
     private static bool RequiresNavigationFirstRpgPlan(string? regenerationGuidance)
@@ -2199,6 +2516,10 @@ public sealed class PrototypeIterationPlanService
         Directory.CreateDirectory(root);
         return root;
     }
+
+    private sealed record IterationGoalBuildResult(
+        List<PrototypeIterationPlanGoalResult> Goals,
+        bool UsedScaffoldFallback);
 }
 
 public sealed record PrototypeIterationPlanDetails(

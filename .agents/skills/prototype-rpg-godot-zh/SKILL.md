@@ -7,7 +7,7 @@ description: "Use when the prototype top-level router has identified game_type r
 
 ## Purpose
 
-Provide the default repo-local implementation lane for RPG prototypes inside the 7-day playable Godot workflow.
+Provide the default repo-local implementation lane for RPG/JRPG prototypes inside the 7-day playable Godot workflow, using a JRPG first-loop capability profile instead of a fixed DQ-like step script.
 
 ## Required Reading
 
@@ -50,8 +50,9 @@ When `game_type` is `rpg`, this skill is the default implementation route for:
 - Map traversal, encounter rules, battle stats, reward rules, victory/failure conditions, and UI wording should be derived from the user fields when those fields are non-empty.
 - If the user says "each movement increases encounter chance by 10%" or "first enemy has 30 HP and 5 attack", that content must become gameplay logic, visible state, test expectation, or an explicit `needs_fix` blocker.
 - Final RPG acceptance must fail when a concrete non-empty input field is only present in documentation but not represented in scene flow, runtime behavior, tests, or a recorded needs-fix reason.
-- Iteration-plan generation must first inspect the latest successful or failed prototype result, compare it with the current prototype contract and imported draft/form fields, and only then decide whether the next steps are reconstruction, closure, or polish.
-- Do not generate a generic six-step RPG plan when the current project already has a succeeded prototype run. In that case, prefer convergence steps such as contract drift repair, reward comprehension, failure-path closure, evidence readability, and final acceptance.
+- Iteration-plan generation must first inspect the latest successful or failed prototype result, compare it with the current prototype contract and imported draft/form fields, and only then select the JRPG first-loop capabilities that should be reconstructed, closed, or polished.
+- Do not hardcode every RPG/JRPG project into a fixed six-step or seven-step DQ-like plan. DQ-like movement, encounter, battle, reward, return, win/fail, and final acceptance are valid semantic capability selections only when the project request supports them.
+- Town-quest, story-event, exploration, or interaction-first JRPG prototypes may omit BattleScene or reward-choice capabilities when the project contract does not ask for conflict or growth.
 
 ## Default Template Assets
 
@@ -95,23 +96,18 @@ For RPG prototypes, the smallest strong-coupling resources are:
 
 Treat these as repo-relative defaults. When a project slug is created, copy or adapt them into that slug instead of hardcoding absolute paths.
 
-## Expected RPG Scope
+## JRPG First-Loop Capability Scope
 
-- Map scene:
-  - tile/grid-based traversal
-  - player movement
-  - chest/objective placement
-  - obstacle placement with reachable paths
-  - encounter probability or collision-driven battle entry
-- Battle scene:
-  - player and enemy presentation
-  - visible attributes
-  - passive-skill-oriented auto or semi-auto resolution
-  - battle log
-  - victory/failure handling
-- Reward loop:
-  - roguelike three-choice reward
-  - return from battle or chest reward back to map when applicable
+- Opening context and player objective.
+- Field, town, or map navigation with stable control.
+- Optional interaction/discovery beat such as NPC, chest, investigation, or objective discovery.
+- Optional conflict entry when the project asks for encounter, battle, enemy, boss, or challenge.
+- Optional battle/challenge resolution when a conflict exists.
+- Optional party or character state readability when stats, HP, equipment, party, or status matter.
+- Optional growth, reward, or consequence feedback when the project asks for reward, choice, item, level, experience, or story consequence.
+- Return-or-continue loop to the next playable state when the first loop continues.
+- Optional quest or story progress when narrative or town events are central.
+- Final first-loop acceptance across the selected capabilities.
 - Visual layer:
   - prototype-safe sprites, props, tiles, and UI treatment
   - no path assumptions about where generated assets live

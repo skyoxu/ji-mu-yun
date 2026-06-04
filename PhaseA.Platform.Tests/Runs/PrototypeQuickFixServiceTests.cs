@@ -606,10 +606,9 @@ namespace Xunit
         result.IterationGoalStatus.Should().Be("needs_fix");
         refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("needs_fix");
         result.AssistantMessage.Should().Contain("missing_rpg_");
-        runner.LastPrompt.Should().Contain("Platform hard acceptance for RPG Step 1");
-        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
-        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
-        runner.LastPrompt.Should().Contain("RpgPlayerAsset");
+        runner.LastPrompt.Should().Contain("Platform hard acceptance for JRPG field navigation");
+        runner.LastPrompt.Should().Contain("visible playable field");
+        runner.LastPrompt.Should().Contain("player marker or character");
     }
 
     [Fact]
@@ -673,9 +672,9 @@ namespace Xunit
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 6);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 7);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core test packages missing", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 6, "Goal 6 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 7, "Goal 7 needs fix");
         var runner = new CoreTestPackageFailurePromptRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -683,7 +682,7 @@ namespace Xunit
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 6, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 7, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         runner.LastPrompt.Should().Contain("Platform acceptance scope override:");
         runner.LastPrompt.Should().Contain("core_tests_failed with CS0246 for Xunit or FluentAssertions");
@@ -711,9 +710,9 @@ namespace Xunit
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 6);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 7);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core compile error", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 6, "Goal 6 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 7, "Goal 7 needs fix");
         var runner = new CoreCompileFailurePromptRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -721,7 +720,7 @@ namespace Xunit
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 6, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 7, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         runner.LastPrompt.Should().Contain("Platform acceptance scope override:");
         runner.LastPrompt.Should().Contain("core_tests_failed with C# compile errors");
@@ -747,9 +746,9 @@ namespace Xunit
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG battle scene step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 2);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 3);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_battle_scene_contract", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 2, "Goal 2 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 3, "Goal 3 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -757,15 +756,13 @@ namespace Xunit
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 2, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 3, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.IterationGoalStatus.Should().Be("needs_fix");
         result.AssistantMessage.Should().Contain("missing_rpg_battle_scene_contract");
-        runner.LastPrompt.Should().Contain("Platform hard acceptance for RPG Step 2");
-        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/BattleScene.tscn");
-        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs");
-        runner.LastPrompt.Should().Contain("RpgEnemyAsset");
-        runner.LastPrompt.Should().Contain("ResolveBattle/ResolveAttackTurn");
+        runner.LastPrompt.Should().Contain("Platform hard acceptance for JRPG battle or challenge resolution");
+        runner.LastPrompt.Should().Contain("readable battle, challenge, or obstacle resolution loop");
+        runner.LastPrompt.Should().Contain("dedicated battle scene");
     }
 
     [Fact]
@@ -819,9 +816,9 @@ namespace Xunit
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG reward loop step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 3);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "reward values are wrong", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 3, "Goal 3 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -829,16 +826,13 @@ namespace Xunit
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 3, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.IterationGoalStatus.Should().Be("needs_fix");
-        runner.LastPrompt.Should().Contain("Platform hard acceptance for RPG Step 3");
+        runner.LastPrompt.Should().Contain("Platform hard acceptance for JRPG growth, reward, or consequence feedback");
         runner.LastPrompt.Should().Contain("统一 smoke");
-        runner.LastPrompt.Should().Contain("+5 HP");
-        runner.LastPrompt.Should().Contain("+2 ATK");
-        runner.LastPrompt.Should().Contain("+1 DEF");
-        runner.LastPrompt.Should().Contain("StartingPlayerHp + 5");
-        runner.LastPrompt.Should().Contain("ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward");
+        runner.LastPrompt.Should().Contain("exactly three understandable reward choices");
+        runner.LastPrompt.Should().Contain("visible state change");
     }
 
     [Fact]
@@ -869,9 +863,9 @@ namespace Xunit
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG reward loop step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 3);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 5);
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need reward loop verification.", null);
-        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 3, "Goal 3 needs fix");
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 5, "Goal 5 needs fix");
 
         var scriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
         File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
@@ -950,7 +944,7 @@ public sealed class BattleScene
             "Repair current goal.",
             "gpt-5.4",
             "normal",
-            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 3, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 5, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");

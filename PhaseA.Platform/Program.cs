@@ -33,6 +33,7 @@ builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<GameTypeTemplateCatalog>();
+builder.Services.AddSingleton<BmadGameTypeDesignCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
 builder.Services.AddSingleton<ProjectCreationService>();

@@ -20,8 +20,26 @@ RPG 现在由两层提供专属能力：
 
 RPG 的迭代顺序是：Start Adventure 到可见 MapScene，再到 BattleScene、奖励回地图、主循环切换、胜负可读性和最终验收。
 
-## 新增游戏类型步骤
+## BMAD/GDS 24 Game-Type Templates
 
+BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog first reads `docs/game-type-guides/game-types.csv` and `docs/game-type-guides/<game-type>.md`; if those extracted docs are missing, it falls back to `.agents/skills/gds-create-gdd/game-types.csv` and matching fragments.
+
+Use boundaries:
+
+- Use them for game-type classification, GDD/free-chat context, iteration-plan semantic hints, and source material for future route profiles.
+- Do not turn every GDD section in a template into iteration steps.
+- Do not assume all 24 ids have dedicated Godot executable routes just because the taxonomy exists.
+- A type becomes a Phase A executable route only after it has `GameTypeRouteProfile`, `IGameTypeRouteStrategy`, skill contract, plan generation/evaluation, execution acceptance, and tests.
+
+Current runtime integration:
+
+- `BmadGameTypeDesignCatalog` loads the 24 design templates read-only.
+- RPG/JRPG iteration planning injects the `rpg` guide excerpt as taxonomy and semantic hints.
+- RPG/JRPG execution boundaries still come from `prototype-rpg-godot-zh`, `GameTypeRouteProfiles.Rpg`, and `RpgGameTypeRouteStrategy`.
+
+When adding a new game type, extract first-loop capability vocabulary from the BMAD/GDS guide first, then decide whether the type deserves a Phase A executable route profile.
+
+## 新增游戏类型步骤
 ### 1. 新增专属 skill
 
 在 `.agents/skills/` 下新增目录，例如：

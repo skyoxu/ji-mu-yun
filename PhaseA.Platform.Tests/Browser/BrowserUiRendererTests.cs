@@ -37,6 +37,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("grid-template-columns: repeat(8, minmax(5.6rem, 1fr))");
         html.Should().Contain("body.v2-detail #currentProjectPanel > button { display: none; }");
         html.Should().Contain("v2RunStepAction");
+        html.Should().Contain("let v2UserSelectedStep = false");
+        html.Should().Contain("function v2ApplySelectedStepVisibility()");
+        html.Should().Contain("function v2SelectDefaultStepForPrototypeProgress(progress)");
+        html.Should().Contain("if (v2UserSelectedStep || v2SelectedStep !== \"new-project\") return;");
+        html.Should().Contain("button.onclick = () => v2ShowStep(button.dataset.v2Step, true)");
         html.Should().Contain("v2AcceptancePanel");
         html.Should().Contain("v2CreateAcceptancePanel");
         html.Should().Contain("原型验收结果");
@@ -59,7 +64,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ApplyPrototypeFormSnapshot");
         html.Should().Contain("progress?.form");
         html.Should().Contain("已载入原型记录");
-        html.Should().Contain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
+        html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
         html.Should().Contain("workflow-icons-color.png");
         html.Should().Contain("workflow-icons-gray.png");
         html.Should().Contain("v2-step-number");
@@ -228,6 +233,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("currentProjectPanel");
         html.Should().Contain("initStatusPanel");
         html.Should().Contain("pollProjectInitializationResult");
+        html.Should().Contain(@"const createdProjectId = result.projectId || result.ProjectId || """";");
+        html.Should().Contain("await pollProjectInitializationResult(createdProjectId)");
+        html.Should().Contain("await refreshProjects({ autoSelect: false })");
+        html.Should().Contain("selectProject(createdProject.projectId)");
         html.Should().Contain("projectCreationErrorMessage");
         html.Should().Contain("project_initialization_in_progress");
         html.Should().Contain("project_quota_exceeded");

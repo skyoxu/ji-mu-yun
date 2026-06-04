@@ -29,6 +29,10 @@ def _load_module(name: str, relative_path: str):
 
 
 run_gdunit = _load_module("run_gdunit_test_module", "scripts/python/run_gdunit.py")
+ensure_tests_godot_junction = _load_module(
+    "ensure_tests_godot_junction_test_module",
+    "scripts/python/ensure_tests_godot_junction.py",
+)
 prototype_main_menu_navigation_smoke = _load_module(
     "prototype_main_menu_navigation_smoke_test_module",
     "scripts/python/prototype_main_menu_navigation_smoke.py",
@@ -171,7 +175,7 @@ class RunGdUnitTests(unittest.TestCase):
         self.assertIn("_prewarm_csharp(str(bin_path), project_root, timeout_sec)", source)
         self.assertIn("prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))", navigation_source)
         self.assertIn("prewarm_timeout_sec,", navigation_source)
-        self.assertIn('["dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"]', source)
+        self.assertIn('"dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"', source)
         self.assertIn('return True, "dotnet-build", dotnet_stdout, dotnet_stderr', source)
         self.assertIn('godot build-solutions prewarm timed out', source)
 
@@ -216,6 +220,35 @@ class RunGdUnitTests(unittest.TestCase):
     def test_run_gdunit_cleanup_should_ignore_taskkill_failures(self) -> None:
         with mock.patch.object(run_gdunit.subprocess, "run", side_effect=OSError("taskkill missing")):
             run_gdunit._cleanup_godot_processes(r"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe")
+
+    def test_run_gdunit_msbuild_isolation_should_override_godot_temp_paths(self) -> None:
+        with mock.patch.dict(os.environ, {"PHASEA_VALIDATION_BUILD_ROOT": r"C:\phasea-build"}, clear=False):
+            args = run_gdunit._msbuild_isolation_args("gdunit fallback")
+
+        self.assertIn(r"-p:BaseIntermediateOutputPath=C:\phasea-build\gdunit_fallback\obj\$(MSBuildProjectName)\\", [arg + "\\" for arg in args])
+        self.assertIn(r"-p:IntermediateOutputPath=C:\phasea-build\gdunit_fallback\obj\$(MSBuildProjectName)\Debug\\", [arg + "\\" for arg in args])
+        self.assertIn(r"-p:BaseOutputPath=C:\phasea-build\gdunit_fallback\bin\$(MSBuildProjectName)\\", [arg + "\\" for arg in args])
+        self.assertIn(r"-p:OutputPath=C:\phasea-build\gdunit_fallback\bin\$(MSBuildProjectName)\Debug\\", [arg + "\\" for arg in args])
+
+    def test_run_gdunit_should_use_isolated_godot_user_data_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch.dict(os.environ, {"PHASEA_GODOT_USER_DATA_ROOT": tmpdir}, clear=False):
+                args = run_gdunit._isolated_godot_user_data_args(str(REPO_ROOT), "2026-06-03")
+
+            self.assertEqual("--user-data-dir", args[0])
+            self.assertTrue(args[1].startswith(tmpdir))
+            self.assertTrue(Path(args[1]).is_dir())
+            self.assertTrue((Path(args[1]) / "logs").is_dir())
+
+    def test_ensure_tests_godot_junction_should_not_fail_when_audit_write_is_denied(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ok_report = {"ok": True, "action": "ok"}
+            with mock.patch.object(ensure_tests_godot_junction, "ensure_tests_godot_junction", return_value=ok_report), \
+                    mock.patch.object(ensure_tests_godot_junction, "_date_dir", return_value=Path(tmpdir)), \
+                    mock.patch.object(ensure_tests_godot_junction, "_write_utf8", side_effect=OSError("denied")):
+                rc = ensure_tests_godot_junction.main(["--root", tmpdir])
+
+            self.assertEqual(0, rc)
 
     def test_smoke_cleanup_should_ignore_taskkill_failures(self) -> None:
         smoke_headless = _load_module("smoke_headless_test_module", "scripts/python/smoke_headless.py")

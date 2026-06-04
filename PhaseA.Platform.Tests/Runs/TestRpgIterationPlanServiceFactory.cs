@@ -36,10 +36,10 @@ internal static class TestRpgIterationPlanServiceFactory
                   "analysisSummary": "Test planning analysis succeeded.",
                   "fieldCoverage": [
                     { "field": "hypothesis", "status": "partial", "evidence": "test", "missingReason": null },
-                    { "field": "minimum_playable_loop", "status": "partial", "evidence": "test", "missingReason": null },
-                    { "field": "core_gameplay_loop", "status": "partial", "evidence": "test", "missingReason": null },
-                    { "field": "reward_loop", "status": "partial", "evidence": "test", "missingReason": null },
-                    { "field": "win_fail_conditions", "status": "partial", "evidence": "test", "missingReason": null }
+                    { "field": "minimum_playable_loop", "status": "partial", "evidence": "movement, encounter, battle, reward, return to map", "missingReason": null },
+                    { "field": "core_gameplay_loop", "status": "partial", "evidence": "movement-driven encounter, BattleScene, reward loop, return to map", "missingReason": null },
+                    { "field": "reward_loop", "status": "partial", "evidence": "reward 3-choice and return to map", "missingReason": null },
+                    { "field": "win_fail_conditions", "status": "partial", "evidence": "battle victory and game over rules", "missingReason": null }
                   ]
                 }
                 """;
