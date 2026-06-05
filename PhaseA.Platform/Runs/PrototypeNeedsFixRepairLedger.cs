@@ -353,7 +353,7 @@ internal sealed class PrototypeNeedsFixRepairLedger
 
         if (StartsWithReason(reason, "missing_rpg_battle_scene_contract"))
         {
-            return "Repair the full RPG/JRPG battle-scene contract, not only the first missing token. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and an enemy token node, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
+            return "Repair the full RPG/JRPG battle-scene contract, not only the first missing token. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and file-backed Texture2D nodes named RpgPlayerAsset and RpgEnemyAsset, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
         }
 
         if (StartsWithReason(reason, "missing_rpg_reward_flow_contract"))

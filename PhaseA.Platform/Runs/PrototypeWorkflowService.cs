@@ -436,7 +436,7 @@ public sealed class PrototypeWorkflowService
         var exitCode = ResolveRunExitCode(0, validationExitCode, validation.Succeeded && rpgGdUnitValidation.Passed);
         var stdout = CombineProcessText(CombineProcessText("Prototype validation-only acceptance executed.", smoke.Stdout), rpgGdUnitValidation.Stdout);
         var rpgValidationFailure = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed
-            ? $"RPG project-specific GdUnit validation failed: {rpgGdUnitValidation.Reason}"
+            ? BuildRpgGdUnitValidationFailure(project, rpgGdUnitValidation)
             : "";
         var stderr = CombineProcessText(CombineProcessText(validation.Error ?? "", smoke.Stderr), CombineProcessText(rpgValidationFailure, rpgGdUnitValidation.Stderr));
         var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug, prototypeRecordPath);
@@ -500,13 +500,22 @@ public sealed class PrototypeWorkflowService
         }
 
         run = await RecoverCompletedPrototypeRunIfNeededAsync(project, run, cancellationToken);
+        var creationRun = ResolvePrototypeCreationRun(runs, run);
+        var readbackRun = creationRun ?? run;
         var step = string.IsNullOrWhiteSpace(run.ProgressStep) ? run.Status : run.ProgressStep;
         var label = string.IsNullOrWhiteSpace(run.ProgressLabel) ? DefaultLabel(run.Status) : run.ProgressLabel;
         var completionSummary = ReadCompletionSummaryFromRun(run);
         var nextStepSource = ReadNextStepSourceFromRun(run);
         var nextStepEvaluation = ReadNextStepEvaluationFromRun(run);
         var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(run);
-        var packaging = ReadPackagingSummaryFromRun(project.RepoPath, run);
+        var packaging = ReadPackagingSummaryFromRun(project.RepoPath, readbackRun);
+        var prototypeCreationStatus = creationRun?.Status ?? (IsValidationOnlyRun(run) ? "missing" : run.Status);
+        var prototypeCreationFailure = string.Equals(prototypeCreationStatus, "failed", StringComparison.OrdinalIgnoreCase)
+            ? ResolveUserFacingFailure(creationRun ?? run)
+            : null;
+        var acceptanceFailure = string.Equals(run.Status, "failed", StringComparison.OrdinalIgnoreCase)
+            ? ResolveUserFacingFailure(run)
+            : null;
         return new PrototypeWorkflowProgress(
             run.Status,
             step,
@@ -514,7 +523,7 @@ public sealed class PrototypeWorkflowService
             label,
             run.ProgressUpdatedUtc,
             run.RunId,
-            run.Status == "failed" ? ResolveUserFacingFailure(run) : null,
+            acceptanceFailure,
             completionSummary,
             nextStepSource,
             nextStepEvaluation,
@@ -526,7 +535,42 @@ public sealed class PrototypeWorkflowService
             packaging?.TddGreenCount,
             packaging?.TddRefactorCount,
             packaging?.PlaytestFocusPoints,
-            ReadPrototypeFormSnapshot(project.RepoPath, run));
+            ReadPrototypeFormSnapshot(project.RepoPath, readbackRun),
+            prototypeCreationStatus,
+            prototypeCreationFailure,
+            creationRun?.RunId,
+            run.Status,
+            acceptanceFailure,
+            run.RunId);
+    }
+
+    private static RunSnapshot? ResolvePrototypeCreationRun(IReadOnlyList<RunSnapshot> runs, RunSnapshot latestRun)
+    {
+        return runs.FirstOrDefault(item =>
+                   item.RunType == RunType &&
+                   string.Equals(item.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+                   !IsValidationOnlyRun(item) &&
+                   LatestPrototypeCompletionSucceeded(item.EvidenceJson)) ??
+               (!IsValidationOnlyRun(latestRun) ? latestRun : null);
+    }
+
+    private static bool IsValidationOnlyRun(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("validation_only", out var validationOnly) &&
+                   validationOnly.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private async Task<RunSnapshot> RecoverCompletedPrototypeRunIfNeededAsync(ProjectSnapshot project, RunSnapshot run, CancellationToken cancellationToken)
@@ -1073,6 +1117,132 @@ public sealed class PrototypeWorkflowService
         return string.IsNullOrWhiteSpace(primary)
             ? secondary
             : $"{primary.TrimEnd()}{Environment.NewLine}{Environment.NewLine}[post-prototype-godot-smoke]{Environment.NewLine}{secondary}";
+    }
+
+    private static string BuildRpgGdUnitValidationFailure(ProjectSnapshot project, PrototypeRpgGdUnitValidationResult validation)
+    {
+        var lines = new List<string>
+        {
+            $"RPG project-specific GdUnit validation failed: {validation.Reason}"
+        };
+
+        var summaryPath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "run-summary.json");
+        if (!string.IsNullOrWhiteSpace(summaryPath) && File.Exists(summaryPath))
+        {
+            lines.Add($"GDUNIT_SUMMARY: {TrimForPromptExcerpt(File.ReadAllText(summaryPath, Encoding.UTF8), 700)}");
+        }
+
+        var consolePath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "gdunit-console.txt");
+        if (!string.IsNullOrWhiteSpace(consolePath) && File.Exists(consolePath))
+        {
+            var failures = ExtractGdUnitFailureSummary(File.ReadAllText(consolePath, Encoding.UTF8), 18);
+            if (failures.Count > 0)
+            {
+                lines.Add("GDUNIT_FAILURES:");
+                lines.AddRange(failures.Select(line => $"- {line}"));
+            }
+        }
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string? ResolveRpgGdUnitReportFile(string repoPath, string? reportDir, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(reportDir) || Path.IsPathRooted(reportDir))
+        {
+            return null;
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(repoPath, reportDir.Replace('/', Path.DirectorySeparatorChar), fileName));
+        var root = Path.GetFullPath(repoPath);
+        return fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) ? fullPath : null;
+    }
+
+    private static IReadOnlyList<string> ExtractGdUnitFailureSummary(string consoleText, int maxLines)
+    {
+        if (string.IsNullOrWhiteSpace(consoleText))
+        {
+            return [];
+        }
+
+        var cleaned = Regex.Replace(consoleText, @"\x1B\[[0-?]*[ -/]*[@-~]", "");
+        var result = new List<string>();
+        var captureFailure = false;
+        foreach (var rawLine in cleaned.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        {
+            var line = rawLine.Trim();
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            var isImportant = ContainsAny(
+                line,
+                "Statistics:",
+                "Overall Summary:",
+                "Exit code:",
+                "ERROR:",
+                "SCRIPT ERROR",
+                "Node not found",
+                "Parse Error",
+                "Invalid call",
+                "No test cases found",
+                "FAILED",
+                "Expecting:",
+                "do contains");
+            if (line.StartsWith("res://tests/Prototype/", StringComparison.OrdinalIgnoreCase))
+            {
+                captureFailure = line.Contains("FAILED", StringComparison.OrdinalIgnoreCase);
+                isImportant = captureFailure;
+            }
+            else if (line.StartsWith("Report:", StringComparison.OrdinalIgnoreCase))
+            {
+                isImportant = true;
+                captureFailure = true;
+            }
+            else if (captureFailure && (line.StartsWith("'", StringComparison.Ordinal) || line.Contains(" but is ", StringComparison.OrdinalIgnoreCase)))
+            {
+                isImportant = true;
+            }
+
+            if (!isImportant)
+            {
+                continue;
+            }
+
+            AddDistinctLine(result, TrimForPromptExcerpt(line, 500));
+            if (result.Count >= maxLines)
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    private static void AddDistinctLine(List<string> lines, string line)
+    {
+        if (!string.IsNullOrWhiteSpace(line) &&
+            !lines.Any(existing => string.Equals(existing, line, StringComparison.OrdinalIgnoreCase)))
+        {
+            lines.Add(line);
+        }
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string TrimForPromptExcerpt(string value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var compact = Regex.Replace(value.Trim(), @"\s+", " ");
+        return compact.Length <= maxLength ? compact : compact[..maxLength] + "...";
     }
 
     private static bool ShouldUsePostValidationRepair(RunSnapshot failedRun)

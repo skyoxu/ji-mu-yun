@@ -5,6 +5,8 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Readback;
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Skills;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -735,6 +737,90 @@ public sealed class ArtifactReadbackServiceTests
         service.IsValid(ticket, "project-a", "res://Game.Godot/Prototypes/demo/Assets/enemy.png").Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ProjectAssetLibrary_GeneratesHistoryWithResolvedSkill_AndSelectsEntry()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var runner = new FakeHostedProcessRunner("asset generation output");
+        var skillService = new SkillActionService(store, options, new SkillActionCatalog(), runner, new NoopWorkspaceSeeder());
+        var routeEngine = new FakeLlmRouteEngine("""{"actionId":"map-making-master","reason":"map unit"}""");
+        var service = new ProjectAssetLibraryService(store, options, skillService, routeEngine);
+
+        var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
+            "make it like a 16-bit overworld",
+            new ProjectAssetUnitRequest(
+                null,
+                "RpgMapAsset",
+                "TextureRect",
+                "res://Game.Godot/Prototypes/dq-rpg/MapScene.tscn",
+                "res://Game.Godot/Prototypes/dq-rpg/Assets/Map/map.png",
+                "map_or_tile_asset",
+                "field map background",
+                "needs stronger map art")));
+
+        generated!.ActionId.Should().Be("map-making-master");
+        generated.Entry.SkillName.Should().Be("generate2dmap");
+        generated.Entry.AssistantMessage.Should().Contain("asset generation output");
+        generated.Entry.PreviewResourcePath.Should().StartWith("res://Game.Godot/Prototypes/ProjectAssetLibrary/");
+        generated.Entry.ArtifactPaths.Should().Contain(path => path.Contains("ProjectAssetLibrary", StringComparison.Ordinal));
+        routeEngine.LastPrompt.Should().Contain("Decide the correct asset generation skill");
+        routeEngine.LastPrompt.Should().Contain("RpgMapAsset");
+        generated.Library.Units.Should().ContainSingle(unit =>
+            unit.InstanceName == "RpgMapAsset" &&
+            unit.Entries.Count == 1);
+        runner.Commands.Should().ContainSingle();
+        runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write"]);
+        runner.Commands[0].StandardInput.Should().Contain("generate2dmap");
+        runner.Commands[0].StandardInput.Should().Contain("make it like a 16-bit overworld");
+        runner.Commands[0].StandardInput.Should().Contain("Required output directory:");
+
+        var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest(
+            generated.Library.Units.Single().Key,
+            generated.Entry.EntryId));
+
+        selected!.Units.Single().SelectedEntryId.Should().Be(generated.Entry.EntryId);
+        selected.Units.Single().Entries.Single().Selected.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_DoesNotPersistFailedGenerationWithoutGeneratedFiles()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var runner = new FakeHostedProcessRunner("asset generation failed", exitCode: 1, writeGeneratedAsset: false);
+        var skillService = new SkillActionService(store, options, new SkillActionCatalog(), runner, new NoopWorkspaceSeeder());
+        var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
+        var service = new ProjectAssetLibraryService(store, options, skillService, routeEngine);
+
+        var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
+            "make a red slime",
+            new ProjectAssetUnitRequest(
+                null,
+                "EnemyToken",
+                "ColorRect",
+                "res://Game.Godot/Prototypes/dq-rpg/BattleScene.tscn",
+                "",
+                "enemy_sprite",
+                "battle enemy sprite",
+                "placeholder needs art")));
+        var library = await service.ReadAsync(accountId, projectId);
+
+        generated!.Status.Should().Be("failed");
+        generated.Library.Units.Should().BeEmpty();
+        library!.Units.Should().BeEmpty();
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -889,6 +975,85 @@ public sealed class ArtifactReadbackServiceTests
         {
             LastPrompt = prompt;
             return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
+        }
+    }
+
+    private sealed class FakeHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly string _output;
+        private readonly int _exitCode;
+        private readonly bool _writeGeneratedAsset;
+
+        public FakeHostedProcessRunner(string output, int exitCode = 0, bool writeGeneratedAsset = true)
+        {
+            _output = output;
+            _exitCode = exitCode;
+            _writeGeneratedAsset = writeGeneratedAsset;
+        }
+
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, _output);
+            var outputDirectory = ReadRequiredOutputDirectory(command.StandardInput ?? "");
+            if (_writeGeneratedAsset && !string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                var assetPath = Path.Combine(command.WorkingDirectory, outputDirectory.Replace('/', Path.DirectorySeparatorChar), "generated.png");
+                Directory.CreateDirectory(Path.GetDirectoryName(assetPath)!);
+                File.WriteAllBytes(assetPath, MinimalPng(16, 16));
+            }
+
+            return Task.FromResult(new HostedProcessResult(_exitCode, "codex stdout", _exitCode == 0 ? "" : "codex failed"));
+        }
+
+        private static string? ReadRequiredOutputDirectory(string prompt)
+        {
+            var lines = prompt.Split(["\r\n", "\n"], StringSplitOptions.None);
+            for (var i = 0; i < lines.Length - 1; i++)
+            {
+                if (lines[i].Trim().Equals("Required output directory:", StringComparison.Ordinal))
+                {
+                    return lines[i + 1].Trim();
+                }
+            }
+
+            return null;
+        }
+    }
+
+    private sealed class FakeLlmRouteEngine : ILlmRouteEngine
+    {
+        private readonly string _json;
+
+        public FakeLlmRouteEngine(string json)
+        {
+            _json = json;
+        }
+
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            LastPrompt = request.Prompt;
+            return Task.FromResult(new LlmRouteResult(
+                true,
+                _json,
+                _json,
+                request.Model,
+                null,
+                null,
+                0,
+                "",
+                "",
+                null,
+                1,
+                request.Prompt.Length,
+                System.Text.Encoding.UTF8.GetByteCount(request.Prompt),
+                1));
         }
     }
 

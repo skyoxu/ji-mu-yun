@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -69,9 +69,31 @@ public sealed class SkillActionService
             throw new InvalidOperationException("Project not found.");
         }
 
+        var isWorkspaceWrite = string.Equals(action.ExecutionMode, "codex-workspace-write", StringComparison.Ordinal);
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        var runnerLockAcquired = false;
+        if (isWorkspaceWrite)
+        {
+            runnerLockAcquired = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+            if (!runnerLockAcquired)
+            {
+                var busyEvidence = JsonSerializer.Serialize(new
+                {
+                    run_type = RunType,
+                    action_id = action.ActionId,
+                    skill_name = action.SkillName,
+                    execution_mode = action.ExecutionMode,
+                    failure_code = "project_busy"
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", 409, "", "Project is busy.", busyEvidence, cancellationToken);
+                return new SkillActionRunResult(runId, "project_busy", 409, action.ActionId, action.SkillName, "", [], "project_busy");
+            }
+        }
+
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        try
+        {
 
         var relativeDir = ToSlash(Path.Combine("logs", "phase-a-skills", project.ProjectId, runId));
         var outputRelativePath = ToSlash(Path.Combine(relativeDir, "skill-output.md"));
@@ -96,8 +118,9 @@ public sealed class SkillActionService
             cancellationToken);
 
         var prompt = BuildPrompt(action, project, request);
-        var routeResult = _llmRouteEngine is null
-            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, cancellationToken)
+        var sandbox = isWorkspaceWrite ? "workspace-write" : "read-only";
+        var routeResult = _llmRouteEngine is null || isWorkspaceWrite
+            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, sandbox, cancellationToken)
             : await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
                     EnsureSkillActionPromptWorkspace(project),
@@ -154,18 +177,27 @@ public sealed class SkillActionService
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
         return new SkillActionRunResult(runId, status, routeResult.ExitCode, action.ActionId, action.SkillName, output.Trim(), artifacts);
+        }
+        finally
+        {
+            if (runnerLockAcquired)
+            {
+                await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+            }
+        }
     }
 
     private async Task<LlmRouteResult> RunLegacyCodexProcessAsync(
         ProjectSnapshot project,
         string outputAbsolutePath,
         string prompt,
+        string sandbox,
         CancellationToken cancellationToken)
     {
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexReadOnlyCommand(project.RepoPath, outputAbsolutePath, prompt), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox), runtimeCredential), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
@@ -196,7 +228,7 @@ public sealed class SkillActionService
             Math.Max(1, (int)Math.Ceiling(Encoding.UTF8.GetByteCount(prompt) / 4.0d)));
     }
 
-    private HostedProcessCommand BuildCodexReadOnlyCommand(string repositoryRoot, string outputPath, string prompt)
+    private HostedProcessCommand BuildCodexCommand(string repositoryRoot, string outputPath, string prompt, string sandbox)
     {
         return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repositoryRoot,
@@ -204,7 +236,7 @@ public sealed class SkillActionService
             prompt,
             "gpt-5.4",
             "high",
-            Sandbox: "read-only"));
+            Sandbox: sandbox));
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)
@@ -228,24 +260,43 @@ public sealed class SkillActionService
 
     private static string BuildPrompt(SkillActionDefinition action, ProjectSnapshot project, SkillActionRunRequest request)
     {
+        var modeRules = string.Equals(action.ExecutionMode, "codex-workspace-write", StringComparison.Ordinal)
+            ? """
+            Workspace write mode:
+            - Use the named whitelist skill.
+            - You may create or update files only when the user input explicitly provides an output directory or asset-library target inside this project repository.
+            - Keep generated asset files, prompts, manifests, and notes under the provided output directory.
+            - Do not modify gameplay scenes, scripts, tests, platform code, or unrelated project files from this skill action.
+            - If real image generation is unavailable, write a concrete generation prompt/specification file in the output directory and explain the blocker.
+            """
+            : """
+            Read-only mode:
+            - Use the named whitelist skill.
+            - Only analyze and output advice.
+            - Do not modify files.
+            - Do not execute destructive operations.
+            """;
         return $"""
-            请使用 ${action.SkillName} 这个白名单 skill。
-            你正在积木云 Phase A 的项目级 workspace 中运行，只允许只读分析和输出建议，不要修改文件，不要执行破坏性操作。
+            Please use ${action.SkillName} for this whitelist skill action.
+            You are running inside a Phase A project workspace.
 
-            项目信息：
+            Project:
             - ProjectId: {project.ProjectId}
             - ProjectName: {project.Name}
             - GameName: {project.GameName}
             - GameTypeSource: {project.GameTypeSource}
+            - ExecutionMode: {action.ExecutionMode}
 
-            用户输入：
-            {request.Input?.Trim() ?? "请基于当前项目状态输出下一步建议。"}
+            {modeRules}
 
-            输出要求：
-            - 用中文回答。
-            - 明确说明调用的 skill 名称。
-            - 给出可执行建议、风险和下一步。
-            - 不要声称已经修改代码。
+            User input:
+            {request.Input?.Trim() ?? "Analyze the current project and provide the next actionable recommendation."}
+
+            Output requirements:
+            - Answer in Chinese for the browser user.
+            - Clearly state the skill name used.
+            - Summarize generated files or state why no real asset file could be generated.
+            - Do not claim files were modified unless you actually wrote them.
             """;
     }
 

@@ -30,7 +30,7 @@ on:
 
 jobs:
   quality:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       GODOT_VERSION: '4.5.1'
       PYTHONIOENCODING: 'utf-8'
@@ -210,6 +210,21 @@ jobs:
         shell: pwsh
         run: |
           py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            if ($env:GITHUB_STEP_SUMMARY) {
+              "CI pipeline failed with exit code $code." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              "" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              $summaries = Get-ChildItem -Path logs/ci -Recurse -Filter summary.json -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 5
+              foreach ($summary in $summaries) {
+                "Latest summary: $($summary.FullName)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+                '```json' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+                Get-Content -Path $summary.FullName -Raw -Encoding utf8 | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+                '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+              }
+            }
+            exit $code
+          }
 
       - name: Resolve Task IDs for acceptance-check
         shell: pwsh
@@ -399,7 +414,7 @@ jobs:
     name: build-test-export
     if: always()
     needs: [quality]
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Mirror quality result for legacy required check context
         shell: pwsh

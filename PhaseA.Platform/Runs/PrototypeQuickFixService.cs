@@ -1823,7 +1823,7 @@ public sealed partial class PrototypeQuickFixService
 
         if (validation.Reason?.StartsWith("missing_rpg_battle_scene_contract", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return "- RepairFocus: Repair the dedicated RPG/JRPG battle-scene contract. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and enemy token nodes, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
+            return "- RepairFocus: Repair the dedicated RPG/JRPG battle-scene contract. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and file-backed Texture2D nodes named RpgPlayerAsset and RpgEnemyAsset, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
         }
 
         if (validation.Reason?.StartsWith("missing_rpg_reward_flow_contract", StringComparison.OrdinalIgnoreCase) == true)

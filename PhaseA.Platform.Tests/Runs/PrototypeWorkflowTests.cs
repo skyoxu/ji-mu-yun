@@ -542,6 +542,8 @@ public sealed class PrototypeWorkflowTests
 
         idle.Status.Should().Be("idle");
         finished.Status.Should().Be("succeeded");
+        finished.PrototypeCreationStatus.Should().Be("succeeded");
+        finished.AcceptanceStatus.Should().Be("succeeded");
         finished.Step.Should().Be("succeeded");
         finished.RunId.Should().Be(result.RunId);
         finished.CompletionSummary.Should().Contain("下一步建议");
@@ -700,7 +702,13 @@ public sealed class PrototypeWorkflowTests
         run.StderrText.Should().Contain("RPG project-specific GdUnit validation failed");
         run.StderrText.Should().Contain("Node not found");
         progress.Status.Should().Be("failed");
+        progress.PrototypeCreationStatus.Should().Be("succeeded");
+        progress.PrototypeCreationRunId.Should().NotBeNullOrWhiteSpace();
+        progress.AcceptanceStatus.Should().Be("failed");
+        progress.AcceptanceRunId.Should().Be(result.RunId);
         progress.Label.Should().Be("RPG behavior validation failed. Generate or continue a repair plan before packaging.");
+        progress.Form.Should().NotBeNull();
+        progress.Form!.PrototypeSlug.Should().Be("demo-prototype");
     }
 
     [Fact]

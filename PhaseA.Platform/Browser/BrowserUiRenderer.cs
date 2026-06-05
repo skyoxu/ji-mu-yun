@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
 
@@ -128,12 +128,13 @@ public sealed class BrowserUiRenderer
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
                   const progressText = $("prototypeProgress")?.textContent || "";
                   const prototypeStatus = String(state?.v2PrototypeStatus || "").trim().toLowerCase();
+                  const creationStatus = String(state?.v2PrototypeCreationStatus || prototypeStatus || "").trim().toLowerCase();
                   const succeeded = prototypeStatus === "succeeded";
                   const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
                   if (stepId === "new-project") return state.projectId ? "done" : "pending";
                   if (stepId === "create-prototype") {
-                    if (!state.projectId || progressText.includes("idle") || !prototypeStatus) return "pending";
-                    return failed ? "fix" : succeeded ? "done" : "pending";
+                    if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
+                    return creationStatus === "failed" ? "fix" : creationStatus === "succeeded" ? "done" : "pending";
                   }
                   if (stepId === "prototype-acceptance") return succeeded ? "done" : failed ? "fix" : "pending";
                   if (stepId === "iteration-plan") {
@@ -435,7 +436,7 @@ public sealed class BrowserUiRenderer
                   return state.v2PrototypeStatus || "";
                 }
                 function v2ShouldLockPrototypeForm() {
-                  const status = v2PrototypeStatus();
+                  const status = String(state?.v2PrototypeCreationStatus || v2PrototypeStatus() || "").trim().toLowerCase();
                   return !!state.projectId && status !== "" && !["idle", "failed"].includes(status);
                 }
                 function v2ApplyPrototypeFormLock() {
@@ -472,8 +473,8 @@ public sealed class BrowserUiRenderer
                   return String(state?.v2PrototypeStatus || "").trim().toLowerCase();
                 }
                 function v2HasPrototypeSkeleton() {
-                  const status = v2CurrentPrototypeStatus();
-                  return !!status && status !== "idle";
+                  const status = String(state?.v2PrototypeCreationStatus || state?.v2PrototypeStatus || "").trim().toLowerCase();
+                  return status === "succeeded";
                 }
                 function v2HasFailedPrototypeAcceptance() {
                   return v2CurrentPrototypeStatus() === "failed" || !!state.prototypeFailure;
@@ -554,7 +555,8 @@ public sealed class BrowserUiRenderer
                 };
                 const v2OriginalUpdateChatPanelVisibility = updateChatPanelVisibility;
                 updateChatPanelVisibility = function(progress) {
-                  state.v2PrototypeStatus = progress?.status || "";
+                  state.v2PrototypeStatus = progress?.acceptanceStatus || progress?.status || "";
+                  state.v2PrototypeCreationStatus = progress?.prototypeCreationStatus || progress?.status || "";
                   v2CreateIterationPanel();
                   v2ArrangeChatPanel();
                   v2EnsureContentGrid();
@@ -1007,7 +1009,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1385,7 +1387,7 @@ public sealed class BrowserUiRenderer
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
                     ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
-                    ${planningAnalysis ? `<p class="muted">原型状态：${escapeHtml(planningAnalysis.latestPrototypeStatus || "unknown")} · 草稿覆盖率：${escapeHtml(String(planningAnalysis.draftCoveragePercent ?? 0))}%${planningAnalysis.templateId ? ` · 模板：${escapeHtml(planningAnalysis.templateId)}` : ""}</p>` : ""}
+                    ${planningAnalysis ? `<p class="muted">原型状态：${escapeHtml(planningAnalysis.latestPrototypeStatus || "未知")} · 草稿覆盖率：${escapeHtml(String(planningAnalysis.draftCoveragePercent ?? 0))}%${planningAnalysis.templateId ? ` · 模板：${escapeHtml(planningAnalysis.templateId)}` : ""}</p>` : ""}
                     ${planningAnalysis && Array.isArray(planningAnalysis.fieldCoverage) && planningAnalysis.fieldCoverage.length
                       ? `<p class="muted">字段判断：${escapeHtml(planningAnalysis.fieldCoverage.map(item => `${item.field}:${item.status}${item.missingReason ? `(${item.missingReason})` : item.evidence ? `(${item.evidence})` : ""}`).join(" · "))}</p>`
                       : ""}
@@ -2546,7 +2548,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedback() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
+                  if (!v2HasPrototypeSkeleton()) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
                   const feedback = $("chatMessage").value.trim();
                   const goal = currentNeedsFixRouteGoal();
                   if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
@@ -2655,7 +2657,7 @@ public sealed class BrowserUiRenderer
                 async function submitNeedsFixRouteRequest(payload, busyText) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("请先完成原型骨架创建，再使用 needs-fix 路由。");
+                  if (!v2HasPrototypeSkeleton()) return out("请先完成原型骨架创建，再使用 needs-fix 路由。");
                   setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
                   try {
@@ -2866,7 +2868,7 @@ public sealed class BrowserUiRenderer
                     if (!response.ok) return null;
                     const payload = await response.json();
                     return {
-                      status: payload.status || "unknown",
+                      status: payload.status || "未知",
                       generatedAt: payload.generated_at || "",
                       stage: (payload.records || []).find(r => r.kind === "detect-project-stage")?.stage || "",
                       summary: (payload.records || []).find(r => r.kind === "detect-project-stage")?.summary || ""
@@ -3310,7 +3312,7 @@ public sealed class BrowserUiRenderer
                     return `\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
                   }
                   const label = run.progressLabel || run.progressStep || run.status || "";
-                  return `当前任务执行中：${run.runType || "unknown"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
+                  return `当前任务执行中：${run.runType || "未知"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
 
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
@@ -3755,7 +3757,8 @@ public sealed class BrowserUiRenderer
                   try {
                     $("validatePrototype").disabled = isGlobalBusy();
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
-                    state.prototypeFailure = progress?.status === "failed" ? (progress.failure || "") : "";
+                    const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
+                    state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
                     renderPrototypeProgress(progress);
                     renderPrototypeAcceptanceSummary(progress);
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
@@ -3816,7 +3819,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function updateChatPanelVisibility(progress) {
-                  const status = progress?.status || "idle";
+                  const status = progress?.acceptanceStatus || progress?.status || "idle";
                   $("prototypeWorkflowPanel").classList.toggle("hidden", status === "succeeded");
                   $("chatPanel").classList.remove("hidden");
                   setFormalFeedbackAvailability(status === "succeeded");
@@ -3918,7 +3921,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function isPrototypeCreationLocked(progress) {
-                  const status = progress?.status || "idle";
+                  const status = progress?.prototypeCreationStatus || progress?.status || "idle";
                   return !["idle", "failed"].includes(status);
                 }
 
@@ -4375,31 +4378,41 @@ public sealed class BrowserUiRenderer
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1">
-              <title>项目素材清单</title>
+              <title>项目素材库</title>
+              <!-- Project Asset Library -->
               <style>
-                :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --danger: #a2342f; }
+                :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --accent-2: #244c9a; --danger: #a2342f; }
                 * { box-sizing: border-box; }
                 body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
-                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 1rem; }
-                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.06em; }
+                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem 7rem; display: grid; gap: 1rem; }
+                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: 0; }
                 h2 { margin: 0 0 0.75rem; }
                 p { color: var(--muted); }
-                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
-                .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
+                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
+                .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.75rem; }
                 .list { display: grid; gap: 0.75rem; }
-                .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.75rem; background: #f3ead9; }
-                button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.5rem; background: #f3ead9; display: grid; place-items: center; }
+                button { border: 0; border-radius: 0.4rem; padding: 0.65rem 0.9rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                button.secondary { background: var(--accent-2); }
+                button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
-                .danger { color: var(--danger); }
                 .muted { color: var(--muted); }
                 .badge { display: inline-flex; border-radius: 999px; padding: 0.2rem 0.55rem; background: #e6f4ef; color: var(--accent); font-weight: 700; font-size: 0.85rem; }
+                .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+                .history { margin-top: 0.75rem; display: grid; gap: 0.5rem; }
+                .history-item { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.65rem; background: #fbf7ef; }
+                .history-item.selected { border-color: var(--accent); background: #edf8f3; }
+                .history-item pre { white-space: pre-wrap; max-height: 8rem; overflow: auto; margin: 0.5rem 0 0; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+                .floating-composer { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(600px, calc(100vw - 32px)); height: 50px; display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.45rem; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 253, 248, 0.96); box-shadow: 0 0.8rem 2rem rgba(57, 43, 24, 0.18); z-index: 20; }
+                .floating-composer input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; padding: 0 0.75rem; font: inherit; color: var(--ink); }
+                .floating-composer span { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
               </style>
             </head>
             <body>
               <main>
                 <header>
-                  <h1>项目素材清单</h1>
-                  <p>列出当前项目实际使用的素材实例、素材预览，以及未使用素材但适合生成素材的候选实例。候选项会说明它在游戏或界面中做什么用。</p>
+                  <h1>项目素材库</h1>
+                  <p>查看当前项目已使用的素材、可生成的素材候选和每个素材单位的生成历史。</p>
                 </header>
                 <section id="status" class="card muted">正在读取素材清单...</section>
                 <section class="card">
@@ -4411,6 +4424,10 @@ public sealed class BrowserUiRenderer
                   <div id="candidates" class="list"></div>
                 </section>
               </main>
+              <div class="floating-composer">
+                <input id="floatingPrompt" maxlength="2000" placeholder="输入本次素材生成方向，例如：16-bit JRPG、蓝色史莱姆、俯视城镇地图...">
+                <span>应用到所点击的素材</span>
+              </div>
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
@@ -4418,41 +4435,36 @@ public sealed class BrowserUiRenderer
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+                const state = { assetUnits: {}, library: { units: [] } };
 
                 async function loadAssets() {
-                  if (!projectId) {
-                    $("status").textContent = "缺少 projectId。请从控制台打开素材清单页。";
-                    return;
-                  }
-                  if (!token()) {
-                    $("status").textContent = "当前浏览器没有 token。请先在控制台登录。";
-                    return;
-                  }
-                  $("status").textContent = "正在识别素材实例和可生成素材候选...";
-                  const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&model=${encodeURIComponent(model)}`, {
-                    headers: { "Authorization": `Bearer ${token()}` },
-                    cache: "no-store"
-                  });
-                  const payload = await response.json();
-                  if (!response.ok || !payload.canReadInventory) {
-                    $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(payload.error || payload.disabledReason || "unknown_error")}</span>`;
+                  if (!projectId) { $("status").textContent = "缺少 projectId。"; return; }
+                  if (!token()) { $("status").textContent = "浏览器 token 不存在，请先登录。"; return; }
+                  $("status").textContent = "正在扫描素材单位...";
+                  const [inventoryResponse, libraryResponse] = await Promise.all([
+                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&model=${encodeURIComponent(model)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" }),
+                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" })
+                  ]);
+                  const payload = await inventoryResponse.json();
+                  state.library = libraryResponse.ok ? await libraryResponse.json() : { units: [] };
+                  await hydrateLibraryPreviewUrls();
+                  if (!inventoryResponse.ok || !payload.canReadInventory) {
+                    const reason = payload.disabledReason || payload.error || "unknown_error";
+                    $("status").className = "card muted";
+                    $("status").textContent = assetInventoryDisabledText(reason);
                     return;
                   }
                   const usedAssets = payload.usedAssets || [];
                   const candidates = payload.generationCandidates || [];
-                  $("status").textContent = `已识别 ${usedAssets.length} 个已使用素材实例，${candidates.length} 个可生成素材候选。`;
+                  $("status").textContent = `??? ${usedAssets.length} ?????????${candidates.length} ?????????`;
                   await renderUsedAssets(usedAssets);
                   renderCandidates(candidates);
                 }
 
                 async function renderUsedAssets(items) {
                   const enriched = [];
-                  for (const item of items) {
-                    enriched.push({ ...item, previewUrl: await createPreviewUrl(item.resourcePath) });
-                  }
-                  $("usedAssets").innerHTML = enriched.length
-                    ? enriched.map(renderUsedAsset).join("")
-                    : "<p class='muted'>未识别到可预览素材引用。</p>";
+                  for (const item of items) enriched.push({ ...item, previewUrl: await createPreviewUrl(item.resourcePath) });
+                  $("usedAssets").innerHTML = enriched.length ? enriched.map(item => renderUsedAsset(registerUnit(item, "used_asset"))).join("") : "<p class='muted'>未识别到可预览的素材引用。</p>";
                 }
 
                 async function createPreviewUrl(resourcePath) {
@@ -4467,26 +4479,48 @@ public sealed class BrowserUiRenderer
                     if (!response.ok) return "";
                     const payload = await response.json();
                     return payload.previewUrl || "";
-                  } catch {
-                    return "";
+                  } catch { return ""; }
+                }
+
+                async function hydrateLibraryPreviewUrls() {
+                  const units = state.library?.units || [];
+                  for (const unit of units) {
+                    for (const entry of unit.entries || []) {
+                      if (entry.previewResourcePath && !entry.previewUrl) {
+                        entry.previewUrl = await createPreviewUrl(entry.previewResourcePath);
+                      }
+                    }
                   }
                 }
 
-                function renderUsedAsset(item) {
-                  const image = item.previewUrl
-                    ? `<img class="asset-preview" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">`
-                    : "<div class='asset-preview muted'>预览不可用</div>";
-                  return `
-                    <article class="card">
-                      ${image}
-                      <strong>${escapeHtml(item.instanceName || "")}</strong>
-                      <p class="muted">${escapeHtml(item.nodeType || "")}</p>
-                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
-                      <p class="muted">用途：${escapeHtml(item.intendedUse || "")}</p>
-                      <p class="muted">像素尺寸：${escapeHtml(assetPixelSize(item))}</p>
-                      <p class="muted">素材：${escapeHtml(item.resourcePath || "")}</p>
-                    </article>
-                  `;
+                function registerUnit(item, kind) {
+                  const key = `${kind}-${Object.keys(state.assetUnits).length + 1}`;
+                  const libraryUnit = findLibraryUnit(item, kind);
+                  const unit = {
+                    clientKey: key,
+                    unitKey: libraryUnit?.key || "",
+                    instanceName: item.instanceName || "",
+                    nodeType: item.nodeType || "",
+                    scenePath: item.scenePath || "",
+                    resourcePath: item.resourcePath || "",
+                    kind: item.suggestedAssetKind || kind,
+                    intendedUse: item.intendedUse || "",
+                    reason: item.reason || ""
+                  };
+                  state.assetUnits[key] = unit;
+                  return { item, unit, libraryUnit };
+                }
+
+                function findLibraryUnit(item, fallbackKind) {
+                  const units = state.library?.units || [];
+                  return units.find(unit => String(unit.scenePath || "").toLowerCase() === String(item.scenePath || "").toLowerCase() && String(unit.instanceName || "").toLowerCase() === String(item.instanceName || "").toLowerCase() && String(unit.resourcePath || "").toLowerCase() === String(item.resourcePath || "").toLowerCase())
+                    || units.find(unit => String(unit.scenePath || "").toLowerCase() === String(item.scenePath || "").toLowerCase() && String(unit.instanceName || "").toLowerCase() === String(item.instanceName || "").toLowerCase() && String(unit.kind || "").toLowerCase() === String(item.suggestedAssetKind || fallbackKind || "").toLowerCase());
+                }
+
+                function renderUsedAsset(model) {
+                  const item = model.item;
+                  const image = item.previewUrl ? `<img class="asset-preview" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "<div class='asset-preview muted'>预览不可用</div>";
+                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p class="muted">${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p class="muted">用途： ${escapeHtml(item.intendedUse || "")}</p><p class="muted">像素尺寸： ${escapeHtml(assetPixelSize(item))}</p><p class="muted">素材： ${escapeHtml(item.resourcePath || "")}</p>${renderAssetActions(model.unit)}${renderHistory(model.libraryUnit)}</article>`;
                 }
 
                 function assetPixelSize(item) {
@@ -4495,24 +4529,84 @@ public sealed class BrowserUiRenderer
                   return width > 0 && height > 0 ? `${width} x ${height}` : "未知";
                 }
 
-                function renderCandidates(items) {
-                  $("candidates").innerHTML = items.length
-                    ? items.map(renderCandidate).join("")
-                    : "<p class='muted'>暂未识别到明显的素材生成候选。</p>";
+                function assetInventoryDisabledText(reason) {
+                  if (reason === "final_step_not_completed") return "final step 完成后才可以查看素材清单。";
+                  if (reason === "project_busy") return "项目正在运行，请稍后再试。";
+                  if (reason === "project_not_selected") return "请先选择项目。";
+                  return "素材清单暂不可用。";
                 }
 
-                function renderCandidate(item) {
-                  return `
-                    <article class="card">
-                      <strong>${escapeHtml(item.instanceName || "")}</strong>
-                      <p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p>
-                      <p class="muted">节点类型：${escapeHtml(item.nodeType || "")}</p>
-                      <p class="muted">场景：${escapeHtml(item.scenePath || "")}</p>
-                      <p><strong>用途</strong>：${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p>
-                      <p><strong>建议原因</strong>：${escapeHtml(item.reason || "")}</p>
-                      <p class="muted">判断状态：${escapeHtml(item.llmJudgementStatus || "")}</p>
-                    </article>
-                  `;
+                function renderCandidates(items) {
+                  $("candidates").innerHTML = items.length ? items.map(item => renderCandidate(registerUnit(item, "candidate_asset"))).join("") : "<p class='muted'>暂未识别到明显的素材生成候选。</p>";
+                }
+
+                function renderCandidate(model) {
+                  const item = model.item;
+                  return `<article class="card"><strong>${escapeHtml(item.instanceName || "")}</strong><p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p><p class="muted">节点类型： ${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p><strong>用途</strong>： ${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p><p><strong>建议原因</strong>： ${escapeHtml(item.reason || "")}</p><p class="muted">判断状态： ${escapeHtml(item.llmJudgementStatus || "")}</p>${renderAssetActions(model.unit)}${renderHistory(model.libraryUnit)}</article>`;
+                }
+
+                function renderAssetActions(unit) {
+                  return `<div class="row"><button class="secondary" data-generate-key="${escapeHtml(unit.clientKey)}" onclick="generateAsset('${escapeHtml(unit.clientKey)}', this)">智能生成素材</button></div>`;
+                }
+
+                function renderHistory(libraryUnit) {
+                  const entries = libraryUnit?.entries || [];
+                  const selectedEntryId = libraryUnit?.selectedEntryId || "";
+                  if (!entries.length) return "<div class='history muted'>暂无历史生成素材。</div>";
+                  return `<div class="history">${entries.map(entry => `<div class="history-item ${entry.selected || entry.entryId === selectedEntryId ? "selected" : ""}">${entry.previewUrl ? `<img class="asset-preview" src="${escapeHtml(entry.previewUrl)}" alt="${escapeHtml(entry.entryId || "generated asset")}">` : ""}<div class="row"><strong>${escapeHtml(entry.skillName || entry.actionId || "skill")}</strong><span class="badge">${escapeHtml(entry.status || "")}</span><span class="muted">${escapeHtml(formatTime(entry.createdUtc))}</span><button class="ghost" onclick="selectEntry('${escapeHtml(libraryUnit.key)}', '${escapeHtml(entry.entryId)}', this)">选择</button></div>${entry.previewResourcePath ? `<p class="muted">生成素材：${escapeHtml(entry.previewResourcePath)}</p>` : ""}<pre>${escapeHtml(trimMessage(entry.assistantMessage || entry.prompt || ""))}</pre></div>`).join("")}</div>`;
+                }
+
+                function trimMessage(value) {
+                  const text = String(value || "").trim();
+                  return text.length > 900 ? `${text.slice(0, 900)}...` : text;
+                }
+
+                function formatTime(value) {
+                  const date = new Date(value);
+                  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+                }
+
+                async function generateAsset(clientKey, button) {
+                  const unit = state.assetUnits[clientKey];
+                  if (!unit) return;
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "生成中...";
+                  try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/generate`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, body: JSON.stringify({ floatingPrompt: $("floatingPrompt").value || "", unit }), cache: "no-store" });
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload.error || payload.failureCode || "generate_failed");
+                    state.library = payload.library || state.library;
+                    if (payload.status !== "succeeded") {
+                      $("status").textContent = `素材生成未完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
+                      await loadAssets();
+                      return;
+                    }
+                    $("status").textContent = `素材生成已完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
+                    await loadAssets();
+                  } catch (error) {
+                    $("status").textContent = `素材生成失败：${error.message || error}`;
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
+                }
+
+                async function selectEntry(unitKey, entryId, button) {
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "已选择";
+                  try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/select`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, body: JSON.stringify({ unitKey, entryId }), cache: "no-store" });
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload.error || "select_failed");
+                    state.library = payload;
+                    await loadAssets();
+                  } catch (error) {
+                    $("status").textContent = `选择失败: ${error.message || error}`;
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
                 }
 
                 loadAssets();

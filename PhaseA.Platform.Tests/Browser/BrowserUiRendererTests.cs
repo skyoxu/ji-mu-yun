@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
 using Xunit;
@@ -552,20 +552,28 @@ public sealed class BrowserUiRendererTests
     {
         var html = new BrowserUiRenderer().RenderAssets();
 
-        html.Should().Contain("项目素材清单");
+        html.Should().Contain("Project Asset Library");
         html.Should().Contain("asset-inventory?judge=true");
+        html.Should().Contain("asset-library");
+        html.Should().Contain("asset-library/generate");
+        html.Should().Contain("asset-library/select");
         html.Should().Contain("asset-preview-ticket");
         html.Should().Contain("createPreviewUrl");
-        html.Should().Contain("已使用素材");
-        html.Should().Contain("可生成素材候选");
-        html.Should().Contain("用途");
-        html.Should().Contain("像素尺寸");
+        html.Should().Contain("hydrateLibraryPreviewUrls");
+        html.Should().Contain("previewResourcePath");
+        html.Should().Contain("previewUrl");
+        html.Should().Contain("素材生成未完成");
+        html.Should().Contain("floatingPrompt");
+        html.Should().Contain("??????");
+        html.Should().Contain("renderHistory");
+        html.Should().Contain("selectEntry");
+        html.Should().Contain("???");
+        html.Should().Contain("?????");
         html.Should().Contain("assetPixelSize");
         html.Should().Contain("pixelWidth");
         html.Should().Contain("pixelHeight");
-        html.Should().Contain("建议原因");
+        html.Should().Contain("????");
         html.Should().Contain("intendedUse");
-        html.Should().Contain("previewUrl");
     }
 
     [Fact]

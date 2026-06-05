@@ -300,12 +300,15 @@ texture = ExtResource("2_player")
 texture = ExtResource("3_enemy")
 """);
         Write(root, "Game.Godot/Prototypes/dq-rpg/BattleScene.tscn", """
-[gd_scene load_steps=2 format=3]
-[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/Enemy/enemy.png" id="1_enemy"]
+[gd_scene load_steps=3 format=3]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/Player/player.png" id="1_player"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/Enemy/enemy.png" id="2_enemy"]
 [node name="BattleScene" type="Control"]
 [node name="Attack" type="Button" parent="."]
+[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+texture = ExtResource("1_player")
 [node name="RpgEnemyAsset" type="TextureRect" parent="."]
-texture = ExtResource("1_enemy")
+texture = ExtResource("2_enemy")
 """);
         Write(root, "Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs", """
 public sealed class DqRpgPrototype

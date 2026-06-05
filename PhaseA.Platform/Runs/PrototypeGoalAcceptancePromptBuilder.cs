@@ -197,7 +197,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 Platform hard acceptance for RPG Step 3:
                 - Need: Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs.
                 - Keep battle UI and battle-side runtime behavior in the dedicated BattleScene instead of leaving the full battle loop only inside DqRpgPrototype.cs.
-                - BattleScene.tscn must expose a recognizable BattleScene node, RpgEnemyAsset, and AttackButton.
+                - BattleScene.tscn must expose a recognizable BattleScene node, AttackButton, and file-backed Texture2D nodes named RpgPlayerAsset and RpgEnemyAsset.
                 - BattleScene.cs must expose battle settlement wiring through BattleFinished and ResolveBattle/ResolveAttackTurn.
                 - The battle loop must show readable enemy presentation, attack feedback, and victory or defeat settlement without advancing into reward selection.
                 - Missing contract means STATUS: needs_fix.
@@ -232,7 +232,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
             7 => """
                 Platform hard acceptance for RPG Final Step:
                 - Full RPG prototype acceptance must pass: MapScene, BattleScene, reward return-to-map loop, main-menu prototype entry, visible map after Start Adventure, Godot smoke, and package readiness.
-                - Runtime visuals must use real file-backed Texture2D assets for the exact nodes RpgMapAsset, RpgPlayerAsset, and RpgEnemyAsset.
+                - Runtime visuals must use real file-backed Texture2D assets for MapScene nodes RpgMapAsset, RpgPlayerAsset, and RpgEnemyAsset, and BattleScene nodes RpgPlayerAsset and RpgEnemyAsset.
                 - Copy/adapt assets into Game.Godot/Prototypes/dq-rpg/Assets/Map, Assets/Player, and Assets/Enemy, then reference them through res:// ext_resource Texture2D paths.
                 - GradientTexture2D/sub_resource placeholders do not satisfy final asset acceptance, even when node names are correct.
                 - Delete Game.Godot/.gdignore if present; it blocks Godot from importing res://Game.Godot/** runtime assets and fails final RPG asset acceptance.

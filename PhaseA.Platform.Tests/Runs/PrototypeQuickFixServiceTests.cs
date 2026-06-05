@@ -2118,11 +2118,17 @@ texture = ExtResource("2")
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "BattleScene.tscn"), """
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="2"]
 [node name="BattleScene" type="Node"]
 [node name="AttackButton" type="Button" parent="."]
 text = "Attack"
+[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+texture = ExtResource("1")
+[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+texture = ExtResource("2")
 """);
         var scriptPath = Path.Combine(scenePath, "Scripts");
         Directory.CreateDirectory(scriptPath);

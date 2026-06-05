@@ -205,6 +205,62 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
+    public void RpgRouteStrategy_ShouldTreatFinalGdUnitRepairGoalAsFinalAcceptance()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Rerun RPG project-specific GdUnit and final prototype acceptance",
+            "Run final RPG validation against the same blocker that generated this repair plan.",
+            "Final RPG GdUnit and prototype acceptance pass.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        contract.FinalAcceptance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RpgRouteStrategy_ShouldNotTreatAssetImportGdUnitRepairGoalAsFinalAcceptance()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "Repair RPG runtime assets and Godot imports for GdUnit",
+            "Fix missing PNG or imported resources before project-specific GdUnit can load the scene.",
+            "This step passes only when active dq-rpg scenes no longer reference missing PNG or .ctex resources.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("rpg-asset-usage-validation");
+        contract.FinalAcceptance.Should().BeFalse();
+    }
+
+    [Fact]
     public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForNonRpgProject()
     {
         var project = Project(

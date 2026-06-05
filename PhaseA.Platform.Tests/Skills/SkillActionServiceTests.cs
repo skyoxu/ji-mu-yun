@@ -60,6 +60,9 @@ public sealed class SkillActionServiceTests
             "generate2dmap",
             "generate2dsprite");
         actions.Select(a => a.ActionId).Should().NotContain("prototype-playable-advice");
+        actions.Single(a => a.ActionId == "game-design-master").ExecutionMode.Should().Be("codex-read-only");
+        actions.Single(a => a.ActionId == "map-making-master").ExecutionMode.Should().Be("codex-workspace-write");
+        actions.Single(a => a.ActionId == "character-making-master").ExecutionMode.Should().Be("codex-workspace-write");
     }
 
     [Fact]
@@ -106,6 +109,31 @@ public sealed class SkillActionServiceTests
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Project not found.");
         runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_WorkspaceWriteAction_ReturnsBusy_WhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var heldRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "held-run");
+        (await store.TryAcquireRunnerLockAsync(projectId, heldRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner("should not run");
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, "map-making-master", new SkillActionRunRequest("Generate map."));
+
+        result.Status.Should().Be("project_busy");
+        result.FailureCode.Should().Be("project_busy");
+        runner.Commands.Should().BeEmpty();
+        await store.ReleaseRunnerLockAsync(projectId, heldRunId);
     }
 
     private static SkillActionService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, IHostedProcessRunner runner)

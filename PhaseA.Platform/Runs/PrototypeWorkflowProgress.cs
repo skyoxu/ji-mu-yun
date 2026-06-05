@@ -19,7 +19,13 @@ public sealed record PrototypeWorkflowProgress(
     int? TddGreenCount = null,
     int? TddRefactorCount = null,
     IReadOnlyList<string>? PlaytestFocusPoints = null,
-    PrototypeWorkflowFormSnapshot? Form = null);
+    PrototypeWorkflowFormSnapshot? Form = null,
+    string? PrototypeCreationStatus = null,
+    string? PrototypeCreationFailure = null,
+    string? PrototypeCreationRunId = null,
+    string? AcceptanceStatus = null,
+    string? AcceptanceFailure = null,
+    string? AcceptanceRunId = null);
 
 public sealed record PrototypeWorkflowFormSnapshot(
     string? PrototypeSlug,

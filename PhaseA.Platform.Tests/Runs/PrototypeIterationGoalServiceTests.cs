@@ -287,6 +287,58 @@ public sealed class BattleScene
     }
 
     [Fact]
+    public async Task GoalAcceptanceValidator_ShouldRequireBattleScenePlayerAndEnemyTextureAssets()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        File.WriteAllText(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"), """
+[gd_scene format=3]
+
+[node name="BattleScene" type="Control"]
+[node name="AttackButton" type="Button" parent="."]
+[node name="PlayerToken" type="ColorRect" parent="."]
+[node name="EnemyToken" type="ColorRect" parent="."]
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: battle or challenge resolution",
+            "Validate one readable JRPG battle resolution.",
+            "Pass when BattleScene reaches clear battle feedback and settlement.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeFalse();
+        result.Reason.Should().StartWith("missing_rpg_battle_scene_contract");
+        result.Reason.Should().Contain("battle_scene_missing_RpgPlayerAsset_Texture2D");
+        result.Reason.Should().Contain("battle_scene_missing_RpgEnemyAsset_Texture2D");
+    }
+
+    [Fact]
     public async Task GoalAcceptanceValidator_ShouldAcceptMainScriptOwnedRewardPanel()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -990,11 +1042,17 @@ texture = ExtResource("2")
 texture = ExtResource("3")
 """);
         File.WriteAllText(Path.Combine(scenePath, "BattleScene.tscn"), """
-[gd_scene format=3]
+[gd_scene load_steps=3 format=3]
 
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/enemy_slime.png" id="2"]
 [node name="BattleScene" type="Node"]
 [node name="AttackButton" type="Button" parent="."]
 text = "Attack"
+[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+texture = ExtResource("1")
+[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+texture = ExtResource("2")
 """);
         var scriptPath = Path.Combine(scenePath, "Scripts");
         Directory.CreateDirectory(scriptPath);

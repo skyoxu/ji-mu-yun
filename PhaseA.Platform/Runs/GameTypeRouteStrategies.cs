@@ -271,7 +271,11 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
         }
 
         var text = combined.ToLowerInvariant();
-        if (ContainsAny(text, "full playable prototype acceptance", "final acceptance", "\u6700\u7ec8\u9a8c\u6536", "\u5168\u91cf\u9a8c\u6536", "\u7aef\u5230\u7aef"))
+        var requestsFinalGdUnitValidation =
+            ContainsAny(text, "project-specific gdunit", "rpg gdunit", "gdunit") &&
+            ContainsAny(text, "final", "prototype acceptance", "front-end prototype validation", "validation route", "\u6700\u7ec8\u9a8c\u6536", "\u5168\u91cf\u9a8c\u6536");
+        if (ContainsAny(text, "full playable prototype acceptance", "final acceptance", "final prototype acceptance", "prototype acceptance", "\u6700\u7ec8\u9a8c\u6536", "\u5168\u91cf\u9a8c\u6536", "\u7aef\u5230\u7aef") ||
+            requestsFinalGdUnitValidation)
         {
             return new PrototypeGoalAcceptanceContract(
                 ContainsAny(text, "jrpg", "first-loop", "first loop") ? "jrpg-final-first-loop-acceptance" : "rpg-final-full-playable-acceptance",

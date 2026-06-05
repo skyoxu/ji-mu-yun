@@ -593,9 +593,12 @@ internal static class PrototypeGoalAcceptanceValidator
 
         var battleSceneText = File.ReadAllText(battleScene);
         var battleScriptText = File.ReadAllText(battleScript);
+        var battleAssetUsages = ReadSceneAssetUsages(repoPath, battleScene).ToList();
         var missing = new List<string>();
         AddMissing(missing, battleSceneText.Contains("BattleScene", StringComparison.Ordinal), "battle_scene_missing_BattleScene_node");
         AddMissing(missing, battleSceneText.Contains("AttackButton", StringComparison.Ordinal) || battleSceneText.Contains("Attack", StringComparison.Ordinal), "battle_scene_missing_AttackButton");
+        AddMissing(missing, HasRequiredRpgAssetUsage(battleAssetUsages, "RpgPlayerAsset", IsPlayerAssetPath), "battle_scene_missing_RpgPlayerAsset_Texture2D");
+        AddMissing(missing, HasRequiredRpgAssetUsage(battleAssetUsages, "RpgEnemyAsset", IsEnemyAssetPath), "battle_scene_missing_RpgEnemyAsset_Texture2D");
         AddMissing(missing, battleScriptText.Contains("ResolveAttackTurn", StringComparison.Ordinal) || battleScriptText.Contains("ResolveBattle", StringComparison.Ordinal), "battle_script_missing_ResolveBattle_or_ResolveAttackTurn");
         AddMissing(missing, !battleScriptText.Contains("_loop.ResolveBattle(_state", StringComparison.Ordinal), "battle_script_still_only_delegates_to_main_loop_ResolveBattle");
         AddMissing(missing, battleScriptText.Contains("BattleFinished", StringComparison.Ordinal), "battle_script_missing_BattleFinished");

@@ -66,6 +66,7 @@ builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
+builder.Services.AddSingleton<ProjectAssetLibraryService>();
 builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
 builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
 builder.Services.AddSingleton<LlmBindingService>();
@@ -474,6 +475,48 @@ app.MapPost("/api/projects/{projectId}/asset-preview-ticket", async (
     {
         previewUrl = $"/projects/{projectId}/asset-preview?resource={Uri.EscapeDataString(request.ResourcePath)}&ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, request.ResourcePath))}"
     });
+});
+
+app.MapGet("/api/projects/{projectId}/asset-library", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] ProjectAssetLibraryService library,
+    CancellationToken cancellationToken) =>
+{
+    var result = await library.ReadAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/asset-library/generate", async (
+    string projectId,
+    ProjectAssetGenerationRunRequest request,
+    HttpContext context,
+    [FromServices] ProjectAssetLibraryService library,
+    CancellationToken cancellationToken) =>
+{
+    if (request.Unit is null)
+    {
+        return Results.BadRequest(new { error = "asset_unit_required" });
+    }
+
+    var result = await library.GenerateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/asset-library/select", async (
+    string projectId,
+    ProjectAssetSelectionRequest request,
+    HttpContext context,
+    [FromServices] ProjectAssetLibraryService library,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.UnitKey) || string.IsNullOrWhiteSpace(request.EntryId))
+    {
+        return Results.BadRequest(new { error = "asset_selection_required" });
+    }
+
+    var result = await library.SelectAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapGet("/projects/{projectId}/asset-preview", async (
