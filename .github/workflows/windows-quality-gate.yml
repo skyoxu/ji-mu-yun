@@ -209,7 +209,9 @@ jobs:
       - name: CI pipeline (Python)
         shell: pwsh
         run: |
-          py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
+          & py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
           $code = $LASTEXITCODE
           if ($code -ne 0) {
             if ($env:GITHUB_STEP_SUMMARY) {

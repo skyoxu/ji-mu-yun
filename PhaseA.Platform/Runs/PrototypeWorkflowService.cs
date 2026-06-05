@@ -575,7 +575,9 @@ public sealed class PrototypeWorkflowService
 
     private async Task<RunSnapshot> RecoverCompletedPrototypeRunIfNeededAsync(ProjectSnapshot project, RunSnapshot run, CancellationToken cancellationToken)
     {
-        if (!IsUnfinishedRunStatus(run.Status) || !string.IsNullOrWhiteSpace(run.EvidenceJson))
+        if (!IsUnfinishedRunStatus(run.Status) ||
+            !string.IsNullOrWhiteSpace(run.EvidenceJson) ||
+            IsNonCreationPrototypeProgress(run))
         {
             return run;
         }
@@ -607,6 +609,19 @@ public sealed class PrototypeWorkflowService
             cancellationToken);
         await SetProgressAsync(run.RunId, "succeeded", "", "原型骨架创建已完成。", cancellationToken);
         return await _metadataStore.GetRunSnapshotAsync(run.RunId, cancellationToken) ?? run;
+    }
+
+    private static bool IsNonCreationPrototypeProgress(RunSnapshot run)
+    {
+        return ContainsAny(
+            string.Join("\n", run.ProgressStep, run.ProgressSubstep, run.ProgressLabel),
+            "repair",
+            "post_validation",
+            "godot_diagnostic",
+            "completion_state",
+            "正在修复",
+            "修复",
+            "Validating the current prototype");
     }
 
     private static bool IsUnfinishedRunStatus(string status)

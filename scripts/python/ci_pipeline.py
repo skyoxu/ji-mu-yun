@@ -57,6 +57,46 @@ def copy_if_exists(src_path: str, dst_path: str) -> bool:
         return False
 
 
+def tail_text(path: str, max_lines: int = 80) -> str:
+    if not path or not os.path.exists(path):
+        return ''
+    try:
+        with io.open(path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.read().splitlines()
+    except Exception:
+        return ''
+    return '\n'.join(lines[-max_lines:])
+
+
+def print_failure_diagnostics(summary: dict) -> None:
+    print('CI_PIPELINE hard_fail_diagnostics begin')
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+
+    dotnet = summary.get('dotnet') or {}
+    if dotnet.get('status') == 'tests_failed' or dotnet.get('rc') not in (0, 2, None):
+        for label, path in (
+            ('run-dotnet-console', dotnet.get('run_dotnet_console_log')),
+            ('dotnet-test-output', dotnet.get('dotnet_test_output_log')),
+        ):
+            tail = tail_text(path)
+            if tail:
+                print(f'--- {label} tail ({path}) ---')
+                print(tail)
+
+    selfcheck = summary.get('selfcheck') or {}
+    if selfcheck.get('status') != 'ok':
+        for label, path in (
+            ('selfcheck-stdout', os.path.join('logs', 'ci', dt.date.today().strftime('%Y-%m-%d'), 'selfcheck-stdout.txt')),
+            ('selfcheck-console', os.path.join('logs', 'ci', dt.date.today().strftime('%Y-%m-%d'), 'selfcheck-console.txt')),
+            ('selfcheck-stderr', os.path.join('logs', 'ci', dt.date.today().strftime('%Y-%m-%d'), 'selfcheck-stderr.txt')),
+        ):
+            tail = tail_text(path)
+            if tail:
+                print(f'--- {label} tail ({path}) ---')
+                print(tail)
+    print('CI_PIPELINE hard_fail_diagnostics end')
+
+
 def extract_failed_tests(dotnet_test_output: str):
     """
     Parse failed test names from dotnet test console output.
@@ -264,6 +304,8 @@ def main():
         f"dotnet={summary['dotnet'].get('status')} selfcheck={summary['selfcheck'].get('status')} "
         f"encoding_bad={summary['encoding'].get('bad', 'n/a')}"
     )
+    if hard_fail:
+        print_failure_diagnostics(summary)
     return 0 if not hard_fail else 1
 
 

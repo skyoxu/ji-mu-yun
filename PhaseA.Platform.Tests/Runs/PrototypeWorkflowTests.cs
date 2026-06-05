@@ -638,6 +638,54 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task GetProgressAsync_DoesNotRecoverRepairRun_FromCompletionArtifacts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.UpdateRunProgressAsync(runId, "repair", "", "Repair queued.");
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.packaging.json".Replace('/', Path.DirectorySeparatorChar)), """
+        {
+          "kind": "prototype-packaging-summary",
+          "default_scene": "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn"
+        }
+        """);
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.completion.md".Replace('/', Path.DirectorySeparatorChar)), "# Prototype Completion Report\n");
+        WriteFile(Path.Combine(project.RepoPath, "logs/ci/active-prototypes/demo-prototype.active.json".Replace('/', Path.DirectorySeparatorChar)), """
+        {
+          "status": "completed-through-day",
+          "completed_through_day": 7,
+          "missing_required_fields": [],
+          "prototype_file": "docs/prototypes/2026-06-03-demo-prototype.md",
+          "steps_run": [
+            { "day": 1, "status": "ok" },
+            { "day": 2, "status": "ok" },
+            { "day": 3, "status": "ok" },
+            { "day": 4, "status": "ok" },
+            { "day": 5, "status": "ok" },
+            { "day": 6, "status": "ok" },
+            { "day": 7, "status": "ok" }
+          ]
+        }
+        """);
+
+        var progress = await service.GetProgressAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(runId);
+
+        progress.Status.Should().Be("running");
+        progress.Step.Should().Be("repair");
+        run!.Status.Should().Be("running");
+        run.EvidenceJson.Should().BeNullOrEmpty();
+    }
+
+    [Fact]
     public async Task ValidateAsync_RevalidatesExistingPrototypeWithoutRunningCodex()
     {
         using var database = TempSqliteDatabase.Create();
