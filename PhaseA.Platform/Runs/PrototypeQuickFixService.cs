@@ -1831,6 +1831,11 @@ public sealed partial class PrototypeQuickFixService
             return "- RepairFocus: Repair the RPG/JRPG reward-flow contract. Ensure victory or consequence creates exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, shows visible stat/consequence feedback, returns or refreshes the map view, and restores player visibility. If the reward panel is owned by DqRpgPrototype.cs instead of BattleScene.cs, keep that shape coherent and expose the same contract markers there.";
         }
 
+        if (validation.Reason?.StartsWith("missing_required_core_markers", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "- RepairFocus: Add or restore the exact required runtime/test evidence markers listed in PlatformAcceptanceReason. Keep the repair scoped to the current goal capability; do not report completion until each missing_marker item is represented in gameplay code, tests, UI text, or a clear validation-facing contract marker.";
+        }
+
         return "";
     }
 
@@ -1839,9 +1844,10 @@ public sealed partial class PrototypeQuickFixService
         PrototypeGoalAcceptanceValidationResult acceptanceValidation)
     {
         return string.Equals(acceptanceValidation.Status, "failed", StringComparison.Ordinal) &&
-               goal.GoalIndex is >= 1 and <= 6 &&
+               goal.GoalIndex is >= 1 and <= 10 &&
                (acceptanceValidation.Kind.StartsWith("rpg-", StringComparison.Ordinal) ||
-                acceptanceValidation.Kind.StartsWith("jrpg-", StringComparison.Ordinal));
+                acceptanceValidation.Kind.StartsWith("jrpg-", StringComparison.Ordinal) ||
+                acceptanceValidation.Kind.StartsWith("survivorslike-", StringComparison.Ordinal));
     }
 
     private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)

@@ -150,6 +150,40 @@ public sealed class GameTypeTemplateCatalogTests
         rpg.GuideExcerpt.Should().Be("Docs RPG guide.");
     }
 
+    [Theory]
+    [InlineData("Vampire Survivors-like")]
+    [InlineData("survivors like")]
+    [InlineData("arena survival")]
+    public void BmadCatalog_ShouldMapSurvivorsLikeAliasesToSurvivalGuidance(string alias)
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        survival,Survival,Resource survival,survival,survival.md
+        roguelike,Roguelike,Runs and procedural variation,roguelike,roguelike.md
+        shooter,Shooter,Aiming and projectiles,shooter,shooter.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "survival.md"), "Survival guide excerpt.", System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var entry = catalog.Find(alias);
+
+        entry.Should().NotBeNull();
+        entry!.Id.Should().Be("survival");
+        entry.GuideExcerpt.Should().Be("Survival guide excerpt.");
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         private TempDirectory(string path)

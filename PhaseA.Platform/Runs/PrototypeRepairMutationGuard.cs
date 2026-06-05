@@ -19,9 +19,10 @@ internal static partial class PrototypeRepairMutationGuard
             return PrototypeRepairMutationGuardResult.NotRequired("not_goal_repair");
         }
 
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (!PrototypeRouteSkillPolicy.IsRpgProject(project) &&
+            !PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
         {
-            return PrototypeRepairMutationGuardResult.NotRequired("not_rpg_project");
+            return PrototypeRepairMutationGuardResult.NotRequired("not_specialized_prototype_project");
         }
 
         var violations = new List<PrototypeRepairMutationGuardViolation>();

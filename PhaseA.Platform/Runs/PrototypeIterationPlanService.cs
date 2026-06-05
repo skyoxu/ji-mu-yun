@@ -250,6 +250,12 @@ public sealed class PrototypeIterationPlanService
             return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, model, cancellationToken);
         }
 
+        if (routeStrategy.UsesSpecializedIterationPlanning &&
+            string.Equals(routeStrategy.GameTypeId, "survivorslike", StringComparison.OrdinalIgnoreCase))
+        {
+            return new IterationGoalBuildResult(BuildSurvivorsLikeFirstLoopGoals(message, prototypeContract, regenerationGuidance), false);
+        }
+
         var goals = BuildGoals(message, sourceKind);
         return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract), false);
     }
@@ -1361,6 +1367,28 @@ public sealed class PrototypeIterationPlanService
             return await PersistEvaluationAsync(details, llmEvaluation, cancellationToken);
         }
 
+        if (routeStrategy.UsesSpecializedPlanEvaluation &&
+            string.Equals(routeStrategy.GameTypeId, "survivorslike", StringComparison.OrdinalIgnoreCase))
+        {
+            var survivorsLikePlanIssue = FindSurvivorsLikePlanContractIssue(goals);
+            if (survivorsLikePlanIssue is not null)
+            {
+                return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
+                    "should_refine_plan",
+                    "Current Vampire Survivors-like iteration plan is missing required first-loop route coverage.",
+                    survivorsLikePlanIssue,
+                    "Regenerate the plan with the Vampire Survivors-like first-loop route: run start, arena movement, spawn pressure, auto-attack, damage/death, pickup, level-up choice, growth feedback, escalation, and run summary/restart.",
+                    BuildSurvivorsLikeRegenerationPrompt(details)));
+            }
+
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
+                "ready_to_execute",
+                "Current Vampire Survivors-like iteration plan matches the first-loop route profile.",
+                "The plan includes run start, arena movement, spawn pressure, auto-attack, damage/death, pickup, level-up choice, growth feedback, escalation, and run summary/restart in a valid order.",
+                "Execute the next pending goal first, then continue through the route one goal at a time.",
+                null));
+        }
+
         var firstPending = pendingGoals[0];
         var firstGoalLooksTooLarge = !IsRecognizedSmallGoal(firstPending) && (LooksTooBroad(firstPending.Title) || LooksTooBroad(firstPending.Description));
         var overallLooksLarge = goals.Length <= 3 && goals.Any(goal => LooksTooBroad(goal.Description));
@@ -1538,6 +1566,30 @@ public sealed class PrototypeIterationPlanService
         return goals;
     }
 
+    private static List<PrototypeIterationPlanGoalResult> BuildSurvivorsLikeFirstLoopGoals(
+        string message,
+        PrototypeContractSnapshot prototypeContract,
+        string? regenerationGuidance)
+    {
+        var contractInstruction = BuildContractGoalInstruction(prototypeContract);
+        var hint = TrimForHint(string.Join(" ", message, regenerationGuidance).Trim(), 120);
+        var goals = new List<PrototypeIterationPlanGoalResult>(SurvivorsLikeFirstLoopCapabilities.Length);
+        var index = 1;
+        foreach (var capability in SurvivorsLikeFirstLoopCapabilities)
+        {
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                index++,
+                $"Vampire Survivors-like First Loop: {capability.Title}",
+                capability.DescriptionTemplate
+                    .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
+                    .Replace("{sourceHint}", hint, StringComparison.Ordinal),
+                capability.AcceptanceTemplate.Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal),
+                "pending"));
+        }
+
+        return goals;
+    }
+
     private static IReadOnlyList<JrpgFirstLoopCapability> SelectJrpgFirstLoopCapabilities(
         string message,
         IterationPlanningContext? planningContext,
@@ -1699,6 +1751,66 @@ public sealed class PrototypeIterationPlanService
     ];
 
     private sealed record JrpgFirstLoopCapability(
+        string Id,
+        string Title,
+        string DescriptionTemplate,
+        string AcceptanceTemplate);
+
+    private static readonly SurvivorsLikeFirstLoopCapability[] SurvivorsLikeFirstLoopCapabilities =
+    [
+        new(
+            "run_start_survival_objective",
+            "run start and survival objective",
+            "Establish the playable run entry and immediate survival objective before adding systems. The player must know they are starting a survival run, what the short-term objective is, and what initial state they have. {contractInstruction} Source request: {sourceHint}",
+            "Pass only when the prototype has a clear run start, visible survival objective or timer/goal, and readable initial player state."),
+        new(
+            "arena_movement_camera",
+            "arena movement and camera readability",
+            "Validate the arena control layer independently: the player can move continuously, the camera or viewport keeps the player readable, and the arena/background does not obscure threats. {contractInstruction}",
+            "Pass only when movement is stable, the player remains readable, and arena/camera framing supports survival play."),
+        new(
+            "enemy_spawn_pressure",
+            "enemy spawn pressure curve",
+            "Validate continuous enemy spawning and a first pressure curve. The prototype must show ongoing spawn pressure rather than a one-time enemy placement. {contractInstruction}",
+            "Pass only when enemies spawn repeatedly with readable pressure escalation or wave/timer rules."),
+        new(
+            "auto_attack_core_weapon",
+            "auto-attack or core weapon loop",
+            "Validate the core weapon loop: an auto-attack or equivalent repeated attack uses cooldown/range/direction rules, hits enemies, and creates clear hit/kill feedback. {contractInstruction}",
+            "Pass only when the core weapon repeatedly attacks, can hit spawned enemies, and produces readable hit or kill feedback."),
+        new(
+            "damage_health_death",
+            "hit, damage, health, and death feedback",
+            "Validate the survival risk loop: enemies can threaten the player, health or equivalent durability is readable, damage feedback is visible, and death/failure is understandable. {contractInstruction}",
+            "Pass only when player damage, enemy damage/death, health state, and failure feedback are visible or validated."),
+        new(
+            "pickup_resource_collection",
+            "pickup and resource collection",
+            "Validate the first collection loop: defeated enemies or arena events produce pickup resources such as experience, coins, gems, or energy, and the player can collect them. {contractInstruction}",
+            "Pass only when pickups are visible, collectible, and update a readable resource or progress meter."),
+        new(
+            "level_up_choice_power_selection",
+            "level-up choice or power selection",
+            "Validate the first power choice: reaching the resource threshold opens a small set of understandable upgrades, ideally two or three choices, and the player can select one. {contractInstruction}",
+            "Pass only when level-up or power selection appears, choices are understandable, and one selected option is applied."),
+        new(
+            "build_growth_power_fantasy",
+            "build growth and power fantasy feedback",
+            "Validate that the selected power produces visible growth in the survival loop, such as more damage, larger area, faster cooldown, extra projectile, summon, movement, or defensive change. {contractInstruction}",
+            "Pass only when the player can perceive a before/after power increase in runtime behavior, not only text."),
+        new(
+            "escalation_event_milestone",
+            "escalation event or mini-milestone",
+            "Validate one short-run escalation beat such as elite spawn, timed wave, chest/event, danger spike, or milestone reward so the loop has a small climax. {contractInstruction}",
+            "Pass only when the run reaches a visible escalation event or milestone beyond basic enemy spawning."),
+        new(
+            "run_end_summary_restart",
+            "run end, summary, and restart loop",
+            "Validate final first-loop closure: death, timeout, milestone completion, or stage result leads to a summary and restart path. Include selected capability proof, project contract traceability, Godot validation evidence, and package readiness. {contractInstruction}",
+            "Pass only when the selected Vampire Survivors-like first-loop capabilities are playable end-to-end, run result/summary is visible, restart works, project-specific contract fields are represented or explicitly blocked, and package readiness is proven.")
+    ];
+
+    private sealed record SurvivorsLikeFirstLoopCapability(
         string Id,
         string Title,
         string DescriptionTemplate,
@@ -2011,6 +2123,116 @@ public sealed class PrototypeIterationPlanService
         }
 
         return selected;
+    }
+
+    private static string? FindSurvivorsLikePlanContractIssue(ProjectIterationGoalSnapshot[] goals)
+    {
+        if (goals.Length == 0)
+        {
+            return "Vampire Survivors-like plan boundary mismatch: the plan has no executable goals.";
+        }
+
+        var orderedGoals = goals.OrderBy(goal => goal.GoalIndex).ToArray();
+        var selected = ResolveSurvivorsLikeCapabilitiesFromGoals(orderedGoals);
+        var required = SurvivorsLikeFirstLoopCapabilities.Select(capability => capability.Id).ToArray();
+        var missing = required.Where(id => !selected.Contains(id)).ToArray();
+        if (missing.Length > 0)
+        {
+            return "Vampire Survivors-like plan boundary mismatch: missing first-loop capabilities: " + string.Join(", ", missing) + ".";
+        }
+
+        var firstText = string.Join(" ", orderedGoals[0].Title, orderedGoals[0].Description, orderedGoals[0].AcceptanceHint).ToLowerInvariant();
+        if (!ContainsAny(firstText, "run start", "survival objective", "start", "objective"))
+        {
+            return "Vampire Survivors-like plan boundary mismatch: step 1 must establish run start and survival objective before arena movement, weapons, pickups, or final acceptance.";
+        }
+
+        var finalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint).ToLowerInvariant();
+        if (!ContainsAny(finalText, "run end", "summary", "restart", "final first-loop", "end-to-end", "package readiness"))
+        {
+            return "Vampire Survivors-like plan boundary mismatch: the final goal must close the run with summary/restart and final first-loop acceptance.";
+        }
+
+        return null;
+    }
+
+    private static HashSet<string> ResolveSurvivorsLikeCapabilitiesFromGoals(ProjectIterationGoalSnapshot[] goals)
+    {
+        var selected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var goal in goals)
+        {
+            var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
+            if (ContainsAny(text, "run start and survival objective", "survival objective", "run start"))
+            {
+                selected.Add("run_start_survival_objective");
+            }
+
+            if (ContainsAny(text, "arena movement and camera", "arena movement", "camera readability"))
+            {
+                selected.Add("arena_movement_camera");
+            }
+
+            if (ContainsAny(text, "enemy spawn pressure", "spawn pressure", "pressure curve"))
+            {
+                selected.Add("enemy_spawn_pressure");
+            }
+
+            if (ContainsAny(text, "auto-attack", "auto attack", "core weapon loop"))
+            {
+                selected.Add("auto_attack_core_weapon");
+            }
+
+            if (ContainsAny(text, "hit, damage, health", "damage, health", "death feedback"))
+            {
+                selected.Add("damage_health_death");
+            }
+
+            if (ContainsAny(text, "pickup and resource collection", "pickup", "resource collection"))
+            {
+                selected.Add("pickup_resource_collection");
+            }
+
+            if (ContainsAny(text, "level-up choice", "level up choice", "power selection"))
+            {
+                selected.Add("level_up_choice_power_selection");
+            }
+
+            if (ContainsAny(text, "build growth", "power fantasy feedback", "power fantasy"))
+            {
+                selected.Add("build_growth_power_fantasy");
+            }
+
+            if (ContainsAny(text, "escalation event", "mini-milestone", "milestone"))
+            {
+                selected.Add("escalation_event_milestone");
+            }
+
+            if (ContainsAny(text, "run end", "summary", "restart loop", "final first-loop acceptance"))
+            {
+                selected.Add("run_end_summary_restart");
+            }
+        }
+
+        return selected;
+    }
+
+    private static string BuildSurvivorsLikeRegenerationPrompt(ProjectIterationSessionDetails details)
+    {
+        return $"""
+            Regenerate the iteration plan as Vampire Survivors-like first-loop capability steps:
+            1. run start and survival objective
+            2. arena movement and camera readability
+            3. enemy spawn pressure curve
+            4. auto-attack or core weapon loop
+            5. hit, damage, health, and death feedback
+            6. pickup and resource collection
+            7. level-up choice or power selection
+            8. build growth and power fantasy feedback
+            9. escalation event or mini-milestone
+            10. run end, summary, and restart loop
+
+            Keep the source request in scope: {TrimForHint(details.Session.SourceMessage, 160)}
+            """;
     }
 
     private static string StripRpgStepOneBoundaryExclusionClauses(string value)

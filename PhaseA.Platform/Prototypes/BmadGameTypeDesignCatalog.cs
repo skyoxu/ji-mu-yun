@@ -37,7 +37,20 @@ public sealed class BmadGameTypeDesignCatalog
             return null;
         }
 
-        return _entries.TryGetValue(normalized, out var entry) ? entry : null;
+        if (_entries.TryGetValue(normalized, out var entry))
+        {
+            return entry;
+        }
+
+        foreach (var alias in ResolveAliases(normalized))
+        {
+            if (_entries.TryGetValue(alias, out entry))
+            {
+                return entry;
+            }
+        }
+
+        return null;
     }
 
     private static IReadOnlyDictionary<string, BmadGameTypeDesignEntry> Load(string docsRoot, string skillRoot)
@@ -210,5 +223,17 @@ public sealed class BmadGameTypeDesignCatalog
     private static string NormalizeId(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? "" : value.Trim().ToLowerInvariant();
+    }
+
+    private static IReadOnlyList<string> ResolveAliases(string normalized)
+    {
+        if (normalized is "survivorslike" or "survivors like" or "survivors-like" or "survivor like" or "survivor-like" or
+            "vampire survivors-like" or "vampire survivors" or "bullet heaven" or "auto shooter" or
+            "arena survival" or "horde survival")
+        {
+            return ["survival", "roguelike", "shooter"];
+        }
+
+        return [];
     }
 }

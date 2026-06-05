@@ -21,6 +21,7 @@ internal interface IGameTypeRouteStrategy
 internal static class GameTypeRouteStrategies
 {
     private static readonly IGameTypeRouteStrategy Rpg = new RpgGameTypeRouteStrategy();
+    private static readonly IGameTypeRouteStrategy SurvivorsLike = new SurvivorsLikeGameTypeRouteStrategy();
     private static readonly IGameTypeRouteStrategy Default = new DefaultGameTypeRouteStrategy();
 
     public static IGameTypeRouteStrategy Resolve(ProjectSnapshot project)
@@ -33,6 +34,11 @@ internal static class GameTypeRouteStrategies
     {
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(profile);
+
+        if (string.Equals(profile.GameTypeId, "survivorslike", StringComparison.OrdinalIgnoreCase))
+        {
+            return SurvivorsLike;
+        }
 
         return string.Equals(profile.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase) || RpgGameTypeRouteStrategy.HasLegacyRpgShape(project)
             ? Rpg
@@ -416,6 +422,93 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
         }
 
         return null;
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
+internal sealed class SurvivorsLikeGameTypeRouteStrategy : IGameTypeRouteStrategy
+{
+    public string GameTypeId => "survivorslike";
+
+    public bool RequiresModelBackedIterationPlanning => false;
+
+    public bool RequiresNonEmptyIterationGoals => true;
+
+    public bool UsesSpecializedIterationPlanning => true;
+
+    public bool UsesSpecializedPlanEvaluation => true;
+
+    public PrototypeGoalAcceptanceContract? ResolveAcceptanceContract(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        ArgumentNullException.ThrowIfNull(goal);
+
+        if (!PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
+        {
+            return null;
+        }
+
+        var text = string.Join(" ", goal.Title ?? "", goal.Description ?? "", goal.AcceptanceHint ?? "").ToLowerInvariant();
+        if (ContainsAny(text, "run start and survival objective"))
+        {
+            return Static("survivorslike-run-start-survival-objective", ["RunStart", "SurvivalObjective"]);
+        }
+
+        if (ContainsAny(text, "arena movement and camera readability"))
+        {
+            return Static("survivorslike-arena-movement-camera-readability", ["ArenaMovement", "PlayerMovement", "Camera"]);
+        }
+
+        if (ContainsAny(text, "enemy spawn pressure curve"))
+        {
+            return Static("survivorslike-enemy-spawn-pressure-curve", ["EnemySpawn", "SpawnPressure"]);
+        }
+
+        if (ContainsAny(text, "auto-attack", "auto attack", "core weapon loop"))
+        {
+            return Static("survivorslike-auto-attack-core-weapon-loop", ["AutoAttack", "WeaponCooldown", "Hit"]);
+        }
+
+        if (ContainsAny(text, "hit, damage, health", "death feedback"))
+        {
+            return Static("survivorslike-hit-damage-health-death-feedback", ["Health", "Damage", "Death"]);
+        }
+
+        if (ContainsAny(text, "pickup and resource collection"))
+        {
+            return Static("survivorslike-pickup-resource-collection", ["Pickup", "Experience", "Resource"]);
+        }
+
+        if (ContainsAny(text, "level-up choice", "power selection"))
+        {
+            return Static("survivorslike-level-up-choice-power-selection", ["LevelUp", "PowerChoice", "Upgrade"]);
+        }
+
+        if (ContainsAny(text, "build growth", "power fantasy feedback"))
+        {
+            return Static("survivorslike-build-growth-power-fantasy-feedback", ["Upgrade", "PowerGrowth", "PowerFantasy"]);
+        }
+
+        if (ContainsAny(text, "escalation event", "mini-milestone"))
+        {
+            return Static("survivorslike-escalation-event-mini-milestone", ["Escalation", "Elite", "Milestone"]);
+        }
+
+        if (ContainsAny(text, "run end", "summary", "restart loop", "final first-loop acceptance"))
+        {
+            return Static("survivorslike-run-end-summary-restart-loop", ["RunSummary", "Restart", "SurvivalObjective"]);
+        }
+
+        return null;
+    }
+
+    private static PrototypeGoalAcceptanceContract Static(string kind, IReadOnlyList<string> markers)
+    {
+        return new PrototypeGoalAcceptanceContract(kind, markers, StaticAcceptanceOnly: true);
     }
 
     private static bool ContainsAny(string text, params string[] values)

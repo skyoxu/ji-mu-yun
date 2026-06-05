@@ -146,7 +146,7 @@ internal static class PrototypeGodotSmokeService
         var scenePath = ResolveSmokeScene(prototypeStateJson);
         if (string.IsNullOrWhiteSpace(scenePath))
         {
-            return goal.GoalIndex is 5 or 6 or 7
+            return RequiresSmokeScene(project, goal)
                 ? PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"))
                 : PrototypeGoalGodotSmokeValidationResult.NotRequired();
         }
@@ -240,12 +240,32 @@ internal static class PrototypeGodotSmokeService
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(goal);
 
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
         {
-            return false;
+            return goal.GoalIndex is >= 1 and <= 7;
         }
 
-        return goal.GoalIndex is >= 1 and <= 7;
+        if (PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
+        {
+            return goal.GoalIndex is >= 1 and <= 10;
+        }
+
+        return false;
+    }
+
+    private static bool RequiresSmokeScene(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
+        {
+            return goal.GoalIndex is 5 or 6 or 7;
+        }
+
+        if (PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
+        {
+            return goal.GoalIndex is >= 5 and <= 10;
+        }
+
+        return false;
     }
 
     private static string? ResolveRpgGdUnitRelativePath(string projectRepoPath, string slug)

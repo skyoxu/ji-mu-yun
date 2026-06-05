@@ -12,7 +12,8 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
         if (contract is null ||
             (!contract.Kind.StartsWith("rpg-", StringComparison.Ordinal) &&
-             !contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal)))
+             !contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal) &&
+             !contract.Kind.StartsWith("survivorslike-", StringComparison.Ordinal)))
         {
             return "";
         }
@@ -99,6 +100,78 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         if (!string.IsNullOrWhiteSpace(byKind))
         {
             return byKind;
+        }
+
+        var survivorsLike = contract.Kind switch
+        {
+            "survivorslike-run-start-survival-objective" => """
+                Platform hard acceptance for Vampire Survivors-like run start:
+                - The prototype must expose a clear run entry and survival objective before adding weapons, pickups, or escalation.
+                - Runtime UI must communicate the short-term objective, timer, wave, or survival goal.
+                - Missing run start or survival objective proof means STATUS: needs_fix.
+                """,
+            "survivorslike-arena-movement-camera-readability" => """
+                Platform hard acceptance for Vampire Survivors-like arena movement:
+                - The player must move continuously in an arena or equivalent survival space.
+                - The player, camera/viewport, arena background, and threat directions must remain readable.
+                - Do not advance this step into weapon, pickup, level-up, or final summary work.
+                - Missing arena movement or readability proof means STATUS: needs_fix.
+                """,
+            "survivorslike-enemy-spawn-pressure-curve" => """
+                Platform hard acceptance for Vampire Survivors-like spawn pressure:
+                - Enemies must spawn repeatedly through time, wave, distance, or pressure rules.
+                - The player must be able to perceive escalating pressure, not only a static enemy placement.
+                - Missing continuous spawn pressure proof means STATUS: needs_fix.
+                """,
+            "survivorslike-auto-attack-core-weapon-loop" => """
+                Platform hard acceptance for Vampire Survivors-like core weapon:
+                - The prototype must include auto-attack or equivalent repeated core weapon behavior.
+                - Weapon cooldown, hit range/direction, enemy hit feedback, and kill feedback must be readable.
+                - Missing core weapon loop proof means STATUS: needs_fix.
+                """,
+            "survivorslike-hit-damage-health-death-feedback" => """
+                Platform hard acceptance for Vampire Survivors-like damage and death:
+                - Player health or equivalent durability must be readable.
+                - Enemy and player hit feedback, damage feedback, and death/failure feedback must be visible or validated.
+                - Missing survival risk feedback means STATUS: needs_fix.
+                """,
+            "survivorslike-pickup-resource-collection" => """
+                Platform hard acceptance for Vampire Survivors-like pickups:
+                - Defeated enemies or arena events must create visible collectible resources.
+                - Pickup collection must update experience, coins, energy, or equivalent progress.
+                - Missing pickup/resource collection proof means STATUS: needs_fix.
+                """,
+            "survivorslike-level-up-choice-power-selection" => """
+                Platform hard acceptance for Vampire Survivors-like level-up choice:
+                - Resource threshold must trigger a small set of understandable power choices.
+                - Selecting a choice must apply the selected upgrade.
+                - Missing level-up choice or applied selection proof means STATUS: needs_fix.
+                """,
+            "survivorslike-build-growth-power-fantasy-feedback" => """
+                Platform hard acceptance for Vampire Survivors-like power growth:
+                - The selected upgrade must create visible before/after power growth in the survival loop.
+                - Growth may affect damage, area, cooldown, projectile count, summon, speed, defense, or another project-specific stat.
+                - Text-only upgrade proof is not sufficient when runtime behavior does not change.
+                - Missing power fantasy feedback means STATUS: needs_fix.
+                """,
+            "survivorslike-escalation-event-mini-milestone" => """
+                Platform hard acceptance for Vampire Survivors-like escalation:
+                - The run must reach at least one escalation event or mini-milestone beyond basic spawning.
+                - Examples: elite enemy, timed wave, chest/event, danger spike, milestone reward, or boss-like beat.
+                - Missing escalation or milestone proof means STATUS: needs_fix.
+                """,
+            "survivorslike-run-end-summary-restart-loop" => """
+                Platform hard acceptance for Vampire Survivors-like final first-loop closure:
+                - Death, timeout, milestone completion, or stage result must lead to a readable run result.
+                - The player must see a run summary and have a restart path.
+                - Selected first-loop capabilities, project contract traceability, Godot validation evidence, and package readiness must pass.
+                - Missing run summary/restart or final first-loop proof means STATUS: needs_fix.
+                """,
+            _ => ""
+        };
+        if (!string.IsNullOrWhiteSpace(survivorsLike))
+        {
+            return survivorsLike;
         }
 
         return goal.GoalIndex switch

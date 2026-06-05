@@ -381,6 +381,64 @@ public sealed class DqRpgPrototype
         result.Reason.Should().Contain("reward_flow_missing_return_to_map_after_reward");
     }
 
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldAcceptSurvivorsLikeMarkersOutsideRpgLoopFiles()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        var coreDir = Path.Combine(repoPath, "Game.Core", "Prototypes");
+        var testsDir = Path.Combine(repoPath, "Game.Core.Tests", "Prototypes");
+        Directory.CreateDirectory(coreDir);
+        Directory.CreateDirectory(testsDir);
+        File.WriteAllText(Path.Combine(coreDir, "SurvivorsLikePrototypeLoop.cs"), """
+public sealed class SurvivorsLikePrototypeLoop
+{
+    public const string AutoAttack = "AutoAttack";
+    public const string WeaponCooldown = "WeaponCooldown";
+    public const string Hit = "Hit";
+}
+""");
+        File.WriteAllText(Path.Combine(testsDir, "SurvivorsLikePrototypeLoopTests.cs"), """
+public sealed class SurvivorsLikePrototypeLoopTests
+{
+    // AutoAttack WeaponCooldown Hit
+}
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Vampire Demo",
+            "Vampire Demo",
+            "Vampire Survivors-like",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "Vampire Survivors-like First Loop: auto-attack or core weapon loop",
+            "Validate repeated core weapon behavior.",
+            "Pass only when the core weapon repeatedly attacks and hits spawned enemies.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+        result.Kind.Should().Be("survivorslike-auto-attack-core-weapon-loop");
+    }
+
     [Theory]
     [InlineData(1, "jrpg-field-navigation-stable-control")]
     [InlineData(2, "jrpg-conflict-entry-trigger")]

@@ -55,6 +55,156 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
+    public void ResolveProfile_ShouldExposeSurvivorsLikeRouteProtocol()
+    {
+        var project = Project(
+            name: "vampire-demo",
+            gameName: "Vampire Demo",
+            gameTypeSource: "Vampire Survivors-like",
+            repoPath: Path.GetTempPath());
+
+        var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var prompt = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
+
+        profile.GameTypeId.Should().Be("survivorslike");
+        profile.ProfileId.Should().Be("godot-survivorslike-v1");
+        profile.RouteSetId.Should().Be("survivorslike-prototype-routes-v1");
+        profile.PlannerId.Should().Be("survivorslike-iteration-planner-v1");
+        profile.EvaluatorId.Should().Be("survivorslike-plan-evaluator-v1");
+        profile.ExecutorId.Should().Be("survivorslike-goal-executor-v1");
+        profile.NeedsFixId.Should().Be("survivorslike-needs-fix-v1");
+        profile.FinalAcceptanceId.Should().Be("survivorslike-final-acceptance-v1");
+        profile.RouteSkill.RouteSkillId.Should().Be("prototype-survivorslike-godot-zh");
+        profile.RouteSkill.ContractRelativePath.Should().Be(".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md");
+        prompt.Should().Contain("MandatorySkillEntry: $prototype-survivorslike-godot-zh");
+        prompt.Should().Contain("GameTypeId: survivorslike");
+    }
+
+    [Fact]
+    public void ResolveProfile_ShouldPreferSurvivorsLike_WhenProjectNameContainsRpg()
+    {
+        var project = Project(
+            name: "rpg-survivors-demo",
+            gameName: "RPG Survivors Demo",
+            gameTypeSource: "Vampire Survivors-like",
+            repoPath: Path.GetTempPath());
+
+        var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+
+        profile.GameTypeId.Should().Be("survivorslike");
+    }
+
+    [Theory]
+    [InlineData("survivor like")]
+    [InlineData("survivors like")]
+    [InlineData("Arena Survival")]
+    [InlineData("Horde Survival")]
+    [InlineData("\u5e78\u5b58\u8005\u7c7b")]
+    public void ResolveProfile_ShouldRecognizeSurvivorsLikeAliases(string gameTypeSource)
+    {
+        var project = Project(
+            name: "arena-demo",
+            gameName: "Arena Demo",
+            gameTypeSource: gameTypeSource,
+            repoPath: Path.GetTempPath());
+
+        var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+
+        profile.GameTypeId.Should().Be("survivorslike");
+    }
+
+    [Fact]
+    public void CheckAvailable_ShouldPass_WhenSurvivorsLikeSkillAndContractExist()
+    {
+        using var temp = TempDirectory.Create();
+        Write(temp.Path, ".agents/skills/prototype-survivorslike-godot-zh/SKILL.md", "name: prototype-survivorslike-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md", "# Survivors-like Prototype Contract\n");
+        var project = Project(
+            name: "vampire-demo",
+            gameName: "Vampire Demo",
+            gameTypeSource: "Bullet Heaven",
+            repoPath: temp.Path);
+
+        var availability = PrototypeRouteSkillPolicy.CheckAvailable(project);
+
+        availability.IsAvailable.Should().BeTrue();
+        availability.FailureCode.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void EnsureAvailable_ShouldSeedSurvivorsLikeSkillFromHostRepository()
+    {
+        using var temp = TempDirectory.Create();
+        var project = Project(
+            name: "vampire-demo",
+            gameName: "Vampire Demo",
+            gameTypeSource: "Vampire Survivors-like",
+            repoPath: temp.Path);
+
+        var availability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
+
+        availability.IsAvailable.Should().BeTrue();
+        File.Exists(Path.Combine(temp.Path, ".agents", "skills", "prototype-survivorslike-godot-zh", "SKILL.md")).Should().BeTrue();
+        File.Exists(Path.Combine(temp.Path, ".agents", "skills", "prototype-survivorslike-godot-zh", "references", "survivorslike-prototype-contract.md")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldExposeSurvivorsLikeHardAcceptance()
+    {
+        var project = Project(
+            name: "vampire-demo",
+            gameName: "Vampire Demo",
+            gameTypeSource: "Vampire Survivors-like",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "Vampire Survivors-like First Loop: auto-attack or core weapon loop",
+            "Validate repeated core weapon behavior.",
+            "Pass only when the core weapon repeatedly attacks and hits spawned enemies.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for Vampire Survivors-like core weapon");
+        prompt.Should().Contain("auto-attack");
+        prompt.Should().Contain("STATUS: needs_fix");
+    }
+
+    [Fact]
+    public void GodotSmokePolicy_ShouldValidateSurvivorsLikeFirstLoopGoals()
+    {
+        var project = Project(
+            name: "vampire-demo",
+            gameName: "Vampire Demo",
+            gameTypeSource: "Vampire Survivors-like",
+            repoPath: Path.GetTempPath());
+        var finalGoal = Goal(10, "Vampire Survivors-like First Loop: run end, summary, and restart loop");
+        var earlyGoal = Goal(1, "Vampire Survivors-like First Loop: run start and survival objective");
+
+        PrototypeGodotSmokeService.ShouldValidateGoal(project, finalGoal).Should().BeTrue();
+        PrototypeGodotSmokeService.ShouldValidateGoal(project, earlyGoal).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GodotSmokePolicy_ShouldNotValidateDefaultNonSpecializedGoals()
+    {
+        var project = Project(
+            name: "action-demo",
+            gameName: "Action Demo",
+            gameTypeSource: "Action",
+            repoPath: Path.GetTempPath());
+        var goal = Goal(10, "Final Step: full playable prototype acceptance");
+
+        PrototypeGodotSmokeService.ShouldValidateGoal(project, goal).Should().BeFalse();
+    }
+
+    [Fact]
     public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForNonRpgProject()
     {
         var project = Project(
@@ -106,6 +256,33 @@ public sealed class PrototypeRouteSkillPolicyTests
         availability.FailureCode.Should().BeEmpty();
     }
 
+    [Fact]
+    public void MutationGuard_ShouldBlockTestFrameworkShadowing_ForSurvivorsLikeProject()
+    {
+        using var temp = TempDirectory.Create();
+        var testsRoot = Path.Combine(temp.Path, "Game.Core.Tests", "Prototypes");
+        Directory.CreateDirectory(testsRoot);
+        File.WriteAllText(Path.Combine(testsRoot, "SurvivorsLikePrototypeLoopTests.cs"), """
+namespace Xunit
+{
+    public sealed class FactAttribute : System.Attribute { }
+    public static class Assert { }
+}
+""");
+        var project = Project(
+            name: "arena-demo",
+            gameName: "Arena Demo",
+            gameTypeSource: "survivors like",
+            repoPath: temp.Path);
+
+        var result = PrototypeRepairMutationGuard.Validate(project, Goal(1, "Vampire Survivors-like First Loop: run start and survival objective"));
+
+        result.Status.Should().Be("failed");
+        result.Reason.Should().Be("test_framework_shadowing_detected");
+        result.Violations.Should().Contain(violation => violation.Rule == "namespace_xunit");
+        result.Violations.Should().Contain(violation => violation.Rule == "xunit_assert_shadow");
+    }
+
     private static ProjectSnapshot Project(string name, string gameName, string gameTypeSource, string repoPath)
     {
         return new ProjectSnapshot(
@@ -124,6 +301,22 @@ public sealed class PrototypeRouteSkillPolicyTests
             RepoPath: repoPath,
             RuntimePath: Path.Combine(repoPath, ".runtime"),
             MetaPath: Path.Combine(repoPath, ".phasea"));
+    }
+
+    private static ProjectIterationGoalSnapshot Goal(int index, string title)
+    {
+        return new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            index,
+            title,
+            "Description",
+            "Acceptance",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
     }
 
     private static void Write(string root, string relativePath, string content)

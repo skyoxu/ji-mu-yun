@@ -183,7 +183,17 @@ public static class GameTypeRouteProfiles
     public static GameTypeRouteProfile Resolve(ProjectSnapshot project)
     {
         ArgumentNullException.ThrowIfNull(project);
-        return IsRpgProject(project) ? Rpg : Default;
+        if (IsSurvivorsLikeProject(project))
+        {
+            return SurvivorsLike;
+        }
+
+        if (IsRpgProject(project))
+        {
+            return Rpg;
+        }
+
+        return Default;
     }
 
     public static bool IsRpgProject(ProjectSnapshot project)
@@ -194,6 +204,27 @@ public static class GameTypeRouteProfiles
                text.Contains("dragon quest", StringComparison.Ordinal) ||
                text.Contains("角色扮演", StringComparison.Ordinal) ||
                text.Contains("勇者斗恶龙", StringComparison.Ordinal);
+    }
+
+    public static bool IsSurvivorsLikeProject(ProjectSnapshot project)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
+        return text.Contains("vampire survivors", StringComparison.Ordinal) ||
+               text.Contains("survivors like", StringComparison.Ordinal) ||
+               text.Contains("survivors-like", StringComparison.Ordinal) ||
+               text.Contains("survivor like", StringComparison.Ordinal) ||
+               text.Contains("survivor-like", StringComparison.Ordinal) ||
+               text.Contains("survivorslike", StringComparison.Ordinal) ||
+               text.Contains("bullet heaven", StringComparison.Ordinal) ||
+               text.Contains("auto shooter", StringComparison.Ordinal) ||
+               text.Contains("arena survival", StringComparison.Ordinal) ||
+               text.Contains("horde survival", StringComparison.Ordinal) ||
+               text.Contains("\u5438\u8840\u9b3c\u5e78\u5b58\u8005", StringComparison.Ordinal) ||
+               text.Contains("\u5e78\u5b58\u8005like", StringComparison.Ordinal) ||
+               text.Contains("\u5e78\u5b58\u8005\u7c7b", StringComparison.Ordinal) ||
+               text.Contains("\u5272\u8349", StringComparison.Ordinal) ||
+               text.Contains("\u8089\u9e3d\u5272\u8349", StringComparison.Ordinal);
     }
 
     public static readonly GameTypeRouteProfile Rpg = new(
@@ -213,6 +244,24 @@ public static class GameTypeRouteProfiles
         "rpg-goal-executor-v1",
         "rpg-needs-fix-v1",
         "rpg-final-acceptance-v1");
+
+    public static readonly GameTypeRouteProfile SurvivorsLike = new(
+        "survivorslike",
+        "godot-survivorslike-v1",
+        "survivorslike-prototype-routes-v1",
+        "survivorslike-prompt-protocol-v1",
+        new PrototypeRouteSkillContext(
+            "prototype-survivorslike-godot-zh",
+            "Vampire Survivors-like prototype skill",
+            "Vampire Survivors-like route skill",
+            "Constrain prototype / iteration-plan / execute-next-goal / needs-fix around a short arena survival first loop.",
+            "Arena survival, spawn pressure, auto-attack, pickups, level-up choices, escalation, run summary",
+            ".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md"),
+        "survivorslike-iteration-planner-v1",
+        "survivorslike-plan-evaluator-v1",
+        "survivorslike-goal-executor-v1",
+        "survivorslike-needs-fix-v1",
+        "survivorslike-final-acceptance-v1");
 
     public static readonly GameTypeRouteProfile Default = new(
         "default",

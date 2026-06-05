@@ -361,6 +361,11 @@ internal sealed class PrototypeNeedsFixRepairLedger
             return "Repair the full RPG/JRPG reward-flow contract. Ensure victory or consequence exposes exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, visibly updates stats or consequence text, returns or refreshes the map, and restores player visibility. A DqRpgPrototype.cs-owned reward panel is valid if it keeps the reward entry, selection, ApplyReward, visible feedback, and map-return contract together.";
         }
 
+        if (StartsWithReason(reason, "missing_required_core_markers"))
+        {
+            return "Add or restore the exact required markers named in acceptance_validation_reason or acceptance_validation_details. Keep the repair scoped to the current goal capability and represent each missing_marker in runtime code, tests, visible UI text, or a validation-facing contract marker before reporting completion.";
+        }
+
         return reason switch
         {
             "core_tests_failed" => "Fix the concrete core test compile or assertion failure named in acceptance_validation_details.",

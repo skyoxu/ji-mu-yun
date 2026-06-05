@@ -350,6 +350,42 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldUseSurvivorsLikeFirstLoopGoals_WhenProjectIsVampireSurvivorsLike()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Vampire Survivors-like");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Build a Vampire Survivors-like first loop with arena movement, enemy waves, auto attack, pickups, level-up choices, escalation, and restart.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(10);
+        result.Goals[0].Title.Should().Be("Vampire Survivors-like First Loop: run start and survival objective");
+        result.Goals[1].Title.Should().Be("Vampire Survivors-like First Loop: arena movement and camera readability");
+        result.Goals[2].Title.Should().Be("Vampire Survivors-like First Loop: enemy spawn pressure curve");
+        result.Goals[3].Title.Should().Be("Vampire Survivors-like First Loop: auto-attack or core weapon loop");
+        result.Goals[4].Title.Should().Be("Vampire Survivors-like First Loop: hit, damage, health, and death feedback");
+        result.Goals[5].Title.Should().Be("Vampire Survivors-like First Loop: pickup and resource collection");
+        result.Goals[6].Title.Should().Be("Vampire Survivors-like First Loop: level-up choice or power selection");
+        result.Goals[7].Title.Should().Be("Vampire Survivors-like First Loop: build growth and power fantasy feedback");
+        result.Goals[8].Title.Should().Be("Vampire Survivors-like First Loop: escalation event or mini-milestone");
+        result.Goals[9].Title.Should().Be("Vampire Survivors-like First Loop: run end, summary, and restart loop");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldUseRpgClosureGoals_AfterPrototypeAlreadySucceeded()
     {
         using var database = TempSqliteDatabase.Create();

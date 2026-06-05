@@ -21,6 +21,11 @@ public static class PrototypeRouteSkillPolicy
         return GameTypeRouteProfiles.IsRpgProject(project);
     }
 
+    public static bool IsSurvivorsLikeProject(ProjectSnapshot project)
+    {
+        return GameTypeRouteProfiles.IsSurvivorsLikeProject(project);
+    }
+
     public static string BuildPromptBlock(ProjectSnapshot project)
     {
         return Engine.BuildPromptBlock(project);

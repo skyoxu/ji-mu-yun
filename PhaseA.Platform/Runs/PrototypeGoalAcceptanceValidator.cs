@@ -63,9 +63,12 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "rpg_form_contract_values_not_reflected");
         }
 
-        if (!HasRequiredMarkers(testsPath, corePath, contract.RequiredMarkers))
+        var missingMarkers = GetMissingRequiredMarkers(testsPath, corePath, contract.RequiredMarkers);
+        if (missingMarkers.Count > 0)
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_required_core_markers");
+            return PrototypeGoalAcceptanceValidationResult.Failed(
+                contract.Kind,
+                "missing_required_core_markers: " + string.Join("; ", missingMarkers.Select(marker => $"missing_marker={marker}")));
         }
 
         if (contract.StaticAcceptanceOnly)
@@ -315,20 +318,42 @@ internal static class PrototypeGoalAcceptanceValidator
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
     }
 
-    private static bool HasRequiredMarkers(string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)
+    private static IReadOnlyList<string> GetMissingRequiredMarkers(string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)
     {
-        var text = "";
-        if (File.Exists(testsPath))
+        var searchFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddMarkerSearchFile(searchFiles, testsPath);
+        AddMarkerSearchFile(searchFiles, corePath);
+        AddMarkerSearchDirectory(searchFiles, Path.GetDirectoryName(testsPath));
+        AddMarkerSearchDirectory(searchFiles, Path.GetDirectoryName(corePath));
+
+        var text = string.Join(
+            Environment.NewLine,
+            searchFiles.Select(path => File.ReadAllText(path)));
+
+        return requiredMarkers
+            .Where(marker => !text.Contains(marker, StringComparison.Ordinal))
+            .ToArray();
+    }
+
+    private static void AddMarkerSearchFile(HashSet<string> searchFiles, string path)
+    {
+        if (File.Exists(path))
         {
-            text += File.ReadAllText(testsPath);
+            searchFiles.Add(path);
+        }
+    }
+
+    private static void AddMarkerSearchDirectory(HashSet<string> searchFiles, string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            return;
         }
 
-        if (File.Exists(corePath))
+        foreach (var path in Directory.EnumerateFiles(directory, "*.cs", SearchOption.TopDirectoryOnly))
         {
-            text += Environment.NewLine + File.ReadAllText(corePath);
+            searchFiles.Add(path);
         }
-
-        return requiredMarkers.All(marker => text.Contains(marker, StringComparison.Ordinal));
     }
 
     private static bool HasRpgFinalAcceptanceFiles(string repoPath)
