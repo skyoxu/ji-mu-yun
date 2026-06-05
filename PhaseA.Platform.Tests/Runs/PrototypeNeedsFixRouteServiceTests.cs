@@ -97,11 +97,14 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().Contain("current needs fix step state");
         runner.Prompt.Should().NotContain("wrong-step");
         runner.Prompt.Length.Should().BeLessThan(17000);
-        runner.Prompt.Should().Contain("Project README and Recovery source are read-only recovery context, not repair targets.");
+        runner.Prompt.Should().Contain("Project README, Project Execution Guide, and Recovery source are read-only recovery context, not repair targets.");
         runner.Prompt.Should().Contain("Project Execution Guide");
         runner.Prompt.Should().Contain("Route Recovery Protocol");
         runner.Prompt.Should().Contain("Prototype Chapter 6 Lite semantics");
         runner.Prompt.Should().Contain("formal acceptance files");
+        runner.Prompt.Should().Contain("if the latest platform acceptance blocker is core_tests_failed");
+        runner.Prompt.Should().Contain("missing Xunit/FluentAssertions/package references");
+        runner.Prompt.Should().Contain("repair hosted test project/package/reference files first");
         runner.Prompt.Should().Contain("Platform route or recovery tests passing does not prove a gameplay goal is complete.");
         runner.Prompt.Should().Contain("Project prototype contract");
         runner.Prompt.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
@@ -332,6 +335,50 @@ public sealed class PrototypeNeedsFixRouteServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_ShouldInjectMapEntryContractGroupRepairFocus()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var goal = details!.Goals[0];
+        var previousRunId = await store.CreateRunAsync(projectId, null, "prototype-quick-fix");
+        await store.MarkRunStartedAsync(previousRunId);
+        await store.CompleteRunAsync(previousRunId, "completed", 0, "assistant said completed", "", """
+            {
+              "goal_repair_status": "needs_fix",
+              "acceptance_validation_status": "failed",
+              "acceptance_validation_reason": "missing_rpg_map_entry_contract",
+              "acceptance_validation_details": "missing_file=Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs",
+              "mutation_guard": { "status": "passed", "reason": null, "violations": [] },
+              "godot_smoke_validation": { "required": false, "ran": false, "passed": true, "reason": "not_required" },
+              "rpg_gdunit_validation": { "required": false, "ran": false, "passed": true, "reason": "not_required" }
+            }
+            """);
+        await store.LinkProjectIterationGoalRunAsync(details.Session.SessionId, goal.GoalId, previousRunId, "prototype-iteration-goal-repair");
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteProjectReadme(project!);
+        writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
+        writer.WriteExecuteNextGoalState(project!, 1, new { route = "execute-next-goal", goal_index = 1, marker = "execute-next-current-step" });
+        var runner = new NeedsFixRunner();
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+
+        await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
+
+        runner.Prompt.Should().Contain("PlatformAcceptanceReason: missing_rpg_map_entry_contract");
+        runner.Prompt.Should().Contain("missing_file=Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
+        runner.Prompt.Should().Contain("RepairFocus: Repair the full RPG/JRPG map-entry contract group");
+        runner.Prompt.Should().Contain("MapScene.tscn and Scripts/MapScene.cs exist together");
+        runner.Prompt.Should().Contain("stable movement handling");
+    }
+
+    [Fact]
     public async Task RunAsync_ShouldPersistAndReuseStepRepairLedger()
     {
         using var database = TempSqliteDatabase.Create();
@@ -357,6 +404,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         ledger.Should().Contain(firstResult.RunId);
         ledger.Should().Contain("platform_acceptance:missing-rpg-map-entry-contract");
         ledger.Should().Contain("DqRpgPrototype.tscn");
+        ledger.Should().Contain("Repair the full RPG/JRPG map-entry contract group");
+        ledger.Should().Contain("MapScene.cs");
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("repair_ledger_path");
 
         var secondRunner = new NeedsFixRunner();
@@ -367,6 +416,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         secondRunner.Prompt.Should().Contain("Step repair ledger:");
         secondRunner.Prompt.Should().Contain("platform_acceptance:missing-rpg-map-entry-contract");
         secondRunner.Prompt.Should().Contain("DqRpgPrototype.tscn");
+        secondRunner.Prompt.Should().Contain("Repair the full RPG/JRPG map-entry contract group");
+        secondRunner.Prompt.Should().Contain("MapScene.cs");
         secondRunner.Prompt.Should().Contain("Current platform acceptance diagnosis overrides the ledger when they differ");
         secondRunner.Prompt.Should().Contain("continuity memory");
     }

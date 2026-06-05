@@ -103,10 +103,8 @@ public sealed class PrototypeIterationGoalServiceTests
         godotBuildCommand.Arguments.Should().Contain("-p:NodeReuse=false");
         godotBuildCommand.Arguments.Should().Contain("-m:1");
         godotBuildCommand.Arguments.Should().Contain("-p:BuildInParallel=false");
-        godotBuildCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
-        godotBuildCommand.Arguments.Should().Contain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
-        godotBuildCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
-        godotBuildCommand.Arguments.Single(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal)).Should().Contain("phase-a-validation-build");
+        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseIntermediateOutputPath=", StringComparison.Ordinal));
+        godotBuildCommand.Arguments.Should().NotContain(argument => argument.StartsWith("-p:BaseOutputPath=", StringComparison.Ordinal));
         godotBuildCommand.Environment["UseSharedCompilation"].Should().Be("false");
         godotBuildCommand.Environment["MSBUILDDISABLENODEREUSE"].Should().Be("1");
         godotBuildCommand.Environment["TEMP"].Should().Contain("phase-a-validation-temp");
@@ -177,6 +175,210 @@ public sealed class PrototypeIterationGoalServiceTests
         refreshed.Session.LatestEvaluationJson.Should().Be(evaluationJson);
         refreshed.LatestEvaluation!.Decision.Should().Be("should_refine_plan");
         refreshed.Goals[0].Status.Should().Be("pending");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldRetryRestore_WhenTestFrameworkReferencesArePresentButCompileLooksStale()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        File.WriteAllText(Path.Combine(repoPath, "Game.Core.Tests", "Game.Core.Tests.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="xunit" Version="2.7.1" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+  </ItemGroup>
+</Project>
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "JRPG First Loop: field navigation and stable control",
+            "Visible field navigation and stable movement.",
+            "Pass when field navigation is visible and stable.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var runner = new RestoreRetryHostedProcessRunner();
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, runner, CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+        runner.Commands.Count(command => command.FileName == "dotnet" && command.Arguments.Contains("test")).Should().Be(2);
+        runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("restore"));
+        runner.Commands.SelectMany(command => command.Arguments).Should().Contain(argument => argument.Contains("core-tests-retry", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldExplainMissingBattleSceneContractItems()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        var battleScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs");
+        File.WriteAllText(battleScript, """
+public sealed class BattleScene
+{
+    public void SetBattleVisible(bool visible) { }
+}
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: battle or challenge resolution",
+            "Validate one readable JRPG battle resolution.",
+            "Pass when BattleScene reaches clear battle feedback and settlement.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeFalse();
+        result.Reason.Should().StartWith("missing_rpg_battle_scene_contract");
+        result.Reason.Should().Contain("battle_script_missing_ResolveBattle_or_ResolveAttackTurn");
+        result.Reason.Should().Contain("battle_script_missing_BattleFinished");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldAcceptMainScriptOwnedRewardPanel()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        WriteMainScriptOwnedRewardPanel(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: growth, reward, or consequence feedback",
+            "Validate reward choice and return feedback.",
+            "Pass when a visible reward choice updates state and returns to map.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldExplainMissingRewardFlowContractItems()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        var scriptPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    private void OnBattleFinished(bool victory) { RefreshView(); }
+    private void RefreshView() { }
+}
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: growth, reward, or consequence feedback",
+            "Validate reward choice and return feedback.",
+            "Pass when a visible reward choice updates state and returns to map.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeFalse();
+        result.Reason.Should().StartWith("missing_rpg_reward_flow_contract");
+        result.Reason.Should().Contain("reward_flow_missing_reward_list_guard");
+        result.Reason.Should().Contain("reward_flow_missing_reward_entry");
+        result.Reason.Should().Contain("reward_flow_missing_return_to_map_after_reward");
     }
 
     [Theory]
@@ -956,6 +1158,77 @@ public sealed class DqRpgPrototype
 """);
     }
 
+    private static void WriteMainScriptOwnedRewardPanel(string repoPath)
+    {
+        var scriptPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    private DqRpgPrototypeLoop _loop = new();
+    private dynamic _state;
+    private dynamic _rewardPanel;
+    private dynamic[] _rewardButtons = new dynamic[3];
+
+    private void OnBattleFinished(dynamic result)
+    {
+        var rewards = result.RewardOptions.Count > 0
+            ? result.RewardOptions
+            : _loop.CreateRewardOptions(_state, fromChest: false);
+        if (rewards.Count > 0)
+        {
+            ShowRewardScene(rewards);
+            return;
+        }
+
+        RefreshView();
+    }
+
+    private void ShowRewardScene(System.Collections.Generic.IReadOnlyList<object> rewards)
+    {
+        for (var i = 0; i < _rewardButtons.Length; i++)
+        {
+            if (i < rewards.Count)
+            {
+                _rewardButtons[i].Text = $"Reward {i + 1}";
+                _rewardButtons[i].Visible = true;
+            }
+            else
+            {
+                _rewardButtons[i].Visible = false;
+            }
+        }
+
+        _rewardPanel.Visible = true;
+    }
+
+    private void SelectReward(int rewardIndex)
+    {
+        _state = _loop.ApplyReward(_state, rewardIndex, fromChest: false);
+        _rewardPanel.Visible = false;
+        RefreshView();
+    }
+
+    private string DebugGetRpgRewardFlowContract()
+    {
+        return "rpg_reward_flow_contract choice_count=3 Battle reward selected Return to the map";
+    }
+
+    private void RefreshView() { }
+}
+""");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), """
+public sealed class MapScene
+{
+    private dynamic _playerToken;
+    public bool TryHandleMapKey(object keycode) { MoveOnMap(); return true; }
+    private void MoveOnMap() { GridToPosition(); EncounterTriggered?.Invoke("enemy"); }
+    private object GridToPosition() => new();
+    public event System.Action<string>? EncounterTriggered;
+}
+""");
+    }
+
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
         public List<HostedProcessCommand> Commands { get; } = [];
@@ -978,6 +1251,31 @@ VERIFY: Unit tests passed and Godot smoke passed.
 REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "iteration goal stdout", ""));
+        }
+    }
+
+    private sealed class RestoreRetryHostedProcessRunner : IHostedProcessRunner
+    {
+        private int _testAttempts;
+
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet" && command.Arguments.Contains("test"))
+            {
+                _testAttempts++;
+                if (_testAttempts == 1)
+                {
+                    return Task.FromResult(new HostedProcessResult(
+                        1,
+                        "",
+                        "Game.Core.Tests\\Domain\\GameConfigTests.cs(1,7): error CS0246: The type or namespace name 'FluentAssertions' could not be found\r\nGame.Core.Tests\\Domain\\GameConfigTests.cs(3,7): error CS0246: The type or namespace name 'Xunit' could not be found"));
+                }
+            }
+
+            return Task.FromResult(new HostedProcessResult(0, "ok", ""));
         }
     }
 

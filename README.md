@@ -138,6 +138,49 @@ Protocol rules:
 
 如果恢复链已经显示 `planned-only`、`artifact_integrity`、`rerun_guard`、`llm_retry_stop_loss`、`sc_test_retry_stop_loss` 或 `needs-fix-fast`，先按恢复建议做窄修复或回退，不要直接付出一次新的完整重跑成本。
 
+
+## Phase A Hosted Route Recovery Protocol
+
+This section governs Phase A frontend-triggered hosted game-project routes. It follows the recovery-first spirit of `workflow.md` Chapter 6 while keeping the prototype lane lightweight: no Taskmaster triplets, no formal acceptance files, no overlays, and no architecture contract files.
+
+### AGENTS.md Boundary
+
+- `AGENTS.md` is the platform repository routing map for `C:\jimuyun`; it is for Phase A platform code, workflow scripts, docs, skills, and repository maintenance.
+- Hosted game-project routes must not use `AGENTS.md` as ordinary project recovery memory, and must not summarize or copy `AGENTS.md` before executing a normal game-project step.
+- When a route is maintaining Phase A platform code or skill definitions, it must still obey `AGENTS.md`. When a route is executing one hosted game-project goal, project memory comes only from the project-level recovery sources below.
+
+### Mandatory Recovery Order
+
+Every route that can modify hosted game-project files must consume these sources before implementation or repair. Missing mandatory sources must be recorded as an explicit risk or failure reason.
+
+1. Resolved game-type route profile and selected route skill prompt block.
+2. `meta/project-execution-guide.md`, the project-level lightweight `/new` recovery protocol.
+3. `routes/prototype-contract/latest.json`; form fields and `input_traceability` are the project requirement SSoT.
+4. Latest state for the current route, for example `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, `meta/routes/execute-next-goal/latest.json`, `meta/routes/prototype-repair/latest.json`, or `meta/routes/repair-plan/latest.json`.
+5. Current goal, current step, current repair step, or current session state from metadata.
+6. Repair routes must also read the current step `meta/routes/needs-fix/step-XX/repair-ledger.json`; prototype repair and repair-plan routes must also read the latest failed acceptance or Godot diagnostic evidence.
+7. The latest live platform acceptance blocker overrides older assistant summaries, route state, and repair ledger memory.
+
+### Route Matrix
+
+- Prototype skeleton creation: generate `README.md`, `meta/project-execution-guide.md`, `routes/prototype-contract/latest.json`, and `meta/routes/prototype/latest.json`, including the game-type profile and skill in the project-level recovery file.
+- Prototype acceptance: read the current prototype, project execution guide, prototype contract, and platform acceptance evidence; do not call Codex to modify project files.
+- Prototype acceptance repair: read the project execution guide, prototype contract, latest failed acceptance, Godot diagnostics, and `meta/routes/prototype-repair/latest.json`; repair only hosted game-project files.
+- Iteration plan completion: read the project execution guide, prototype contract, draft/form state, latest prototype state, latest iteration-plan state, and game-type design guidance; generate or evaluate lightweight goals only.
+- Iteration step execution: read project README, project execution guide, prototype contract, latest prototype state, latest iteration-plan state, and current goal; execute exactly one step.
+- Needs Fix: read project README, project execution guide, prototype contract, current goal, current step execution state, current step repair ledger, and latest platform rejection; repair only the current step.
+- Repair plan generation/execution: read the project execution guide, prototype contract, latest failed acceptance, current repair-plan state, and current repair step; repair only the current repair step.
+- Free chat: read-only auxiliary route using implicit chat context, explicit chat records, imported TXT files, and the selected skill; chat output is not project completion evidence.
+- GDD creation: uses implicit chat context, explicit chat records, imported TXT files, BMAD/GDS skill prompt, and project metadata to write GDD output; it does not change prototype execution status.
+- Asset inventory, package, and download: readback/artifact routes based on current project state and filesystem facts, not assistant text.
+
+### Hard Rules
+
+- Executable routes must fail closed: when a mandatory recovery source is missing, do not pretend context was restored; either recreate the project execution guide or return an explicit failure/risk.
+- Route state and repair ledger are continuity memory, not current acceptance authority.
+- Do not mark a step complete from assistant text alone; completion must come from platform validation, current goal acceptance, or explicit route-state update.
+- Every new route must declare recovery inputs, authority order, missing-source behavior, and browser-safe output rules before it is wired to frontend buttons or skills.
+
 ### Deep Reference
 - 文档索引：`docs/PROJECT_DOCUMENTATION_INDEX.md`
 - Script Entrypoints Index: `docs/workflows/script-entrypoints-index.md`

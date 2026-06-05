@@ -5,7 +5,7 @@ namespace PhaseA.Platform.Llm;
 
 public sealed class CodexCliChatClient : ICodexChatClient
 {
-    private const int TimeoutSeconds = 300;
+    private const int TimeoutSeconds = 1200;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
 

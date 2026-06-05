@@ -29,6 +29,9 @@ internal static class PrototypeGoalAcceptancePromptBuilder
             "jrpg-field-navigation-stable-control" => """
                 Platform hard acceptance for JRPG field navigation:
                 - Need a visible playable field, town, or map scene after Start Adventure or the project entry.
+                - RPG route required pair: Game.Godot/Prototypes/dq-rpg/MapScene.tscn + Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs.
+                - MapScene.tscn needs MapScene, TrackLayer, RpgMapAsset, Grid, Overlay, RpgPlayerAsset, RpgEnemyAsset nodes.
+                - MapScene.cs needs grid mapping, player visibility restore, movement (MovePlayer/MoveOnMap/TryHandleMapKey).
                 - The player marker or character must be visible and controllable with stable movement.
                 - Runtime visuals must show map/field and player asset usage.
                 - Do not advance this step into encounter, battle, reward, or final acceptance work.

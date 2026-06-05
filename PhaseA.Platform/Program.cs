@@ -1046,15 +1046,19 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
-        if (result.Status == "ready")
+        if (result.Status is "ready" or "llm_failed")
         {
-            await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
+            if (!string.IsNullOrWhiteSpace(request.Message))
+            {
+                await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
+            }
+
             var goalSummary = result.Goals.Count == 0
                 ? result.Summary
                 : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
             await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
         }
-        return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status is "ready" or "llm_failed" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {
@@ -1074,6 +1078,7 @@ app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
 
 app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     string projectId,
+    PrototypeIterationPlanEvaluationRequest request,
     HttpContext context,
     [FromServices] PrototypeIterationPlanService iterationPlans,
     [FromServices] PrototypeWorkflowService prototypeWorkflow,
@@ -1083,7 +1088,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     {
         var accountId = CurrentAccountId(context);
         var progress = await prototypeWorkflow.GetProgressAsync(accountId, projectId, cancellationToken);
-        var result = await iterationPlans.EvaluateAsync(accountId, projectId, progress, cancellationToken);
+        var result = await iterationPlans.EvaluateAsync(accountId, projectId, progress, request.Model, cancellationToken);
         return Results.Ok(result);
     }
     catch (InvalidOperationException ex)

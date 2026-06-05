@@ -608,6 +608,10 @@ namespace Xunit
         result.AssistantMessage.Should().Contain("missing_rpg_");
         runner.LastPrompt.Should().Contain("Platform hard acceptance for JRPG field navigation");
         runner.LastPrompt.Should().Contain("visible playable field");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/MapScene.tscn");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs");
+        runner.LastPrompt.Should().Contain("TrackLayer");
+        runner.LastPrompt.Should().Contain("MovePlayer");
         runner.LastPrompt.Should().Contain("player marker or character");
     }
 
@@ -648,6 +652,7 @@ namespace Xunit
         run!.EvidenceJson.Should().Contain("map_scene_missing_600x600_custom_minimum_size");
         run.EvidenceJson.Should().Contain("map_script_missing_player_visibility_restore");
         runner.LastPrompt.Should().Contain("Current platform acceptance diagnosis before repair");
+        runner.LastPrompt.Should().Contain("Repair the full RPG/JRPG map-entry contract group");
         runner.LastPrompt.Should().Contain("map_scene_missing_600x600_custom_minimum_size");
         runner.LastPrompt.Should().Contain("map_script_missing_player_visibility_restore");
     }
@@ -731,6 +736,43 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldOverrideScopeForMsBuildProjectExtensionsPathFailures()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 7);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "msbuild project extensions path error", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 7, "Goal 7 needs fix");
+        var runner = new MsBuildProjectExtensionsPathFailurePromptRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 7, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        runner.LastPrompt.Should().Contain("core_tests_failed with MSB3540 for MSBuildProjectExtensionsPath");
+        runner.LastPrompt.Should().Contain("remove any MSBuildProjectExtensionsPath assignment from .csproj files");
+        runner.LastPrompt.Should().Contain("Directory.Build.props");
+        runner.LastPrompt.Should().Contain("Do not add late MSBuildProjectExtensionsPath properties");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldRequireDedicatedBattleScene_ForStepTwo()
     {
         using var database = TempSqliteDatabase.Create();
@@ -763,6 +805,8 @@ namespace Xunit
         runner.LastPrompt.Should().Contain("Platform hard acceptance for JRPG battle or challenge resolution");
         runner.LastPrompt.Should().Contain("readable battle, challenge, or obstacle resolution loop");
         runner.LastPrompt.Should().Contain("dedicated battle scene");
+        runner.LastPrompt.Should().Contain("BattleFinished");
+        runner.LastPrompt.Should().Contain("ResolveBattle or ResolveAttackTurn");
     }
 
     [Fact]
@@ -2550,6 +2594,41 @@ SUMMARY: Core compile errors still need repair.
 CHANGED: none
 VERIFY: core compile still blocked.
 REMAINING: repair DqRpgPrototypeLoop.cs PlayerX/PlayerY compile errors
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class MsBuildProjectExtensionsPathFailurePromptRunner : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    1,
+                    "",
+                    "Microsoft.Common.CurrentVersion.targets(873,5): error MSB3540: The value of the property \"MSBuildProjectExtensionsPath\" was modified after it was used by MSBuild which can lead to unexpected build results."));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
+                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
+                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
+            }
+
+            LastPrompt = command.StandardInput ?? "";
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: needs_fix
+SUMMARY: MSBuildProjectExtensionsPath still needs repair.
+CHANGED: none
+VERIFY: core compile still blocked.
+REMAINING: remove late MSBuildProjectExtensionsPath properties
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }

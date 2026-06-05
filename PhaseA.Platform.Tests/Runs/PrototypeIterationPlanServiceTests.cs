@@ -67,7 +67,8 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var codex = new SuccessfulRpgPlanCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
 
         var result = await service.CreateAsync(
             accountId,
@@ -84,6 +85,49 @@ public sealed class PrototypeIterationPlanServiceTests
         latest.Should().NotBeNull();
         latest!.LatestEvaluation.Should().NotBeNull();
         latest.LatestEvaluation!.Decision.Should().Be(result.LatestEvaluation.Decision);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseRequestedModelForStructuredPlanningCalls()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var codex = new SuccessfulRpgPlanCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Please complete the first full playable loop: stable movement, visible encounter trigger, one battle, reward 3 choices, then return to the map.",
+                "completion_suggestion",
+                Model: "gpt-5.5"));
+
+        result.Status.Should().Be("ready");
+        codex.Models.Should().NotBeEmpty();
+        codex.Models.Should().OnlyContain(model => model == "gpt-5.5");
+        codex.LastGoalPlanPrompt.Should().Contain("Project execution guide");
+        codex.LastGoalPlanPrompt.Should().Contain("Route Recovery Protocol");
+        codex.LastGoalPlanPrompt.Should().Contain("Do not use AGENTS.md as hosted game-project recovery memory.");
+        result.PlanningAnalysis!.StageTelemetry.Should().NotBeNullOrEmpty();
+        result.PlanningAnalysis!.StageTelemetry!.Should().Contain(stage => stage.Stage == "goal-plan" && stage.Model == "gpt-5.5");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateJson = new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project!);
+        using var state = JsonDocument.Parse(stateJson);
+        var observability = state.RootElement.GetProperty("llm_observability");
+        observability.GetProperty("schema").GetString().Should().Be("phase-a.iteration-plan.observability.v1");
+        observability.GetProperty("totalEstimatedPromptTokens").GetInt32().Should().BeGreaterThan(0);
+        observability.GetProperty("stages").EnumerateArray()
+            .Should()
+            .Contain(stage => stage.GetProperty("stage").GetString() == "goal-plan" &&
+                stage.GetProperty("model").GetString() == "gpt-5.5");
     }
 
 
@@ -110,8 +154,7 @@ public sealed class PrototypeIterationPlanServiceTests
                 [new TextAttachment("notes.txt", "Important boss design reference.")]));
 
         result.Status.Should().Be("ready");
-        codex.LastPlanningAnalysisPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
-        codex.LastPlanningAnalysisPrompt.Should().Contain("Taskmaster triplets");
+        codex.LastPlanningAnalysisPrompt.Should().BeNull();
         codex.LastGoalPlanPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
         codex.LastGoalPlanPrompt.Should().Contain("formal acceptance files");
         codex.LastGoalPlanPrompt.Should().Contain("notes.txt");
@@ -153,11 +196,9 @@ public sealed class PrototypeIterationPlanServiceTests
                 "manual_feedback"));
 
         result.Status.Should().Be("ready");
-        codex.LastPlanningAnalysisPrompt.Should().Contain("BMAD/GDS game-type design template");
-        codex.LastPlanningAnalysisPrompt.Should().Contain("Character progression");
-        codex.LastPlanningAnalysisPrompt.Should().Contain("semantic hints only");
-        codex.LastGoalPlanPrompt.Should().Contain("BMAD/GDS game-type design template");
-        codex.LastGoalPlanPrompt.Should().Contain("Quest System");
+        codex.LastPlanningAnalysisPrompt.Should().BeNull();
+        codex.LastGoalPlanPrompt.Should().Contain("BMAD/GDS game-type design template summary");
+        codex.LastGoalPlanPrompt.Should().Contain("semantic hints only");
         codex.LastGoalPlanPrompt.Should().Contain("do not turn the whole GDD template into iteration goals");
     }
 
@@ -274,7 +315,8 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var codex = new SuccessfulRpgPlanCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
 
         var result = await service.CreateAsync(
             accountId,
@@ -402,7 +444,7 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Goals[0].Description.Should().Contain("Start Adventure");
         string.Join(" ", result.Goals[0].Description, result.Goals[0].AcceptanceHint).Should().Match(text => text.Contains("playable field", StringComparison.OrdinalIgnoreCase) || text.Contains("visible MapScene", StringComparison.OrdinalIgnoreCase));
         result.Goals[0].Description.Should().NotContain("encounter entry");
-        result.Goals[0].AcceptanceHint.Should().Contain("movement");
+        result.Goals[0].AcceptanceHint.Should().Contain("move continuously");
         result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: conflict entry trigger");
         result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
         result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: growth, reward, or consequence feedback");
@@ -602,6 +644,7 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Decision.Should().Be("should_refine_plan");
         result.Reason.Should().Contain("acceptance boundary mismatch");
+        result.SuggestedAction.Should().Contain("JRPG first-loop capability profile");
         result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -772,7 +815,7 @@ public sealed class PrototypeIterationPlanServiceTests
             "Win after 15 battles; any battle loss means game loss.",
             "Demo Game: improve RPG loop.",
             ValidRpgIterationGoalCommands(
-                "Resolve the first RPG route blocker as the initial convergence step: Start Adventure opens a visible MapScene, shows runtime map/player assets, and proves stable controllable movement. Keep this step tightly focused on map start and movement stability before battle, reward, or broader loop closure work."));
+                "Resolve the first RPG route blocker as the initial convergence step: Start Adventure opens a visible MapScene, shows runtime map/player assets, and proves stable controllable movement before encounter, battle, reward, or closure proof is mixed in. Keep this step tightly focused on map start and movement stability. Movement evidence is independent of encounter, battle, reward, or final acceptance behavior."));
 
         var result = await service.EvaluateAsync(
             accountId,
@@ -794,7 +837,8 @@ public sealed class PrototypeIterationPlanServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var codex = new SuccessfulRpgPlanCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
 
         await service.CreateAsync(
             accountId,
@@ -809,6 +853,9 @@ public sealed class PrototypeIterationPlanServiceTests
             new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
 
         result.Decision.Should().NotBeNullOrWhiteSpace();
+        codex.LastPrompt.Should().Contain("Project execution guide");
+        codex.LastPrompt.Should().Contain("Route Recovery Protocol");
+        codex.LastPrompt.Should().Contain("Do not use AGENTS.md as hosted game-project recovery memory.");
     }
 
     [Fact]
@@ -1044,6 +1091,7 @@ public sealed class PrototypeIterationPlanServiceTests
         public string? LastPrompt { get; private set; }
         public string? LastPlanningAnalysisPrompt { get; private set; }
         public string? LastGoalPlanPrompt { get; private set; }
+        public List<string> Models { get; } = [];
 
         public SuccessfulRpgPlanCodexClient(bool includeContractInstruction = false)
         {
@@ -1058,6 +1106,7 @@ public sealed class PrototypeIterationPlanServiceTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
+            Models.Add(model);
             LastPrompt = prompt;
             if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
             {

@@ -63,6 +63,17 @@ internal static class PrototypeValidationProcessEnvironment
         ];
     }
 
+    public static string[] CreateMsBuildStabilityArguments()
+    {
+        return
+        [
+            "-p:UseSharedCompilation=false",
+            "-p:NodeReuse=false",
+            "-m:1",
+            "-p:BuildInParallel=false"
+        ];
+    }
+
     private static string EnsureTrailingSeparator(string path)
     {
         return path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar)

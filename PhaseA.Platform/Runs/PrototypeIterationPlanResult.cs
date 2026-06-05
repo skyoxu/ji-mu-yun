@@ -23,10 +23,21 @@ public sealed record PrototypeIterationPlanningAnalysisResult(
     int DraftCoveragePercent,
     string? DraftCoverageSummary,
     string? TemplateId,
-    IReadOnlyList<PrototypeIterationPlanningFieldResult> FieldCoverage);
+    IReadOnlyList<PrototypeIterationPlanningFieldResult> FieldCoverage,
+    IReadOnlyList<PrototypeIterationPlanStageTelemetryResult>? StageTelemetry = null);
 
 public sealed record PrototypeIterationPlanningFieldResult(
     string Field,
     string Status,
     string? Evidence,
     string? MissingReason);
+
+public sealed record PrototypeIterationPlanStageTelemetryResult(
+    string Stage,
+    string Model,
+    long DurationMs,
+    int PromptLength,
+    int PromptUtf8Bytes,
+    int EstimatedPromptTokens,
+    string? FailureCode,
+    string? FailureCategory);

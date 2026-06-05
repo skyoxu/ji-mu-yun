@@ -1606,6 +1606,19 @@ public sealed partial class PrototypeQuickFixService
                 """;
         }
 
+        if (IsMsBuildProjectExtensionsPathFailure(validation))
+        {
+            return """
+                Platform acceptance scope override:
+                - The current blocker is core_tests_failed with MSB3540 for MSBuildProjectExtensionsPath.
+                - This overrides the generic RPG gameplay-only edit scope for this run.
+                - Required first target: remove any MSBuildProjectExtensionsPath assignment from .csproj files when it is imported too late.
+                - If intermediate-output isolation is still required, set it before Microsoft.Common.props is imported, for example in Directory.Build.props.
+                - Do not add late MSBuildProjectExtensionsPath properties to GodotGame.csproj, Game.Core.csproj, or Game.Core.Tests.csproj.
+                - Report STATUS: needs_fix unless the MSB3540 blocker has actually been repaired.
+                """;
+        }
+
         return """
             Platform acceptance scope override:
             - The current blocker is core_tests_failed with C# compile errors in PlatformAcceptanceDetails.
@@ -1635,6 +1648,18 @@ public sealed partial class PrototypeQuickFixService
         return details.Contains("CS0246", StringComparison.OrdinalIgnoreCase) &&
                (details.Contains("Xunit", StringComparison.OrdinalIgnoreCase) ||
                 details.Contains("FluentAssertions", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsMsBuildProjectExtensionsPathFailure(PrototypeGoalAcceptanceValidationResult? validation)
+    {
+        if (validation is null || !IsCoreTestFailure(validation))
+        {
+            return false;
+        }
+
+        var details = validation.Details ?? "";
+        return details.Contains("MSB3540", StringComparison.OrdinalIgnoreCase) &&
+               details.Contains("MSBuildProjectExtensionsPath", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string BuildRpgGdUnitRepairContextBlock(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
@@ -1784,8 +1809,29 @@ public sealed partial class PrototypeQuickFixService
             - Status: {validation.Status}
             - Reason: {validation.Reason ?? validation.Status}
             - Details: {validation.Details ?? "none"}
+            {BuildCurrentAcceptanceRepairFocus(validation)}
             - If Status is failed, repair the listed reason items before reporting STATUS: completed.
             """;
+    }
+
+    private static string BuildCurrentAcceptanceRepairFocus(PrototypeGoalAcceptanceValidationResult validation)
+    {
+        if (validation.Reason?.StartsWith("missing_rpg_map_entry_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "- RepairFocus: Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy map nodes, grid-position mapping, player visibility restore, and stable movement handling.";
+        }
+
+        if (validation.Reason?.StartsWith("missing_rpg_battle_scene_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "- RepairFocus: Repair the dedicated RPG/JRPG battle-scene contract. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and enemy token nodes, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
+        }
+
+        if (validation.Reason?.StartsWith("missing_rpg_reward_flow_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "- RepairFocus: Repair the RPG/JRPG reward-flow contract. Ensure victory or consequence creates exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, shows visible stat/consequence feedback, returns or refreshes the map view, and restores player visibility. If the reward panel is owned by DqRpgPrototype.cs instead of BattleScene.cs, keep that shape coherent and expose the same contract markers there.";
+        }
+
+        return "";
     }
 
     private static bool RequiresHardPlatformAcceptance(

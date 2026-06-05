@@ -30,6 +30,7 @@ public sealed class PrototypeRouteSkillPolicyTests
         prompt.Should().Contain("ILlmRouteEngine");
         prompt.Should().Contain("CodexHostedProcessCommandFactory");
         prompt.Should().Contain("do not run a bare/generic prototype route");
+        prompt.Should().Contain("do not use AGENTS.md as hosted project memory");
     }
 
     [Fact]

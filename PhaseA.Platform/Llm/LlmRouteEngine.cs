@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace PhaseA.Platform.Llm;
 
@@ -23,11 +24,17 @@ public sealed record LlmRouteResult(
     bool Succeeded,
     string? AssistantMessage,
     string? JsonObjectText,
+    string Model,
     string? FailureCode,
+    string? FailureCategory,
     int ExitCode,
     string Stdout,
     string Stderr,
-    CodexChatClientResult? RawResult);
+    CodexChatClientResult? RawResult,
+    long DurationMs,
+    int PromptLength,
+    int PromptUtf8Bytes,
+    int EstimatedPromptTokens);
 
 public sealed class LlmRouteEngine : ILlmRouteEngine
 {
@@ -48,6 +55,7 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         ArgumentException.ThrowIfNullOrWhiteSpace(request.Prompt);
 
         Directory.CreateDirectory(request.WorkspaceRoot);
+        var stopwatch = Stopwatch.StartNew();
         var completion = await _codexChatClient.CompleteAsync(
             request.WorkspaceRoot,
             request.Model,
@@ -55,26 +63,30 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
             request.Options,
             request.BillingAccountId,
             cancellationToken);
+        stopwatch.Stop();
 
         if (!completion.Succeeded)
         {
-            PersistFailure(request, completion, request.Purpose);
-            return FromCodexResult(completion, null, completion.FailureCode ?? "llm_failed");
+            var failureCode = completion.FailureCode ?? "llm_failed";
+            PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, failureCode);
+            return FromCodexResult(request, completion, null, failureCode, stopwatch.ElapsedMilliseconds);
         }
 
         if (!request.RequireJsonObject)
         {
-            return FromCodexResult(completion, null, null);
+            PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null);
+            return FromCodexResult(request, completion, null, null, stopwatch.ElapsedMilliseconds);
         }
 
         var json = ExtractFirstJsonObject(completion.AssistantMessage);
         if (string.IsNullOrWhiteSpace(json) || !IsValidJsonObject(json))
         {
-            PersistFailure(request, completion, $"{request.Purpose}-json-parse");
-            return FromCodexResult(completion, json, "llm_json_parse_failed");
+            PersistTelemetry(request, completion, $"{request.Purpose}-json-parse", stopwatch.ElapsedMilliseconds, "llm_json_parse_failed");
+            return FromCodexResult(request, completion, json, "llm_json_parse_failed", stopwatch.ElapsedMilliseconds);
         }
 
-        return FromCodexResult(completion, json, null);
+        PersistTelemetry(request, completion, request.Purpose, stopwatch.ElapsedMilliseconds, null);
+        return FromCodexResult(request, completion, json, null, stopwatch.ElapsedMilliseconds);
     }
 
     public static string? ExtractFirstJsonObject(string? text)
@@ -138,19 +150,28 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
     }
 
     private static LlmRouteResult FromCodexResult(
+        LlmRouteRequest request,
         CodexChatClientResult completion,
         string? jsonObjectText,
-        string? failureCode)
+        string? failureCode,
+        long durationMs)
     {
+        var promptUtf8Bytes = Encoding.UTF8.GetByteCount(request.Prompt);
         return new LlmRouteResult(
             string.IsNullOrWhiteSpace(failureCode),
             completion.AssistantMessage,
             jsonObjectText,
+            request.Model,
             failureCode,
+            ClassifyFailure(failureCode, completion.ExitCode, completion.AssistantMessage),
             completion.ExitCode,
             completion.Stdout,
             completion.Stderr,
-            completion);
+            completion,
+            durationMs,
+            request.Prompt.Length,
+            promptUtf8Bytes,
+            EstimateTokensFromUtf8Bytes(promptUtf8Bytes));
     }
 
     private static bool IsValidJsonObject(string json)
@@ -166,10 +187,12 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         }
     }
 
-    private static void PersistFailure(
+    private static void PersistTelemetry(
         LlmRouteRequest request,
         CodexChatClientResult completion,
-        string purpose)
+        string purpose,
+        long durationMs,
+        string? failureCode)
     {
         try
         {
@@ -177,6 +200,7 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
             Directory.CreateDirectory(dir);
             var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
             var prefix = Path.Combine(dir, $"{stamp}-{SanitizeFileSegment(purpose)}");
+            var promptUtf8Bytes = Encoding.UTF8.GetByteCount(request.Prompt);
             var metadata = JsonSerializer.Serialize(new
             {
                 route_engine = "llm-route-engine",
@@ -184,20 +208,28 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
                 routePurpose = request.Purpose,
                 request.Model,
                 promptLength = request.Prompt.Length,
+                promptUtf8Bytes,
+                estimatedPromptTokens = EstimateTokensFromUtf8Bytes(promptUtf8Bytes),
                 requireJsonObject = request.RequireJsonObject,
-                completion.FailureCode,
+                failureCode,
+                failureCategory = ClassifyFailure(failureCode, completion.ExitCode, completion.AssistantMessage),
                 completion.ExitCode,
+                durationMs,
                 outputLength = completion.AssistantMessage?.Length ?? 0,
                 stdoutLength = completion.Stdout?.Length ?? 0,
                 stderrLength = completion.Stderr?.Length ?? 0
             }, new JsonSerializerOptions { WriteIndented = true });
 
-            File.WriteAllText($"{prefix}.failure.json", metadata, Encoding.UTF8);
-            File.WriteAllText($"{prefix}.stdout.txt", completion.Stdout ?? "", Encoding.UTF8);
-            File.WriteAllText($"{prefix}.stderr.txt", completion.Stderr ?? "", Encoding.UTF8);
-            if (!string.IsNullOrWhiteSpace(completion.AssistantMessage))
+            File.WriteAllText($"{prefix}.metrics.json", metadata, Encoding.UTF8);
+            if (!string.IsNullOrWhiteSpace(failureCode))
             {
-                File.WriteAllText($"{prefix}.output.txt", completion.AssistantMessage, Encoding.UTF8);
+                File.WriteAllText($"{prefix}.failure.json", metadata, Encoding.UTF8);
+                File.WriteAllText($"{prefix}.stdout.txt", completion.Stdout ?? "", Encoding.UTF8);
+                File.WriteAllText($"{prefix}.stderr.txt", completion.Stderr ?? "", Encoding.UTF8);
+                if (!string.IsNullOrWhiteSpace(completion.AssistantMessage))
+                {
+                    File.WriteAllText($"{prefix}.output.txt", completion.AssistantMessage, Encoding.UTF8);
+                }
             }
         }
         catch (IOException)
@@ -206,6 +238,54 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
         catch (UnauthorizedAccessException)
         {
         }
+    }
+
+    private static int EstimateTokensFromUtf8Bytes(int utf8Bytes)
+    {
+        return Math.Max(1, (int)Math.Ceiling(utf8Bytes / 4.0d));
+    }
+
+    private static string? ClassifyFailure(string? failureCode, int exitCode, string? assistantMessage)
+    {
+        if (string.IsNullOrWhiteSpace(failureCode))
+        {
+            return null;
+        }
+
+        var code = failureCode.Trim().ToLowerInvariant();
+        if (code.Contains("timeout", StringComparison.Ordinal) || exitCode == 124)
+        {
+            return "timeout";
+        }
+
+        if (code.Contains("503", StringComparison.Ordinal) ||
+            code.Contains("service_unavailable", StringComparison.Ordinal) ||
+            code.Contains("provider_unavailable", StringComparison.Ordinal))
+        {
+            return "provider_unavailable";
+        }
+
+        if (code.Contains("json", StringComparison.Ordinal) || code.Contains("parse", StringComparison.Ordinal))
+        {
+            return "invalid_json";
+        }
+
+        if (code.Contains("credential", StringComparison.Ordinal) || code.Contains("key", StringComparison.Ordinal))
+        {
+            return "credential";
+        }
+
+        if (code.Contains("stop_loss", StringComparison.Ordinal))
+        {
+            return "budget_guard";
+        }
+
+        if (string.IsNullOrWhiteSpace(assistantMessage))
+        {
+            return "empty_output";
+        }
+
+        return "llm_failed";
     }
 
     private static string SanitizeFileSegment(string value)

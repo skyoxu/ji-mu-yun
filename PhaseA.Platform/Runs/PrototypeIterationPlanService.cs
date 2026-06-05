@@ -86,6 +86,7 @@ public sealed class PrototypeIterationPlanService
 
         var rawMessage = request.Message?.Trim();
         var message = NormalizePlanningMessage(rawMessage, request.SourceKind);
+        var model = PrototypeModelPolicy.Normalize(request.Model);
         if (string.IsNullOrWhiteSpace(message))
         {
             return new PrototypeIterationPlanResult("", "missing_message", "请输入要拆解的优化目标。", [], null);
@@ -126,7 +127,7 @@ public sealed class PrototypeIterationPlanService
         IterationPlanningContext planningContext;
         try
         {
-            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, regenerationGuidance, cancellationToken);
+            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, regenerationGuidance, model, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -142,7 +143,7 @@ public sealed class PrototypeIterationPlanService
         IterationGoalBuildResult goalBuild;
         try
         {
-            goalBuild = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, cancellationToken);
+            goalBuild = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, model, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -183,12 +184,14 @@ public sealed class PrototypeIterationPlanService
 
         var summary = BuildPlanSummary(goals.Count, planningContext, goalBuild.UsedScaffoldFallback);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(created.SessionId, "ready", 0, summary, null, null, cancellationToken);
-        var planningAnalysis = ToPlanningAnalysisResult(planningContext);
+        var planningAnalysis = ToPlanningAnalysisResult(planningContext, goalBuild.StageTelemetry);
+        var llmObservability = BuildIterationPlanObservability(planningContext, goalBuild);
         _routeStateWriter.WriteIterationPlanAnalysisState(project, new
         {
             route = "iteration-plan",
             session_id = created.SessionId,
             planning_analysis = planningAnalysis,
+            llm_observability = llmObservability,
             model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
@@ -207,6 +210,7 @@ public sealed class PrototypeIterationPlanService
             summary,
             model_plan_degraded = goalBuild.UsedScaffoldFallback ? "scaffold_fallback" : null,
             planning_analysis = planningAnalysis,
+            llm_observability = llmObservability,
             goals = goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -218,7 +222,7 @@ public sealed class PrototypeIterationPlanService
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
 
-        var evaluation = await EvaluateAsync(accountId, projectId, ToPrototypeProgress(planningContext), cancellationToken);
+        var evaluation = await EvaluateAsync(accountId, projectId, ToPrototypeProgress(planningContext), model, cancellationToken);
         return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis, evaluation);
     }
 
@@ -231,6 +235,7 @@ public sealed class PrototypeIterationPlanService
         string sourceKind,
         IterationPlanningContext planningContext,
         string? regenerationGuidance,
+        string model,
         CancellationToken cancellationToken)
     {
         if (routeStrategy.UsesSpecializedIterationPlanning &&
@@ -242,7 +247,7 @@ public sealed class PrototypeIterationPlanService
                 return new IterationGoalBuildResult(scaffold, false);
             }
 
-            return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, cancellationToken);
+            return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, model, cancellationToken);
         }
 
         var goals = BuildGoals(message, sourceKind);
@@ -258,6 +263,7 @@ public sealed class PrototypeIterationPlanService
         string message,
         string sourceKind,
         string? regenerationGuidance,
+        string model,
         CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
@@ -285,11 +291,22 @@ public sealed class PrototypeIterationPlanService
             PrototypeStateExcerpt: TrimForPrompt(prototypeState),
             SourceMessage: message,
             SourceKind: sourceKind,
-            RouteSkillId: routeSkill.RouteSkillId);
+            RouteSkillId: routeSkill.RouteSkillId,
+            StageTelemetry: []);
+
+        if (AllowsSoftPlanningAnalysisFallback(routeStrategy))
+        {
+            return fallback with
+            {
+                AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_skipped_for_rpg_route"),
+                StageTelemetry = [BuildSkippedTelemetry("planning-analysis", model, "planning_analysis_skipped_for_rpg_route")]
+            };
+        }
 
         if (_llmRouteEngine is null)
         {
             if (routeStrategy.RequiresModelBackedIterationPlanning &&
+                !AllowsSoftPlanningAnalysisFallback(routeStrategy) &&
                 !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
             {
                 throw new PrototypeIterationPlanLlmException("planning_analysis_llm_client_missing");
@@ -298,7 +315,7 @@ public sealed class PrototypeIterationPlanService
             return fallback;
         }
 
-        var designTemplateGuidance = BuildDesignTemplateGuidance(project, routeProfile);
+        var designTemplateGuidance = BuildCompactDesignTemplateGuidance(project, routeProfile);
         var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
@@ -306,7 +323,7 @@ public sealed class PrototypeIterationPlanService
             new LlmRouteRequest(
                 promptRoot,
                 "planning-analysis",
-                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                model,
                 modelPrompt,
                 options,
                 project.AccountId,
@@ -315,6 +332,7 @@ public sealed class PrototypeIterationPlanService
         if (!completion.Succeeded)
         {
             if (routeStrategy.RequiresModelBackedIterationPlanning &&
+                !AllowsSoftPlanningAnalysisFallback(routeStrategy) &&
                 !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
             {
                 throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "planning_analysis_llm_failed");
@@ -322,21 +340,30 @@ public sealed class PrototypeIterationPlanService
 
             return fallback with
             {
-                AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, completion.FailureCode)
+                AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, completion.FailureCode),
+                StageTelemetry = [BuildTelemetry("planning-analysis", completion)]
             };
         }
 
         var parsed = TryParsePlanningContext(completion.JsonObjectText ?? completion.AssistantMessage, fallback);
         if (parsed is null &&
             routeStrategy.RequiresModelBackedIterationPlanning &&
+            !AllowsSoftPlanningAnalysisFallback(routeStrategy) &&
             !IsDeterministicRpgRegenerationRequest(sourceKind, message, regenerationGuidance))
         {
             throw new PrototypeIterationPlanLlmException("planning_analysis_parse_failed");
         }
 
-        return parsed ?? fallback with
+        var telemetry = BuildTelemetry("planning-analysis", completion);
+        if (parsed is not null)
         {
-            AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_parse_failed")
+            return parsed with { StageTelemetry = [telemetry] };
+        }
+
+        return fallback with
+        {
+            AnalysisSummary = AppendFailureNote(fallback.AnalysisSummary, "planning_analysis_parse_failed"),
+            StageTelemetry = [telemetry]
         };
     }
 
@@ -347,6 +374,7 @@ public sealed class PrototypeIterationPlanService
         string message,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
         string? regenerationGuidance,
+        string model,
         CancellationToken cancellationToken)
     {
         if (_llmRouteEngine is null)
@@ -355,7 +383,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
-        var designTemplateGuidance = BuildDesignTemplateGuidance(project, routeProfile);
+        var designTemplateGuidance = BuildCompactDesignTemplateGuidance(project, routeProfile);
         var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
@@ -363,7 +391,7 @@ public sealed class PrototypeIterationPlanService
             new LlmRouteRequest(
                 promptRoot,
                 "goal-plan",
-                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                model,
                 prompt,
                 options,
                 project.AccountId,
@@ -380,7 +408,10 @@ public sealed class PrototypeIterationPlanService
             throw new PrototypeIterationPlanLlmException("goal_plan_parse_failed");
         }
 
-        return parsed;
+        return parsed with
+        {
+            StageTelemetry = [BuildTelemetry("goal-plan", completion)]
+        };
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgGoalsFromContext(
@@ -398,6 +429,12 @@ public sealed class PrototypeIterationPlanService
         var goals = BuildGoals(message, sourceKind);
         _ = goals;
         return BuildJrpgFirstLoopGoals(message, planningContext, prototypeContract, regenerationGuidance);
+    }
+
+    private static bool AllowsSoftPlanningAnalysisFallback(IGameTypeRouteStrategy routeStrategy)
+    {
+        return routeStrategy.UsesSpecializedIterationPlanning &&
+            string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildRpgClosureGoals(IterationPlanningContext planningContext, string? regenerationGuidance)
@@ -462,6 +499,25 @@ public sealed class PrototypeIterationPlanService
             """;
     }
 
+    private string BuildCompactDesignTemplateGuidance(ProjectSnapshot project, GameTypeRouteProfile routeProfile)
+    {
+        var entry = _bmadGameTypeDesignCatalog?.Find(routeProfile.GameTypeId)
+            ?? _bmadGameTypeDesignCatalog?.Find(project.GameTypeSource);
+        if (entry is null)
+        {
+            return "No BMAD/GDS game-type design template was loaded.";
+        }
+
+        return $"""
+            BMAD/GDS game-type design template summary:
+            - Id: {entry.Id}
+            - Name: {entry.Name}
+            - Description: {CompactForPrompt(entry.Description, 360)}
+            - GenreTags: {entry.GenreTags}
+            - Source: {entry.FragmentRelativePath}
+            """;
+    }
+
     private static string BuildPlanningAnalysisPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
@@ -478,25 +534,33 @@ public sealed class PrototypeIterationPlanService
             : JsonSerializer.Serialize(new
             {
                 draft.PrototypeSlug,
-                draft.Hypothesis,
-                draft.CorePlayerFantasy,
-                draft.MinimumPlayableLoop,
-                SuccessCriteria = DeserializeJsonArray(draft.SuccessCriteriaJson),
-                draft.GameFeature,
-                draft.CoreGameplayLoop,
-                draft.WinFailConditions,
+                Hypothesis = CompactForPrompt(draft.Hypothesis, 600),
+                CorePlayerFantasy = CompactForPrompt(draft.CorePlayerFantasy, 600),
+                MinimumPlayableLoop = CompactForPrompt(draft.MinimumPlayableLoop, 800),
+                SuccessCriteria = DeserializeJsonArray(draft.SuccessCriteriaJson).Select(item => CompactForPrompt(item, 300)).Take(6).ToArray(),
+                GameFeature = CompactForPrompt(draft.GameFeature, 800),
+                CoreGameplayLoop = CompactForPrompt(draft.CoreGameplayLoop, 800),
+                WinFailConditions = CompactForPrompt(draft.WinFailConditions, 600),
                 draft.CoveragePercent,
-                draft.CoverageSummary,
-                CoverageMissingTopics = DeserializeJsonArray(draft.CoverageMissingTopicsJson)
+                CoverageSummary = CompactForPrompt(draft.CoverageSummary, 600),
+                CoverageMissingTopics = DeserializeJsonArray(draft.CoverageMissingTopicsJson).Select(item => CompactForPrompt(item, 220)).Take(8).ToArray()
             });
         var runJson = JsonSerializer.Serialize(new
         {
             latest_run_status = latestPrototypeRun?.Status,
-            latest_run_summary = ReadCompletionSummaryFromRun(latestPrototypeRun),
+            latest_run_summary = CompactForPrompt(ReadCompletionSummaryFromRun(latestPrototypeRun), 1000),
             latest_successful_status = latestSuccessfulPrototypeRun?.Status,
-            latest_successful_summary = ReadCompletionSummaryFromRun(latestSuccessfulPrototypeRun),
-            fallback_analysis = fallback.AnalysisSummary
+            latest_successful_summary = CompactForPrompt(ReadCompletionSummaryFromRun(latestSuccessfulPrototypeRun), 1000),
+            fallback_analysis = CompactForPrompt(fallback.AnalysisSummary, 800)
         });
+        var contractSummary = string.IsNullOrWhiteSpace(prototypeContract.Json)
+            ? "{}"
+            : JsonSerializer.Serialize(new
+            {
+                prototypeContract.RelativePath,
+                present = true,
+                excerpt = CompactForPrompt(prototypeContract.Json, 1000)
+            });
 
         return $"""
             You are analyzing a hosted Godot prototype after prototype creation has already run.
@@ -511,6 +575,9 @@ public sealed class PrototypeIterationPlanService
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite semantics: split small ordered prototype goals from context without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
+            - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
+            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract, latest prototype state, draft/form snapshot, and latest prototype run evidence.
+            - Do not use AGENTS.md as hosted game-project recovery memory.
             - status must be one of completed, partial, missing.
             - Judge completion against the current prototype result, not only the form text.
             - Focus on prototype-form fields and the current route profile. For RPG/JRPG, judge only the JRPG first-loop capabilities implied by the project semantics instead of forcing every map/battle/reward template section.
@@ -529,16 +596,16 @@ public sealed class PrototypeIterationPlanService
             - PlannerId: {routeProfile.PlannerId}
 
             Source message:
-            {fallback.SourceMessage}
+            {CompactForPrompt(fallback.SourceMessage, 1600)}
 
             Project execution guide:
-            {TrimForPrompt(projectExecutionGuide)}
+            {CompactForPrompt(projectExecutionGuide, 1200)}
 
             Design template guidance:
             {designTemplateGuidance}
 
             Prototype contract:
-            {TrimForPrompt(prototypeContract.Json)}
+            {contractSummary}
 
             Draft/form snapshot:
             {draftJson}
@@ -547,7 +614,7 @@ public sealed class PrototypeIterationPlanService
             {runJson}
 
             Prototype route state excerpt:
-            {fallback.PrototypeStateExcerpt}
+            {CompactForPrompt(fallback.PrototypeStateExcerpt, 1200)}
             """;
     }
 
@@ -592,6 +659,9 @@ public sealed class PrototypeIterationPlanService
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite semantics: refine the lightweight iteration plan only, without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
+            - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
+            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract, latest prototype state, planning analysis, and scaffold.
+            - Do not use AGENTS.md as hosted game-project recovery memory.
             - Do not generate a new plan from scratch.
             - Keep the exact scaffold order.
             - Keep every title exactly unchanged from the scaffold.
@@ -617,13 +687,13 @@ public sealed class PrototypeIterationPlanService
             - PlannerId: {routeProfile.PlannerId}
 
             Requested optimization:
-            {message}
+            {CompactForPrompt(message, 1800)}
 
             Regeneration guidance from previous plan evaluation:
-            {(string.IsNullOrWhiteSpace(regenerationGuidance) ? "none" : regenerationGuidance.Trim())}
+            {(string.IsNullOrWhiteSpace(regenerationGuidance) ? "none" : CompactForPrompt(regenerationGuidance, 1200))}
 
             Project execution guide:
-            {TrimForPrompt(projectExecutionGuide)}
+            {CompactForPrompt(projectExecutionGuide, 1800)}
 
             Design template guidance:
             {designTemplateGuidance}
@@ -946,8 +1016,13 @@ public sealed class PrototypeIterationPlanService
         }
     }
 
-    private static PrototypeIterationPlanningAnalysisResult ToPlanningAnalysisResult(IterationPlanningContext planningContext)
+    private static PrototypeIterationPlanningAnalysisResult ToPlanningAnalysisResult(
+        IterationPlanningContext planningContext,
+        IReadOnlyList<PrototypeIterationPlanStageTelemetryResult>? extraStageTelemetry = null)
     {
+        var stageTelemetry = planningContext.StageTelemetry
+            .Concat(extraStageTelemetry ?? [])
+            .ToArray();
         return new PrototypeIterationPlanningAnalysisResult(
             planningContext.AnalysisSource,
             planningContext.AnalysisSummary,
@@ -960,7 +1035,65 @@ public sealed class PrototypeIterationPlanService
                 item.Field,
                 item.Status,
                 item.Evidence,
-                item.MissingReason)).ToArray());
+                item.MissingReason)).ToArray(),
+            stageTelemetry);
+    }
+
+    private static PrototypeIterationPlanStageTelemetryResult BuildTelemetry(string stage, LlmRouteResult completion)
+    {
+        return new PrototypeIterationPlanStageTelemetryResult(
+            stage,
+            completion.Model,
+            completion.DurationMs,
+            completion.PromptLength,
+            completion.PromptUtf8Bytes,
+            completion.EstimatedPromptTokens,
+            completion.FailureCode,
+            completion.FailureCategory);
+    }
+
+    private static PrototypeIterationPlanStageTelemetryResult BuildSkippedTelemetry(
+        string stage,
+        string model,
+        string reason)
+    {
+        return new PrototypeIterationPlanStageTelemetryResult(
+            stage,
+            model,
+            0,
+            0,
+            0,
+            0,
+            reason,
+            "skipped");
+    }
+
+    private static object BuildIterationPlanObservability(
+        IterationPlanningContext planningContext,
+        IterationGoalBuildResult goalBuild)
+    {
+        var stages = planningContext.StageTelemetry
+            .Concat(goalBuild.StageTelemetry ?? [])
+            .ToArray();
+        return new
+        {
+            schema = "phase-a.iteration-plan.observability.v1",
+            stages,
+            totalDurationMs = stages.Sum(stage => stage.DurationMs),
+            totalPromptLength = stages.Sum(stage => stage.PromptLength),
+            totalPromptUtf8Bytes = stages.Sum(stage => stage.PromptUtf8Bytes),
+            totalEstimatedPromptTokens = stages.Sum(stage => stage.EstimatedPromptTokens),
+            failedStages = stages
+                .Where(stage => !string.IsNullOrWhiteSpace(stage.FailureCode) &&
+                    !string.Equals(stage.FailureCategory, "skipped", StringComparison.OrdinalIgnoreCase))
+                .Select(stage => new
+                {
+                    stage.Stage,
+                    stage.FailureCode,
+                    stage.FailureCategory
+                })
+                .ToArray()
+        };
     }
 
     private static PrototypeIterationPlanningAnalysisResult? TryReadPlanningAnalysisFromState(string stateText)
@@ -1049,6 +1182,22 @@ public sealed class PrototypeIterationPlanService
         return trimmed.Length <= 5000 ? trimmed : trimmed[..5000];
     }
 
+    private static string CompactForPrompt(string? value, int maxChars)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length <= maxChars)
+        {
+            return trimmed;
+        }
+
+        return trimmed[..maxChars] + "\n[truncated]";
+    }
+
     private static string AppendAttachmentContext(string message, string attachmentContext)
     {
         if (string.IsNullOrWhiteSpace(attachmentContext) || attachmentContext == "无。")
@@ -1120,6 +1269,7 @@ public sealed class PrototypeIterationPlanService
         string accountId,
         string projectId,
         PrototypeWorkflowProgress? prototypeProgress,
+        string? model = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
@@ -1198,11 +1348,11 @@ public sealed class PrototypeIterationPlanService
                     "should_refine_plan",
                     "当前 RPG 迭代计划缺少类型路由要求的场景、顺序或验收覆盖。",
                     rpgPlanIssue,
-                    "请先按 RPG 类型路由重新生成迭代计划：Start Adventure 到可见 MapScene 与稳定移动必须作为第一目标，之后再拆 BattleScene、奖励回地图、主循环切换、胜负可读性和最终验收。",
+                    "请按 JRPG first-loop capability profile 重新生成迭代计划：目标 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
                     BuildRpgRegenerationPrompt(details)));
             }
 
-            var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, routeProfile, details, prototypeProgress, cancellationToken);
+            var llmEvaluation = await EvaluateRpgPlanWithRequiredModelAsync(project, routeProfile, details, prototypeProgress, PrototypeModelPolicy.Normalize(model), cancellationToken);
             if (IsStaleRpgBoundaryMismatchEvaluation(llmEvaluation, goals))
             {
                 llmEvaluation = BuildRpgRouteGuardAcceptedEvaluation(llmEvaluation);
@@ -1241,6 +1391,7 @@ public sealed class PrototypeIterationPlanService
         GameTypeRouteProfile routeProfile,
         ProjectIterationSessionDetails details,
         PrototypeWorkflowProgress? prototypeProgress,
+        string model,
         CancellationToken cancellationToken)
     {
         if (_llmRouteEngine is null)
@@ -1256,7 +1407,7 @@ public sealed class PrototypeIterationPlanService
             new LlmRouteRequest(
                 promptRoot,
                 "plan-evaluation",
-                PrototypeModelPolicy.Normalize("gpt-5.4"),
+                model,
                 BuildRpgPlanEvaluationPrompt(project, routeProfile, projectExecutionGuide, details, prototypeProgress, planningAnalysis),
                 options,
                 project.AccountId,
@@ -1399,8 +1550,21 @@ public sealed class PrototypeIterationPlanService
             "field_navigation"
         };
 
-        var hasConflict = ContainsAny(text, "encounter", "battle", "combat", "enemy", "monster", "boss", "danger", "fight", "battle scene", "battlescene", "遇敌", "战斗", "敌人", "怪物", "首战");
-        var hasReward = ContainsAny(text, "reward", "level", "exp", "growth", "loot", "item", "skill", "choice", "3-choice", "three choices", "奖励", "成长", "经验", "升级", "道具", "技能", "三选一", "选择");
+        var strictFirstLoopRoute = ContainsAny(text, "strict route-profile", "route-profile steps", "strict contract", "contract steps", "rpg route", "jrpg first-loop", "reward loop step", "return-to-map validation", "clean return-to-map", "final rpg acceptance", "final playable acceptance");
+        if (strictFirstLoopRoute)
+        {
+            return SelectJrpgCapabilitiesInOrder(
+                "field_navigation",
+                "conflict_entry",
+                "battle_or_challenge_resolution",
+                "party_or_character_state",
+                "growth_feedback",
+                "return_or_continue_loop",
+                "final_first_loop_acceptance");
+        }
+
+        var hasConflict = strictFirstLoopRoute || ContainsAny(text, "encounter", "battle", "combat", "enemy", "monster", "boss", "danger", "fight", "battle scene", "battlescene", "遇敌", "战斗", "敌人", "怪物", "首战");
+        var hasReward = strictFirstLoopRoute || ContainsAny(text, "reward", "level", "exp", "growth", "loot", "item", "skill", "choice", "3-choice", "three choices", "奖励", "成长", "经验", "升级", "道具", "技能", "三选一", "选择");
         var hasOpeningContext = ContainsAny(text, "opening context", "who they control", "hero/context/objective", "player objective", "开场", "玩家身份", "当前目标");
         var hasStory = ContainsAny(text, "story", "quest", "npc", "dialog", "dialogue", "town", "village", "objective", "cutscene", "narrative", "剧情", "任务", "村庄", "城镇", "对话", "目标", "事件");
         var hasInteraction = hasStory || ContainsAny(text, "chest", "inspect", "talk", "discover", "interaction", "探索", "宝箱", "调查", "交互", "发现");
@@ -1444,6 +1608,16 @@ public sealed class PrototypeIterationPlanService
         }
 
         selectedIds.Add("final_first_loop_acceptance");
+        return SelectJrpgCapabilitiesInOrder(selectedIds);
+    }
+
+    private static IReadOnlyList<JrpgFirstLoopCapability> SelectJrpgCapabilitiesInOrder(params string[] selectedIds)
+    {
+        return SelectJrpgCapabilitiesInOrder(new HashSet<string>(selectedIds, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<JrpgFirstLoopCapability> SelectJrpgCapabilitiesInOrder(ISet<string> selectedIds)
+    {
         return JrpgFirstLoopCapabilities
             .Where(capability => selectedIds.Contains(capability.Id))
             .ToArray();
@@ -1841,23 +2015,61 @@ public sealed class PrototypeIterationPlanService
 
     private static string StripRpgStepOneBoundaryExclusionClauses(string value)
     {
-        var text = value;
-        text = Regex.Replace(
+        var clauses = Regex.Split(value, @"(?<=[.;??])\s+|\s+(?=\bPass only when\b)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return string.Join(" ", clauses.Where(clause => !IsRpgStepOneBoundaryExclusionClause(clause)));
+    }
+
+    private static bool IsRpgStepOneBoundaryExclusionClause(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var text = value.ToLowerInvariant();
+        var mentionsLaterCapability = ContainsAny(
             text,
-            @"\bbefore\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
-            " ",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        text = Regex.Replace(
+            "conflict",
+            "encounter",
+            "first encounter",
+            "encounter trigger",
+            "battle",
+            "battlescene",
+            "reward",
+            "rewards",
+            "3-choice",
+            "three choices",
+            "polish",
+            "scene switching",
+            "package readiness",
+            "final acceptance",
+            "full playable");
+        if (!mentionsLaterCapability)
+        {
+            return false;
+        }
+
+        return ContainsAny(
             text,
-            @"\b(?:do not|don't|must not|should not|without)\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
-            " ",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        text = Regex.Replace(
-            text,
-            @"\b(?:keep|remain|stays?)\b[^.。]*\b(?:focused|limited|scoped)\b[^.。]*\b(?:before|without|not)\b[^.。]*\b(?:conflict|encounter|first encounter|encounter trigger|battle|battlescene|reward|rewards|polish|scene switching|package readiness|final acceptance|full playable)\b[^.。]*[.。]?",
-            " ",
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        return text;
+            "before",
+            "without",
+            "independent of",
+            "separate from",
+            "not include",
+            "not cover",
+            "do not",
+            "don't",
+            "must not",
+            "should not",
+            "exclude",
+            "excluding",
+            "only validate",
+            "only covers",
+            "keep this scoped",
+            "keep this focused",
+            "focused on",
+            "limited to",
+            "mixed in");
     }
 
     private static bool IsStaleRpgBoundaryMismatchEvaluation(
@@ -1943,6 +2155,9 @@ public sealed class PrototypeIterationPlanService
             - Use only the data provided in this prompt.
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite / Chapter 6 Lite boundaries: evaluate whether the lightweight prototype goals are executable, not whether formal Chapter 3/6 task artifacts exist.
+            - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
+            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract/state inside the guide, current iteration goals, prototype progress, and planning analysis.
+            - Do not use AGENTS.md as hosted game-project recovery memory.
             - decision must be one of: ready_to_execute, should_refine_plan.
             - Use the current prototype result, planning analysis, and RPG/JRPG type requirements.
             - Treat the route as a JRPG first-loop capability profile, not a fixed DQ-like 7-step script.
@@ -2404,7 +2619,8 @@ public sealed class PrototypeIterationPlanService
         string PrototypeStateExcerpt,
         string SourceMessage,
         string SourceKind,
-        string RouteSkillId);
+        string RouteSkillId,
+        IReadOnlyList<PrototypeIterationPlanStageTelemetryResult> StageTelemetry);
 
     private static string EnsurePlanningAnalysisSchemaFile()
     {
@@ -2519,7 +2735,8 @@ public sealed class PrototypeIterationPlanService
 
     private sealed record IterationGoalBuildResult(
         List<PrototypeIterationPlanGoalResult> Goals,
-        bool UsedScaffoldFallback);
+        bool UsedScaffoldFallback,
+        IReadOnlyList<PrototypeIterationPlanStageTelemetryResult>? StageTelemetry = null);
 }
 
 public sealed record PrototypeIterationPlanDetails(

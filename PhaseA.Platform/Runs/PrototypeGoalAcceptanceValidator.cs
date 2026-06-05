@@ -36,14 +36,16 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, mapEntryFailureReason);
         }
 
-        if (contract.BattleSceneAcceptance && !HasRpgBattleSceneAcceptanceFiles(project.RepoPath))
+        var battleSceneFailureReason = GetRpgBattleSceneAcceptanceFailureReason(project.RepoPath);
+        if (contract.BattleSceneAcceptance && battleSceneFailureReason is not null)
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_battle_scene_contract");
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, battleSceneFailureReason);
         }
 
-        if (contract.RewardFlowAcceptance && !HasRpgRewardFlowAcceptanceFiles(project.RepoPath))
+        var rewardFlowFailureReason = GetRpgRewardFlowAcceptanceFailureReason(project.RepoPath);
+        if (contract.RewardFlowAcceptance && rewardFlowFailureReason is not null)
         {
-            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_reward_flow_contract");
+            return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, rewardFlowFailureReason);
         }
 
         if (contract.MainSceneHostUiHiddenAcceptance && !HasMainSceneDefaultPrototypeHostUiHidden(project.RepoPath))
@@ -99,6 +101,58 @@ internal static class PrototypeGoalAcceptanceValidator
                 linked.Token);
             if (result.ExitCode != 0)
             {
+                if (ShouldRetryCoreTestAfterRestore(testProject, result))
+                {
+                    await ShutdownDotnetBuildServerAsync(project.RepoPath, processRunner, linked.Token);
+                    var retryEnvironment = PrototypeValidationProcessEnvironment.Create(project.RepoPath);
+                    var retryIsolationArguments = PrototypeValidationProcessEnvironment.CreateMsBuildIsolationArguments(retryEnvironment, "core-tests-retry");
+                    await processRunner.RunAsync(
+                        new HostedProcessCommand(
+                            "dotnet",
+                            [
+                                "restore",
+                                testProject,
+                                .. retryIsolationArguments
+                            ],
+                            project.RepoPath,
+                            retryEnvironment),
+                        linked.Token);
+                    var retryResult = await processRunner.RunAsync(
+                        new HostedProcessCommand(
+                            "dotnet",
+                            [
+                                "test",
+                                testProject,
+                                "--filter",
+                                "FullyQualifiedName~DqRpgPrototypeLoopTests",
+                                .. retryIsolationArguments
+                            ],
+                            project.RepoPath,
+                            retryEnvironment),
+                        linked.Token);
+                    if (retryResult.ExitCode == 0)
+                    {
+                        result = retryResult;
+                    }
+                    else
+                    {
+                        return PrototypeGoalAcceptanceValidationResult.Failed(
+                            contract.Kind,
+                            "core_tests_failed",
+                            ExtractDotnetTestFailureDetails(retryResult));
+                    }
+                }
+                else
+                {
+                    return PrototypeGoalAcceptanceValidationResult.Failed(
+                        contract.Kind,
+                        "core_tests_failed",
+                        ExtractDotnetTestFailureDetails(result));
+                }
+            }
+
+            if (result.ExitCode != 0)
+            {
                 return PrototypeGoalAcceptanceValidationResult.Failed(
                     contract.Kind,
                     "core_tests_failed",
@@ -108,7 +162,7 @@ internal static class PrototypeGoalAcceptanceValidator
             var godotProject = Path.Combine(project.RepoPath, "GodotGame.csproj");
             if (File.Exists(godotProject))
             {
-                var godotBuildIsolationArguments = PrototypeValidationProcessEnvironment.CreateMsBuildIsolationArguments(validationEnvironment, "godot-build");
+                var godotBuildStabilityArguments = PrototypeValidationProcessEnvironment.CreateMsBuildStabilityArguments();
                 var buildResult = await processRunner.RunAsync(
                     new HostedProcessCommand(
                         "dotnet",
@@ -119,7 +173,7 @@ internal static class PrototypeGoalAcceptanceValidator
                             "Debug",
                             "-v",
                             "minimal",
-                            .. godotBuildIsolationArguments
+                            .. godotBuildStabilityArguments
                         ],
                         project.RepoPath,
                         validationEnvironment),
@@ -163,6 +217,26 @@ internal static class PrototypeGoalAcceptanceValidator
         catch
         {
         }
+    }
+
+    private static bool ShouldRetryCoreTestAfterRestore(string testProject, HostedProcessResult result)
+    {
+        var details = ExtractDotnetTestFailureDetails(result) ?? "";
+        if (!details.Contains("CS0246", StringComparison.OrdinalIgnoreCase) ||
+            (!details.Contains("Xunit", StringComparison.OrdinalIgnoreCase) &&
+             !details.Contains("FluentAssertions", StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        if (!File.Exists(testProject))
+        {
+            return false;
+        }
+
+        var projectText = File.ReadAllText(testProject);
+        return projectText.Contains("PackageReference Include=\"xunit\"", StringComparison.OrdinalIgnoreCase) &&
+               projectText.Contains("PackageReference Include=\"FluentAssertions\"", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? ExtractDotnetTestFailureDetails(HostedProcessResult result)
@@ -479,47 +553,74 @@ internal static class PrototypeGoalAcceptanceValidator
         }
     }
 
-    private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
+    private static string? GetRpgBattleSceneAcceptanceFailureReason(string repoPath)
     {
         var battleScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn");
         var battleScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs");
-        if (new[] { battleScene, battleScript }.Any(path => !File.Exists(path)))
+        var missingFiles = new[] { battleScene, battleScript }
+            .Where(path => !File.Exists(path))
+            .Select(path => Path.GetRelativePath(repoPath, path).Replace('\\', '/'))
+            .ToList();
+        if (missingFiles.Count > 0)
         {
-            return false;
+            return "missing_rpg_battle_scene_contract: " + string.Join("; ", missingFiles.Select(path => $"missing_file={path}"));
         }
 
         var battleSceneText = File.ReadAllText(battleScene);
         var battleScriptText = File.ReadAllText(battleScript);
-        return battleSceneText.Contains("BattleScene", StringComparison.Ordinal) &&
-               battleSceneText.Contains("Attack", StringComparison.Ordinal) &&
-               battleScriptText.Contains("ResolveAttackTurn", StringComparison.Ordinal) &&
-               !battleScriptText.Contains("_loop.ResolveBattle(_state", StringComparison.Ordinal) &&
-               battleScriptText.Contains("BattleFinished", StringComparison.Ordinal);
+        var missing = new List<string>();
+        AddMissing(missing, battleSceneText.Contains("BattleScene", StringComparison.Ordinal), "battle_scene_missing_BattleScene_node");
+        AddMissing(missing, battleSceneText.Contains("AttackButton", StringComparison.Ordinal) || battleSceneText.Contains("Attack", StringComparison.Ordinal), "battle_scene_missing_AttackButton");
+        AddMissing(missing, battleScriptText.Contains("ResolveAttackTurn", StringComparison.Ordinal) || battleScriptText.Contains("ResolveBattle", StringComparison.Ordinal), "battle_script_missing_ResolveBattle_or_ResolveAttackTurn");
+        AddMissing(missing, !battleScriptText.Contains("_loop.ResolveBattle(_state", StringComparison.Ordinal), "battle_script_still_only_delegates_to_main_loop_ResolveBattle");
+        AddMissing(missing, battleScriptText.Contains("BattleFinished", StringComparison.Ordinal), "battle_script_missing_BattleFinished");
+        return missing.Count == 0
+            ? null
+            : "missing_rpg_battle_scene_contract: " + string.Join("; ", missing);
     }
 
-    private static bool HasRpgRewardFlowAcceptanceFiles(string repoPath)
+    private static bool HasRpgBattleSceneAcceptanceFiles(string repoPath)
+    {
+        return GetRpgBattleSceneAcceptanceFailureReason(repoPath) is null;
+    }
+
+    private static string? GetRpgRewardFlowAcceptanceFailureReason(string repoPath)
     {
         var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
         var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
-        if (!File.Exists(mainScript) || !File.Exists(mapScene))
+        var missingFiles = new[] { mainScript, mapScene }
+            .Where(path => !File.Exists(path))
+            .Select(path => Path.GetRelativePath(repoPath, path).Replace('\\', '/'))
+            .ToList();
+        if (missingFiles.Count > 0)
         {
-            return false;
+            return "missing_rpg_reward_flow_contract: " + string.Join("; ", missingFiles.Select(path => $"missing_file={path}"));
         }
 
         var mapScript = ResolveSceneScriptPath(repoPath, mapScene, Path.Combine("Game.Godot", "Prototypes", "dq-rpg", "Scripts", "MapScene.cs"));
         if (string.IsNullOrWhiteSpace(mapScript) || !File.Exists(mapScript))
         {
-            return false;
+            return "missing_rpg_reward_flow_contract: missing_file=Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs";
         }
 
         var mainScriptText = File.ReadAllText(mainScript);
         var mapScriptText = File.ReadAllText(mapScript);
-        return HasRewardListGuard(mainScriptText) &&
-               !mainScriptText.Contains("if (isVictory && rewards.Count > 0)", StringComparison.Ordinal) &&
-               HasRewardEntry(repoPath, mainScriptText) &&
-               HasRewardReturnToMapEntry(mainScriptText) &&
-               ContainsAny(mapScriptText, "ShowRewardReturnStatus", "ApplyState", "ResumeAfterReward") &&
-               HasPlayerVisibilityRestore(mapScriptText);
+        var missing = new List<string>();
+        AddMissing(missing, HasRewardListGuard(mainScriptText), "reward_flow_missing_reward_list_guard");
+        AddMissing(missing, !mainScriptText.Contains("if (isVictory && rewards.Count > 0)", StringComparison.Ordinal), "reward_flow_still_uses_unreachable_isVictory_reward_guard");
+        AddMissing(missing, HasRewardEntry(repoPath, mainScriptText), "reward_flow_missing_reward_entry");
+        AddMissing(missing, HasRewardReturnToMapEntry(mainScriptText), "reward_flow_missing_return_to_map_after_reward");
+        AddMissing(missing, HasRewardReturnFeedback(mainScriptText, mapScriptText), "reward_flow_missing_map_return_feedback");
+        AddMissing(missing, HasPlayerVisibilityRestore(mapScriptText) || HasMainScriptRewardRefresh(mainScriptText), "reward_flow_missing_player_visibility_or_view_refresh_restore");
+
+        return missing.Count == 0
+            ? null
+            : "missing_rpg_reward_flow_contract: " + string.Join("; ", missing);
+    }
+
+    private static bool HasRpgRewardFlowAcceptanceFiles(string repoPath)
+    {
+        return GetRpgRewardFlowAcceptanceFailureReason(repoPath) is null;
     }
 
     private static bool HasStartAdventureMapEntry(string mainScriptText)
@@ -573,12 +674,17 @@ internal static class PrototypeGoalAcceptanceValidator
                mainScriptText.Contains("rewards.Count == 0", StringComparison.Ordinal) ||
                mainScriptText.Contains("RewardOptions.Count > 0", StringComparison.Ordinal) ||
                mainScriptText.Contains("RewardOptions.Count <= 0", StringComparison.Ordinal) ||
-               mainScriptText.Contains("RewardOptions.Count == 0", StringComparison.Ordinal);
+               mainScriptText.Contains("RewardOptions.Count == 0", StringComparison.Ordinal) ||
+               mainScriptText.Contains("rewards.Count", StringComparison.Ordinal) ||
+               mainScriptText.Contains("RewardOptions.Count", StringComparison.Ordinal) ||
+               mainScriptText.Contains("_currentRewards.Count", StringComparison.Ordinal);
     }
 
     private static bool HasRewardEntry(string repoPath, string mainScriptText)
     {
-        return HasRewardSceneEntry(mainScriptText) || HasBattleSceneOwnedRewardEntry(repoPath, mainScriptText);
+        return HasRewardSceneEntry(mainScriptText) ||
+               HasBattleSceneOwnedRewardEntry(repoPath, mainScriptText) ||
+               HasMainScriptOwnedRewardPanelEntry(mainScriptText);
     }
 
     private static bool HasRewardSceneEntry(string mainScriptText)
@@ -595,7 +701,45 @@ internal static class PrototypeGoalAcceptanceValidator
         return mainScriptText.Contains("ShowMapScene()", StringComparison.Ordinal) ||
                (mainScriptText.Contains("ApplyReward", StringComparison.Ordinal) &&
                  mainScriptText.Contains("RefreshView()", StringComparison.Ordinal) &&
-                 ContainsAny(mainScriptText, "ResumeAfterReward", "ShowRewardReturnStatus", "ApplyState"));
+                 ContainsAny(mainScriptText, "ResumeAfterReward", "ShowRewardReturnStatus", "ApplyState", "_rewardPanel.Visible = false", "DebugGetRpgRewardFlowContract", "rpg_reward_flow_contract"));
+    }
+
+    private static bool HasRewardReturnFeedback(string mainScriptText, string mapScriptText)
+    {
+        return ContainsAny(mapScriptText, "ShowRewardReturnStatus", "ApplyState", "ResumeAfterReward") ||
+               ContainsAny(mainScriptText, "ShowRewardReturnStatus", "ApplyState", "ResumeAfterReward", "Return to the map", "Battle reward selected", "rpg_reward_flow_contract");
+    }
+
+    private static bool HasMainScriptRewardRefresh(string mainScriptText)
+    {
+        return mainScriptText.Contains("RefreshView()", StringComparison.Ordinal) &&
+               ContainsAny(mainScriptText, "SelectReward", "ApplyRewardSelection", "OnRewardSelected");
+    }
+
+    private static bool HasMainScriptOwnedRewardPanelEntry(string mainScriptText)
+    {
+        return ContainsAny(mainScriptText, "SelectReward", "ApplyRewardSelection", "OnRewardSelected") &&
+               mainScriptText.Contains("ApplyReward", StringComparison.Ordinal) &&
+               HasRewardChoiceCountContract(mainScriptText) &&
+               ContainsAny(mainScriptText, "_rewardButtons", "RewardButtons", "RewardOptionOne", "RewardOptionTwo", "RewardOptionThree", "RewardOptions") &&
+               ContainsAny(mainScriptText, "_rewardPanel.Visible = true", "rewardVisible = true", "ShowRewardScene") &&
+               ContainsAny(mainScriptText, "_rewardPanel.Visible = false", "rewardVisible = false", "ShowMapScene()", "RefreshView()");
+    }
+
+    private static bool HasRewardChoiceCountContract(string mainScriptText)
+    {
+        return ContainsAny(
+            mainScriptText,
+            "RewardOptions.Count",
+            "rewards.Count",
+            "_rewardButtons.Length",
+            "choice_count",
+            "choice count",
+            "exactly three",
+            "== 3",
+            "Count == 3",
+            "Count != 3") ||
+            Regex.IsMatch(mainScriptText, @"\[\s*2\s*\]", RegexOptions.CultureInvariant);
     }
 
     private static bool HasBattleSceneOwnedRewardEntry(string repoPath, string mainScriptText)

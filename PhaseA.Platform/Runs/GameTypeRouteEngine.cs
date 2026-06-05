@@ -69,6 +69,7 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
             - Rule: all cloud business top-level routes must enter through this game type route profile before planning, coding, repairing, validating, or reporting.
             - Rule: treat the selected route skill as the operating playbook for this route; load and follow it before using generic prototype behavior.
             - Rule: do not run a bare/generic prototype route when the route skill is missing or unresolved; report route_skill_required instead.
+            - Rule: recover hosted project memory from project guide, contract, route state, ledger, and latest validation; do not use AGENTS.md as hosted project memory.
             - Rule: read-only JSON routes must use ILlmRouteEngine; executable Codex routes must use CodexHostedProcessCommandFactory with stdin prompt transport.
             """;
     }

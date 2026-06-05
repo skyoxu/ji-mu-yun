@@ -11,12 +11,27 @@ Provide the default repo-local implementation lane for RPG/JRPG prototypes insid
 
 ## Required Reading
 
-1. `AGENTS.md`
-2. `docs/workflows/prototype-lane.md`
-3. `docs/workflows/prototype-tdd.md`
-4. `docs/workflows/prototype-7day-playable-godot-zh.md`
-5. `docs/prototype-type-kits/rpg.md`
-6. `references/rpg-prototype-contract.md`
+1. `docs/workflows/prototype-lane.md`
+2. `docs/workflows/prototype-tdd.md`
+3. `docs/workflows/prototype-7day-playable-godot-zh.md`
+4. `docs/prototype-type-kits/rpg.md`
+5. `references/rpg-prototype-contract.md`
+
+`AGENTS.md` is required only when maintaining the Phase A platform repo, workflow code, docs, or this skill. Hosted RPG project routes must not use `AGENTS.md` as project recovery memory.
+
+
+## Hosted Route Recovery Protocol
+
+Before any hosted prototype route implements or repairs a game project, restore project memory from project-level route files, not from `AGENTS.md`:
+
+1. Read the resolved game-type route profile and this route skill prompt block.
+2. Read `meta/project-execution-guide.md` as the project-level `/new` recovery protocol.
+3. Read `routes/prototype-contract/latest.json`; concrete user form fields and `input_traceability` override templates.
+4. Read only the latest route state relevant to the current route and current step, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, `meta/routes/execute-next-goal/latest.json`, `meta/routes/prototype-repair/latest.json`, or `meta/routes/repair-plan/latest.json`.
+5. For needs-fix, read the current step `meta/routes/needs-fix/step-XX/repair-ledger.json` before changing files and update it with fixed, remaining, and newly found blockers.
+6. Treat the latest platform validation blocker as higher priority than older assistant summaries, route state, or repair ledger memory.
+
+If a mandatory recovery source is missing, fail closed or record the missing source explicitly. Do not infer project completion from assistant text alone; completion must come from route state, current goal acceptance, or platform validation evidence.
 
 ## Operating Rules
 

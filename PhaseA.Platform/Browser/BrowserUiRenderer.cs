@@ -1007,7 +1007,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1221,12 +1221,23 @@ public sealed class BrowserUiRenderer
                       }))
                       .filter(isStoredChatMessage)
                       .slice(-maxStoredChatMessages);
+                    syncIterationPlanFailureFromChat();
                     renderChatHistory();
                     saveChatHistoryForProject();
                     updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
                   } catch {
                     renderChatHistory();
                   }
+                }
+
+                function syncIterationPlanFailureFromChat() {
+                  const latest = state.chatHistory
+                    .filter(message => message.role === "assistant" && message.kind === "iteration-plan-result")
+                    .slice(-1)[0];
+                  const content = sanitizePublicChatContent(latest?.content || "");
+                  state.iterationPlanFailure = content.includes("调用失败") || content.includes("codex_timeout") || content.includes("llm_failed")
+                    ? content
+                    : "";
                 }
 
                 async function loadIterationPlan() {
@@ -1239,6 +1250,7 @@ public sealed class BrowserUiRenderer
                   try {
                     state.iterationPlan = await api(`/api/projects/${state.projectId}/iteration-plan/latest`);
                     state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
+                    state.iterationPlanFailure = "";
                     syncIterationPlanRegenerationSuggestion();
                   } catch (error) {
                     if (error?.status === 404) {
@@ -1340,8 +1352,10 @@ public sealed class BrowserUiRenderer
                 function renderIterationPlan() {
                   const plan = state.iterationPlan;
                   if (!plan || !plan.session) {
-                    $("iterationPlanStatus").className = "card muted";
-                    $("iterationPlanStatus").textContent = "尚未生成迭代计划。";
+                    $("iterationPlanStatus").className = state.iterationPlanFailure ? "card" : "card muted";
+                    $("iterationPlanStatus").innerHTML = state.iterationPlanFailure
+                      ? `<strong>迭代计划生成失败</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
+                      : "尚未生成迭代计划。";
                     $("iterationPlanEvaluation").className = "card muted";
                     $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
                     $("iterationPlanGoals").innerHTML = "";
@@ -1530,7 +1544,8 @@ public sealed class BrowserUiRenderer
                   try {
                     state.iterationPlanEvaluation = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
                       method: "POST",
-                      body: JSON.stringify({})
+                      timeoutMs: longLlmTimeoutMs,
+                      body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
                     });
                     if (state.iterationPlan) {
                       state.iterationPlan.latestEvaluation = state.iterationPlanEvaluation;
@@ -1559,7 +1574,15 @@ public sealed class BrowserUiRenderer
                     }
                     out(state.iterationPlanEvaluation);
                   } catch (error) {
+                    const payload = error?.payload;
+                    if (payload?.status && payload?.summary) {
+                      state.chatHistory.push({ role: "assistant", content: payload.summary, kind: "iteration-plan-result" });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                      out({ status: error.status, ...payload });
+                    } else {
                     showError(error);
+                    }
                   } finally {
                     setLocalBusy(false);
                     await refreshActiveRun();
@@ -1575,8 +1598,23 @@ public sealed class BrowserUiRenderer
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
                       method: "POST",
-                      body: JSON.stringify({ message, sourceKind, attachments: currentChatAttachmentsForRun() })
+                      timeoutMs: longLlmTimeoutMs,
+                      body: JSON.stringify({ message, sourceKind, attachments: currentChatAttachmentsForRun(), model: $("globalModel").value || "gpt-5.5" })
                     });
+                    const summary = result.goals?.length
+                      ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
+                      : result.summary;
+                    state.chatHistory.push({ role: "assistant", content: summary, kind: "iteration-plan-result" });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    await loadServerChatHistoryForProject(state.projectId);
+                    if (result.status !== "ready") {
+                      state.iterationPlanEvaluation = null;
+                      state.iterationPlanFailure = summary || "迭代计划生成失败。";
+                      renderIterationPlan();
+                      out(result);
+                      return;
+                    }
                     state.iterationPlan = {
                       session: {
                         sessionId: result.sessionId,
@@ -1590,13 +1628,8 @@ public sealed class BrowserUiRenderer
                       latestEvaluation: null
                     };
                     state.iterationPlanEvaluation = null;
-                    const summary = result.goals?.length
-                      ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
-                      : result.summary;
-                    state.chatHistory.push({ role: "assistant", content: summary, kind: "iteration-plan-result" });
+                    state.iterationPlanFailure = "";
                     renderIterationPlan();
-                    renderChatHistory();
-                    saveChatHistoryForProject();
                     out(result);
                   } catch (error) {
                     showError(error);
@@ -2705,8 +2738,27 @@ public sealed class BrowserUiRenderer
                   $("chatSkillDescription").textContent = action.description || "当前能力暂无说明。";
                 }
 
+                const longLlmTimeoutMs = 1200 * 1000;
+
                 async function api(path, options = {}) {
-                  const response = await fetch(path, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+                  const { timeoutMs, ...fetchOptions } = options;
+                  const controller = timeoutMs ? new AbortController() : null;
+                  const timeoutHandle = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
+                  let response;
+                  try {
+                    response = await fetch(path, {
+                      ...fetchOptions,
+                      signal: controller?.signal,
+                      headers: { ...headers(), ...(options.headers || {}) }
+                    });
+                  } catch (error) {
+                    if (error?.name === "AbortError") {
+                      throw { status: 408, payload: { status: "client_timeout", failureCode: "client_timeout", timeoutMs } };
+                    }
+                    throw error;
+                  } finally {
+                    if (timeoutHandle) clearTimeout(timeoutHandle);
+                  }
                   const text = await response.text();
                   let payload = {};
                   try { payload = text ? JSON.parse(text) : {}; } catch { payload = { raw: text }; }

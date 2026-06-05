@@ -1,5 +1,6 @@
 using FluentAssertions;
 using PhaseA.Platform.Llm;
+using System.Text.Json;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Llm;
@@ -34,9 +35,19 @@ public sealed class LlmRouteEngineTests
 
             result.Succeeded.Should().BeFalse();
             result.FailureCode.Should().Be("llm_json_parse_failed");
+            result.FailureCategory.Should().Be("invalid_json");
+            result.PromptLength.Should().Be("Return JSON.".Length);
+            result.EstimatedPromptTokens.Should().BeGreaterThan(0);
             Directory.EnumerateFiles(Path.Combine(workspace, "logs", "phase-a-chat"), "*.failure.json")
                 .Should()
                 .ContainSingle();
+            var metricsFiles = Directory.EnumerateFiles(Path.Combine(workspace, "logs", "phase-a-chat"), "*.metrics.json").ToArray();
+            metricsFiles.Should().ContainSingle();
+            var metricsPath = metricsFiles.Single();
+            using var metrics = JsonDocument.Parse(File.ReadAllText(metricsPath));
+            metrics.RootElement.GetProperty("failureCategory").GetString().Should().Be("invalid_json");
+            metrics.RootElement.GetProperty("durationMs").GetInt64().Should().BeGreaterThanOrEqualTo(0);
+            metrics.RootElement.GetProperty("estimatedPromptTokens").GetInt32().Should().BeGreaterThan(0);
         }
         finally
         {

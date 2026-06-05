@@ -137,6 +137,7 @@ public sealed class PrototypeWorkflowTests
         projectGuide.Should().Contain("Prototype Chapter 3/6 Lite Protocol");
         projectGuide.Should().Contain("does not create or validate formal acceptance files");
         projectGuide.Should().Contain("Route Recovery Protocol");
+        projectGuide.Should().Contain("Do not use AGENTS.md as hosted project recovery memory");
     }
 
     [Fact]

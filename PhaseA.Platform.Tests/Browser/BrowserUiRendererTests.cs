@@ -517,6 +517,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("请先修复当前目标");
         html.Should().Contain("/iteration-plan");
         html.Should().Contain("/iteration-plan/evaluate");
+        html.Should().Contain("const longLlmTimeoutMs = 1200 * 1000;");
+        html.Should().Contain("failureCode: \"client_timeout\"");
+        html.Should().Contain("timeoutMs: longLlmTimeoutMs");
         html.Should().Contain("/iteration-plan/execute-next");
         html.Should().Contain("loadIterationPlan");
         html.Should().Contain("renderIterationPlan");

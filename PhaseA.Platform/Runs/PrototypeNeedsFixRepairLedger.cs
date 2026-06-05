@@ -346,12 +346,33 @@ internal sealed class PrototypeNeedsFixRepairLedger
             return "Fix the exact C# compile errors named in acceptance_validation_details first. Keep the repair scoped to the listed files, missing symbols, and error codes; do not continue gameplay/UI/content polish while these compile errors remain open.";
         }
 
+        if (StartsWithReason(reason, "missing_rpg_map_entry_contract"))
+        {
+            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure Game.Godot/Prototypes/dq-rpg/MapScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs exist together, MapScene.tscn has MapScene/TrackLayer/RpgMapAsset/Grid/Overlay/RpgPlayerAsset/RpgEnemyAsset, and MapScene.cs exposes grid-position mapping, player visibility restore, and stable movement handling.";
+        }
+
+        if (StartsWithReason(reason, "missing_rpg_battle_scene_contract"))
+        {
+            return "Repair the full RPG/JRPG battle-scene contract, not only the first missing token. Ensure Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, and an enemy token node, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn battle settlement wiring instead of leaving the battle loop only inside DqRpgPrototype.cs.";
+        }
+
+        if (StartsWithReason(reason, "missing_rpg_reward_flow_contract"))
+        {
+            return "Repair the full RPG/JRPG reward-flow contract. Ensure victory or consequence exposes exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, visibly updates stats or consequence text, returns or refreshes the map, and restores player visibility. A DqRpgPrototype.cs-owned reward panel is valid if it keeps the reward entry, selection, ApplyReward, visible feedback, and map-return contract together.";
+        }
+
         return reason switch
         {
             "core_tests_failed" => "Fix the concrete core test compile or assertion failure named in acceptance_validation_details.",
             "godot_project_build_failed" => "Fix the concrete Godot build error named in acceptance_validation_details.",
             _ => "Fix the concrete platform acceptance failure named in acceptance_validation_details."
         };
+    }
+
+    private static bool StartsWithReason(string? actual, string expected)
+    {
+        return !string.IsNullOrWhiteSpace(actual) &&
+               actual.Trim().StartsWith(expected, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string BuildGodotSmokeSuggestedFix(string reason, string? scene)

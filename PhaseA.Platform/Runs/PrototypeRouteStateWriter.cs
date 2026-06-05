@@ -395,6 +395,7 @@ public sealed class PrototypeRouteStateWriter
             5. Use the latest live platform acceptance blocker as highest priority when it differs from older route state or ledger memory.
             6. Keep changes scoped to the hosted game project unless the current goal explicitly asks for platform changes.
             7. Before reporting succeeded, verify the work against the current goal, prototype contract, and type-specific route rules.
+            8. Do not use AGENTS.md as hosted project recovery memory; AGENTS.md is platform-repo guidance, not this project-level route memory.
 
             ## Priority Rules
 

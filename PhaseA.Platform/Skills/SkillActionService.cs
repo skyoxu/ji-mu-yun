@@ -183,11 +183,17 @@ public sealed class SkillActionService
             process.ExitCode == 0,
             output,
             null,
+            "gpt-5.4",
             rawResult.FailureCode,
+            process.ExitCode == 0 ? null : "llm_failed",
             process.ExitCode,
             process.Stdout,
             process.Stderr,
-            rawResult);
+            rawResult,
+            0,
+            prompt.Length,
+            Encoding.UTF8.GetByteCount(prompt),
+            Math.Max(1, (int)Math.Ceiling(Encoding.UTF8.GetByteCount(prompt) / 4.0d)));
     }
 
     private HostedProcessCommand BuildCodexReadOnlyCommand(string repositoryRoot, string outputPath, string prompt)

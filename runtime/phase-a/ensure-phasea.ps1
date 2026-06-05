@@ -5,6 +5,7 @@ $publicUrl = 'http://47.86.160.138:8080/healthz'
 $repositoryRoot = 'C:\jimuyun'
 $startScript = 'C:\jimuyun\runtime\phase-a\start-phasea.ps1'
 $pidFile = 'C:\jimuyun\logs\phase-a-innernet\phasea.pid'
+$metadataDb = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
 $runtimeLogRoot = 'C:\jimuyun\logs\phase-a-innernet\runtime'
 $eventLog = Join-Path $runtimeLogRoot 'phasea-ensure.jsonl'
 $timeoutSeconds = 45
@@ -67,6 +68,36 @@ function Stop-StalePhaseAProcess {
     return $true
 }
 
+function Test-ActiveHostedRun {
+    if (!(Test-Path $metadataDb)) {
+        return $false
+    }
+
+    try {
+        $script = @"
+import sqlite3
+import sys
+db = r'''$metadataDb'''
+try:
+    conn = sqlite3.connect(db, timeout=2)
+    row = conn.execute("select count(*) from runs where status in ('queued','running')").fetchone()
+    print(row[0] if row else 0)
+except Exception:
+    print(0)
+"@
+        $countText = $script | py -3 -
+        $count = 0
+        if ([int]::TryParse(($countText | Select-Object -First 1).Trim(), [ref]$count)) {
+            return $count -gt 0
+        }
+    }
+    catch {
+        return $false
+    }
+
+    return $false
+}
+
 if (Test-HttpHealthy -Url $appUrl) {
     $publicHealthy = Test-HttpHealthy -Url $publicUrl
     if ($publicHealthy) {
@@ -75,6 +106,11 @@ if (Test-HttpHealthy -Url $appUrl) {
     }
 
     Write-EnsureEvent -Status 'warn' -Action 'noop' -Message 'Phase A local health is healthy but public proxy health is still failing.'
+    exit 0
+}
+
+if (Test-ActiveHostedRun) {
+    Write-EnsureEvent -Status 'warn' -Action 'defer-restart-active-run' -Message 'Phase A local health is failing, but a hosted run is active; restart deferred to avoid interrupting Codex.'
     exit 0
 }
 

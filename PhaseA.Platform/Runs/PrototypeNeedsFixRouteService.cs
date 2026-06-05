@@ -345,6 +345,11 @@ public sealed class PrototypeNeedsFixRouteService
             return "Only repair the Godot project build blocker first. Use PlatformAcceptanceDetails as the source of truth and keep changes scoped to the files named by the build errors.";
         }
 
+        if (acceptanceReason?.StartsWith("missing_rpg_map_entry_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy the platform-required map nodes, grid-position mapping, player visibility restore, and stable movement handling before reporting STATUS: completed.";
+        }
+
         return "Repair the listed platform blocker first. Do not infer success from prior assistant summaries.";
     }
 
@@ -377,20 +382,20 @@ public sealed class PrototypeNeedsFixRouteService
             Direction lock:
             - The repair target is only the Current goal below.
             - Use Prototype Chapter 6 Lite semantics: one-step repair plus route state/ledger; no Taskmaster triplets, formal acceptance files, overlays, contracts, or review pipeline artifacts.
-            - Project README and Recovery source are read-only recovery context, not repair targets.
             - Project README, Project Execution Guide, and Recovery source are read-only recovery context, not repair targets.
             - The Project Execution Guide is the project-level /new recovery protocol. Use it to locate artifacts and restore route context when no conversational memory is available.
             - Do not repair Phase A platform routing, route-state readers, recovery logic, docs, scripts, deployment, or tests unless the Current goal explicitly asks for that.
             - If Current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
+            - Exception: if the latest platform acceptance blocker is core_tests_failed, missing Xunit/FluentAssertions/package references, or hosted test project compile failure, repair hosted test project/package/reference files first. This is current-goal work, not Phase A repair.
             - Platform route or recovery tests passing does not prove a gameplay goal is complete.
 
             Project README:
-            {TrimForPrompt(projectReadme, 600)}
+            {TrimForPrompt(projectReadme, 360)}
 
             Project Execution Guide:
             - Path: {PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath}
             - Route Recovery Protocol: follow the project-level /new recovery order from this guide before changing files.
-            {TrimForPrompt(projectExecutionGuide, 200)}
+            {TrimForPrompt(projectExecutionGuide, 120)}
 
             Project prototype contract:
             - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
@@ -402,7 +407,7 @@ public sealed class PrototypeNeedsFixRouteService
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
-            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 450)}
+            - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 240)}
 
             Previous platform rejection:
             {previousPlatformRejection}
@@ -411,7 +416,7 @@ public sealed class PrototypeNeedsFixRouteService
             {repairLedger}
 
             Recovery source consumed: {sourceLabel}
-            {TrimForPrompt(sourceState, 500)}
+            {TrimForPrompt(sourceState, 260)}
 
             User feedback:
             {userFeedback?.Trim()}
@@ -419,6 +424,7 @@ public sealed class PrototypeNeedsFixRouteService
             Scope rule:
             Only repair this current step. Do not read or use needs fix state from another step.
             Current platform acceptance diagnosis overrides previous platform rejection and repair ledger when they differ. The repair ledger is continuity memory, not authority over live validation.
+            If platform acceptance still reports core_tests_failed or missing test framework references, do not output STATUS: completed without changing hosted files that resolve it.
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             """;
