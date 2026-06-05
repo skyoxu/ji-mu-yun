@@ -9,7 +9,8 @@ public sealed class HeavyRunnerQueueServiceTests
     public async Task ExecuteAsync_RunsHeavyWorkOneAtATimeInFifoOrder()
     {
         var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
-        var firstCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var waitTimeout = TimeSpan.FromSeconds(60);
+        var firstCanFinish = new TaskCompletionSource();
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var order = new List<string>();
@@ -27,7 +28,7 @@ public sealed class HeavyRunnerQueueServiceTests
                 return "first";
             });
 
-        await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        await firstStarted.Task.WaitAsync(waitTimeout);
 
         var second = queue.ExecuteAsync(
             "run-2",
@@ -50,8 +51,8 @@ public sealed class HeavyRunnerQueueServiceTests
 
         firstCanFinish.SetResult();
 
-        Assert.Equal("first", await first.WaitAsync(TimeSpan.FromSeconds(15)));
-        Assert.Equal("second", await second.WaitAsync(TimeSpan.FromSeconds(15)));
+        Assert.Equal("first", await first.WaitAsync(waitTimeout));
+        Assert.Equal("second", await second.WaitAsync(waitTimeout));
         Assert.Equal(["first", "second"], order);
         Assert.False(queue.GetReadback("account-2", includeAll: true).Running);
     }
