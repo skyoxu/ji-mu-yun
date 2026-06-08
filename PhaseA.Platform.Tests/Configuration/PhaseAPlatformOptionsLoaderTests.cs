@@ -27,6 +27,11 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.PythonCommand.Should().Be("py");
         options.DeliveryProfile.Should().Be("fast-ship");
         options.AdminUsername.Should().Be("admin");
+        options.MaxConcurrentChats.Should().Be(8);
+        options.MaxConcurrentChatsPerAccount.Should().Be(2);
+        options.MaxConcurrentProjectCreations.Should().Be(3);
+        options.MaxConcurrentProjectCreationsPerAccount.Should().Be(1);
+        options.MaxConcurrentOtherRuns.Should().Be(1);
     }
 
     [Fact]
@@ -52,7 +57,12 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_ADMIN_USERNAME"] = "root",
             ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-hash",
             ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
-            ["PHASEA_USER_TOKEN_HASH"] = "user-token-hash"
+            ["PHASEA_USER_TOKEN_HASH"] = "user-token-hash",
+            ["PHASEA_MAX_CONCURRENT_CHATS"] = "9",
+            ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
+            ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
+            ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT"] = "2",
+            ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2"
         };
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(values);
@@ -72,6 +82,11 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.AdminPasswordHash.Should().Be("password-hash");
         options.AdminTokenHash.Should().Be("token-hash");
         options.UserTokenHash.Should().Be("user-token-hash");
+        options.MaxConcurrentChats.Should().Be(9);
+        options.MaxConcurrentChatsPerAccount.Should().Be(3);
+        options.MaxConcurrentProjectCreations.Should().Be(4);
+        options.MaxConcurrentProjectCreationsPerAccount.Should().Be(2);
+        options.MaxConcurrentOtherRuns.Should().Be(2);
     }
 
     [Theory]
@@ -83,6 +98,11 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("PHASEA_REPOSITORY_ROOT", "relative\\repo")]
     [InlineData("APP_BIND_URL", "http://0.0.0.0:8080")]
     [InlineData("APP_BIND_URL", "https://127.0.0.1:8080")]
+    [InlineData("PHASEA_MAX_CONCURRENT_CHATS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_OTHER_RUNS", "0")]
     public void FromDictionary_FailsClosed_ForInvalidValues(string key, string value)
     {
         var values = new Dictionary<string, string?> { [key] = value };

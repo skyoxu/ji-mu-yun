@@ -16,6 +16,7 @@ public sealed class Chapter2BootstrapService
     private readonly Chapter2BootstrapCommandBuilder _commandBuilder;
     private readonly ProjectHealthArtifactIndexer _artifactIndexer;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly TimeSpan _executionTimeout;
 
     public Chapter2BootstrapService(
@@ -35,7 +36,8 @@ public sealed class Chapter2BootstrapService
         Chapter2BootstrapCommandBuilder commandBuilder,
         ProjectHealthArtifactIndexer artifactIndexer,
         IProjectWorkspaceSeeder workspaceSeeder,
-        TimeSpan? executionTimeout = null)
+        TimeSpan? executionTimeout = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -43,6 +45,7 @@ public sealed class Chapter2BootstrapService
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -102,6 +105,7 @@ public sealed class Chapter2BootstrapService
 
         try
         {
+            await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
             await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
             _workspaceSeeder.EnsureSeeded(project.RepoPath);

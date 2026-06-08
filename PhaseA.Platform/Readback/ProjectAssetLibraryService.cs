@@ -76,9 +76,16 @@ public sealed class ProjectAssetLibraryService
 
         var library = ReadLibrary(project);
         var generatedFiles = EnumerateGeneratedFiles(project.RepoPath, outputAbsoluteDirectory).ToArray();
-        var previewResourcePath = generatedFiles
+        var generatedImageFiles = generatedFiles
+            .Where(path => IsPreviewResource(ToResPath(project.RepoPath, path)))
+            .ToArray();
+        var previewResourcePath = generatedImageFiles
             .Select(path => ToResPath(project.RepoPath, path))
-            .FirstOrDefault(IsPreviewResource);
+            .FirstOrDefault();
+        var skillSucceeded = string.Equals(skillResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
+        var entryStatus = skillSucceeded && generatedImageFiles.Length == 0
+            ? "no_image_generated"
+            : skillResult.Status;
         var entry = new ProjectAssetLibraryEntry(
             entryId,
             DateTimeOffset.UtcNow.ToString("O"),
@@ -86,15 +93,15 @@ public sealed class ProjectAssetLibraryService
             actionId,
             actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
             prompt,
-            skillResult.Status,
+            entryStatus,
             skillResult.AssistantMessage,
-            skillResult.Artifacts.Select(artifact => artifact.RelativePath).Concat(generatedFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).ToArray(),
+            skillResult.Artifacts.Select(artifact => artifact.RelativePath).Concat(generatedImageFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).ToArray(),
             previewResourcePath,
             false);
-        if (!string.Equals(skillResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase) && generatedFiles.Length == 0)
+        if (generatedImageFiles.Length == 0)
         {
             return new ProjectAssetGenerationRunResult(
-                skillResult.Status,
+                entryStatus,
                 actionId,
                 entry,
                 library);
@@ -361,7 +368,11 @@ public sealed class ProjectAssetLibraryService
             Required output directory:
             {outputRelativeDirectory}
 
-            Generate or prepare this asset unit under the required output directory. If the selected skill can create image files, put the image files there. If real image generation is unavailable, write an asset-spec.md or generation-prompt.md there with the exact prompt, style constraints, dimensions, and intended usage.
+            Generate this asset unit under the required output directory.
+            Hard requirement: create at least one real image file under that directory using .png, .jpg, .jpeg, .webp, or .svg.
+            Default background requirement: generated images must use transparent background by default. Use an opaque or scene background only when the user generation direction explicitly asks for one.
+            Put diagnostic files such as asset-spec.md, generation-prompt.md, or asset-manifest.json there only as supporting files.
+            If real image generation is unavailable, write the diagnostic files and clearly state that no image was generated; the platform will not add the result to the project asset library until a real image file exists.
             """;
     }
 

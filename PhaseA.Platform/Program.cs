@@ -36,6 +36,9 @@ builder.Services.AddSingleton<GameTypeTemplateCatalog>();
 builder.Services.AddSingleton<BmadGameTypeDesignCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
+builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
+    options.MaxConcurrentProjectCreations,
+    options.MaxConcurrentProjectCreationsPerAccount));
 builder.Services.AddSingleton<ProjectCreationService>();
 builder.Services.AddSingleton<ProjectDraftImportService>();
 builder.Services.AddSingleton<ProjectInitializationService>();
@@ -44,7 +47,9 @@ builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
 builder.Services.AddSingleton<Chapter2BootstrapService>();
-builder.Services.AddSingleton<HeavyRunnerQueueService>();
+builder.Services.AddSingleton(new HeavyRunnerQueueService(
+    TimeSpan.FromMinutes(8),
+    options.MaxConcurrentOtherRuns));
 builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
@@ -57,6 +62,7 @@ builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
 builder.Services.AddSingleton<PrototypeIterationPlanService>();
 builder.Services.AddSingleton<PrototypeIterationGoalService>();
 builder.Services.AddSingleton<PrototypeRepairPlanService>();
+builder.Services.AddSingleton<PrototypeUiOptimizationService>();
 builder.Services.AddSingleton<GameDesignDocumentService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
@@ -77,7 +83,9 @@ builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
 builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
 builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
 builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
-builder.Services.AddSingleton(new ChatConcurrencyLimiter(8, 2));
+builder.Services.AddSingleton(new ChatConcurrencyLimiter(
+    options.MaxConcurrentChats,
+    options.MaxConcurrentChatsPerAccount));
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
@@ -432,11 +440,12 @@ app.MapGet("/api/projects/{projectId}/asset-inventory", async (
     string projectId,
     string? model,
     bool? judge,
+    bool? force,
     HttpContext context,
     [FromServices] ProjectAssetInventoryService assets,
     CancellationToken cancellationToken) =>
 {
-    var result = await assets.GetInventoryAsync(CurrentAccountId(context), projectId, judge == true, model, cancellationToken);
+    var result = await assets.GetInventoryAsync(CurrentAccountId(context), projectId, judge == true, model, force == true, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
@@ -1169,6 +1178,23 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
     }
 });
 
+app.MapPost("/api/projects/{projectId}/ui-optimization", async (
+    string projectId,
+    PrototypeUiOptimizationRequest? request,
+    HttpContext context,
+    [FromServices] PrototypeUiOptimizationService uiOptimization,
+    CancellationToken cancellationToken) =>
+{
+    var result = await uiOptimization.RunAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result.Status switch
+    {
+        "succeeded" => Results.Ok(result),
+        "project_busy" or "iteration_plan_not_ready" or "iteration_plan_not_complete" or "prototype_skeleton_not_ready" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+        "project_not_found" => Results.NotFound(result),
+        _ => Results.Json(result, statusCode: StatusCodes.Status500InternalServerError)
+    };
+});
+
 app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     string projectId,
     PrototypeFeedbackRequest request,
@@ -1369,9 +1395,12 @@ app.MapPost("/api/projects", async (
         var result = await projects.CreateProjectAsync(CurrentAccountId(context), request, cancellationToken);
         if (!result.Succeeded)
         {
-            return result.FailureCode == "project_initialization_in_progress"
-                ? Results.Json(result, statusCode: StatusCodes.Status409Conflict)
-                : Results.BadRequest(result);
+            return result.FailureCode switch
+            {
+                "project_initialization_in_progress" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+                "project_creation_concurrency_limit_exceeded" or "user_project_creation_concurrency_limit_exceeded" => Results.Json(result, statusCode: StatusCodes.Status429TooManyRequests),
+                _ => Results.BadRequest(result)
+            };
         }
 
         initialization.StartChapter2Bootstrap(result.ProjectId!);
@@ -1551,6 +1580,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async 
             "succeeded" or "failed" => Results.Ok(result),
             "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
             "prototype_validation_not_available" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
+            "iteration_plan_not_complete" or "ui_optimization_required" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             _ => Results.BadRequest(result)
         };
     }

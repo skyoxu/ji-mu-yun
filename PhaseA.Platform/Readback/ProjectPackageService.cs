@@ -1,7 +1,10 @@
 using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Readback;
@@ -69,11 +72,16 @@ public sealed class ProjectPackageService
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
-    public ProjectPackageService(PhaseAMetadataStore metadataStore, PhaseAPlatformOptions options)
+    public ProjectPackageService(
+        PhaseAMetadataStore metadataStore,
+        PhaseAPlatformOptions options,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<ProjectPackageResult> CreatePackageAsync(
@@ -109,10 +117,17 @@ public sealed class ProjectPackageService
         }
 
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
-        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return Failure(projectId, "project_busy", runId);
+        }
 
         try
         {
+            await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
+            await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
             var packageOrdinal = await NextPackageOrdinalAsync(project.ProjectId, cancellationToken);
             var version = CreateVersion(packageOrdinal);
             var safeName = SafeFileName(project.Name);
@@ -125,6 +140,7 @@ public sealed class ProjectPackageService
                 File.Delete(packagePath);
             }
 
+            var appliedAssetSelectionCount = ApplySelectedAssetLibraryEntries(projectRoot);
             var includedFileCount = CreateZip(projectRoot, packagePath, project, version);
             var sizeBytes = new FileInfo(packagePath).Length;
             var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
@@ -146,6 +162,7 @@ public sealed class ProjectPackageService
                 relative_path = relativePath,
                 size_bytes = sizeBytes,
                 included_file_count = includedFileCount,
+                applied_asset_selection_count = appliedAssetSelectionCount,
                 included_roots = IncludedRoots,
                 included_root_files = IncludedRootFiles
             });
@@ -168,6 +185,10 @@ public sealed class ProjectPackageService
         {
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), "{}", CancellationToken.None);
             return new ProjectPackageResult(projectId, runId, "failed", "", "", "", "", 0, 0, [], "package_failed");
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
     }
 
@@ -322,6 +343,209 @@ public sealed class ProjectPackageService
         return included;
     }
 
+    private static int ApplySelectedAssetLibraryEntries(string projectRoot)
+    {
+        var libraryPath = ResolveUnderProject(projectRoot, "meta/assets/library.json");
+        if (!File.Exists(libraryPath))
+        {
+            return 0;
+        }
+
+        ProjectAssetLibraryResult? library;
+        try
+        {
+            library = JsonSerializer.Deserialize<ProjectAssetLibraryResult>(
+                File.ReadAllText(libraryPath, Encoding.UTF8),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (JsonException)
+        {
+            return 0;
+        }
+
+        if (library is null)
+        {
+            return 0;
+        }
+
+        var applied = 0;
+        foreach (var unit in library.Units)
+        {
+            if (!IsResPath(unit.ScenePath) || !unit.ScenePath.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var selected = unit.Entries.FirstOrDefault(entry =>
+                entry.Selected ||
+                string.Equals(entry.EntryId, unit.SelectedEntryId, StringComparison.Ordinal));
+            if (!IsResPath(selected?.PreviewResourcePath) ||
+                string.Equals(unit.ResourcePath, selected!.PreviewResourcePath, StringComparison.Ordinal))
+            {
+                continue;
+            }
+            var selectedPreviewResourcePath = selected.PreviewResourcePath!;
+
+            var scenePath = ResolveResPath(projectRoot, unit.ScenePath);
+            if (!File.Exists(scenePath))
+            {
+                continue;
+            }
+
+            var sceneText = File.ReadAllText(scenePath, Encoding.UTF8);
+            if (IsResPath(unit.ResourcePath))
+            {
+                var oldToken = $"path=\"{unit.ResourcePath}\"";
+                var newToken = $"path=\"{selectedPreviewResourcePath}\"";
+                if (!sceneText.Contains(oldToken, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                File.WriteAllText(scenePath, sceneText.Replace(oldToken, newToken, StringComparison.Ordinal), Encoding.UTF8);
+                applied++;
+                continue;
+            }
+
+            if (!IsDirectTextureNodeType(unit.NodeType))
+            {
+                continue;
+            }
+
+            var updatedSceneText = AddTextureReferenceToExistingNode(sceneText, unit, selectedPreviewResourcePath);
+            if (updatedSceneText is null)
+            {
+                continue;
+            }
+
+            File.WriteAllText(scenePath, updatedSceneText, Encoding.UTF8);
+            applied++;
+        }
+
+        return applied;
+    }
+
+    private static bool IsResPath(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value) && value.StartsWith("res://", StringComparison.Ordinal);
+    }
+
+    private static bool IsDirectTextureNodeType(string? nodeType)
+    {
+        return string.Equals(nodeType, "Sprite2D", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(nodeType, "TextureRect", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? AddTextureReferenceToExistingNode(
+        string sceneText,
+        ProjectAssetLibraryUnit unit,
+        string previewResourcePath)
+    {
+        var lines = sceneText.Replace("\r\n", "\n").Split('\n').ToList();
+        var extResourceId = FindExtResourceId(lines, previewResourcePath);
+        if (string.IsNullOrWhiteSpace(extResourceId))
+        {
+            extResourceId = $"phasea_asset_{StableShortId(unit.Key, previewResourcePath)}";
+            var insertIndex = LastExtResourceLineIndex(lines);
+            if (insertIndex < 0)
+            {
+                insertIndex = lines.FindIndex(line => line.StartsWith("[gd_scene", StringComparison.Ordinal));
+            }
+
+            lines.Insert(Math.Max(0, insertIndex + 1), $"[ext_resource type=\"Texture2D\" path=\"{previewResourcePath}\" id=\"{extResourceId}\"]");
+        }
+
+        var nodeIndex = FindNodeLineIndex(lines, unit.InstanceName, unit.NodeType);
+        if (nodeIndex < 0)
+        {
+            return null;
+        }
+
+        var nextSectionIndex = lines.FindIndex(nodeIndex + 1, line => line.StartsWith("[node ", StringComparison.Ordinal) || line.StartsWith("[connection ", StringComparison.Ordinal) || line.StartsWith("[editable ", StringComparison.Ordinal));
+        if (nextSectionIndex < 0)
+        {
+            nextSectionIndex = lines.Count;
+        }
+
+        for (var i = nodeIndex + 1; i < nextSectionIndex; i++)
+        {
+            if (lines[i].TrimStart().StartsWith("texture =", StringComparison.Ordinal))
+            {
+                lines[i] = $"texture = ExtResource(\"{extResourceId}\")";
+                return string.Join('\n', lines);
+            }
+        }
+
+        lines.Insert(nodeIndex + 1, $"texture = ExtResource(\"{extResourceId}\")");
+        return string.Join('\n', lines);
+    }
+
+    private static string? FindExtResourceId(IReadOnlyList<string> lines, string previewResourcePath)
+    {
+        foreach (var line in lines)
+        {
+            var match = Regex.Match(line, "^\\[ext_resource\\s+.*path=\"(?<path>[^\"]+)\".*id=\"(?<id>[^\"]+)\".*\\]$");
+            if (match.Success && string.Equals(match.Groups["path"].Value, previewResourcePath, StringComparison.Ordinal))
+            {
+                return match.Groups["id"].Value;
+            }
+        }
+
+        return null;
+    }
+
+    private static int LastExtResourceLineIndex(IReadOnlyList<string> lines)
+    {
+        for (var i = lines.Count - 1; i >= 0; i--)
+        {
+            if (lines[i].StartsWith("[ext_resource ", StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static int FindNodeLineIndex(IReadOnlyList<string> lines, string instanceName, string nodeType)
+    {
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var line = lines[i];
+            if (line.StartsWith("[node ", StringComparison.Ordinal) &&
+                line.Contains($"name=\"{instanceName}\"", StringComparison.Ordinal) &&
+                line.Contains($"type=\"{nodeType}\"", StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string StableShortId(string unitKey, string previewResourcePath)
+    {
+        var hash = unchecked((uint)HashCode.Combine(unitKey, previewResourcePath));
+        return hash.ToString("x8");
+    }
+
+    private static string ResolveResPath(string projectRoot, string resourcePath)
+    {
+        if (!IsResPath(resourcePath))
+        {
+            throw new InvalidOperationException("Resource path must use res://.");
+        }
+
+        var relativePath = resourcePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(projectRoot, relativePath));
+        if (!WorkspacePathPolicy.IsUnderRoot(projectRoot, fullPath))
+        {
+            throw new InvalidOperationException("Resource path escaped project repository root.");
+        }
+
+        return fullPath;
+    }
+
     private static void AddManifest(ZipArchive archive, ProjectSnapshot project, string version)
     {
         var entry = archive.CreateEntry("PACKAGE-MANIFEST.json", CompressionLevel.Optimal);
@@ -417,5 +641,10 @@ public sealed class ProjectPackageService
     private static ProjectPackageResult Failure(string projectId, string failureCode)
     {
         return new ProjectPackageResult(projectId, "", failureCode, "", "", "", "", 0, 0, [], failureCode);
+    }
+
+    private static ProjectPackageResult Failure(string projectId, string failureCode, string runId)
+    {
+        return new ProjectPackageResult(projectId, runId, failureCode, "", "", "", "", 0, 0, [], failureCode);
     }
 }

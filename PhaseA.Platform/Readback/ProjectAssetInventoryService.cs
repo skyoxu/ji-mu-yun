@@ -10,6 +10,8 @@ namespace PhaseA.Platform.Readback;
 public sealed partial class ProjectAssetInventoryService
 {
     private const string RunType = "project-asset-inventory";
+    private const int InventoryCacheSchemaVersion = 2;
+    private const int MaxApplicableGenerationCandidates = 10;
 
     private static readonly HashSet<string> PreviewExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -53,10 +55,17 @@ public sealed partial class ProjectAssetInventoryService
         "Game.Godot/Prototypes"
     ];
 
+    private static readonly HashSet<string> DirectTextureCandidateNodeTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Sprite2D",
+        "TextureRect"
+    };
+
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public ProjectAssetInventoryService(
         PhaseAMetadataStore metadataStore,
@@ -71,12 +80,14 @@ public sealed partial class ProjectAssetInventoryService
         PhaseAPlatformOptions options,
         ICodexChatClient codexChatClient,
         IProjectWorkspaceSeeder workspaceSeeder,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<ProjectAssetInventoryResult?> GetInventoryAsync(
@@ -84,6 +95,7 @@ public sealed partial class ProjectAssetInventoryService
         string projectId,
         bool includeLlmJudgement = false,
         string? model = null,
+        bool forceRefresh = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
@@ -100,12 +112,21 @@ public sealed partial class ProjectAssetInventoryService
             return new ProjectAssetInventoryResult(project.ProjectId, false, "final_step_not_completed", [], []);
         }
 
+        var projectRoot = GetProjectRoot(project);
+        if (includeLlmJudgement && !forceRefresh)
+        {
+            var cached = await ReadCachedInventoryAsync(project, projectRoot, cancellationToken);
+            if (cached is not null)
+            {
+                return cached;
+            }
+        }
+
         if (includeLlmJudgement && await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken))
         {
             return new ProjectAssetInventoryResult(project.ProjectId, false, "project_busy", [], []);
         }
 
-        var projectRoot = GetProjectRoot(project);
         var usedAssets = new List<ProjectAssetUsageItem>();
         var generationCandidates = new List<ProjectAssetGenerationCandidate>();
         foreach (var scenePath in EnumerateSceneFiles(projectRoot))
@@ -134,7 +155,7 @@ public sealed partial class ProjectAssetInventoryService
             .DistinctBy(item => $"{item.ScenePath}|{item.InstanceName}", StringComparer.OrdinalIgnoreCase)
             .OrderBy(item => item.ScenePath, StringComparer.OrdinalIgnoreCase)
             .ThenBy(item => item.InstanceName, StringComparer.OrdinalIgnoreCase)
-            .Take(50)
+            .Take(MaxApplicableGenerationCandidates)
             .ToArray();
 
         if (includeLlmJudgement && distinctCandidates.Length > 0)
@@ -142,12 +163,18 @@ public sealed partial class ProjectAssetInventoryService
             distinctCandidates = await JudgeCandidatesWithCodexAsync(project, projectRoot, distinctUsedAssets, distinctCandidates, model, cancellationToken);
         }
 
-        return new ProjectAssetInventoryResult(
+        var result = new ProjectAssetInventoryResult(
             project.ProjectId,
             true,
             null,
             distinctUsedAssets,
             distinctCandidates);
+        if (includeLlmJudgement)
+        {
+            await WriteCachedInventoryAsync(project, projectRoot, result, cancellationToken);
+        }
+
+        return result;
     }
 
     public async Task<ProjectAssetPreviewReadResult?> ReadPreviewAsync(
@@ -214,9 +241,11 @@ public sealed partial class ProjectAssetInventoryService
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
         {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
             return candidates.Select(candidate => candidate with { LlmJudgementStatus = "project_busy" }).ToArray();
         }
 
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
         try
         {
@@ -409,6 +438,60 @@ public sealed partial class ProjectAssetInventoryService
         return root;
     }
 
+    private static async Task<ProjectAssetInventoryResult?> ReadCachedInventoryAsync(
+        ProjectSnapshot project,
+        string projectRoot,
+        CancellationToken cancellationToken)
+    {
+        var cachePath = GetInventoryCachePath(projectRoot);
+        if (!File.Exists(cachePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var cache = System.Text.Json.JsonSerializer.Deserialize<ProjectAssetInventoryCache>(
+                await File.ReadAllTextAsync(cachePath, cancellationToken),
+                new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            return cache is null ||
+                   cache.CacheSchemaVersion != InventoryCacheSchemaVersion ||
+                   !string.Equals(cache.Inventory.ProjectId, project.ProjectId, StringComparison.Ordinal)
+                ? null
+                : cache.Inventory;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    private static async Task WriteCachedInventoryAsync(
+        ProjectSnapshot project,
+        string projectRoot,
+        ProjectAssetInventoryResult result,
+        CancellationToken cancellationToken)
+    {
+        var cachePath = GetInventoryCachePath(projectRoot);
+        Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
+        await File.WriteAllTextAsync(
+            cachePath,
+            System.Text.Json.JsonSerializer.Serialize(new ProjectAssetInventoryCache(InventoryCacheSchemaVersion, result), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)
+            {
+                WriteIndented = true
+            }),
+            cancellationToken);
+    }
+
+    private static string GetInventoryCachePath(string projectRoot)
+    {
+        return Path.Combine(projectRoot, "_phasea", "asset-inventory-cache.json");
+    }
+
     private static IEnumerable<string> EnumerateSceneFiles(string projectRoot)
     {
         foreach (var root in SceneRoots)
@@ -512,8 +595,13 @@ public sealed partial class ProjectAssetInventoryService
 
         var name = node.Name.ToLowerInvariant();
         var nodeType = node.Type.ToLowerInvariant();
+        if (!DirectTextureCandidateNodeTypes.Contains(node.Type))
+        {
+            return;
+        }
+
         if (!CandidateTokens.Any(token => name.Contains(token, StringComparison.Ordinal)) &&
-            nodeType is not ("sprite2d" or "texturerect" or "animatedsprite2d" or "tilemap" or "tilemaplayer" or "colorrect" or "panelcontainer"))
+            nodeType is not ("sprite2d" or "texturerect"))
         {
             return;
         }
@@ -801,6 +889,10 @@ public sealed partial class ProjectAssetInventoryService
     private sealed record ParsedScene(
         IReadOnlyList<ProjectAssetUsageItem> UsedAssets,
         IReadOnlyList<ProjectAssetGenerationCandidate> GenerationCandidates);
+
+    private sealed record ProjectAssetInventoryCache(
+        int CacheSchemaVersion,
+        ProjectAssetInventoryResult Inventory);
 
     private sealed record ImageDimensions(int Width, int Height);
 }

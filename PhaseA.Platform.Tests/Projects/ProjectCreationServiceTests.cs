@@ -158,7 +158,7 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
-    public async Task CreateProjectAsync_BlocksWhileInitializationIsRunning()
+    public async Task CreateProjectAsync_AllowsIndependentCreations_WhenLimiterAllows()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
@@ -166,14 +166,52 @@ public sealed class ProjectCreationServiceTests
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            creationConcurrencyLimiter: new ProjectCreationConcurrencyLimiter(2, 2));
 
         var first = await service.CreateProjectAsync(accountId, Request("Game One"));
         var second = await service.CreateProjectAsync(accountId, Request("Game Two"));
 
         first.Succeeded.Should().BeTrue();
-        second.Succeeded.Should().BeFalse();
-        second.FailureCode.Should().Be("project_initialization_in_progress");
+        second.Succeeded.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_Blocks_WhenProjectCreationAccountLimiterIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var limiter = new ProjectCreationConcurrencyLimiter(2, 1);
+        var held = await limiter.TryAcquireAsync(accountId);
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            creationConcurrencyLimiter: limiter);
+
+        try
+        {
+            var result = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+            result.Succeeded.Should().BeFalse();
+            result.FailureCode.Should().Be("user_project_creation_concurrency_limit_exceeded");
+        }
+        finally
+        {
+            if (held.Lease is not null)
+            {
+                await held.Lease.DisposeAsync();
+            }
+        }
     }
 
     [Fact]

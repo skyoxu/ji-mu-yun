@@ -1,0 +1,354 @@
+using FluentAssertions;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
+using PhaseA.Platform.Projects;
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
+using Xunit;
+
+namespace PhaseA.Platform.Tests.Runs;
+
+public sealed class PrototypeUiOptimizationServiceTests
+{
+    [Fact]
+    public async Task RunAsync_ShouldReject_WhenIterationPlanIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("iteration_plan_not_ready");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldReject_WhenIterationPlanHasPendingGoals()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: false);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("iteration_plan_not_complete");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldUseCodexRuntimeAndReleaseRunnerLock_WhenIterationPlanIsComplete()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().HaveCount(3);
+        runner.Commands[0].Arguments.Should().Contain("--sandbox");
+        runner.Commands[0].Arguments.Should().Contain("workspace-write");
+        runner.Commands[0].Environment.Should().ContainKey("PHASEA_CODEX_DEFAULT_MODEL").WhoseValue.Should().Be("gpt-5.4");
+        runner.Commands[0].StandardInput.Should().Contain("$prototype-rpg-ui-optimizer-zh");
+        runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after Codex exits");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.ProgressStep.Should().Be("succeeded");
+        run.ProgressSubstep.Should().Be("completed");
+        run.EvidenceJson.Should().Contain("\"timeout_seconds\":480");
+        run.EvidenceJson.Should().Contain("codex_ui_edit_only_platform_short_godot_smoke");
+        run.EvidenceJson.Should().Contain("strict_headless_main_menu_navigation");
+        run.LlmGateway.Should().Be("codex-cli");
+        run.LlmModel.Should().Be("gpt-5.4");
+        run.LlmCostJson.Should().Contain("prototype-ui-optimization");
+        var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
+        artifacts.Should().Contain(item => item.ArtifactType == "prototype-ui-optimization-prompt");
+        artifacts.Should().Contain(item => item.ArtifactType == "prototype-ui-optimization-output");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var promptArtifact = artifacts.Single(item => item.ArtifactType == "prototype-ui-optimization-prompt");
+        var promptPath = Path.Combine(project!.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
+        File.ReadAllText(promptPath).Should().Contain("$prototype-rpg-ui-optimizer-zh");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldFailAsValidationFailed_WhenCodexSucceedsButShortSmokeFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var runner = new FakeHostedProcessRunner(smokeExitCode: 12);
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("failed");
+        result.Summary.Should().Be("UI optimization changed files, but short validation failed.");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.ExitCode.Should().Be(12);
+        run.ProgressSubstep.Should().Be("validation_failed");
+        run.EvidenceJson.Should().Contain("\"codex_exit_code\":0");
+        run.EvidenceJson.Should().Contain("\"exit_code\":12");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldFallbackToProjectGodotMainScene_WhenSmokeSceneIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: false);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().HaveCount(3);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.ProgressSubstep.Should().Be("completed");
+        run.EvidenceJson.Should().Contain("\"validation_required\":true");
+        run.EvidenceJson.Should().Contain("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldMarkValidationSkipped_WhenSmokeSceneAndProjectGodotAreMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, seedProjectGodot: false);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: false);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().ContainSingle();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.ProgressSubstep.Should().Be("validation_skipped");
+        run.EvidenceJson.Should().Contain("\"validation_required\":false");
+        run.EvidenceJson.Should().Contain("prototype_smoke_scene_missing");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldReject_WhenPrototypeSkeletonIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("prototype_skeleton_not_ready");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldMarkFailedAndReleaseRunnerLock_WhenCodexTimesOut()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var service = new PrototypeUiOptimizationService(
+            store,
+            options,
+            new CancelingHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromMilliseconds(1));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("failed");
+        result.Summary.Should().Be("UI optimization timed out.");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ExitCode.Should().Be(408);
+        run.ProgressStep.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("timeout");
+        run.EvidenceJson.Should().Contain("ui_optimization_codex_timeout");
+        run.EvidenceJson.Should().Contain("\"timeout_seconds\":0");
+    }
+
+    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool seedProjectGodot = true)
+    {
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
+        if (seedProjectGodot)
+        {
+            var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
+            Directory.CreateDirectory(project!.RepoPath);
+            await File.WriteAllTextAsync(
+                Path.Combine(project.RepoPath, "project.godot"),
+                "[application]\nrun/main_scene=\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"\n");
+        }
+
+        return result.ProjectId!;
+    }
+
+    private static async Task CreateIterationPlanAsync(PhaseAMetadataStore store, string accountId, string projectId, bool complete)
+    {
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "manual_feedback",
+            "Improve the RPG prototype.",
+            "Improve the RPG prototype.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Improve RPG HUD", "Align HUD with RPG template.", "HUD is visible."),
+                new ProjectIterationGoalCreateCommand(2, "Improve battle panel", "Align battle panel with RPG template.", "Battle panel is visible.")
+            ]);
+
+        if (!complete)
+        {
+            return;
+        }
+
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in details!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} completed.", DateTimeOffset.UtcNow.ToString("O"));
+        }
+    }
+
+    private static async Task CreateSucceededPrototypeSkeletonRunAsync(PhaseAMetadataStore store, string projectId, bool includeSmokeScene = true)
+    {
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        var evidence = includeSmokeScene
+            ? "{\"prototype_completion\":{\"succeeded\":true,\"smoke_scene\":\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"}}"
+            : "{\"prototype_completion\":{\"succeeded\":true}}";
+        await store.CompleteRunAsync(runId, "succeeded", 0, "", "", evidence);
+    }
+
+    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    {
+        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
+            ["GODOT_BIN"] = @"C:\Godot\fake-godot.exe"
+        });
+    }
+
+    private sealed class FakeHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly int _smokeExitCode;
+
+        public FakeHostedProcessRunner(int smokeExitCode = 0)
+        {
+            _smokeExitCode = smokeExitCode;
+        }
+
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (!command.Arguments.Contains("exec"))
+            {
+                return Task.FromResult(new HostedProcessResult(_smokeExitCode, "smoke stdout", _smokeExitCode == 0 ? "" : "smoke failed"));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, "UI optimization completed.");
+            return Task.FromResult(new HostedProcessResult(0, "codex stdout", ""));
+        }
+    }
+
+    private sealed class CancelingHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new OperationCanceledException(cancellationToken);
+        }
+    }
+
+    private sealed class TempDirectory : IDisposable
+    {
+        private TempDirectory(string path)
+        {
+            Path = path;
+            Directory.CreateDirectory(Path);
+        }
+
+        public string Path { get; }
+
+        public static TempDirectory Create(string prefix)
+        {
+            return new TempDirectory(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}"));
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(Path))
+            {
+                Directory.Delete(Path, recursive: true);
+            }
+        }
+    }
+}

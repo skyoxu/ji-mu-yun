@@ -19,6 +19,7 @@ public sealed class SkillActionService
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public SkillActionService(
         PhaseAMetadataStore metadataStore,
@@ -28,7 +29,8 @@ public sealed class SkillActionService
         IProjectWorkspaceSeeder workspaceSeeder,
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -38,6 +40,7 @@ public sealed class SkillActionService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _llmRouteEngine = llmRouteEngine;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
@@ -91,6 +94,7 @@ public sealed class SkillActionService
             }
         }
 
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
         try
         {

@@ -40,6 +40,11 @@ public static class PhaseAPlatformOptionsLoader
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
         var userTokenHash = GetOptionalString(get, "PHASEA_USER_TOKEN_HASH");
+        var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
+        var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 2);
+        var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
+        var maxConcurrentProjectCreationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", 1);
+        var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 1);
         var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
         var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
         var aiCodeMirrorCookie = GetOptionalString(get, "AICODEMIRROR_COOKIE");
@@ -72,6 +77,11 @@ public static class PhaseAPlatformOptionsLoader
             adminPasswordHash,
             adminTokenHash,
             userTokenHash,
+            maxConcurrentChats,
+            maxConcurrentChatsPerAccount,
+            maxConcurrentProjectCreations,
+            maxConcurrentProjectCreationsPerAccount,
+            maxConcurrentOtherRuns,
             aiCodeMirrorBillingEnabled,
             aiCodeMirrorBaseUrl,
             aiCodeMirrorCookie,

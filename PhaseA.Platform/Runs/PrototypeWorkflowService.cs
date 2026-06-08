@@ -131,6 +131,15 @@ public sealed class PrototypeWorkflowService
         var contract = _contractService.WriteFromRequest(project, request, prototypeRecordPath, PrototypeRecordWriter.SanitizeSlug(request.Slug!));
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "queued", "", "已提交，等待 runner。", cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressForProjectAsync(project, cancellationToken));
+        }
+
+        try
+        {
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", cancellationToken);
@@ -209,6 +218,17 @@ public sealed class PrototypeWorkflowService
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
 
         return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressForProjectAsync(project, cancellationToken));
+        }
+        catch (Exception ex)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
+            await SetProgressAsync(runId, "failed", "", "Prototype skeleton creation failed. Check run stderr for details.", CancellationToken.None);
+            return new PrototypeWorkflowResult(runId, "failed", 500, prototypeRecordPath, "", ex.ToString(), [], [], await GetProgressForProjectAsync(project, CancellationToken.None));
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
     }
 
     public async Task<PrototypeWorkflowResult> QueueAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -408,6 +428,12 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "prototype_validation_not_available", 404, "", "", "No prototype workflow record is available for validation.", [], []);
         }
 
+        var iterationReadiness = await ValidateIterationAndUiOptimizationReadinessAsync(project.ProjectId, runs, cancellationToken);
+        if (iterationReadiness is not null)
+        {
+            return iterationReadiness;
+        }
+
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
         if (!routeSkill.IsAvailable)
@@ -419,6 +445,15 @@ public sealed class PrototypeWorkflowService
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await SetProgressAsync(runId, "validating", "completion_state", "Validating the current prototype without running Codex.", cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            return new PrototypeWorkflowResult(runId, "project_busy", 423, prototypeRecordPath, "", "Project runner is busy.", [], [], await GetProgressForProjectAsync(project, cancellationToken));
+        }
+
+        try
+        {
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
 
@@ -474,6 +509,101 @@ public sealed class PrototypeWorkflowService
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
         return new PrototypeWorkflowResult(runId, status, exitCode, prototypeRecordPath, stdout, stderr, artifacts, [], await GetProgressForProjectAsync(project, cancellationToken));
+        }
+        catch (Exception ex)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
+            await SetProgressAsync(runId, "failed", "validation", "Prototype validation failed. Generate or continue a repair plan before packaging.", CancellationToken.None);
+            return new PrototypeWorkflowResult(runId, "failed", 500, prototypeRecordPath, "", ex.ToString(), [], [], await GetProgressForProjectAsync(project, CancellationToken.None));
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
+    }
+
+    private async Task<PrototypeWorkflowResult?> ValidateIterationAndUiOptimizationReadinessAsync(
+        string projectId,
+        IReadOnlyList<RunSnapshot> runs,
+        CancellationToken cancellationToken)
+    {
+        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (details is null || details.Goals.Count == 0)
+        {
+            return null;
+        }
+
+        if (details.Goals.Any(goal => !IsCompletedIterationGoalStatus(goal.Status)))
+        {
+            return new PrototypeWorkflowResult("", "iteration_plan_not_complete", 409, "", "", "Complete the iteration plan before prototype acceptance.", [], []);
+        }
+
+        var sessionTime = ResolveIterationGoalTimestamp(details) ??
+                          ParseIsoTime(details.Session.CompletedUtc) ??
+                          ParseIsoTime(details.Session.UpdatedUtc) ??
+                          ParseIsoTime(details.Session.CreatedUtc);
+        var latestUiOptimization = runs.FirstOrDefault(run => string.Equals(run.RunType, "prototype-ui-optimization", StringComparison.OrdinalIgnoreCase));
+        var uiOptimizationTime = ParseIsoTime(latestUiOptimization?.ProgressUpdatedUtc);
+        var uiOptimizationCurrent = latestUiOptimization is not null &&
+                                    string.Equals(latestUiOptimization.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+                                    UiOptimizationShortValidationPassed(latestUiOptimization) &&
+                                    (!sessionTime.HasValue || (uiOptimizationTime.HasValue && uiOptimizationTime.Value >= sessionTime.Value));
+
+        return uiOptimizationCurrent
+            ? null
+            : new PrototypeWorkflowResult("", "ui_optimization_required", 409, "", "", "Run UI optimization before prototype acceptance.", [], []);
+    }
+
+    private static bool UiOptimizationShortValidationPassed(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("godot_smoke", out var smoke) ||
+                smoke.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var ran = smoke.TryGetProperty("ran", out var ranElement) &&
+                      ranElement.ValueKind == JsonValueKind.True;
+            var exitCodeOk = smoke.TryGetProperty("exit_code", out var exitCodeElement) &&
+                             exitCodeElement.ValueKind == JsonValueKind.Number &&
+                             exitCodeElement.TryGetInt32(out var exitCode) &&
+                             exitCode == 0;
+            return ran && exitCodeOk;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsCompletedIterationGoalStatus(string? status)
+    {
+        return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTimeOffset? ParseIsoTime(string? value)
+    {
+        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
+    }
+
+    private static DateTimeOffset? ResolveIterationGoalTimestamp(ProjectIterationSessionDetails details)
+    {
+        return details.Goals
+            .Select(goal => ParseIsoTime(goal.CompletedUtc) ?? ParseIsoTime(goal.UpdatedUtc) ?? ParseIsoTime(goal.CreatedUtc))
+            .Where(value => value.HasValue)
+            .Select(value => value!.Value)
+            .DefaultIfEmpty()
+            .Max();
     }
 
     public async Task<PrototypeWorkflowProgress> GetProgressAsync(string accountId, string projectId, CancellationToken cancellationToken = default)

@@ -1080,18 +1080,6 @@ public sealed class PhaseAMetadataStore
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         var limit = await GetProjectLimitInsideTransactionAsync(connection, create.AccountId, cancellationToken);
-        var initializingCount = await ExecuteScalarLongAsync(
-            connection,
-            "SELECT COUNT(*) FROM projects WHERE account_id = $account_id AND bootstrap_status = 'running';",
-            cancellationToken,
-            ("$account_id", create.AccountId)) ?? 0;
-
-        if (initializingCount > 0)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return ProjectCreationResult.Failure("project_initialization_in_progress");
-        }
-
         var count = await ExecuteScalarLongAsync(
             connection,
             "SELECT COUNT(*) FROM projects WHERE account_id = $account_id;",
@@ -1359,7 +1347,7 @@ public sealed class PhaseAMetadataStore
         await using var connection = await OpenConnectionAsync(cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM runs WHERE project_id = $project_id AND status IN ('queued', 'running');",
+            "SELECT COUNT(*) FROM runs WHERE project_id = $project_id AND status IN ('queued', 'running') AND run_type <> 'prototype-chat';",
             cancellationToken,
             ("$project_id", projectId)) ?? 0;
         return count > 0;

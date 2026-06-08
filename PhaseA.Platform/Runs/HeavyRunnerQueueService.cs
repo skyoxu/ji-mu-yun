@@ -3,20 +3,28 @@ namespace PhaseA.Platform.Runs;
 public sealed class HeavyRunnerQueueService
 {
     private static readonly TimeSpan DefaultEstimatedTaskDuration = TimeSpan.FromMinutes(8);
+    public const int DefaultMaxConcurrentOtherRuns = 1;
 
     private readonly object _gate = new();
     private readonly Queue<HeavyRunnerQueueItem> _waiting = new();
     private readonly TimeSpan _estimatedTaskDuration;
-    private HeavyRunnerQueueItem? _running;
+    private readonly int _maxConcurrentRuns;
+    private readonly List<HeavyRunnerQueueItem> _running = [];
 
     public HeavyRunnerQueueService()
-        : this(DefaultEstimatedTaskDuration)
+        : this(DefaultEstimatedTaskDuration, DefaultMaxConcurrentOtherRuns)
     {
     }
 
-    public HeavyRunnerQueueService(TimeSpan? estimatedTaskDuration)
+    public HeavyRunnerQueueService(TimeSpan? estimatedTaskDuration, int maxConcurrentRuns = DefaultMaxConcurrentOtherRuns)
     {
+        if (maxConcurrentRuns <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxConcurrentRuns));
+        }
+
         _estimatedTaskDuration = estimatedTaskDuration ?? DefaultEstimatedTaskDuration;
+        _maxConcurrentRuns = maxConcurrentRuns;
     }
 
     public async Task<T> ExecuteAsync<T>(
@@ -41,7 +49,15 @@ public sealed class HeavyRunnerQueueService
             DateTimeOffset.UtcNow);
 
         Enqueue(item);
-        await item.Ready.Task.WaitAsync(cancellationToken);
+        try
+        {
+            await item.Ready.Task.WaitAsync(cancellationToken);
+        }
+        catch
+        {
+            Cancel(item);
+            throw;
+        }
 
         try
         {
@@ -73,7 +89,16 @@ public sealed class HeavyRunnerQueueService
             DateTimeOffset.UtcNow);
 
         Enqueue(item);
-        await item.Ready.Task.WaitAsync(cancellationToken);
+        try
+        {
+            await item.Ready.Task.WaitAsync(cancellationToken);
+        }
+        catch
+        {
+            Cancel(item);
+            throw;
+        }
+
         return new HeavyRunnerLease(this, item);
     }
 
@@ -94,10 +119,13 @@ public sealed class HeavyRunnerQueueService
                 .Select((item, index) => new { item, position = index + 1 })
                 .FirstOrDefault(row => string.Equals(row.item.AccountId, accountId, StringComparison.Ordinal))
                 ?.position;
+            var current = _running
+                .Select(item => ToReadbackItem(item, 0, includeAll || string.Equals(item.AccountId, accountId, StringComparison.Ordinal)))
+                .FirstOrDefault(item => item is not null);
 
             return new HeavyRunnerQueueReadback(
-                _running is not null,
-                _running is null ? null : ToReadbackItem(_running, 0, includeAll || string.Equals(_running.AccountId, accountId, StringComparison.Ordinal)),
+                _running.Count > 0,
+                current,
                 waiting.Length,
                 currentAccountPosition,
                 EstimateWaitSeconds(currentAccountPosition),
@@ -118,24 +146,44 @@ public sealed class HeavyRunnerQueueService
     {
         lock (_gate)
         {
-            if (ReferenceEquals(_running, item))
-            {
-                _running = null;
-            }
+            _running.Remove(item);
 
             TryStartNextLocked();
         }
     }
 
+    private void Cancel(HeavyRunnerQueueItem item)
+    {
+        lock (_gate)
+        {
+            if (_running.Remove(item))
+            {
+                TryStartNextLocked();
+                return;
+            }
+
+            var retained = _waiting.Where(waiting => !ReferenceEquals(waiting, item)).ToArray();
+            if (retained.Length == _waiting.Count)
+            {
+                return;
+            }
+
+            _waiting.Clear();
+            foreach (var waiting in retained)
+            {
+                _waiting.Enqueue(waiting);
+            }
+        }
+    }
+
     private void TryStartNextLocked()
     {
-        if (_running is not null || _waiting.Count == 0)
+        while (_running.Count < _maxConcurrentRuns && _waiting.Count > 0)
         {
-            return;
+            var next = _waiting.Dequeue();
+            _running.Add(next);
+            next.Ready.TrySetResult();
         }
-
-        _running = _waiting.Dequeue();
-        _running.Ready.TrySetResult();
     }
 
     private int? EstimateWaitSeconds(int? position)

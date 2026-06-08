@@ -13,6 +13,7 @@ public sealed class PrototypeCommandService
     private readonly PrototypeCommandBuilder _commandBuilder;
     private readonly PrototypeTddArtifactIndexer _artifactIndexer;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public PrototypeCommandService(
         PhaseAMetadataStore metadataStore,
@@ -30,7 +31,8 @@ public sealed class PrototypeCommandService
         IHostedProcessRunner processRunner,
         PrototypeCommandBuilder commandBuilder,
         PrototypeTddArtifactIndexer artifactIndexer,
-        IProjectWorkspaceSeeder workspaceSeeder)
+        IProjectWorkspaceSeeder workspaceSeeder,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -38,6 +40,7 @@ public sealed class PrototypeCommandService
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<HostedCommandResult> RunTddAsync(string accountId, string projectId, PrototypeTddRequest request, CancellationToken cancellationToken = default)
@@ -100,6 +103,7 @@ public sealed class PrototypeCommandService
 
         try
         {
+            await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, runType, CancellationToken.None);
             await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
             var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);

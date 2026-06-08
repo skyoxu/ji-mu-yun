@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Projects;
@@ -41,6 +42,7 @@ public sealed class ProjectDraftImportService
     private readonly IAiCodeMirrorResponsesClient? _responsesClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public ProjectDraftImportService(
         PhaseAMetadataStore metadataStore,
@@ -57,7 +59,8 @@ public sealed class ProjectDraftImportService
         IAiCodeMirrorResponsesClient? responsesClient,
         AiCodeMirrorKeyPoolService? keyPoolService,
         IProjectWorkspaceSeeder workspaceSeeder,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -65,6 +68,7 @@ public sealed class ProjectDraftImportService
         _responsesClient = responsesClient;
         _keyPoolService = keyPoolService;
         _workspaceSeeder = workspaceSeeder;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
     }
 
     public async Task<ProjectDraftImportResult> AnalyzeAsync(
@@ -100,9 +104,11 @@ public sealed class ProjectDraftImportService
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
         {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
             return basic with { Status = "project_busy", FailureCode = "project_busy" };
         }
 
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
         await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, null, cancellationToken);
         try

@@ -190,6 +190,11 @@ This file is the repository map. It routes you to the right source document by t
   - `PUBLIC_BASE_URL=https://47.86.160.138:8080`
   - `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
   - `HOSTED_PROJECT_LIMIT=2`
+  - `PHASEA_MAX_CONCURRENT_CHATS=8`
+  - `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=2`
+  - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`
+  - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`
+  - `PHASEA_MAX_CONCURRENT_OTHER_RUNS=1`
   - `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
   - `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
   - `PHASEA_CODEX_COMMAND=C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd`

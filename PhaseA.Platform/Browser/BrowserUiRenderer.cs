@@ -26,13 +26,14 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #chatPanel { grid-column: 1; grid-row: 1; align-self: start; }
                 body.v2-detail #v2IterationPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #v2RepairPanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail #v2UiOptimizationPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #v2AcceptancePanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #currentProjectPanel,
                 body.v2-detail #prototypeWorkflowPanel,
                 body.v2-detail #prototypeCommandPanel,
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
-                body.v2-detail .v2-progress-row { display: grid; grid-template-columns: repeat(8, minmax(5.6rem, 1fr)); gap: 0.45rem; overflow-x: auto; padding-bottom: 0.1rem; }
+                body.v2-detail .v2-progress-row { display: grid; grid-template-columns: repeat(9, minmax(5.6rem, 1fr)); gap: 0.45rem; overflow-x: auto; padding-bottom: 0.1rem; }
                 body.v2-detail .v2-step-button { position: relative; min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
                 body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
                 body.v2-detail .v2-step-number { color: #15905f; font-size: 0.82rem; line-height: 1; font-weight: 800; }
@@ -84,6 +85,7 @@ public sealed class BrowserUiRenderer
                   body.v2-detail #chatPanel,
                   body.v2-detail #v2IterationPanel,
                   body.v2-detail #v2RepairPanel,
+                  body.v2-detail #v2UiOptimizationPanel,
                   body.v2-detail #v2AcceptancePanel,
                   body.v2-detail #currentProjectPanel,
                   body.v2-detail #prototypeWorkflowPanel,
@@ -105,14 +107,15 @@ public sealed class BrowserUiRenderer
               <script>
                 document.body.classList.add("v2-detail");
                 const v2Steps = [
-                  ["new-project", "游戏项目详情", 0],
-                  ["create-prototype", "原型骨架创建", 1],
-                  ["prototype-acceptance", "原型验收", 2],
-                  ["execute-or-repair", "原型验收修复", 4],
-                  ["iteration-plan", "完成迭代计划", 3],
-                  ["asset-inventory", "确认素材清单", 6],
-                  ["package-project", "打包项目文件", 7],
-                  ["download-project", "下载项目文件", 8]
+                  ["new-project", "游戏项目详情", 1],
+                  ["create-prototype", "原型骨架创建", 2],
+                  ["execute-or-repair", "骨架验收修复", 3],
+                  ["iteration-plan", "完成迭代计划", 4],
+                  ["ui-optimization", "UI优化", 5],
+                  ["prototype-acceptance", "原型验收", 6],
+                  ["asset-inventory", "确认素材清单", 7],
+                  ["package-project", "打包项目文件", 8],
+                  ["download-project", "下载项目文件", 9]
                 ];
                 let v2SelectedStep = "new-project";
                 let v2UserSelectedStep = false;
@@ -123,6 +126,26 @@ public sealed class BrowserUiRenderer
                 }
                 function v2AssetInventoryConfirmed() {
                   return !!state.assetInventory?.canReadInventory;
+                }
+                function v2LatestRunByType(runType) {
+                  return (state.runs || []).find(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase()) || null;
+                }
+                function v2IsoTime(value) {
+                  const time = Date.parse(value || "");
+                  return Number.isFinite(time) ? time : 0;
+                }
+                function v2IterationSessionTimestamp() {
+                  const session = state.iterationPlan?.session || null;
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || "")));
+                  return goalTime || v2IsoTime(session?.completedUtc || session?.updatedUtc || session?.createdUtc || "");
+                }
+                function v2RunIsCurrentForIteration(run) {
+                  if (!run) return false;
+                  const sessionTime = v2IterationSessionTimestamp();
+                  if (!sessionTime) return true;
+                  const runTime = v2IsoTime(run.progressUpdatedUtc || run.updatedUtc || run.completedUtc || run.createdUtc || "");
+                  return runTime >= sessionTime;
                 }
                 function v2StepStatus(stepId) {
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
@@ -136,7 +159,10 @@ public sealed class BrowserUiRenderer
                     if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
                     return creationStatus === "failed" ? "fix" : creationStatus === "succeeded" ? "done" : "pending";
                   }
-                  if (stepId === "prototype-acceptance") return succeeded ? "done" : failed ? "fix" : "pending";
+                  if (stepId === "prototype-acceptance") {
+                    if (state.v2PrototypeValidationInvalidatedByIteration) return "pending";
+                    return succeeded ? "done" : failed ? "fix" : "pending";
+                  }
                   if (stepId === "iteration-plan") {
                     const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                     if (!goals.length) return "pending";
@@ -152,6 +178,16 @@ public sealed class BrowserUiRenderer
                     if (goals.length && goals.every(goal => goal.status === "succeeded" || goal.status === "completed")) return "done";
                     return "pending";
                   }
+                  if (stepId === "ui-optimization") {
+                    const run = v2LatestRunByType("prototype-ui-optimization");
+                    if (!run || !v2RunIsCurrentForIteration(run)) return "pending";
+                    const substep = String(run.progressSubstep || "").toLowerCase();
+                    if (substep === "validation_skipped") return "pending";
+                    if (substep === "validation_failed") return "fix";
+                    if (String(run.status || "").toLowerCase() === "succeeded") return "done";
+                    if (String(run.status || "").toLowerCase() === "failed") return "fix";
+                    return "pending";
+                  }
                   if (stepId === "asset-inventory") return v2AssetInventoryConfirmed() ? "done" : "pending";
                   if (stepId === "package-project") return v2HasPackages() ? "done" : "pending";
                   if (stepId === "download-project") return v2HasPackages() ? "action" : "pending";
@@ -160,13 +196,14 @@ public sealed class BrowserUiRenderer
                 function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
                   const hide = id => $(id)?.classList.add("hidden");
-                  ["v2IterationPanel", "v2RepairPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
+                  ["v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
                   show("chatPanel");
                   if (v2SelectedStep === "new-project") show("currentProjectPanel");
                   if (v2SelectedStep === "create-prototype") show("prototypeWorkflowPanel");
                   if (v2SelectedStep === "prototype-acceptance") show("v2AcceptancePanel");
                   if (v2SelectedStep === "asset-inventory" || v2SelectedStep === "package-project" || v2SelectedStep === "download-project") show("currentProjectPanel");
                   if (v2SelectedStep === "iteration-plan") show("v2IterationPanel");
+                  if (v2SelectedStep === "ui-optimization") show("v2UiOptimizationPanel");
                   if (v2SelectedStep === "execute-or-repair") show("v2RepairPanel");
                 }
                 function v2ShowStep(stepId, userInitiated = false) {
@@ -231,7 +268,8 @@ public sealed class BrowserUiRenderer
                   grid.className = "v2-content-grid";
                   progressShell.insertAdjacentElement("afterend", grid);
                   v2CreateAcceptancePanel();
-                  ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
+                  v2CreateUiOptimizationPanel();
+                  ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
                     const element = $(id);
                     if (element) grid.appendChild(element);
                   });
@@ -257,15 +295,40 @@ public sealed class BrowserUiRenderer
                   actions.appendChild(rerun);
                   panel.appendChild(actions);
                 }
+                function v2CreateUiOptimizationPanel() {
+                  if ($("v2UiOptimizationPanel")) return;
+                  const panel = document.createElement("section");
+                  panel.id = "v2UiOptimizationPanel";
+                  panel.className = "stack hidden";
+                  panel.innerHTML = `
+                    <h2>UI优化</h2>
+                    <p class="muted">按照当前游戏类型模板重新对齐原型 UI。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。</p>
+                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true">运行UI优化</button>
+                    <div id="uiOptimizationStatus" class="card muted">完成迭代计划后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
+                  `;
+                  $("v2AcceptancePanel")?.insertAdjacentElement("beforebegin", panel);
+                  $("runUiOptimization").onclick = runUiOptimization;
+                }
                 function v2IterationPlanAllowsAcceptance() {
                   const goals = state.iterationPlan?.goals;
                   if (!Array.isArray(goals) || goals.length === 0) return true;
                   return goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
+                function v2UiOptimizationAllowsAcceptance() {
+                  const goals = state.iterationPlan?.goals;
+                  if (!Array.isArray(goals) || goals.length === 0) return true;
+                  if (!v2IterationPlanAllowsAcceptance()) return false;
+                  return v2StepStatus("ui-optimization") === "done";
+                }
                 function v2ValidatePrototypeIfAllowed() {
                   if (!v2IterationPlanAllowsAcceptance()) {
                     $("v2NextSuggestion").textContent = "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
                     out("请先完成迭代计划，再进行原型验收。");
+                    return;
+                  }
+                  if (!v2UiOptimizationAllowsAcceptance()) {
+                    $("v2NextSuggestion").textContent = "请先完成 UI 优化，再进行原型验收。";
+                    out("请先运行 UI 优化，再进行原型验收。");
                     return;
                   }
                   $("validatePrototype")?.click();
@@ -303,8 +366,14 @@ public sealed class BrowserUiRenderer
                   const actions = document.createElement("div");
                   actions.id = "v2RepairActions";
                   actions.className = "v2-action-row";
+                  const skeletonAcceptance = document.createElement("button");
+                  skeletonAcceptance.id = "v2SkeletonAcceptance";
+                  skeletonAcceptance.className = "secondary";
+                  skeletonAcceptance.type = "button";
+                  skeletonAcceptance.textContent = "骨架验收";
+                  skeletonAcceptance.onclick = validatePrototype;
                   createRepair?.insertAdjacentElement("beforebegin", actions);
-                  [createRepair, $("executeRepairStep")].filter(Boolean).forEach(button => actions.appendChild(button));
+                  [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
                 }
                 function resizeChatComposer() {
                   const textarea = $("chatMessage");
@@ -485,23 +554,27 @@ public sealed class BrowserUiRenderer
                   const allGoalsCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
                   const hasOpenGoal = hasPlan && goals.some(goal => !v2CompletedIterationStatus(goal.status));
                   const validationPassed = v2PrototypeValidationPassedForPlanning();
+                  const uiOptimized = v2StepStatus("ui-optimization") === "done";
                   if (!v2HasPrototypeSkeleton()) {
                     return "建议：请先进行 2. 原型骨架创建。\n\n如果你还没有整理清楚游戏设定，也可以先在自由聊天的能力模式中激活“游戏策划大师”，让它协助你梳理并创建策划文档，再回到 2. 原型骨架创建填写表单。";
                   }
                   if (v2HasFailedPrototypeAcceptance()) {
-                    return "建议：请先进行 4. 原型验收修复。\n\n当前原型验收没有通过，需要先生成或执行修复计划，把失败项修到可验收状态，再继续后续流程。";
+                    return "建议：请先进行 3. 骨架验收修复。\n\n当前骨架验收没有通过，需要先生成或执行修复计划，把失败项修到可验收状态，再继续后续流程。";
                   }
                   if (validationPassed && !hasPlan) {
-                    return "建议：请先进行 5. 生成迭代计划。\n\n原型验收已经通过，但还没有生成迭代计划。下一步应该把游戏原型需要补齐的功能拆成可执行 step，逐项完成游戏功能。";
+                    return "建议：请先进行 4. 完成迭代计划。\n\n骨架验收已经通过，但还没有生成迭代计划。下一步应该把游戏原型需要补齐的功能拆成可执行 step，逐项完成游戏功能。";
                   }
                   if (hasOpenGoal) {
                     return "建议：请先完成当前迭代计划的执行或修复。\n\n当前迭代计划中仍有至少一个 step 不是完成状态。请继续执行下一目标；如果某个 step 进入 needs fix 或失败状态，请先完成对应修复。";
                   }
-                  if (allGoalsCompleted && !validationPassed) {
-                    return "建议：请重新进行原型验收。\n\n当前迭代计划已经全部完成，但本轮迭代后的原型验收还没有重新通过。请回到 3. 原型验收，确认迭代后的项目仍然可以正常运行。";
+                  if (allGoalsCompleted && !uiOptimized) {
+                    return "建议：请先进行 5. UI优化。\n\n当前迭代计划已经全部完成，下一步应按照游戏类型模板重新对齐界面。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。";
                   }
-                  if (allGoalsCompleted && validationPassed) {
-                    return "建议：可以确认素材清单后打包项目文件。\n\n请依次进行 6. 确认素材清单、7. 打包项目文件、8. 下载项目文件；在下载列表中下载游戏项目压缩包，并在本地 Godot 里试玩和验证。试玩后把结果发到聊天界面，我们再准备第二轮迭代计划。";
+                  if (allGoalsCompleted && uiOptimized && !validationPassed) {
+                    return "建议：请进行 6. 原型验收。\n\n当前迭代计划和 UI 优化已经完成，需要再次验收原型，确认优化后的项目仍然可以正常运行。";
+                  }
+                  if (allGoalsCompleted && uiOptimized && validationPassed) {
+                    return "建议：可以确认素材清单后打包项目文件。\n\n请依次进行 7. 确认素材清单、8. 打包项目文件、9. 下载项目文件；在下载列表中下载游戏项目压缩包，并在本地 Godot 里试玩和验证。试玩后把结果发到聊天界面，我们再准备第二轮迭代计划。";
                   }
                   return "建议：请先刷新项目状态或重新选择项目。\n\n当前页面没有读取到足够的项目状态，无法判断下一步。";
                 }
@@ -782,6 +855,48 @@ public sealed class BrowserUiRenderer
                   border: 1px solid var(--line);
                   border-radius: 0.75rem;
                   background: #f3ead9;
+                }
+                .asset-history {
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 0.55rem;
+                  margin-top: 0.65rem;
+                }
+                .asset-history-item {
+                  width: 6.25rem;
+                  border: 1px solid var(--line);
+                  border-radius: 0.5rem;
+                  background: #fffdf8;
+                  padding: 0.3rem;
+                  color: var(--ink);
+                  text-align: left;
+                  cursor: pointer;
+                }
+                .asset-history-item.selected {
+                  border-color: var(--accent);
+                  box-shadow: inset 0 0 0 1px var(--accent);
+                }
+                .asset-history-number {
+                  display: block;
+                  font-size: 0.75rem;
+                  font-weight: 800;
+                  line-height: 1;
+                  margin-bottom: 0.25rem;
+                }
+                .asset-history-thumb {
+                  width: 90px;
+                  height: 90px;
+                  object-fit: contain;
+                  border: 1px solid var(--line);
+                  border-radius: 0.35rem;
+                  background: #f3ead9;
+                }
+                .asset-history-time {
+                  display: block;
+                  margin-top: 0.25rem;
+                  font-size: 0.7rem;
+                  color: var(--muted);
+                  line-height: 1.15;
                 }
                 .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
                 .modal-backdrop {
@@ -1292,6 +1407,7 @@ public sealed class BrowserUiRenderer
                     $("createRepairPlan").disabled = isGlobalBusy();
                     $("executeRepairStep").disabled = true;
                     $("executeRepairStep").textContent = "请先生成修复计划";
+                    $("v2SkeletonAcceptance")?.classList.remove("hidden");
                     return;
                   }
                   const goals = Array.isArray(plan.goals) ? plan.goals : [];
@@ -1305,6 +1421,7 @@ public sealed class BrowserUiRenderer
                   $("createRepairPlan").disabled = isGlobalBusy();
                   $("executeRepairStep").disabled = !hasRunnable || isGlobalBusy();
                   $("executeRepairStep").textContent = hasRunnable ? "执行下一项修复" : "修复计划已无待执行步骤";
+                  $("v2SkeletonAcceptance")?.classList.toggle("hidden", hasRunnable);
                   $("repairPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
                       <strong>repair-step${String(goal.goalIndex || 0).padStart(2, "0")} · ${escapeHtml(goal.status || "pending")}</strong>
@@ -1666,6 +1783,35 @@ public sealed class BrowserUiRenderer
                     await loadIterationPlan();
                     await loadRuns();
                     await refreshActiveRun();
+                  }
+                }
+
+                async function runUiOptimization() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!v2HasPrototypeSkeleton()) return out("请先完成原型骨架创建，再运行 UI 优化。");
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
+                    return out("请先完成迭代计划，再运行 UI 优化。");
+                  }
+                  $("uiOptimizationStatus").textContent = "正在运行 UI 优化，请等待后台任务完成。";
+                  setLocalBusy(true, "正在运行 UI 优化，请等待当前任务执行完毕。");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/ui-optimization`, {
+                      method: "POST",
+                      body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
+                    });
+                    $("uiOptimizationStatus").textContent = result.summary || "UI 优化已完成。";
+                    if (String(result.status || "").toLowerCase() === "succeeded") v2SetPrototypeValidationInvalidated(true);
+                    out(result);
+                  } catch (error) {
+                    $("uiOptimizationStatus").textContent = `UI 优化失败：${error.message || error}`;
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await loadRuns();
+                    await refreshActiveRun();
+                    v2RenderProgress();
                   }
                 }
 
@@ -3013,6 +3159,9 @@ public sealed class BrowserUiRenderer
                   if (code === "project_initialization_in_progress") {
                     return "已有项目仍在初始化中，暂时不能创建新项目。系统会自动清理中断的初始化；如果页面一直停留在这里，请刷新后重试。";
                   }
+                  if (code === "project_creation_concurrency_limit_exceeded" || code === "user_project_creation_concurrency_limit_exceeded") {
+                    return "当前已有项目正在创建中，请等待创建完成后再提交新的项目创建请求。";
+                  }
                   if (code === "project_quota_exceeded") {
                     return `项目数量已达到上限${payload.projectLimit ? `（${payload.projectLimit} 个）` : ""}，请先删除旧项目后再创建。`;
                   }
@@ -4085,7 +4234,7 @@ public sealed class BrowserUiRenderer
               h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: 0; }
               p { color: var(--muted); }
               .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
-              .detail-progress { display: grid; grid-template-columns: repeat(8, minmax(5.6rem, 1fr)); gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem; }
+              .detail-progress { display: grid; grid-template-columns: repeat(9, minmax(5.6rem, 1fr)); gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem; }
               .detail-step { min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--muted); text-decoration: none; background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
               .detail-step-number { color: var(--accent); font-size: 0.82rem; line-height: 1; font-weight: 800; }
               .detail-step-icon { width: 2rem; height: 2rem; border-radius: 999px; background: #eef0ec; border: 2px solid var(--pending); }
@@ -4129,6 +4278,7 @@ public sealed class BrowserUiRenderer
         var latestPrototype = LatestRun(runs, "prototype-7day-playable");
         var latestRepair = LatestRun(runs, "prototype-repair-step", "prototype-quick-fix");
         var latestIteration = LatestRun(runs, "prototype-iteration-goal", "prototype-feedback-iteration");
+        var latestUiOptimization = LatestRun(runs, "prototype-ui-optimization");
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
         var prototypeFailed = latestPrototype?.Status == "failed";
@@ -4137,29 +4287,30 @@ public sealed class BrowserUiRenderer
         [
             new ProjectDetailStep(1, "游戏项目详情", "done", "/", "✓"),
             CreateRunStep(2, "原型骨架创建", latestPrototype, "/#prototypeWorkflowPanel"),
-            CreateAcceptanceStep(latestPrototype, "/#prototypeWorkflowPanel"),
             prototypeFailed && latestRepair is null
-                ? new ProjectDetailStep(4, "原型验收修复", "fix", "/#v2RepairPanel", "×")
-                : CreateRunStep(4, "原型验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(5, "完成迭代计划", latestIteration, "/#v2IterationPanel"),
-            CreateRunStep(6, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
-            CreateRunStep(7, "打包项目文件", latestPackage, "/#createProjectPackage"),
-            new ProjectDetailStep(8, "下载项目文件", "pending", $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}", "")
+                ? new ProjectDetailStep(3, "骨架验收修复", "fix", "/#v2RepairPanel", "×")
+                : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
+            CreateRunStep(4, "完成迭代计划", latestIteration, "/#v2IterationPanel"),
+            CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
+            CreateAcceptanceStep(6, latestPrototype, "/#v2AcceptancePanel"),
+            CreateRunStep(7, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
+            CreateRunStep(8, "打包项目文件", latestPackage, "/#createProjectPackage"),
+            new ProjectDetailStep(9, "下载项目文件", "pending", $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}", "")
         ];
     }
 
-    private static ProjectDetailStep CreateAcceptanceStep(RunReadbackItem? prototypeRun, string href)
+    private static ProjectDetailStep CreateAcceptanceStep(int number, RunReadbackItem? prototypeRun, string href)
     {
         if (prototypeRun is null || string.IsNullOrWhiteSpace(prototypeRun.ProgressStep))
         {
-            return new ProjectDetailStep(3, "原型验收", "pending", href, "");
+            return new ProjectDetailStep(number, "原型验收", "pending", href, "");
         }
 
         return prototypeRun.Status switch
         {
-            "succeeded" => new ProjectDetailStep(3, "原型验收", "done", href, "✓"),
-            "failed" => new ProjectDetailStep(3, "原型验收", "fix", href, "×"),
-            _ => new ProjectDetailStep(3, "原型验收", "pending", href, "")
+            "succeeded" => new ProjectDetailStep(number, "原型验收", "done", href, "✓"),
+            "failed" => new ProjectDetailStep(number, "原型验收", "fix", href, "×"),
+            _ => new ProjectDetailStep(number, "原型验收", "pending", href, "")
         };
     }
 
@@ -4176,6 +4327,26 @@ public sealed class BrowserUiRenderer
             "failed" => new ProjectDetailStep(number, label, "fix", href, "×"),
             _ => new ProjectDetailStep(number, label, "pending", href, "")
         };
+    }
+
+    private static ProjectDetailStep CreateUiOptimizationStep(int number, RunReadbackItem? run, string href)
+    {
+        if (run is null)
+        {
+            return new ProjectDetailStep(number, "UI优化", "pending", href, "");
+        }
+
+        if (string.Equals(run.ProgressSubstep, "validation_skipped", StringComparison.OrdinalIgnoreCase))
+        {
+            return new ProjectDetailStep(number, "UI优化", "pending", href, "");
+        }
+
+        if (string.Equals(run.ProgressSubstep, "validation_failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return new ProjectDetailStep(number, "UI优化", "fix", href, "×");
+        }
+
+        return CreateRunStep(number, "UI优化", run, href);
     }
 
     private static RunReadbackItem? LatestRun(IReadOnlyList<RunReadbackItem> runs, params string[] runTypes)
@@ -4388,6 +4559,7 @@ public sealed class BrowserUiRenderer
                 h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: 0; }
                 h2 { margin: 0 0 0.75rem; }
                 p { color: var(--muted); }
+                .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
                 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
                 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.75rem; }
                 .list { display: grid; gap: 0.75rem; }
@@ -4399,10 +4571,17 @@ public sealed class BrowserUiRenderer
                 .muted { color: var(--muted); }
                 .badge { display: inline-flex; border-radius: 999px; padding: 0.2rem 0.55rem; background: #e6f4ef; color: var(--accent); font-weight: 700; font-size: 0.85rem; }
                 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-                .history { margin-top: 0.75rem; display: grid; gap: 0.5rem; }
-                .history-item { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.65rem; background: #fbf7ef; }
-                .history-item.selected { border-color: var(--accent); background: #edf8f3; }
-                .history-item pre { white-space: pre-wrap; max-height: 8rem; overflow: auto; margin: 0.5rem 0 0; font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+                .asset-action-row { flex-wrap: nowrap; }
+                .asset-action-row button { white-space: nowrap; flex: 0 0 auto; }
+                .history-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 1rem; background: rgba(23, 33, 27, 0.36); z-index: 40; }
+                .history-modal.open { display: flex; }
+                .history-dialog { width: min(46rem, 100%); max-height: min(42rem, calc(100vh - 2rem)); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1.4rem 4rem rgba(23, 33, 27, 0.28); }
+                .history-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+                .history-list { display: grid; gap: 0.5rem; }
+                .history-row { display: grid; grid-template-columns: 4rem 90px minmax(8rem, 1fr) auto; align-items: center; gap: 0.65rem; border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.5rem; background: #fbf7ef; }
+                .history-row.selected { border-color: var(--accent); background: #edf8f3; }
+                .history-row-number { font-weight: 800; }
+                .history-row-time { color: var(--muted); font-size: 0.85rem; }
                 .floating-composer { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(600px, calc(100vw - 32px)); height: 50px; display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.45rem; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 253, 248, 0.96); box-shadow: 0 0.8rem 2rem rgba(57, 43, 24, 0.18); z-index: 20; }
                 .floating-composer input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; padding: 0 0.75rem; font: inherit; color: var(--ink); }
                 .floating-composer span { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
@@ -4410,9 +4589,12 @@ public sealed class BrowserUiRenderer
             </head>
             <body>
               <main>
-                <header>
-                  <h1>项目素材库</h1>
-                  <p>查看当前项目已使用的素材、可生成的素材候选和每个素材单位的生成历史。</p>
+                <header class="page-header">
+                  <div>
+                    <h1>项目素材库</h1>
+                    <p>查看当前项目已使用的素材、可生成的素材候选和每个素材单位的生成历史。</p>
+                  </div>
+                  <button class="ghost" type="button" onclick="loadAssets(true)">刷新素材库</button>
                 </header>
                 <section id="status" class="card muted">正在读取素材清单...</section>
                 <section class="card">
@@ -4428,6 +4610,15 @@ public sealed class BrowserUiRenderer
                 <input id="floatingPrompt" maxlength="2000" placeholder="输入本次素材生成方向，例如：16-bit JRPG、蓝色史莱姆、俯视城镇地图...">
                 <span>应用到所点击的素材</span>
               </div>
+              <div id="assetHistoryModal" class="history-modal" aria-hidden="true">
+                <div class="history-dialog">
+                  <div class="history-dialog-header">
+                    <strong id="assetHistoryTitle">素材列表</strong>
+                    <button class="ghost" type="button" onclick="closeAssetHistory()">关闭</button>
+                  </div>
+                  <div id="assetHistoryList" class="history-list"></div>
+                </div>
+              </div>
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
@@ -4435,14 +4626,45 @@ public sealed class BrowserUiRenderer
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
-                const state = { assetUnits: {}, library: { units: [] } };
+                const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [] };
+                const cacheKey = () => `phaseA.assetLibrary.${projectId}.${model}`;
 
-                async function loadAssets() {
+                function readAssetCache() {
+                  try {
+                    const cached = JSON.parse(localStorage.getItem(cacheKey()) || "null");
+                    return cached && Array.isArray(cached.usedAssets) && Array.isArray(cached.candidates) ? cached : null;
+                  } catch { return null; }
+                }
+
+                function writeAssetCache() {
+                  const cleanLibrary = JSON.parse(JSON.stringify(state.library || { units: [] }));
+                  for (const unit of cleanLibrary.units || []) for (const entry of unit.entries || []) delete entry.previewUrl;
+                  localStorage.setItem(cacheKey(), JSON.stringify({
+                    cachedAt: new Date().toISOString(),
+                    usedAssets: state.usedAssets || [],
+                    candidates: state.candidates || [],
+                    library: cleanLibrary
+                  }));
+                }
+
+                async function loadAssets(force = false) {
                   if (!projectId) { $("status").textContent = "缺少 projectId。"; return; }
                   if (!token()) { $("status").textContent = "浏览器 token 不存在，请先登录。"; return; }
-                  $("status").textContent = "正在扫描素材单位...";
+                  if (!force) {
+                    const cached = readAssetCache();
+                    if (cached) {
+                      state.usedAssets = cached.usedAssets || [];
+                      state.candidates = cached.candidates || [];
+                      state.library = cached.library || { units: [] };
+                      await hydrateLibraryPreviewUrls();
+                      await renderAssetData(`已载入缓存素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。`);
+                      return;
+                    }
+                  }
+
+                  $("status").textContent = "正在刷新素材库...";
                   const [inventoryResponse, libraryResponse] = await Promise.all([
-                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&model=${encodeURIComponent(model)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" }),
+                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&force=${force ? "true" : "false"}&model=${encodeURIComponent(model)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" }),
                     fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" })
                   ]);
                   const payload = await inventoryResponse.json();
@@ -4454,11 +4676,18 @@ public sealed class BrowserUiRenderer
                     $("status").textContent = assetInventoryDisabledText(reason);
                     return;
                   }
-                  const usedAssets = payload.usedAssets || [];
-                  const candidates = payload.generationCandidates || [];
-                  $("status").textContent = `??? ${usedAssets.length} ?????????${candidates.length} ?????????`;
-                  await renderUsedAssets(usedAssets);
-                  renderCandidates(candidates);
+                  state.usedAssets = payload.usedAssets || [];
+                  state.candidates = payload.generationCandidates || [];
+                  writeAssetCache();
+                  await renderAssetData(`已刷新素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。`);
+                }
+
+                async function renderAssetData(statusText) {
+                  $("status").className = "card muted";
+                  $("status").textContent = statusText;
+                  state.assetUnits = {};
+                  await renderUsedAssets(state.usedAssets || []);
+                  renderCandidates(state.candidates || []);
                 }
 
                 async function renderUsedAssets(items) {
@@ -4517,10 +4746,19 @@ public sealed class BrowserUiRenderer
                     || units.find(unit => String(unit.scenePath || "").toLowerCase() === String(item.scenePath || "").toLowerCase() && String(unit.instanceName || "").toLowerCase() === String(item.instanceName || "").toLowerCase() && String(unit.kind || "").toLowerCase() === String(item.suggestedAssetKind || fallbackKind || "").toLowerCase());
                 }
 
+                function selectedLibraryEntry(libraryUnit) {
+                  const entries = libraryUnit?.entries || [];
+                  const selectedEntryId = libraryUnit?.selectedEntryId || "";
+                  return entries.find(entry => entry.selected || entry.entryId === selectedEntryId) || null;
+                }
+
                 function renderUsedAsset(model) {
                   const item = model.item;
-                  const image = item.previewUrl ? `<img class="asset-preview" src="${escapeHtml(item.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "<div class='asset-preview muted'>预览不可用</div>";
-                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p class="muted">${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p class="muted">用途： ${escapeHtml(item.intendedUse || "")}</p><p class="muted">像素尺寸： ${escapeHtml(assetPixelSize(item))}</p><p class="muted">素材： ${escapeHtml(item.resourcePath || "")}</p>${renderAssetActions(model.unit)}${renderHistory(model.libraryUnit)}</article>`;
+                  const selected = selectedLibraryEntry(model.libraryUnit);
+                  const previewUrl = selected?.previewUrl || item.previewUrl || "";
+                  const resourcePath = selected?.previewResourcePath || item.resourcePath || "";
+                  const image = previewUrl ? `<img class="asset-preview" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "<div class='asset-preview muted'>预览不可用</div>";
+                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p class="muted">${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p class="muted">用途： ${escapeHtml(item.intendedUse || "")}</p><p class="muted">像素尺寸： ${escapeHtml(assetPixelSize(item))}</p><p class="muted">素材： ${escapeHtml(resourcePath)}</p>${renderAssetActions(model.unit, model.libraryUnit)}</article>`;
                 }
 
                 function assetPixelSize(item) {
@@ -4542,18 +4780,54 @@ public sealed class BrowserUiRenderer
 
                 function renderCandidate(model) {
                   const item = model.item;
-                  return `<article class="card"><strong>${escapeHtml(item.instanceName || "")}</strong><p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p><p class="muted">节点类型： ${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p><strong>用途</strong>： ${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p><p><strong>建议原因</strong>： ${escapeHtml(item.reason || "")}</p><p class="muted">判断状态： ${escapeHtml(item.llmJudgementStatus || "")}</p>${renderAssetActions(model.unit)}${renderHistory(model.libraryUnit)}</article>`;
+                  const selected = selectedLibraryEntry(model.libraryUnit);
+                  const image = selected?.previewUrl ? `<img class="asset-preview" src="${escapeHtml(selected.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "";
+                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p><p class="muted">节点类型： ${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p><strong>用途</strong>： ${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p><p><strong>建议原因</strong>： ${escapeHtml(item.reason || "")}</p><p class="muted">判断状态： ${escapeHtml(item.llmJudgementStatus || "")}</p>${renderAssetActions(model.unit, model.libraryUnit)}</article>`;
                 }
 
-                function renderAssetActions(unit) {
-                  return `<div class="row"><button class="secondary" data-generate-key="${escapeHtml(unit.clientKey)}" onclick="generateAsset('${escapeHtml(unit.clientKey)}', this)">智能生成素材</button></div>`;
+                function renderAssetActions(unit, libraryUnit) {
+                  const count = (libraryUnit?.entries || []).length;
+                  return `<div class="row asset-action-row"><button class="secondary" data-generate-key="${escapeHtml(unit.clientKey)}" onclick="generateAsset('${escapeHtml(unit.clientKey)}', this)">生成素材</button><button class="ghost" type="button" ${count ? "" : "disabled"} onclick="showAssetHistory('${escapeHtml(libraryUnit?.key || unit.unitKey || "")}')">素材列表</button></div>`;
                 }
 
-                function renderHistory(libraryUnit) {
+                function showAssetHistory(unitKey) {
+                  const libraryUnit = (state.library?.units || []).find(unit => unit.key === unitKey);
                   const entries = libraryUnit?.entries || [];
                   const selectedEntryId = libraryUnit?.selectedEntryId || "";
-                  if (!entries.length) return "<div class='history muted'>暂无历史生成素材。</div>";
-                  return `<div class="history">${entries.map(entry => `<div class="history-item ${entry.selected || entry.entryId === selectedEntryId ? "selected" : ""}">${entry.previewUrl ? `<img class="asset-preview" src="${escapeHtml(entry.previewUrl)}" alt="${escapeHtml(entry.entryId || "generated asset")}">` : ""}<div class="row"><strong>${escapeHtml(entry.skillName || entry.actionId || "skill")}</strong><span class="badge">${escapeHtml(entry.status || "")}</span><span class="muted">${escapeHtml(formatTime(entry.createdUtc))}</span><button class="ghost" onclick="selectEntry('${escapeHtml(libraryUnit.key)}', '${escapeHtml(entry.entryId)}', this)">选择</button></div>${entry.previewResourcePath ? `<p class="muted">生成素材：${escapeHtml(entry.previewResourcePath)}</p>` : ""}<pre>${escapeHtml(trimMessage(entry.assistantMessage || entry.prompt || ""))}</pre></div>`).join("")}</div>`;
+                  if (!libraryUnit || !entries.length) return;
+                  $("assetHistoryTitle").textContent = `${libraryUnit.instanceName || "素材"} 的素材列表`;
+                  $("assetHistoryList").innerHTML = entries.map((entry, index) => {
+                    const selected = entry.selected || entry.entryId === selectedEntryId;
+                    const preview = entry.previewUrl
+                      ? `<img class="history-thumb" src="${escapeHtml(entry.previewUrl)}" alt="${escapeHtml("素材 " + (index + 1))}">`
+                      : "<div class='history-thumb muted'>无图</div>";
+                    return `<div class="history-row ${selected ? "selected" : ""}"><span class="history-row-number">#${index + 1}</span>${preview}<span class="history-row-time">${escapeHtml(formatTime(entry.createdUtc))}</span><button class="ghost" type="button" data-entry-id="${escapeHtml(entry.entryId)}" onclick="selectEntry('${escapeHtml(libraryUnit.key)}', '${escapeHtml(entry.entryId)}', this)">替换默认素材</button></div>`;
+                  }).join("");
+                  $("assetHistoryModal").classList.add("open");
+                  $("assetHistoryModal").setAttribute("aria-hidden", "false");
+                }
+
+                function closeAssetHistory() {
+                  $("assetHistoryModal").classList.remove("open");
+                  $("assetHistoryModal").setAttribute("aria-hidden", "true");
+                }
+
+                function cloneLibrary() {
+                  return JSON.parse(JSON.stringify(state.library || { units: [] }));
+                }
+
+                async function applySelectionLocal(unitKey, entryId, statusText) {
+                  const units = state.library?.units || [];
+                  const libraryUnit = units.find(unit => unit.key === unitKey);
+                  if (!libraryUnit) return false;
+                  libraryUnit.selectedEntryId = entryId;
+                  for (const entry of libraryUnit.entries || []) {
+                    entry.selected = entry.entryId === entryId;
+                  }
+                  writeAssetCache();
+                  await renderAssetData(statusText);
+                  showAssetHistory(unitKey);
+                  return true;
                 }
 
                 function trimMessage(value) {
@@ -4577,13 +4851,15 @@ public sealed class BrowserUiRenderer
                     const payload = await response.json();
                     if (!response.ok) throw new Error(payload.error || payload.failureCode || "generate_failed");
                     state.library = payload.library || state.library;
+                    await hydrateLibraryPreviewUrls();
+                    writeAssetCache();
                     if (payload.status !== "succeeded") {
                       $("status").textContent = `素材生成未完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
-                      await loadAssets();
+                      await renderAssetData($("status").textContent);
                       return;
                     }
                     $("status").textContent = `素材生成已完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
-                    await loadAssets();
+                    await renderAssetData($("status").textContent);
                   } catch (error) {
                     $("status").textContent = `素材生成失败：${error.message || error}`;
                   } finally {
@@ -4594,18 +4870,37 @@ public sealed class BrowserUiRenderer
 
                 async function selectEntry(unitKey, entryId, button) {
                   const originalText = button.textContent;
+                  const previousLibrary = cloneLibrary();
                   button.disabled = true;
-                  button.textContent = "已选择";
+                  button.textContent = "保存中...";
                   try {
+                    const applied = await applySelectionLocal(unitKey, entryId, "默认素材已替换，正在后台保存...");
+                    if (!applied) throw new Error("entry_not_found");
                     const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/select`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, body: JSON.stringify({ unitKey, entryId }), cache: "no-store" });
                     const payload = await response.json();
                     if (!response.ok) throw new Error(payload.error || "select_failed");
+                    const currentUnits = state.library?.units || [];
                     state.library = payload;
-                    await loadAssets();
+                    for (const unit of state.library?.units || []) {
+                      const current = currentUnits.find(item => item.key === unit.key);
+                      for (const entry of unit.entries || []) {
+                        const currentEntry = (current?.entries || []).find(item => item.entryId === entry.entryId);
+                        if (currentEntry?.previewUrl) entry.previewUrl = currentEntry.previewUrl;
+                      }
+                    }
+                    writeAssetCache();
+                    $("status").textContent = "默认素材已替换。";
                   } catch (error) {
+                    state.library = previousLibrary;
+                    await renderAssetData(`选择失败，已恢复原默认素材：${error.message || error}`);
+                    showAssetHistory(unitKey);
                     $("status").textContent = `选择失败: ${error.message || error}`;
-                    button.disabled = false;
-                    button.textContent = originalText;
+                  } finally {
+                    const activeButton = $("assetHistoryList").querySelector(`button[data-entry-id="${CSS.escape(entryId)}"]`);
+                    if (activeButton) {
+                      activeButton.disabled = false;
+                      activeButton.textContent = originalText;
+                    }
                   }
                 }
 

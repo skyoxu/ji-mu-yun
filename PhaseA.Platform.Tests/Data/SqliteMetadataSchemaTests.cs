@@ -477,6 +477,34 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task HasActiveRunAsync_IgnoresRunningChatRuns()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Chat Game", "manual", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var chatRunId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-chat");
+        await store.MarkRunStartedAsync(chatRunId);
+
+        var chatOnlyActive = await store.HasActiveRunAsync(project.ProjectId);
+
+        chatOnlyActive.Should().BeFalse();
+
+        var workflowRunId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        await store.MarkRunStartedAsync(workflowRunId);
+
+        var workflowActive = await store.HasActiveRunAsync(project.ProjectId);
+
+        workflowActive.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task ReconcileAbandonedRunsAsync_CanRecoverPrototypeQuickFixRuns()
     {
         using var database = TempSqliteDatabase.Create();

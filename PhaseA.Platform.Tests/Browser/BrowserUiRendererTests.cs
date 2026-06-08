@@ -1,6 +1,7 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Readback;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Browser;
@@ -29,12 +30,12 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("调用 LLM 判断下一步");
         html.Should().NotContain("v2NextSuggestionHasLlmResult");
         html.Should().Contain("请先进行 2. 原型骨架创建");
-        html.Should().Contain("请先进行 4. 原型验收修复");
-        html.Should().Contain("请先进行 5. 生成迭代计划");
-        html.Should().Contain("请重新进行原型验收");
+        html.Should().Contain("请先进行 3. 骨架验收修复");
+        html.Should().Contain("请先进行 4. 完成迭代计划");
+        html.Should().Contain("请先进行 5. UI优化");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
-        html.Should().Contain("grid-template-columns: repeat(8, minmax(5.6rem, 1fr))");
+        html.Should().Contain("grid-template-columns: repeat(9, minmax(5.6rem, 1fr))");
         html.Should().Contain("body.v2-detail #currentProjectPanel > button { display: none; }");
         html.Should().Contain("v2RunStepAction");
         html.Should().Contain("let v2UserSelectedStep = false");
@@ -48,7 +49,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("重新触发原型验收");
         html.Should().Contain("rerun.onclick = v2ValidatePrototypeIfAllowed");
         html.Should().Contain("v2IterationPlanAllowsAcceptance");
+        html.Should().Contain("v2UiOptimizationAllowsAcceptance");
         html.Should().Contain("请先完成当前迭代计划，所有目标完成后再进行原型验收。");
+        html.Should().Contain("请先完成 UI 优化，再进行原型验收。");
         html.Should().NotContain("if (stepId === \"prototype-acceptance\") {\n                    $(\"validatePrototype\")?.click();");
         html.Should().NotContain("[\"revalidate-prototype\", \"重新验收\"]");
         html.Should().Contain("$(\"loadAssetInventory\")?.click()");
@@ -74,8 +77,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("游戏项目详情");
         html.Should().Contain("原型骨架创建");
         html.Should().Contain("完成迭代计划");
-        html.Should().Contain("原型验收修复");
-        html.IndexOf("[\"execute-or-repair\", \"原型验收修复\", 4]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", 3]", StringComparison.Ordinal));
+        html.Should().Contain("骨架验收修复");
+        html.Should().Contain("UI优化");
+        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", 3]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", 4]", StringComparison.Ordinal));
+        html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", 4]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"UI优化\", 5]", StringComparison.Ordinal));
+        html.Should().Contain("function v2RunIsCurrentForIteration(run)");
+        html.Should().Contain("const sessionTime = v2IterationSessionTimestamp();");
+        html.Should().Contain("const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || \"\")));");
+        html.Should().Contain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
+        html.Should().Contain("if (substep === \"validation_skipped\") return \"pending\";");
+        html.Should().Contain("if (substep === \"validation_failed\") return \"fix\";");
+        html.Should().Contain("请先完成原型骨架创建，再运行 UI 优化。");
         html.Should().Contain("v2RepairPanel");
         html.Should().Contain("v2CreateRepairPanel");
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
@@ -167,6 +179,8 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("message.role === \"assistant\" ? \"助手\" : \"我\"");
         html.Should().Contain("v2OriginalShowProjectDetail");
         html.Should().Contain("v2SelectedStep = \"new-project\"");
+        html.Should().Contain("user_project_creation_concurrency_limit_exceeded");
+        html.Should().Contain("当前已有项目正在创建中");
         html.Should().NotContain("<strong>最新进度</strong>");
         html.Should().NotContain("<strong>更新时间</strong>");
         html.Should().NotContain("<strong>项目健康检查</strong>");
@@ -200,13 +214,58 @@ public sealed class BrowserUiRendererTests
 
         html.Should().Contain("detail-progress");
         html.Should().Contain("detail-step-number\">1</span>");
-        html.Should().Contain("detail-step-number\">8</span>");
+        html.Should().Contain("detail-step-number\">9</span>");
         html.Should().Contain("打包项目文件");
         html.Should().Contain("detail-step pending");
         html.Should().NotContain("detail-step fix");
         html.Should().NotContain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
         html.Should().NotContain("detail-step done\" href=\"/assets?projectId=project-1\"");
         html.Should().NotContain("detail-step done\" href=\"/#createProjectPackage\"");
+    }
+
+    [Fact]
+    public void RenderProject_ShouldNotMarkUiOptimizationDone_WhenShortValidationWasSkipped()
+    {
+        var project = new ProjectSnapshot(
+            "project-1",
+            "account-1",
+            "Demo Project",
+            "Demo Game",
+            "rpg",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\project-1",
+            "C:\\workspaces\\project-1\\runtime",
+            "C:\\workspaces\\project-1\\.phasea");
+        var run = new RunReadbackItem(
+            "run-ui",
+            "project-1",
+            "workspace-1",
+            "prototype-ui-optimization",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{\"godot_smoke\":{\"ran\":false,\"reason\":\"prototype_smoke_scene_missing\"}}",
+            "succeeded",
+            "validation_skipped",
+            "UI optimization completed, short validation skipped.",
+            DateTimeOffset.UtcNow.ToString("O"),
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [run]);
+
+        html.Should().Contain("detail-step pending\" href=\"/#v2UiOptimizationPanel\"");
+        html.Should().NotContain("detail-step done\" href=\"/#v2UiOptimizationPanel\"");
     }
 
     [Fact]
@@ -564,15 +623,18 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("previewUrl");
         html.Should().Contain("素材生成未完成");
         html.Should().Contain("floatingPrompt");
-        html.Should().Contain("??????");
-        html.Should().Contain("renderHistory");
+        html.Should().Contain("刷新素材库");
+        html.Should().Contain("素材列表");
+        html.Should().Contain("assetHistoryModal");
+        html.Should().Contain("showAssetHistory");
         html.Should().Contain("selectEntry");
-        html.Should().Contain("???");
-        html.Should().Contain("?????");
+        html.Should().Contain("phaseA.assetLibrary");
+        html.Should().Contain("已载入缓存素材库");
+        html.Should().Contain("已刷新素材库");
         html.Should().Contain("assetPixelSize");
         html.Should().Contain("pixelWidth");
         html.Should().Contain("pixelHeight");
-        html.Should().Contain("????");
+        html.Should().Contain("生成素材");
         html.Should().Contain("intendedUse");
     }
 

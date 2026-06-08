@@ -19,6 +19,7 @@ public sealed class PrototypeFeedbackIterationService
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeFeedbackIterationService(
@@ -46,7 +47,8 @@ public sealed class PrototypeFeedbackIterationService
         SkillActionCatalog skillActionCatalog,
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
-        TimeSpan? executionTimeout = null)
+        TimeSpan? executionTimeout = null,
+        HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -55,6 +57,7 @@ public sealed class PrototypeFeedbackIterationService
         _skillActionCatalog = skillActionCatalog;
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
+        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -100,6 +103,7 @@ public sealed class PrototypeFeedbackIterationService
             return new PrototypeFeedbackResult(runId, "project_busy", "有任务正在执行，请等待当前任务完成后再提交反馈。", []);
         }
 
+        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
         await SetProgressAsync(runId, "running", "prepare", "正在整理正式反馈并准备启动 Codex。", CancellationToken.None);
 

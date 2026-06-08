@@ -141,6 +141,50 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task RunAsync_BlocksWhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
+        (await store.TryAcquireRunnerLockAsync(projectId, lockRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+
+        result.Status.Should().Be("project_busy");
+        result.ExitCode.Should().Be(423);
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_CompletesRunAndReleasesProjectLock_WhenRunnerThrows()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new ThrowingHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(500);
+        run!.Status.Should().Be("failed");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        (await store.HasActiveRunAsync(projectId)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task QueueAsync_RejectsProjectOwnedByAnotherAccount()
     {
         using var database = TempSqliteDatabase.Create();
@@ -719,6 +763,100 @@ public sealed class PrototypeWorkflowTests
         run.Status.Should().Be("succeeded");
         progress.Status.Should().Be("succeeded");
         progress.RunId.Should().Be(result.RunId);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_BlocksWhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        runner.Commands.Clear();
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
+        (await store.TryAcquireRunnerLockAsync(projectId, lockRunId)).Should().BeTrue();
+
+        var result = await service.ValidateAsync(accountId, projectId);
+
+        result.Status.Should().Be("project_busy");
+        result.ExitCode.Should().Be(423);
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ValidateAsync_CompletesRunAndReleasesProjectLock_WhenRunnerThrows()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var setupRunner = new FakeHostedProcessRunner();
+        var setupService = Service(store, options, setupRunner);
+        _ = await setupService.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var service = Service(store, options, new ThrowingHostedProcessRunner());
+
+        var result = await service.ValidateAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(500);
+        run!.Status.Should().Be("failed");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        (await store.HasActiveRunAsync(projectId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ValidateAsync_ShouldRequireUiOptimizationAfterCompletedIterationPlan()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
+
+        var result = await service.ValidateAsync(accountId, projectId);
+
+        result.Status.Should().Be("ui_optimization_required");
+        result.ExitCode.Should().Be(409);
+        runner.Commands.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_ShouldKeepUiOptimizationCurrent_WhenOnlyIterationSessionEvaluationChanged()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var session = await CreateCompletedIterationPlanAsync(store, accountId, projectId);
+        await CreateSucceededUiOptimizationRunAsync(store, projectId);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "ready", 0, "Evaluation refreshed after UI optimization.", "{}");
+
+        var result = await service.ValidateAsync(accountId, projectId);
+
+        result.Status.Should().Be("succeeded");
+        result.ExitCode.Should().Be(0);
+        runner.Commands.Should().HaveCount(6);
     }
 
     [Fact]
@@ -1317,6 +1455,36 @@ public sealed class PrototypeWorkflowTests
         return (accountId, result.ProjectId!);
     }
 
+    private static async Task<ProjectIterationSessionSnapshot> CreateCompletedIterationPlanAsync(PhaseAMetadataStore store, string accountId, string projectId)
+    {
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "manual_feedback",
+            "Improve the prototype.",
+            "Improve the prototype.",
+            [
+                new ProjectIterationGoalCreateCommand(1, "Improve field UI", "Make field state visible.", "Field UI is visible."),
+                new ProjectIterationGoalCreateCommand(2, "Improve battle UI", "Make battle state visible.", "Battle UI is visible.")
+            ]);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in details!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} completed.", DateTimeOffset.UtcNow.ToString("O"));
+        }
+
+        return session;
+    }
+
+    private static async Task CreateSucceededUiOptimizationRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-ui-optimization");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{\"route\":\"prototype-ui-optimization\",\"godot_smoke\":{\"ran\":true,\"exit_code\":0,\"reason\":\"strict_headless_main_menu_navigation\",\"scene\":\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"}}");
+        await store.UpdateRunProgressAsync(runId, "succeeded", "completed", "UI optimization completed.");
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")
     {
         var accountId = await store.EnsureSingleAdminAsync();
@@ -1790,6 +1958,14 @@ public sealed class PrototypeWorkflowTests
             {
                 Directory.Delete(Path, recursive: true);
             }
+        }
+    }
+
+    private sealed class ThrowingHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("runner failed");
         }
     }
 }

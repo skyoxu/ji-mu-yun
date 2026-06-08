@@ -12,12 +12,13 @@ public sealed class ProjectCreationService
     private readonly ProjectRuleCatalog _ruleCatalog;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
+    private readonly ProjectCreationConcurrencyLimiter _creationConcurrencyLimiter;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog)
-        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter())
+        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new ProjectCreationConcurrencyLimiter())
     {
     }
 
@@ -26,13 +27,15 @@ public sealed class ProjectCreationService
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog,
         IProjectWorkspaceSeeder workspaceSeeder,
-        PrototypeRouteStateWriter? routeStateWriter = null)
+        PrototypeRouteStateWriter? routeStateWriter = null,
+        ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _ruleCatalog = ruleCatalog;
         _workspaceSeeder = workspaceSeeder;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
+        _creationConcurrencyLimiter = creationConcurrencyLimiter ?? new ProjectCreationConcurrencyLimiter();
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -83,6 +86,13 @@ public sealed class ProjectCreationService
             RuntimePath: layout.RuntimePath,
             MetaPath: layout.MetaPath);
 
+        var concurrency = await _creationConcurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
+        if (concurrency.Lease is null)
+        {
+            return ProjectCreationResult.Failure(concurrency.FailureCode ?? "project_creation_concurrency_limit_exceeded");
+        }
+
+        await using var lease = concurrency.Lease;
         var result = await _metadataStore.CreateProjectAsync(command, cancellationToken);
         if (!result.Succeeded)
         {

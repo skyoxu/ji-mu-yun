@@ -3,6 +3,11 @@ $env:HTTPS_TERMINATION = 'caddy'
 $env:PUBLIC_BASE_URL = 'https://47.86.160.138:8080'
 $env:HOSTED_WORKSPACE_ROOT = 'C:\jimuyun\logs\phase-a-innernet\workspaces'
 $env:HOSTED_PROJECT_LIMIT = '2'
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_CHATS)) { $env:PHASEA_MAX_CONCURRENT_CHATS = '8' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT)) { $env:PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT = '2' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS)) { $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS = '3' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT)) { $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT = '1' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_OTHER_RUNS)) { $env:PHASEA_MAX_CONCURRENT_OTHER_RUNS = '1' }
 $env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
 $env:PHASEA_REPOSITORY_ROOT = 'C:\jimuyun'
 $preferredCodexCommands = @(
@@ -54,6 +59,22 @@ if ([string]::IsNullOrWhiteSpace($env:PHASEA_ADMIN_TOKEN_HASH)) {
     throw "phasea_admin_token_hash_missing"
   }
   $env:PHASEA_ADMIN_TOKEN_HASH = $resolvedHash
+}
+
+foreach ($concurrencyName in @(
+  'PHASEA_MAX_CONCURRENT_CHATS',
+  'PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT',
+  'PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS',
+  'PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT',
+  'PHASEA_MAX_CONCURRENT_OTHER_RUNS'
+)) {
+  $hostValue = [System.Environment]::GetEnvironmentVariable($concurrencyName, 'User')
+  if ([string]::IsNullOrWhiteSpace($hostValue)) {
+    $hostValue = [System.Environment]::GetEnvironmentVariable($concurrencyName, 'Machine')
+  }
+  if (![string]::IsNullOrWhiteSpace($hostValue)) {
+    [System.Environment]::SetEnvironmentVariable($concurrencyName, $hostValue, 'Process')
+  }
 }
 
 $aiCodeMirrorCookie = Resolve-HostEnvironmentValue 'AICODEMIRROR_COOKIE'
@@ -124,6 +145,11 @@ $psi.Environment['HTTPS_TERMINATION'] = $env:HTTPS_TERMINATION
 $psi.Environment['PUBLIC_BASE_URL'] = $env:PUBLIC_BASE_URL
 $psi.Environment['HOSTED_WORKSPACE_ROOT'] = $env:HOSTED_WORKSPACE_ROOT
 $psi.Environment['HOSTED_PROJECT_LIMIT'] = $env:HOSTED_PROJECT_LIMIT
+$psi.Environment['PHASEA_MAX_CONCURRENT_CHATS'] = $env:PHASEA_MAX_CONCURRENT_CHATS
+$psi.Environment['PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT'] = $env:PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT
+$psi.Environment['PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS'] = $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS
+$psi.Environment['PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT'] = $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT
+$psi.Environment['PHASEA_MAX_CONCURRENT_OTHER_RUNS'] = $env:PHASEA_MAX_CONCURRENT_OTHER_RUNS
 $psi.Environment['PHASEA_METADATA_DB_PATH'] = $env:PHASEA_METADATA_DB_PATH
 $psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
 $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH

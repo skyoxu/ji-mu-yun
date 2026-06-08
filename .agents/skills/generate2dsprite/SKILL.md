@@ -158,7 +158,7 @@ Use the repo-local aiartmirror/OpenAI-compatible wrapper.
 Default command:
 
 ```bash
-py -3 C:\Users\weiruan\.codex\skills\generate2dsprite\scripts\generate_sprite_image.py \
+py -3 .agents\skills\generate2dsprite\scripts\generate_sprite_image.py \
   --repo-root <repo-root> \
   --prompt-file <prompt.txt> \
   --out <raw-sheet.png> \
