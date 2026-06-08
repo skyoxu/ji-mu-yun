@@ -1493,6 +1493,11 @@ public sealed class PhaseAMetadataStore
 
     public async Task MarkRunStartedAsync(string runId, CancellationToken cancellationToken = default)
     {
+        await MarkRunStartedAsync(runId, null, cancellationToken);
+    }
+
+    public async Task MarkRunStartedAsync(string runId, int? queuePositionAtStart, CancellationToken cancellationToken = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -1501,11 +1506,13 @@ public sealed class PhaseAMetadataStore
             """
             UPDATE runs
             SET status = 'running',
-                started_utc = $started_utc
+                started_utc = $started_utc,
+                queue_position_at_start = $queue_position_at_start
             WHERE id = $id;
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$started_utc", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$queue_position_at_start", (object?)queuePositionAtStart ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -1612,6 +1619,10 @@ public sealed class PhaseAMetadataStore
                 workspace_id,
                 run_type,
                 status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
                 exit_code,
                 stdout_text,
                 stderr_text,
@@ -1652,6 +1663,10 @@ public sealed class PhaseAMetadataStore
                 workspace_id,
                 run_type,
                 status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
                 exit_code,
                 stdout_text,
                 stderr_text,
@@ -1701,6 +1716,10 @@ public sealed class PhaseAMetadataStore
                 r.workspace_id,
                 r.run_type,
                 r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
                 r.exit_code,
                 r.stdout_text,
                 r.stderr_text,
@@ -1763,6 +1782,10 @@ public sealed class PhaseAMetadataStore
                 r.workspace_id,
                 r.run_type,
                 r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
                 r.exit_code,
                 r.stdout_text,
                 r.stderr_text,
@@ -1865,6 +1888,129 @@ public sealed class PhaseAMetadataStore
         return rows;
     }
 
+    public async Task<IReadOnlyList<AdminRunMetricsRow>> ListRunMetricsForAdminAsync(
+        string? accountId,
+        string? runType,
+        int limit = 200,
+        CancellationToken cancellationToken = default)
+    {
+        if (limit < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be greater than zero.");
+        }
+
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+        var normalizedAccountId = string.IsNullOrWhiteSpace(accountId) ? null : accountId.Trim();
+        var normalizedRunType = string.IsNullOrWhiteSpace(runType) ? null : runType.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                a.id,
+                a.username,
+                p.id,
+                p.name,
+                p.game_name,
+                r.id,
+                r.project_id,
+                r.workspace_id,
+                r.run_type,
+                r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
+                r.exit_code,
+                r.stdout_text,
+                r.stderr_text,
+                r.evidence_json,
+                r.progress_step,
+                r.progress_substep,
+                r.progress_label,
+                r.progress_updated_utc,
+                r.llm_gateway,
+                r.llm_request_id,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE a.is_admin = 0
+              AND ($account_id IS NULL OR a.id = $account_id)
+              AND ($run_type IS NULL OR r.run_type = $run_type)
+            ORDER BY r.created_utc DESC, r.id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$run_type", (object?)normalizedRunType ?? DBNull.Value);
+        command.Parameters.AddWithValue("$limit", boundedLimit);
+
+        var rows = new List<AdminRunMetricsRow>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rows.Add(new AdminRunMetricsRow(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                ReadRunSnapshot(reader, offset: 5)));
+        }
+
+        return rows;
+    }
+
+    public async Task<IReadOnlyList<AdminChatRunMetricsRow>> ListChatRunMetricsForAdminAsync(
+        string? accountId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedAccountId = string.IsNullOrWhiteSpace(accountId) ? null : accountId.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                a.id,
+                a.username,
+                COUNT(*) AS run_count,
+                ROUND(AVG(CASE
+                    WHEN r.started_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(r.started_utc) - julianday(r.created_utc)) * 86400.0)
+                END), 3) AS average_queue_seconds,
+                ROUND(AVG(CASE
+                    WHEN r.started_utc IS NULL OR r.finished_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(r.finished_utc) - julianday(r.started_utc)) * 86400.0)
+                END), 3) AS average_runtime_seconds
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE a.is_admin = 0
+              AND r.run_type = 'prototype-chat'
+              AND ($account_id IS NULL OR a.id = $account_id)
+            GROUP BY a.id, a.username
+            ORDER BY a.username ASC, a.id ASC;
+            """;
+        command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
+
+        var rows = new List<AdminChatRunMetricsRow>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rows.Add(new AdminChatRunMetricsRow(
+                reader.GetString(0),
+                reader.GetString(1),
+                checked((int)reader.GetInt64(2)),
+                reader.IsDBNull(3) ? null : reader.GetDouble(3),
+                reader.IsDBNull(4) ? null : reader.GetDouble(4)));
+        }
+
+        return rows;
+    }
+
     public async Task<RunSnapshot?> GetActiveRunForAccountAsync(string accountId, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
@@ -1879,6 +2025,10 @@ public sealed class PhaseAMetadataStore
                 r.workspace_id,
                 r.run_type,
                 r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
                 r.exit_code,
                 r.stdout_text,
                 r.stderr_text,
@@ -1906,24 +2056,7 @@ public sealed class PhaseAMetadataStore
             return null;
         }
 
-        return new RunSnapshot(
-            reader.GetString(0),
-            reader.GetString(1),
-            reader.IsDBNull(2) ? null : reader.GetString(2),
-            reader.GetString(3),
-            reader.GetString(4),
-            reader.IsDBNull(5) ? null : reader.GetInt32(5),
-            reader.IsDBNull(6) ? null : reader.GetString(6),
-            reader.IsDBNull(7) ? null : reader.GetString(7),
-            reader.IsDBNull(8) ? null : reader.GetString(8),
-            reader.GetString(9),
-            reader.GetString(10),
-            reader.GetString(11),
-            reader.IsDBNull(12) ? null : reader.GetString(12),
-            reader.IsDBNull(13) ? null : reader.GetString(13),
-            reader.IsDBNull(14) ? null : reader.GetString(14),
-            reader.IsDBNull(15) ? null : reader.GetString(15),
-            reader.IsDBNull(16) ? null : reader.GetString(16));
+        return ReadRunSnapshot(reader);
     }
 
     public async Task RecordRunLlmAuditAsync(
@@ -2989,18 +3122,22 @@ public sealed class PhaseAMetadataStore
             reader.IsDBNull(offset + 2) ? null : reader.GetString(offset + 2),
             reader.GetString(offset + 3),
             reader.GetString(offset + 4),
-            reader.IsDBNull(offset + 5) ? null : reader.GetInt32(offset + 5),
+            reader.GetString(offset + 5),
             reader.IsDBNull(offset + 6) ? null : reader.GetString(offset + 6),
             reader.IsDBNull(offset + 7) ? null : reader.GetString(offset + 7),
-            reader.IsDBNull(offset + 8) ? null : reader.GetString(offset + 8),
-            reader.GetString(offset + 9),
-            reader.GetString(offset + 10),
-            reader.GetString(offset + 11),
+            reader.IsDBNull(offset + 8) ? null : reader.GetInt32(offset + 8),
+            reader.IsDBNull(offset + 9) ? null : reader.GetInt32(offset + 9),
+            reader.IsDBNull(offset + 10) ? null : reader.GetString(offset + 10),
+            reader.IsDBNull(offset + 11) ? null : reader.GetString(offset + 11),
             reader.IsDBNull(offset + 12) ? null : reader.GetString(offset + 12),
-            reader.IsDBNull(offset + 13) ? null : reader.GetString(offset + 13),
-            reader.IsDBNull(offset + 14) ? null : reader.GetString(offset + 14),
-            reader.IsDBNull(offset + 15) ? null : reader.GetString(offset + 15),
-            reader.IsDBNull(offset + 16) ? null : reader.GetString(offset + 16));
+            reader.GetString(offset + 13),
+            reader.GetString(offset + 14),
+            reader.GetString(offset + 15),
+            reader.IsDBNull(offset + 16) ? null : reader.GetString(offset + 16),
+            reader.IsDBNull(offset + 17) ? null : reader.GetString(offset + 17),
+            reader.IsDBNull(offset + 18) ? null : reader.GetString(offset + 18),
+            reader.IsDBNull(offset + 19) ? null : reader.GetString(offset + 19),
+            reader.IsDBNull(offset + 20) ? null : reader.GetString(offset + 20));
     }
 
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)

@@ -181,4 +181,59 @@ public sealed class HeavyRunnerQueueServiceTests
         Assert.Equal("third", await third.WaitAsync(waitTimeout));
         Assert.Equal(0, queue.GetReadback("account-3", includeAll: true).QueuedCount);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ExposesQueuePositionAtStart()
+    {
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
+        var waitTimeout = TimeSpan.FromSeconds(60);
+        var firstCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStartedPosition = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var first = queue.ExecuteAsync(
+            "run-1",
+            "account-1",
+            "project-1",
+            "prototype-7day-playable",
+            async (start, _) =>
+            {
+                Assert.Equal(1, start.QueuePositionAtStart);
+                firstStarted.SetResult();
+                await firstCanFinish.Task;
+                return "first";
+            });
+
+        await firstStarted.Task.WaitAsync(waitTimeout);
+
+        var second = queue.ExecuteAsync(
+            "run-2",
+            "account-2",
+            "project-2",
+            "prototype-quick-fix",
+            (start, _) =>
+            {
+                secondStartedPosition.SetResult(start.QueuePositionAtStart);
+                return Task.FromResult("second");
+            });
+
+        firstCanFinish.SetResult();
+
+        Assert.Equal("first", await first.WaitAsync(waitTimeout));
+        Assert.Equal("second", await second.WaitAsync(waitTimeout));
+        Assert.Equal(2, await secondStartedPosition.Task.WaitAsync(waitTimeout));
+    }
+
+    [Fact]
+    public async Task EnterAsync_ExposesQueuePositionAtStart()
+    {
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
+        await using var lease = await queue.EnterAsync(
+            "run-1",
+            "account-1",
+            "project-1",
+            "prototype-7day-playable");
+
+        Assert.Equal(1, lease.QueuePositionAtStart);
+    }
 }

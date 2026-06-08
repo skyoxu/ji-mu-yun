@@ -103,7 +103,7 @@ public sealed class GameDesignDocumentService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", "正在准备策划 GDD 文档。", CancellationToken.None);
 
         try

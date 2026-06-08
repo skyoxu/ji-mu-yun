@@ -449,6 +449,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/admin/llm-usage.csv");
         html.Should().Contain("loadAdminLlmRuns");
         html.Should().Contain("/api/admin/llm-runs");
+        html.Should().Contain("loadAdminRunMetrics");
+        html.Should().Contain("/api/admin/run-metrics");
+        html.Should().Contain("adminRunMetricsAccount");
+        html.Should().Contain("adminRunMetricsType");
         html.Should().Contain("loadAccountAudit");
         html.Should().Contain("/api/admin/account-audit");
         html.Should().Contain("downloadAccountAuditCsv");

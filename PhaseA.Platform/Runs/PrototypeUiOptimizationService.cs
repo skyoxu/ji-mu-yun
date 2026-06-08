@@ -95,7 +95,7 @@ public sealed class PrototypeUiOptimizationService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", "\u6b63\u5728\u51c6\u5907 UI \u4f18\u5316\u3002", CancellationToken.None);
         var runLogRelativeDir = Path.Combine("logs", "phase-a-ui-optimization", project.ProjectId, runId);
         var promptRelativePath = Path.Combine(runLogRelativeDir, "ui-optimization-prompt.md");

@@ -305,6 +305,22 @@ app.MapGet("/api/admin/llm-runs", async (
     return Results.Ok(await readback.GetAdminLlmRunAuditAsync(limit ?? 100, cancellationToken));
 });
 
+app.MapGet("/api/admin/run-metrics", async (
+    string? accountId,
+    string? runType,
+    int? limit,
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await readback.GetAdminRunMetricsAsync(accountId, runType, limit ?? 200, cancellationToken));
+});
+
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
     HttpContext context,

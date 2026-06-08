@@ -151,6 +151,54 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_ReturnsAdminRunMetricsWithFiltersAndChatAverages()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var user = await store.CreateUserAccountAsync("metrics-user", 1);
+        var otherUser = await store.CreateUserAccountAsync("metrics-other", 1);
+        var adminProject = await CreateProjectAsync(store, options, admin, "Admin Game");
+        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Game");
+        var otherProject = await CreateProjectAsync(store, options, otherUser.AccountId, "Other Game");
+        var adminRun = await store.CreateRunAsync(adminProject, null, "prototype-iteration-goal");
+        var workflowRun = await store.CreateRunAsync(projectId, null, "prototype-iteration-goal");
+        var packageRun = await store.CreateRunAsync(projectId, null, "project-package");
+        var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-iteration-goal");
+        var chatOne = await store.CreateRunAsync(projectId, null, "prototype-chat");
+        var chatTwo = await store.CreateRunAsync(projectId, null, "prototype-chat");
+        await SetRunTimingAsync(database.ConnectionString, adminRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:01.0000000Z", "2026-06-01T00:00:02.0000000Z", 1);
+        await SetRunTimingAsync(database.ConnectionString, workflowRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:05.0000000Z", "2026-06-01T00:00:17.0000000Z", 3);
+        await SetRunTimingAsync(database.ConnectionString, packageRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:03.0000000Z", "2026-06-01T00:00:09.0000000Z", 2);
+        await SetRunTimingAsync(database.ConnectionString, otherRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:04.0000000Z", 1);
+        await SetRunTimingAsync(database.ConnectionString, chatOne, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:07.0000000Z", null);
+        await SetRunTimingAsync(database.ConnectionString, chatTwo, "2026-06-01T00:00:10.0000000Z", "2026-06-01T00:00:14.0000000Z", "2026-06-01T00:00:23.0000000Z", null);
+        var service = new ArtifactReadbackService(store, options);
+
+        var metrics = await service.GetAdminRunMetricsAsync(user.AccountId, "prototype-iteration-goal");
+        var userMetrics = await service.GetAdminRunMetricsAsync(user.AccountId, null, limit: 1);
+
+        var item = metrics.Runs.Should().ContainSingle().Subject;
+        item.AccountId.Should().Be(user.AccountId);
+        item.ProjectId.Should().Be(projectId);
+        item.RunId.Should().Be(workflowRun);
+        item.QueuePositionAtStart.Should().Be(3);
+        item.QueueSeconds.Should().Be(5);
+        item.RuntimeSeconds.Should().Be(12);
+        metrics.Runs.Should().NotContain(run => run.RunId == adminRun);
+        metrics.Runs.Should().NotContain(run => run.RunId == packageRun);
+        metrics.Runs.Should().NotContain(run => run.RunId == otherRun);
+        var chat = userMetrics.ChatAverages.Should().ContainSingle().Subject;
+        chat.AccountId.Should().Be(user.AccountId);
+        chat.RunCount.Should().Be(2);
+        chat.AverageQueueSeconds.Should().Be(3);
+        chat.AverageRuntimeSeconds.Should().Be(7);
+    }
+
+    [Fact]
     public async Task Readback_ReturnsAdminLlmUsageAcrossAccounts()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1094,6 +1142,39 @@ public sealed class ArtifactReadbackServiceTests
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         return store;
+    }
+
+    private static async Task SetRunTimingAsync(
+        string connectionString,
+        string runId,
+        string createdUtc,
+        string startedUtc,
+        string finishedUtc,
+        int? queuePositionAtStart)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE runs
+            SET status = 'succeeded',
+                created_utc = $created_utc,
+                started_utc = $started_utc,
+                finished_utc = $finished_utc,
+                queue_position_at_start = $queue_position_at_start,
+                exit_code = 0,
+                stdout_text = '',
+                stderr_text = '',
+                evidence_json = '{}'
+            WHERE id = $id;
+            """;
+        command.Parameters.AddWithValue("$id", runId);
+        command.Parameters.AddWithValue("$created_utc", createdUtc);
+        command.Parameters.AddWithValue("$started_utc", startedUtc);
+        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+        command.Parameters.AddWithValue("$queue_position_at_start", (object?)queuePositionAtStart ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)

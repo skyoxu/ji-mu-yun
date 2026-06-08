@@ -35,6 +35,25 @@ public sealed class HeavyRunnerQueueService
         Func<CancellationToken, Task<T>> work,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(work);
+
+        return await ExecuteAsync(
+            runId,
+            accountId,
+            projectId,
+            runType,
+            (_, token) => work(token),
+            cancellationToken);
+    }
+
+    public async Task<T> ExecuteAsync<T>(
+        string runId,
+        string accountId,
+        string projectId,
+        string runType,
+        Func<HeavyRunnerStartContext, CancellationToken, Task<T>> work,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
@@ -61,7 +80,7 @@ public sealed class HeavyRunnerQueueService
 
         try
         {
-            return await work(cancellationToken);
+            return await work(new HeavyRunnerStartContext(item.QueuePositionAtStart), cancellationToken);
         }
         finally
         {
@@ -69,7 +88,7 @@ public sealed class HeavyRunnerQueueService
         }
     }
 
-    public async Task<IAsyncDisposable> EnterAsync(
+    public async Task<HeavyRunnerLease> EnterAsync(
         string runId,
         string accountId,
         string projectId,
@@ -99,7 +118,7 @@ public sealed class HeavyRunnerQueueService
             throw;
         }
 
-        return new HeavyRunnerLease(this, item);
+        return new HeavyRunnerLease(item.QueuePositionAtStart, () => Complete(item));
     }
 
     public HeavyRunnerQueueReadback GetReadback(string accountId, bool includeAll)
@@ -137,6 +156,7 @@ public sealed class HeavyRunnerQueueService
     {
         lock (_gate)
         {
+            item.QueuePositionAtStart = _running.Count + _waiting.Count + 1;
             _waiting.Enqueue(item);
             TryStartNextLocked();
         }
@@ -223,26 +243,28 @@ public sealed class HeavyRunnerQueueService
         DateTimeOffset EnqueuedUtc)
     {
         public TaskCompletionSource Ready { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int QueuePositionAtStart { get; set; }
     }
 
-    private sealed class HeavyRunnerLease : IAsyncDisposable
+    public sealed class HeavyRunnerLease : IAsyncDisposable
     {
-        private readonly HeavyRunnerQueueService _owner;
-        private readonly HeavyRunnerQueueItem _item;
+        private readonly Action _complete;
         private bool _disposed;
 
-        public HeavyRunnerLease(HeavyRunnerQueueService owner, HeavyRunnerQueueItem item)
+        internal HeavyRunnerLease(int queuePositionAtStart, Action complete)
         {
-            _owner = owner;
-            _item = item;
+            QueuePositionAtStart = queuePositionAtStart;
+            _complete = complete;
         }
+
+        public int QueuePositionAtStart { get; }
 
         public ValueTask DisposeAsync()
         {
             if (!_disposed)
             {
                 _disposed = true;
-                _owner.Complete(_item);
+                _complete();
             }
 
             return ValueTask.CompletedTask;
@@ -266,3 +288,5 @@ public sealed record HeavyRunnerQueueItemReadback(
     int Position,
     int EstimatedWaitSeconds,
     string EnqueuedUtc);
+
+public sealed record HeavyRunnerStartContext(int QueuePositionAtStart);

@@ -127,7 +127,7 @@ public sealed class ProjectPackageService
         try
         {
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-            await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+            await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             var packageOrdinal = await NextPackageOrdinalAsync(project.ProjectId, cancellationToken);
             var version = CreateVersion(packageOrdinal);
             var safeName = SafeFileName(project.Name);

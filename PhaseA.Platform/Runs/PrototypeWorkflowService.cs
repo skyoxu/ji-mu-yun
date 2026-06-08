@@ -141,7 +141,7 @@ public sealed class PrototypeWorkflowService
         try
         {
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
-        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", cancellationToken);
         await AdvancePrototypeStepsAsync(runId, cancellationToken);
 
@@ -286,9 +286,9 @@ public sealed class PrototypeWorkflowService
                     project.AccountId,
                     project.ProjectId,
                     RunType,
-                    async _ =>
+                    async (queueStart, _) =>
                     {
-                        await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, contract.RelativePath, request);
+                        await RunQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, contract.RelativePath, request, queueStart.QueuePositionAtStart);
                         return true;
                     },
                     CancellationToken.None);
@@ -376,9 +376,9 @@ public sealed class PrototypeWorkflowService
                     project.AccountId,
                     project.ProjectId,
                     RunType,
-                    async _ =>
+                    async (queueStart, _) =>
                     {
-                        await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, latestPrototypeRun, postValidationFailureRun, request.Model);
+                        await RunRepairQueuedAsync(project.ProjectId, project.WorkspaceId, project.RepoPath, runId, prototypeRecordPath, latestPrototypeRun, postValidationFailureRun, request.Model, queueStart.QueuePositionAtStart);
                         return true;
                     },
                     CancellationToken.None);
@@ -455,7 +455,7 @@ public sealed class PrototypeWorkflowService
         try
         {
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
-        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
 
         var validation = ValidateCompletedPrototypeState(project.RepoPath, slug);
         var smoke = validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
@@ -906,9 +906,10 @@ public sealed class PrototypeWorkflowService
         string runId,
         string prototypeRecordPath,
         string prototypeContractPath,
-        PrototypeWorkflowRequest request)
+        PrototypeWorkflowRequest request,
+        int queuePositionAtStart)
     {
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, queuePositionAtStart, CancellationToken.None);
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", CancellationToken.None);
         await AdvancePrototypeStepsAsync(runId, CancellationToken.None);
 
@@ -984,11 +985,12 @@ public sealed class PrototypeWorkflowService
         string prototypeRecordPath,
         RunSnapshot failedRun,
         RunSnapshot? postValidationFailureRun,
-        string? model)
+        string? model,
+        int queuePositionAtStart)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None)
             ?? throw new InvalidOperationException("Project not found.");
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, queuePositionAtStart, CancellationToken.None);
         await SetProgressAsync(runId, "repairing", "prepare", "正在基于上一次失败原因修复原型。", CancellationToken.None);
         await AdvancePrototypeStepsAsync(runId, CancellationToken.None);
 

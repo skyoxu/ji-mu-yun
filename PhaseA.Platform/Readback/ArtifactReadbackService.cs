@@ -130,6 +130,49 @@ public sealed class ArtifactReadbackService
         return new AdminLlmRunAuditReadback(items.Length, items);
     }
 
+    public async Task<AdminRunMetricsReadback> GetAdminRunMetricsAsync(
+        string? accountId,
+        string? runType,
+        int limit = 200,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+        var rows = await _metadataStore.ListRunMetricsForAdminAsync(accountId, runType, boundedLimit, cancellationToken);
+        var includeChatAverages = string.IsNullOrWhiteSpace(runType) ||
+                                  string.Equals(runType.Trim(), "prototype-chat", StringComparison.OrdinalIgnoreCase);
+        var chatRows = includeChatAverages
+            ? await _metadataStore.ListChatRunMetricsForAdminAsync(accountId, cancellationToken)
+            : Array.Empty<AdminChatRunMetricsRow>();
+        var nonChatRuns = rows
+            .Where(row => !string.Equals(row.Run.RunType, "prototype-chat", StringComparison.OrdinalIgnoreCase))
+            .Select(row => new AdminRunMetricsItem(
+                row.AccountId,
+                row.Username,
+                row.ProjectId,
+                row.ProjectName,
+                row.GameName,
+                row.Run.RunId,
+                row.Run.RunType,
+                row.Run.Status,
+                row.Run.CreatedUtc,
+                row.Run.StartedUtc,
+                row.Run.FinishedUtc,
+                row.Run.QueuePositionAtStart,
+                SecondsBetween(row.Run.CreatedUtc, row.Run.StartedUtc),
+                SecondsBetween(row.Run.StartedUtc, row.Run.FinishedUtc)))
+            .ToArray();
+        var chatAverages = chatRows
+            .Select(row => new AdminChatRunMetricsItem(
+                row.AccountId,
+                row.Username,
+                row.RunCount,
+                row.AverageQueueSeconds,
+                row.AverageRuntimeSeconds))
+            .ToArray();
+
+        return new AdminRunMetricsReadback(nonChatRuns.Length, nonChatRuns, chatAverages);
+    }
+
     public async Task<AdminLlmUsageAggregateReadback> GetAdminLlmUsageAggregateAsync(
         string? grain,
         string? split,
@@ -407,6 +450,17 @@ public sealed class ArtifactReadbackService
     private static decimal ReadEstimatedCostCny(string json)
     {
         return LlmUsageAuditJson.SumEstimatedCostCny(json);
+    }
+
+    private static double? SecondsBetween(string? fromUtc, string? toUtc)
+    {
+        if (!DateTimeOffset.TryParse(fromUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var from) ||
+            !DateTimeOffset.TryParse(toUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var to))
+        {
+            return null;
+        }
+
+        return Math.Round(Math.Max(0, (to - from).TotalSeconds), 3);
     }
 
     private static string NormalizeGrain(string? grain)

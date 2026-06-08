@@ -109,7 +109,7 @@ public sealed class ProjectDraftImportService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
         await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, null, cancellationToken);
         try
         {

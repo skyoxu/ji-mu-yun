@@ -95,7 +95,7 @@ public sealed class SkillActionService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
         try
         {
 

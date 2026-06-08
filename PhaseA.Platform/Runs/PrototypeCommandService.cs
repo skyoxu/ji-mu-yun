@@ -104,7 +104,7 @@ public sealed class PrototypeCommandService
         try
         {
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, runType, CancellationToken.None);
-            await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+            await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
             var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
             if (!routeSkill.IsAvailable)

@@ -1017,12 +1017,18 @@ public sealed class BrowserUiRenderer
                       <button id="loadAdminLlmUsageAggregate" class="ghost">Open cost aggregate page</button>
                     </div>
                     <button id="loadAdminLlmRuns" class="ghost">Load admin LLM run audit</button>
+                    <div class="split-actions">
+                      <label>Run user <select id="adminRunMetricsAccount"><option value="">All users</option></select></label>
+                      <label>Run type <input id="adminRunMetricsType" placeholder="blank = all run types"></label>
+                      <button id="loadAdminRunMetrics" class="ghost">Load run metrics</button>
+                    </div>
                     <button id="loadAccountAudit" class="ghost">Load account audit</button>
                     <button id="downloadAccountAuditCsv" class="ghost">Download account audit CSV</button>
                     <div id="createUserAccountResult" class="card muted">Admin only. The token is shown once after creation.</div>
                     <div id="userAccounts" class="card-list"></div>
                     <div id="adminLlmUsageStatus" class="card muted">No admin LLM usage loaded.</div>
                     <div id="adminLlmRunsStatus" class="card muted">No admin LLM run audit loaded.</div>
+                    <div id="adminRunMetricsStatus" class="card muted">No run metrics loaded.</div>
                     <div id="accountAuditStatus" class="card muted">No account audit loaded.</div>
                   </section>
                   <section id="initStatusPanel" class="stack hidden">
@@ -2284,6 +2290,8 @@ public sealed class BrowserUiRenderer
                     ]);
                     const users = result.users || [];
                     const usageByAccount = new Map((usage.accounts || []).map(item => [item.accountId, item]));
+                    const runMetricUsers = users.filter(user => !user.isAdmin);
+                    $("adminRunMetricsAccount").innerHTML = `<option value="">All users</option>${runMetricUsers.map(user => `<option value="${escapeHtml(user.accountId)}">${escapeHtml(user.username)}</option>`).join("")}`;
                     $("userAccounts").innerHTML = users.map(user => `
                       <div class="card">
                         <strong>${escapeHtml(user.username)}${user.isAdmin ? " · admin" : ""}${user.isDisabled ? " · disabled" : ""}</strong>
@@ -2492,6 +2500,56 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     $("adminLlmRunsStatus").className = "card danger";
                     $("adminLlmRunsStatus").textContent = error?.payload?.error || "admin_llm_runs_load_failed";
+                  }
+                }
+
+                function formatMetricSeconds(value) {
+                  if (value === null || value === undefined || value === "") return "-";
+                  const number = Number(value);
+                  if (!Number.isFinite(number)) return "-";
+                  return `${number.toFixed(number >= 10 ? 1 : 3)}s`;
+                }
+
+                async function loadAdminRunMetrics() {
+                  if (state.role !== "admin") return;
+                  try {
+                    const query = new URLSearchParams();
+                    const accountId = $("adminRunMetricsAccount").value || "";
+                    const runType = $("adminRunMetricsType").value.trim();
+                    if (accountId) query.set("accountId", accountId);
+                    if (runType) query.set("runType", runType);
+                    query.set("limit", "200");
+                    const metrics = await api(`/api/admin/run-metrics?${query}`);
+                    const runs = metrics.runs || [];
+                    const chats = metrics.chatAverages || [];
+                    $("adminRunMetricsStatus").className = "card";
+                    $("adminRunMetricsStatus").innerHTML = `
+                      <strong>Run metrics: ${escapeHtml(metrics.count || 0)} non-chat runs</strong>
+                      <div class="card-list">
+                        ${runs.map(run => `
+                          <div class="card">
+                            <strong>${escapeHtml(run.username)} · ${escapeHtml(run.runType)} · ${escapeHtml(run.status)}</strong>
+                            <p class="muted">project: ${escapeHtml(run.projectName || run.projectId)} · ${escapeHtml(run.gameName || "")}</p>
+                            <p class="muted">runId: ${escapeHtml(run.runId)}</p>
+                            <p class="muted">queue: ${escapeHtml(formatMetricSeconds(run.queueSeconds))} · runtime: ${escapeHtml(formatMetricSeconds(run.runtimeSeconds))} · start queue position: ${escapeHtml(run.queuePositionAtStart ?? "-")}</p>
+                            <p class="muted">created: ${escapeHtml(run.createdUtc)} · started: ${escapeHtml(run.startedUtc || "")} · finished: ${escapeHtml(run.finishedUtc || "")}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No non-chat runs matched.</p>"}
+                      </div>
+                      <hr>
+                      <strong>Chat averages by user</strong>
+                      <div class="card-list">
+                        ${chats.map(item => `
+                          <div class="card">
+                            <strong>${escapeHtml(item.username)} · ${escapeHtml(item.runCount)} chat runs</strong>
+                            <p class="muted">avg queue: ${escapeHtml(formatMetricSeconds(item.averageQueueSeconds))} · avg runtime: ${escapeHtml(formatMetricSeconds(item.averageRuntimeSeconds))}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>No chat runs matched.</p>"}
+                      </div>
+                    `;
+                  } catch (error) {
+                    $("adminRunMetricsStatus").className = "card danger";
+                    $("adminRunMetricsStatus").textContent = error?.payload?.error || "admin_run_metrics_load_failed";
                   }
                 }
 
@@ -4175,6 +4233,7 @@ public sealed class BrowserUiRenderer
                 $("loadAdminLlmUsageAggregate").onclick = loadAdminLlmUsageAggregate;
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
                 $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
+                $("loadAdminRunMetrics").onclick = loadAdminRunMetrics;
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("importDraft").onclick = importDraft;

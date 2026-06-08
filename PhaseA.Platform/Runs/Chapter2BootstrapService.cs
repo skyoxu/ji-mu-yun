@@ -106,7 +106,7 @@ public sealed class Chapter2BootstrapService
         try
         {
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-            await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+            await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
 
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

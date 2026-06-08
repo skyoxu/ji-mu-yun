@@ -151,7 +151,7 @@ public sealed partial class PrototypeQuickFixService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await SetProgressAsync(runId, "running", "prepare", "正在准备快速修复任务。", CancellationToken.None);
 
         string submittedRelativePath = "";

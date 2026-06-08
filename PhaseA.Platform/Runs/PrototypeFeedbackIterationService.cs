@@ -104,7 +104,7 @@ public sealed class PrototypeFeedbackIterationService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
-        await _metadataStore.MarkRunStartedAsync(runId, CancellationToken.None);
+        await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await SetProgressAsync(runId, "running", "prepare", "正在整理正式反馈并准备启动 Codex。", CancellationToken.None);
 
         try

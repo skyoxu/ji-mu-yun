@@ -150,6 +150,13 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "runs",
+            "queue_position_at_start",
+            "ALTER TABLE runs ADD COLUMN queue_position_at_start INTEGER NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "project_iteration_sessions",
             "latest_evaluation_json",
             "ALTER TABLE project_iteration_sessions ADD COLUMN latest_evaluation_json TEXT NULL;",
@@ -328,6 +335,7 @@ public static class SqliteMetadataSchema
             progress_substep TEXT NOT NULL DEFAULT '',
             progress_label TEXT NOT NULL DEFAULT '',
             progress_updated_utc TEXT NULL,
+            queue_position_at_start INTEGER NULL,
             llm_gateway TEXT NULL,
             llm_request_id TEXT NULL,
             llm_model TEXT NULL,
@@ -533,6 +541,8 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
+        "CREATE INDEX IF NOT EXISTS ix_runs_created_utc ON runs(created_utc);",
+        "CREATE INDEX IF NOT EXISTS ix_runs_run_type_created ON runs(run_type, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_artifacts_project_id ON artifacts(project_id);",
         "CREATE INDEX IF NOT EXISTS ix_aicodemirror_key_pool_account ON aicodemirror_key_pool(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_chat_messages_project_created ON project_chat_messages(project_id, created_utc);",
