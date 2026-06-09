@@ -37,7 +37,8 @@ public sealed class Chapter2BootstrapService
         ProjectHealthArtifactIndexer artifactIndexer,
         IProjectWorkspaceSeeder workspaceSeeder,
         TimeSpan? executionTimeout = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        ProjectCreationRunnerQueue? projectCreationRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,7 +46,7 @@ public sealed class Chapter2BootstrapService
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = projectCreationRunnerQueue?.Queue ?? heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 

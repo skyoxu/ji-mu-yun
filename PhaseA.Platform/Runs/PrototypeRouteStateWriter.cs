@@ -194,15 +194,27 @@ public sealed class PrototypeRouteStateWriter
 
     private static void WriteState(ProjectSnapshot project, string relativePath, object payload)
     {
-        var path = Path.Combine(project.MetaPath, relativePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, JsonSerializer.Serialize(payload, JsonOptions), Utf8NoBom);
+        var serialized = JsonSerializer.Serialize(payload, JsonOptions);
+        WriteStateFile(Path.Combine(project.MetaPath, relativePath), serialized);
+        WriteStateFile(Path.Combine(project.RepoPath, "meta", relativePath), serialized);
     }
 
     private static string ReadState(ProjectSnapshot project, string relativePath)
     {
         var path = Path.Combine(project.MetaPath, relativePath);
-        return File.Exists(path) ? File.ReadAllText(path, Encoding.UTF8) : "";
+        if (File.Exists(path))
+        {
+            return File.ReadAllText(path, Encoding.UTF8);
+        }
+
+        var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath);
+        return File.Exists(mirroredPath) ? File.ReadAllText(mirroredPath, Encoding.UTF8) : "";
+    }
+
+    private static void WriteStateFile(string path, string serialized)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, serialized, Utf8NoBom);
     }
 
     private static string ToSlash(string value)

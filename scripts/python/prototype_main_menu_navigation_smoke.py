@@ -373,7 +373,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
     if timeout_sec <= 0:
         print("[prototype_main_menu_navigation] --timeout-sec must be greater than 0", file=sys.stderr)
         return 2
-    prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))
+    prewarm_timeout_sec = max(1, PREWARM_TIMEOUT_SEC)
 
     day = _dt.date.today().strftime("%Y-%m-%d")
     ts = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")

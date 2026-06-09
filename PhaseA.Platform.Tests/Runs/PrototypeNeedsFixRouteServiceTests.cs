@@ -74,6 +74,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WriteProjectReadme(project!);
         var contract = new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
         writer.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
+        File.Exists(Path.Combine(project!.RepoPath, "meta", "routes", "prototype-contract", "latest.json"))
+            .Should().BeTrue();
         writer.WriteNeedsFixState(project!, 1, new
         {
             route = "needs-fix",
@@ -112,6 +114,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain(result.RunId);
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("prototype_contract");
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("project_execution_guide");
+        File.ReadAllText(Path.Combine(project!.RepoPath, "meta", "routes", "needs-fix", "step-01", "latest.json"))
+            .Should().Contain(result.RunId);
     }
 
     [Fact]
@@ -139,6 +143,56 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().Contain("current execute next goal step state");
         runner.Prompt.Should().Contain("\"route\":\"execute-next-goal\"");
         runner.Prompt.Should().NotContain("prototype-fallback");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldIgnoreLegacyNeedsFixState_WhenCurrentExecuteNextGoalStateExists()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteProjectReadme(project!);
+        writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
+        writer.WriteNeedsFixState(project!, 1, new
+        {
+            route = "needs-fix",
+            step = 1,
+            status = "completed",
+            goal_title = "legacy skeleton repair",
+            summary = "old completed skeleton repair"
+        });
+        writer.WriteNeedsFixRepairLedger(project!, 1, new
+        {
+            route = "needs-fix-repair-ledger",
+            step = 1,
+            status = "completed",
+            source_failure = "old skeleton failure"
+        });
+        writer.WriteExecuteNextGoalState(project!, 1, new
+        {
+            route = "execute-next-goal",
+            session_id = details!.Session.SessionId,
+            goal_id = details.Goals[0].GoalId,
+            goal_index = 1,
+            summary = "current-execute-state"
+        });
+        var runner = new NeedsFixRunner();
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+
+        await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
+
+        runner.Prompt.Should().Contain("current execute next goal step state");
+        runner.Prompt.Should().Contain("current-execute-state");
+        runner.Prompt.Should().NotContain("legacy skeleton repair");
+        runner.Prompt.Should().NotContain("old skeleton failure");
     }
 
     [Fact]

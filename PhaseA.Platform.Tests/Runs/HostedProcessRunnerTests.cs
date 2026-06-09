@@ -46,17 +46,36 @@ pathlib.Path(r"{marker}").write_text("started")
 time.sleep(30)
 """);
         var runner = new HostedProcessRunner();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+        using var timeout = new CancellationTokenSource();
         var command = new HostedProcessCommand(
             "py",
             ["-3", script],
             temp.Path,
             new Dictionary<string, string>());
 
-        var act = async () => await runner.RunAsync(command, timeout.Token);
+        var runTask = runner.RunAsync(command, timeout.Token);
+        await WaitForFileAsync(marker);
+        await timeout.CancelAsync();
 
+        var act = async () => await runTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
         File.Exists(marker).Should().BeTrue();
+    }
+
+    private static async Task WaitForFileAsync(string path)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            if (File.Exists(path))
+            {
+                return;
+            }
+
+            await Task.Delay(25);
+        }
+
+        File.Exists(path).Should().BeTrue();
     }
 
     private sealed class TempDirectory : IDisposable

@@ -51,6 +51,7 @@ If a mandatory recovery source is missing, fail closed or record the missing sou
 - Treat `docs/prototype-type-kits/` as prototype-only default flow/UI material for 1-2 scene playable loops. Use it to confirm or adjust the default route; do not expand it into full GDD, balance, economy, progression, or boundary design.
 - Stop for user input when required prototype fields are missing. Do not invent gameplay content.
 - Main scene SOP: every prototype creation or repair that wires a playable prototype through `Game.Godot/Scenes/Main.tscn` must set the root-level `VBox`, `Overlays`, and `ScreenRoot` nodes to `visible = false` by default. They may be shown later only by explicit runtime navigation. This prevents template/debug UI from covering the prototype entry and is a final acceptance requirement.
+- Godot C# namespace rule: any script under `namespace Game.Godot.*` must use `global::Godot.*` for fully qualified Godot API references, for example `global::Godot.Collections.Array<string>`. Prefer plain C# collections unless Godot serialization specifically requires Godot collections. This prevents C# from resolving `Godot.*` as `Game.Godot.*` inside project namespaces.
 
 ## Default Command
 

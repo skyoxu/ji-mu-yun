@@ -59,9 +59,11 @@ public sealed class PrototypeNeedsFixRouteService
         var readme = _stateWriter.ReadProjectReadme(project);
         var prototypeContract = _contractService.Read(project);
         var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
-        var stepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
+        var rawStepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
+        var rawExecuteNextGoalState = _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex);
+        var stepState = SelectCurrentNeedsFixState(rawStepState, rawExecuteNextGoalState, details.Session.SessionId, goal);
         var executeNextGoalState = string.IsNullOrWhiteSpace(stepState)
-            ? _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex)
+            ? SelectCurrentExecuteNextGoalState(rawExecuteNextGoalState, details.Session.SessionId, goal)
             : "";
         var prototypeState = string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState)
             ? _stateWriter.ReadLatestPrototypeState(project)
@@ -71,7 +73,9 @@ public sealed class PrototypeNeedsFixRouteService
             return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
-        var repairLedger = _stateWriter.ReadNeedsFixRepairLedger(project, goal.GoalIndex);
+        var repairLedger = string.IsNullOrWhiteSpace(stepState) && !string.IsNullOrWhiteSpace(rawStepState)
+            ? ""
+            : _stateWriter.ReadNeedsFixRepairLedger(project, goal.GoalIndex);
         var repairLedgerBlock = PrototypeNeedsFixRepairLedger.BuildPromptBlock(repairLedger);
         var previousPlatformRejection = await BuildPreviousPlatformRejectionBlockAsync(details, goal, cancellationToken);
         var feedback = BuildFeedback(project, request.Feedback, readme, projectExecutionGuide, prototypeContract, stepState, executeNextGoalState, prototypeState, goal, previousPlatformRejection, repairLedgerBlock);
@@ -222,6 +226,90 @@ public sealed class PrototypeNeedsFixRouteService
                    goal.GoalIndex == details.Session.CurrentGoalIndex &&
                    !string.Equals(goal.Status, "pending", StringComparison.Ordinal) &&
                    !string.Equals(goal.Status, "succeeded", StringComparison.Ordinal));
+    }
+
+    private static string SelectCurrentNeedsFixState(
+        string needsFixState,
+        string executeNextGoalState,
+        string sessionId,
+        ProjectIterationGoalSnapshot goal)
+    {
+        if (string.IsNullOrWhiteSpace(needsFixState))
+        {
+            return "";
+        }
+
+        var match = RouteStateMatchesCurrentGoal(needsFixState, sessionId, goal);
+        if (match == true)
+        {
+            return needsFixState;
+        }
+
+        if (match == false)
+        {
+            return "";
+        }
+
+        return string.IsNullOrWhiteSpace(executeNextGoalState) ? needsFixState : "";
+    }
+
+    private static string SelectCurrentExecuteNextGoalState(
+        string executeNextGoalState,
+        string sessionId,
+        ProjectIterationGoalSnapshot goal)
+    {
+        if (string.IsNullOrWhiteSpace(executeNextGoalState))
+        {
+            return "";
+        }
+
+        var match = RouteStateMatchesCurrentGoal(executeNextGoalState, sessionId, goal);
+        return match == false ? "" : executeNextGoalState;
+    }
+
+    private static bool? RouteStateMatchesCurrentGoal(
+        string routeState,
+        string sessionId,
+        ProjectIterationGoalSnapshot goal)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(routeState);
+            var root = document.RootElement;
+            var stateSessionId = ReadString(root, "session_id");
+            var stateGoalId = ReadString(root, "goal_id");
+            var stateGoalIndex = ReadInt(root, "goal_index");
+            var hasIdentity = !string.IsNullOrWhiteSpace(stateSessionId) ||
+                              !string.IsNullOrWhiteSpace(stateGoalId) ||
+                              stateGoalIndex.HasValue;
+            if (!hasIdentity)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(stateSessionId) &&
+                !string.Equals(stateSessionId, sessionId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(stateGoalId) &&
+                !string.Equals(stateGoalId, goal.GoalId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (stateGoalIndex.HasValue && stateGoalIndex.Value != goal.GoalIndex)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private async Task<string> BuildPreviousPlatformRejectionBlockAsync(

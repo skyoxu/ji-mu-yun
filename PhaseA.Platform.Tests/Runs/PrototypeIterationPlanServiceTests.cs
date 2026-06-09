@@ -305,6 +305,194 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldRejectGenericPlan_WhenDetectedCoreLoopNeedsCustomRoute()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "请继续把当前原型补成一个可反复试玩的最小闭环：围绕杀怪、掉装备、金币、获得经验升级、穿戴装备、购买药水、营地地图、野外地图、挑战Boss、随机装备词缀和剧情任务完成 10-15 分钟原型。",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("custom_route_required");
+        result.Goals.Should().BeEmpty();
+        result.Summary.Should().Contain("联系管理员");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldTrimGenericLootCombatPlan_ToMinimumLoopOnly()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "围绕杀怪 -> 掉装备或金币 -> 获得经验升级 -> 变强 -> 继续下一场战斗，补齐关键反馈。",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
+        var planText = string.Join(" ", result.Goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint)));
+        planText.Should().Contain("击败一个普通敌人");
+        planText.Should().Contain("展示玩家状态变化");
+        planText.Should().NotContain("Boss");
+        planText.Should().NotContain("完整商店");
+        planText.Should().NotContain("多地图");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldAutoEvaluateGenericMinimumLoopPlanAsReady()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "围绕杀怪 -> 掉装备或金币 -> 获得经验升级 -> 变强 -> 继续下一场战斗，补齐关键反馈。",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+
+        var latest = await service.GetLatestAsync(accountId, projectId);
+        latest.Should().NotBeNull();
+        latest!.LatestEvaluation.Should().NotBeNull();
+        latest.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldNotLeakTrimmedScopeIntoGenericFinalAcceptance()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "围绕杀怪、掉落金币、获得经验升级、挑战Boss和购买药水，补齐最小循环反馈。",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        var finalGoal = result.Goals.Should().Contain(goal => goal.Title.Contains("Final Step", StringComparison.Ordinal)).Subject;
+        string.Join(" ", finalGoal.Title, finalGoal.Description, finalGoal.AcceptanceHint).Should()
+            .Contain("进入一次战斗")
+            .And.NotContain("Boss")
+            .And.NotContain("购买药水");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldNotRejectSmallGenericRequest_BecauseHistoricalContextWasLarge()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "succeeded",
+            0,
+            "ok",
+            "",
+            """
+            {
+              "prototype_completion": {
+                "succeeded": true,
+                "completed_through_day": 7,
+                "completion_summary": "当前原型包含杀怪、掉装备、金币、经验升级、穿戴装备、购买药水、营地地图、野外地图、挑战Boss、随机装备词缀和剧情任务。"
+              }
+            }
+            """);
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "只补杀怪后获得金币的反馈。",
+                "manual_feedback"));
+
+        result.Status.Should().Be("ready");
+        result.Summary.Should().NotContain("联系管理员");
+        result.Goals.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldPreserveNumberedGenericLootCombatPlan()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Diablo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                """
+                1. 只补杀怪后的金币掉落反馈
+                2. 只补经验升级后的状态变化显示
+                3. 只补继续下一场战斗的入口提示
+                """,
+                "manual_feedback"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(4);
+        result.Goals[0].Description.Should().Be("只补杀怪后的金币掉落反馈");
+        result.Goals[1].Description.Should().Be("只补经验升级后的状态变化显示");
+        result.Goals[2].Description.Should().Be("只补继续下一场战斗的入口提示");
+        result.Goals[3].Title.Should().Contain("Final Step");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldForceRpgContractGoals_WhenProjectIsRpg()
     {
         using var database = TempSqliteDatabase.Create();

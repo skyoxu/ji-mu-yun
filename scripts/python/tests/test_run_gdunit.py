@@ -173,7 +173,7 @@ class RunGdUnitTests(unittest.TestCase):
 
         self.assertIn("prewarm_timeout = max(1, PREWARM_TIMEOUT_SEC)", source)
         self.assertIn("_prewarm_csharp(str(bin_path), project_root, timeout_sec)", source)
-        self.assertIn("prewarm_timeout_sec = max(1, min(PREWARM_TIMEOUT_SEC, timeout_sec))", navigation_source)
+        self.assertIn("prewarm_timeout_sec = max(1, PREWARM_TIMEOUT_SEC)", navigation_source)
         self.assertIn("prewarm_timeout_sec,", navigation_source)
         self.assertIn('"dotnet", "build", "GodotGame.csproj", "-c", "Debug", "-v", "minimal"', source)
         self.assertIn('return True, "dotnet-build", dotnet_stdout, dotnet_stderr', source)

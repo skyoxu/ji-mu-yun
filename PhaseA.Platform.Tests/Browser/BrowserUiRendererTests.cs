@@ -450,6 +450,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadAdminLlmRuns");
         html.Should().Contain("/api/admin/llm-runs");
         html.Should().Contain("loadAdminRunMetrics");
+        html.Should().Contain("openAdminRunDurationMetrics");
+        html.Should().Contain("openAdminChatAverageMetrics");
+        html.Should().Contain("admin-only-action");
+        html.Should().Contain("location.href = \"/admin/run-duration-metrics\"");
+        html.Should().Contain("location.href = \"/admin/chat-average-metrics\"");
+        html.Should().Contain("prototype-chat");
         html.Should().Contain("/api/admin/run-metrics");
         html.Should().Contain("adminRunMetricsAccount");
         html.Should().Contain("adminRunMetricsType");
@@ -470,6 +476,21 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("submitNeedsFixRouteRequest");
         html.Should().Contain("运行 Needs Fix 路由");
         html.Should().Contain("data-needs-fix-goal");
+        html.Should().Contain("type=\"button\" class=\"secondary\" data-needs-fix-goal");
+        html.Should().Contain("onclick=\"event.stopPropagation(); runNeedsFixIterationGoal('");
+        html.Should().Contain("needsFixDisabledAttrs");
+        html.Should().Contain("document.querySelectorAll(\"[data-needs-fix-goal]\").forEach");
+        html.Should().Contain("document.addEventListener(\"click\", event =>");
+        html.Should().Contain("event.target?.closest?.(\"[data-needs-fix-goal]\")");
+        html.Should().Contain("<div class=\"v2-action-row\"><button type=\"button\" class=\"secondary\" data-needs-fix-goal");
+        html.Should().NotContain("data-global-action=\"true\" data-needs-fix-goal");
+        html.Should().NotContain("async function submitNeedsFixRouteRequest(payload, busyText) {\n                  if (!guardGlobalAction()) return;");
+        html.Should().Contain("await loadPrototypeProgress();");
+        html.Should().Contain("iterationNeedsFixStatus");
+        html.Should().Contain("正在准备提交 step");
+        html.Should().Contain("Needs Fix 路由已提交，正在等待后台 run 创建。");
+        html.Should().Contain("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+        html.Should().NotContain("无法启动 needs-fix：当前页面未确认原型骨架已创建。");
         html.Should().Contain("[\"needs_fix\", \"failed\"].includes");
         html.Should().Contain("feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal)");
         html.Should().NotContain("quickFixPanel");
@@ -558,11 +579,18 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("iteration-plan-evaluation");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");
+        html.Should().Contain("<button id=\"executeIterationGoal\" class=\"secondary\" data-global-action=\"true\">执行下一目标</button>");
+        html.Should().Contain("$(\"executeIterationGoal\").disabled = hasNeedsFix");
+        html.Should().Contain("? isGlobalBusy()");
         html.Should().Contain("iterationAutoRefreshHint");
+        html.Should().Contain("await runNeedsFixIterationGoal(needsFixGoal.goalIndex);");
+        html.Should().Contain("运行 Needs Fix 路由");
         html.Should().Contain("执行中会自动刷新进度");
         html.Should().Contain("iterationPlanStatus");
         html.Should().Contain("iterationPlanEvaluation");
         html.Should().Contain("iterationPlanGoals");
+        html.Should().Contain("需要定制路线");
+        html.Should().Contain("联系管理员创建定制游戏类型路线");
         html.Should().Contain("主流程：迭代计划");
         html.Should().Contain("评估当前迭代计划");
         html.Should().Contain("renderIterationPlanEvaluation");
@@ -640,6 +668,35 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("pixelHeight");
         html.Should().Contain("生成素材");
         html.Should().Contain("intendedUse");
+    }
+
+    [Fact]
+    public void RenderAdminRunDurationMetrics_IncludesStandaloneMetricsPage()
+    {
+        var html = new BrowserUiRenderer().RenderAdminRunDurationMetrics();
+
+        html.Should().Contain("普通用户 run 花费时间记录");
+        html.Should().Contain("/api/admin/users");
+        html.Should().Contain("/api/admin/run-metrics");
+        html.Should().Contain("renderRunDurations");
+        html.Should().Contain("queuePositionAtStart");
+        html.Should().Contain("runTypeLabel");
+        html.Should().Contain("返回控制台");
+    }
+
+    [Fact]
+    public void RenderAdminChatAverageMetrics_IncludesStandaloneChatAveragePage()
+    {
+        var html = new BrowserUiRenderer().RenderAdminChatAverageMetrics();
+
+        html.Should().Contain("普通用户聊天平均响应时长");
+        html.Should().Contain("/api/admin/users");
+        html.Should().Contain("/api/admin/run-metrics");
+        html.Should().Contain("prototype-chat");
+        html.Should().Contain("renderChatAverages");
+        html.Should().Contain("averageRuntimeSeconds");
+        html.Should().Contain("runTypeLabel");
+        html.Should().Contain("style.display = \"none\"");
     }
 
     [Fact]

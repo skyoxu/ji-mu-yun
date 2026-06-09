@@ -80,8 +80,12 @@ public sealed class PrototypeContractService
 
         var relativePath = ContractRelativePath();
         var absolutePath = Path.Combine(project.MetaPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var serialized = JsonSerializer.Serialize(payload, JsonOptions);
         Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
-        File.WriteAllText(absolutePath, JsonSerializer.Serialize(payload, JsonOptions), Utf8NoBom);
+        File.WriteAllText(absolutePath, serialized, Utf8NoBom);
+        Directory.CreateDirectory(Path.GetDirectoryName(mirroredPath)!);
+        File.WriteAllText(mirroredPath, serialized, Utf8NoBom);
         return new PrototypeContractSnapshot(relativePath, File.ReadAllText(absolutePath, Encoding.UTF8));
     }
 
@@ -91,8 +95,14 @@ public sealed class PrototypeContractService
 
         var relativePath = ContractRelativePath();
         var absolutePath = Path.Combine(project.MetaPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
-        return File.Exists(absolutePath)
-            ? new PrototypeContractSnapshot(relativePath, File.ReadAllText(absolutePath, Encoding.UTF8))
+        if (File.Exists(absolutePath))
+        {
+            return new PrototypeContractSnapshot(relativePath, File.ReadAllText(absolutePath, Encoding.UTF8));
+        }
+
+        var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath.Replace('/', Path.DirectorySeparatorChar));
+        return File.Exists(mirroredPath)
+            ? new PrototypeContractSnapshot(relativePath, File.ReadAllText(mirroredPath, Encoding.UTF8))
             : new PrototypeContractSnapshot(relativePath, "");
     }
 

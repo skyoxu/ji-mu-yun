@@ -18,6 +18,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     private static readonly string[] ExcludedDirectoryNames =
     [
         ".git",
+        ".dotnet",
         ".vs",
         ".vscode",
         "bin",

@@ -140,10 +140,24 @@ public sealed class PrototypeIterationPlanService
                 null);
         }
 
+        var genericCoreLoopGate = routeStrategy.UsesSpecializedIterationPlanning
+            ? GenericCoreLoopGateResult.NotApplicable()
+            : AnalyzeGenericCoreLoopForPlanning(promptMessage, planningContext);
+        if (genericCoreLoopGate.RequiresCustomRoute)
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "custom_route_required",
+                "当前表单识别出的最小循环已经超过通用迭代计划能力范围，请联系管理员创建定制游戏类型路线后再继续。",
+                [],
+                ToPlanningAnalysisResult(planningContext),
+                null);
+        }
+
         IterationGoalBuildResult goalBuild;
         try
         {
-            goalBuild = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, model, cancellationToken);
+            goalBuild = await BuildGoalsForProjectAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, planningContext, regenerationGuidance, genericCoreLoopGate, model, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -235,6 +249,7 @@ public sealed class PrototypeIterationPlanService
         string sourceKind,
         IterationPlanningContext planningContext,
         string? regenerationGuidance,
+        GenericCoreLoopGateResult genericCoreLoopGate,
         string model,
         CancellationToken cancellationToken)
     {
@@ -256,8 +271,11 @@ public sealed class PrototypeIterationPlanService
             return new IterationGoalBuildResult(BuildSurvivorsLikeFirstLoopGoals(message, prototypeContract, regenerationGuidance), false);
         }
 
-        var goals = BuildGoals(message, sourceKind);
-        return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract), false);
+        var genericMessage = string.IsNullOrWhiteSpace(genericCoreLoopGate.PlanningMessage)
+            ? message
+            : genericCoreLoopGate.PlanningMessage;
+        var goals = BuildGoals(genericMessage, sourceKind);
+        return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, genericMessage, prototypeContract), false);
     }
 
     private async Task<IterationPlanningContext> BuildPlanningContextAsync(
@@ -1526,6 +1544,76 @@ public sealed class PrototypeIterationPlanService
         return goals;
     }
 
+    private static GenericCoreLoopGateResult AnalyzeGenericCoreLoopForPlanning(
+        string message,
+        IterationPlanningContext planningContext)
+    {
+        var requestSource = message ?? string.Empty;
+        if (ExtractStructuredGoals(requestSource).Count > 0)
+        {
+            return GenericCoreLoopGateResult.NotApplicable();
+        }
+
+        var contextSource = string.Join(
+            " ",
+            planningContext.LatestPrototypeCompletionSummary ?? string.Empty,
+            planningContext.DraftCoverageSummary ?? string.Empty,
+            string.Join(" ", planningContext.FieldCoverage.Select(item => string.Join(" ", item.Field, item.Evidence, item.MissingReason))));
+        var source = string.Join(" ", requestSource, contextSource);
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return GenericCoreLoopGateResult.NotApplicable();
+        }
+
+        var hasCombat = ContainsAny(source, "杀怪", "怪", "战斗", "combat", "battle", "fight", "monster", "enemy");
+        var hasLoot = ContainsAny(source, "掉装备", "掉落", "金币", "loot", "drop", "gold", "equipment");
+        var hasGrowth = ContainsAny(source, "经验", "升级", "变强", "成长", "exp", "level", "growth", "stronger");
+        if (!hasCombat || (!hasLoot && !hasGrowth))
+        {
+            return GenericCoreLoopGateResult.NotApplicable();
+        }
+
+        var optionalLargeSystemsInRequest = CountPresentGroups(
+            requestSource,
+            ["多职业", "职业", "class", "classes"],
+            ["完整商店", "商店", "购买药水", "shop", "merchant"],
+            ["多地图", "营地地图", "野外地图", "地图切换", "camp", "field map", "multiple maps"],
+            ["boss", "Boss", "小Boss", "挑战Boss"],
+            ["复杂词缀", "词缀", "affix", "随机装备"],
+            ["剧情", "任务", "npc", "quest", "story"]);
+
+        var coreLoopStepsInRequest = CountPresentGroups(
+            requestSource,
+            ["进入战斗", "遇敌", "触发战斗", "encounter", "combat entry"],
+            ["杀怪", "打怪", "战斗结算", "defeat enemy", "kill"],
+            ["掉装备", "掉落", "金币", "loot", "drop", "gold"],
+            ["经验", "升级", "level", "exp"],
+            ["装备", "穿戴", "equipment", "equip"],
+            ["继续", "下一场", "反复", "repeat", "continue"]);
+
+        if (optionalLargeSystemsInRequest >= 5 || coreLoopStepsInRequest >= 7)
+        {
+            return new GenericCoreLoopGateResult(
+                true,
+                null,
+                "最小循环同时包含战斗、掉落、成长、装备/商店、多地图或 Boss 等多个系统，超过通用迭代计划能力范围。");
+        }
+
+        var planningMessage = """
+            1. 进入一次战斗，并让战斗入口或触发反馈清楚可见
+            2. 击败一个普通敌人，并展示清楚的战斗结果反馈
+            3. 获得一个明确奖励，金币、装备或经验三选一即可
+            4. 展示玩家状态变化，让玩家能看出自己变强或资源增加
+            5. 返回或继续到下一场战斗，完成最小循环验收
+            """;
+        return new GenericCoreLoopGateResult(false, planningMessage, "generic_loot_combat_core_loop");
+    }
+
+    private static int CountPresentGroups(string source, params string[][] groups)
+    {
+        return groups.Count(group => ContainsAny(source, group));
+    }
+
     private static List<PrototypeIterationPlanGoalResult> BuildRpgContractGoals(
         string message,
         List<PrototypeIterationPlanGoalResult> existingGoals,
@@ -2723,7 +2811,17 @@ public sealed class PrototypeIterationPlanService
              description.Contains("返回地图", StringComparison.Ordinal)) ||
             (title.Contains("补齐胜负目标提示与最小验证", StringComparison.Ordinal) &&
              description.Contains("打赢 15 场胜利", StringComparison.Ordinal) &&
-             description.Contains("任一战斗失败即失败", StringComparison.Ordinal));
+             description.Contains("任一战斗失败即失败", StringComparison.Ordinal)) ||
+            (description.Contains("进入一次战斗", StringComparison.Ordinal) &&
+             description.Contains("战斗入口", StringComparison.Ordinal)) ||
+            (description.Contains("击败一个普通敌人", StringComparison.Ordinal) &&
+             description.Contains("战斗结果反馈", StringComparison.Ordinal)) ||
+            (description.Contains("获得一个明确奖励", StringComparison.Ordinal) &&
+             description.Contains("三选一", StringComparison.Ordinal)) ||
+            (description.Contains("展示玩家状态变化", StringComparison.Ordinal) &&
+             (description.Contains("变强", StringComparison.Ordinal) || description.Contains("资源增加", StringComparison.Ordinal))) ||
+            (description.Contains("返回或继续到下一场战斗", StringComparison.Ordinal) &&
+             description.Contains("最小循环验收", StringComparison.Ordinal));
     }
 
     private static PrototypeIterationPlanEvaluationResult BuildLlmFailedEvaluation(string failureCode)
@@ -2959,6 +3057,17 @@ public sealed class PrototypeIterationPlanService
         List<PrototypeIterationPlanGoalResult> Goals,
         bool UsedScaffoldFallback,
         IReadOnlyList<PrototypeIterationPlanStageTelemetryResult>? StageTelemetry = null);
+
+    private sealed record GenericCoreLoopGateResult(
+        bool RequiresCustomRoute,
+        string? PlanningMessage,
+        string? Reason)
+    {
+        public static GenericCoreLoopGateResult NotApplicable()
+        {
+            return new GenericCoreLoopGateResult(false, null, null);
+        }
+    }
 }
 
 public sealed record PrototypeIterationPlanDetails(

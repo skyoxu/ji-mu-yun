@@ -147,6 +147,36 @@ public sealed class ProjectWorkspaceSeederTests
     }
 
     [Fact]
+    public void EnsureSeeded_SkipsDotnetToolCache_WhenWorkspaceHasPartialResidualFiles()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        var sourceToolCache = Path.Combine(sourceRoot, ".dotnet", "sdk", "8.0.401", "DotnetTools", "dotnet-format");
+        Directory.CreateDirectory(sourceToolCache);
+        File.WriteAllText(Path.Combine(sourceRoot, "README.md"), "source readme\n");
+        File.WriteAllText(Path.Combine(sourceToolCache, "Microsoft.Extensions.Logging.Abstractions.dll"), "source dll\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        var residualToolCache = Path.Combine(targetRepo, ".dotnet", "sdk", "8.0.401", "DotnetTools", "dotnet-format");
+        Directory.CreateDirectory(residualToolCache);
+        File.WriteAllText(Path.Combine(residualToolCache, "Microsoft.Extensions.Logging.Abstractions.dll"), "residual dll\n");
+
+        var seeder = new ProjectWorkspaceSeeder(options);
+
+        seeder.EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("source readme\n");
+        File.ReadAllText(Path.Combine(residualToolCache, "Microsoft.Extensions.Logging.Abstractions.dll")).Should().Be("residual dll\n");
+    }
+
+    [Fact]
     public void EnsureSeeded_RestoresJunction_WhenSourceContainsMirroredRuntimeDirectory()
     {
         using var source = TempDirectory.Create("phase-a-source");

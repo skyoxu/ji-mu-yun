@@ -339,6 +339,22 @@ namespace Xunit
         result.Violations.Should().Contain(violation => violation.Rule == "xunit_assert_shadow");
     }
 
+    [Fact]
+    public void MutationGuard_ShouldAllowProgress_WhenNotRequiredForDefaultProject()
+    {
+        var project = Project(
+            name: "action-demo",
+            gameName: "Action Demo",
+            gameTypeSource: "Action",
+            repoPath: Path.GetTempPath());
+
+        var result = PrototypeRepairMutationGuard.Validate(project, Goal(1, "Restore prototype route evidence"));
+
+        result.Status.Should().Be("not_required");
+        result.AllowsProgress.Should().BeTrue();
+        result.Passed.Should().BeFalse();
+    }
+
     private static ProjectSnapshot Project(string name, string gameName, string gameTypeSource, string repoPath)
     {
         return new ProjectSnapshot(

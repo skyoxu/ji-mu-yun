@@ -28,6 +28,57 @@ REMAINING: none
     }
 
     [Fact]
+    public void GoalRepairCompletionEvidence_ShouldAcceptStaticConfirmedPrototypeEvidence()
+    {
+        var output = """
+STATUS: completed
+SUMMARY: Current step is repaired.
+CHANGED: Removed stale import metadata and external texture dependency.
+VERIFY: Static confirmation found the prototype scene no longer contains the failed image resource references.
+REMAINING: none
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalRepairCompletionEvidence_ShouldAcceptStaticCheckedPrototypeEvidence()
+    {
+        var output = """
+STATUS: completed
+SUMMARY: Current step is repaired.
+CHANGED: The prototype no longer references failed image resources.
+VERIFY: 已静态核对项目说明、原型契约、失败资源信号、原型场景和原型脚本引用；按限制未运行构建或 Godot 验证，等待平台隔离复验。
+REMAINING: none
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalRepairCompletionEvidence_ShouldAcceptStaticResourceRepairWithDeferredEngineValidation()
+    {
+        var output = """
+STATUS: completed
+
+SUMMARY: 当前目标已完成。最新失败中点名的 3 个图片资源现在都存在且是有效图片，原型场景也不再引用缺失资源，因此主菜单进入原型时不应再触发资源加载失败。
+
+CHANGED:
+- 本轮未做额外文件改动；确认上一轮修复已落到当前工作区。
+- 确认原型契约可用于当前目标验收。
+
+VERIFY:
+- 已静态确认场景文件首字符符合 Godot 文本场景格式。
+- 已静态确认 3 个失败资源均为有效图片，且旧的缺失引用已消除。
+- 按本轮限制未运行引擎验证，等待平台隔离复验。
+
+REMAINING: none
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeTrue();
+    }
+
+    [Fact]
     public void GoalRepairCompletionEvidence_ShouldRejectMissingGameplayVerification()
     {
         var output = """
@@ -41,6 +92,168 @@ REMAINING: none
 """;
 
         PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeFalse();
+    }
+
+    [Fact]
+    public void GoalRepairOffTopicEvidence_ShouldIgnoreHostedPrototypeScriptReferences()
+    {
+        PrototypeQuickFixService.HasGoalRepairOffTopicEvidenceForTesting(
+            "VERIFY: 已静态核对原型场景和原型脚本引用，且不再包含失败图片引用。").Should().BeFalse();
+
+        PrototypeQuickFixService.HasGoalRepairOffTopicEvidenceForTesting(
+            "CHANGED: updated platform startup script and deployment config.").Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalRepairOutcome_ShouldIgnoreToolLogOffTopicNoise_WhenStructuredOutputIsCompleted()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "恢复原型运行证据",
+            "Restore prototype run evidence.",
+            "The latest failure reason is eliminated.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var output = """
+STATUS: completed
+SUMMARY: 当前目标已完成。
+CHANGED: 确认原型资源可用。
+VERIFY: 已静态确认 3 个失败资源均为有效图片，且旧的缺失引用已消除。
+REMAINING: none
+""";
+
+        var status = PrototypeQuickFixService.DetermineGoalRepairOutcomeStatusForTesting(
+            goal,
+            output,
+            "Reading .agents/skills/prototype-7day-playable-godot-zh/SKILL.md",
+            "Tool log mentions docs/workflows while reading route instructions.");
+
+        status.Should().Be("succeeded");
+    }
+
+    [Fact]
+    public void GoalRepairOutcome_ShouldAcceptLatestStaticResourceRepairOutput()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "恢复原型运行证据",
+            "Restore prototype run evidence.",
+            "The latest failure reason is eliminated and the prototype route can produce completion evidence without build, cache, or write failures.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var output = """
+STATUS: completed
+
+SUMMARY: 当前目标已完成。最新失败点名的资源加载问题已消除：原型场景不再引用缺失图片，3 个所需图片资源也都存在且是有效图片，因此主菜单进入原型时不应再因这些资源失败而中断。
+
+CHANGED:
+- 本轮未做额外文件改动；确认上一轮资源修复已经落到当前工作区。
+- 确认原型契约可读，且当前目标验收项与现状一致。
+
+VERIFY:
+- 已静态确认原型场景首字符符合 Godot 文本场景格式。
+- 已静态确认 3 个失败图片资源均存在且为有效 PNG。
+- 按本轮限制未运行引擎验证，等待平台隔离复验。
+
+REMAINING: none
+""";
+
+        var status = PrototypeQuickFixService.DetermineGoalRepairOutcomeStatusForTesting(
+            goal,
+            output,
+            "Reading route skill docs/workflows/prototype-lane.md",
+            "Tool output contains route documentation and command logs.");
+
+        status.Should().Be("succeeded");
+    }
+
+    [Fact]
+    public void GoalRepairOutcome_ShouldAcceptRpgStaticRepairOutputWithHistoricalFailureText()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "修复 RPG 原型资源加载失败",
+            "Repair the RPG prototype resource loading failure.",
+            "The dq-rpg prototype scene no longer references missing PNG resources and can continue through the RPG route.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var output = """
+STATUS: completed
+
+SUMMARY: RPG 修复目标已完成。最新失败点名的 dq-rpg 资源加载问题已消除，地图和战斗场景不再引用缺失 PNG。
+
+CHANGED:
+- 本轮未做额外文件改动；确认上一轮 RPG 资源修复已经落到当前工作区。
+- 确认 prototype-rpg-godot-zh 路由契约可读，且当前目标验收项与现状一致。
+
+VERIFY:
+- 已静态确认 Game.Godot/Prototypes/dq-rpg/MapScene.tscn 和 BattleScene.tscn 可读。
+- 已静态确认失败资源均存在且为有效 PNG，旧的缺失引用已消除。
+- 按本轮限制未运行 Godot 引擎验证，等待平台隔离复验。
+
+REMAINING: none
+""";
+
+        var status = PrototypeQuickFixService.DetermineGoalRepairOutcomeStatusForTesting(
+            goal,
+            output,
+            "Reading .agents/skills/prototype-rpg-godot-zh/SKILL.md",
+            "Tool output contains route documentation and command logs.");
+
+        status.Should().Be("succeeded");
+    }
+
+    [Fact]
+    public void GoalRepairOutcome_ShouldAcceptStaticInspectionOutputWithDeferredGodotValidation()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "修复通用原型合同缺口",
+            "Repair the current prototype against the default prototype route skill and project prototype contract.",
+            "The default prototype route skill and project prototype contract are reflected in the repaired output, with no new prototype drift.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var output = """
+STATUS: completed
+
+SUMMARY: 当前 step 已完成。奖励闭环现在明确满足：胜利后有 3 个奖励，选择奖励后状态变化可见，并提示玩家返回地图继续刷怪、变强和挑战 Boss。
+
+CHANGED: 修正奖励领取后的状态反馈文案，使其明确表达“返回地图”。
+CHANGED: 保持原型合同已有的战士、三类小怪、Boss、掉落、金币、升级、背包装备、技能解锁和药水冷却表现不漂移。
+
+VERIFY: 已做静态检查：场景开头有效，不再引用缺失图片资源，奖励按钮为 3 个，奖励后返回地图文案存在。
+VERIFY: 未运行本地 Godot、构建或测试；按要求等待平台隔离验收。
+
+REMAINING: none
+""";
+
+        var status = PrototypeQuickFixService.DetermineGoalRepairOutcomeStatusForTesting(
+            goal,
+            output,
+            "Reading .agents/skills/prototype-7day-playable-godot-zh/SKILL.md",
+            "Tool output contains route documentation and command logs.");
+
+        status.Should().Be("succeeded");
     }
 
     [Fact]

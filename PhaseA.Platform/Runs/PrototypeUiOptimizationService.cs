@@ -9,7 +9,7 @@ namespace PhaseA.Platform.Runs;
 public sealed class PrototypeUiOptimizationService
 {
     private const string RunType = "prototype-ui-optimization";
-    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(8);
+    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(20);
     private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(75);
 
     private readonly PhaseAMetadataStore _metadataStore;
@@ -104,6 +104,7 @@ public sealed class PrototypeUiOptimizationService
         var outputAbsolutePath = Path.Combine(projectRoot, outputRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(promptAbsolutePath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(outputAbsolutePath)!);
+        var codexStartedUtc = DateTimeOffset.MinValue;
 
         try
         {
@@ -121,9 +122,11 @@ public sealed class PrototypeUiOptimizationService
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
             using var timeout = new CancellationTokenSource(_executionTimeout);
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", "Codex \u6b63\u5728\u8fd0\u884c UI \u4f18\u5316\u8def\u7531\u3002", CancellationToken.None);
+            codexStartedUtc = DateTimeOffset.UtcNow;
             var process = await _processRunner.RunAsync(
                 CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential),
                 timeout.Token);
+            var bomCleanedFiles = StripGodotTextResourceBom(project.RepoPath);
             var smokeScene = process.ExitCode == 0
                 ? await ResolveLatestPrototypeSmokeSceneAsync(project, CancellationToken.None)
                 : null;
@@ -154,6 +157,7 @@ public sealed class PrototypeUiOptimizationService
                 timeout_seconds = (int)_executionTimeout.TotalSeconds,
                 validation_policy = "codex_ui_edit_only_platform_short_godot_smoke",
                 codex_exit_code = process.ExitCode,
+                godot_text_bom_cleaned = bomCleanedFiles,
                 validation_required = godotSmoke.Ran,
                 godot_smoke = godotSmoke.ToEvidence()
             });
@@ -196,6 +200,19 @@ public sealed class PrototypeUiOptimizationService
         }
         catch (OperationCanceledException ex)
         {
+            var timeoutRecovery = await TryCompleteTimedOutRunIfValidatedAsync(
+                runId,
+                project,
+                model: PrototypeModelPolicy.Normalize(request?.Model),
+                promptRelativePath,
+                outputRelativePath,
+                codexStartedUtc,
+                CancellationToken.None);
+            if (timeoutRecovery is not null)
+            {
+                return timeoutRecovery;
+            }
+
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 route = RunType,
@@ -227,6 +244,183 @@ public sealed class PrototypeUiOptimizationService
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
+    }
+
+    private async Task<PrototypeUiOptimizationResult?> TryCompleteTimedOutRunIfValidatedAsync(
+        string runId,
+        ProjectSnapshot project,
+        string model,
+        string promptRelativePath,
+        string outputRelativePath,
+        DateTimeOffset codexStartedUtc,
+        CancellationToken cancellationToken)
+    {
+        if (!HasPrototypeUiEditsSince(project.RepoPath, codexStartedUtc))
+        {
+            return null;
+        }
+
+        var smokeScene = await ResolveLatestPrototypeSmokeSceneAsync(project, cancellationToken);
+        var godotSmoke = await RunGodotSmokeValidationAsync(runId, project, smokeScene, cancellationToken);
+        var validationPassed = !godotSmoke.Ran || godotSmoke.ExitCode == 0;
+        if (!validationPassed)
+        {
+            var failedEvidenceJson = JsonSerializer.Serialize(new
+            {
+                route = RunType,
+                model,
+                timeout_seconds = (int)_executionTimeout.TotalSeconds,
+                failure_code = "ui_optimization_timeout_validation_failed_after_cancel",
+                validation_policy = "codex_ui_edit_only_platform_short_godot_smoke",
+                changed_files_detected = true,
+                prompt = promptRelativePath.Replace('\\', '/'),
+                output = outputRelativePath.Replace('\\', '/'),
+                godot_smoke = godotSmoke.ToEvidence()
+            });
+            await _metadataStore.CompleteRunAsync(
+                runId,
+                "failed",
+                godotSmoke.Ran ? godotSmoke.ExitCode : 408,
+                "",
+                "UI optimization timed out and post-timeout short validation failed.",
+                failedEvidenceJson,
+                CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "timeout_validation_failed", "UI \u4f18\u5316\u8d85\u65f6\uff0c\u4e14\u77ed\u9a8c\u8bc1\u5931\u8d25\u3002", CancellationToken.None);
+            await AddUiOptimizationArtifactsAsync(runId, project.ProjectId, promptRelativePath, outputRelativePath, CancellationToken.None);
+            return new PrototypeUiOptimizationResult(runId, "failed", "UI optimization timed out after edits, and short validation failed.");
+        }
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            route = RunType,
+            model,
+            template = ResolveTemplateName(project),
+            timeout_seconds = (int)_executionTimeout.TotalSeconds,
+            failure_code = "ui_optimization_timeout_validated_after_cancel",
+            validation_policy = "codex_ui_edit_only_platform_short_godot_smoke",
+            changed_files_detected = true,
+            prompt = promptRelativePath.Replace('\\', '/'),
+            output = outputRelativePath.Replace('\\', '/'),
+            validation_required = godotSmoke.Ran,
+            godot_smoke = godotSmoke.ToEvidence()
+        });
+        await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, "", "UI optimization timed out after edits; post-timeout short validation passed.", evidenceJson, CancellationToken.None);
+        await _metadataStore.RecordRunLlmAuditAsync(
+            runId,
+            "codex-cli",
+            null,
+            model,
+            LlmUsageAuditJson.BuildCodexUsageJson(
+                operation: RunType,
+                model: model,
+                runType: RunType,
+                projectId: project.ProjectId,
+                skillName: "prototype-rpg-ui-optimizer-zh",
+                route: RunType,
+                exitCode: 0),
+            CancellationToken.None);
+        await AddUiOptimizationArtifactsAsync(runId, project.ProjectId, promptRelativePath, outputRelativePath, CancellationToken.None);
+        await _metadataStore.UpdateRunProgressAsync(runId, "succeeded", godotSmoke.Ran ? "completed_after_timeout" : "validation_skipped_after_timeout", "UI \u4f18\u5316\u8d85\u65f6\u540e\u68c0\u6d4b\u5230\u5df2\u5199\u5165\u6539\u52a8\uff0c\u77ed\u9a8c\u8bc1\u5df2\u901a\u8fc7\u3002", CancellationToken.None);
+        return new PrototypeUiOptimizationResult(runId, "succeeded", "UI optimization timed out after edits, but short validation passed.");
+    }
+
+    private static bool HasPrototypeUiEditsSince(string repoPath, DateTimeOffset codexStartedUtc)
+    {
+        if (codexStartedUtc == DateTimeOffset.MinValue)
+        {
+            return false;
+        }
+
+        var prototypesRoot = Path.Combine(repoPath, "Game.Godot", "Prototypes");
+        if (!Directory.Exists(prototypesRoot))
+        {
+            return false;
+        }
+
+        var thresholdUtc = codexStartedUtc.UtcDateTime.AddSeconds(-2);
+        foreach (var file in Directory.EnumerateFiles(prototypesRoot, "*", SearchOption.AllDirectories))
+        {
+            var extension = Path.GetExtension(file);
+            if (!IsPrototypeUiFileExtension(extension))
+            {
+                continue;
+            }
+
+            if (File.GetLastWriteTimeUtc(file) >= thresholdUtc)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsPrototypeUiFileExtension(string extension)
+    {
+        return string.Equals(extension, ".tscn", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".gd", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".cs", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".tres", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".res", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".png", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".jpg", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".webp", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<string> StripGodotTextResourceBom(string repoPath)
+    {
+        var prototypesRoot = Path.Combine(repoPath, "Game.Godot", "Prototypes");
+        if (!Directory.Exists(prototypesRoot))
+        {
+            return [];
+        }
+
+        var cleaned = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(prototypesRoot, "*", SearchOption.AllDirectories))
+        {
+            if (!IsGodotTextResourceExtension(Path.GetExtension(file)))
+            {
+                continue;
+            }
+
+            var bytes = File.ReadAllBytes(file);
+            if (bytes.Length < 3 ||
+                bytes[0] != 0xEF ||
+                bytes[1] != 0xBB ||
+                bytes[2] != 0xBF)
+            {
+                continue;
+            }
+
+            File.WriteAllBytes(file, bytes[3..]);
+            cleaned.Add(Path.GetRelativePath(repoPath, file).Replace('\\', '/'));
+        }
+
+        return cleaned;
+    }
+
+    private static bool IsGodotTextResourceExtension(string extension)
+    {
+        return string.Equals(extension, ".tscn", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".tres", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".gd", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".cs", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task AddUiOptimizationArtifactsAsync(
+        string runId,
+        string projectId,
+        string promptRelativePath,
+        string outputRelativePath,
+        CancellationToken cancellationToken)
+    {
+        await _metadataStore.AddArtifactAsync(
+            new ArtifactCreationCommand(runId, projectId, "prototype-ui-optimization-prompt", promptRelativePath.Replace('\\', '/'), "UI optimization prompt"),
+            cancellationToken);
+        await _metadataStore.AddArtifactAsync(
+            new ArtifactCreationCommand(runId, projectId, "prototype-ui-optimization-output", outputRelativePath.Replace('\\', '/'), "UI optimization Codex output"),
+            cancellationToken);
     }
 
     private async Task<string?> ValidateIterationPlanCompleteAsync(string projectId, CancellationToken cancellationToken)

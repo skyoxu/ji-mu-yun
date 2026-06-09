@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 
@@ -6,6 +7,10 @@ namespace PhaseA.Platform.Runs;
 
 internal static class PrototypeGodotSmokeService
 {
+    private static readonly Regex GodotNamespaceAliasPattern = new(
+        @"(?<!global::)(?<![A-Za-z0-9_\.])Godot\.",
+        RegexOptions.Compiled);
+
     public static async Task<PrototypeGodotSmokeResult> RunAsync(
         PhaseAPlatformOptions options,
         IHostedProcessRunner processRunner,
@@ -54,11 +59,13 @@ internal static class PrototypeGodotSmokeService
             return PrototypeGodotSmokeResult.NotRun("godot_bin_not_configured", scenePath);
         }
 
+        NormalizeGodotCSharpNamespaceAliases(projectRepoPath);
+
         var command = new HostedProcessCommand(
             options.PythonCommand,
             [
                 "-3",
-                "scripts/python/smoke_headless.py",
+                ResolveRepositoryScriptPath(options, "scripts/python/smoke_headless.py"),
                 "--godot-bin",
                 options.GodotBin,
                 "--project-path",
@@ -87,7 +94,7 @@ internal static class PrototypeGodotSmokeService
             options.PythonCommand,
             [
                 "-3",
-                "scripts/python/prototype_main_menu_navigation_smoke.py",
+                ResolveRepositoryScriptPath(options, "scripts/python/prototype_main_menu_navigation_smoke.py"),
                 "--godot-bin",
                 options.GodotBin,
                 "--project-path",
@@ -118,6 +125,55 @@ internal static class PrototypeGodotSmokeService
             stderr,
             reason,
             scenePath);
+    }
+
+    internal static IReadOnlyList<string> NormalizeGodotCSharpNamespaceAliases(string projectRepoPath)
+    {
+        if (string.IsNullOrWhiteSpace(projectRepoPath))
+        {
+            return [];
+        }
+
+        var prototypesRoot = Path.Combine(projectRepoPath, "Game.Godot", "Prototypes");
+        if (!Directory.Exists(prototypesRoot))
+        {
+            return [];
+        }
+
+        var changed = new List<string>();
+        foreach (var scriptPath in Directory.EnumerateFiles(prototypesRoot, "*.cs", SearchOption.AllDirectories))
+        {
+            string text;
+            try
+            {
+                text = File.ReadAllText(scriptPath);
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            if (!text.Contains("namespace Game.Godot", StringComparison.Ordinal) ||
+                !text.Contains("Godot.", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var normalized = GodotNamespaceAliasPattern.Replace(text, "global::Godot.");
+            if (string.Equals(normalized, text, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            File.WriteAllText(scriptPath, normalized);
+            changed.Add(Path.GetRelativePath(projectRepoPath, scriptPath).Replace('\\', '/'));
+        }
+
+        return changed;
     }
 
     public static async Task<PrototypeGoalGodotSmokeValidationResult> ValidateGoalAsync(
@@ -198,7 +254,7 @@ internal static class PrototypeGodotSmokeService
             options.PythonCommand,
             [
                 "-3",
-                "scripts/python/run_gdunit.py",
+                ResolveRepositoryScriptPath(options, "scripts/python/run_gdunit.py"),
                 "--godot-bin",
                 options.GodotBin,
                 "--add",
@@ -300,6 +356,17 @@ internal static class PrototypeGodotSmokeService
         var chars = slug.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '-').ToArray();
         var normalized = new string(chars).Trim('-');
         return string.IsNullOrWhiteSpace(normalized) ? "rpg" : normalized;
+    }
+
+    private static string ResolveRepositoryScriptPath(PhaseAPlatformOptions options, string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(options.RepositoryRoot))
+        {
+            return relativePath;
+        }
+
+        var absolutePath = Path.Combine(options.RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        return File.Exists(absolutePath) ? absolutePath : relativePath;
     }
 
     private static int ResolveGdUnitEffectiveExitCode(int processExitCode, string output)

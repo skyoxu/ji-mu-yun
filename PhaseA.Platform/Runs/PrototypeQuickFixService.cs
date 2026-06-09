@@ -292,7 +292,7 @@ public sealed partial class PrototypeQuickFixService
             await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "目标修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
 
             var mutationGuardValidation = PrototypeRepairMutationGuard.Validate(project, targetGoal);
-            if (!mutationGuardValidation.Passed)
+            if (!mutationGuardValidation.AllowsProgress)
             {
                 assistantMessage = AppendMutationGuardFailure(assistantMessage, mutationGuardValidation);
                 codexOutput = AppendMutationGuardFailureEvidence(codexOutput, mutationGuardValidation);
@@ -300,7 +300,7 @@ public sealed partial class PrototypeQuickFixService
 
             var goalRepairOutcome = targetGoal is null
                 ? null
-                : !mutationGuardValidation.Passed
+                : !mutationGuardValidation.AllowsProgress
                     ? new GoalRepairOutcome("needs_fix", false)
                 : acceptanceValidation.Passed
                     ? godotSmokeValidation.Passed && !IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation)
@@ -573,7 +573,7 @@ public sealed partial class PrototypeQuickFixService
         }
 
         var mutationGuardValidation = PrototypeRepairMutationGuard.Validate(project, targetGoal);
-        if (!mutationGuardValidation.Passed)
+        if (!mutationGuardValidation.AllowsProgress)
         {
             return null;
         }
@@ -2307,26 +2307,13 @@ public sealed partial class PrototypeQuickFixService
         };
         var goalKeywords = BuildGoalKeywords(goal);
         var goalMatched = goalKeywords.Count == 0 || goalKeywords.Any(normalized.Contains);
-        var offTopicSignals = new[]
-        {
-            "caddy",
-            "token",
-            "hash",
-            "deployment",
-            "deploy",
-            "start-phasea",
-            "phasea.platform",
-            "docs/workflows",
-            "security test",
-            "文档",
-            "部署",
-            "脚本",
-            "安全测试"
-        };
-        var offTopicMatched = offTopicSignals.Any(normalized.Contains) && !GoalAllowsInfraTerms(goal);
+        var offTopicSource = string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase)
+            ? codexOutput.ToLowerInvariant()
+            : normalized;
+        var offTopicMatched = HasOffTopicEvidence(offTopicSource) && !GoalAllowsInfraTerms(goal);
         if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
         {
-            return offTopicMatched || HasBlockingEvidence(codexOutput.ToLowerInvariant()) || !HasCompletionEvidence(codexOutput)
+            return offTopicMatched || !HasCompletionEvidence(codexOutput)
                 ? new GoalRepairOutcome("needs_fix", false)
                 : new GoalRepairOutcome("succeeded", true);
         }
@@ -2371,6 +2358,45 @@ public sealed partial class PrototypeQuickFixService
     public static bool HasGoalRepairBlockingEvidenceForTesting(string normalizedText)
     {
         return HasBlockingEvidence(normalizedText.ToLowerInvariant());
+    }
+
+    public static bool HasGoalRepairOffTopicEvidenceForTesting(string normalizedText)
+    {
+        return HasOffTopicEvidence(normalizedText.ToLowerInvariant());
+    }
+
+    public static string DetermineGoalRepairOutcomeStatusForTesting(
+        ProjectIterationGoalSnapshot goal,
+        string codexOutput,
+        string stdout,
+        string stderr)
+    {
+        return DetermineGoalRepairOutcome(goal, "", new HostedProcessResult(0, stdout, stderr), codexOutput).GoalStatus;
+    }
+
+    private static bool HasOffTopicEvidence(string normalizedText)
+    {
+        var offTopicSignals = new[]
+        {
+            "caddy",
+            "token",
+            "hash",
+            "deployment",
+            "deploy",
+            "start-phasea",
+            "phasea.platform",
+            "docs/workflows",
+            "security test",
+            "文档",
+            "部署",
+            "平台脚本",
+            "启动脚本",
+            "部署脚本",
+            "工作流脚本",
+            "安全测试"
+        };
+
+        return offTopicSignals.Any(marker => normalizedText.Contains(marker, StringComparison.Ordinal));
     }
 
     private static bool HasBlockingEvidence(string normalizedText)
@@ -2439,16 +2465,44 @@ public sealed partial class PrototypeQuickFixService
         }
 
         var normalizedVerify = verify.Trim().ToLowerInvariant();
+        var normalizedVerifyForBlocking = RemoveDeferredPlatformValidationNotes(normalizedVerify);
         var strongVerifyMarkers = new[]
         {
             "pass",
             "passed",
             "green",
             "all green",
-            "通过"
+            "confirmed",
+            "verified",
+            "static confirmation",
+            "static check",
+            "static inspection",
+            "checked",
+            "no longer contains",
+            "通过",
+            "已确认",
+            "已检查",
+            "静态确认",
+            "静态核对",
+            "静态检查",
+            "核对",
+            "检查",
+            "确认"
         };
         var hasStrongEvidence = strongVerifyMarkers.Any(marker => normalizedVerify.Contains(marker, StringComparison.Ordinal));
-        return hasStrongEvidence && !HasBlockingEvidence(normalizedVerify);
+        return hasStrongEvidence && !HasBlockingEvidence(normalizedVerifyForBlocking);
+    }
+
+    private static string RemoveDeferredPlatformValidationNotes(string normalizedText)
+    {
+        var lines = normalizedText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return string.Join(
+            "\n",
+            lines.Where(static line =>
+                !(line.Contains("未运行", StringComparison.Ordinal) &&
+                  (line.Contains("引擎验证", StringComparison.Ordinal) ||
+                   line.Contains("godot", StringComparison.Ordinal) ||
+                   line.Contains("平台隔离复验", StringComparison.Ordinal)))));
     }
 
     private static string? ExtractStructuredField(string text, string fieldName)

@@ -11,7 +11,7 @@ public sealed class PrototypeIterationGoalService
 {
     private const string RunType = "prototype-iteration-goal";
     private const string ReasoningEffort = "low";
-    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(8);
+    private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(12);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;

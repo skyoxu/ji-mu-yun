@@ -814,6 +814,40 @@ def _repo_relative_posix(root: Path, path: Path) -> str:
     return str(path.resolve().relative_to(root.resolve())).replace("\\", "/")
 
 
+def _res_path_to_file(root: Path, resource_path: str) -> Path | None:
+    normalized = str(resource_path or "").strip()
+    if not normalized.startswith("res://"):
+        return None
+    relative = normalized[len("res://"):].replace("/", os.sep)
+    return root / relative
+
+
+def _find_missing_scene_ext_resources(*, root: Path, slug: str) -> list[str]:
+    prototype_root = root / "Game.Godot" / "Prototypes" / sanitize_slug(slug)
+    if not path_exists(prototype_root):
+        return []
+
+    missing: list[str] = []
+    seen: set[str] = set()
+    for scene_path in prototype_root.rglob("*.tscn"):
+        try:
+            scene_text = read_text(scene_path, errors="ignore")
+        except OSError:
+            continue
+        for match in re.finditer(r'\[ext_resource[^\]\r\n]*\bpath="([^"]+)"', scene_text):
+            resource_path = match.group(1)
+            resource_file = _res_path_to_file(root, resource_path)
+            if resource_file is None:
+                continue
+            if path_exists(resource_file):
+                continue
+            key = f"{_repo_relative_posix(root, scene_path)}->{resource_path}"
+            if key not in seen:
+                seen.add(key)
+                missing.append(key)
+    return missing
+
+
 def _slug_to_pascal(slug: str) -> str:
     parts = [part for part in re.split(r"[-_]+", sanitize_slug(slug)) if part]
     return "".join(part[:1].upper() + part[1:] for part in parts) or "Prototype"
@@ -1342,6 +1376,7 @@ def _build_implementation_prompt(*, payload: dict[str, Any], record_file: str, d
         "- 场景根下必须存在名为 PrototypeLoop 的节点，供项目专属 GdUnit 测试读取。\n"
         "- scene 脚手架默认提示文字不能作为最终实现结果；必须完全替换脚手架 _Ready 实现，不能只保留一条 GD.Print 提示。\n"
         "- Godot 脚本必须在运行时提供一个最小可交互循环，至少让玩家看到当前状态、推进一次循环，并拿到完成或重试反馈。\n"
+        "- Godot C# namespace rule is hard: files under namespace Game.Godot.* must use global::Godot.* for fully qualified Godot API references, for example global::Godot.Collections.Array<string>. Prefer plain C# collections unless Godot serialization specifically requires Godot collections.\n"
         "- 目标循环必须覆盖当前记录里的地图移动、遇敌、战斗、奖励或结算反馈，不要只停留在空壳 UI。\n"
         "- 完成实现时，请一并检查主菜单原型入口是否仍指向 default_scene，而不是模板 DefaultRpgPrototype。\n"
         "- 完成后输出简短总结，说明主要改动和验证结果。\n\n"
@@ -1404,6 +1439,25 @@ def _prototype_reward_option_type_name(slug: str) -> str:
 
 def _prototype_battle_result_type_name(slug: str) -> str:
     return f"{_prototype_class_name(slug)}BattleResult"
+
+
+def _normalize_godot_csharp_namespace_aliases(root: Path) -> list[str]:
+    changed: list[str] = []
+    prototypes_root = root / "Game.Godot" / "Prototypes"
+    if not path_exists(prototypes_root):
+        return changed
+    for script_path in prototypes_root.rglob("*.cs"):
+        try:
+            text = read_text(script_path, errors="ignore")
+        except OSError:
+            continue
+        if "namespace Game.Godot" not in text or "Godot." not in text:
+            continue
+        normalized = re.sub(r"(?<!global::)(?<![A-Za-z0-9_\.])Godot\.", "global::Godot.", text)
+        if normalized != text:
+            write_text(script_path, normalized)
+            changed.append(_repo_relative_posix(root, script_path))
+    return changed
 
 
 def _is_rpg_payload(payload: dict[str, Any]) -> bool:
@@ -2089,6 +2143,10 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
     if missing:
         issues.append("missing_files=" + ",".join(missing))
 
+    missing_scene_resources = _find_missing_scene_ext_resources(root=root, slug=slug)
+    if missing_scene_resources:
+        issues.append("missing_scene_ext_resources=" + ",".join(missing_scene_resources))
+
     if path_exists(scene_path):
         scene_text = read_text(scene_path, errors="ignore")
         if '[node name="PrototypeLoop"' not in scene_text:
@@ -2264,6 +2322,7 @@ def _run_day4_codex_implementation(*, root: Path, payload: dict[str, Any], recor
     if path_exists(out_path):
         output = read_text(out_path, errors="ignore")
     merged = output.strip() or trace.strip()
+    namespace_alias_fixes = _normalize_godot_csharp_namespace_aliases(root)
     valid, issues = _validate_day4_implementation_outputs(root=root, payload=payload)
     fallback_applied = False
     if not valid:
@@ -2280,6 +2339,15 @@ def _run_day4_codex_implementation(*, root: Path, payload: dict[str, Any], recor
             for part in [
                 merged.strip(),
                 "DAY4_IMPLEMENTATION_FALLBACK applied=minimal_runtime_script",
+            ]
+            if part.strip()
+        )
+    if namespace_alias_fixes:
+        merged = "\n".join(
+            part
+            for part in [
+                merged.strip(),
+                "DAY4_IMPLEMENTATION_NORMALIZED godot_csharp_namespace_aliases=" + ",".join(namespace_alias_fixes),
             ]
             if part.strip()
         )

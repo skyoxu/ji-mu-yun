@@ -81,7 +81,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.ProgressStep.Should().Be("succeeded");
         run.ProgressSubstep.Should().Be("completed");
-        run.EvidenceJson.Should().Contain("\"timeout_seconds\":480");
+        run.EvidenceJson.Should().Contain("\"timeout_seconds\":1200");
         run.EvidenceJson.Should().Contain("codex_ui_edit_only_platform_short_godot_smoke");
         run.EvidenceJson.Should().Contain("strict_headless_main_menu_navigation");
         run.LlmGateway.Should().Be("codex-cli");
@@ -94,6 +94,36 @@ public sealed class PrototypeUiOptimizationServiceTests
         var promptArtifact = artifacts.Single(item => item.ArtifactType == "prototype-ui-optimization-prompt");
         var promptPath = Path.Combine(project!.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
         File.ReadAllText(promptPath).Should().Contain("$prototype-rpg-ui-optimizer-zh");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldStripBomFromGodotTextResourcesBeforeValidation()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var scenePath = Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
+        Directory.CreateDirectory(Path.GetDirectoryName(scenePath)!);
+        var sceneBytes = "\uFEFF[gd_scene format=3]\n"u8.ToArray();
+        await File.WriteAllBytesAsync(scenePath, sceneBytes);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        File.ReadAllBytes(scenePath).Take(3).Should().NotEqual([0xEF, 0xBB, 0xBF]);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.EvidenceJson.Should().Contain("godot_text_bom_cleaned");
+        run.EvidenceJson.Should().Contain("Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
     }
 
     [Fact]
@@ -230,6 +260,44 @@ public sealed class PrototypeUiOptimizationServiceTests
         run.EvidenceJson.Should().Contain("\"timeout_seconds\":0");
     }
 
+    [Fact]
+    public async Task RunAsync_ShouldMarkSucceeded_WhenCodexTimesOutAfterPrototypeUiEditsAndSmokePasses()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var service = new PrototypeUiOptimizationService(
+            store,
+            options,
+            new EditingThenCancelingHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(1));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        result.Summary.Should().Be("UI optimization timed out after edits, but short validation passed.");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("succeeded");
+        run.ExitCode.Should().Be(0);
+        run.ProgressStep.Should().Be("succeeded");
+        run.ProgressSubstep.Should().Be("completed_after_timeout");
+        run.EvidenceJson.Should().Contain("ui_optimization_timeout_validated_after_cancel");
+        run.EvidenceJson.Should().Contain("\"changed_files_detected\":true");
+        run.LlmGateway.Should().Be("codex-cli");
+        var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
+        artifacts.Should().Contain(item => item.ArtifactType == "prototype-ui-optimization-prompt");
+        artifacts.Should().Contain(item => item.ArtifactType == "prototype-ui-optimization-output");
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool seedProjectGodot = true)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
@@ -324,6 +392,22 @@ public sealed class PrototypeUiOptimizationServiceTests
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            throw new OperationCanceledException(cancellationToken);
+        }
+    }
+
+    private sealed class EditingThenCancelingHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (!command.Arguments.Contains("exec"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "smoke stdout", ""));
+            }
+
+            var scenePath = Path.Combine(command.WorkingDirectory, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
+            Directory.CreateDirectory(Path.GetDirectoryName(scenePath)!);
+            File.WriteAllText(scenePath, "[gd_scene format=3]\n[node name=\"DqRpgPrototype\" type=\"Node2D\"]\n");
             throw new OperationCanceledException(cancellationToken);
         }
     }

@@ -151,6 +151,42 @@ public sealed class Chapter2BootstrapServiceTests
         run.ExitCode.Should().Be(124);
     }
 
+    [Fact]
+    public async Task RunAsync_UsesProjectCreationQueue_WhenOtherRunnerQueueIsOccupied()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        await using var otherRunLease = await otherRunsQueue.EnterAsync(
+            "other-run",
+            accountId,
+            "other-project",
+            "prototype-ui-optimization");
+        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1));
+        var runner = new FakeHostedProcessRunner([
+            new HostedProcessResult(0, "hard checks ok\n", "")
+        ]);
+        var service = new Chapter2BootstrapService(
+            store,
+            options,
+            runner,
+            new Chapter2BootstrapCommandBuilder(options),
+            new ProjectHealthArtifactIndexer(),
+            new ProjectWorkspaceSeeder(options),
+            projectCreationRunnerQueue: projectCreationQueue);
+
+        var result = await service.RunAsync(accountId, projectId);
+
+        result.Status.Should().Be("succeeded");
+        runner.CallCount.Should().Be(1);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.QueuePositionAtStart.Should().Be(1);
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);

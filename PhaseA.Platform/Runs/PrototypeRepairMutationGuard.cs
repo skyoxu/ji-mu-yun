@@ -109,6 +109,11 @@ internal sealed record PrototypeRepairMutationGuardResult(
     [JsonIgnore]
     public bool Passed => string.Equals(Status, "passed", StringComparison.Ordinal);
 
+    [JsonIgnore]
+    public bool AllowsProgress =>
+        string.Equals(Status, "passed", StringComparison.Ordinal) ||
+        string.Equals(Status, "not_required", StringComparison.Ordinal);
+
     public static PrototypeRepairMutationGuardResult Success()
     {
         return new PrototypeRepairMutationGuardResult("passed", null, []);

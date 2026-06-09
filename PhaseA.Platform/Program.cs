@@ -47,6 +47,9 @@ builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
 builder.Services.AddSingleton<Chapter2BootstrapService>();
+builder.Services.AddSingleton(new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(
+    TimeSpan.FromMinutes(8),
+    options.MaxConcurrentProjectCreations)));
 builder.Services.AddSingleton(new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(8),
     options.MaxConcurrentOtherRuns));
@@ -123,6 +126,8 @@ app.Use(async (context, next) =>
         context.Request.Path == "/downloads" ||
         context.Request.Path == "/assets" ||
         context.Request.Path == "/admin/llm-usage" ||
+        context.Request.Path == "/admin/run-duration-metrics" ||
+        context.Request.Path == "/admin/chat-average-metrics" ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/asset-preview", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")) ||
@@ -635,6 +640,18 @@ app.MapGet("/admin/llm-usage", (
     return Results.Content(ui.RenderAdminLlmUsage(), "text/html; charset=utf-8");
 });
 
+app.MapGet("/admin/run-duration-metrics", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminRunDurationMetrics(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/admin/chat-average-metrics", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminChatAverageMetrics(), "text/html; charset=utf-8");
+});
+
 app.MapGet("/projects/{projectId}", async (
     string projectId,
     HttpContext context,
@@ -1114,7 +1131,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
-        if (result.Status is "ready" or "llm_failed")
+        if (result.Status is "ready" or "llm_failed" or "custom_route_required")
         {
             if (!string.IsNullOrWhiteSpace(request.Message))
             {
@@ -1126,7 +1143,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
                 : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
             await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
         }
-        return result.Status is "ready" or "llm_failed" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status is "ready" or "llm_failed" or "custom_route_required" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {

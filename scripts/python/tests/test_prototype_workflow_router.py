@@ -504,6 +504,45 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual("-o", codex_calls[0]["codex_output_arg"])
         self.assertIn("prototype lane 的 Day 4 最小实现步骤", str(codex_calls[0]["prompt"]))
 
+    def test_day4_normalizes_godot_namespace_aliases_for_generated_scripts(self) -> None:
+        module = _load_module("prototype_workflow_router_godot_namespace_aliases", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            slug = "mir"
+            class_name = "MirPrototype"
+            script_path = root / "Game.Godot" / "Prototypes" / slug / "Scripts" / f"{class_name}.cs"
+            module.write_text(
+                script_path,
+                "\n".join(
+                    [
+                        "using Godot;",
+                        "",
+                        "namespace Game.Godot.Prototypes;",
+                        "",
+                        f"public partial class {class_name} : Node2D",
+                        "{",
+                        "    public Godot.Collections.Array<string> RewardOptions",
+                        "    {",
+                        "        get",
+                        "        {",
+                        "            var values = new Godot.Collections.Array<string>();",
+                        "            return values;",
+                        "        }",
+                        "    }",
+                        "}",
+                        "",
+                    ]
+                ),
+            )
+
+            changed = module._normalize_godot_csharp_namespace_aliases(root)
+            rewritten = module.read_text(script_path, errors="ignore")
+
+        self.assertEqual([f"Game.Godot/Prototypes/{slug}/Scripts/{class_name}.cs"], changed)
+        self.assertIn("public global::Godot.Collections.Array<string> RewardOptions", rewritten)
+        self.assertIn("new global::Godot.Collections.Array<string>()", rewritten)
+        self.assertNotIn("public Godot.Collections.Array<string>", rewritten)
+
     def test_confirmation_message_should_tolerate_non_dict_llm_dimensions(self) -> None:
         module = _load_module("prototype_workflow_router_confirmation_llm_shape", "scripts/python/run_prototype_workflow.py")
         payload = module.normalize_prototype_payload(
@@ -849,6 +888,47 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertTrue(any("missing_files=" in issue for issue in issues))
         self.assertIn("missing_prototype_loop_node=Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", issues)
         self.assertIn("scaffold_script_not_replaced=Game.Godot/Prototypes/dq-rpg/Scripts/DqRpgPrototype.cs", issues)
+
+    def test_validate_day4_outputs_should_fail_when_scene_ext_resource_is_missing(self) -> None:
+        module = _load_module("prototype_workflow_router_day4_missing_ext_resource", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            slug = "mirgame1"
+            class_name = "Mirgame1Prototype"
+            (root / "Game.Godot" / "Prototypes" / slug / "Scripts").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Game.Core.Tests" / "Prototypes").mkdir(parents=True, exist_ok=True)
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name).mkdir(parents=True, exist_ok=True)
+            (root / "Game.Godot" / "Prototypes" / slug / f"{class_name}.tscn").write_text(
+                "[gd_scene load_steps=3 format=3]\n"
+                f'[ext_resource type="Script" path="res://Game.Godot/Prototypes/{slug}/Scripts/{class_name}.cs" id="1"]\n'
+                f'[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/{slug}/Assets/{slug}_map.png" id="2"]\n'
+                f'[node name="{class_name}" type="Node2D"]\n'
+                'script = ExtResource("1")\n'
+                '[node name="PrototypeLoop" type="Node2D" parent="."]\n',
+                encoding="utf-8",
+            )
+            (root / "Game.Godot" / "Prototypes" / slug / "Scripts" / f"{class_name}.cs").write_text(
+                "using Godot;\n\npublic partial class Mirgame1Prototype : Node2D\n{\n    private void AdvanceLoop() { }\n}\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core" / "Prototypes" / f"{class_name}Loop.cs").write_text(
+                "namespace Game.Core.Prototypes;\npublic sealed class Mirgame1PrototypeLoop { public string DescribePlayableLoop() => \"ok\"; }\n",
+                encoding="utf-8",
+            )
+            (root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs").write_text("test\n", encoding="utf-8")
+            (root / "Tests.Godot" / "tests" / "Prototype" / class_name / "test_mirgame1_prototype_scene.gd").write_text(
+                f'var scene := preload("res://Game.Godot/Prototypes/{slug}/{class_name}.tscn").instantiate()\n',
+                encoding="utf-8",
+            )
+
+            ok, issues = module._validate_day4_implementation_outputs(root=root, payload={"slug": slug})
+
+        self.assertFalse(ok)
+        self.assertIn(
+            f"missing_scene_ext_resources=Game.Godot/Prototypes/{slug}/{class_name}.tscn->res://Game.Godot/Prototypes/{slug}/Assets/{slug}_map.png",
+            issues,
+        )
 
     def test_validate_day4_outputs_should_pass_when_project_specific_files_are_ready(self) -> None:
         module = _load_module("prototype_workflow_router_day4_validation_ok", "scripts/python/run_prototype_workflow.py")

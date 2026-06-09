@@ -59,6 +59,39 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public void GodotSmoke_NormalizesPrototypeScriptsInsideGameGodotNamespace()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var scriptPath = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "mir", "Scripts", "MirPrototype.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(scriptPath)!);
+        File.WriteAllText(scriptPath, """
+        using Godot;
+
+        namespace Game.Godot.Prototypes;
+
+        public partial class MirPrototype : Node2D
+        {
+            public Godot.Collections.Array<string> RewardOptions
+            {
+                get
+                {
+                    var values = new Godot.Collections.Array<string>();
+                    return values;
+                }
+            }
+        }
+        """);
+
+        var changed = PrototypeGodotSmokeService.NormalizeGodotCSharpNamespaceAliases(repoRoot.Path);
+
+        changed.Should().Equal("Game.Godot/Prototypes/mir/Scripts/MirPrototype.cs");
+        var rewritten = File.ReadAllText(scriptPath);
+        rewritten.Should().Contain("public global::Godot.Collections.Array<string> RewardOptions");
+        rewritten.Should().Contain("new global::Godot.Collections.Array<string>()");
+        rewritten.Should().NotContain("public Godot.Collections.Array<string>");
+    }
+
+    [Fact]
     public async Task RunAsync_WritesPrototypeRecord_RunsRouter_AndIndexesPrototypeArtifacts()
     {
         using var database = TempSqliteDatabase.Create();

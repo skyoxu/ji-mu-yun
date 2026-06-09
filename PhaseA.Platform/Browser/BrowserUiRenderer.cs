@@ -78,6 +78,10 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
                 body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
+                body.v2-detail #v2IterationPanel,
+                body.v2-detail #iterationPlanGoals,
+                body.v2-detail #iterationPlanGoals .card { position: relative; z-index: 2; pointer-events: auto; }
+                body.v2-detail [data-needs-fix-goal] { position: relative; z-index: 5; pointer-events: auto; cursor: pointer; }
                 @media (max-width: 1000px) {
                   body.v2-detail #v2ContentGrid,
                   body.v2-detail .v2-summary-grid,
@@ -548,33 +552,73 @@ public sealed class BrowserUiRenderer
                 function v2HasFailedPrototypeAcceptance() {
                   return v2CurrentPrototypeStatus() === "failed" || !!state.prototypeFailure;
                 }
-                function v2BuildLocalNextStepSuggestion() {
+                function v2RepairPlanHasRunnableStep() {
+                  const goals = Array.isArray(state.repairPlan?.goals) ? state.repairPlan.goals : [];
+                  return goals.some(goal => ["pending", "needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+                function v2RepairPlanCompletedOrEmpty() {
+                  const goals = Array.isArray(state.repairPlan?.goals) ? state.repairPlan.goals : [];
+                  return goals.length === 0 || goals.every(goal => ["succeeded", "completed", "done"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+                function v2IterationPlanGoalState() {
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   const hasPlan = !!state.iterationPlan?.session && goals.length > 0;
-                  const allGoalsCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
-                  const hasOpenGoal = hasPlan && goals.some(goal => !v2CompletedIterationStatus(goal.status));
+                  const hasNeedsFix = goals.some(goal => ["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()));
+                  const hasPending = goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()));
+                  const allCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
+                  return { goals, hasPlan, hasNeedsFix, hasPending, allCompleted };
+                }
+                function v2BuildLocalNextStepSuggestion() {
+                  const iteration = v2IterationPlanGoalState();
                   const validationPassed = v2PrototypeValidationPassedForPlanning();
-                  const uiOptimized = v2StepStatus("ui-optimization") === "done";
+                  const skeletonFailed = v2StepStatus("create-prototype") === "fix";
+                  const skeletonAcceptanceFailed = v2HasFailedPrototypeAcceptance();
+                  const repairRunnable = v2RepairPlanHasRunnableStep();
+                  const repairReadyForAcceptance = v2RepairPlanCompletedOrEmpty();
+                  const uiStatus = v2StepStatus("ui-optimization");
+                  const acceptanceStatus = v2StepStatus("prototype-acceptance");
+                  const assetStatus = v2StepStatus("asset-inventory");
+                  const packageStatus = v2StepStatus("package-project");
                   if (!v2HasPrototypeSkeleton()) {
-                    return "建议：请先进行 2. 原型骨架创建。\n\n如果你还没有整理清楚游戏设定，也可以先在自由聊天的能力模式中激活“游戏策划大师”，让它协助你梳理并创建策划文档，再回到 2. 原型骨架创建填写表单。";
+                    return skeletonFailed
+                      ? "建议：请先处理 2. 原型骨架创建。\n\n当前原型骨架创建没有成功，后续骨架验收、迭代计划、UI优化和打包都没有可靠基础。请回到 2. 原型骨架创建查看失败原因，修正后重新创建骨架。"
+                      : "建议：请先进行 2. 原型骨架创建。\n\n如果你还没有整理清楚游戏设定，可以先在自由聊天的能力模式中激活“游戏策划大师”，让它协助创建策划文档；准备好后再回到 2. 原型骨架创建填写表单并启动。";
                   }
-                  if (v2HasFailedPrototypeAcceptance()) {
-                    return "建议：请先进行 3. 骨架验收修复。\n\n当前骨架验收没有通过，需要先生成或执行修复计划，把失败项修到可验收状态，再继续后续流程。";
+                  if (skeletonAcceptanceFailed || repairRunnable) {
+                    return repairRunnable
+                      ? "建议：请先进行 3. 骨架验收修复。\n\n当前修复计划里仍有待执行或需要继续修复的步骤。请在 3. 骨架验收修复中执行下一项修复；修复计划清空后，再用同一区域里的“骨架验收”按钮重新验收。"
+                      : "建议：请先进行 3. 骨架验收修复。\n\n当前骨架验收没有通过，但还没有可执行的修复步骤。请在 3. 骨架验收修复中生成修复计划，或在修复计划已完成后点击“骨架验收”重新验证。";
                   }
-                  if (validationPassed && !hasPlan) {
-                    return "建议：请先进行 4. 完成迭代计划。\n\n骨架验收已经通过，但还没有生成迭代计划。下一步应该把游戏原型需要补齐的功能拆成可执行 step，逐项完成游戏功能。";
+                  if (!validationPassed && repairReadyForAcceptance && !iteration.hasPlan) {
+                    return "建议：请先进行 3. 骨架验收修复。\n\n原型骨架已经创建，但当前没有可用的骨架验收通过状态。请在 3. 骨架验收修复中点击“骨架验收”，确认骨架可运行后再生成迭代计划。";
                   }
-                  if (hasOpenGoal) {
-                    return "建议：请先完成当前迭代计划的执行或修复。\n\n当前迭代计划中仍有至少一个 step 不是完成状态。请继续执行下一目标；如果某个 step 进入 needs fix 或失败状态，请先完成对应修复。";
+                  if (!iteration.hasPlan) {
+                    return "建议：请先进行 4. 完成迭代计划。\n\n骨架验收已经通过，但当前还没有迭代计划。请在 4. 完成迭代计划中生成新的迭代计划，把游戏功能拆成可执行 step。";
                   }
-                  if (allGoalsCompleted && !uiOptimized) {
-                    return "建议：请先进行 5. UI优化。\n\n当前迭代计划已经全部完成，下一步应按照游戏类型模板重新对齐界面。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。";
+                  if (iteration.hasNeedsFix) {
+                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划中至少有一个 step 处于 needs fix 或 failed 状态。请在 4. 完成迭代计划里继续运行对应修复，直到所有 step 都完成。";
                   }
-                  if (allGoalsCompleted && uiOptimized && !validationPassed) {
-                    return "建议：请进行 6. 原型验收。\n\n当前迭代计划和 UI 优化已经完成，需要再次验收原型，确认优化后的项目仍然可以正常运行。";
+                  if (iteration.hasPending || !iteration.allCompleted) {
+                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划还有 pending 或 running 的 step。请继续执行下一项迭代目标；全部完成后再进入 UI 优化。";
                   }
-                  if (allGoalsCompleted && uiOptimized && validationPassed) {
-                    return "建议：可以确认素材清单后打包项目文件。\n\n请依次进行 7. 确认素材清单、8. 打包项目文件、9. 下载项目文件；在下载列表中下载游戏项目压缩包，并在本地 Godot 里试玩和验证。试玩后把结果发到聊天界面，我们再准备第二轮迭代计划。";
+                  if (uiStatus !== "done") {
+                    return uiStatus === "fix"
+                      ? "建议：请先进行 5. UI优化。\n\n上一次 UI 优化失败或短验证未通过。请重新运行 5. UI优化，让界面按游戏类型模板对齐；RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。"
+                      : "建议：请先进行 5. UI优化。\n\n当前迭代计划已经全部完成。下一步应按照游戏类型模板重新对齐界面，确保可玩功能和 UI 表达一致。";
+                  }
+                  if (acceptanceStatus !== "done" || !validationPassed) {
+                    return acceptanceStatus === "fix"
+                      ? "建议：请进行 6. 原型验收。\n\nUI 优化后的原型验收没有通过。请先查看 6. 原型验收结果；如果确认是骨架/运行问题，再回到 3. 骨架验收修复生成或执行修复计划。"
+                      : "建议：请进行 6. 原型验收。\n\n迭代计划和 UI 优化都已经完成，需要重新验收原型，确认优化后的项目仍然可以运行并满足当前可玩闭环。";
+                  }
+                  if (assetStatus !== "done") {
+                    return "建议：请进行 7. 确认素材清单。\n\n原型验收已经通过。下一步请打开 7. 确认素材清单，检查已使用素材和可生成素材候选，必要时先替换默认素材。";
+                  }
+                  if (packageStatus !== "done") {
+                    return "建议：请进行 8. 打包项目文件。\n\n素材清单已可用，下一步请点击 8. 打包项目文件，生成可下载的项目压缩包。";
+                  }
+                  if (v2HasPackages()) {
+                    return "建议：请进行 9. 下载项目文件。\n\n项目文件包已经生成。请进入下载列表下载游戏项目压缩包，在本地 Godot 中试玩和验证；试玩结果可以发到自由聊天里，用来准备下一轮迭代计划。";
                   }
                   return "建议：请先刷新项目状态或重新选择项目。\n\n当前页面没有读取到足够的项目状态，无法判断下一步。";
                 }
@@ -588,6 +632,8 @@ public sealed class BrowserUiRenderer
                     await loadProjectRuntimeState();
                     await loadIterationPlan();
                     await loadRepairPlan();
+                    await refreshAssetInventoryAvailability();
+                    await loadProjectPackages();
                     $("v2NextSuggestion").textContent = v2BuildLocalNextStepSuggestion();
                   } catch (error) {
                     $("v2NextSuggestion").textContent = "项目状态扫描失败，请稍后重试或先刷新页面。";
@@ -946,6 +992,8 @@ public sealed class BrowserUiRenderer
                     <label class="user-only-action">模型选择 <select id="globalModel"><option value="gpt-5.5" selected>5.5</option><option value="gpt-5.4">5.4</option></select></label>
                     <button id="openCreateProjectPage" class="secondary user-only-action" data-global-action="true">创建项目</button>
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
+                    <button id="openAdminRunDurationMetrics" class="ghost admin-only-action hidden">普通用户Run耗时</button>
+                    <button id="openAdminChatAverageMetrics" class="ghost admin-only-action hidden">聊天平均响应</button>
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
                 </div>
@@ -1095,6 +1143,7 @@ public sealed class BrowserUiRenderer
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
                     <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前迭代计划。</div>
+                    <div id="iterationNeedsFixStatus" class="card muted">step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
                     <h2>异常修复计划</h2>
                     <p class="muted">用于把原型或验收失败拆成多个小修复步骤。每次只执行一个修复步骤，最后一步做全量验收。</p>
@@ -1158,6 +1207,9 @@ public sealed class BrowserUiRenderer
                   $("userTopActions").classList.toggle("hidden", !visible);
                   document.querySelectorAll("#userTopActions .user-only-action").forEach(element => {
                     element.classList.toggle("hidden", logoutOnly);
+                  });
+                  document.querySelectorAll("#userTopActions .admin-only-action").forEach(element => {
+                    element.classList.toggle("hidden", !logoutOnly);
                   });
                 }
 
@@ -1358,7 +1410,7 @@ public sealed class BrowserUiRenderer
                     .filter(message => message.role === "assistant" && message.kind === "iteration-plan-result")
                     .slice(-1)[0];
                   const content = sanitizePublicChatContent(latest?.content || "");
-                  state.iterationPlanFailure = content.includes("调用失败") || content.includes("codex_timeout") || content.includes("llm_failed")
+                  state.iterationPlanFailure = content.includes("调用失败") || content.includes("codex_timeout") || content.includes("llm_failed") || content.includes("联系管理员创建定制游戏类型路线")
                     ? content
                     : "";
                 }
@@ -1478,12 +1530,15 @@ public sealed class BrowserUiRenderer
                   const plan = state.iterationPlan;
                   if (!plan || !plan.session) {
                     $("iterationPlanStatus").className = state.iterationPlanFailure ? "card" : "card muted";
+                    const customRouteRequired = state.iterationPlanFailure && state.iterationPlanFailure.includes("联系管理员创建定制游戏类型路线");
                     $("iterationPlanStatus").innerHTML = state.iterationPlanFailure
-                      ? `<strong>迭代计划生成失败</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
+                      ? `<strong>${customRouteRequired ? "需要定制路线" : "迭代计划生成失败"}</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
                       : "尚未生成迭代计划。";
-                    $("iterationPlanEvaluation").className = "card muted";
-                    $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
-                    $("iterationPlanGoals").innerHTML = "";
+                  $("iterationPlanEvaluation").className = "card muted";
+                  $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
+                  $("iterationNeedsFixStatus").className = "card muted";
+                  $("iterationNeedsFixStatus").textContent = "step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。";
+                  $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
                     $("createIterationPlan").textContent = "生成新的迭代计划";
                     $("evaluateIterationPlan").disabled = true;
@@ -1521,28 +1576,35 @@ public sealed class BrowserUiRenderer
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
                   $("evaluateIterationPlanFromChat").textContent = "评估当前计划是否值得继续";
-                  $("executeIterationGoal").disabled = !hasPending || hasNeedsFix || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy();
+                  $("executeIterationGoal").disabled = hasNeedsFix
+                    ? isGlobalBusy()
+                    : (!hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
                   $("executeIterationGoal").textContent = hasNeedsFix
-                    ? "请先修复当前目标"
+                    ? "运行 Needs Fix 路由"
                     : shouldRefinePlan
                       ? "建议先重拆迭代计划"
                       : hasPending
                         ? "执行下一目标"
                         : "当前没有待执行目标";
                   renderIterationPlanEvaluation();
+                  $("iterationNeedsFixStatus").className = hasNeedsFix ? "card" : "card muted";
+                  $("iterationNeedsFixStatus").textContent = hasNeedsFix
+                    ? "当前有 step 需要修复。点击对应 step 卡片里的“运行 Needs Fix 路由”会直接提交后台 run。"
+                    : "当前没有 needs fix step。";
                   renderChatHistory();
+                  const needsFixBusy = isGlobalBusy();
+                  const needsFixDisabledAttrs = needsFixBusy ? ` disabled title="有任务正在执行，请等待当前任务执行完毕。"` : "";
                   $("iterationPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
                       <strong>step ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(goal.status || "pending")}</strong>
+                      ${["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase())
+                        ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行 Needs Fix 路由</button></div>`
+                        : ""}
                       <p>${escapeHtml(goal.title || "")}</p>
                       <p class="muted">${escapeHtml(goal.description || "")}</p>
                       ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
                       ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
-                      ${["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase())
-                        ? `<button class="secondary" data-global-action="true" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}">运行 Needs Fix 路由</button>`
-                        : ""}
                     </div>`).join("");
-                  document.querySelectorAll("[data-needs-fix-goal]").forEach(button => button.onclick = () => runNeedsFixIterationGoal(button.dataset.needsFixGoal));
                 }
 
                 function iterationPlanGoals() {
@@ -1770,6 +1832,11 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  const needsFixGoal = currentNeedsFixRouteGoal();
+                  if (needsFixGoal) {
+                    await runNeedsFixIterationGoal(needsFixGoal.goalIndex);
+                    return;
+                  }
                   const evaluationDecision = currentIterationPlanDecision();
                   if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆迭代计划，已停止执行旧目标。");
                   if (evaluationDecision === "llm_failed") return out("当前迭代计划评估失败，请先修复评估调用并重新评估计划。");
@@ -2451,6 +2518,16 @@ public sealed class BrowserUiRenderer
                   window.open(`/admin/llm-usage?grain=${encodeURIComponent(grain)}&split=${encodeURIComponent(split)}`, "_blank", "noreferrer");
                 }
 
+                function openAdminRunDurationMetrics() {
+                  if (state.role !== "admin") return;
+                  location.href = "/admin/run-duration-metrics";
+                }
+
+                function openAdminChatAverageMetrics() {
+                  if (state.role !== "admin") return;
+                  location.href = "/admin/chat-average-metrics";
+                }
+
                 async function downloadAdminLlmUsageCsv() {
                   if (state.role !== "admin") return;
                   try {
@@ -2510,41 +2587,42 @@ public sealed class BrowserUiRenderer
                   return `${number.toFixed(number >= 10 ? 1 : 3)}s`;
                 }
 
-                async function loadAdminRunMetrics() {
+                async function loadAdminRunMetrics(view = "runs") {
                   if (state.role !== "admin") return;
                   try {
                     const query = new URLSearchParams();
                     const accountId = $("adminRunMetricsAccount").value || "";
-                    const runType = $("adminRunMetricsType").value.trim();
+                    const runType = view === "chat" ? "prototype-chat" : $("adminRunMetricsType").value.trim();
                     if (accountId) query.set("accountId", accountId);
                     if (runType) query.set("runType", runType);
                     query.set("limit", "200");
                     const metrics = await api(`/api/admin/run-metrics?${query}`);
                     const runs = metrics.runs || [];
                     const chats = metrics.chatAverages || [];
+                    const isChatView = view === "chat";
                     $("adminRunMetricsStatus").className = "card";
-                    $("adminRunMetricsStatus").innerHTML = `
-                      <strong>Run metrics: ${escapeHtml(metrics.count || 0)} non-chat runs</strong>
+                    $("adminRunMetricsStatus").innerHTML = isChatView ? `
+                      <strong>每个普通用户的聊天平均响应时长</strong>
+                      <div class="card-list">
+                        ${chats.map(item => `
+                          <div class="card">
+                            <strong>${escapeHtml(item.username)} · ${escapeHtml(item.runCount)} chat runs</strong>
+                            <p class="muted">平均排队: ${escapeHtml(formatMetricSeconds(item.averageQueueSeconds))} · 平均响应: ${escapeHtml(formatMetricSeconds(item.averageRuntimeSeconds))}</p>
+                          </div>
+                        `).join("") || "<p class='muted'>没有匹配的聊天 run。</p>"}
+                      </div>
+                    ` : `
+                      <strong>普通用户 run 花费时间记录：${escapeHtml(metrics.count || 0)} 条非聊天 run</strong>
                       <div class="card-list">
                         ${runs.map(run => `
                           <div class="card">
                             <strong>${escapeHtml(run.username)} · ${escapeHtml(run.runType)} · ${escapeHtml(run.status)}</strong>
                             <p class="muted">project: ${escapeHtml(run.projectName || run.projectId)} · ${escapeHtml(run.gameName || "")}</p>
                             <p class="muted">runId: ${escapeHtml(run.runId)}</p>
-                            <p class="muted">queue: ${escapeHtml(formatMetricSeconds(run.queueSeconds))} · runtime: ${escapeHtml(formatMetricSeconds(run.runtimeSeconds))} · start queue position: ${escapeHtml(run.queuePositionAtStart ?? "-")}</p>
+                            <p class="muted">排队: ${escapeHtml(formatMetricSeconds(run.queueSeconds))} · 运行: ${escapeHtml(formatMetricSeconds(run.runtimeSeconds))} · 启动时队列序号: ${escapeHtml(run.queuePositionAtStart ?? "-")}</p>
                             <p class="muted">created: ${escapeHtml(run.createdUtc)} · started: ${escapeHtml(run.startedUtc || "")} · finished: ${escapeHtml(run.finishedUtc || "")}</p>
                           </div>
-                        `).join("") || "<p class='muted'>No non-chat runs matched.</p>"}
-                      </div>
-                      <hr>
-                      <strong>Chat averages by user</strong>
-                      <div class="card-list">
-                        ${chats.map(item => `
-                          <div class="card">
-                            <strong>${escapeHtml(item.username)} · ${escapeHtml(item.runCount)} chat runs</strong>
-                            <p class="muted">avg queue: ${escapeHtml(formatMetricSeconds(item.averageQueueSeconds))} · avg runtime: ${escapeHtml(formatMetricSeconds(item.averageRuntimeSeconds))}</p>
-                          </div>
-                        `).join("") || "<p class='muted'>No chat runs matched.</p>"}
+                        `).join("") || "<p class='muted'>没有匹配的非聊天 run。</p>"}
                       </div>
                     `;
                   } catch (error) {
@@ -2846,11 +2924,27 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function runNeedsFixIterationGoal(goalIndex) {
+                  $("iterationNeedsFixStatus").className = "card muted";
+                  $("iterationNeedsFixStatus").textContent = `正在准备提交 step ${String(goalIndex || "").trim()} 的 Needs Fix 路由...`;
+                  await refreshActiveRun();
+                  if (isGlobalBusy()) {
+                    $("iterationNeedsFixStatus").className = "card muted";
+                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。";
+                    return out("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+                  }
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   const goal = goals.find(item => String(item.goalIndex) === String(goalIndex));
-                  if (!goal) return out("未找到需要 needs-fix 处理的目标。");
+                  if (!goal) {
+                    $("iterationNeedsFixStatus").className = "card";
+                    $("iterationNeedsFixStatus").textContent = "未找到需要 needs-fix 处理的目标，请刷新迭代计划后再试。";
+                    return out("未找到需要 needs-fix 处理的目标。");
+                  }
                   const feedback = buildNeedsFixFeedbackForGoal(goal);
-                  if (!feedback) return out("当前目标缺少可用于 needs-fix 路由的内容。");
+                  if (!feedback) {
+                    $("iterationNeedsFixStatus").className = "card";
+                    $("iterationNeedsFixStatus").textContent = "当前目标缺少可用于 needs-fix 路由的内容。";
+                    return out("当前目标缺少可用于 needs-fix 路由的内容。");
+                  }
                   await submitNeedsFixRouteRequest({
                     feedback,
                     goalId: goal.goalId || "",
@@ -2859,10 +2953,15 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function submitNeedsFixRouteRequest(payload, busyText) {
-                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!v2HasPrototypeSkeleton()) return out("请先完成原型骨架创建，再使用 needs-fix 路由。");
+                  if (isGlobalBusy()) {
+                    $("iterationNeedsFixStatus").className = "card muted";
+                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。";
+                    return out("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+                  }
                   setLocalBusy(true);
+                  $("iterationNeedsFixStatus").className = "card muted";
+                  $("iterationNeedsFixStatus").textContent = busyText || "Needs Fix 路由已提交，正在等待后台 run 创建。";
                   $("submitFormalFeedback").disabled = true;
                   try {
                     const feedback = String(payload?.feedback || "").trim();
@@ -2892,10 +2991,14 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                     await loadServerChatHistoryForProject(state.projectId);
                     out(result);
+                    $("iterationNeedsFixStatus").className = needsMoreFix ? "card" : "card muted";
+                    $("iterationNeedsFixStatus").textContent = result.summary || (needsMoreFix ? "Needs Fix 路由已执行，但当前 step 仍需继续修复。" : "Needs Fix 路由已完成。");
                     await loadRuns();
                     await loadIterationPlan();
                   } catch (error) {
                     const message = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || "Needs fix route failed.");
+                    $("iterationNeedsFixStatus").className = "card";
+                    $("iterationNeedsFixStatus").textContent = message;
                     if (message) {
                       state.chatHistory.push({ role: "assistant", content: message, kind: "needs-fix-route-failed" });
                       renderChatHistory();
@@ -3530,6 +3633,11 @@ public sealed class BrowserUiRenderer
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
+                    button.disabled = busy;
+                    if (busy) button.title = message;
+                    else button.removeAttribute("title");
+                  });
+                  document.querySelectorAll("[data-needs-fix-goal]").forEach(button => {
                     button.disabled = busy;
                     if (busy) button.title = message;
                     else button.removeAttribute("title");
@@ -4234,6 +4342,8 @@ public sealed class BrowserUiRenderer
                 $("downloadAdminLlmUsageCsv").onclick = downloadAdminLlmUsageCsv;
                 $("loadAdminLlmRuns").onclick = loadAdminLlmRuns;
                 $("loadAdminRunMetrics").onclick = loadAdminRunMetrics;
+                $("openAdminRunDurationMetrics").onclick = openAdminRunDurationMetrics;
+                $("openAdminChatAverageMetrics").onclick = openAdminChatAverageMetrics;
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("importDraft").onclick = importDraft;
@@ -4262,6 +4372,12 @@ public sealed class BrowserUiRenderer
                 $("validatePrototype").onclick = validatePrototype;
                 $("createScene").onclick = createScene;
                 document.querySelectorAll(".runTdd").forEach(button => button.onclick = () => runTdd(button.dataset.stage));
+                document.addEventListener("click", event => {
+                  const button = event.target?.closest?.("[data-needs-fix-goal]");
+                  if (!button) return;
+                  event.preventDefault();
+                  runNeedsFixIterationGoal(button.dataset.needsFixGoal);
+                });
                 setTokenFromStorage();
                 if (token()) refreshProjects(); else showLoggedOut();
                 setInterval(refreshActiveRun, 5000);
@@ -5083,6 +5199,171 @@ public sealed class BrowserUiRenderer
             </body>
             </html>
             """;
+    }
+
+    public string RenderAdminRunDurationMetrics()
+    {
+        return RenderAdminRunMetricsPage(
+            "runs",
+            "普通用户 run 花费时间记录",
+            "查看每个普通用户非聊天 run 的排队时长、运行时长和启动时队列序号。");
+    }
+
+    public string RenderAdminChatAverageMetrics()
+    {
+        return RenderAdminRunMetricsPage(
+            "chat",
+            "普通用户聊天平均响应时长",
+            "按普通用户聚合聊天 run，查看平均排队时长和平均响应时长。");
+    }
+
+    private static string RenderAdminRunMetricsPage(string mode, string title, string description)
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>__TITLE__</title>
+              <style>
+                :root { --ink: #17211b; --muted: #66736b; --paper: #f7f2e8; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --danger: #a2342f; }
+                body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
+                main { max-width: 86rem; margin: 0 auto; padding: 2rem 1rem 4rem; display: grid; gap: 1rem; }
+                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.06em; }
+                .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
+                .filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+                label { display: grid; gap: 0.3rem; font-weight: 700; }
+                select, input { border: 1px solid var(--line); border-radius: 0.75rem; padding: 0.65rem 0.75rem; font: inherit; background: white; min-width: 12rem; }
+                button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
+                table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 1rem; overflow: hidden; }
+                th, td { text-align: left; padding: 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+                th { background: #efe5d3; white-space: nowrap; }
+                td { overflow-wrap: anywhere; }
+                .muted { color: var(--muted); }
+                .danger { color: var(--danger); }
+                .summary { display: flex; flex-wrap: wrap; gap: 1rem; }
+                .summary strong { font-size: 1.4rem; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <h1>__TITLE__</h1>
+                  <p class="muted">__DESCRIPTION__</p>
+                </header>
+                <section class="card filters">
+                  <label>普通用户
+                    <select id="account"><option value="">全部普通用户</option></select>
+                  </label>
+                  <label id="runTypeLabel">Run 类型
+                    <input id="runType" placeholder="可空，例 prototype-workflow">
+                  </label>
+                  <button id="load">加载</button>
+                  <button id="back" type="button">返回控制台</button>
+                </section>
+                <section id="summary" class="card muted">尚未加载。</section>
+                <section class="card">
+                  <table>
+                    <thead id="head"></thead>
+                    <tbody id="rows"><tr><td class="muted">暂无数据。</td></tr></tbody>
+                  </table>
+                </section>
+              </main>
+              <script>
+                const mode = "__MODE__";
+                const $ = id => document.getElementById(id);
+                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+                const formatSeconds = value => {
+                  if (value === null || value === undefined || value === "") return "-";
+                  const number = Number(value);
+                  if (!Number.isFinite(number)) return "-";
+                  return `${number.toFixed(number >= 10 ? 1 : 3)}s`;
+                };
+                async function api(path) {
+                  if (!token()) throw new Error("missing_token");
+                  const response = await fetch(path, {
+                    headers: { "Authorization": `Bearer ${token()}` },
+                    cache: "no-store"
+                  });
+                  const payload = await response.json();
+                  if (!response.ok) throw new Error(payload.error || "request_failed");
+                  return payload;
+                }
+                async function loadUsers() {
+                  const result = await api("/api/admin/users");
+                  const users = (result.users || []).filter(user => !user.isAdmin);
+                  $("account").innerHTML = `<option value="">全部普通用户</option>${users.map(user => `<option value="${escapeHtml(user.accountId)}">${escapeHtml(user.username)}</option>`).join("")}`;
+                }
+                async function loadMetrics() {
+                  try {
+                    $("summary").className = "card muted";
+                    $("summary").textContent = "加载中...";
+                    const query = new URLSearchParams();
+                    if ($("account").value) query.set("accountId", $("account").value);
+                    if (mode === "chat") {
+                      query.set("runType", "prototype-chat");
+                    } else if ($("runType").value.trim()) {
+                      query.set("runType", $("runType").value.trim());
+                    }
+                    query.set("limit", "500");
+                    const result = await api(`/api/admin/run-metrics?${query}`);
+                    if (mode === "chat") {
+                      renderChatAverages(result.chatAverages || []);
+                    } else {
+                      renderRunDurations(result.runs || [], result.count || 0);
+                    }
+                  } catch (error) {
+                    $("summary").className = "card danger";
+                    $("summary").textContent = error.message === "missing_token" ? "当前浏览器没有 token，请先回控制台登录。" : error.message;
+                  }
+                }
+                function renderRunDurations(runs, count) {
+                  $("head").innerHTML = "<tr><th>用户</th><th>项目</th><th>Run</th><th>状态</th><th>排队</th><th>运行</th><th>启动序号</th><th>时间</th></tr>";
+                  $("summary").className = "card";
+                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(count)}</strong><br><span class="muted">非聊天 run</span></span></div>`;
+                  $("rows").innerHTML = runs.map(run => `
+                    <tr>
+                      <td>${escapeHtml(run.username)}</td>
+                      <td>${escapeHtml(run.projectName || run.projectId)}<br><span class="muted">${escapeHtml(run.gameName || "")}</span></td>
+                      <td>${escapeHtml(run.runType)}<br><span class="muted">${escapeHtml(run.runId)}</span></td>
+                      <td>${escapeHtml(run.status)}</td>
+                      <td>${escapeHtml(formatSeconds(run.queueSeconds))}</td>
+                      <td>${escapeHtml(formatSeconds(run.runtimeSeconds))}</td>
+                      <td>${escapeHtml(run.queuePositionAtStart ?? "-")}</td>
+                      <td><span class="muted">created</span> ${escapeHtml(run.createdUtc)}<br><span class="muted">started</span> ${escapeHtml(run.startedUtc || "")}<br><span class="muted">finished</span> ${escapeHtml(run.finishedUtc || "")}</td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="8" class="muted">没有匹配的非聊天 run。</td></tr>`;
+                }
+                function renderChatAverages(items) {
+                  $("head").innerHTML = "<tr><th>用户</th><th>聊天 run 数</th><th>平均排队</th><th>平均响应</th></tr>";
+                  const totalRuns = items.reduce((sum, item) => sum + Number(item.runCount || 0), 0);
+                  $("summary").className = "card";
+                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(items.length)}</strong><br><span class="muted">普通用户</span></span><span><strong>${escapeHtml(totalRuns)}</strong><br><span class="muted">聊天 run</span></span></div>`;
+                  $("rows").innerHTML = items.map(item => `
+                    <tr>
+                      <td>${escapeHtml(item.username)}<br><span class="muted">${escapeHtml(item.accountId)}</span></td>
+                      <td>${escapeHtml(item.runCount)}</td>
+                      <td>${escapeHtml(formatSeconds(item.averageQueueSeconds))}</td>
+                      <td>${escapeHtml(formatSeconds(item.averageRuntimeSeconds))}</td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="4" class="muted">没有匹配的聊天 run。</td></tr>`;
+                }
+                $("load").onclick = loadMetrics;
+                $("back").onclick = () => { location.href = "/"; };
+                if (mode === "chat") $("runTypeLabel").style.display = "none";
+                loadUsers().then(loadMetrics).catch(error => {
+                  $("summary").className = "card danger";
+                  $("summary").textContent = error.message === "missing_token" ? "当前浏览器没有 token，请先回控制台登录。" : error.message;
+                });
+              </script>
+            </body>
+            </html>
+            """
+            .Replace("__MODE__", mode, StringComparison.Ordinal)
+            .Replace("__TITLE__", WebUtility.HtmlEncode(title), StringComparison.Ordinal)
+            .Replace("__DESCRIPTION__", WebUtility.HtmlEncode(description), StringComparison.Ordinal);
     }
 
     private static string WrapSimplePage(string title, string body)
