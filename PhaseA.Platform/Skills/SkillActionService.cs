@@ -5,6 +5,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhaseA.Platform.Skills;
 
@@ -20,6 +21,7 @@ public sealed class SkillActionService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly HeavyRunnerQueueService? _assetRunnerQueue;
 
     public SkillActionService(
         PhaseAMetadataStore metadataStore,
@@ -30,7 +32,8 @@ public sealed class SkillActionService
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         ILlmRouteEngine? llmRouteEngine = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -41,6 +44,7 @@ public sealed class SkillActionService
         _keyPoolService = keyPoolService;
         _llmRouteEngine = llmRouteEngine;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _assetRunnerQueue = assetRunnerQueue;
     }
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
@@ -94,7 +98,13 @@ public sealed class SkillActionService
             }
         }
 
-        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
+        var runnerQueue = string.Equals(request.QueueLane, "asset-generation", StringComparison.Ordinal)
+            ? _assetRunnerQueue ?? _heavyRunnerQueue
+            : _heavyRunnerQueue;
+        var queueRunType = string.Equals(request.QueueLane, "asset-generation", StringComparison.Ordinal)
+            ? "asset-generation"
+            : RunType;
+        await using var heavyRunnerLease = await runnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, queueRunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
         try
         {
@@ -124,7 +134,7 @@ public sealed class SkillActionService
         var prompt = BuildPrompt(action, project, request);
         var sandbox = isWorkspaceWrite ? "workspace-write" : "read-only";
         var routeResult = _llmRouteEngine is null || isWorkspaceWrite
-            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, sandbox, cancellationToken)
+            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), cancellationToken)
             : await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
                     EnsureSkillActionPromptWorkspace(project),
@@ -196,12 +206,13 @@ public sealed class SkillActionService
         string outputAbsolutePath,
         string prompt,
         string sandbox,
+        string reasoningEffort,
         CancellationToken cancellationToken)
     {
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox, reasoningEffort), runtimeCredential), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)
@@ -232,15 +243,22 @@ public sealed class SkillActionService
             Math.Max(1, (int)Math.Ceiling(Encoding.UTF8.GetByteCount(prompt) / 4.0d)));
     }
 
-    private HostedProcessCommand BuildCodexCommand(string repositoryRoot, string outputPath, string prompt, string sandbox)
+    private HostedProcessCommand BuildCodexCommand(string repositoryRoot, string outputPath, string prompt, string sandbox, string reasoningEffort)
     {
         return CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repositoryRoot,
             outputPath,
             prompt,
             "gpt-5.4",
-            "high",
+            reasoningEffort,
             Sandbox: sandbox));
+    }
+
+    private static string ReasoningEffortFor(SkillActionRunRequest request)
+    {
+        return string.Equals(request.QueueLane, "asset-generation", StringComparison.Ordinal)
+            ? "medium"
+            : "high";
     }
 
     private async Task<string> ResolveBillingApiKeyNameAsync(string accountId, CancellationToken cancellationToken)

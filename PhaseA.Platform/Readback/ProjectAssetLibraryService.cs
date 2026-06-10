@@ -4,29 +4,34 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
-using PhaseA.Platform.Skills;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhaseA.Platform.Readback;
 
 public sealed class ProjectAssetLibraryService
 {
+    private const string RunType = "project-asset-generation";
     private const int MaxInstructionLength = 2000;
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
-    private readonly SkillActionService _skillActionService;
+    private readonly ProjectAssetImageGenerator _imageGenerator;
     private readonly ILlmRouteEngine? _llmRouteEngine;
+    private readonly HeavyRunnerQueueService _assetRunnerQueue;
 
     public ProjectAssetLibraryService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
-        SkillActionService skillActionService,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ProjectAssetImageGenerator imageGenerator,
+        ILlmRouteEngine? llmRouteEngine = null,
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
-        _skillActionService = skillActionService;
+        _imageGenerator = imageGenerator;
         _llmRouteEngine = llmRouteEngine;
+        _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
     }
 
     public async Task<ProjectAssetLibraryResult?> ReadAsync(
@@ -66,12 +71,76 @@ public sealed class ProjectAssetLibraryService
         var outputRelativeDirectory = ToSlash(Path.Combine("Game.Godot", "Prototypes", "ProjectAssetLibrary", unit.Key, entryId));
         var outputAbsoluteDirectory = Path.Combine(project.RepoPath, outputRelativeDirectory.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(outputAbsoluteDirectory);
-        var prompt = BuildSkillPrompt(project, unit, request.FloatingPrompt, actionId, outputRelativeDirectory);
-        var skillResult = await _skillActionService.RunAsync(
-            accountId,
-            projectId,
-            actionId,
-            new SkillActionRunRequest(prompt),
+        var prompt = BuildImagePrompt(project, unit, request.FloatingPrompt, actionId);
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        await using var assetQueueLease = await _assetRunnerQueue.EnterAsync(
+            runId,
+            project.AccountId,
+            project.ProjectId,
+            RunType,
+            cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, assetQueueLease.QueuePositionAtStart, cancellationToken);
+
+        ProjectAssetImageGenerationResult imageResult;
+        try
+        {
+            imageResult = await _imageGenerator.GenerateAsync(
+                project,
+                runId,
+                prompt,
+                outputAbsoluteDirectory,
+                outputRelativeDirectory,
+                SanitizeFileStem(unit.InstanceName, actionId),
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var failureEvidence = JsonSerializer.Serialize(new
+            {
+                run_type = RunType,
+                action_id = actionId,
+                skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+                output_directory = outputRelativeDirectory,
+                failure = ex.Message
+            });
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), failureEvidence, CancellationToken.None);
+            imageResult = new ProjectAssetImageGenerationResult(
+                runId,
+                "failed",
+                500,
+                "",
+                ex.ToString(),
+                $"轻量图片生成失败：{ex.Message}",
+                [],
+                TimeSpan.Zero);
+        }
+
+        foreach (var artifactPath in imageResult.ArtifactPaths)
+        {
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                runId,
+                project.ProjectId,
+                "project-asset-generation-output",
+                artifactPath,
+                "Project asset generation output"), cancellationToken);
+        }
+
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            action_id = actionId,
+            skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+            output_directory = outputRelativeDirectory,
+            elapsed_seconds = Math.Round(imageResult.Elapsed.TotalSeconds, 3),
+            artifacts = imageResult.ArtifactPaths
+        });
+        await _metadataStore.CompleteRunAsync(
+            runId,
+            imageResult.Status,
+            imageResult.ExitCode,
+            imageResult.Stdout,
+            imageResult.Stderr,
+            evidenceJson,
             cancellationToken);
 
         var library = ReadLibrary(project);
@@ -82,20 +151,20 @@ public sealed class ProjectAssetLibraryService
         var previewResourcePath = generatedImageFiles
             .Select(path => ToResPath(project.RepoPath, path))
             .FirstOrDefault();
-        var skillSucceeded = string.Equals(skillResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
+        var skillSucceeded = string.Equals(imageResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
         var entryStatus = skillSucceeded && generatedImageFiles.Length == 0
             ? "no_image_generated"
-            : skillResult.Status;
+            : imageResult.Status;
         var entry = new ProjectAssetLibraryEntry(
             entryId,
             DateTimeOffset.UtcNow.ToString("O"),
-            skillResult.RunId,
+            runId,
             actionId,
             actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
             prompt,
             entryStatus,
-            skillResult.AssistantMessage,
-            skillResult.Artifacts.Select(artifact => artifact.RelativePath).Concat(generatedImageFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).ToArray(),
+            imageResult.AssistantMessage,
+            imageResult.ArtifactPaths.Concat(generatedImageFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).Distinct(StringComparer.Ordinal).ToArray(),
             previewResourcePath,
             false);
         if (generatedImageFiles.Length == 0)
@@ -116,7 +185,7 @@ public sealed class ProjectAssetLibraryService
         await WriteLibraryAsync(project, library, cancellationToken);
 
         return new ProjectAssetGenerationRunResult(
-            skillResult.Status,
+            imageResult.Status,
             actionId,
             entry,
             ReadLibrary(project));
@@ -337,7 +406,7 @@ public sealed class ProjectAssetLibraryService
         return root;
     }
 
-    private static string BuildSkillPrompt(ProjectSnapshot project, ProjectAssetLibraryUnit unit, string? floatingPrompt, string actionId, string outputRelativeDirectory)
+    private static string BuildImagePrompt(ProjectSnapshot project, ProjectAssetLibraryUnit unit, string? floatingPrompt, string actionId)
     {
         var userInstruction = Trim(floatingPrompt);
         if (userInstruction.Length > MaxInstructionLength)
@@ -345,35 +414,72 @@ public sealed class ProjectAssetLibraryService
             userInstruction = userInstruction[..MaxInstructionLength];
         }
 
-        var target = actionId == "map-making-master" ? "$generate2dmap" : "$generate2dsprite";
+        var assetMode = actionId == "map-making-master" ? "2D map/background asset" : "2D sprite/game asset";
+        var currentResourceNote = string.IsNullOrWhiteSpace(unit.ResourcePath)
+            ? "(none)"
+            : unit.ResourcePath;
+        var directionText = string.IsNullOrWhiteSpace(userInstruction)
+            ? "(no explicit user style direction; infer only the minimum asset subject from the asset unit)"
+            : userInstruction;
         return $"""
-            Use {target} for this project asset unit.
+            Create one production-oriented {assetMode} for this hosted Godot project asset unit.
 
             Project:
             - GameName: {project.GameName}
-            - GameType: {project.GameTypeSource}
+            - GameType: {project.GameTypeSource} (classification only; do not treat this as a mandatory visual style when user direction says otherwise)
 
             Asset unit:
             - InstanceName: {unit.InstanceName}
             - NodeType: {unit.NodeType}
             - ScenePath: {unit.ScenePath}
-            - CurrentResource: {unit.ResourcePath}
+            - CurrentResource: {currentResourceNote}
             - SuggestedKind: {unit.Kind}
             - IntendedUse: {unit.IntendedUse}
             - Reason: {unit.Reason}
 
             User generation direction:
-            {userInstruction}
+            {directionText}
 
-            Required output directory:
-            {outputRelativeDirectory}
+            Prompt isolation rules:
+            - Treat User generation direction as the highest-priority style source.
+            - Treat CurrentResource only as the asset slot being replaced. Do not copy its visual style, palette, composition, filename, or previous generated output unless the user explicitly asks to reference it.
+            - Do not infer style from previous entries in Game.Godot/Prototypes/ProjectAssetLibrary.
+            - Do not reuse earlier generation-prompt files, asset-manifest files, or previous fallback SVG/PNG decisions as style anchors.
+            - IntendedUse and Reason describe gameplay placement only; do not let template wording such as JRPG, DQ, Dragon Quest, Final Fantasy, pixel art, or 16-bit override the current user direction.
+            - If the user direction is empty, produce a neutral asset matching only the asset subject, gameplay role, and transparent-background requirement.
 
-            Generate this asset unit under the required output directory.
-            Hard requirement: create at least one real image file under that directory using .png, .jpg, .jpeg, .webp, or .svg.
-            Default background requirement: generated images must use transparent background by default. Use an opaque or scene background only when the user generation direction explicitly asks for one.
-            Put diagnostic files such as asset-spec.md, generation-prompt.md, or asset-manifest.json there only as supporting files.
-            If real image generation is unavailable, write the diagnostic files and clearly state that no image was generated; the platform will not add the result to the project asset library until a real image file exists.
+            Image requirements:
+            - Generate exactly one clean game asset image.
+            - No text, no watermark, no UI chrome, no border.
+            - Use transparent background by default. Use an opaque or scene background only when the user generation direction explicitly asks for one.
+            - Keep the subject centered with safe padding so it can be used as a Godot Texture2D.
             """;
+    }
+
+    private static string SanitizeFileStem(string value, string actionId)
+    {
+        var fallback = actionId == "map-making-master" ? "generated-map-asset" : "generated-sprite-asset";
+        var source = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        var builder = new StringBuilder(source.Length);
+        foreach (var ch in source)
+        {
+            if (char.IsAsciiLetterOrDigit(ch))
+            {
+                builder.Append(char.ToLowerInvariant(ch));
+            }
+            else if (ch is '-' or '_' || char.IsWhiteSpace(ch))
+            {
+                builder.Append('-');
+            }
+        }
+
+        var stem = builder.ToString().Trim('-');
+        while (stem.Contains("--", StringComparison.Ordinal))
+        {
+            stem = stem.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        return string.IsNullOrWhiteSpace(stem) ? fallback : stem[..Math.Min(stem.Length, 64)];
     }
 
     private static IEnumerable<string> EnumerateGeneratedFiles(string projectRoot, string outputAbsoluteDirectory)

@@ -428,7 +428,7 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "prototype_validation_not_available", 404, "", "", "No prototype workflow record is available for validation.", [], []);
         }
 
-        var iterationReadiness = await ValidateIterationAndUiOptimizationReadinessAsync(project.ProjectId, runs, cancellationToken);
+        var iterationReadiness = await ValidateIterationReadinessAsync(project.ProjectId, cancellationToken);
         if (iterationReadiness is not null)
         {
             return iterationReadiness;
@@ -522,9 +522,8 @@ public sealed class PrototypeWorkflowService
         }
     }
 
-    private async Task<PrototypeWorkflowResult?> ValidateIterationAndUiOptimizationReadinessAsync(
+    private async Task<PrototypeWorkflowResult?> ValidateIterationReadinessAsync(
         string projectId,
-        IReadOnlyList<RunSnapshot> runs,
         CancellationToken cancellationToken)
     {
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
@@ -538,72 +537,13 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "iteration_plan_not_complete", 409, "", "", "Complete the iteration plan before prototype acceptance.", [], []);
         }
 
-        var sessionTime = ResolveIterationGoalTimestamp(details) ??
-                          ParseIsoTime(details.Session.CompletedUtc) ??
-                          ParseIsoTime(details.Session.UpdatedUtc) ??
-                          ParseIsoTime(details.Session.CreatedUtc);
-        var latestUiOptimization = runs.FirstOrDefault(run => string.Equals(run.RunType, "prototype-ui-optimization", StringComparison.OrdinalIgnoreCase));
-        var uiOptimizationTime = ParseIsoTime(latestUiOptimization?.ProgressUpdatedUtc);
-        var uiOptimizationCurrent = latestUiOptimization is not null &&
-                                    string.Equals(latestUiOptimization.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
-                                    UiOptimizationShortValidationPassed(latestUiOptimization) &&
-                                    (!sessionTime.HasValue || (uiOptimizationTime.HasValue && uiOptimizationTime.Value >= sessionTime.Value));
-
-        return uiOptimizationCurrent
-            ? null
-            : new PrototypeWorkflowResult("", "ui_optimization_required", 409, "", "", "Run UI optimization before prototype acceptance.", [], []);
-    }
-
-    private static bool UiOptimizationShortValidationPassed(RunSnapshot run)
-    {
-        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(run.EvidenceJson);
-            var root = document.RootElement;
-            if (!root.TryGetProperty("godot_smoke", out var smoke) ||
-                smoke.ValueKind != JsonValueKind.Object)
-            {
-                return false;
-            }
-
-            var ran = smoke.TryGetProperty("ran", out var ranElement) &&
-                      ranElement.ValueKind == JsonValueKind.True;
-            var exitCodeOk = smoke.TryGetProperty("exit_code", out var exitCodeElement) &&
-                             exitCodeElement.ValueKind == JsonValueKind.Number &&
-                             exitCodeElement.TryGetInt32(out var exitCode) &&
-                             exitCode == 0;
-            return ran && exitCodeOk;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
+        return null;
     }
 
     private static bool IsCompletedIterationGoalStatus(string? status)
     {
         return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static DateTimeOffset? ParseIsoTime(string? value)
-    {
-        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
-    }
-
-    private static DateTimeOffset? ResolveIterationGoalTimestamp(ProjectIterationSessionDetails details)
-    {
-        return details.Goals
-            .Select(goal => ParseIsoTime(goal.CompletedUtc) ?? ParseIsoTime(goal.UpdatedUtc) ?? ParseIsoTime(goal.CreatedUtc))
-            .Where(value => value.HasValue)
-            .Select(value => value!.Value)
-            .DefaultIfEmpty()
-            .Max();
     }
 
     public async Task<PrototypeWorkflowProgress> GetProgressAsync(string accountId, string projectId, CancellationToken cancellationToken = default)

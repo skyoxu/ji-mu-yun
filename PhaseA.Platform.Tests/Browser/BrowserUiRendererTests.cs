@@ -25,6 +25,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2JudgeNextStepLocally");
         html.Should().Contain("v2BuildLocalNextStepSuggestion");
         html.Should().Contain("正在扫描项目状态");
+        html.Should().Contain("Promise.allSettled");
+        html.Should().Contain("withTimeout(loadProjectPackages(), \"packages\")");
+        html.Should().Contain("withTimeout(refreshAssetInventoryAvailability(), \"asset_inventory\")");
+        html.Should().Contain("已基于当前缓存状态生成建议");
         html.Should().Contain("点击按钮后扫描项目进度并给出下一步建议。");
         html.Should().Contain("项目状态扫描失败，请稍后重试或先刷新页面。");
         html.Should().NotContain("调用 LLM 判断下一步");
@@ -32,7 +36,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("请先进行 2. 原型骨架创建");
         html.Should().Contain("请先进行 3. 骨架验收修复");
         html.Should().Contain("请先进行 4. 完成迭代计划");
-        html.Should().Contain("请先进行 5. UI优化");
+        html.Should().Contain("请进行 6. 原型验收");
+        html.Should().Contain("UI 优化是可选步骤，可以在验收前或验收后执行。");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
         html.Should().Contain("grid-template-columns: repeat(9, minmax(5.6rem, 1fr))");
@@ -48,10 +53,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("原型验收结果");
         html.Should().Contain("重新触发原型验收");
         html.Should().Contain("rerun.onclick = v2ValidatePrototypeIfAllowed");
+        html.Should().Contain("skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed");
+        html.Should().Contain("v2PrototypeAcceptanceBlockReason");
+        html.Should().Contain("v2AcceptanceActionStatus");
+        html.Should().Contain("await validatePrototype();");
         html.Should().Contain("v2IterationPlanAllowsAcceptance");
-        html.Should().Contain("v2UiOptimizationAllowsAcceptance");
         html.Should().Contain("请先完成当前迭代计划，所有目标完成后再进行原型验收。");
-        html.Should().Contain("请先完成 UI 优化，再进行原型验收。");
+        html.Should().Contain("UI 优化是可选步骤，不会阻塞验收。");
+        html.Should().NotContain("请先完成 UI 优化，再进行原型验收。");
         html.Should().NotContain("if (stepId === \"prototype-acceptance\") {\n                    $(\"validatePrototype\")?.click();");
         html.Should().NotContain("[\"revalidate-prototype\", \"重新验收\"]");
         html.Should().Contain("$(\"loadAssetInventory\")?.click()");

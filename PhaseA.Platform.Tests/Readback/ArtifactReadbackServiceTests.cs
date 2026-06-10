@@ -1028,9 +1028,9 @@ public sealed class ArtifactReadbackServiceTests
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation output");
-        var skillService = new SkillActionService(store, options, new SkillActionCatalog(), runner, new NoopWorkspaceSeeder());
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"map-making-master","reason":"map unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, skillService, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make it like a 16-bit overworld",
@@ -1046,7 +1046,7 @@ public sealed class ArtifactReadbackServiceTests
 
         generated!.ActionId.Should().Be("map-making-master");
         generated.Entry.SkillName.Should().Be("generate2dmap");
-        generated.Entry.AssistantMessage.Should().Contain("asset generation output");
+        generated.Entry.AssistantMessage.Should().Contain("轻量图片生成链路");
         generated.Entry.PreviewResourcePath.Should().StartWith("res://Game.Godot/Prototypes/ProjectAssetLibrary/");
         generated.Entry.ArtifactPaths.Should().Contain(path => path.Contains("ProjectAssetLibrary", StringComparison.Ordinal));
         routeEngine.LastPrompt.Should().Contain("Decide the correct asset generation skill");
@@ -1055,10 +1055,14 @@ public sealed class ArtifactReadbackServiceTests
             unit.InstanceName == "RpgMapAsset" &&
             unit.Entries.Count == 1);
         runner.Commands.Should().ContainSingle();
-        runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write"]);
-        runner.Commands[0].StandardInput.Should().Contain("generate2dmap");
-        runner.Commands[0].StandardInput.Should().Contain("make it like a 16-bit overworld");
-        runner.Commands[0].StandardInput.Should().Contain("Required output directory:");
+        runner.Commands[0].FileName.Should().Be(options.PythonCommand);
+        runner.Commands[0].Arguments.Should().Contain(arg => arg.EndsWith("aiartmirror_image_cli.py", StringComparison.Ordinal));
+        runner.Commands[0].Arguments.Should().Contain(["--quality", "low"]);
+        runner.Commands[0].Arguments.Should().NotContain("exec");
+        generated.Entry.Prompt.Should().Contain("make it like a 16-bit overworld");
+        generated.Entry.Prompt.Should().Contain("Prompt isolation rules:");
+        generated.Entry.Prompt.Should().Contain("Treat User generation direction as the highest-priority style source.");
+        generated.Entry.Prompt.Should().Contain("classification only");
 
         var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest(
             generated.Library.Units.Single().Key,
@@ -1079,9 +1083,9 @@ public sealed class ArtifactReadbackServiceTests
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation failed", exitCode: 1, writeGeneratedAsset: false);
-        var skillService = new SkillActionService(store, options, new SkillActionCatalog(), runner, new NoopWorkspaceSeeder());
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, skillService, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -1112,9 +1116,9 @@ public sealed class ArtifactReadbackServiceTests
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset spec only", generatedAssetFileName: "asset-spec.md");
-        var skillService = new SkillActionService(store, options, new SkillActionCatalog(), runner, new NoopWorkspaceSeeder());
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, skillService, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -1358,9 +1362,42 @@ public sealed class ArtifactReadbackServiceTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
-            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-            File.WriteAllText(outputPath, _output);
+            if (command.Arguments.Contains("--out", StringComparer.Ordinal))
+            {
+                var outputPath = ReadArgument(command.Arguments, "--out")!;
+                var manifestPath = ReadArgument(command.Arguments, "--manifest-out");
+                if (manifestPath is not null)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(manifestPath)!);
+                    File.WriteAllText(manifestPath, """{"result_count":1}""");
+                }
+
+                if (_writeGeneratedAsset)
+                {
+                    var assetPath = Path.GetExtension(_generatedAssetFileName).Equals(".png", StringComparison.OrdinalIgnoreCase)
+                        ? outputPath
+                        : Path.Combine(Path.GetDirectoryName(outputPath)!, _generatedAssetFileName);
+                    Directory.CreateDirectory(Path.GetDirectoryName(assetPath)!);
+                    if (Path.GetExtension(assetPath).Equals(".png", StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.WriteAllBytes(assetPath, MinimalPng(16, 16));
+                    }
+                    else
+                    {
+                        File.WriteAllText(assetPath, "spec only");
+                    }
+                }
+                else
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+                }
+
+                return Task.FromResult(new HostedProcessResult(_exitCode, _output, _exitCode == 0 ? "" : "image generation failed"));
+            }
+
+            var codexOutputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(codexOutputPath)!);
+            File.WriteAllText(codexOutputPath, _output);
             var outputDirectory = ReadRequiredOutputDirectory(command.StandardInput ?? "");
             if (_writeGeneratedAsset && !string.IsNullOrWhiteSpace(outputDirectory))
             {
@@ -1377,6 +1414,19 @@ public sealed class ArtifactReadbackServiceTests
             }
 
             return Task.FromResult(new HostedProcessResult(_exitCode, "codex stdout", _exitCode == 0 ? "" : "codex failed"));
+        }
+
+        private static string? ReadArgument(IReadOnlyList<string> arguments, string name)
+        {
+            for (var index = 0; index < arguments.Count - 1; index++)
+            {
+                if (string.Equals(arguments[index], name, StringComparison.Ordinal))
+                {
+                    return arguments[index + 1];
+                }
+            }
+
+            return null;
         }
 
         private static string? ReadRequiredOutputDirectory(string prompt)

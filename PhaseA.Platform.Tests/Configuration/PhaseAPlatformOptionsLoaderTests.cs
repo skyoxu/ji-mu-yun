@@ -32,6 +32,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentProjectCreations.Should().Be(3);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(1);
         options.MaxConcurrentOtherRuns.Should().Be(1);
+        options.MaxConcurrentAssetGenerations.Should().Be(2);
     }
 
     [Fact]
@@ -62,7 +63,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT"] = "2",
-            ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2"
+            ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
+            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS"] = "5"
         };
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(values);
@@ -87,6 +89,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentProjectCreations.Should().Be(4);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(2);
         options.MaxConcurrentOtherRuns.Should().Be(2);
+        options.MaxConcurrentAssetGenerations.Should().Be(5);
     }
 
     [Theory]
@@ -103,6 +106,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_OTHER_RUNS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", "0")]
     public void FromDictionary_FailsClosed_ForInvalidValues(string key, string value)
     {
         var values = new Dictionary<string, string?> { [key] = value };

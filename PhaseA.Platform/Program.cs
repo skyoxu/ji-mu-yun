@@ -53,6 +53,9 @@ builder.Services.AddSingleton(new ProjectCreationRunnerQueue(new HeavyRunnerQueu
 builder.Services.AddSingleton(new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(8),
     options.MaxConcurrentOtherRuns));
+builder.Services.AddKeyedSingleton("asset-generation", new HeavyRunnerQueueService(
+    TimeSpan.FromMinutes(4),
+    options.MaxConcurrentAssetGenerations));
 builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
@@ -75,6 +78,7 @@ builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
+builder.Services.AddSingleton<ProjectAssetImageGenerator>();
 builder.Services.AddSingleton<ProjectAssetLibraryService>();
 builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
 builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
@@ -1613,7 +1617,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async 
             "succeeded" or "failed" => Results.Ok(result),
             "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
             "prototype_validation_not_available" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
-            "iteration_plan_not_complete" or "ui_optimization_required" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            "iteration_plan_not_complete" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             _ => Results.BadRequest(result)
         };
     }

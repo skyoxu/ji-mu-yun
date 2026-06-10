@@ -847,7 +847,7 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
-    public async Task ValidateAsync_ShouldRequireUiOptimizationAfterCompletedIterationPlan()
+    public async Task ValidateAsync_ShouldRunRpgAcceptanceAfterCompletedIterationPlanWithoutUiOptimization()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -862,10 +862,15 @@ public sealed class PrototypeWorkflowTests
         await CreateCompletedIterationPlanAsync(store, accountId, projectId);
 
         var result = await service.ValidateAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
 
-        result.Status.Should().Be("ui_optimization_required");
-        result.ExitCode.Should().Be(409);
-        runner.Commands.Should().HaveCount(3);
+        result.Status.Should().Be("succeeded");
+        result.ExitCode.Should().Be(0);
+        runner.Commands.Should().HaveCount(6);
+        runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
+        runner.Commands[5].Arguments.Should().Contain("--prewarm");
+        run!.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
+        run.EvidenceJson.Should().Contain("\"required\":true");
     }
 
     [Fact]

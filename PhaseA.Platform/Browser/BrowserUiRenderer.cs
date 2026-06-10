@@ -217,6 +217,7 @@ public sealed class BrowserUiRenderer
                   v2ApplyPrototypeFormLock();
                   v2RunStepAction(stepId);
                   v2RenderProgress();
+                  v2RefreshAcceptanceActionState();
                 }
                 function v2ShouldDefaultToPrototypeCreation(progress) {
                   const status = String(progress?.status || "").trim().toLowerCase();
@@ -298,6 +299,11 @@ public sealed class BrowserUiRenderer
                   rerun.onclick = v2ValidatePrototypeIfAllowed;
                   actions.appendChild(rerun);
                   panel.appendChild(actions);
+                  const status = document.createElement("div");
+                  status.id = "v2AcceptanceActionStatus";
+                  status.className = "card muted";
+                  status.textContent = "原型验收入口会在迭代计划完成后启用。UI 优化是可选步骤，不会阻塞验收。";
+                  panel.appendChild(status);
                 }
                 function v2CreateUiOptimizationPanel() {
                   if ($("v2UiOptimizationPanel")) return;
@@ -318,24 +324,38 @@ public sealed class BrowserUiRenderer
                   if (!Array.isArray(goals) || goals.length === 0) return true;
                   return goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
-                function v2UiOptimizationAllowsAcceptance() {
-                  const goals = state.iterationPlan?.goals;
-                  if (!Array.isArray(goals) || goals.length === 0) return true;
-                  if (!v2IterationPlanAllowsAcceptance()) return false;
-                  return v2StepStatus("ui-optimization") === "done";
-                }
-                function v2ValidatePrototypeIfAllowed() {
+                function v2PrototypeAcceptanceBlockReason() {
                   if (!v2IterationPlanAllowsAcceptance()) {
-                    $("v2NextSuggestion").textContent = "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
-                    out("请先完成迭代计划，再进行原型验收。");
+                    return "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
+                  }
+                  if (isGlobalBusy()) {
+                    return "当前有任务正在执行，请等待当前 run 完成后再进行原型验收。";
+                  }
+                  return "";
+                }
+                function v2RefreshAcceptanceActionState() {
+                  const rerun = $("v2RevalidatePrototype");
+                  const status = $("v2AcceptanceActionStatus");
+                  if (!rerun || !status) return;
+                  const reason = v2PrototypeAcceptanceBlockReason();
+                  rerun.disabled = !!reason;
+                  rerun.title = reason || "";
+                  status.className = reason ? "card muted" : "card";
+                  status.textContent = reason || "当前已满足原型验收条件，点击按钮会创建一条原型验收 run。";
+                }
+                async function v2ValidatePrototypeIfAllowed() {
+                  const reason = v2PrototypeAcceptanceBlockReason();
+                  if (reason) {
+                    $("v2NextSuggestion").textContent = reason;
+                    const status = $("v2AcceptanceActionStatus");
+                    if (status) {
+                      status.className = "card muted";
+                      status.textContent = reason;
+                    }
+                    out(reason);
                     return;
                   }
-                  if (!v2UiOptimizationAllowsAcceptance()) {
-                    $("v2NextSuggestion").textContent = "请先完成 UI 优化，再进行原型验收。";
-                    out("请先运行 UI 优化，再进行原型验收。");
-                    return;
-                  }
-                  $("validatePrototype")?.click();
+                  await validatePrototype();
                 }
                 function v2ArrangeIterationPanel() {
                   const panel = $("v2IterationPanel");
@@ -375,7 +395,7 @@ public sealed class BrowserUiRenderer
                   skeletonAcceptance.className = "secondary";
                   skeletonAcceptance.type = "button";
                   skeletonAcceptance.textContent = "骨架验收";
-                  skeletonAcceptance.onclick = validatePrototype;
+                  skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed;
                   createRepair?.insertAdjacentElement("beforebegin", actions);
                   [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
                 }
@@ -575,7 +595,6 @@ public sealed class BrowserUiRenderer
                   const skeletonAcceptanceFailed = v2HasFailedPrototypeAcceptance();
                   const repairRunnable = v2RepairPlanHasRunnableStep();
                   const repairReadyForAcceptance = v2RepairPlanCompletedOrEmpty();
-                  const uiStatus = v2StepStatus("ui-optimization");
                   const acceptanceStatus = v2StepStatus("prototype-acceptance");
                   const assetStatus = v2StepStatus("asset-inventory");
                   const packageStatus = v2StepStatus("package-project");
@@ -599,17 +618,12 @@ public sealed class BrowserUiRenderer
                     return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划中至少有一个 step 处于 needs fix 或 failed 状态。请在 4. 完成迭代计划里继续运行对应修复，直到所有 step 都完成。";
                   }
                   if (iteration.hasPending || !iteration.allCompleted) {
-                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划还有 pending 或 running 的 step。请继续执行下一项迭代目标；全部完成后再进入 UI 优化。";
-                  }
-                  if (uiStatus !== "done") {
-                    return uiStatus === "fix"
-                      ? "建议：请先进行 5. UI优化。\n\n上一次 UI 优化失败或短验证未通过。请重新运行 5. UI优化，让界面按游戏类型模板对齐；RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。"
-                      : "建议：请先进行 5. UI优化。\n\n当前迭代计划已经全部完成。下一步应按照游戏类型模板重新对齐界面，确保可玩功能和 UI 表达一致。";
+                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划还有 pending 或 running 的 step。请继续执行下一项迭代目标；全部完成后可以直接进入原型验收，也可以先做可选的 UI 优化。";
                   }
                   if (acceptanceStatus !== "done" || !validationPassed) {
                     return acceptanceStatus === "fix"
-                      ? "建议：请进行 6. 原型验收。\n\nUI 优化后的原型验收没有通过。请先查看 6. 原型验收结果；如果确认是骨架/运行问题，再回到 3. 骨架验收修复生成或执行修复计划。"
-                      : "建议：请进行 6. 原型验收。\n\n迭代计划和 UI 优化都已经完成，需要重新验收原型，确认优化后的项目仍然可以运行并满足当前可玩闭环。";
+                      ? "建议：请进行 6. 原型验收。\n\n原型验收没有通过。请先查看 6. 原型验收结果；如果确认是骨架/运行问题，再回到 3. 骨架验收修复生成或执行修复计划。"
+                      : "建议：请进行 6. 原型验收。\n\n迭代计划已经全部完成，需要重新验收原型，确认项目仍然可以运行并满足当前可玩闭环。UI 优化是可选步骤，可以在验收前或验收后执行。";
                   }
                   if (assetStatus !== "done") {
                     return "建议：请进行 7. 确认素材清单。\n\n原型验收已经通过。下一步请打开 7. 确认素材清单，检查已使用素材和可生成素材候选，必要时先替换默认素材。";
@@ -628,13 +642,29 @@ public sealed class BrowserUiRenderer
                   button.disabled = true;
                   button.textContent = "扫描中...";
                   $("v2NextSuggestion").textContent = "正在扫描项目状态...";
+                  const withTimeout = (promise, label, timeoutMs = 8000) => {
+                    let timeoutId;
+                    const timeout = new Promise((_, reject) => {
+                      timeoutId = setTimeout(() => reject(new Error(`${label}_timeout`)), timeoutMs);
+                    });
+                    return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+                  };
                   try {
-                    await loadProjectRuntimeState();
-                    await loadIterationPlan();
-                    await loadRepairPlan();
-                    await refreshAssetInventoryAvailability();
-                    await loadProjectPackages();
+                    const results = await Promise.allSettled([
+                      withTimeout(loadRuns(), "runs"),
+                      withTimeout(loadPrototypeProgress(), "prototype_progress"),
+                      withTimeout(loadIterationPlan(), "iteration_plan"),
+                      withTimeout(loadRepairPlan(), "repair_plan"),
+                      withTimeout(loadProjectPackages(), "packages"),
+                      withTimeout(refreshAssetInventoryAvailability(), "asset_inventory")
+                    ]);
+                    const failed = results
+                      .map((result, index) => result.status === "rejected" ? ["运行记录", "原型进度", "迭代计划", "修复计划", "项目文件包", "素材清单"][index] : "")
+                      .filter(Boolean);
                     $("v2NextSuggestion").textContent = v2BuildLocalNextStepSuggestion();
+                    if (failed.length) {
+                      $("v2NextSuggestion").textContent += `\n\n提示：${failed.join("、")}读取超时或失败，已基于当前缓存状态生成建议。`;
+                    }
                   } catch (error) {
                     $("v2NextSuggestion").textContent = "项目状态扫描失败，请稍后重试或先刷新页面。";
                     showError(error);
@@ -653,6 +683,7 @@ public sealed class BrowserUiRenderer
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
+                  v2RefreshAcceptanceActionState();
                 }
                 const v2OriginalShowProjectDetail = showProjectDetail;
                 showProjectDetail = function() {
@@ -4782,7 +4813,7 @@ public sealed class BrowserUiRenderer
                 </section>
               </main>
               <div class="floating-composer">
-                <input id="floatingPrompt" maxlength="2000" placeholder="输入本次素材生成方向，例如：16-bit JRPG、蓝色史莱姆、俯视城镇地图...">
+                    <input id="floatingPrompt" maxlength="2000" placeholder="输入本次素材生成方向，例如：蓝色史莱姆、俯视城镇地图、透明背景道具...">
                 <span>应用到所点击的素材</span>
               </div>
               <div id="assetHistoryModal" class="history-modal" aria-hidden="true">

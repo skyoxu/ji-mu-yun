@@ -45,6 +45,7 @@ public static class PhaseAPlatformOptionsLoader
         var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
         var maxConcurrentProjectCreationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", 1);
         var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 1);
+        var maxConcurrentAssetGenerations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", 2);
         var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
         var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
         var aiCodeMirrorCookie = GetOptionalString(get, "AICODEMIRROR_COOKIE");
@@ -82,6 +83,7 @@ public static class PhaseAPlatformOptionsLoader
             maxConcurrentProjectCreations,
             maxConcurrentProjectCreationsPerAccount,
             maxConcurrentOtherRuns,
+            maxConcurrentAssetGenerations,
             aiCodeMirrorBillingEnabled,
             aiCodeMirrorBaseUrl,
             aiCodeMirrorCookie,

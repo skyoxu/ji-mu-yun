@@ -137,6 +137,7 @@ Treat these as repo-relative defaults. When a project slug is created, copy or a
 ## RPG Validation And Repair Routes
 
 - When the top-level router identifies `game_type` as RPG, keep prototype creation, iteration planning, needs-fix, quick-fix, repair-plan, execute-repair-step, revalidation, and final acceptance on the RPG route profile.
+- UI optimization is an optional polish route for RPG prototypes. It must not block RPG revalidation or final prototype acceptance after the iteration plan is complete.
 - RPG revalidation must include the project-specific GdUnit behavior suite when it exists. For the current default RPG slice, use `tests/Prototype/DqRpgPrototype` relative to `Tests.Godot`; do not pass `Tests.Godot/tests/...` as the `--add` path.
 - Treat `No test cases found` as validation failure even if the wrapper exits 0.
 - Treat `GDUNIT_DONE rc=<nonzero>` as validation failure even if the wrapper normalized process exit code is 0.

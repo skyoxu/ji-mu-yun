@@ -26,6 +26,7 @@ public sealed record PhaseAPlatformOptions(
     int MaxConcurrentProjectCreations,
     int MaxConcurrentProjectCreationsPerAccount,
     int MaxConcurrentOtherRuns,
+    int MaxConcurrentAssetGenerations,
     bool AiCodeMirrorBillingEnabled,
     string AiCodeMirrorBaseUrl,
     string? AiCodeMirrorCookie,

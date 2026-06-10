@@ -1,3 +1,3 @@
 namespace PhaseA.Platform.Skills;
 
-public sealed record SkillActionRunRequest(string? Input = null);
+public sealed record SkillActionRunRequest(string? Input = null, string? QueueLane = null);
