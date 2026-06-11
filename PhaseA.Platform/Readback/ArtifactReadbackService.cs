@@ -3,6 +3,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -14,12 +15,21 @@ public sealed class ArtifactReadbackService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly HeavyRunnerQueueService _prototypeCreationQueue;
+    private readonly HeavyRunnerQueueService _assetRunnerQueue;
 
-    public ArtifactReadbackService(PhaseAMetadataStore metadataStore, PhaseAPlatformOptions options, HeavyRunnerQueueService? heavyRunnerQueue = null)
+    public ArtifactReadbackService(
+        PhaseAMetadataStore metadataStore,
+        PhaseAPlatformOptions options,
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _prototypeCreationQueue = prototypeCreationQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(20), options.MaxConcurrentPrototypeCreations);
+        _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
     }
 
     public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
@@ -30,10 +40,11 @@ public sealed class ArtifactReadbackService
     public async Task<ActiveRunReadback> GetActiveRunAsync(string accountId, CancellationToken cancellationToken = default)
     {
         var run = await _metadataStore.GetActiveRunForAccountAsync(accountId, cancellationToken);
-        var queue = _heavyRunnerQueue.GetReadback(accountId, includeAll: false);
+        var queue = GetHeavyRunnerQueue(accountId, includeAll: false);
+        var accountHasQueuedOrRunningItem = queue.CurrentAccountPosition.HasValue || queue.Current is not null;
         return run is null
             ? new ActiveRunReadback(
-                queue.CurrentAccountPosition.HasValue,
+                accountHasQueuedOrRunningItem,
                 null,
                 null,
                 null,
@@ -60,7 +71,30 @@ public sealed class ArtifactReadbackService
 
     public HeavyRunnerQueueReadback GetHeavyRunnerQueue(string accountId, bool includeAll = false)
     {
-        return _heavyRunnerQueue.GetReadback(accountId, includeAll);
+        var queues = new[]
+        {
+            _heavyRunnerQueue.GetReadback(accountId, includeAll),
+            _prototypeCreationQueue.GetReadback(accountId, includeAll),
+            _assetRunnerQueue.GetReadback(accountId, includeAll)
+        };
+        return MergeHeavyRunnerQueues(queues);
+    }
+
+    private static HeavyRunnerQueueReadback MergeHeavyRunnerQueues(IReadOnlyList<HeavyRunnerQueueReadback> queues)
+    {
+        var currentAccount = queues
+            .Where(queue => queue.CurrentAccountPosition.HasValue)
+            .OrderBy(queue => queue.CurrentAccountPosition!.Value)
+            .ThenBy(queue => queue.CurrentAccountEstimatedWaitSeconds ?? int.MaxValue)
+            .FirstOrDefault();
+        var items = queues.SelectMany(queue => queue.Items).ToArray();
+        return new HeavyRunnerQueueReadback(
+            queues.Any(queue => queue.Running),
+            queues.Select(queue => queue.Current).FirstOrDefault(current => current is not null),
+            queues.Sum(queue => queue.QueuedCount),
+            currentAccount?.CurrentAccountPosition,
+            currentAccount?.CurrentAccountEstimatedWaitSeconds,
+            items);
     }
 
     public async Task<AccountLlmUsageReadback> GetAccountLlmUsageAsync(

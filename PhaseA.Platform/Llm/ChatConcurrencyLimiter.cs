@@ -5,7 +5,7 @@ namespace PhaseA.Platform.Llm;
 public sealed class ChatConcurrencyLimiter
 {
     public const int DefaultMaxConcurrentChats = 8;
-    public const int DefaultMaxConcurrentChatsPerAccount = 2;
+    public const int DefaultMaxConcurrentChatsPerAccount = 1;
 
     private readonly SemaphoreSlim _globalSemaphore;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _accountSemaphores = new(StringComparer.Ordinal);

@@ -41,11 +41,13 @@ public static class PhaseAPlatformOptionsLoader
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
         var userTokenHash = GetOptionalString(get, "PHASEA_USER_TOKEN_HASH");
         var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
-        var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 2);
+        var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
         var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
         var maxConcurrentProjectCreationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", 1);
-        var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 1);
+        var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 3);
+        var maxConcurrentPrototypeCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", 2);
         var maxConcurrentAssetGenerations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", 2);
+        var maxConcurrentAssetGenerationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", 1);
         var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
         var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
         var aiCodeMirrorCookie = GetOptionalString(get, "AICODEMIRROR_COOKIE");
@@ -83,7 +85,9 @@ public static class PhaseAPlatformOptionsLoader
             maxConcurrentProjectCreations,
             maxConcurrentProjectCreationsPerAccount,
             maxConcurrentOtherRuns,
+            maxConcurrentPrototypeCreations,
             maxConcurrentAssetGenerations,
+            maxConcurrentAssetGenerationsPerAccount,
             aiCodeMirrorBillingEnabled,
             aiCodeMirrorBaseUrl,
             aiCodeMirrorCookie,

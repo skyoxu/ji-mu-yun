@@ -19,19 +19,22 @@ public sealed class ProjectAssetLibraryService
     private readonly ProjectAssetImageGenerator _imageGenerator;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HeavyRunnerQueueService _assetRunnerQueue;
+    private readonly AssetGenerationConcurrencyLimiter _assetConcurrencyLimiter;
 
     public ProjectAssetLibraryService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectAssetImageGenerator imageGenerator,
         ILlmRouteEngine? llmRouteEngine = null,
-        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
+        AssetGenerationConcurrencyLimiter? assetConcurrencyLimiter = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _imageGenerator = imageGenerator;
         _llmRouteEngine = llmRouteEngine;
         _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
+        _assetConcurrencyLimiter = assetConcurrencyLimiter ?? new AssetGenerationConcurrencyLimiter(options.MaxConcurrentAssetGenerationsPerAccount);
     }
 
     public async Task<ProjectAssetLibraryResult?> ReadAsync(
@@ -67,6 +70,13 @@ public sealed class ProjectAssetLibraryService
 
         var unit = NormalizeUnit(request.Unit);
         var count = Math.Clamp(request.Count ?? 1, 1, 4);
+        var concurrency = await _assetConcurrencyLimiter.TryAcquireAsync(project.AccountId, cancellationToken);
+        if (concurrency.Lease is null)
+        {
+            throw new AssetGenerationConcurrencyLimitException(concurrency.FailureCode ?? "user_asset_generation_concurrency_limit_exceeded");
+        }
+
+        await using var accountGenerationLease = concurrency.Lease;
         var actionId = await ResolveActionIdAsync(project, unit, request.FloatingPrompt, cancellationToken);
         var entryId = Guid.NewGuid().ToString("N");
         var outputRelativeDirectory = ToSlash(Path.Combine("Game.Godot", "Prototypes", "ProjectAssetLibrary", unit.Key, entryId));

@@ -6,6 +6,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Workspaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhaseA.Platform.Runs;
 
@@ -31,6 +32,7 @@ public sealed class PrototypeWorkflowService
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly HeavyRunnerQueueService _prototypeCreationQueue;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -60,7 +62,8 @@ public sealed class PrototypeWorkflowService
         PrototypeContractService? contractService = null,
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -77,6 +80,7 @@ public sealed class PrototypeWorkflowService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _prototypeCreationQueue = prototypeCreationQueue ?? _heavyRunnerQueue;
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -140,7 +144,7 @@ public sealed class PrototypeWorkflowService
 
         try
         {
-        await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
+        await using var heavyRunnerLease = await _prototypeCreationQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
         await SetProgressAsync(runId, "preparing", "write_record", "正在写入原型记录并准备执行环境。", cancellationToken);
         await AdvancePrototypeStepsAsync(runId, cancellationToken);
@@ -281,7 +285,7 @@ public sealed class PrototypeWorkflowService
         {
             try
             {
-                await _heavyRunnerQueue.ExecuteAsync(
+                await _prototypeCreationQueue.ExecuteAsync(
                     runId,
                     project.AccountId,
                     project.ProjectId,

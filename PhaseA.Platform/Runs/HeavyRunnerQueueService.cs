@@ -3,7 +3,7 @@ namespace PhaseA.Platform.Runs;
 public sealed class HeavyRunnerQueueService
 {
     private static readonly TimeSpan DefaultEstimatedTaskDuration = TimeSpan.FromMinutes(8);
-    public const int DefaultMaxConcurrentOtherRuns = 1;
+    public const int DefaultMaxConcurrentOtherRuns = 3;
 
     private readonly object _gate = new();
     private readonly Queue<HeavyRunnerQueueItem> _waiting = new();

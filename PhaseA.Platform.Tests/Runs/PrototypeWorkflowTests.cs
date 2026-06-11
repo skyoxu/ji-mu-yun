@@ -3,8 +3,10 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -236,6 +238,44 @@ public sealed class PrototypeWorkflowTests
             .WithMessage("Project not found.");
         runner.Commands.Should().BeEmpty();
         _ = ownerAccountId;
+    }
+
+    [Fact]
+    public async Task QueueAsync_UsesDedicatedPrototypeCreationQueue()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var prototypeCreationQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var otherQueueCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var otherQueueStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = Service(store, options, runner, otherRunsQueue, prototypeCreationQueue);
+
+        var occupiedOtherQueue = otherRunsQueue.ExecuteAsync(
+            "other-run-1",
+            accountId,
+            projectId,
+            "prototype-ui-optimization",
+            async _ =>
+            {
+                otherQueueStarted.SetResult();
+                await otherQueueCanFinish.Task;
+                return true;
+            });
+        await otherQueueStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+
+        result.Status.Should().Be("queued");
+        await WaitForAtLeastCommandsAsync(runner, 1);
+
+        otherQueueCanFinish.SetResult();
+        await occupiedOtherQueue.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
     [Fact]
@@ -1591,7 +1631,12 @@ public sealed class PrototypeWorkflowTests
             "extends Node\n");
     }
 
-    private static PrototypeWorkflowService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, IHostedProcessRunner runner)
+    private static PrototypeWorkflowService Service(
+        PhaseAMetadataStore store,
+        PhaseAPlatformOptions options,
+        IHostedProcessRunner runner,
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        HeavyRunnerQueueService? prototypeCreationQueue = null)
     {
         return new PrototypeWorkflowService(
             store,
@@ -1601,7 +1646,11 @@ public sealed class PrototypeWorkflowTests
             new PrototypeWorkflowCommandBuilder(options),
             new PrototypeArtifactIndexer(),
             new LlmBindingService(store, options),
-            new LlmStopLossService(store, options));
+            new LlmStopLossService(store, options),
+            new ProjectWorkspaceSeeder(options),
+            new GameTypeTemplateCatalog(options),
+            heavyRunnerQueue: heavyRunnerQueue,
+            prototypeCreationQueue: prototypeCreationQueue);
     }
 
     private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
@@ -1613,6 +1662,17 @@ public sealed class PrototypeWorkflowTests
         }
 
         runner.Commands.Should().HaveCount(expectedCount);
+    }
+
+    private static async Task WaitForAtLeastCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (runner.Commands.Count < expectedCount && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(50);
+        }
+
+        runner.Commands.Should().HaveCountGreaterThanOrEqualTo(expectedCount);
     }
 
     private static async Task<RunSnapshot> WaitForRunStatusAsync(

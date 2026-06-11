@@ -87,6 +87,67 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_IncludesDedicatedPrototypeAndAssetQueues()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
+        var prototypeCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prototypeStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var assetCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var assetStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var prototypeRun = prototypeQueue.ExecuteAsync(
+            "prototype-run",
+            project!.AccountId,
+            project.ProjectId,
+            "prototype-7day-playable",
+            async _ =>
+            {
+                prototypeStarted.SetResult();
+                await prototypeCanFinish.Task;
+                return true;
+            });
+        var assetRun = assetQueue.ExecuteAsync(
+            "asset-run",
+            project.AccountId,
+            project.ProjectId,
+            "asset-generation",
+            async _ =>
+            {
+                assetStarted.SetResult();
+                await assetCanFinish.Task;
+                return true;
+            });
+        await prototypeStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await assetStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var service = new ArtifactReadbackService(
+            store,
+            options,
+            new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+            prototypeQueue,
+            assetQueue);
+
+        var active = await service.GetActiveRunAsync(project.AccountId);
+        var queue = service.GetHeavyRunnerQueue(project.AccountId, includeAll: false);
+
+        active.Busy.Should().BeTrue();
+        active.HeavyRunnerRunning.Should().BeTrue();
+        queue.Running.Should().BeTrue();
+        queue.Current!.RunId.Should().Be("prototype-run");
+
+        prototypeCanFinish.SetResult();
+        assetCanFinish.SetResult();
+        await prototypeRun.WaitAsync(TimeSpan.FromSeconds(5));
+        await assetRun.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public void ExportAdminLlmUsageCsv_ExcludesSecrets()
     {
         var usage = new AdminLlmUsageReadback(
@@ -1146,6 +1207,46 @@ public sealed class ArtifactReadbackServiceTests
         generated.Entry.ArtifactPaths.Should().NotContain(path => path.Contains("asset-spec.md", StringComparison.Ordinal));
         generated.Library.Units.Should().BeEmpty();
         library!.Units.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_RejectsWhenAccountAssetGenerationLimitIsReached()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var runner = new FakeHostedProcessRunner("asset generation output");
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
+        var limiter = new AssetGenerationConcurrencyLimiter(maxConcurrentAssetGenerationsPerAccount: 1);
+        var acquired = await limiter.TryAcquireAsync(accountId);
+        await using var lease = acquired.Lease;
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            imageGenerator,
+            routeEngine,
+            assetConcurrencyLimiter: limiter);
+
+        var act = () => service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
+            "make a red slime",
+            new ProjectAssetUnitRequest(
+                null,
+                "EnemyToken",
+                "ColorRect",
+                "res://Game.Godot/Prototypes/dq-rpg/BattleScene.tscn",
+                "",
+                "enemy_sprite",
+                "battle enemy sprite",
+                "placeholder needs art")));
+
+        await act.Should().ThrowAsync<AssetGenerationConcurrencyLimitException>()
+            .Where(ex => ex.FailureCode == "user_asset_generation_concurrency_limit_exceeded");
+        runner.Commands.Should().BeEmpty();
     }
 
     [Fact]

@@ -8,7 +8,7 @@ public sealed class HeavyRunnerQueueServiceTests
     [Fact]
     public async Task ExecuteAsync_RunsHeavyWorkOneAtATimeInFifoOrder()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var waitTimeout = TimeSpan.FromSeconds(60);
         var firstCanFinish = new TaskCompletionSource();
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -125,7 +125,7 @@ public sealed class HeavyRunnerQueueServiceTests
     [Fact]
     public async Task ExecuteAsync_RemovesCancelledWaitingItemFromQueue()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var waitTimeout = TimeSpan.FromSeconds(60);
         var firstCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -185,7 +185,7 @@ public sealed class HeavyRunnerQueueServiceTests
     [Fact]
     public async Task ExecuteAsync_ExposesQueuePositionAtStart()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30));
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var waitTimeout = TimeSpan.FromSeconds(60);
         var firstCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

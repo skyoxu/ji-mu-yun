@@ -75,6 +75,7 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls button,
                 body.v2-detail .v2-chat-controls label,
                 body.v2-detail .v2-chat-controls select { width: auto; min-height: 2.35rem; padding: 0.5rem 0.72rem; border-radius: 999px; font-size: 0.88rem; }
+                body.v2-detail .v2-chat-controls .v2-file-button input { display: none; }
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
                 body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
@@ -452,8 +453,8 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback")?.classList.add("hidden");
                   const attachLabel = $("chatAttachmentFiles")?.closest("label");
                   if (attachLabel) {
-                    attachLabel.className = "v2-attach-button";
-                    if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "\u5bfc\u5165";
+                    attachLabel.className = "ghost v2-file-button";
+                    if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "\u5bfc\u5165\u6587\u4ef6";
                     attachLabel.title = "导入 TXT 参考文件";
                   }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";

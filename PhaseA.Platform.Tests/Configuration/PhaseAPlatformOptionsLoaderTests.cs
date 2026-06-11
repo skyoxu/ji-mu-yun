@@ -28,11 +28,13 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.DeliveryProfile.Should().Be("fast-ship");
         options.AdminUsername.Should().Be("admin");
         options.MaxConcurrentChats.Should().Be(8);
-        options.MaxConcurrentChatsPerAccount.Should().Be(2);
+        options.MaxConcurrentChatsPerAccount.Should().Be(1);
         options.MaxConcurrentProjectCreations.Should().Be(3);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(1);
-        options.MaxConcurrentOtherRuns.Should().Be(1);
+        options.MaxConcurrentOtherRuns.Should().Be(3);
+        options.MaxConcurrentPrototypeCreations.Should().Be(2);
         options.MaxConcurrentAssetGenerations.Should().Be(2);
+        options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
     }
 
     [Fact]
@@ -64,7 +66,9 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT"] = "2",
             ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
-            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS"] = "5"
+            ["PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS"] = "6",
+            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS"] = "5",
+            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT"] = "1"
         };
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(values);
@@ -89,7 +93,9 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentProjectCreations.Should().Be(4);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(2);
         options.MaxConcurrentOtherRuns.Should().Be(2);
+        options.MaxConcurrentPrototypeCreations.Should().Be(6);
         options.MaxConcurrentAssetGenerations.Should().Be(5);
+        options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
     }
 
     [Theory]
@@ -106,7 +112,9 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_OTHER_RUNS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", "0")]
     public void FromDictionary_FailsClosed_ForInvalidValues(string key, string value)
     {
         var values = new Dictionary<string, string?> { [key] = value };

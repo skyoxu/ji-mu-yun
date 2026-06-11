@@ -53,9 +53,14 @@ builder.Services.AddSingleton(new ProjectCreationRunnerQueue(new HeavyRunnerQueu
 builder.Services.AddSingleton(new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(8),
     options.MaxConcurrentOtherRuns));
+builder.Services.AddKeyedSingleton("prototype-creation", new HeavyRunnerQueueService(
+    TimeSpan.FromMinutes(20),
+    options.MaxConcurrentPrototypeCreations));
 builder.Services.AddKeyedSingleton("asset-generation", new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(4),
     options.MaxConcurrentAssetGenerations));
+builder.Services.AddSingleton(new AssetGenerationConcurrencyLimiter(
+    options.MaxConcurrentAssetGenerationsPerAccount));
 builder.Services.AddSingleton<PrototypeRecordWriter>();
 builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
@@ -613,8 +618,15 @@ app.MapPost("/api/projects/{projectId}/asset-library/generate", async (
         return Results.BadRequest(new { error = "asset_unit_required" });
     }
 
-    var result = await library.GenerateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
-    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    try
+    {
+        var result = await library.GenerateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+        return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    }
+    catch (AssetGenerationConcurrencyLimitException ex)
+    {
+        return Results.Json(new { error = ex.FailureCode }, statusCode: StatusCodes.Status429TooManyRequests);
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/asset-library/select", async (

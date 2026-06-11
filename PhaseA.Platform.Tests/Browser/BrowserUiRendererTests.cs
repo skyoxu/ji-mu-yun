@@ -149,8 +149,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("data-index=\"${index}\"");
         html.Should().Contain("v2-attachment-chip");
         html.Should().Contain("v2-attachment-remove");
-        html.Should().Contain("v2-attach-button");
-        html.Should().Contain("color: var(--danger)");
+        html.Should().Contain("v2-file-button");
+        html.Should().Contain("attachLabel.className = \"ghost v2-file-button\"");
+        html.Should().Contain("\\u5bfc\\u5165\\u6587\\u4ef6");
         html.Should().Contain("attachLabel.title = \"导入 TXT 参考文件\"");
         html.Should().Contain("未导入 TXT 参考文件，只支持 TXT 文件导入。");
         html.Should().Contain("id=\"clearChatAttachments\" class=\"ghost hidden\"");
@@ -490,7 +491,6 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("syncChatHistory");
         html.Should().Contain("同步记录");
         html.Should().Contain("下载记录");
-        html.Should().Contain("导入");
         html.Should().Contain("history.scrollTop = history.scrollHeight");
         html.Should().Contain("\\u521b\\u5efa\\u7b56\\u5212\\u5927\\u7eb2");
         html.Should().Contain("服务器聊天记录已同步。");
