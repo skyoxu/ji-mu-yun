@@ -15,6 +15,11 @@ public sealed record PrototypeIterationPlanGoalResult(
     string AcceptanceHint,
     string Status);
 
+public sealed record PrototypeIterationPlanDeleteResult(
+    string Status,
+    string Summary,
+    int DeletedSessions);
+
 public sealed record PrototypeIterationPlanningAnalysisResult(
     string AnalysisSource,
     string AnalysisSummary,
@@ -41,3 +46,10 @@ public sealed record PrototypeIterationPlanStageTelemetryResult(
     int EstimatedPromptTokens,
     string? FailureCode,
     string? FailureCategory);
+
+internal sealed record PrototypeSkeletonRegenerationDecision(
+    bool RequiresPrototypeRecreation,
+    string? Reason)
+{
+    public static PrototypeSkeletonRegenerationDecision NotRequired() => new(false, null);
+}

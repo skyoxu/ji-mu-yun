@@ -2721,6 +2721,28 @@ public sealed class PhaseAMetadataStore
         return new ProjectIterationSessionDetails(session, goals, goalRuns, latestEvaluation);
     }
 
+    public async Task<int> DeleteProjectIterationSessionsAsync(
+        string projectId,
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            DELETE FROM project_iteration_sessions
+            WHERE project_id = $project_id
+              AND account_id = $account_id
+              AND source_kind <> 'repair_plan';
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$account_id", accountId);
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task UpdateProjectIterationGoalStatusAsync(
         string goalId,
         string status,

@@ -121,6 +121,19 @@ public sealed class PrototypeIterationPlanService
         }
 
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (previousIterationPlan is not null &&
+            IsIterationPlanStarted(previousIterationPlan) &&
+            !IsIterationPlanComplete(previousIterationPlan.Goals))
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "iteration_plan_update_blocked",
+                "\u5f53\u524d\u8fed\u4ee3\u8ba1\u5212\u5df2\u7ecf\u5f00\u59cb\u6267\u884c\uff0c\u4e0d\u5141\u8bb8\u66f4\u65b0\u8fed\u4ee3\u8ba1\u5212\u3002",
+                [],
+                null,
+                previousIterationPlan.LatestEvaluation);
+        }
+
         var regenerationGuidance = BuildPlanRegenerationGuidance(previousIterationPlan, promptMessage, sourceKind);
         var prototypeContract = _contractService.Read(project);
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
@@ -177,6 +190,27 @@ public sealed class PrototypeIterationPlanService
                 "",
                 "llm_failed",
                 "迭代计划生成需要 LLM 成功细化目标，但当前没有得到可用目标。",
+                [],
+                ToPlanningAnalysisResult(planningContext),
+                null);
+        }
+
+        var skeletonGuard = await EvaluatePrototypeSkeletonRegenerationNeedAsync(
+            project,
+            previousIterationPlan,
+            message,
+            goals,
+            planningContext,
+            model,
+            cancellationToken);
+        if (skeletonGuard.RequiresPrototypeRecreation)
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "prototype_recreation_required",
+                string.IsNullOrWhiteSpace(skeletonGuard.Reason)
+                    ? "\u6e38\u620f\u529f\u80fd\u8ba1\u5212\u6539\u52a8\u8fc7\u5927\uff0c\u9700\u8981\u65b0\u5efa\u9879\u76ee\u91cd\u65b0\u521b\u5efa\u6e38\u620f\u539f\u578b\u9aa8\u67b6\u3002"
+                    : skeletonGuard.Reason,
                 [],
                 ToPlanningAnalysisResult(planningContext),
                 null);
@@ -1289,6 +1323,37 @@ public sealed class PrototypeIterationPlanService
             TryReadPlanningAnalysisFromState(stateText));
     }
 
+    public async Task<PrototypeIterationPlanDeleteResult> DeleteAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Project not found.");
+        }
+
+        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (details is null)
+        {
+            _routeStateWriter.ClearIterationPlanState(project);
+            return new PrototypeIterationPlanDeleteResult("not_found", "\u5f53\u524d\u6ca1\u6709\u53ef\u5220\u9664\u7684\u8fed\u4ee3\u8ba1\u5212\u3002", 0);
+        }
+
+        if (IsIterationPlanComplete(details.Goals))
+        {
+            return new PrototypeIterationPlanDeleteResult("blocked", "\u8fed\u4ee3\u8ba1\u5212\u5df2\u5168\u90e8\u5b8c\u6210\uff0c\u4e0d\u53ef\u518d\u5220\u9664\u3002", 0);
+        }
+
+        var deleted = await _metadataStore.DeleteProjectIterationSessionsAsync(projectId, accountId, cancellationToken);
+        _routeStateWriter.ClearIterationPlanState(project);
+        return new PrototypeIterationPlanDeleteResult("deleted", "\u8fed\u4ee3\u8ba1\u5212\u5df2\u5220\u9664\uff0c\u72b6\u6001\u5df2\u91cd\u7f6e\u3002", deleted);
+    }
+
     public async Task<PrototypeIterationPlanEvaluationResult> EvaluateAsync(
         string accountId,
         string projectId,
@@ -1430,6 +1495,108 @@ public sealed class PrototypeIterationPlanService
             $"当前待执行目标“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
             "可以直接点击“执行下一目标”。",
             null));
+    }
+
+    private async Task<PrototypeSkeletonRegenerationDecision> EvaluatePrototypeSkeletonRegenerationNeedAsync(
+        ProjectSnapshot project,
+        ProjectIterationSessionDetails? previousIterationPlan,
+        string message,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> candidateGoals,
+        IterationPlanningContext planningContext,
+        string model,
+        CancellationToken cancellationToken)
+    {
+        if (previousIterationPlan is null || _llmRouteEngine is null || candidateGoals.Count == 0)
+        {
+            return PrototypeSkeletonRegenerationDecision.NotRequired();
+        }
+
+        var promptRoot = EnsureIterationPlanPromptWorkspace(project, "prototype-skeleton-regeneration-guard");
+        var previousGoals = previousIterationPlan.Goals
+            .OrderBy(goal => goal.GoalIndex)
+            .Select(goal => $"{goal.GoalIndex}. {goal.Title} - {goal.Description} [{goal.Status}]");
+        var newGoals = candidateGoals
+            .OrderBy(goal => goal.GoalIndex)
+            .Select(goal => $"{goal.GoalIndex}. {goal.Title} - {goal.Description}");
+        var prompt = $$"""
+            You are the Phase A iteration-plan safety guard.
+
+            Decide whether the newly requested iteration plan can continue from the existing playable prototype skeleton, or whether the gameplay direction changed so much that the user should create a new project and rebuild the prototype skeleton.
+
+            Return one JSON object only:
+            {
+              "requiresPrototypeRecreation": true,
+              "reason": "Chinese user-facing reason"
+            }
+
+            Use requiresPrototypeRecreation=true only when the requested plan changes the core genre, camera/control model, primary game loop, required scene topology, or engine-level skeleton beyond what can reasonably be achieved as iteration goals.
+            Use false for normal feature additions, UI polish, balance, content expansion, combat improvements, map additions, or second-round iteration on the same core loop.
+
+            Project:
+            - Game name: {{project.GameName}}
+            - Game type: {{project.GameTypeSource}}
+            - Latest prototype status: {{planningContext.LatestPrototypeStatus}}
+            - Planning summary: {{planningContext.AnalysisSummary}}
+
+            User update request:
+            {{message}}
+
+            Previous iteration plan:
+            {{string.Join("\n", previousGoals)}}
+
+            Candidate new iteration plan:
+            {{string.Join("\n", newGoals)}}
+            """;
+
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                promptRoot,
+                "prototype-skeleton-regeneration-guard",
+                model,
+                prompt,
+                PlanningCodexOptions,
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
+        if (!completion.Succeeded)
+        {
+            return PrototypeSkeletonRegenerationDecision.NotRequired();
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(completion.JsonObjectText ?? completion.AssistantMessage ?? "{}");
+            var root = document.RootElement;
+            var required = root.TryGetProperty("requiresPrototypeRecreation", out var requiredElement) &&
+                           requiredElement.ValueKind is JsonValueKind.True or JsonValueKind.False &&
+                           requiredElement.GetBoolean();
+            var reason = root.TryGetProperty("reason", out var reasonElement) && reasonElement.ValueKind == JsonValueKind.String
+                ? reasonElement.GetString()
+                : null;
+            return required
+                ? new PrototypeSkeletonRegenerationDecision(true, string.IsNullOrWhiteSpace(reason)
+                    ? "\u6e38\u620f\u529f\u80fd\u8ba1\u5212\u6539\u52a8\u8fc7\u5927\uff0c\u9700\u8981\u65b0\u5efa\u9879\u76ee\u91cd\u65b0\u521b\u5efa\u6e38\u620f\u539f\u578b\u9aa8\u67b6\u3002"
+                    : reason!.Trim())
+                : PrototypeSkeletonRegenerationDecision.NotRequired();
+        }
+        catch (JsonException)
+        {
+            return PrototypeSkeletonRegenerationDecision.NotRequired();
+        }
+    }
+
+    private static bool IsIterationPlanComplete(IReadOnlyList<ProjectIterationGoalSnapshot> goals)
+    {
+        return goals.Count > 0 && goals.All(goal =>
+            string.Equals(goal.Status, "completed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(goal.Status, "succeeded", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsIterationPlanStarted(ProjectIterationSessionDetails details)
+    {
+        return details.GoalRuns.Count > 0 ||
+               details.Session.CurrentGoalIndex > 0 ||
+               details.Goals.Any(goal => !string.Equals(goal.Status, "pending", StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task<PrototypeIterationPlanEvaluationResult> EvaluateRpgPlanWithRequiredModelAsync(

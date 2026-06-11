@@ -67,6 +67,12 @@ public sealed class PrototypeRouteStateWriter
         WriteState(project, Path.Combine("routes", "iteration-plan", "planning-analysis.json"), payload);
     }
 
+    public void ClearIterationPlanState(ProjectSnapshot project)
+    {
+        DeleteState(project, Path.Combine("routes", "iteration-plan", "latest.json"));
+        DeleteState(project, Path.Combine("routes", "iteration-plan", "planning-analysis.json"));
+    }
+
     public void WriteRepairPlanState(ProjectSnapshot project, object payload)
     {
         WriteState(project, Path.Combine("routes", "repair-plan", "latest.json"), payload);
@@ -209,6 +215,21 @@ public sealed class PrototypeRouteStateWriter
 
         var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath);
         return File.Exists(mirroredPath) ? File.ReadAllText(mirroredPath, Encoding.UTF8) : "";
+    }
+
+    private static void DeleteState(ProjectSnapshot project, string relativePath)
+    {
+        var path = Path.Combine(project.MetaPath, relativePath);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        var mirroredPath = Path.Combine(project.RepoPath, "meta", relativePath);
+        if (File.Exists(mirroredPath))
+        {
+            File.Delete(mirroredPath);
+        }
     }
 
     private static void WriteStateFile(string path, string serialized)

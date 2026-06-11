@@ -457,16 +457,7 @@ public sealed class BrowserUiRenderer
                     attachLabel.title = "导入 TXT 参考文件";
                   }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
-                  if (!$("v2CreateIterationPlanFromChat")) {
-                    const createPlanButton = document.createElement("button");
-                    createPlanButton.id = "v2CreateIterationPlanFromChat";
-                    createPlanButton.className = "ghost";
-                    createPlanButton.type = "button";
-                    createPlanButton.textContent = "创建新迭代计划";
-                    createPlanButton.onclick = v2CreateIterationPlanFromChat;
-                    controls.appendChild(createPlanButton);
-                  }
-                  [$("chatAttachmentFiles")?.closest("label"), $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("v2CreateIterationPlanFromChat"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("chatAttachmentFiles")?.closest("label"), $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
                   $("chatMessage").addEventListener("input", resizeChatComposer);
                   resizeChatComposer();
@@ -498,27 +489,7 @@ public sealed class BrowserUiRenderer
                   return v2IterationPlanExists() && v2IterationPlanCompleted() && v2PrototypeValidationPassedForPlanning() && !isGlobalBusy();
                 }
                 function v2RenderChatIterationPlanButtonState() {
-                  const button = $("v2CreateIterationPlanFromChat");
-                  if (!button) return;
-                  button.disabled = !v2CanCreateIterationPlanFromChat();
-                  button.title = !v2IterationPlanExists()
-                    ? "当前还没有迭代计划。"
-                    : !v2IterationPlanCompleted()
-                      ? "请先完成当前迭代计划。"
-                      : !v2PrototypeValidationPassedForPlanning()
-                        ? "请先完成原型验收。"
-                        : "";
-                }
-                async function v2CreateIterationPlanFromChat() {
-                  if (!guardGlobalAction()) return;
-                  if (!v2CanCreateIterationPlanFromChat()) {
-                    out("需要满足：已有迭代计划、当前迭代计划已完成、原型验收通过。");
-                    return;
-                  }
-                  const message = $("chatMessage").value.trim();
-                  if (!message) return out("请先在聊天输入框填写新的迭代目标。");
-                  await submitIterationPlanFromFeedback(message, "正在根据聊天内容创建新的迭代计划...", "manual_feedback");
-                  v2RenderChatIterationPlanButtonState();
+                  return;
                 }
                 function v2PrototypeStatus() {
                   const text = $("prototypeProgress")?.textContent || "";
@@ -721,8 +692,8 @@ public sealed class BrowserUiRenderer
                 };
                 const v2OriginalSubmitIterationPlanFromFeedback = submitIterationPlanFromFeedback;
                 submitIterationPlanFromFeedback = async function(message, busyText, sourceKind = "manual_feedback") {
-                  await v2OriginalSubmitIterationPlanFromFeedback(message, busyText, sourceKind);
-                  if (state.iterationPlan?.session) {
+                  const result = await v2OriginalSubmitIterationPlanFromFeedback(message, busyText, sourceKind);
+                  if (result?.status === "ready" && state.iterationPlan?.session) {
                     v2SetPrototypeValidationInvalidated(true);
                     setFormalFeedbackAvailability(false);
                   }
@@ -1054,6 +1025,22 @@ public sealed class BrowserUiRenderer
                   </section>
                 </div>
               </div>
+              <div id="iterationPlanUpdateModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="iterationPlanUpdateTitle">
+                <div class="modal-card modal-card-large">
+                  <section class="stack">
+                    <h2 id="iterationPlanUpdateTitle">重新生成迭代计划</h2>
+                    <div id="iterationPlanUpdateEvaluation" class="card muted">尚未评估当前迭代计划。</div>
+                    <label>补充要求
+                      <textarea id="iterationPlanUpdateInput" rows="1" placeholder="输入本次更新迭代计划的补充要求。"></textarea>
+                    </label>
+                    <div class="split-actions">
+                      <button id="confirmIterationPlanUpdate" class="secondary" data-global-action="true">更新迭代计划</button>
+                      <button id="closeIterationPlanUpdateModal" class="ghost" type="button">关闭</button>
+                    </div>
+                    <p id="iterationPlanUpdateHint" class="muted"></p>
+                  </section>
+                </div>
+              </div>
               <main>
                 <section id="sessionPanel" class="stack login-shell">
                   <h2>会话</h2>
@@ -1170,6 +1157,7 @@ public sealed class BrowserUiRenderer
                     <p class="muted">推荐流程：先把较大的优化目标拆成 3-7 个小目标，再逐个执行。每次只推进一个目标，完成后停下，由你决定是否继续。</p>
                     <button id="createIterationPlan" class="ghost" data-global-action="true">生成迭代计划</button>
                     <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前迭代计划</button>
+                    <button id="deleteIterationPlan" class="ghost" data-global-action="true">删除迭代计划</button>
                     <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一目标</button>
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
                     <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
@@ -1210,7 +1198,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", gddOutlineReady: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1580,6 +1568,8 @@ public sealed class BrowserUiRenderer
                   $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
                     $("createIterationPlan").textContent = "生成新的迭代计划";
+                    $("deleteIterationPlan").classList.add("hidden");
+                    $("deleteIterationPlan").disabled = true;
                     $("evaluateIterationPlan").disabled = true;
                     $("evaluateIterationPlan").textContent = "请先生成迭代计划";
                     $("evaluateIterationPlanFromChat").disabled = true;
@@ -1596,7 +1586,9 @@ public sealed class BrowserUiRenderer
                   const evaluationDecision = currentIterationPlanDecision();
                   const shouldRefinePlan = evaluationDecision === "should_refine_plan";
                   const blockedByCurrentGoal = evaluationDecision === "blocked_by_current_goal" || evaluationDecision === "llm_failed";
-                  const canCreateNewPlan = (!hasPending && !hasNeedsFix) || shouldRefinePlan;
+                  const planComplete = isIterationPlanComplete();
+                  const planStarted = isIterationPlanStarted();
+                  const canUpdatePlan = !planStarted;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
                     <strong>${escapeHtml(session.status || "ready")}</strong>
@@ -1609,8 +1601,10 @@ public sealed class BrowserUiRenderer
                       ? `<p class="muted">字段判断：${escapeHtml(planningAnalysis.fieldCoverage.map(item => `${item.field}:${item.status}${item.missingReason ? `(${item.missingReason})` : item.evidence ? `(${item.evidence})` : ""}`).join(" · "))}</p>`
                       : ""}
                   `;
-                  $("createIterationPlan").disabled = !canCreateNewPlan || blockedByCurrentGoal || isGlobalBusy();
-                  $("createIterationPlan").textContent = shouldRefinePlan ? "按评估重拆迭代计划" : "根据评估更新迭代计划";
+                  $("createIterationPlan").disabled = planComplete ? isGlobalBusy() : (!canUpdatePlan || blockedByCurrentGoal || isGlobalBusy());
+                  $("createIterationPlan").textContent = planComplete ? "创建新的迭代计划" : "重新生成迭代计划";
+                  $("deleteIterationPlan").classList.remove("hidden");
+                  $("deleteIterationPlan").disabled = planComplete || isGlobalBusy();
                   $("evaluateIterationPlan").disabled = isGlobalBusy();
                   $("evaluateIterationPlan").textContent = "评估当前迭代计划";
                   $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
@@ -1658,6 +1652,18 @@ public sealed class BrowserUiRenderer
                   return iterationPlanGoals().some(goal => ["pending", "needs_fix", "failed", "running"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
 
+                function isIterationPlanComplete() {
+                  const goals = iterationPlanGoals();
+                  return goals.length > 0 && goals.every(goal => ["completed", "succeeded"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+
+                function isIterationPlanStarted() {
+                  const goals = iterationPlanGoals();
+                  const hasGoalRun = Array.isArray(state.iterationPlan?.goalRuns) && state.iterationPlan.goalRuns.length > 0;
+                  const currentIndex = Number(state.iterationPlan?.session?.currentGoalIndex || 0);
+                  return hasGoalRun || currentIndex > 0 || goals.some(goal => String(goal.status || "").trim().toLowerCase() !== "pending");
+                }
+
                 function currentNeedsFixRouteGoal() {
                   const goals = iterationPlanGoals();
                   if (!goals.length) return null;
@@ -1698,7 +1704,7 @@ public sealed class BrowserUiRenderer
                   const actionHint = decision === "llm_failed"
                     ? "LLM 调用失败，需先修复 LLM 后再继续；系统不会用本地规则替代评估。"
                     : decision === "should_refine_plan"
-                    ? "推荐先点击“按评估重拆迭代计划”，不要直接执行下一目标。"
+                    ? "推荐先点击“重新生成迭代计划”，不要直接执行下一目标。"
                     : decision === "ready_to_execute"
                       ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
                       : "推荐先处理当前阻塞项，再决定是否继续。";
@@ -1710,22 +1716,81 @@ public sealed class BrowserUiRenderer
                     ${evaluation.suggestedAction ? `<p class="muted">建议动作：${escapeHtml(evaluation.suggestedAction)}</p>` : ""}
                     <p class="muted">页面建议：${escapeHtml(actionHint)}</p>
                     ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议重拆提示词：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
-                    ${decision === "should_refine_plan" && evaluation.suggestedPromptForRegeneration ? `<button id="refineIterationPlanFromEvaluation" class="secondary" data-global-action="true">按评估重拆迭代计划</button>` : ""}
                   `;
-                  const refineButton = $("refineIterationPlanFromEvaluation");
-                  if (refineButton) {
-                    refineButton.disabled = isGlobalBusy();
-                    refineButton.onclick = async () => {
-                      const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
-                      if (!evaluationSuggestion) return out("当前没有可用于重拆计划的建议。");
-                      await submitIterationPlanFromFeedback(evaluationSuggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
-                    };
+                }
+
+                function autoGrowTextarea(textarea) {
+                  if (!textarea) return;
+                  textarea.style.height = "auto";
+                  textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 44), 220)}px`;
+                }
+
+                function openIterationPlanUpdateModal(mode, initialValue = "") {
+                  state.iterationPlanUpdateMode = mode;
+                  const isNewPlan = mode === "new";
+                  $("iterationPlanUpdateTitle").textContent = isNewPlan ? "创建新的迭代计划" : "重新生成迭代计划";
+                  $("iterationPlanUpdateEvaluation").className = isNewPlan ? "card muted hidden" : "card";
+                  $("iterationPlanUpdateEvaluation").innerHTML = isNewPlan
+                    ? ""
+                    : iterationPlanEvaluationHtml(state.iterationPlanEvaluation);
+                  $("iterationPlanUpdateInput").value = initialValue || "";
+                  $("iterationPlanUpdateInput").placeholder = isNewPlan
+                    ? "输入第二轮或新一轮迭代目标。"
+                    : "输入本次更新计划的补充要求；留空时会优先使用评估结果中的重拆建议。";
+                  $("confirmIterationPlanUpdate").textContent = isNewPlan ? "创建新的迭代计划" : "更新迭代计划";
+                  $("iterationPlanUpdateHint").textContent = isNewPlan
+                    ? "当前迭代计划已完成，将基于这里输入的新目标创建下一轮计划。"
+                    : "更新时会优先参考输入框信息，其次参考当前评估结果。";
+                  setModalVisible("iterationPlanUpdateModal", true);
+                  autoGrowTextarea($("iterationPlanUpdateInput"));
+                  $("iterationPlanUpdateInput").focus();
+                }
+
+                function iterationPlanEvaluationHtml(evaluation) {
+                  if (!evaluation) return "<p class='muted'>尚未评估当前迭代计划。可以先关闭弹窗并点击“评估当前迭代计划”。</p>";
+                  return `
+                    <strong>${escapeHtml(evaluation.decision || "unknown")}</strong>
+                    <p>${escapeHtml(evaluation.summary || "")}</p>
+                    <p class="muted">${escapeHtml(evaluation.reason || "")}</p>
+                    <p class="muted">${escapeHtml(evaluation.suggestedAction || "")}</p>
+                    ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
+                  `;
+                }
+
+                async function confirmIterationPlanUpdate() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const mode = state.iterationPlanUpdateMode || "update";
+                  if (mode !== "new" && isIterationPlanStarted()) {
+                    out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                    return;
                   }
+                  const typedMessage = $("iterationPlanUpdateInput").value.trim();
+                  const evaluationMessage = currentIterationPlanRegenerationPrompt()
+                    || state.iterationPlanEvaluation?.suggestedAction
+                    || state.iterationPlanEvaluation?.reason
+                    || "";
+                  const message = typedMessage || evaluationMessage || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
+                  const sourceKind = mode === "new" ? "new_iteration_plan" : typedMessage ? "iteration_plan_update" : "completion_suggestion";
+                  setModalVisible("iterationPlanUpdateModal", false);
+                  await submitIterationPlanFromFeedback(message, mode === "new" ? "正在创建新的迭代计划..." : "正在更新迭代计划...", sourceKind);
                 }
 
                 async function createIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  if (hasAnyIterationPlan()) {
+                    if (isIterationPlanComplete()) {
+                      openIterationPlanUpdateModal("new");
+                      return;
+                    }
+                    if (isIterationPlanStarted()) {
+                      out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                      return;
+                    }
+                    openIterationPlanUpdateModal("update");
+                    return;
+                  }
                   const typedMessage = $("chatMessage").value.trim();
                   const message = typedMessage || currentIterationPlanRegenerationPrompt() || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = typedMessage ? "manual_feedback" : "completion_suggestion";
@@ -1836,11 +1901,11 @@ public sealed class BrowserUiRenderer
                     await loadServerChatHistoryForProject(state.projectId);
                     if (result.status !== "ready") {
                       state.iterationPlanEvaluation = null;
-                      state.iterationPlanFailure = summary || "迭代计划生成失败。";
-                      renderIterationPlan();
-                      out(result);
-                      return;
-                    }
+                    state.iterationPlanFailure = summary || "迭代计划生成失败。";
+                    renderIterationPlan();
+                    out(result);
+                    return result;
+                  }
                     state.iterationPlan = {
                       session: {
                         sessionId: result.sessionId,
@@ -1851,18 +1916,42 @@ public sealed class BrowserUiRenderer
                       },
                       goals: result.goals || [],
                       goalRuns: [],
-                      latestEvaluation: null
+                      latestEvaluation: result.latestEvaluation || null
                     };
-                    state.iterationPlanEvaluation = null;
+                    state.iterationPlanEvaluation = result.latestEvaluation || null;
                     state.iterationPlanFailure = "";
                     renderIterationPlan();
                     out(result);
+                    return result;
                   } catch (error) {
                     showError(error);
+                    return null;
                   } finally {
                     clearChatAttachments();
                     setLocalBusy(false);
                     await loadIterationPlan();
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function deleteIterationPlan() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (!hasAnyIterationPlan()) return out("当前没有可删除的迭代计划。");
+                  if (isIterationPlanComplete()) return out("迭代计划已经全部完成，不可以删除。");
+                  setLocalBusy(true, "正在删除迭代计划...");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/iteration-plan`, { method: "DELETE" });
+                    state.iterationPlan = null;
+                    state.iterationPlanEvaluation = null;
+                    state.iterationPlanFailure = "";
+                    renderIterationPlan();
+                    out(result.summary || "迭代计划已删除。");
+                    await loadIterationPlan();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
                     await refreshActiveRun();
                   }
                 }
@@ -2943,7 +3032,8 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (hasPendingPlan && currentIterationPlanDecision() === "should_refine_plan") {
-                    await submitIterationPlanFromFeedback(suggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
+                    if (isIterationPlanStarted()) return out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                    openIterationPlanUpdateModal("update", suggestion);
                     return;
                   }
                   if (hasPendingPlan) {
@@ -3571,7 +3661,7 @@ public sealed class BrowserUiRenderer
                     return { label: "LLM 调用失败，先修复", action: "", source: "当前计划评估", disabled: true };
                   }
                   if (decision === "should_refine_plan") {
-                    return { label: "按评估重拆迭代计划", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() };
+                    return { label: "重新生成迭代计划", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() || isIterationPlanStarted() };
                   }
                   if (hasNeedsFix || hasPending) {
                     return { label: "继续评估当前计划", action: "evaluate", source: "目标执行结果", disabled: isGlobalBusy() };
@@ -3598,9 +3688,10 @@ public sealed class BrowserUiRenderer
                   const state = feedbackPrimaryActionState();
                   if (!state.action) return out("当前没有可执行的推荐动作。");
                   if (state.action === "refine") {
+                    if (isIterationPlanStarted()) return out("当前迭代计划已经开始执行，不允许更新迭代计划。");
                     const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
                     if (evaluationSuggestion) {
-                      await submitIterationPlanFromFeedback(evaluationSuggestion, "正在按评估重拆迭代计划...", "completion_suggestion");
+                      openIterationPlanUpdateModal("update", evaluationSuggestion);
                       return;
                     }
                     const evaluationMessage = state.chatHistory.filter(message => message.role === "assistant" && message.kind === "iteration-plan-evaluation" && !message.continueConsumed).slice(-1)[0];
@@ -3609,7 +3700,7 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     if (!state.nextSuggestedFeedback) return out("当前没有可用于重拆计划的建议。");
-                    await submitIterationPlanFromFeedback(state.nextSuggestedFeedback, "正在按评估重拆迭代计划...", "completion_suggestion");
+                    openIterationPlanUpdateModal("update", state.nextSuggestedFeedback);
                     return;
                   }
                   if (state.action === "execute") {
@@ -4439,8 +4530,12 @@ public sealed class BrowserUiRenderer
                 $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
+                $("deleteIterationPlan").onclick = deleteIterationPlan;
                 $("evaluateIterationPlan").onclick = () => evaluateIterationPlan(false);
                 $("executeIterationGoal").onclick = executeIterationGoal;
+                $("confirmIterationPlanUpdate").onclick = confirmIterationPlanUpdate;
+                $("closeIterationPlanUpdateModal").onclick = () => setModalVisible("iterationPlanUpdateModal", false);
+                $("iterationPlanUpdateInput").addEventListener("input", event => autoGrowTextarea(event.target));
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;

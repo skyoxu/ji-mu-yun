@@ -1195,6 +1195,111 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Goals[^1].AcceptanceHint.Should().Contain("project-specific contract fields");
     }
 
+    [Fact]
+    public async Task DeleteAsync_ShouldRemoveUnfinishedIterationPlansAndClearRouteState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var writer = new PrototypeRouteStateWriter();
+        var service = new PrototypeIterationPlanService(store, writer);
+        var created = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Add a small map polish step."));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+
+        created.Status.Should().Be("ready");
+        writer.ReadLatestIterationPlanState(project!).Should().NotBeNullOrWhiteSpace();
+
+        var result = await service.DeleteAsync(accountId, projectId);
+
+        result.Status.Should().Be("deleted");
+        result.DeletedSessions.Should().BeGreaterThan(0);
+        (await service.GetLatestAsync(accountId, projectId)).Should().BeNull();
+        writer.ReadLatestIterationPlanState(project!).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldBlock_WhenIterationPlanIsComplete()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var service = new PrototypeIterationPlanService(store);
+        await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Add a small map polish step."));
+        var latest = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in latest!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+
+        var result = await service.DeleteAsync(accountId, projectId);
+
+        result.Status.Should().Be("blocked");
+        (await service.GetLatestAsync(accountId, projectId)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldBlockUpdate_WhenIterationPlanHasStarted()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var service = new PrototypeIterationPlanService(store);
+        var first = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Add a small map polish step."));
+        var latestBeforeUpdate = await store.GetLatestProjectIterationSessionAsync(projectId);
+        await store.UpdateProjectIterationGoalStatusAsync(
+            latestBeforeUpdate!.Goals[0].GoalId,
+            "completed",
+            "done",
+            DateTimeOffset.UtcNow.ToString("O"));
+
+        var second = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Regenerate the remaining plan."));
+        var latestAfterUpdate = await service.GetLatestAsync(accountId, projectId);
+
+        first.Status.Should().Be("ready");
+        second.Status.Should().Be("iteration_plan_update_blocked");
+        second.Goals.Should().BeEmpty();
+        latestAfterUpdate!.Session.SessionId.Should().Be(first.SessionId);
+        latestAfterUpdate.Goals.Should().Contain(goal => goal.Status == "completed");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldNotPersistPlan_WhenSkeletonRecreationGuardRequiresNewPrototype()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SkeletonRecreationGuardCodexClient());
+        var first = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Improve the current RPG first loop."));
+
+        var second = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Turn this into a side-scrolling action platformer with physics jumps."));
+        var latest = await service.GetLatestAsync(accountId, projectId);
+
+        first.Status.Should().Be("ready");
+        second.Status.Should().Be("prototype_recreation_required");
+        second.Goals.Should().BeEmpty();
+        latest!.Session.SessionId.Should().Be(first.SessionId);
+    }
+
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource = "Action")
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
@@ -1739,6 +1844,103 @@ public sealed class PrototypeIterationPlanServiceTests
                 }
                 """;
             return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
+        }
+    }
+
+    private sealed class SkeletonRecreationGuardCodexClient : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(
+            string projectRoot,
+            string model,
+            string prompt,
+            CodexChatClientOptions? options = null,
+            string? billingApiKeyName = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (prompt.Contains("Phase A iteration-plan safety guard", StringComparison.OrdinalIgnoreCase))
+            {
+                const string guard =
+                    """
+                    {
+                      "requiresPrototypeRecreation": true,
+                      "reason": "游戏功能计划改动过大，需要新建项目重新创建游戏原型骨架。"
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, guard, null, 0, "", ""));
+            }
+
+            if (options?.OutputSchemaPath?.Contains("planning-analysis", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                const string analysis =
+                    """
+                    {
+                      "analysisSummary": "The RPG first loop can be planned.",
+                      "fieldCoverage": [
+                        { "field": "core_loop", "status": "present", "evidence": "RPG first loop", "missingReason": null }
+                      ]
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, analysis, null, 0, "", ""));
+            }
+
+            if (options?.OutputSchemaPath?.Contains("goal-plan", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                const string goals =
+                    """
+                    {
+                      "goals": [
+                        {
+                          "title": "JRPG First Loop: field navigation and stable control",
+                          "description": "Start Adventure opens a visible MapScene with stable movement and map/player assets.",
+                          "acceptanceHint": "Visible MapScene, stable movement, and assets pass."
+                        },
+                        {
+                          "title": "JRPG First Loop: conflict entry trigger",
+                          "description": "Validate movement-driven encounter trigger, visible encounter progress, and guaranteed encounter behavior.",
+                          "acceptanceHint": "Encounter trigger, encounter progress, and guaranteed encounter behavior pass."
+                        },
+                        {
+                          "title": "JRPG First Loop: battle or challenge resolution",
+                          "description": "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.",
+                          "acceptanceHint": "BattleScene settlement and enemy asset usage pass."
+                        },
+                        {
+                          "title": "JRPG First Loop: growth, reward, or consequence feedback",
+                          "description": "Validate reward 3-choice readability and player understanding.",
+                          "acceptanceHint": "Reward 3-choice readability passes."
+                        },
+                        {
+                          "title": "JRPG First Loop: return or continue loop",
+                          "description": "Validate reward state change and return-to-map.",
+                          "acceptanceHint": "Reward application and return-to-map pass."
+                        },
+                        {
+                          "title": "JRPG First Loop: party or character state readability",
+                          "description": "Show and validate win after 15 battles, any battle loss means game loss, and encounter rules clearly.",
+                          "acceptanceHint": "Win/fail and encounter rule feedback pass."
+                        },
+                        {
+                          "title": "JRPG First Loop: final first-loop acceptance",
+                          "description": "Run final acceptance across Start Adventure visible map, encounter, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.",
+                          "acceptanceHint": "Final acceptance, explicit rule coverage, project contract, and asset usage pass."
+                        }
+                      ]
+                    }
+                    """;
+                return Task.FromResult(new CodexChatClientResult(true, goals, null, 0, "", ""));
+            }
+
+            const string evaluation =
+                """
+                {
+                  "decision": "ready_to_execute",
+                  "summary": "The plan is usable.",
+                  "reason": "The goals are bounded.",
+                  "suggestedAction": "Execute the next goal.",
+                  "suggestedPromptForRegeneration": null
+                }
+                """;
+            return Task.FromResult(new CodexChatClientResult(true, evaluation, null, 0, "", ""));
         }
     }
 

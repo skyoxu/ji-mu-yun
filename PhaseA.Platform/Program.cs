@@ -1215,7 +1215,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
-        if (result.Status is "ready" or "llm_failed" or "custom_route_required")
+        if (result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked")
         {
             if (!string.IsNullOrWhiteSpace(request.Message))
             {
@@ -1227,7 +1227,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
                 : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
             await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
         }
-        return result.Status is "ready" or "llm_failed" or "custom_route_required" ? Results.Ok(result) : Results.BadRequest(result);
+        return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {
@@ -1243,6 +1243,23 @@ app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
 {
     var result = await iterationPlans.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
+});
+
+app.MapDelete("/api/projects/{projectId}/iteration-plan", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await iterationPlans.DeleteAsync(CurrentAccountId(context), projectId, cancellationToken);
+        return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
