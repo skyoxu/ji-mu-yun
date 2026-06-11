@@ -136,8 +136,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--prompt", default="", help="Inline prompt text.")
     parser.add_argument("--prompt-file", default="", help="UTF-8 prompt file path.")
-    parser.add_argument("--out", required=True, help="Output image path.")
+    parser.add_argument("--out", required=True, help="Output image path. With --n > 1, numbered files are written next to this path.")
     parser.add_argument("--manifest-out", default="", help="Optional metadata json output path.")
+    parser.add_argument("--reference-image", default="", help="Optional reference image path for image edit mode.")
+    parser.add_argument("--n", type=int, default=1, help="Number of images to request, 1-4.")
     parser.add_argument("--model", default="")
     parser.add_argument("--group", default="", help="Optional provider-specific routing group passed via extra_body.")
     parser.add_argument("--size", default=DEFAULT_SIZE)
@@ -176,10 +178,15 @@ def main() -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     model = _resolve_model(args)
     group = _resolve_group(args)
+    count = max(1, min(int(args.n or 1), 4))
+    reference_image_path = Path(str(args.reference_image or "").strip()) if str(args.reference_image or "").strip() else None
+    if reference_image_path is not None and not reference_image_path.is_file():
+        _die(f"Reference image not found: {reference_image_path}")
 
     request_payload: dict[str, Any] = {
         "model": model,
         "prompt": prompt,
+        "n": count,
         "size": args.size,
         "quality": args.quality,
         "output_format": args.output_format,
@@ -196,6 +203,8 @@ def main() -> int:
     metadata: dict[str, Any] = {
         "base_url": _resolve_base_url(args),
         "request": request_payload,
+        "mode": "edit" if reference_image_path else "generation",
+        "reference_image_name": reference_image_path.name if reference_image_path else "",
         "extra_body": extra_body or {},
         "out": str(out_path),
         "api_key_env": str(args.api_key_env or DEFAULT_API_KEY_ENV),
@@ -215,27 +224,42 @@ def main() -> int:
         timeout=float(args.timeout),
     )
 
-    response = client.images.generate(
-        **request_payload,
-        extra_body=extra_body,
-    )
+    if reference_image_path:
+        with reference_image_path.open("rb") as image_file:
+            response = client.images.edit(
+                image=image_file,
+                **request_payload,
+                extra_body=extra_body,
+            )
+    else:
+        response = client.images.generate(
+            **request_payload,
+            extra_body=extra_body,
+        )
     data = getattr(response, "data", None)
     if not data:
         _die("Image response did not include any data entries.")
 
-    first_item = data[0]
-    if args.response_format == "url":
-        url = getattr(first_item, "url", None)
-        if not url and isinstance(first_item, dict):
-            url = first_item.get("url")
-        if not url:
-            _die("Image response did not contain url payload.")
-        image_bytes = _download_image(url)
-        metadata["result_url"] = url
-    else:
-        image_bytes = _decode_image_payload(first_item)
-    out_path.write_bytes(image_bytes)
+    written_paths: list[str] = []
+    result_urls: list[str] = []
+    for index, item in enumerate(data):
+        target_path = out_path if len(data) == 1 else out_path.with_name(f"{out_path.stem}-{index + 1:02d}{out_path.suffix}")
+        if args.response_format == "url":
+            url = getattr(item, "url", None)
+            if not url and isinstance(item, dict):
+                url = item.get("url")
+            if not url:
+                _die("Image response did not contain url payload.")
+            image_bytes = _download_image(url)
+            result_urls.append(url)
+        else:
+            image_bytes = _decode_image_payload(item)
+        target_path.write_bytes(image_bytes)
+        written_paths.append(str(target_path))
 
+    metadata["written_files"] = written_paths
+    if result_urls:
+        metadata["result_urls"] = result_urls
     metadata["result_count"] = len(data)
     if args.manifest_out:
         _write_manifest(Path(args.manifest_out), metadata)

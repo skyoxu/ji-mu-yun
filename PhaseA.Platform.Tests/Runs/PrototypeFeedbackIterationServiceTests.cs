@@ -24,7 +24,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeFeedbackIterationService(store, options, runner);
 
-        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4", "map-making-master"));
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Make combat feedback stronger.", "gpt-5.4", "game-design-master"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -37,7 +37,7 @@ public sealed class PrototypeFeedbackIterationServiceTests
         runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
         runner.Commands[0].Arguments.Should().Contain(["-c", "model_reasoning_effort=\"high\""]);
         runner.Commands[0].Arguments.Last().Should().Be("-");
-        runner.Commands[0].StandardInput.Should().Contain("地图制作大师").And.Contain("$generate2dmap");
+        runner.Commands[0].StandardInput.Should().Contain("bmad-agent-game-designer");
         runner.Commands[0].Environment["PHASEA_CODEX_REASONING_EFFORT"].Should().Be("high");
         run!.RunType.Should().Be("prototype-feedback-iteration");
         run.Status.Should().Be("completed");

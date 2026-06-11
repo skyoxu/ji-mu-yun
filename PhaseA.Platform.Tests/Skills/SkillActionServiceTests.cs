@@ -48,22 +48,13 @@ public sealed class SkillActionServiceTests
     {
         var actions = new SkillActionCatalog().ListAllowed("user");
 
-        actions.Select(a => a.ActionId).Should().Equal(
-            "game-design-master",
-            "map-making-master",
-            "character-making-master");
-        actions.Select(a => a.Label).Should().Equal(
-            "\u6e38\u620f\u7b56\u5212\u5927\u5e08",
-            "\u5730\u56fe\u5236\u4f5c\u5927\u5e08",
-            "\u89d2\u8272\u5236\u4f5c\u5927\u5e08");
-        actions.Select(a => a.SkillName).Should().Equal(
-            "bmad-agent-game-designer",
-            "generate2dmap",
-            "generate2dsprite");
+        actions.Select(a => a.ActionId).Should().Equal("game-design-master");
+        actions.Select(a => a.Label).Should().Equal("\u6e38\u620f\u7b56\u5212\u5927\u5e08");
+        actions.Select(a => a.SkillName).Should().Equal("bmad-agent-game-designer");
         actions.Select(a => a.ActionId).Should().NotContain("prototype-playable-advice");
+        actions.Select(a => a.ActionId).Should().NotContain("map-making-master");
+        actions.Select(a => a.ActionId).Should().NotContain("character-making-master");
         actions.Single(a => a.ActionId == "game-design-master").ExecutionMode.Should().Be("codex-read-only");
-        actions.Single(a => a.ActionId == "map-making-master").ExecutionMode.Should().Be("codex-workspace-write");
-        actions.Single(a => a.ActionId == "character-making-master").ExecutionMode.Should().Be("codex-workspace-write");
     }
 
     [Fact]
@@ -113,7 +104,7 @@ public sealed class SkillActionServiceTests
     }
 
     [Fact]
-    public async Task RunAsync_WorkspaceWriteAction_ReturnsBusy_WhenProjectRunnerLockIsHeld()
+    public async Task RunAsync_RejectsRemovedImageActions()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -123,55 +114,15 @@ public sealed class SkillActionServiceTests
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
-        var project = await store.GetProjectSnapshotAsync(projectId);
-        var heldRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "held-run");
-        (await store.TryAcquireRunnerLockAsync(projectId, heldRunId)).Should().BeTrue();
-        var runner = new FakeHostedProcessRunner("should not run");
+        var runner = new FakeHostedProcessRunner("asset skill output");
         var service = Service(store, options, runner);
 
-        var result = await service.RunAsync(accountId, projectId, "map-making-master", new SkillActionRunRequest("Generate map."));
+        var mapResult = await service.RunAsync(accountId, projectId, "map-making-master", new SkillActionRunRequest("Generate map."));
+        var spriteResult = await service.RunAsync(accountId, projectId, "character-making-master", new SkillActionRunRequest("Generate sprite."));
 
-        result.Status.Should().Be("project_busy");
-        result.FailureCode.Should().Be("project_busy");
+        mapResult.Status.Should().Be("skill_action_not_allowed");
+        spriteResult.Status.Should().Be("skill_action_not_allowed");
         runner.Commands.Should().BeEmpty();
-        await store.ReleaseRunnerLockAsync(projectId, heldRunId);
-    }
-
-    [Fact]
-    public async Task RunAsync_AssetGenerationLane_UsesSeparateQueue()
-    {
-        using var database = TempSqliteDatabase.Create();
-        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
-        using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
-        var store = new PhaseAMetadataStore(database.ConnectionString, options);
-        var accountId = await store.EnsureSingleAdminAsync();
-        var projectId = await CreateProjectAsync(store, options, accountId);
-        var project = await store.GetProjectSnapshotAsync(projectId);
-        var runner = new FakeHostedProcessRunner("asset skill output");
-        var defaultQueue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(8), maxConcurrentRuns: 1);
-        var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), maxConcurrentRuns: 1);
-        var blocker = await defaultQueue.EnterAsync("blocking-run", accountId, projectId, "other-run");
-        var service = new SkillActionService(
-            store,
-            options,
-            new SkillActionCatalog(),
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            heavyRunnerQueue: defaultQueue,
-            assetRunnerQueue: assetQueue);
-
-        var result = await service.RunAsync(
-            accountId,
-            projectId,
-            "map-making-master",
-            new SkillActionRunRequest("Generate map.", "asset-generation"));
-
-        result.Status.Should().Be("succeeded");
-        runner.Commands.Should().ContainSingle();
-        runner.Commands[0].Arguments.Should().Contain(["-c", "model_reasoning_effort=\"medium\""]);
-        await blocker.DisposeAsync();
     }
 
     private static SkillActionService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, IHostedProcessRunner runner)

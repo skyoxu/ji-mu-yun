@@ -1042,7 +1042,12 @@ public sealed class ArtifactReadbackServiceTests
                 "res://Game.Godot/Prototypes/dq-rpg/Assets/Map/map.png",
                 "map_or_tile_asset",
                 "field map background",
-                "needs stronger map art")));
+                "needs stronger map art"),
+            "image-to-image",
+            2,
+            "reference.png",
+            Convert.ToBase64String(MinimalPng(16, 16)),
+            "image/png"));
 
         generated!.ActionId.Should().Be("map-making-master");
         generated.Entry.SkillName.Should().Be("generate2dmap");
@@ -1053,11 +1058,13 @@ public sealed class ArtifactReadbackServiceTests
         routeEngine.LastPrompt.Should().Contain("RpgMapAsset");
         generated.Library.Units.Should().ContainSingle(unit =>
             unit.InstanceName == "RpgMapAsset" &&
-            unit.Entries.Count == 1);
+            unit.Entries.Count == 2);
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].FileName.Should().Be(options.PythonCommand);
         runner.Commands[0].Arguments.Should().Contain(arg => arg.EndsWith("aiartmirror_image_cli.py", StringComparison.Ordinal));
         runner.Commands[0].Arguments.Should().Contain(["--quality", "low"]);
+        runner.Commands[0].Arguments.Should().Contain(["--n", "2"]);
+        runner.Commands[0].Arguments.Should().Contain("--reference-image");
         runner.Commands[0].Arguments.Should().NotContain("exec");
         generated.Entry.Prompt.Should().Contain("make it like a 16-bit overworld");
         generated.Entry.Prompt.Should().Contain("Prompt isolation rules:");
@@ -1069,7 +1076,8 @@ public sealed class ArtifactReadbackServiceTests
             generated.Entry.EntryId));
 
         selected!.Units.Single().SelectedEntryId.Should().Be(generated.Entry.EntryId);
-        selected.Units.Single().Entries.Single().Selected.Should().BeTrue();
+        selected.Units.Single().Entries.Should().ContainSingle(entry => entry.Selected);
+        selected.Units.Single().Entries.Single(entry => entry.Selected).EntryId.Should().Be(generated.Entry.EntryId);
     }
 
     [Fact]
@@ -1138,6 +1146,43 @@ public sealed class ArtifactReadbackServiceTests
         generated.Entry.ArtifactPaths.Should().NotContain(path => path.Contains("asset-spec.md", StringComparison.Ordinal));
         generated.Library.Units.Should().BeEmpty();
         library!.Units.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_RejectsInvalidReferenceImageContentType()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var runner = new FakeHostedProcessRunner("asset generation output");
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
+
+        var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
+            "make a red slime",
+            new ProjectAssetUnitRequest(
+                null,
+                "EnemyToken",
+                "ColorRect",
+                "res://Game.Godot/Prototypes/dq-rpg/BattleScene.tscn",
+                "",
+                "enemy_sprite",
+                "battle enemy sprite",
+                "placeholder needs art"),
+            "image-to-image",
+            1,
+            "reference.png",
+            Convert.ToBase64String(MinimalPng(16, 16)),
+            "text/plain"));
+
+        generated!.Status.Should().Be("failed");
+        generated.Library.Units.Should().BeEmpty();
+        runner.Commands.Should().BeEmpty();
     }
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
@@ -1374,17 +1419,21 @@ public sealed class ArtifactReadbackServiceTests
 
                 if (_writeGeneratedAsset)
                 {
-                    var assetPath = Path.GetExtension(_generatedAssetFileName).Equals(".png", StringComparison.OrdinalIgnoreCase)
-                        ? outputPath
-                        : Path.Combine(Path.GetDirectoryName(outputPath)!, _generatedAssetFileName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(assetPath)!);
-                    if (Path.GetExtension(assetPath).Equals(".png", StringComparison.OrdinalIgnoreCase))
+                    var count = int.TryParse(ReadArgument(command.Arguments, "--n"), out var parsedCount) ? Math.Clamp(parsedCount, 1, 4) : 1;
+                    for (var index = 0; index < count; index++)
                     {
-                        File.WriteAllBytes(assetPath, MinimalPng(16, 16));
-                    }
-                    else
-                    {
-                        File.WriteAllText(assetPath, "spec only");
+                        var assetPath = Path.GetExtension(_generatedAssetFileName).Equals(".png", StringComparison.OrdinalIgnoreCase)
+                            ? (count == 1 ? outputPath : Path.Combine(Path.GetDirectoryName(outputPath)!, $"{Path.GetFileNameWithoutExtension(outputPath)}-{index + 1:00}.png"))
+                            : Path.Combine(Path.GetDirectoryName(outputPath)!, _generatedAssetFileName);
+                        Directory.CreateDirectory(Path.GetDirectoryName(assetPath)!);
+                        if (Path.GetExtension(assetPath).Equals(".png", StringComparison.OrdinalIgnoreCase))
+                        {
+                            File.WriteAllBytes(assetPath, MinimalPng(16, 16));
+                        }
+                        else
+                        {
+                            File.WriteAllText(assetPath, "spec only");
+                        }
                     }
                 }
                 else

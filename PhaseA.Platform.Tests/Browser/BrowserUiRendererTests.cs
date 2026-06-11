@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
@@ -33,7 +33,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("项目状态扫描失败，请稍后重试或先刷新页面。");
         html.Should().NotContain("调用 LLM 判断下一步");
         html.Should().NotContain("v2NextSuggestionHasLlmResult");
-        html.Should().Contain("请先进行 2. 原型骨架创建");
+        html.Should().Contain("\\u8bf7\\u5148\\u8fdb\\u884c 2. \\u539f\\u578b\\u9aa8\\u67b6\\u521b\\u5efa");
         html.Should().Contain("请先进行 3. 骨架验收修复");
         html.Should().Contain("请先进行 4. 完成迭代计划");
         html.Should().Contain("请进行 6. 原型验收");
@@ -157,6 +157,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("记录已下载。");
         html.Should().Contain("createGddDocument");
         html.Should().Contain("/api/projects/${state.projectId}/gdd");
+        html.Should().Contain("gddOutlineUrl");
+        html.Should().Contain("window.open(`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}`");
+        html.Should().Contain("state.gddOutlineReady = true;");
+        html.Should().Contain("download=\"GDD.md\"");
+        html.Should().Contain("result.downloadUrl || \"\"");
+        html.Should().Contain("\\u521b\\u5efa\\u7b56\\u5212\\u5927\\u7eb2\\u5931\\u8d25");
+        html.Should().Contain("kind: \"gdd-result\"");
+        html.Should().Contain("__PHASEA_GDD_LINK_");
         html.Should().Contain("v2CanCreateIterationPlanFromChat");
         html.Should().Contain("v2IterationPlanExists");
         html.Should().Contain("v2IterationPlanCompleted");
@@ -475,7 +483,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("syncChatHistory");
         html.Should().Contain("同步记录");
         html.Should().Contain("下载记录");
-        html.Should().Contain("创建策划文档");
+        html.Should().Contain("导入");
+        html.Should().Contain("history.scrollTop = history.scrollHeight");
+        html.Should().Contain("\\u521b\\u5efa\\u7b56\\u5212\\u5927\\u7eb2");
         html.Should().Contain("服务器聊天记录已同步。");
         html.Should().Contain("未输入优化目标，已使用当前下一步建议生成迭代计划。");
         html.Should().Contain("typedMessage ? \"manual_feedback\" : \"completion_suggestion\"");
@@ -668,6 +678,19 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("素材列表");
         html.Should().Contain("assetHistoryModal");
         html.Should().Contain("showAssetHistory");
+        html.Should().Contain("openAssetDetail");
+        html.Should().Contain("data-asset-detail-key");
+        html.Should().Contain("data-select-unit-key");
+        html.Should().Contain("addEventListener(\"click\"");
+        html.Should().NotContain("onclick=");
+        html.Should().NotContain("onchange=");
+        html.Should().Contain("asset-detail-grid");
+        html.Should().Contain("素材详情及替换");
+        html.Should().Contain("image-to-image");
+        html.Should().Contain("referenceImageFile");
+        html.Should().Contain("assetGenerationCount");
+        html.Should().Contain("readReferenceImagePayload");
+        html.Should().Contain("generationMode");
         html.Should().Contain("selectEntry");
         html.Should().Contain("phaseA.assetLibrary");
         html.Should().Contain("已载入缓存素材库");
@@ -675,7 +698,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("assetPixelSize");
         html.Should().Contain("pixelWidth");
         html.Should().Contain("pixelHeight");
-        html.Should().Contain("生成素材");
+        html.Should().Contain("创建素材");
         html.Should().Contain("intendedUse");
     }
 
@@ -706,6 +729,23 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("averageRuntimeSeconds");
         html.Should().Contain("runTypeLabel");
         html.Should().Contain("style.display = \"none\"");
+    }
+
+    [Fact]
+    public void RenderGddOutline_IncludesOutlineEditorFlow()
+    {
+        var html = new BrowserUiRenderer().RenderGddOutline();
+
+        html.Should().Contain("/api/projects/${projectId}/gdd/outline");
+        html.Should().Contain("/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(selectedSection.id)}");
+        html.Should().Contain("generateSection");
+        html.Should().Contain("editorSkeleton");
+        html.Should().Contain("editorContent");
+        html.Should().Contain("editorMessage");
+        html.Should().Contain("showModal");
+        html.Should().Contain("exportGddMarkdown");
+        html.Should().Contain("/api/projects/${projectId}/gdd/outline/export");
+        html.Should().Contain("/downloads?projectId=");
     }
 
     [Fact]

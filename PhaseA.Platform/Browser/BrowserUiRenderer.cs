@@ -453,7 +453,7 @@ public sealed class BrowserUiRenderer
                   const attachLabel = $("chatAttachmentFiles")?.closest("label");
                   if (attachLabel) {
                     attachLabel.className = "v2-attach-button";
-                    if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "+";
+                    if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "\u5bfc\u5165";
                     attachLabel.title = "导入 TXT 参考文件";
                   }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
@@ -601,7 +601,7 @@ public sealed class BrowserUiRenderer
                   if (!v2HasPrototypeSkeleton()) {
                     return skeletonFailed
                       ? "建议：请先处理 2. 原型骨架创建。\n\n当前原型骨架创建没有成功，后续骨架验收、迭代计划、UI优化和打包都没有可靠基础。请回到 2. 原型骨架创建查看失败原因，修正后重新创建骨架。"
-                      : "建议：请先进行 2. 原型骨架创建。\n\n如果你还没有整理清楚游戏设定，可以先在自由聊天的能力模式中激活“游戏策划大师”，让它协助创建策划文档；准备好后再回到 2. 原型骨架创建填写表单并启动。";
+                      : "\u5efa\u8bae\uff1a\u8bf7\u5148\u8fdb\u884c 2. \u539f\u578b\u9aa8\u67b6\u521b\u5efa\u3002\n\n\u5982\u679c\u4f60\u8fd8\u6ca1\u6709\u6574\u7406\u6e05\u695a\u6e38\u620f\u8bbe\u5b9a\uff0c\u53ef\u4ee5\u5148\u5728\u81ea\u7531\u804a\u5929\u7684\u80fd\u529b\u6a21\u5f0f\u4e2d\u6fc0\u6d3b\u201c\u6e38\u620f\u7b56\u5212\u5927\u5e08\u201d\uff0c\u8ba9\u5b83\u534f\u52a9\u521b\u5efa\u7b56\u5212\u5927\u7eb2\uff1b\u51c6\u5907\u597d\u540e\u518d\u56de\u5230 2. \u539f\u578b\u9aa8\u67b6\u521b\u5efa\u586b\u5199\u8868\u5355\u5e76\u542f\u52a8\u3002";
                   }
                   if (skeletonAcceptanceFailed || repairRunnable) {
                     return repairRunnable
@@ -1190,7 +1190,7 @@ public sealed class BrowserUiRenderer
                     <label>+ <input id="chatAttachmentFiles" type="file" accept=".txt,text/plain" multiple></label>
                     <div id="chatAttachmentStatus" class="card muted">未导入 TXT 参考文件，只支持 TXT 文件导入。</div>
                     <button id="clearChatAttachments" class="ghost hidden">清空参考文件</button>
-                    <button id="createGddDocument" class="ghost" data-global-action="true">创建策划文档</button>
+                    <button id="createGddDocument" class="ghost" data-global-action="true">&#21019;&#24314;&#31574;&#21010;&#22823;&#32434;</button>
                     <button id="sendChat" class="secondary">发送</button>
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
@@ -1210,7 +1210,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", gddOutlineReady: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1270,7 +1270,7 @@ public sealed class BrowserUiRenderer
                     const pendingLabel = message.pending ? "<span class=\"v2-chat-pending-label\">生成中</span>" : "";
                     const contentHtml = message.role === "user"
                       ? `<span>${escapeHtml(message.content)}</span>`
-                      : renderAssistantChatContent(message.content);
+                      : renderAssistantChatContent(message.content, message);
                     return `
                       <div class="v2-chat-message ${roleClass}${pendingClass}">
                         ${pendingLabel}
@@ -1278,9 +1278,13 @@ public sealed class BrowserUiRenderer
                       </div>
                     `;
                   }).join("") || "<p class='muted'>还没有对话。</p>";
+                  requestAnimationFrame(() => {
+                    const history = $("chatHistory");
+                    if (history) history.scrollTop = history.scrollHeight;
+                  });
                 }
 
-                function renderAssistantChatContent(content) {
+                function renderAssistantChatContent(content, message = null) {
                   const lines = String(content || "").replace(/\r/g, "").split("\n");
                   const parts = [];
                   let paragraph = [];
@@ -1359,13 +1363,17 @@ public sealed class BrowserUiRenderer
                   if (inCode) flushCode();
                   flushParagraph();
                   flushList();
-                  return parts.join("") || "<p></p>";
+                  const outlineButton = message?.gddOutlineUrl
+                    ? `<p><a class="button secondary" href="${escapeHtml(message.gddOutlineUrl)}" target="_blank" rel="noopener">&#26597;&#38405;&#31574;&#21010;&#22823;&#32434;</a></p>`
+                    : "";
+                  return (parts.join("") || "<p></p>") + outlineButton;
                 }
 
                 function renderInlineMarkdown(value) {
                   let html = escapeHtml(value || "");
                   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
                   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+                  html = html.replace(/(https?:\/\/[^\s<]+|\/projects\/[^\s<]+\/gdd\/GDD\.md\?ticket=[^\s<]+)/g, match => `<a href="${match}" target="_blank" rel="noopener" download="GDD.md">${match.includes("/gdd/GDD.md") ? "下载 GDD.md" : match}</a>`);
                   return html;
                 }
 
@@ -2054,13 +2062,20 @@ public sealed class BrowserUiRenderer
                 }
 
                 function sanitizePublicChatContent(value) {
+                  const gddLinks = [];
                   return String(value || "")
+                    .replace(/\/projects\/[^\s`'"，。；：、）)<]+\/gdd\/GDD\.md\?ticket=[^\s`'"，。；：、）)<]+/g, match => {
+                      const token = `__PHASEA_GDD_LINK_${gddLinks.length}__`;
+                      gddLinks.push(match);
+                      return token;
+                    })
                     .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
                     .replace(/[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
                     .replace(/(?<![\w.])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
                     .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
                     .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
                     .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
+                    .replace(/__PHASEA_GDD_LINK_(\d+)__/g, (_, index) => gddLinks[Number(index)] || "")
                     .replace(/[ \t]{2,}/g, " ")
                     .replace(/\n{3,}/g, "\n\n")
                     .trim();
@@ -2235,12 +2250,27 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                async function refreshGddOutlineStatus() {
+                  if (!state.projectId || !$("createGddDocument")) return;
+                  try {
+                    await api(`/api/projects/${state.projectId}/gdd/outline`);
+                    state.gddOutlineReady = true;
+                  } catch {
+                    state.gddOutlineReady = false;
+                  }
+                  $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                }
+
                 async function createGddDocument() {
-                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  if (state.gddOutlineReady) {
+                    window.open(`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                    return;
+                  }
+                  if (!guardGlobalAction()) return;
                   const message = $("chatMessage").value.trim();
                   const button = $("createGddDocument");
-                  setLocalBusy(true, "正在创建策划 GDD 文档，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "\u6b63\u5728\u521b\u5efa\u7b56\u5212\u5927\u7eb2\uff0c\u8bf7\u7b49\u5f85\u5f53\u524d\u4efb\u52a1\u6267\u884c\u5b8c\u6bd5\u3002");
                   button.disabled = true;
                   button.textContent = "创建中...";
                   try {
@@ -2250,17 +2280,37 @@ public sealed class BrowserUiRenderer
                       attachments: currentChatAttachmentsForRun()
                     };
                     const result = await api(`/api/projects/${state.projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
-                    out(result.summary || "策划 GDD 文档已创建。");
                     await loadServerChatHistoryForProject(state.projectId);
+                    state.chatHistory.push({
+                      role: "assistant",
+                      kind: "gdd-result",
+                      content: result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002",
+                      gddOutlineUrl: result.downloadUrl || ""
+                    });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    state.gddOutlineReady = true;
+                    button.textContent = "\u67e5\u9605\u7b56\u5212\u5927\u7eb2";
+                    out(result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002");
                     await loadRuns();
                     await loadProjectPackages();
                   } catch (error) {
+                    const failureMessage = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || error?.payload?.failureCode || "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002");
+                    state.chatHistory.push({
+                      role: "assistant",
+                      kind: "gdd-result",
+                      content: failureMessage
+                    });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    out(failureMessage);
+                    await loadServerChatHistoryForProject(state.projectId).catch(() => {});
                     showError(error);
                   } finally {
                     clearChatAttachments();
                     setLocalBusy(false);
                     button.disabled = false;
-                    button.textContent = "创建策划文档";
+                    button.textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                     await refreshActiveRun();
                   }
                 }
@@ -3235,6 +3285,7 @@ public sealed class BrowserUiRenderer
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();
                   loadRepairPlan();
+                  refreshGddOutlineStatus();
                 }
 
                 async function loadProjectRuntimeState() {
@@ -4579,6 +4630,156 @@ public sealed class BrowserUiRenderer
         return WrapSimplePage($"Run {Encode(run.RunId)}", body);
     }
 
+    public string RenderGddOutline()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>&#31574;&#21010;&#22823;&#32434;</title>
+              <style>
+                :root { --ink:#17211b; --muted:#66736b; --paper:#fbf7ef; --panel:#fffdf8; --line:#ded4c4; --accent:#0f6b57; --accent2:#c65f2d; --danger:#a2342f; }
+                * { box-sizing: border-box; }
+                body { margin:0; font-family: Georgia,"Times New Roman",serif; color:var(--ink); background:linear-gradient(135deg,#fbf7ef,#efe5d3); }
+                main { max-width: 1180px; margin: 0 auto; padding: 1.2rem; display:grid; gap:1rem; }
+                header, section, article, dialog { background:rgba(255,252,245,.92); border:1px solid var(--line); border-radius:1rem; padding:1rem; }
+                header { display:flex; justify-content:space-between; gap:1rem; align-items:start; }
+                h1,h2,h3 { margin:.1rem 0 .6rem; }
+                p { color:var(--muted); white-space:pre-wrap; }
+                button { border:0; border-radius:.75rem; background:var(--accent); color:white; font-weight:700; padding:.65rem .9rem; cursor:pointer; }
+                button.secondary { background:var(--accent2); }
+                button.ghost { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+                button:disabled { opacity:.5; cursor:not-allowed; }
+                textarea { width:100%; min-height:8rem; resize:vertical; border:1px solid var(--line); border-radius:.75rem; padding:.75rem; background:#fffdf8; color:var(--ink); font:inherit; }
+                .muted { color:var(--muted); }
+                .danger { color:var(--danger); }
+                .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(18rem,1fr)); gap:.8rem; }
+                .section-card { display:grid; gap:.55rem; align-content:start; }
+                .section-content { color:var(--ink); white-space:pre-wrap; }
+                dialog { width:min(840px, calc(100vw - 2rem)); max-height:90vh; overflow:auto; box-shadow:0 2rem 5rem rgba(23,33,27,.28); }
+                dialog::backdrop { background:rgba(23,33,27,.45); }
+                .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+                .row button:last-child { margin-left:auto; }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <div>
+                    <h1>&#31574;&#21010;&#22823;&#32434;</h1>
+                    <p id="meta" class="muted">&#27491;&#22312;&#35835;&#21462;&#31574;&#21010;&#22823;&#32434;...</p>
+                  </div>
+                  <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
+                </header>
+                <section>
+                  <h2 id="title">-</h2>
+                  <p id="summary"></p>
+                </section>
+                <section class="grid" id="sections"></section>
+              </main>
+              <dialog id="editor">
+                <h2 id="editorTitle"></h2>
+                <label><strong>&#39592;&#26550;&#20449;&#24687;</strong><textarea id="editorSkeleton" readonly></textarea></label>
+                <label><strong>&#20855;&#20307;&#20869;&#23481;</strong><textarea id="editorContent" readonly></textarea></label>
+                <label><strong>&#36755;&#20837;&#20449;&#24687;</strong><textarea id="editorMessage" placeholder="&#36755;&#20837;&#26412;&#26465;&#30446;&#30340;&#34917;&#20805;&#35201;&#27714;"></textarea></label>
+                <div class="row">
+                  <button id="generateSection" class="secondary">&#29983;&#25104;&#20855;&#20307;&#20869;&#23481;</button>
+                  <button id="closeEditor" class="ghost">&#20851;&#38381;</button>
+                </div>
+              </dialog>
+              <script>
+                const params = new URLSearchParams(location.search);
+                const projectId = params.get("projectId") || "";
+                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const $ = id => document.getElementById(id);
+                const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[ch]));
+                let outline = null;
+                let selectedSection = null;
+                async function api(path, options = {}) {
+                  const response = await fetch(path, { ...options, headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json", ...(options.headers || {}) }, cache: "no-store" });
+                  const text = await response.text();
+                  let payload = {};
+                  try { payload = text ? JSON.parse(text) : {}; } catch { payload = { raw: text }; }
+                  if (!response.ok) throw { status: response.status, payload };
+                  return payload;
+                }
+                async function loadOutline() {
+                  if (!projectId) { $("meta").innerHTML = "<span class='danger'>&#32570;&#23569; projectId&#12290;</span>"; return; }
+                  if (!token()) { $("meta").innerHTML = "<span class='danger'>&#35831;&#20808;&#30331;&#24405;&#25511;&#21046;&#21488;&#12290;</span>"; return; }
+                  try {
+                    outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                    renderOutline();
+                  } catch (error) {
+                    $("meta").innerHTML = `<span class="danger">&#35835;&#21462;&#22833;&#36133;&#65306;${escapeHtml(error?.payload?.error || "gdd_outline_not_found")}</span>`;
+                  }
+                }
+                function renderOutline() {
+                  $("meta").textContent = `${outline.relativePath || "docs/gdd/gdd-outline.json"} ? ${outline.lastUpdatedUtc || ""}`;
+                  $("title").textContent = outline.title || "\u7b56\u5212\u5927\u7eb2";
+                  $("summary").textContent = outline.summary || "";
+                  $("sections").innerHTML = (outline.sections || []).map(section => `
+                    <article class="section-card" data-section-id="${escapeHtml(section.id)}">
+                      <h3>${escapeHtml(section.title)}</h3>
+                      <p><strong>&#39592;&#26550;</strong><br>${escapeHtml(section.skeleton)}</p>
+                      <div class="section-content">${section.content ? escapeHtml(section.content) : "<span class='muted'>&#20855;&#20307;&#20869;&#23481;&#24453;&#29983;&#25104;&#12290;</span>"}</div>
+                      <button data-edit-section="${escapeHtml(section.id)}">&#32534;&#36753;</button>
+                    </article>
+                  `).join("") || "<p class='muted'>&#27809;&#26377;&#22823;&#32434;&#26465;&#30446;&#12290;</p>";
+                  document.querySelectorAll("[data-edit-section]").forEach(button => button.onclick = () => openEditor(button.dataset.editSection));
+                }
+                function openEditor(sectionId) {
+                  selectedSection = (outline.sections || []).find(item => item.id === sectionId);
+                  if (!selectedSection) return;
+                  $("editorTitle").textContent = selectedSection.title;
+                  $("editorSkeleton").value = selectedSection.skeleton || "";
+                  $("editorContent").value = selectedSection.content || "";
+                  $("editorMessage").value = "";
+                  $("editor").showModal();
+                }
+                async function generateSection() {
+                  if (!selectedSection) return;
+                  const button = $("generateSection");
+                  button.disabled = true;
+                  button.textContent = "&#29983;&#25104;&#20013;...";
+                  try {
+                    await api(`/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(selectedSection.id)}`, { method:"POST", body: JSON.stringify({ message: $("editorMessage").value, model: localStorage.getItem("phaseASelectedModel") || null }) });
+                    outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                    selectedSection = (outline.sections || []).find(item => item.id === selectedSection.id);
+                    $("editorContent").value = selectedSection?.content || "";
+                    renderOutline();
+                  } catch (error) {
+                    alert(error?.payload?.summary || error?.payload?.error || "generate_failed");
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "&#29983;&#25104;&#20855;&#20307;&#20869;&#23481;";
+                  }
+                }
+                async function exportGddMarkdown() {
+                  const button = $("exportGddMarkdown");
+                  button.disabled = true;
+                  button.textContent = "&#23548;&#20986;&#20013;...";
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd/outline/export`, { method:"POST", body:"{}" });
+                    window.open(result.downloadPageUrl || `/downloads?projectId=${encodeURIComponent(projectId)}`, "_blank", "noreferrer");
+                  } catch (error) {
+                    alert(error?.payload?.error || "export_failed");
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "&#23548;&#20986;&#20026; GDD.md";
+                  }
+                }
+                $("closeEditor").onclick = () => $("editor").close();
+                $("generateSection").onclick = generateSection;
+                $("exportGddMarkdown").onclick = exportGddMarkdown;
+                loadOutline();
+              </script>
+            </body>
+            </html>
+            """;
+    }
+
     public string RenderDownloads()
     {
         return """
@@ -4652,14 +4853,14 @@ public sealed class BrowserUiRenderer
                 async function loadGddDownload() {
                   const response = await fetch(`/api/projects/${projectId}/gdd`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
                   if (!response.ok) {
-                    $("gddDownload").innerHTML = "<strong>策划 GDD 文档</strong><p class='muted'>还没有创建 GDD.md。</p>";
+                    $("gddDownload").innerHTML = "<strong>&#31574;&#21010;&#22823;&#32434;&#25991;&#26723;</strong><p class='muted'>&#36824;&#27809;&#26377;&#21019;&#24314;&#31574;&#21010;&#22823;&#32434;&#12290;</p>";
                     return;
                   }
 
                   const payload = await response.json();
                   $("gddDownload").innerHTML = `
                     <article class="package">
-                      <strong>策划 GDD 文档</strong>
+                      <strong>&#31574;&#21010;&#22823;&#32434;&#25991;&#26723;</strong>
                       <span class="muted">${escapeHtml(payload.lastUpdatedUtc || "未知时间")} · ${escapeHtml(payload.relativePath || "docs/gdd/GDD.md")} · ${payload.sizeBytes || 0} bytes</span>
                       <button id="downloadGddDocument">下载 GDD.md</button>
                     </article>
@@ -4712,7 +4913,7 @@ public sealed class BrowserUiRenderer
                   const originalText = button.textContent;
                   button.disabled = true;
                   button.textContent = "下载准备中...";
-                  $("status").textContent = "正在准备策划 GDD 文档下载。";
+                  $("status").textContent = "\u6b63\u5728\u51c6\u5907\u7b56\u5212\u5927\u7eb2\u6587\u6863\u4e0b\u8f7d\u3002";
                   try {
                     const response = await fetch(`/api/projects/${projectId}/gdd/download-ticket`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, cache: "no-store" });
                     if (!response.ok) {
@@ -4761,7 +4962,7 @@ public sealed class BrowserUiRenderer
                 :root { --ink: #17211b; --muted: #66736b; --paper: #fbf7ef; --panel: #fffdf8; --line: #ded4c4; --accent: #0f6b57; --accent-2: #244c9a; --danger: #a2342f; }
                 * { box-sizing: border-box; }
                 body { margin: 0; font-family: Georgia, "Times New Roman", serif; color: var(--ink); background: linear-gradient(135deg, #fbf7ef, #efe5d3); }
-                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem 7rem; display: grid; gap: 1rem; }
+                main { max-width: 78rem; margin: 0 auto; padding: 2rem 1rem; display: grid; gap: 1rem; }
                 h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: 0; }
                 h2 { margin: 0 0 0.75rem; }
                 p { color: var(--muted); }
@@ -4769,7 +4970,9 @@ public sealed class BrowserUiRenderer
                 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
                 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.75rem; }
                 .list { display: grid; gap: 0.75rem; }
-                .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.5rem; background: #f3ead9; display: grid; place-items: center; }
+                .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.5rem; background: #f3ead9; display: grid; place-items: center; cursor: pointer; }
+                .asset-card { display: grid; gap: 0.65rem; align-content: start; }
+                .asset-card .asset-detail-button { justify-self: center; }
                 button { border: 0; border-radius: 0.4rem; padding: 0.65rem 0.9rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
                 button.secondary { background: var(--accent-2); }
                 button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
@@ -4781,16 +4984,24 @@ public sealed class BrowserUiRenderer
                 .asset-action-row button { white-space: nowrap; flex: 0 0 auto; }
                 .history-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 1rem; background: rgba(23, 33, 27, 0.36); z-index: 40; }
                 .history-modal.open { display: flex; }
-                .history-dialog { width: min(46rem, 100%); max-height: min(42rem, calc(100vh - 2rem)); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1.4rem 4rem rgba(23, 33, 27, 0.28); }
+                .history-dialog { width: min(62rem, 100%); max-height: min(44rem, calc(100vh - 2rem)); overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1.4rem 4rem rgba(23, 33, 27, 0.28); display: grid; gap: 0.8rem; }
                 .history-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
-                .history-list { display: grid; gap: 0.5rem; }
+                .asset-detail-grid { display: grid; grid-template-columns: minmax(14rem, 0.9fr) minmax(18rem, 1.1fr); gap: 0.8rem; min-height: 0; }
+                .asset-detail-panel { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem; background: #fbf7ef; min-height: 0; }
+                .history-list { display: grid; gap: 0.5rem; max-height: 22rem; overflow-y: auto; padding-right: 0.25rem; }
                 .history-row { display: grid; grid-template-columns: 4rem 90px minmax(8rem, 1fr) auto; align-items: center; gap: 0.65rem; border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.5rem; background: #fbf7ef; }
                 .history-row.selected { border-color: var(--accent); background: #edf8f3; }
                 .history-row-number { font-weight: 800; }
                 .history-row-time { color: var(--muted); font-size: 0.85rem; }
-                .floating-composer { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(600px, calc(100vw - 32px)); height: 50px; display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.45rem; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 253, 248, 0.96); box-shadow: 0 0.8rem 2rem rgba(57, 43, 24, 0.18); z-index: 20; }
-                .floating-composer input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; padding: 0 0.75rem; font: inherit; color: var(--ink); }
-                .floating-composer span { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+                .asset-create-panel { border-top: 1px solid var(--line); padding-top: 0.8rem; display: grid; grid-template-columns: auto auto minmax(12rem, 1fr) auto auto; align-items: center; gap: 0.55rem; }
+                .asset-create-panel input[type="text"] { min-width: 0; border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.65rem; font: inherit; background: #fffdf8; }
+                .asset-create-panel select { border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.65rem; font: inherit; background: #fffdf8; }
+                .reference-file { display: none; }
+                .reference-file.open { display: inline-flex; align-items: center; gap: 0.35rem; }
+                @media (max-width: 820px) {
+                  .asset-detail-grid { grid-template-columns: 1fr; }
+                  .asset-create-panel { grid-template-columns: 1fr; }
+                }
               </style>
             </head>
             <body>
@@ -4800,7 +5011,7 @@ public sealed class BrowserUiRenderer
                     <h1>项目素材库</h1>
                     <p>查看当前项目已使用的素材、可生成的素材候选和每个素材单位的生成历史。</p>
                   </div>
-                  <button class="ghost" type="button" onclick="loadAssets(true)">刷新素材库</button>
+                  <button id="refreshAssetLibraryButton" class="ghost" type="button">刷新素材库</button>
                 </header>
                 <section id="status" class="card muted">正在读取素材清单...</section>
                 <section class="card">
@@ -4812,17 +5023,27 @@ public sealed class BrowserUiRenderer
                   <div id="candidates" class="list"></div>
                 </section>
               </main>
-              <div class="floating-composer">
-                    <input id="floatingPrompt" maxlength="2000" placeholder="输入本次素材生成方向，例如：蓝色史莱姆、俯视城镇地图、透明背景道具...">
-                <span>应用到所点击的素材</span>
-              </div>
               <div id="assetHistoryModal" class="history-modal" aria-hidden="true">
                 <div class="history-dialog">
                   <div class="history-dialog-header">
-                    <strong id="assetHistoryTitle">素材列表</strong>
-                    <button class="ghost" type="button" onclick="closeAssetHistory()">关闭</button>
+                    <strong id="assetHistoryTitle">素材详情及替换</strong>
+                    <button id="closeAssetHistoryButton" class="ghost" type="button">关闭</button>
                   </div>
-                  <div id="assetHistoryList" class="history-list"></div>
+                  <div class="asset-detail-grid">
+                    <section id="assetDetailInfo" class="asset-detail-panel"></section>
+                    <section class="asset-detail-panel">
+                      <strong>素材列表</strong>
+                      <div id="assetHistoryList" class="history-list"></div>
+                    </section>
+                  </div>
+                  <div class="asset-create-panel">
+                    <label><input type="radio" name="assetGenerationMode" value="text-to-image" checked> 文生图</label>
+                    <label><input type="radio" name="assetGenerationMode" value="image-to-image"> 图生图</label>
+                    <label id="referenceImageLabel" class="reference-file">导入 <input id="referenceImageFile" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"></label>
+                    <input id="floatingPrompt" type="text" maxlength="2000" placeholder="输入本次素材生成方向，例如：蓝色史莱姆、俯视城镇地图、透明背景道具...">
+                    <select id="assetGenerationCount"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                    <button id="modalGenerateAsset" class="secondary" type="button">创建素材</button>
+                  </div>
                 </div>
               </div>
               <script>
@@ -4832,7 +5053,7 @@ public sealed class BrowserUiRenderer
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
-                const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [] };
+                const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [], activeAsset: null };
                 const cacheKey = () => `phaseA.assetLibrary.${projectId}.${model}`;
 
                 function readAssetCache() {
@@ -4940,7 +5161,8 @@ public sealed class BrowserUiRenderer
                     resourcePath: item.resourcePath || "",
                     kind: item.suggestedAssetKind || kind,
                     intendedUse: item.intendedUse || "",
-                    reason: item.reason || ""
+                    reason: item.reason || "",
+                    pixelSize: assetPixelSize(item)
                   };
                   state.assetUnits[key] = unit;
                   return { item, unit, libraryUnit };
@@ -4962,9 +5184,8 @@ public sealed class BrowserUiRenderer
                   const item = model.item;
                   const selected = selectedLibraryEntry(model.libraryUnit);
                   const previewUrl = selected?.previewUrl || item.previewUrl || "";
-                  const resourcePath = selected?.previewResourcePath || item.resourcePath || "";
-                  const image = previewUrl ? `<img class="asset-preview" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "<div class='asset-preview muted'>预览不可用</div>";
-                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p class="muted">${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p class="muted">用途： ${escapeHtml(item.intendedUse || "")}</p><p class="muted">像素尺寸： ${escapeHtml(assetPixelSize(item))}</p><p class="muted">素材： ${escapeHtml(resourcePath)}</p>${renderAssetActions(model.unit, model.libraryUnit)}</article>`;
+                  const image = previewUrl ? `<img class="asset-preview" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">预览不可用</div>`;
+                  return `<article class="card asset-card">${image}<button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button></article>`;
                 }
 
                 function assetPixelSize(item) {
@@ -4987,28 +5208,48 @@ public sealed class BrowserUiRenderer
                 function renderCandidate(model) {
                   const item = model.item;
                   const selected = selectedLibraryEntry(model.libraryUnit);
-                  const image = selected?.previewUrl ? `<img class="asset-preview" src="${escapeHtml(selected.previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}">` : "";
-                  return `<article class="card">${image}<strong>${escapeHtml(item.instanceName || "")}</strong><p><span class="badge">${escapeHtml(item.suggestedAssetKind || "visual_asset")}</span></p><p class="muted">节点类型： ${escapeHtml(item.nodeType || "")}</p><p class="muted">场景： ${escapeHtml(item.scenePath || "")}</p><p><strong>用途</strong>： ${escapeHtml(item.intendedUse || "用于替换当前占位节点，提升可读性。")}</p><p><strong>建议原因</strong>： ${escapeHtml(item.reason || "")}</p><p class="muted">判断状态： ${escapeHtml(item.llmJudgementStatus || "")}</p>${renderAssetActions(model.unit, model.libraryUnit)}</article>`;
-                }
-
-                function renderAssetActions(unit, libraryUnit) {
-                  const count = (libraryUnit?.entries || []).length;
-                  return `<div class="row asset-action-row"><button class="secondary" data-generate-key="${escapeHtml(unit.clientKey)}" onclick="generateAsset('${escapeHtml(unit.clientKey)}', this)">生成素材</button><button class="ghost" type="button" ${count ? "" : "disabled"} onclick="showAssetHistory('${escapeHtml(libraryUnit?.key || unit.unitKey || "")}')">素材列表</button></div>`;
+                  const preview = selected?.previewUrl || "";
+                  const image = preview ? `<img class="asset-preview" src="${escapeHtml(preview)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">待生成</div>`;
+                  return `<article class="card asset-card">${image}<button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button></article>`;
                 }
 
                 function showAssetHistory(unitKey) {
-                  const libraryUnit = (state.library?.units || []).find(unit => unit.key === unitKey);
+                  const active = state.activeAsset || Object.values(state.assetUnits).find(unit => unit.unitKey === unitKey);
+                  if (active) {
+                    state.activeAsset = active;
+                  }
+                  renderAssetDetail();
+                }
+
+                function openAssetDetail(clientKey) {
+                  const unit = state.assetUnits[clientKey];
+                  if (!unit) return;
+                  state.activeAsset = unit;
+                  renderAssetDetail();
+                }
+
+                function renderAssetDetail() {
+                  const active = state.activeAsset;
+                  if (!active) return;
+                  const libraryUnit = (state.library?.units || []).find(unit => unit.key === active.unitKey)
+                    || findLibraryUnit(active, active.kind);
                   const entries = libraryUnit?.entries || [];
                   const selectedEntryId = libraryUnit?.selectedEntryId || "";
-                  if (!libraryUnit || !entries.length) return;
-                  $("assetHistoryTitle").textContent = `${libraryUnit.instanceName || "素材"} 的素材列表`;
+                  $("assetHistoryTitle").textContent = `${active.instanceName || "素材"} 的素材详情及替换`;
+                  $("assetDetailInfo").innerHTML = `
+                    <p><strong>素材名字</strong><br>${escapeHtml(active.instanceName || "未命名素材")}</p>
+                    <p><strong>素材场景</strong><br>${escapeHtml(active.scenePath || "未知")}</p>
+                    <p><strong>用途</strong><br>${escapeHtml(active.intendedUse || "用于替换当前占位节点，提升可读性。")}</p>
+                    <p><strong>像素尺寸</strong><br>${escapeHtml(active.pixelSize || "未知")}</p>
+                  `;
                   $("assetHistoryList").innerHTML = entries.map((entry, index) => {
                     const selected = entry.selected || entry.entryId === selectedEntryId;
                     const preview = entry.previewUrl
                       ? `<img class="history-thumb" src="${escapeHtml(entry.previewUrl)}" alt="${escapeHtml("素材 " + (index + 1))}">`
                       : "<div class='history-thumb muted'>无图</div>";
-                    return `<div class="history-row ${selected ? "selected" : ""}"><span class="history-row-number">#${index + 1}</span>${preview}<span class="history-row-time">${escapeHtml(formatTime(entry.createdUtc))}</span><button class="ghost" type="button" data-entry-id="${escapeHtml(entry.entryId)}" onclick="selectEntry('${escapeHtml(libraryUnit.key)}', '${escapeHtml(entry.entryId)}', this)">替换默认素材</button></div>`;
-                  }).join("");
+                    return `<div class="history-row ${selected ? "selected" : ""}"><span class="history-row-number">#${index + 1}</span>${preview}<span class="history-row-time">${escapeHtml(formatTime(entry.createdUtc))}</span><button class="ghost" type="button" data-select-unit-key="${escapeHtml(libraryUnit.key)}" data-entry-id="${escapeHtml(entry.entryId)}">替换默认素材</button></div>`;
+                  }).join("") || "<p class='muted'>暂无历史素材。可以在下方创建。</p>";
+                  renderGenerationMode();
                   $("assetHistoryModal").classList.add("open");
                   $("assetHistoryModal").setAttribute("aria-hidden", "false");
                 }
@@ -5016,6 +5257,11 @@ public sealed class BrowserUiRenderer
                 function closeAssetHistory() {
                   $("assetHistoryModal").classList.remove("open");
                   $("assetHistoryModal").setAttribute("aria-hidden", "true");
+                }
+
+                function renderGenerationMode() {
+                  const mode = document.querySelector("input[name='assetGenerationMode']:checked")?.value || "text-to-image";
+                  $("referenceImageLabel").classList.toggle("open", mode === "image-to-image");
                 }
 
                 function cloneLibrary() {
@@ -5046,6 +5292,33 @@ public sealed class BrowserUiRenderer
                   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
                 }
 
+                async function readReferenceImagePayload() {
+                  const mode = document.querySelector("input[name='assetGenerationMode']:checked")?.value || "text-to-image";
+                  if (mode !== "image-to-image") return {};
+                  const file = $("referenceImageFile")?.files?.[0];
+                  if (!file) throw new Error("请选择一张参考图片。");
+                  const allowed = ["image/png", "image/jpeg", "image/webp"];
+                  if (!allowed.includes(file.type)) throw new Error("参考图片只支持 png、jpg、jpeg、webp。");
+                  if (file.size > 10 * 1024 * 1024) throw new Error("参考图片不能超过 10M。");
+                  const dataUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result || ""));
+                    reader.onerror = () => reject(new Error("参考图片读取失败。"));
+                    reader.readAsDataURL(file);
+                  });
+                  return {
+                    generationMode: "image-to-image",
+                    referenceImageFileName: file.name,
+                    referenceImageContentType: file.type,
+                    referenceImageBase64: dataUrl
+                  };
+                }
+
+                async function generateActiveAsset(button) {
+                  if (!state.activeAsset) return;
+                  await generateAsset(state.activeAsset.clientKey, button);
+                }
+
                 async function generateAsset(clientKey, button) {
                   const unit = state.assetUnits[clientKey];
                   if (!unit) return;
@@ -5053,12 +5326,26 @@ public sealed class BrowserUiRenderer
                   button.disabled = true;
                   button.textContent = "生成中...";
                   try {
-                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/generate`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, body: JSON.stringify({ floatingPrompt: $("floatingPrompt").value || "", unit }), cache: "no-store" });
+                    const referencePayload = await readReferenceImagePayload();
+                    const count = Number($("assetGenerationCount")?.value || 1);
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/generate`, {
+                      method: "POST",
+                      headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        floatingPrompt: $("floatingPrompt").value || "",
+                        unit,
+                        generationMode: referencePayload.generationMode || "text-to-image",
+                        count,
+                        ...referencePayload
+                      }),
+                      cache: "no-store"
+                    });
                     const payload = await response.json();
                     if (!response.ok) throw new Error(payload.error || payload.failureCode || "generate_failed");
                     state.library = payload.library || state.library;
                     await hydrateLibraryPreviewUrls();
                     writeAssetCache();
+                    if ($("referenceImageFile")) $("referenceImageFile").value = "";
                     if (payload.status !== "succeeded") {
                       $("status").textContent = `素材生成未完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
                       await renderAssetData($("status").textContent);
@@ -5066,6 +5353,7 @@ public sealed class BrowserUiRenderer
                     }
                     $("status").textContent = `素材生成已完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
                     await renderAssetData($("status").textContent);
+                    showAssetHistory(unit.unitKey);
                   } catch (error) {
                     $("status").textContent = `素材生成失败：${error.message || error}`;
                   } finally {
@@ -5110,6 +5398,21 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                document.addEventListener("click", event => {
+                  const detailTarget = event.target?.closest?.("[data-asset-detail-key]");
+                  if (detailTarget) {
+                    openAssetDetail(detailTarget.dataset.assetDetailKey || "");
+                    return;
+                  }
+                  const selectButton = event.target?.closest?.("[data-select-unit-key][data-entry-id]");
+                  if (selectButton) {
+                    selectEntry(selectButton.dataset.selectUnitKey || "", selectButton.dataset.entryId || "", selectButton);
+                  }
+                });
+                $("closeAssetHistoryButton").addEventListener("click", closeAssetHistory);
+                $("modalGenerateAsset").addEventListener("click", event => generateActiveAsset(event.currentTarget));
+                $("refreshAssetLibraryButton").addEventListener("click", () => loadAssets(true));
+                document.querySelectorAll("input[name='assetGenerationMode']").forEach(input => input.addEventListener("change", renderGenerationMode));
                 loadAssets();
               </script>
             </body>

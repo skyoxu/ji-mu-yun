@@ -66,6 +66,7 @@ public sealed class ProjectAssetLibraryService
         }
 
         var unit = NormalizeUnit(request.Unit);
+        var count = Math.Clamp(request.Count ?? 1, 1, 4);
         var actionId = await ResolveActionIdAsync(project, unit, request.FloatingPrompt, cancellationToken);
         var entryId = Guid.NewGuid().ToString("N");
         var outputRelativeDirectory = ToSlash(Path.Combine("Game.Godot", "Prototypes", "ProjectAssetLibrary", unit.Key, entryId));
@@ -82,8 +83,10 @@ public sealed class ProjectAssetLibraryService
         await _metadataStore.MarkRunStartedAsync(runId, assetQueueLease.QueuePositionAtStart, cancellationToken);
 
         ProjectAssetImageGenerationResult imageResult;
+        string? referenceImagePath = null;
         try
         {
+            referenceImagePath = WriteTemporaryReferenceImage(outputAbsoluteDirectory, request);
             imageResult = await _imageGenerator.GenerateAsync(
                 project,
                 runId,
@@ -91,6 +94,8 @@ public sealed class ProjectAssetLibraryService
                 outputAbsoluteDirectory,
                 outputRelativeDirectory,
                 SanitizeFileStem(unit.InstanceName, actionId),
+                count,
+                referenceImagePath,
                 cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -114,6 +119,18 @@ public sealed class ProjectAssetLibraryService
                 [],
                 TimeSpan.Zero);
         }
+        finally
+        {
+            if (!string.IsNullOrWhiteSpace(referenceImagePath) && File.Exists(referenceImagePath))
+            {
+                File.Delete(referenceImagePath);
+                var referenceDirectory = Path.GetDirectoryName(referenceImagePath);
+                if (!string.IsNullOrWhiteSpace(referenceDirectory) && Directory.Exists(referenceDirectory))
+                {
+                    Directory.Delete(referenceDirectory, recursive: true);
+                }
+            }
+        }
 
         foreach (var artifactPath in imageResult.ArtifactPaths)
         {
@@ -130,6 +147,8 @@ public sealed class ProjectAssetLibraryService
             run_type = RunType,
             action_id = actionId,
             skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+            generation_mode = string.Equals(request.GenerationMode, "image-to-image", StringComparison.OrdinalIgnoreCase) ? "image-to-image" : "text-to-image",
+            requested_count = count,
             output_directory = outputRelativeDirectory,
             elapsed_seconds = Math.Round(imageResult.Elapsed.TotalSeconds, 3),
             artifacts = imageResult.ArtifactPaths
@@ -148,27 +167,13 @@ public sealed class ProjectAssetLibraryService
         var generatedImageFiles = generatedFiles
             .Where(path => IsPreviewResource(ToResPath(project.RepoPath, path)))
             .ToArray();
-        var previewResourcePath = generatedImageFiles
-            .Select(path => ToResPath(project.RepoPath, path))
-            .FirstOrDefault();
         var skillSucceeded = string.Equals(imageResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
         var entryStatus = skillSucceeded && generatedImageFiles.Length == 0
             ? "no_image_generated"
             : imageResult.Status;
-        var entry = new ProjectAssetLibraryEntry(
-            entryId,
-            DateTimeOffset.UtcNow.ToString("O"),
-            runId,
-            actionId,
-            actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
-            prompt,
-            entryStatus,
-            imageResult.AssistantMessage,
-            imageResult.ArtifactPaths.Concat(generatedImageFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).Distinct(StringComparer.Ordinal).ToArray(),
-            previewResourcePath,
-            false);
         if (generatedImageFiles.Length == 0)
         {
+            var entry = CreateLibraryEntry(project, entryId, runId, actionId, prompt, entryStatus, imageResult, null, generatedImageFiles);
             return new ProjectAssetGenerationRunResult(
                 entryStatus,
                 actionId,
@@ -177,9 +182,12 @@ public sealed class ProjectAssetLibraryService
         }
 
         var existingUnit = UpsertUnit(library, unit);
+        var entries = generatedImageFiles
+            .Select((path, index) => CreateLibraryEntry(project, index == 0 ? entryId : $"{entryId}-{index + 1:00}", runId, actionId, prompt, entryStatus, imageResult, path, generatedImageFiles))
+            .ToArray();
         var updatedUnit = existingUnit with
         {
-            Entries = [entry, .. existingUnit.Entries]
+            Entries = [.. entries, .. existingUnit.Entries]
         };
         library = WriteUnit(library, updatedUnit);
         await WriteLibraryAsync(project, library, cancellationToken);
@@ -187,7 +195,7 @@ public sealed class ProjectAssetLibraryService
         return new ProjectAssetGenerationRunResult(
             imageResult.Status,
             actionId,
-            entry,
+            entries[0],
             ReadLibrary(project));
     }
 
@@ -315,6 +323,80 @@ public sealed class ProjectAssetLibraryService
             .ThenBy(existing => existing.InstanceName, StringComparer.OrdinalIgnoreCase)
             .ToArray();
         return library with { Units = units };
+    }
+
+    private static ProjectAssetLibraryEntry CreateLibraryEntry(
+        ProjectSnapshot project,
+        string entryId,
+        string runId,
+        string actionId,
+        string prompt,
+        string entryStatus,
+        ProjectAssetImageGenerationResult imageResult,
+        string? generatedImageFile,
+        IReadOnlyList<string> generatedImageFiles)
+    {
+        var previewResourcePath = string.IsNullOrWhiteSpace(generatedImageFile)
+            ? null
+            : ToResPath(project.RepoPath, generatedImageFile);
+        return new ProjectAssetLibraryEntry(
+            entryId,
+            DateTimeOffset.UtcNow.ToString("O"),
+            runId,
+            actionId,
+            actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+            prompt,
+            entryStatus,
+            imageResult.AssistantMessage,
+            imageResult.ArtifactPaths.Concat(generatedImageFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path)))).Distinct(StringComparer.Ordinal).ToArray(),
+            previewResourcePath,
+            false);
+    }
+
+    private static string? WriteTemporaryReferenceImage(string outputAbsoluteDirectory, ProjectAssetGenerationRunRequest request)
+    {
+        if (!string.Equals(request.GenerationMode, "image-to-image", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var fileName = Trim(request.ReferenceImageFileName);
+        var payload = Trim(request.ReferenceImageBase64);
+        if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(payload))
+        {
+            throw new ArgumentException("Reference image is required for image-to-image generation.");
+        }
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (extension is not ".png" and not ".jpg" and not ".jpeg" and not ".webp")
+        {
+            throw new ArgumentException("Reference image must be png, jpg, jpeg, or webp.");
+        }
+
+        var contentType = Trim(request.ReferenceImageContentType).ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(contentType) &&
+            contentType is not "image/png" and not "image/jpeg" and not "image/webp")
+        {
+            throw new ArgumentException("Reference image content type must be image/png, image/jpeg, or image/webp.");
+        }
+
+        var commaIndex = payload.IndexOf(',', StringComparison.Ordinal);
+        if (commaIndex >= 0)
+        {
+            payload = payload[(commaIndex + 1)..];
+        }
+
+        var bytes = Convert.FromBase64String(payload);
+        if (bytes.Length > 10 * 1024 * 1024)
+        {
+            throw new ArgumentException("Reference image must be 10MB or smaller.");
+        }
+
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "phasea-asset-reference", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        var path = Path.Combine(tempDirectory, $"reference-input{extension}");
+        File.WriteAllBytes(path, bytes);
+        return path;
     }
 
     private async Task<string> ResolveActionIdAsync(
@@ -563,7 +645,12 @@ public sealed record ProjectAssetLibraryEntry(
 
 public sealed record ProjectAssetGenerationRunRequest(
     string? FloatingPrompt,
-    ProjectAssetUnitRequest? Unit);
+    ProjectAssetUnitRequest? Unit,
+    string? GenerationMode = null,
+    int? Count = null,
+    string? ReferenceImageFileName = null,
+    string? ReferenceImageBase64 = null,
+    string? ReferenceImageContentType = null);
 
 public sealed record ProjectAssetUnitRequest(
     string? UnitKey,

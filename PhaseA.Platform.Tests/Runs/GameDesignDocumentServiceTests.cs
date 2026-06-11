@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
@@ -44,7 +44,10 @@ public sealed class GameDesignDocumentServiceTests
         result.Status.Should().Be("succeeded");
         result.RelativePath.Should().Be("docs/gdd/GDD.md");
         var project = await store.GetProjectSnapshotAsync(projectId);
+        File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json")).Should().BeTrue();
         File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md")).Should().BeTrue();
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        outline!.Sections.Should().ContainSingle(item => item.Id == "core-loop");
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].Arguments.Should().Contain("--sandbox");
         runner.Commands[0].Arguments.Should().Contain("workspace-write");
@@ -53,6 +56,93 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("Reference file says the village hub matters.");
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd" && item.RelativePath == "docs/gdd/GDD.md");
+        artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline" && item.RelativePath == "docs/gdd/gdd-outline.json");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenCodexFails_ShouldNotReportSuccessFromStaleOutline()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        File.WriteAllText(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Stale Outline",
+              "summary": "This file existed before the failed run.",
+              "sections": [
+                { "id": "stale", "title": "Stale", "skeleton": "Old.", "content": "" }
+              ]
+            }
+            """);
+        var runner = new FakeHostedProcessRunner
+        {
+            ExitCode = 17,
+            ShouldWriteOutline = false
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("codex_failed");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ExitCode.Should().Be(17);
+    }
+
+    [Fact]
+    public async Task ExportOutlineMarkdownAsync_ShouldWriteGddMarkdownFromOutline()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Demo Outline",
+              "summary": "A compact game plan.",
+              "sections": [
+                { "id": "core-loop", "title": "Core Loop", "skeleton": "Define loop.", "content": "Explore, fight, upgrade." }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.ExportOutlineMarkdownAsync(accountId, projectId);
+
+        result!.RelativePath.Should().Be("docs/gdd/GDD.md");
+        var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
+        markdown.Should().Contain("# Demo Outline");
+        markdown.Should().Contain("## Core Loop");
+        markdown.Should().Contain("Explore, fight, upgrade.");
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
@@ -76,17 +166,32 @@ public sealed class GameDesignDocumentServiceTests
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
         public List<HostedProcessCommand> Commands { get; } = [];
+        public int ExitCode { get; init; }
+        public bool ShouldWriteOutline { get; init; } = true;
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
-            var gddPath = Path.Combine(command.WorkingDirectory, "docs", "gdd", "GDD.md");
-            Directory.CreateDirectory(Path.GetDirectoryName(gddPath)!);
-            File.WriteAllText(gddPath, "# GDD\n\nGenerated by BMAD.");
+            var gddDir = Path.Combine(command.WorkingDirectory, "docs", "gdd");
+            Directory.CreateDirectory(gddDir);
+            if (ShouldWriteOutline)
+            {
+                var outlinePath = Path.Combine(gddDir, "gdd-outline.json");
+                File.WriteAllText(outlinePath, """
+                    {
+                      "title": "Demo GDD Outline",
+                      "summary": "Generated by BMAD.",
+                      "sections": [
+                        { "id": "core-loop", "title": "Core Loop", "skeleton": "Define loop.", "content": "" }
+                      ]
+                    }
+                    """);
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "GDD created.");
-            return Task.FromResult(new HostedProcessResult(0, "codex stdout", ""));
+            return Task.FromResult(new HostedProcessResult(ExitCode, "codex stdout", ExitCode == 0 ? "" : "codex failed"));
         }
     }
 

@@ -25,6 +25,8 @@ public sealed class ProjectAssetImageGenerator
         string outputAbsoluteDirectory,
         string outputRelativeDirectory,
         string fileStem,
+        int count = 1,
+        string? referenceImagePath = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -35,6 +37,7 @@ public sealed class ProjectAssetImageGenerator
         ArgumentException.ThrowIfNullOrWhiteSpace(fileStem);
 
         Directory.CreateDirectory(outputAbsoluteDirectory);
+        count = Math.Clamp(count, 1, 4);
         var promptRelativePath = ToSlash(Path.Combine(outputRelativeDirectory, "generation-prompt.txt"));
         var manifestRelativePath = ToSlash(Path.Combine(outputRelativeDirectory, "image-generation-manifest.json"));
         var imageRelativePath = ToSlash(Path.Combine(outputRelativeDirectory, $"{fileStem}.png"));
@@ -63,9 +66,18 @@ public sealed class ProjectAssetImageGenerator
                 "1024x1024",
                 "--quality",
                 "low",
+                "--background",
+                "transparent",
+                "--n",
+                count.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--timeout",
                 "120"
             ]);
+        if (!string.IsNullOrWhiteSpace(referenceImagePath))
+        {
+            arguments.Add("--reference-image");
+            arguments.Add(referenceImagePath);
+        }
 
         var command = new HostedProcessCommand(
             _options.PythonCommand,
@@ -80,13 +92,25 @@ public sealed class ProjectAssetImageGenerator
         var process = await _processRunner.RunAsync(command, cancellationToken);
         stopwatch.Stop();
 
-        var generated = process.ExitCode == 0 && File.Exists(imagePath);
+        var generatedImagePaths = Directory.EnumerateFiles(outputAbsoluteDirectory, "*", SearchOption.TopDirectoryOnly)
+            .Where(path =>
+            {
+                var extension = Path.GetExtension(path);
+                return extension.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
+                       extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                       extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                       extension.Equals(".webp", StringComparison.OrdinalIgnoreCase);
+            })
+            .Select(Path.GetFullPath)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var generated = process.ExitCode == 0 && generatedImagePaths.Length > 0;
         var status = process.ExitCode == 0 ? "succeeded" : "failed";
         var assistantMessage = generated
-            ? $"已通过轻量图片生成链路创建素材：{imageRelativePath}，耗时 {stopwatch.Elapsed.TotalSeconds:0.0} 秒。"
+            ? $"\u5df2\u901a\u8fc7\u8f7b\u91cf\u56fe\u7247\u751f\u6210\u94fe\u8def\u521b\u5efa {generatedImagePaths.Length} \u4e2a\u7d20\u6750\uff0c\u8017\u65f6 {stopwatch.Elapsed.TotalSeconds:0.0} \u79d2\u3002"
             : process.ExitCode == 0
-                ? $"轻量图片生成链路已结束，但没有产出可用图片，耗时 {stopwatch.Elapsed.TotalSeconds:0.0} 秒。"
-                : $"轻量图片生成失败，耗时 {stopwatch.Elapsed.TotalSeconds:0.0} 秒。";
+                ? $"\u8f7b\u91cf\u56fe\u7247\u751f\u6210\u94fe\u8def\u5df2\u7ed3\u675f\uff0c\u4f46\u6ca1\u6709\u4ea7\u51fa\u53ef\u7528\u56fe\u7247\uff0c\u8017\u65f6 {stopwatch.Elapsed.TotalSeconds:0.0} \u79d2\u3002"
+                : $"\u8f7b\u91cf\u56fe\u7247\u751f\u6210\u5931\u8d25\uff0c\u8017\u65f6 {stopwatch.Elapsed.TotalSeconds:0.0} \u79d2\u3002";
 
         var sidecar = new
         {
@@ -94,7 +118,8 @@ public sealed class ProjectAssetImageGenerator
             route = "project-asset-image-direct",
             status,
             elapsed_seconds = Math.Round(stopwatch.Elapsed.TotalSeconds, 3),
-            image = generated ? imageRelativePath : null,
+            image = generated ? ToSlash(Path.GetRelativePath(project.RepoPath, generatedImagePaths[0])) : null,
+            images = generatedImagePaths.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path))).ToArray(),
             prompt = promptRelativePath,
             manifest = File.Exists(manifestPath) ? manifestRelativePath : null,
             exit_code = process.ExitCode,
@@ -110,10 +135,7 @@ public sealed class ProjectAssetImageGenerator
         {
             artifacts.Add(manifestRelativePath);
         }
-        if (generated)
-        {
-            artifacts.Add(imageRelativePath);
-        }
+        artifacts.AddRange(generatedImagePaths.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path))));
 
         return new ProjectAssetImageGenerationResult(
             runId,

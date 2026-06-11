@@ -1,4 +1,4 @@
-using PhaseA.Platform.Browser;
+﻿using PhaseA.Platform.Browser;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -137,6 +137,9 @@ app.Use(async (context, next) =>
          context.Request.Query.ContainsKey("ticket")) ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/packages/", StringComparison.Ordinal) == true &&
+         context.Request.Query.ContainsKey("ticket")) ||
+        (context.Request.Path.StartsWithSegments("/projects") &&
+         context.Request.Path.Value?.Contains("/gdd/GDD.md", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")))
     {
         await next(context);
@@ -188,6 +191,12 @@ app.MapGet("/ui-v2", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderShellV2(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/gdd-outline", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderGddOutline(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/backup", (
@@ -366,6 +375,7 @@ app.MapPost("/api/projects/{projectId}/gdd", async (
     HttpContext context,
     [FromServices] GameDesignDocumentService gdd,
     [FromServices] ProjectChatHistoryService chatHistory,
+    [FromServices] ProjectPackageDownloadTicketService tickets,
     CancellationToken cancellationToken) =>
 {
     try
@@ -374,11 +384,29 @@ app.MapPost("/api/projects/{projectId}/gdd", async (
         var result = await gdd.CreateAsync(accountId, projectId, request, cancellationToken);
         if (result.Status == "succeeded")
         {
+            var outlineUrl = $"/gdd-outline?projectId={Uri.EscapeDataString(projectId)}";
+            var chatSummary = $"{result.Summary}\n\n\u67e5\u9605\u7b56\u5212\u5927\u7eb2\uff1a{outlineUrl}";
             await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "gdd-request", cancellationToken);
-            await chatHistory.AppendAsync(accountId, projectId, "assistant", result.Summary, "gdd-result", cancellationToken);
+            await chatHistory.AppendAsync(accountId, projectId, "assistant", chatSummary, "gdd-result", cancellationToken);
+            return Results.Ok(new
+            {
+                result.ProjectId,
+                result.RunId,
+                result.Status,
+                result.RelativePath,
+                DownloadUrl = outlineUrl,
+                result.Artifacts,
+                result.FailureCode,
+                result.Summary
+            });
         }
 
-        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+        var failureSummary = string.IsNullOrWhiteSpace(result.Summary)
+            ? "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002"
+            : result.Summary;
+        await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "gdd-request", cancellationToken);
+        await chatHistory.AppendAsync(accountId, projectId, "assistant", failureSummary, "gdd-result", cancellationToken);
+        return Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
     {
@@ -403,6 +431,58 @@ app.MapGet("/api/projects/{projectId}/gdd", async (
             lastUpdatedUtc = result.LastUpdatedUtc,
             downloadUrl = $"/api/projects/{projectId}/gdd/download"
         });
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/outline", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var result = await gdd.ReadOutlineAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "gdd_outline_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/outline/export", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var result = await gdd.ExportOutlineMarkdownAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "gdd_outline_not_found" })
+        : Results.Ok(new
+        {
+            result.FileName,
+            result.RelativePath,
+            result.SizeBytes,
+            result.LastUpdatedUtc,
+            downloadPageUrl = $"/downloads?projectId={Uri.EscapeDataString(projectId)}"
+        });
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async (
+    string projectId,
+    string sectionId,
+    GameDesignOutlineSectionRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await gdd.GenerateSectionAsync(
+            CurrentAccountId(context),
+            projectId,
+            request with { SectionId = sectionId },
+            cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
 });
 
 app.MapGet("/api/projects/{projectId}/gdd/download", async (

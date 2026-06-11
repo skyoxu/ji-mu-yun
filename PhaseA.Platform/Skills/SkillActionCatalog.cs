@@ -11,20 +11,6 @@ public sealed class SkillActionCatalog
             "调用白名单游戏策划 skill，帮助梳理玩法、GDD、机制、叙事与原型设计建议。",
             "user",
             "codex-read-only"),
-        new(
-            "map-making-master",
-            "generate2dmap",
-            "地图制作大师",
-            "调用白名单 2D 地图制作 skill，生成或细化可玩的 2D 场景地图方案。",
-            "user",
-            "codex-workspace-write"),
-        new(
-            "character-making-master",
-            "generate2dsprite",
-            "角色制作大师",
-            "调用白名单 2D 角色与精灵制作 skill，生成或细化角色、敌人、NPC、道具和动画资源方案。",
-            "user",
-            "codex-workspace-write")
     ];
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
