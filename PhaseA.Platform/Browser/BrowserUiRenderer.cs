@@ -947,7 +947,29 @@ public sealed class BrowserUiRenderer
                   color: var(--muted);
                   line-height: 1.15;
                 }
-                .busy-banner { margin-top: 0.75rem; border: 1px solid var(--accent-2); background: #fff8e6; border-radius: 0.9rem; padding: 0.85rem; }
+                .busy-banner {
+                  position: fixed;
+                  top: 0.75rem;
+                  left: 50%;
+                  z-index: 1200;
+                  width: min(calc(100vw - 2rem), 72rem);
+                  min-height: 2.75rem;
+                  transform: translateX(-50%);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border: 1px solid var(--accent-2);
+                  background: #fff8e6;
+                  border-radius: 0.9rem;
+                  box-shadow: 0 0.85rem 2.5rem rgba(57, 43, 24, 0.2);
+                  padding: 0.7rem 1rem;
+                  color: var(--ink);
+                  font-weight: 700;
+                  line-height: 1.35;
+                  text-align: center;
+                  overflow-wrap: anywhere;
+                  pointer-events: auto;
+                }
                 .modal-backdrop {
                   position: fixed;
                   inset: 0;
@@ -1000,7 +1022,7 @@ public sealed class BrowserUiRenderer
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
                 </div>
-                <div id="activeRunBanner" class="busy-banner hidden"></div>
+                <div id="activeRunBanner" class="busy-banner hidden" role="status" aria-live="polite"></div>
               </header>
               <div id="oneTimeTokenModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="oneTimeTokenTitle">
                 <div class="modal-card">
@@ -1424,23 +1446,12 @@ public sealed class BrowserUiRenderer
                       }))
                       .filter(isStoredChatMessage)
                       .slice(-maxStoredChatMessages);
-                    syncIterationPlanFailureFromChat();
                     renderChatHistory();
                     saveChatHistoryForProject();
                     updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
                   } catch {
                     renderChatHistory();
                   }
-                }
-
-                function syncIterationPlanFailureFromChat() {
-                  const latest = state.chatHistory
-                    .filter(message => message.role === "assistant" && message.kind === "iteration-plan-result")
-                    .slice(-1)[0];
-                  const content = sanitizePublicChatContent(latest?.content || "");
-                  state.iterationPlanFailure = content.includes("调用失败") || content.includes("codex_timeout") || content.includes("llm_failed") || content.includes("联系管理员创建定制游戏类型路线")
-                    ? content
-                    : "";
                 }
 
                 async function loadIterationPlan() {
@@ -1538,20 +1549,6 @@ public sealed class BrowserUiRenderer
                 function focusRepairPlanPanel() {
                   $("chatPanel").classList.remove("hidden");
                   $("repairPlanStatus").scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-
-                function repairPlanChatSummary(result) {
-                  const goals = Array.isArray(result?.goals) ? result.goals : [];
-                  const lines = [
-                    result?.summary || "修复计划已生成。",
-                    "",
-                    "下一步：点击“执行下一项修复”，系统会只处理第一项未完成修复步骤。"
-                  ];
-                  if (goals.length) {
-                    lines.push("", "修复步骤：");
-                    goals.forEach(goal => lines.push(`${goal.goalIndex}. ${goal.title}`));
-                  }
-                  return lines.join("\n").trim();
                 }
 
                 function renderIterationPlan() {
@@ -1801,33 +1798,6 @@ public sealed class BrowserUiRenderer
                   await submitIterationPlanFromFeedback(message, "正在生成迭代计划...", sourceKind);
                 }
 
-                function buildIterationPlanEvaluationChatMessage(evaluation) {
-                  if (!evaluation) return "当前没有可用的迭代计划评估结果。";
-                  const lines = [
-                    "迭代计划继续评估结果：",
-                    `decision: ${String(evaluation.decision || "pending").trim()}`,
-                    String(evaluation.summary || "").trim()
-                  ].filter(Boolean);
-                  if (evaluation.reason) lines.push(`原因：${String(evaluation.reason).trim()}`);
-                  if (evaluation.suggestedAction) lines.push(`建议动作：${String(evaluation.suggestedAction).trim()}`);
-                  if (evaluation.suggestedPromptForRegeneration) lines.push(`建议重拆提示词：${String(evaluation.suggestedPromptForRegeneration).trim()}`);
-                  return lines.join("\n");
-                }
-
-                function resolveIterationPlanEvaluationSuggestedFeedback(evaluation) {
-                  const decision = String(evaluation?.decision || "").trim().toLowerCase();
-                  if (decision === "llm_failed") {
-                    return "";
-                  }
-                  if (decision === "should_refine_plan") {
-                    return String(evaluation?.suggestedPromptForRegeneration || state.nextSuggestedFeedback || defaultNextSuggestedFeedback()).trim();
-                  }
-                  if (decision === "ready_to_execute") {
-                    return "__iteration_plan_execute_next__";
-                  }
-                  return "";
-                }
-
                 async function evaluateIterationPlan(announceInChat = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
@@ -1853,24 +1823,10 @@ public sealed class BrowserUiRenderer
                         suggestedAction: state.iterationPlanEvaluation?.suggestedAction || ""
                       });
                     }
-                    if (announceInChat) {
-                      state.chatHistory.push({
-                        role: "assistant",
-                        content: buildIterationPlanEvaluationChatMessage(state.iterationPlanEvaluation),
-                        kind: "iteration-plan-evaluation",
-                        evaluationDecision: state.iterationPlanEvaluation?.decision || "",
-                        suggestedFeedback: resolveIterationPlanEvaluationSuggestedFeedback(state.iterationPlanEvaluation)
-                      });
-                      renderChatHistory();
-                      saveChatHistoryForProject();
-                    }
                     out(state.iterationPlanEvaluation);
                   } catch (error) {
                     const payload = error?.payload;
                     if (payload?.status && payload?.summary) {
-                      state.chatHistory.push({ role: "assistant", content: payload.summary, kind: "iteration-plan-result" });
-                      renderChatHistory();
-                      saveChatHistoryForProject();
                       out({ status: error.status, ...payload });
                     } else {
                     showError(error);
@@ -1884,9 +1840,6 @@ public sealed class BrowserUiRenderer
                 async function submitIterationPlanFromFeedback(message, busyText, sourceKind = "manual_feedback") {
                   setLocalBusy(true, "正在生成迭代计划，请等待当前任务执行完毕。");
                   try {
-                    state.chatHistory.push({ role: "user", content: message, kind: "iteration-plan-request" });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
                       method: "POST",
@@ -1896,10 +1849,6 @@ public sealed class BrowserUiRenderer
                     const summary = result.goals?.length
                       ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
                       : result.summary;
-                    state.chatHistory.push({ role: "assistant", content: summary, kind: "iteration-plan-result" });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
-                    await loadServerChatHistoryForProject(state.projectId);
                     if (result.status !== "ready") {
                       state.iterationPlanEvaluation = null;
                     state.iterationPlanFailure = summary || "迭代计划生成失败。";
@@ -2024,11 +1973,7 @@ public sealed class BrowserUiRenderer
                   try {
                     const result = await api(`/api/projects/${state.projectId}/repair-plan`, { method: "POST" });
                     state.repairPlan = result;
-                    await loadServerChatHistoryForProject(state.projectId);
                     renderRepairPlan();
-                    state.chatHistory.push({ role: "assistant", content: repairPlanChatSummary(result), kind: "repair-plan-visible-summary" });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
                     focusRepairPlanPanel();
                     out(result);
                   } catch (error) {
@@ -2766,14 +2711,17 @@ public sealed class BrowserUiRenderer
                     const runType = view === "chat" ? "prototype-chat" : $("adminRunMetricsType").value.trim();
                     if (accountId) query.set("accountId", accountId);
                     if (runType) query.set("runType", runType);
-                    query.set("limit", "200");
+                    query.set("limit", "500");
                     const metrics = await api(`/api/admin/run-metrics?${query}`);
                     const runs = metrics.runs || [];
                     const chats = metrics.chatAverages || [];
+                    const chatRuns = metrics.chatRuns || [];
+                    const assetRuns = metrics.assetRuns || [];
                     const isChatView = view === "chat";
                     $("adminRunMetricsStatus").className = "card";
                     $("adminRunMetricsStatus").innerHTML = isChatView ? `
                       <strong>每个普通用户的聊天平均响应时长</strong>
+                      <p class="muted">最近聊天记录：${escapeHtml(chatRuns.length)} 条</p>
                       <div class="card-list">
                         ${chats.map(item => `
                           <div class="card">
@@ -2783,9 +2731,9 @@ public sealed class BrowserUiRenderer
                         `).join("") || "<p class='muted'>没有匹配的聊天 run。</p>"}
                       </div>
                     ` : `
-                      <strong>普通用户 run 花费时间记录：${escapeHtml(metrics.count || 0)} 条非聊天 run</strong>
+                      <strong>普通用户 run 花费时间记录：${escapeHtml(metrics.count || 0)} 条普通 run · ${escapeHtml(assetRuns.length)} 条素材生成 run</strong>
                       <div class="card-list">
-                        ${runs.map(run => `
+                        ${[...runs, ...assetRuns].map(run => `
                           <div class="card">
                             <strong>${escapeHtml(run.username)} · ${escapeHtml(run.runType)} · ${escapeHtml(run.status)}</strong>
                             <p class="muted">project: ${escapeHtml(run.projectName || run.projectId)} · ${escapeHtml(run.gameName || "")}</p>
@@ -3052,30 +3000,18 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback").disabled = true;
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
                   try {
-                    state.chatHistory.push({ role: "user", content: feedback });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/prototype-feedback-iterations`, {
                       method: "POST",
                       body: JSON.stringify({ feedback, model: $("globalModel").value, skillActionId: $("chatSkillMode").value || "normal" })
                     });
-                    state.chatHistory.push({ role: "assistant", content: result.assistantMessage || "\u672c\u8f6e\u6b63\u5f0f\u53cd\u9988\u5df2\u5b8c\u6210\u3002" });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
-                    await loadServerChatHistoryForProject(state.projectId);
                     out(result);
                     await loadRuns();
                     updateContinueSuggestionFromText(result.assistantMessage);
                   } catch (error) {
                     const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮正式反馈处理失败。");
-                    if (message) {
-                      state.chatHistory.push({ role: "assistant", content: message, kind: "formal-feedback-failed" });
-                      renderChatHistory();
-                      saveChatHistoryForProject();
-                    }
+                    out(message);
                     showError(error);
-                    await loadServerChatHistoryForProject(state.projectId);
                   }
                   finally {
                     setLocalBusy(false);
@@ -3137,9 +3073,6 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback").disabled = true;
                   try {
                     const feedback = String(payload?.feedback || "").trim();
-                    state.chatHistory.push({ role: "user", content: feedback, kind: "needs-fix-route" });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/needs-fix-route`, {
                       method: "POST",
@@ -3154,14 +3087,6 @@ public sealed class BrowserUiRenderer
                     const routeStatus = String(result.status || "").trim().toLowerCase();
                     const goalStatus = String(result.iterationGoalStatus || "").trim().toLowerCase();
                     const needsMoreFix = goalStatus === "needs_fix" || goalStatus === "failed" || routeStatus === "needs_fix" || routeStatus === "failed";
-                    state.chatHistory.push({
-                      role: "assistant",
-                      content: result.summary || (needsMoreFix ? "本轮 needs-fix 路由已执行，但当前目标仍需继续修复。" : "本轮 needs-fix 路由已完成。"),
-                      kind: needsMoreFix ? "needs-fix-route-failed" : "needs-fix-route-result"
-                    });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
-                    await loadServerChatHistoryForProject(state.projectId);
                     out(result);
                     $("iterationNeedsFixStatus").className = needsMoreFix ? "card" : "card muted";
                     $("iterationNeedsFixStatus").textContent = result.summary || (needsMoreFix ? "Needs Fix 路由已执行，但当前 step 仍需继续修复。" : "Needs Fix 路由已完成。");
@@ -3171,13 +3096,8 @@ public sealed class BrowserUiRenderer
                     const message = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || "Needs fix route failed.");
                     $("iterationNeedsFixStatus").className = "card";
                     $("iterationNeedsFixStatus").textContent = message;
-                    if (message) {
-                      state.chatHistory.push({ role: "assistant", content: message, kind: "needs-fix-route-failed" });
-                      renderChatHistory();
-                      saveChatHistoryForProject();
-                    }
+                    out(message);
                     showError(error);
-                    await loadServerChatHistoryForProject(state.projectId);
                   }
                   finally {
                     setLocalBusy(false);
@@ -3693,11 +3613,6 @@ public sealed class BrowserUiRenderer
                     const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
                     if (evaluationSuggestion) {
                       openIterationPlanUpdateModal("update", evaluationSuggestion);
-                      return;
-                    }
-                    const evaluationMessage = state.chatHistory.filter(message => message.role === "assistant" && message.kind === "iteration-plan-evaluation" && !message.continueConsumed).slice(-1)[0];
-                    if (evaluationMessage) {
-                      await continueSuggestedFeedback(state.chatHistory.indexOf(evaluationMessage));
                       return;
                     }
                     if (!state.nextSuggestedFeedback) return out("当前没有可用于重拆计划的建议。");
@@ -5699,6 +5614,13 @@ public sealed class BrowserUiRenderer
                     <tbody id="rows"><tr><td class="muted">暂无数据。</td></tr></tbody>
                   </table>
                 </section>
+                <section id="recentRunsSection" class="card hidden">
+                  <h2 id="recentRunsTitle">最近聊天 run 明细</h2>
+                  <table>
+                    <thead id="recentHead"></thead>
+                    <tbody id="recentRows"><tr><td class="muted">暂无数据。</td></tr></tbody>
+                  </table>
+                </section>
               </main>
               <script>
                 const mode = "__MODE__";
@@ -5740,20 +5662,22 @@ public sealed class BrowserUiRenderer
                     query.set("limit", "500");
                     const result = await api(`/api/admin/run-metrics?${query}`);
                     if (mode === "chat") {
-                      renderChatAverages(result.chatAverages || []);
+                      renderChatAverages(result.chatAverages || [], result.chatRuns || []);
                     } else {
-                      renderRunDurations(result.runs || [], result.count || 0);
+                      renderRunDurations(result.runs || [], result.count || 0, result.assetRuns || []);
                     }
                   } catch (error) {
                     $("summary").className = "card danger";
                     $("summary").textContent = error.message === "missing_token" ? "当前浏览器没有 token，请先回控制台登录。" : error.message;
                   }
                 }
-                function renderRunDurations(runs, count) {
+                function renderRunDurations(runs, count, assetRuns) {
+                  $("recentRunsSection").classList.add("hidden");
                   $("head").innerHTML = "<tr><th>用户</th><th>项目</th><th>Run</th><th>状态</th><th>排队</th><th>运行</th><th>启动序号</th><th>时间</th></tr>";
                   $("summary").className = "card";
-                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(count)}</strong><br><span class="muted">非聊天 run</span></span></div>`;
-                  $("rows").innerHTML = runs.map(run => `
+                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(count)}</strong><br><span class="muted">普通 run</span></span><span><strong>${escapeHtml(assetRuns.length)}</strong><br><span class="muted">素材生成 run</span></span></div>`;
+                  const allRuns = [...runs, ...assetRuns];
+                  $("rows").innerHTML = allRuns.map(run => `
                     <tr>
                       <td>${escapeHtml(run.username)}</td>
                       <td>${escapeHtml(run.projectName || run.projectId)}<br><span class="muted">${escapeHtml(run.gameName || "")}</span></td>
@@ -5764,13 +5688,13 @@ public sealed class BrowserUiRenderer
                       <td>${escapeHtml(run.queuePositionAtStart ?? "-")}</td>
                       <td><span class="muted">created</span> ${escapeHtml(run.createdUtc)}<br><span class="muted">started</span> ${escapeHtml(run.startedUtc || "")}<br><span class="muted">finished</span> ${escapeHtml(run.finishedUtc || "")}</td>
                     </tr>
-                  `).join("") || `<tr><td colspan="8" class="muted">没有匹配的非聊天 run。</td></tr>`;
+                  `).join("") || `<tr><td colspan="8" class="muted">没有匹配的 run。</td></tr>`;
                 }
-                function renderChatAverages(items) {
+                function renderChatAverages(items, chatRuns) {
                   $("head").innerHTML = "<tr><th>用户</th><th>聊天 run 数</th><th>平均排队</th><th>平均响应</th></tr>";
                   const totalRuns = items.reduce((sum, item) => sum + Number(item.runCount || 0), 0);
                   $("summary").className = "card";
-                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(items.length)}</strong><br><span class="muted">普通用户</span></span><span><strong>${escapeHtml(totalRuns)}</strong><br><span class="muted">聊天 run</span></span></div>`;
+                  $("summary").innerHTML = `<div class="summary"><span><strong>${escapeHtml(items.length)}</strong><br><span class="muted">普通用户</span></span><span><strong>${escapeHtml(totalRuns)}</strong><br><span class="muted">聊天 run</span></span><span><strong>${escapeHtml(chatRuns.length)}</strong><br><span class="muted">最近聊天记录</span></span></div>`;
                   $("rows").innerHTML = items.map(item => `
                     <tr>
                       <td>${escapeHtml(item.username)}<br><span class="muted">${escapeHtml(item.accountId)}</span></td>
@@ -5778,7 +5702,18 @@ public sealed class BrowserUiRenderer
                       <td>${escapeHtml(formatSeconds(item.averageQueueSeconds))}</td>
                       <td>${escapeHtml(formatSeconds(item.averageRuntimeSeconds))}</td>
                     </tr>
-                  `).join("") || `<tr><td colspan="4" class="muted">没有匹配的聊天 run。</td></tr>`;
+                  `).join("") || `<tr><td colspan="4" class="muted">没有匹配的聊天平均数据。</td></tr>`;
+                  $("recentRunsSection").classList.remove("hidden");
+                  $("recentRunsTitle").textContent = "最近聊天 run 明细";
+                  $("recentHead").innerHTML = "<tr><th>用户</th><th>Run</th><th>排队</th><th>状态 / 响应</th></tr>";
+                  $("recentRows").innerHTML = chatRuns.map(run => `
+                    <tr>
+                      <td>${escapeHtml(run.username)}<br><span class="muted">${escapeHtml(run.accountId)}</span></td>
+                      <td>${escapeHtml(run.runId)}</td>
+                      <td>${escapeHtml(formatSeconds(run.queueSeconds))}</td>
+                      <td>${escapeHtml(run.status)} · ${escapeHtml(formatSeconds(run.runtimeSeconds))}<br><span class="muted">${escapeHtml(run.createdUtc)}</span></td>
+                    </tr>
+                  `).join("") || `<tr><td colspan="4" class="muted">没有最近聊天 run 明细。</td></tr>`;
                 }
                 $("load").onclick = loadMetrics;
                 $("back").onclick = () => { location.href = "/"; };

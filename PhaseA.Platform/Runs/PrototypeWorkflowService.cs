@@ -1111,7 +1111,6 @@ public sealed class PrototypeWorkflowService
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
         WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
         WritePrototypeRepairState(project, runId, status, exitCode, prototypeRecordPath, slug, preferredShellScene, failedRun, validation, smoke);
-        await AppendPrototypeRepairChatMessageAsync(project, runId, status, validation, smoke, CancellationToken.None);
         await SetProgressAsync(
             runId,
             status,
@@ -1496,52 +1495,6 @@ public sealed class PrototypeWorkflowService
             godot_smoke = smoke.ToEvidence(),
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-    }
-
-    private async Task AppendPrototypeRepairChatMessageAsync(
-        ProjectSnapshot project,
-        string runId,
-        string status,
-        PrototypeCompletionValidation validation,
-        PrototypeGodotSmokeResult smoke,
-        CancellationToken cancellationToken)
-    {
-        var failureCode = ResolveRepairFailureCode(validation, smoke);
-        var message = BuildPrototypeRepairChatMessage(runId, status, validation, smoke, failureCode);
-        await _metadataStore.AddProjectChatMessageAsync(
-            project.AccountId,
-            project.ProjectId,
-            "assistant",
-            PublicChatSanitizer.Sanitize(message),
-            "prototype-repair-result",
-            ProjectChatHistoryService.DefaultLimit,
-            cancellationToken);
-    }
-
-    private static string BuildPrototypeRepairChatMessage(
-        string runId,
-        string status,
-        PrototypeCompletionValidation validation,
-        PrototypeGodotSmokeResult smoke,
-        string failureCode)
-    {
-        var result = string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase)
-            ? "本轮原型修复已通过平台验收。"
-            : "本轮原型修复尚未通过平台验收。";
-        var smokeLine = smoke.Ran
-            ? $"平台验收结果：{(smoke.ExitCode == 0 ? "通过" : "未通过")}。"
-            : "平台验收结果：本轮未执行。";
-        var focus = BuildNextRepairFocus(failureCode, validation.SmokeScene ?? smoke.ScenePath ?? "");
-
-        return $"""
-            原型修复进展
-
-            {result}
-            {smokeLine}
-            当前错误码：{failureCode}
-            下一次修复重点：{focus}
-            修复记录：{runId}
-            """;
     }
 
     private static string ResolveRepairFailureCode(PrototypeCompletionValidation validation, PrototypeGodotSmokeResult smoke)

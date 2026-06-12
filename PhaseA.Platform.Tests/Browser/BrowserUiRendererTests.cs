@@ -300,6 +300,11 @@ public sealed class BrowserUiRendererTests
 
         html.Should().Contain("Phase A Prototype Console");
         html.Should().Contain("activeRunBanner");
+        html.Should().Contain(".busy-banner");
+        html.Should().Contain("position: fixed");
+        html.Should().Contain("top: 0.75rem");
+        html.Should().Contain("pointer-events: auto");
+        html.Should().Contain("role=\"status\" aria-live=\"polite\"");
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("当前任务执行中");
         html.Should().Contain("guardGlobalAction");
@@ -589,7 +594,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("失败");
         html.Should().Contain("需修复");
         html.Should().Contain("prototype-feedback-iterations");
-        html.Should().Contain("formal-feedback-failed");
+        html.Should().NotContain("formal-feedback-failed");
         html.Should().Contain("assistantMessage");
         html.Should().NotContain("skillActionPanel");
         html.Should().NotContain("skillActionSelect");
@@ -600,11 +605,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("skillActionId");
         html.Should().Contain("createIterationPlan");
         html.Should().Contain("evaluateIterationPlan");
-        html.Should().Contain("buildIterationPlanEvaluationChatMessage");
-        html.Should().Contain("resolveIterationPlanEvaluationSuggestedFeedback");
+        html.Should().NotContain("buildIterationPlanEvaluationChatMessage");
+        html.Should().NotContain("resolveIterationPlanEvaluationSuggestedFeedback");
         html.Should().Contain("__iteration_plan_evaluate__");
         html.Should().Contain("__iteration_plan_execute_next__");
-        html.Should().Contain("iteration-plan-evaluation");
+        html.Should().NotContain("iteration-plan-evaluation");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");
         html.Should().Contain("<button id=\"executeIterationGoal\" class=\"secondary\" data-global-action=\"true\">执行下一目标</button>");
@@ -644,8 +649,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadIterationPlan");
         html.Should().Contain("renderIterationPlan");
         html.Should().Contain("submitIterationPlanFromFeedback");
-        html.Should().Contain("iteration-plan-request");
-        html.Should().Contain("iteration-plan-result");
+        html.Should().NotContain("iteration-plan-request");
+        html.Should().NotContain("iteration-plan-result");
         html.Should().Contain("await loadServerChatHistoryForProject(state.projectId);");
         html.Should().Contain("Codex");
         html.Should().Contain("/chat");
@@ -721,6 +726,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/admin/users");
         html.Should().Contain("/api/admin/run-metrics");
         html.Should().Contain("renderRunDurations");
+        html.Should().Contain("assetRuns");
         html.Should().Contain("queuePositionAtStart");
         html.Should().Contain("runTypeLabel");
         html.Should().Contain("返回控制台");
@@ -736,6 +742,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/admin/run-metrics");
         html.Should().Contain("prototype-chat");
         html.Should().Contain("renderChatAverages");
+        html.Should().Contain("chatRuns");
+        html.Should().Contain("recentRunsSection");
+        html.Should().Contain("最近聊天 run 明细");
+        html.Should().Contain("没有最近聊天 run 明细");
         html.Should().Contain("averageRuntimeSeconds");
         html.Should().Contain("runTypeLabel");
         html.Should().Contain("style.display = \"none\"");

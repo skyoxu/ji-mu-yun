@@ -1557,7 +1557,10 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(status);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        var finishedUtc = DateTimeOffset.UtcNow.ToString("O");
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             UPDATE runs
@@ -1571,12 +1574,16 @@ public sealed class PhaseAMetadataStore
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$status", status);
-        command.Parameters.AddWithValue("$finished_utc", DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
         command.Parameters.AddWithValue("$exit_code", exitCode);
         command.Parameters.AddWithValue("$stdout_text", stdoutText);
         command.Parameters.AddWithValue("$stderr_text", stderrText);
         command.Parameters.AddWithValue("$evidence_json", evidenceJson);
         await command.ExecuteNonQueryAsync(cancellationToken);
+
+        await UpsertRunDurationMetricAsync(connection, transaction, runId, finishedUtc, cancellationToken);
+        await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task AddArtifactAsync(ArtifactCreationCommand create, CancellationToken cancellationToken = default)
@@ -1891,7 +1898,7 @@ public sealed class PhaseAMetadataStore
     public async Task<IReadOnlyList<AdminRunMetricsRow>> ListRunMetricsForAdminAsync(
         string? accountId,
         string? runType,
-        int limit = 200,
+        int limit = 500,
         CancellationToken cancellationToken = default)
     {
         if (limit < 1)
@@ -1907,41 +1914,49 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT
-                a.id,
-                a.username,
-                p.id,
-                p.name,
-                p.game_name,
-                r.id,
-                r.project_id,
-                r.workspace_id,
-                r.run_type,
-                r.status,
-                r.created_utc,
-                r.started_utc,
-                r.finished_utc,
-                r.queue_position_at_start,
-                r.exit_code,
-                r.stdout_text,
-                r.stderr_text,
-                r.evidence_json,
-                r.progress_step,
-                r.progress_substep,
-                r.progress_label,
-                r.progress_updated_utc,
-                r.llm_gateway,
-                r.llm_request_id,
-                r.llm_model,
-                r.llm_cost_json
-            FROM runs r
-            INNER JOIN projects p ON p.id = r.project_id
-            INNER JOIN accounts a ON a.id = p.account_id
-            WHERE a.is_admin = 0
-              AND ($account_id IS NULL OR a.id = $account_id)
-              AND ($run_type IS NULL OR r.run_type = $run_type)
-            ORDER BY r.created_utc DESC, r.id DESC
-            LIMIT $limit;
+            SELECT account_id,
+                   username,
+                   project_id,
+                   project_name,
+                   game_name,
+                   run_id,
+                   run_type,
+                   status,
+                   created_utc,
+                   started_utc,
+                   finished_utc,
+                   queue_position_at_start,
+                   queue_seconds,
+                   runtime_seconds,
+                   exit_code
+            FROM (
+                SELECT
+                    account_id,
+                    username,
+                    project_id,
+                    project_name,
+                    game_name,
+                    run_id,
+                    run_type,
+                    status,
+                    created_utc,
+                    started_utc,
+                    finished_utc,
+                    queue_position_at_start,
+                    queue_seconds,
+                    runtime_seconds,
+                    exit_code,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY account_id
+                        ORDER BY created_utc DESC, run_id DESC
+                    ) AS rn
+                FROM run_duration_metrics
+                WHERE bucket = 'workflow'
+                  AND ($account_id IS NULL OR account_id = $account_id)
+                  AND ($run_type IS NULL OR run_type = $run_type)
+            )
+            WHERE rn <= $limit
+            ORDER BY created_utc DESC, run_id DESC
             """;
         command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
         command.Parameters.AddWithValue("$run_type", (object?)normalizedRunType ?? DBNull.Value);
@@ -1952,12 +1967,105 @@ public sealed class PhaseAMetadataStore
         while (await reader.ReadAsync(cancellationToken))
         {
             rows.Add(new AdminRunMetricsRow(
-                reader.GetString(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.GetString(3),
-                reader.GetString(4),
-                ReadRunSnapshot(reader, offset: 5)));
+                ReadRunDurationMetricSnapshot(reader)));
+        }
+
+        return rows;
+    }
+
+    public async Task<IReadOnlyList<AdminChatRunMetricSnapshotRow>> ListChatRunMetricSnapshotsForAdminAsync(
+        string? accountId,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+        var normalizedAccountId = string.IsNullOrWhiteSpace(accountId) ? null : accountId.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                account_id,
+                username,
+                project_id,
+                project_name,
+                game_name,
+                run_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
+                queue_seconds,
+                runtime_seconds,
+                exit_code
+            FROM run_duration_metrics
+            WHERE bucket = 'chat'
+              AND ($account_id IS NULL OR account_id = $account_id)
+            ORDER BY created_utc DESC, run_id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$limit", boundedLimit);
+
+        var rows = new List<AdminChatRunMetricSnapshotRow>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rows.Add(new AdminChatRunMetricSnapshotRow(ReadRunDurationMetricSnapshot(reader)));
+        }
+
+        return rows;
+    }
+
+    public async Task<IReadOnlyList<AdminAssetRunMetricsRow>> ListAssetRunMetricsForAdminAsync(
+        string? accountId,
+        string? runType,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+        var normalizedAccountId = string.IsNullOrWhiteSpace(accountId) ? null : accountId.Trim();
+        var normalizedRunType = string.IsNullOrWhiteSpace(runType) ? null : runType.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                account_id,
+                username,
+                project_id,
+                project_name,
+                game_name,
+                run_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
+                queue_seconds,
+                runtime_seconds,
+                exit_code
+            FROM run_duration_metrics
+            WHERE bucket = 'asset'
+              AND ($account_id IS NULL OR account_id = $account_id)
+              AND ($run_type IS NULL OR run_type = $run_type)
+            ORDER BY created_utc DESC, run_id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$run_type", (object?)normalizedRunType ?? DBNull.Value);
+        command.Parameters.AddWithValue("$limit", boundedLimit);
+
+        var rows = new List<AdminAssetRunMetricsRow>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            rows.Add(new AdminAssetRunMetricsRow(ReadRunDurationMetricSnapshot(reader)));
         }
 
         return rows;
@@ -1974,25 +2082,16 @@ public sealed class PhaseAMetadataStore
         command.CommandText =
             """
             SELECT
-                a.id,
-                a.username,
+                account_id,
+                username,
                 COUNT(*) AS run_count,
-                ROUND(AVG(CASE
-                    WHEN r.started_utc IS NULL THEN NULL
-                    ELSE MAX(0.0, (julianday(r.started_utc) - julianday(r.created_utc)) * 86400.0)
-                END), 3) AS average_queue_seconds,
-                ROUND(AVG(CASE
-                    WHEN r.started_utc IS NULL OR r.finished_utc IS NULL THEN NULL
-                    ELSE MAX(0.0, (julianday(r.finished_utc) - julianday(r.started_utc)) * 86400.0)
-                END), 3) AS average_runtime_seconds
-            FROM runs r
-            INNER JOIN projects p ON p.id = r.project_id
-            INNER JOIN accounts a ON a.id = p.account_id
-            WHERE a.is_admin = 0
-              AND r.run_type = 'prototype-chat'
-              AND ($account_id IS NULL OR a.id = $account_id)
-            GROUP BY a.id, a.username
-            ORDER BY a.username ASC, a.id ASC;
+                ROUND(AVG(queue_seconds), 3) AS average_queue_seconds,
+                ROUND(AVG(runtime_seconds), 3) AS average_runtime_seconds
+            FROM run_duration_metrics
+            WHERE bucket = 'chat'
+              AND ($account_id IS NULL OR account_id = $account_id)
+            GROUP BY account_id, username
+            ORDER BY username ASC, account_id ASC;
             """;
         command.Parameters.AddWithValue("$account_id", (object?)normalizedAccountId ?? DBNull.Value);
 
@@ -3134,6 +3233,172 @@ public sealed class PhaseAMetadataStore
             ("$account_id", accountId));
 
         return value is null ? _options.HostedProjectLimit : checked((int)value.Value);
+    }
+
+    private static async Task UpsertRunDurationMetricAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string runId,
+        string finishedUtc,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            INSERT INTO run_duration_metrics (
+                id,
+                bucket,
+                account_id,
+                username,
+                project_id,
+                project_name,
+                game_name,
+                run_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
+                queue_seconds,
+                runtime_seconds,
+                exit_code)
+            SELECT
+                $id,
+                CASE
+                    WHEN r.run_type = 'prototype-chat' THEN 'chat'
+                    WHEN r.run_type = 'project-asset-generation' OR r.run_type = 'asset-generation' THEN 'asset'
+                    ELSE 'workflow'
+                END,
+                a.id,
+                a.username,
+                p.id,
+                p.name,
+                p.game_name,
+                r.id,
+                r.run_type,
+                r.status,
+                r.created_utc,
+                r.started_utc,
+                COALESCE(r.finished_utc, $finished_utc),
+                r.queue_position_at_start,
+                ROUND(CASE
+                    WHEN r.started_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(r.started_utc) - julianday(r.created_utc)) * 86400.0)
+                END, 3),
+                ROUND(CASE
+                    WHEN r.started_utc IS NULL OR COALESCE(r.finished_utc, $finished_utc) IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(COALESCE(r.finished_utc, $finished_utc)) - julianday(r.started_utc)) * 86400.0)
+                END, 3),
+                r.exit_code
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE r.id = $run_id
+              AND a.is_admin = 0
+            ON CONFLICT(run_id) DO UPDATE SET
+                bucket = excluded.bucket,
+                account_id = excluded.account_id,
+                username = excluded.username,
+                project_id = excluded.project_id,
+                project_name = excluded.project_name,
+                game_name = excluded.game_name,
+                run_type = excluded.run_type,
+                status = excluded.status,
+                created_utc = excluded.created_utc,
+                started_utc = excluded.started_utc,
+                finished_utc = excluded.finished_utc,
+                queue_position_at_start = excluded.queue_position_at_start,
+                queue_seconds = excluded.queue_seconds,
+                runtime_seconds = excluded.runtime_seconds,
+                exit_code = excluded.exit_code;
+            """;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$run_id", runId);
+        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task PruneRunDurationMetricsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var workflowCommand = connection.CreateCommand();
+        workflowCommand.Transaction = transaction;
+        workflowCommand.CommandText =
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'workflow'
+              AND id NOT IN (
+                  SELECT id
+                  FROM (
+                      SELECT
+                          id,
+                          ROW_NUMBER() OVER (
+                              PARTITION BY account_id
+                              ORDER BY created_utc DESC, run_id DESC
+                          ) AS rn
+                      FROM run_duration_metrics
+                      WHERE bucket = 'workflow'
+                  )
+                  WHERE rn <= 500
+              );
+            """;
+        await workflowCommand.ExecuteNonQueryAsync(cancellationToken);
+
+        await using var chatCommand = connection.CreateCommand();
+        chatCommand.Transaction = transaction;
+        chatCommand.CommandText =
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'chat'
+              AND id NOT IN (
+                  SELECT id
+                  FROM run_duration_metrics
+                  WHERE bucket = 'chat'
+                  ORDER BY created_utc DESC, run_id DESC
+                  LIMIT 500
+              );
+            """;
+        await chatCommand.ExecuteNonQueryAsync(cancellationToken);
+
+        await using var assetCommand = connection.CreateCommand();
+        assetCommand.Transaction = transaction;
+        assetCommand.CommandText =
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'asset'
+              AND id NOT IN (
+                  SELECT id
+                  FROM run_duration_metrics
+                  WHERE bucket = 'asset'
+                  ORDER BY created_utc DESC, run_id DESC
+                  LIMIT 500
+              );
+            """;
+        await assetCommand.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static RunDurationMetricSnapshot ReadRunDurationMetricSnapshot(SqliteDataReader reader, int offset = 0)
+    {
+        return new RunDurationMetricSnapshot(
+            reader.GetString(offset + 0),
+            reader.GetString(offset + 1),
+            reader.GetString(offset + 2),
+            reader.GetString(offset + 3),
+            reader.GetString(offset + 4),
+            reader.GetString(offset + 5),
+            reader.GetString(offset + 6),
+            reader.GetString(offset + 7),
+            reader.GetString(offset + 8),
+            reader.IsDBNull(offset + 9) ? null : reader.GetString(offset + 9),
+            reader.IsDBNull(offset + 10) ? null : reader.GetString(offset + 10),
+            reader.IsDBNull(offset + 11) ? null : reader.GetInt32(offset + 11),
+            reader.IsDBNull(offset + 12) ? null : reader.GetDouble(offset + 12),
+            reader.IsDBNull(offset + 13) ? null : reader.GetDouble(offset + 13),
+            reader.IsDBNull(offset + 14) ? null : reader.GetInt32(offset + 14));
     }
 
     private static RunSnapshot ReadRunSnapshot(SqliteDataReader reader, int offset = 0)

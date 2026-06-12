@@ -28,7 +28,7 @@ public sealed class ArtifactReadbackService
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
-        _prototypeCreationQueue = prototypeCreationQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(20), options.MaxConcurrentPrototypeCreations);
+        _prototypeCreationQueue = prototypeCreationQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(25), options.MaxConcurrentPrototypeCreations);
         _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
     }
 
@@ -167,33 +167,29 @@ public sealed class ArtifactReadbackService
     public async Task<AdminRunMetricsReadback> GetAdminRunMetricsAsync(
         string? accountId,
         string? runType,
-        int limit = 200,
+        int limit = 500,
         CancellationToken cancellationToken = default)
     {
         var boundedLimit = Math.Clamp(limit, 1, 500);
         var rows = await _metadataStore.ListRunMetricsForAdminAsync(accountId, runType, boundedLimit, cancellationToken);
+        var includeChatRuns = string.IsNullOrWhiteSpace(runType) ||
+                              string.Equals(runType.Trim(), "prototype-chat", StringComparison.OrdinalIgnoreCase);
+        var includeAssetRuns = string.IsNullOrWhiteSpace(runType) ||
+                               string.Equals(runType.Trim(), "project-asset-generation", StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(runType.Trim(), "asset-generation", StringComparison.OrdinalIgnoreCase);
         var includeChatAverages = string.IsNullOrWhiteSpace(runType) ||
                                   string.Equals(runType.Trim(), "prototype-chat", StringComparison.OrdinalIgnoreCase);
         var chatRows = includeChatAverages
             ? await _metadataStore.ListChatRunMetricsForAdminAsync(accountId, cancellationToken)
             : Array.Empty<AdminChatRunMetricsRow>();
+        var chatRunRows = includeChatRuns
+            ? await _metadataStore.ListChatRunMetricSnapshotsForAdminAsync(accountId, 500, cancellationToken)
+            : Array.Empty<AdminChatRunMetricSnapshotRow>();
+        var assetRows = includeAssetRuns
+            ? await _metadataStore.ListAssetRunMetricsForAdminAsync(accountId, runType, 500, cancellationToken)
+            : Array.Empty<AdminAssetRunMetricsRow>();
         var nonChatRuns = rows
-            .Where(row => !string.Equals(row.Run.RunType, "prototype-chat", StringComparison.OrdinalIgnoreCase))
-            .Select(row => new AdminRunMetricsItem(
-                row.AccountId,
-                row.Username,
-                row.ProjectId,
-                row.ProjectName,
-                row.GameName,
-                row.Run.RunId,
-                row.Run.RunType,
-                row.Run.Status,
-                row.Run.CreatedUtc,
-                row.Run.StartedUtc,
-                row.Run.FinishedUtc,
-                row.Run.QueuePositionAtStart,
-                SecondsBetween(row.Run.CreatedUtc, row.Run.StartedUtc),
-                SecondsBetween(row.Run.StartedUtc, row.Run.FinishedUtc)))
+            .Select(row => ToAdminRunMetricsItem(row.Metric))
             .ToArray();
         var chatAverages = chatRows
             .Select(row => new AdminChatRunMetricsItem(
@@ -203,8 +199,29 @@ public sealed class ArtifactReadbackService
                 row.AverageQueueSeconds,
                 row.AverageRuntimeSeconds))
             .ToArray();
+        var chatRuns = chatRunRows.Select(row => ToAdminRunMetricsItem(row.Metric)).ToArray();
+        var assetRuns = assetRows.Select(row => ToAdminRunMetricsItem(row.Metric)).ToArray();
 
-        return new AdminRunMetricsReadback(nonChatRuns.Length, nonChatRuns, chatAverages);
+        return new AdminRunMetricsReadback(nonChatRuns.Length, nonChatRuns, chatAverages, chatRuns, assetRuns);
+    }
+
+    private static AdminRunMetricsItem ToAdminRunMetricsItem(RunDurationMetricSnapshot metric)
+    {
+        return new AdminRunMetricsItem(
+            metric.AccountId,
+            metric.Username,
+            metric.ProjectId,
+            metric.ProjectName,
+            metric.GameName,
+            metric.RunId,
+            metric.RunType,
+            metric.Status,
+            metric.CreatedUtc,
+            metric.StartedUtc,
+            metric.FinishedUtc,
+            metric.QueuePositionAtStart,
+            metric.QueueSeconds,
+            metric.RuntimeSeconds);
     }
 
     public async Task<AdminLlmUsageAggregateReadback> GetAdminLlmUsageAggregateAsync(
@@ -484,17 +501,6 @@ public sealed class ArtifactReadbackService
     private static decimal ReadEstimatedCostCny(string json)
     {
         return LlmUsageAuditJson.SumEstimatedCostCny(json);
-    }
-
-    private static double? SecondsBetween(string? fromUtc, string? toUtc)
-    {
-        if (!DateTimeOffset.TryParse(fromUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var from) ||
-            !DateTimeOffset.TryParse(toUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var to))
-        {
-            return null;
-        }
-
-        return Math.Round(Math.Max(0, (to - from).TotalSeconds), 3);
     }
 
     private static string NormalizeGrain(string? grain)

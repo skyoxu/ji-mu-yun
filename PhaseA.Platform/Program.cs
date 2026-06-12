@@ -54,7 +54,7 @@ builder.Services.AddSingleton(new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(8),
     options.MaxConcurrentOtherRuns));
 builder.Services.AddKeyedSingleton("prototype-creation", new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(20),
+    TimeSpan.FromMinutes(25),
     options.MaxConcurrentPrototypeCreations));
 builder.Services.AddKeyedSingleton("asset-generation", new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(4),
@@ -341,7 +341,7 @@ app.MapGet("/api/admin/run-metrics", async (
         return AdminForbidden();
     }
 
-    return Results.Ok(await readback.GetAdminRunMetricsAsync(accountId, runType, limit ?? 200, cancellationToken));
+    return Results.Ok(await readback.GetAdminRunMetricsAsync(accountId, runType, limit ?? 500, cancellationToken));
 });
 
 app.MapGet("/api/projects/{projectId}/runs", async (
@@ -1220,25 +1220,12 @@ app.MapPost("/api/projects/{projectId}/iteration-plan", async (
     PrototypeIterationPlanRequest request,
     HttpContext context,
     [FromServices] PrototypeIterationPlanService iterationPlans,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationPlans.CreateAsync(accountId, projectId, request, cancellationToken);
-        if (result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked")
-        {
-            if (!string.IsNullOrWhiteSpace(request.Message))
-            {
-                await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "iteration-plan-request", cancellationToken);
-            }
-
-            var goalSummary = result.Goals.Count == 0
-                ? result.Summary
-                : $"{result.Summary}\n\n本次目标拆分：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
-            await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "iteration-plan-result", cancellationToken);
-        }
         return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -1299,23 +1286,12 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
     string projectId,
     HttpContext context,
     [FromServices] PrototypeIterationGoalService iterationGoals,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await iterationGoals.ExecuteNextAsync(accountId, projectId, cancellationToken);
-        if (result.Status is "completed" or "failed" or "needs_fix")
-        {
-            await chatHistory.AppendAsync(
-                accountId,
-                projectId,
-                "assistant",
-                result.Summary,
-                result.Status == "completed" ? "iteration-goal-result" : "iteration-goal-failed",
-                cancellationToken);
-        }
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -1346,24 +1322,12 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
     PrototypeFeedbackRequest request,
     HttpContext context,
     [FromServices] PrototypeFeedbackIterationService feedbackIterations,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
-        await chatHistory.AppendAsync(accountId, projectId, "user", request.Feedback, "formal-feedback", cancellationToken);
         var result = await feedbackIterations.SubmitAsync(accountId, projectId, request, cancellationToken);
-        if (result.Status == "completed" || result.Status == "failed")
-        {
-            await chatHistory.AppendAsync(
-                accountId,
-                projectId,
-                "assistant",
-                result.AssistantMessage,
-                result.Status == "completed" ? "formal-feedback-result" : "formal-feedback-failed",
-                cancellationToken);
-        }
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }
@@ -1386,30 +1350,12 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
     PrototypeNeedsFixRouteRequest request,
     HttpContext context,
     [FromServices] PrototypeNeedsFixRouteService needsFixRoute,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
-        if (!string.IsNullOrWhiteSpace(request.Feedback))
-        {
-            await chatHistory.AppendAsync(accountId, projectId, "user", request.Feedback, "needs-fix-route", cancellationToken);
-        }
-
         var result = await needsFixRoute.RunAsync(accountId, projectId, request, cancellationToken);
-        if (!string.IsNullOrWhiteSpace(result.Summary))
-        {
-            await chatHistory.AppendAsync(
-                accountId,
-                projectId,
-                "assistant",
-                result.Summary,
-                result.IterationGoalStatus == "succeeded" || result.Status == "succeeded" || result.Status == "completed"
-                    ? "needs-fix-route-result"
-                    : "needs-fix-route-failed",
-                cancellationToken);
-        }
 
         return result.Status is "completed" or "succeeded" or "needs_fix"
             ? Results.Ok(result)
@@ -1425,18 +1371,12 @@ app.MapPost("/api/projects/{projectId}/repair-plan", async (
     string projectId,
     HttpContext context,
     [FromServices] PrototypeRepairPlanService repairPlans,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await repairPlans.CreateAsync(accountId, projectId, cancellationToken);
-        if (result.Status is "ready")
-        {
-            var goalSummary = $"{result.Summary}\n\n修复步骤：\n{string.Join("\n", result.Goals.Select(goal => $"{goal.GoalIndex}. {goal.Title}"))}";
-            await chatHistory.AppendAsync(accountId, projectId, "assistant", goalSummary, "repair-plan-result", cancellationToken);
-        }
 
         return result.Status == "ready" ? Results.Ok(result) : Results.BadRequest(result);
     }
@@ -1461,17 +1401,12 @@ app.MapPost("/api/projects/{projectId}/repair-plan/execute-next", async (
     PrototypeRepairStepExecutionRequest request,
     HttpContext context,
     [FromServices] PrototypeRepairPlanService repairPlans,
-    [FromServices] ProjectChatHistoryService chatHistory,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var accountId = CurrentAccountId(context);
         var result = await repairPlans.ExecuteNextAsync(accountId, projectId, request, cancellationToken);
-        if (!string.IsNullOrWhiteSpace(result.Summary))
-        {
-            await chatHistory.AppendAsync(accountId, projectId, "assistant", result.Summary, "repair-step-result", cancellationToken);
-        }
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }

@@ -1400,10 +1400,7 @@ public sealed class PrototypeWorkflowTests
         var repairState = new PrototypeRouteStateWriter().ReadLatestPrototypeRepairState(project);
 
         repairRun!.Status.Should().Be("failed");
-        messages.Should().Contain(message =>
-            message.Role == "assistant" &&
-            message.Kind == "prototype-repair-result" &&
-            message.Content.Contains("rpg_map_visible_markers_missing_after_start", StringComparison.Ordinal));
+        messages.Should().NotContain(message => message.Kind == "prototype-repair-result");
         repairState.Should().Contain("rpg_map_visible_markers_missing_after_start");
         repairState.Should().Contain("next_repair_focus");
     }

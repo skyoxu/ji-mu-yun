@@ -190,9 +190,135 @@ public static class SqliteMetadataSchema
             "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_missing_topics_json TEXT NOT NULL DEFAULT '[]';",
             cancellationToken);
 
+        await BackfillRunDurationMetricsAsync(connection, transaction, cancellationToken);
+        await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
+
         await ExecuteAsync(connection, "PRAGMA user_version = 1;", transaction, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    private static async Task BackfillRunDurationMetricsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            """
+            INSERT OR IGNORE INTO run_duration_metrics (
+                id,
+                bucket,
+                account_id,
+                username,
+                project_id,
+                project_name,
+                game_name,
+                run_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
+                queue_seconds,
+                runtime_seconds,
+                exit_code)
+            SELECT
+                lower(hex(randomblob(16))),
+                CASE
+                    WHEN r.run_type = 'prototype-chat' THEN 'chat'
+                    WHEN r.run_type = 'project-asset-generation' OR r.run_type = 'asset-generation' THEN 'asset'
+                    ELSE 'workflow'
+                END,
+                a.id,
+                a.username,
+                p.id,
+                p.name,
+                p.game_name,
+                r.id,
+                r.run_type,
+                r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
+                ROUND(CASE
+                    WHEN r.started_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(r.started_utc) - julianday(r.created_utc)) * 86400.0)
+                END, 3),
+                ROUND(CASE
+                    WHEN r.started_utc IS NULL OR r.finished_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(r.finished_utc) - julianday(r.started_utc)) * 86400.0)
+                END, 3),
+                r.exit_code
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            INNER JOIN accounts a ON a.id = p.account_id
+            WHERE a.is_admin = 0
+              AND r.finished_utc IS NOT NULL;
+            """,
+            transaction,
+            cancellationToken);
+    }
+
+    private static async Task PruneRunDurationMetricsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'workflow'
+              AND id NOT IN (
+                  SELECT id
+                  FROM (
+                      SELECT
+                          id,
+                          ROW_NUMBER() OVER (
+                              PARTITION BY account_id
+                              ORDER BY created_utc DESC, run_id DESC
+                          ) AS rn
+                      FROM run_duration_metrics
+                      WHERE bucket = 'workflow'
+                  )
+                  WHERE rn <= 500
+              );
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'chat'
+              AND id NOT IN (
+                  SELECT id
+                  FROM run_duration_metrics
+                  WHERE bucket = 'chat'
+                  ORDER BY created_utc DESC, run_id DESC
+                  LIMIT 500
+              );
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            DELETE FROM run_duration_metrics
+            WHERE bucket = 'asset'
+              AND id NOT IN (
+                  SELECT id
+                  FROM run_duration_metrics
+                  WHERE bucket = 'asset'
+                  ORDER BY created_utc DESC, run_id DESC
+                  LIMIT 500
+              );
+            """,
+            transaction,
+            cancellationToken);
     }
 
     private static async Task ExecuteAsync(SqliteConnection connection, string sql, CancellationToken cancellationToken)
@@ -343,6 +469,35 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE SET NULL
         );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS run_duration_metrics (
+            id TEXT PRIMARY KEY,
+            bucket TEXT NOT NULL,
+            account_id TEXT NOT NULL,
+            username TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            project_name TEXT NOT NULL,
+            game_name TEXT NOT NULL,
+            run_id TEXT NOT NULL,
+            run_type TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_utc TEXT NOT NULL,
+            started_utc TEXT NULL,
+            finished_utc TEXT NULL,
+            queue_position_at_start INTEGER NULL,
+            queue_seconds REAL NULL,
+            runtime_seconds REAL NULL,
+            exit_code INTEGER NULL
+        );
+        """,
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_run_duration_metrics_run_id
+        ON run_duration_metrics(run_id);
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS idx_run_duration_metrics_bucket_account_created
+        ON run_duration_metrics(bucket, account_id, created_utc DESC, run_id DESC);
         """,
         """
         CREATE TABLE IF NOT EXISTS artifacts (

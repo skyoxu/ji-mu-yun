@@ -3,7 +3,9 @@ namespace PhaseA.Platform.Readback;
 public sealed record AdminRunMetricsReadback(
     int Count,
     IReadOnlyList<AdminRunMetricsItem> Runs,
-    IReadOnlyList<AdminChatRunMetricsItem> ChatAverages);
+    IReadOnlyList<AdminChatRunMetricsItem> ChatAverages,
+    IReadOnlyList<AdminRunMetricsItem> ChatRuns,
+    IReadOnlyList<AdminRunMetricsItem> AssetRuns);
 
 public sealed record AdminRunMetricsItem(
     string AccountId,

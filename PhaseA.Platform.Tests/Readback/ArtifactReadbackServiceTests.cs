@@ -231,16 +231,22 @@ public sealed class ArtifactReadbackServiceTests
         var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-iteration-goal");
         var chatOne = await store.CreateRunAsync(projectId, null, "prototype-chat");
         var chatTwo = await store.CreateRunAsync(projectId, null, "prototype-chat");
-        await SetRunTimingAsync(database.ConnectionString, adminRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:01.0000000Z", "2026-06-01T00:00:02.0000000Z", 1);
-        await SetRunTimingAsync(database.ConnectionString, workflowRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:05.0000000Z", "2026-06-01T00:00:17.0000000Z", 3);
-        await SetRunTimingAsync(database.ConnectionString, packageRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:03.0000000Z", "2026-06-01T00:00:09.0000000Z", 2);
-        await SetRunTimingAsync(database.ConnectionString, otherRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:04.0000000Z", 1);
-        await SetRunTimingAsync(database.ConnectionString, chatOne, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:07.0000000Z", null);
-        await SetRunTimingAsync(database.ConnectionString, chatTwo, "2026-06-01T00:00:10.0000000Z", "2026-06-01T00:00:14.0000000Z", "2026-06-01T00:00:23.0000000Z", null);
+        var assetRun = await store.CreateRunAsync(projectId, null, "project-asset-generation");
+        var otherAssetRun = await store.CreateRunAsync(otherProject, null, "project-asset-generation");
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, adminRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:01.0000000Z", "2026-06-01T00:00:02.0000000Z", 1);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, workflowRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:05.0000000Z", "2026-06-01T00:00:17.0000000Z", 3);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, packageRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:03.0000000Z", "2026-06-01T00:00:09.0000000Z", 2);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, otherRun, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:04.0000000Z", 1);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, chatOne, "2026-06-01T00:00:00.0000000Z", "2026-06-01T00:00:02.0000000Z", "2026-06-01T00:00:07.0000000Z", null);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, chatTwo, "2026-06-01T00:00:10.0000000Z", "2026-06-01T00:00:14.0000000Z", "2026-06-01T00:00:23.0000000Z", null);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, assetRun, "2026-06-01T00:00:20.0000000Z", "2026-06-01T00:00:21.0000000Z", "2026-06-01T00:00:31.0000000Z", null);
+        await CompleteRunWithTimingAsync(database.ConnectionString, store, otherAssetRun, "2026-06-01T00:00:30.0000000Z", "2026-06-01T00:00:31.0000000Z", "2026-06-01T00:00:41.0000000Z", null);
         var service = new ArtifactReadbackService(store, options);
 
         var metrics = await service.GetAdminRunMetricsAsync(user.AccountId, "prototype-iteration-goal");
         var userMetrics = await service.GetAdminRunMetricsAsync(user.AccountId, null, limit: 1);
+        await store.DeleteProjectAsync(projectId);
+        var afterDelete = await service.GetAdminRunMetricsAsync(user.AccountId, "prototype-iteration-goal");
 
         var item = metrics.Runs.Should().ContainSingle().Subject;
         item.AccountId.Should().Be(user.AccountId);
@@ -257,6 +263,68 @@ public sealed class ArtifactReadbackServiceTests
         chat.RunCount.Should().Be(2);
         chat.AverageQueueSeconds.Should().Be(3);
         chat.AverageRuntimeSeconds.Should().Be(7);
+        userMetrics.ChatRuns.Should().HaveCount(2);
+        userMetrics.AssetRuns.Should().ContainSingle(run => run.RunId == assetRun);
+        userMetrics.AssetRuns.Should().NotContain(run => run.RunId == otherAssetRun);
+        afterDelete.Runs.Should().ContainSingle(run => run.RunId == workflowRun);
+        afterDelete.Runs.Single().ProjectName.Should().Be("Metrics Game");
+    }
+
+    [Fact]
+    public async Task Readback_PrunesRunDurationMetricsByBucketPolicy()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var user = await store.CreateUserAccountAsync("metrics-prune-user", 1);
+        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Prune Game");
+
+        for (var index = 0; index < 505; index++)
+        {
+            var runId = await store.CreateRunAsync(projectId, null, "prototype-iteration-goal");
+            await CompleteRunWithTimingAsync(
+                database.ConnectionString,
+                store,
+                runId,
+                $"2026-06-01T00:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-01T01:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-01T02:{index / 60:00}:{index % 60:00}.0000000Z",
+                index + 1);
+        }
+
+        for (var index = 0; index < 505; index++)
+        {
+            var chatRunId = await store.CreateRunAsync(projectId, null, "prototype-chat");
+            await CompleteRunWithTimingAsync(
+                database.ConnectionString,
+                store,
+                chatRunId,
+                $"2026-06-02T00:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-02T01:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-02T02:{index / 60:00}:{index % 60:00}.0000000Z",
+                null);
+            var assetRunId = await store.CreateRunAsync(projectId, null, "project-asset-generation");
+            await CompleteRunWithTimingAsync(
+                database.ConnectionString,
+                store,
+                assetRunId,
+                $"2026-06-03T00:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-03T01:{index / 60:00}:{index % 60:00}.0000000Z",
+                $"2026-06-03T02:{index / 60:00}:{index % 60:00}.0000000Z",
+                null);
+        }
+
+        var service = new ArtifactReadbackService(store, options);
+        var metrics = await service.GetAdminRunMetricsAsync(user.AccountId, null, limit: 500);
+
+        metrics.Runs.Should().HaveCount(500);
+        metrics.ChatRuns.Should().HaveCount(500);
+        metrics.AssetRuns.Should().HaveCount(500);
+        metrics.Runs.Should().OnlyContain(run => run.RunType == "prototype-iteration-goal");
+        metrics.ChatRuns.Should().OnlyContain(run => run.RunType == "prototype-chat");
+        metrics.AssetRuns.Should().OnlyContain(run => run.RunType == "project-asset-generation");
     }
 
     [Fact]
@@ -1294,8 +1362,9 @@ public sealed class ArtifactReadbackServiceTests
         return store;
     }
 
-    private static async Task SetRunTimingAsync(
+    private static async Task CompleteRunWithTimingAsync(
         string connectionString,
+        PhaseAMetadataStore store,
         string runId,
         string createdUtc,
         string startedUtc,
@@ -1308,23 +1377,43 @@ public sealed class ArtifactReadbackServiceTests
         command.CommandText =
             """
             UPDATE runs
-            SET status = 'succeeded',
-                created_utc = $created_utc,
+            SET created_utc = $created_utc,
                 started_utc = $started_utc,
-                finished_utc = $finished_utc,
-                queue_position_at_start = $queue_position_at_start,
-                exit_code = 0,
-                stdout_text = '',
-                stderr_text = '',
-                evidence_json = '{}'
+                finished_utc = NULL,
+                queue_position_at_start = $queue_position_at_start
             WHERE id = $id;
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$created_utc", createdUtc);
         command.Parameters.AddWithValue("$started_utc", startedUtc);
-        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
         command.Parameters.AddWithValue("$queue_position_at_start", (object?)queuePositionAtStart ?? DBNull.Value);
         await command.ExecuteNonQueryAsync();
+
+        await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{}");
+
+        await using var fixConnection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await fixConnection.OpenAsync();
+        await using var fixCommand = fixConnection.CreateCommand();
+        fixCommand.CommandText =
+            """
+            UPDATE runs
+            SET finished_utc = $finished_utc
+            WHERE id = $id;
+            UPDATE run_duration_metrics
+            SET finished_utc = $finished_utc,
+                queue_seconds = ROUND(CASE
+                    WHEN started_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday(started_utc) - julianday(created_utc)) * 86400.0)
+                END, 3),
+                runtime_seconds = ROUND(CASE
+                    WHEN started_utc IS NULL THEN NULL
+                    ELSE MAX(0.0, (julianday($finished_utc) - julianday(started_utc)) * 86400.0)
+                END, 3)
+            WHERE run_id = $id;
+            """;
+        fixCommand.Parameters.AddWithValue("$id", runId);
+        fixCommand.Parameters.AddWithValue("$finished_utc", finishedUtc);
+        await fixCommand.ExecuteNonQueryAsync();
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
