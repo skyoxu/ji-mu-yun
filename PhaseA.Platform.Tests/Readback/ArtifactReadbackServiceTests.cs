@@ -98,34 +98,24 @@ public sealed class ArtifactReadbackServiceTests
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
-        var prototypeCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var prototypeStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var assetCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var assetStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var prototypeRun = prototypeQueue.ExecuteAsync(
+        await using var prototypeLease = await prototypeQueue.EnterAsync(
             "prototype-run",
             project!.AccountId,
             project.ProjectId,
-            "prototype-7day-playable",
-            async _ =>
-            {
-                prototypeStarted.SetResult();
-                await prototypeCanFinish.Task;
-                return true;
-            });
-        var assetRun = assetQueue.ExecuteAsync(
+            "prototype-7day-playable");
+        await using var assetLease = await assetQueue.EnterAsync(
+            "asset-current",
+            "other-account",
+            "other-project",
+            "asset-generation");
+        using var queuedAssetCancellation = new CancellationTokenSource();
+        var queuedAssetRun = assetQueue.ExecuteAsync(
             "asset-run",
             project.AccountId,
             project.ProjectId,
             "asset-generation",
-            async _ =>
-            {
-                assetStarted.SetResult();
-                await assetCanFinish.Task;
-                return true;
-            });
-        await prototypeStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        await assetStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            _ => Task.FromResult(true),
+            queuedAssetCancellation.Token);
         var service = new ArtifactReadbackService(
             store,
             options,
@@ -135,16 +125,18 @@ public sealed class ArtifactReadbackServiceTests
 
         var active = await service.GetActiveRunAsync(project.AccountId);
         var queue = service.GetHeavyRunnerQueue(project.AccountId, includeAll: false);
+        var fullQueue = service.GetHeavyRunnerQueue(project.AccountId, includeAll: true);
 
         active.Busy.Should().BeTrue();
         active.HeavyRunnerRunning.Should().BeTrue();
         queue.Running.Should().BeTrue();
         queue.Current!.RunId.Should().Be("prototype-run");
+        fullQueue.Running.Should().BeTrue();
+        fullQueue.Items.Select(item => item.RunId).Should().Contain("asset-run");
+        fullQueue.CurrentAccountPosition.Should().Be(1);
 
-        prototypeCanFinish.SetResult();
-        assetCanFinish.SetResult();
-        await prototypeRun.WaitAsync(TimeSpan.FromSeconds(5));
-        await assetRun.WaitAsync(TimeSpan.FromSeconds(5));
+        await queuedAssetCancellation.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => queuedAssetRun);
     }
 
     [Fact]
