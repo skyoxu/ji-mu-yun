@@ -87,17 +87,17 @@ These files are template assets for RPG prototype work. Keep all references repo
 - Do not leave or create `Game.Godot/.gdignore` in an active RPG prototype project; it prevents Godot from importing and loading `res://Game.Godot/**` runtime assets.
 - Copy or adapt the minimum required RPG visual assets into the current prototype slug, for example `Game.Godot/Prototypes/dq-rpg/Assets/`, before referencing them from scenes.
 - After adding or copying PNG assets, run Godot import for the active project before smoke validation so `.import` metadata exists.
-- The three required runtime asset instances must use exact node names:
-  - `RpgMapAsset` for the map/background asset.
+- Selected runtime asset instances must use exact node names:
+  - `RpgMapAsset` for the map/background asset when a map asset is used.
   - `RpgPlayerAsset` for the player/hero asset.
-  - `RpgEnemyAsset` for the enemy/monster asset.
-- `Start Adventure` must reveal a non-empty map scene. Put the instantiated `MapScene` and `BattleScene` under `CanvasLayer/UI`, not directly under a `Node2D` root, and anchor the map scene to the full viewport.
+  - `RpgEnemyAsset` for the enemy/monster asset only when conflict/battle capability is selected or the latest failure names an enemy asset.
+- `Start Adventure` must reveal a non-empty map scene. Put the instantiated `MapScene` under `CanvasLayer/UI`, not directly under a `Node2D` root, and anchor the map scene to the full viewport. Put `BattleScene` under `CanvasLayer/UI` only when battle/conflict capability is selected or the latest failure names it.
 - The main RPG prototype script must resolve the map scene through `CanvasLayer/UI/MapScene` and make it visible when `StartButton.Pressed` fires.
 - The visible `MapScene` must contain exact node names `Title`, `Grid`, and `StatusLabel`. Do not substitute `MapTitle`, `PositionLabel`, or other near-equivalent names; platform navigation smoke checks these names exactly.
 - Main scene SOP: when the RPG prototype is reachable from `Game.Godot/Scenes/Main.tscn`, the root-level `VBox`, `Overlays`, and `ScreenRoot` nodes in `Main.tscn` must be present and default to `visible = false`. Do not leave template/debug UI visible over the prototype route. Final acceptance must fail if any of these nodes are missing or default-visible.
 - The playable map must keep the background map asset, movement grid, and token overlay under one fixed-size shared layer, for example a `TrackLayer` sized to the playable map. Do not make `RpgMapAsset`, `Grid`, and `Overlay` independent sibling layout controls without a common coordinate parent.
-- `RpgPlayerAsset`, `RpgEnemyAsset`, and chest/objective tokens must move in the same coordinate space as the visible map asset. If the map is 600x600 and the grid is 10x10, token movement must align to that 600x600 layer instead of drifting relative to the background.
-- BattleScene must use file-backed Texture2D nodes named `RpgPlayerAsset` and `RpgEnemyAsset` for the player and enemy presentation. ColorRect-only battle tokens do not satisfy RPG battle-scene or final acceptance.
+- `RpgPlayerAsset`, selected `RpgEnemyAsset`, and chest/objective tokens must move in the same coordinate space as the visible map asset. If the map is 600x600 and the grid is 10x10, token movement must align to that 600x600 layer instead of drifting relative to the background.
+- When BattleScene is selected, it must use file-backed Texture2D nodes named `RpgPlayerAsset` and `RpgEnemyAsset` for the player and enemy presentation. ColorRect-only battle tokens do not satisfy selected battle-scene or final acceptance.
 - Battle `Attack` should advance the battle according to the prototype record. Do not make one button press immediately leave the battle scene unless that press actually reaches a terminal battle state.
 - A normal battle win must enter the reward flow when reward options exist. Do not use the final-run victory flag as the condition for showing ordinary post-battle rewards.
 - Returning from reward or battle to map must restore map visibility, player token visibility, and movement input.
@@ -114,19 +114,26 @@ Treat these as repo-relative defaults. When a project slug is created, copy or a
 
 ## JRPG First-Loop Capability Scope
 
-- Opening context and player objective.
-- Field, town, or map navigation with stable control.
-- Optional interaction/discovery beat such as NPC, chest, investigation, or objective discovery.
-- Optional conflict entry when the project asks for encounter, battle, enemy, boss, or challenge.
-- Optional battle/challenge resolution when a conflict exists.
-- Optional party or character state readability when stats, HP, equipment, party, or status matter.
-- Optional growth, reward, or consequence feedback when the project asks for reward, choice, item, level, experience, or story consequence.
-- Return-or-continue loop to the next playable state when the first loop continues.
-- Optional quest or story progress when narrative or town events are central.
-- Final first-loop acceptance across the selected capabilities.
-- Visual layer:
-  - prototype-safe sprites, props, tiles, and UI treatment
-  - no path assumptions about where generated assets live
+RPG/JRPG routes use a first-loop capability profile, not a fixed DQ-like map-battle-reward script. Select only the capabilities implied by the project form fields, prototype contract, `input_traceability`, route state, or an explicit needs-fix blocker.
+
+| Id | Design Purpose | Pass Standard | Omit When |
+|---|---|---|---|
+| `opening_context` | Establish who the player controls, where the prototype starts, and the immediate objective before expanding systems. | The playable scene presents a clear controllable hero/context/objective, and the objective maps to the project contract or a recorded blocker. | Never omit for JRPG first-loop plans. |
+| `field_navigation` | Validate the field, town, or map movement layer as the base experience. | Entry or Start Adventure opens a non-empty visible field/map/town scene, the player marker or character is visible, movement is stable, and selected map/player assets are represented. | Never omit for JRPG first-loop plans. |
+| `interaction_discovery` | Give the field a meaningful discovery beat such as NPC dialogue, inspection, a chest, or objective reveal. | At least one project-relevant interaction is visible, reachable, and changes feedback, objective state, or player understanding. | Omit when the project has no interaction, discovery, NPC, object, or event requirement. |
+| `conflict_entry` | Validate the transition from navigation/interaction into the first conflict, encounter, challenge, or battle. | The player can clearly trigger or reach the first conflict, and the trigger rule is visible or validated. | Omit when form/contract text has no encounter, battle, combat, enemy, monster, boss, fight, challenge, or equivalent conflict language. |
+| `battle_or_challenge_resolution` | Validate one readable conflict resolution without hiding growth or return proof inside the battle step. | One conflict or challenge resolves with readable state, action feedback, and success/failure or victory/defeat settlement. BattleScene is required only when this selected capability uses a battle scene. | Omit whenever `conflict_entry` is omitted. Do not create BattleScene for non-combat JRPG forms. |
+| `party_or_character_state` | Make player-facing character or party state readable and traceable to the rules. | Relevant HP, stats, party, equipment, passive skill, or status changes are visible, understandable, and consistent with project rules. | Omit when the first loop does not depend on character/party state readability beyond the visible actor. |
+| `growth_feedback` | Prove the first loop's reward, growth, or consequence feedback. | Reward, item gain, stat change, experience, skill unlock, story consequence, or other state change is shown and understandable. | Omit when the project has no reward, growth, choice, item, level, experience, skill, or consequence requirement. |
+| `return_or_continue_loop` | Ensure the prototype does not dead-end after a resolution. | The prototype reaches the intended next playable state, and navigation/input remain usable without visual stacking or broken state. | Omit only when the requested first loop intentionally ends at a terminal result. |
+| `quest_or_story_progress` | Validate first-loop story or quest progress for narrative, town-event, or objective-driven JRPGs. | Objective, quest, or story state visibly progresses and remains traceable to the project request. | Omit when the project has no story, quest, NPC flow, town event, or objective-completion requirement. |
+| `final_first_loop_acceptance` | Run final end-to-end acceptance across the selected JRPG capabilities. | Selected capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets resolve, Godot validation passes, and package readiness is proven. | Never omit for JRPG first-loop plans. |
+
+BattleScene rule: if the form/contract/traceability does not mention combat or conflict, the route must not create, require, or repair BattleScene. Town-quest, story-event, exploration, and interaction-first JRPG prototypes are valid JRPG routes when they satisfy their selected capabilities.
+
+Visual layer:
+- prototype-safe sprites, props, tiles, and UI treatment
+- no path assumptions about where generated assets live
 
 ## TDD Boundary
 
@@ -154,7 +161,7 @@ When RPG project-specific GdUnit validation fails, repair in this order:
    - Run Godot import through the project workflow after adding or restoring assets.
 2. Scene node contract:
    - Ensure test-validated nodes exist at the authoritative path or update scene, script, and tests together to one contract.
-   - For the default `dq-rpg` contract, GdUnit may require `CanvasLayer/UI/MapScene/RpgMapAsset`, `RpgPlayerAsset`, `RpgEnemyAsset`, `ChestToken`, and `CanvasLayer/UI/BattleScene/EnemyToken`.
+   - For the default `dq-rpg` contract, GdUnit may require selected nodes such as `CanvasLayer/UI/MapScene/RpgMapAsset`, `RpgPlayerAsset`, `ChestToken`, plus `RpgEnemyAsset` or `CanvasLayer/UI/BattleScene/EnemyToken` only when battle/conflict capability is selected or the latest failure names them.
 3. Script/runtime errors:
    - Fix invalid calls such as invoking `_UnhandledInput` on a `Control` base that does not expose it.
    - Keep map movement, encounter entry, battle, reward selection, and return-to-map callable through the same prototype shell used by tests.

@@ -75,6 +75,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls button,
                 body.v2-detail .v2-chat-controls label,
                 body.v2-detail .v2-chat-controls select { width: auto; min-height: 2.35rem; padding: 0.5rem 0.72rem; border-radius: 999px; font-size: 0.88rem; }
+                body.v2-detail .v2-chat-controls .v2-file-button.ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
+                body.v2-detail .v2-chat-controls .v2-file-button.ghost:hover { background: rgba(15, 107, 87, 0.08); }
                 body.v2-detail .v2-chat-controls .v2-file-button input { display: none; }
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }

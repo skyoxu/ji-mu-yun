@@ -31,7 +31,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 Platform hard acceptance for JRPG field navigation:
                 - Need a visible playable field, town, or map scene after Start Adventure or the project entry.
                 - RPG route required pair: Game.Godot/Prototypes/dq-rpg/MapScene.tscn + Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs.
-                - MapScene.tscn needs MapScene, TrackLayer, RpgMapAsset, Grid, Overlay, RpgPlayerAsset, RpgEnemyAsset nodes.
+                - MapScene.tscn needs MapScene, TrackLayer, RpgMapAsset, Grid, Overlay, and RpgPlayerAsset nodes. Add RpgEnemyAsset only when the selected route includes encounter, conflict, or battle.
                 - MapScene.cs needs grid mapping, player visibility restore, movement (MovePlayer/MoveOnMap/TryHandleMapKey).
                 - The player marker or character must be visible and controllable with stable movement.
                 - Runtime visuals must show map/field and player asset usage.
@@ -174,17 +174,17 @@ internal static class PrototypeGoalAcceptancePromptBuilder
             return survivorsLike;
         }
 
-        return goal.GoalIndex switch
+        return contract.Kind switch
         {
-            1 => """
+            "rpg-step1-visible-map-movement" => """
                 Platform hard acceptance for RPG Step 1:
                 - Need: Game.Godot/Prototypes/dq-rpg/MapScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs.
                 - DqRpgPrototype.tscn keeps Start Adventure and CanvasLayer/UI/MapScene; click shows it via ShowMapScene or StartRun/StartAdventure.
-                - MapScene has TrackLayer with RpgMapAsset, Grid, Overlay, RpgPlayerAsset, RpgEnemyAsset.
+                - MapScene has TrackLayer with RpgMapAsset, Grid, Overlay, and RpgPlayerAsset. Add RpgEnemyAsset only when the selected route includes encounter, conflict, or battle.
                 - MapScene.cs moves player and maps grid positions; do not advance this step into encounter, battle, reward, or final acceptance work.
                 - Missing contract means STATUS: needs_fix.
                 """,
-            2 => """
+            "rpg-step2-encounter-trigger" => """
                 Platform hard acceptance for RPG Step 2:
                 - This step is encounter trigger validation, not BattleScene implementation.
                 - Map traversal must expose visible encounter progress and a clear first encounter trigger.
@@ -193,7 +193,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Do not advance this step into BattleScene settlement or reward selection.
                 - Missing contract means STATUS: needs_fix.
                 """,
-            3 => """
+            "rpg-step3-battlescene-settlement" => """
                 Platform hard acceptance for RPG Step 3:
                 - Need: Game.Godot/Prototypes/dq-rpg/BattleScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/BattleScene.cs.
                 - Keep battle UI and battle-side runtime behavior in the dedicated BattleScene instead of leaving the full battle loop only inside DqRpgPrototype.cs.
@@ -202,7 +202,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - The battle loop must show readable enemy presentation, attack feedback, and victory or defeat settlement without advancing into reward selection.
                 - Missing contract means STATUS: needs_fix.
                 """,
-            4 => """
+            "rpg-step4-reward-choice-readability" => """
                 Platform hard acceptance for RPG Step 4:
                 - This step is reward choice understandability, not return-to-map implementation.
                 - ShowRewardScene(rewards) must show exactly three understandable reward choices after a battle victory when rewards.Count > 0.
@@ -210,7 +210,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Keep markers: RewardOptions.Count and three visible reward choices.
                 - If reward choices are missing, fewer than three, or unclear to the player, output STATUS: needs_fix.
                 """,
-            5 => """
+            "rpg-step5-reward-loop-return-map" => """
                 Platform hard acceptance for RPG Step 5:
                 - ShowRewardScene(rewards) must show exactly three understandable reward choices after a battle victory when rewards.Count > 0.
                 - Choosing a reward must apply one visible growth option: +5 HP, +2 ATK, or +1 DEF.
@@ -220,7 +220,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Keep markers: RewardOptions.Count, ApplyReward, Battle reward selected, Return to the map, ShouldReturnToMap_WithUpdatedStats_AfterChoosingReward.
                 - If reward values, reward UI, or return-to-map proof are missing, output STATUS: needs_fix.
                 """,
-            6 => """
+            "rpg-step6-win-fail-visibility" => """
                 Platform hard acceptance for RPG Step 6:
                 - This step is win/fail visibility and readability, not the reward implementation step.
                 - 15 battle wins must be visibly communicated as the game victory condition.
@@ -229,11 +229,38 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Keep victory/failure markers: VictoryBattleCount, IsVictory, IsGameOver.
                 - If win/fail rules are only in code or docs and not visible to the player, output STATUS: needs_fix.
                 """,
-            7 => """
+            "rpg-step4-main-loop-scene-switching" => """
+                Platform hard acceptance for RPG scene switching:
+                - The main prototype scene must open the selected playable map, field, town, or next scene from the project entry.
+                - Preserve Start Adventure, visible MapScene, player visibility, and stable return or continuation wiring for the current goal.
+                - Require BattleScene, reward UI, or reward return proof only when the current platform contract explicitly requires those acceptances.
+                - Missing selected scene switching proof means STATUS: needs_fix.
+                """,
+            "rpg-contract-alignment" => """
+                Platform hard acceptance for RPG contract alignment:
+                - Concrete user form values from the prototype contract must be represented in gameplay behavior, UI/state feedback, tests, or an explicit needs-fix blocker.
+                - Validate only the selected route capabilities for this project; do not add BattleScene or reward work from template examples.
+                - Missing contract traceability proof means STATUS: needs_fix.
+                """,
+            "rpg-asset-usage-validation" => """
+                Platform hard acceptance for RPG asset usage:
+                - Selected runtime scenes must use real file-backed Texture2D assets for required map/player nodes.
+                - Enemy and BattleScene asset nodes are required only when the current platform contract includes battle acceptance.
+                - Do not create unselected battle or reward scenes just to satisfy template examples.
+                - Missing selected asset proof means STATUS: needs_fix.
+                """,
+            "rpg-loop-stability" => """
+                Platform hard acceptance for RPG loop stability:
+                - The selected playable loop must return or continue to a clear controllable state without breaking the current goal.
+                - Trigger BattleScene or reward flows only when the current platform contract explicitly requires them.
+                - Missing selected loop stability proof means STATUS: needs_fix.
+                """,
+            "rpg-final-full-playable-acceptance" => """
                 Platform hard acceptance for RPG Final Step:
-                - Full RPG prototype acceptance must pass: MapScene, BattleScene, reward return-to-map loop, main-menu prototype entry, visible map after Start Adventure, Godot smoke, and package readiness.
-                - Runtime visuals must use real file-backed Texture2D assets for MapScene nodes RpgMapAsset, RpgPlayerAsset, and RpgEnemyAsset, and BattleScene nodes RpgPlayerAsset and RpgEnemyAsset.
-                - Copy/adapt assets into Game.Godot/Prototypes/dq-rpg/Assets/Map, Assets/Player, and Assets/Enemy, then reference them through res:// ext_resource Texture2D paths.
+                - Full RPG prototype acceptance must pass the selected route capabilities, main-menu prototype entry, visible map after Start Adventure, Godot smoke, and package readiness.
+                - Require BattleScene and reward return-to-map proof only when the project contract or current goal explicitly includes battle, encounter, conflict, reward, or return-loop capabilities.
+                - Runtime visuals must use real file-backed Texture2D assets for selected runtime nodes such as MapScene RpgMapAsset and RpgPlayerAsset; require RpgEnemyAsset and BattleScene asset nodes only when encounter, conflict, or BattleScene is part of the selected route.
+                - Copy/adapt selected assets into Game.Godot/Prototypes/dq-rpg/Assets/Map and Assets/Player; use Assets/Enemy only when enemy/encounter/conflict is selected. Reference them through res:// ext_resource Texture2D paths.
                 - GradientTexture2D/sub_resource placeholders do not satisfy final asset acceptance, even when node names are correct.
                 - Delete Game.Godot/.gdignore if present; it blocks Godot from importing res://Game.Godot/** runtime assets and fails final RPG asset acceptance.
                 - Main.tscn root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false.

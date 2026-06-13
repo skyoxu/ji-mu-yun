@@ -10,22 +10,22 @@
 
 ## 用途
 
-本文件用于 RPG 类型的 prototype lane。它不是完整 GDD，也不处理数值平衡、长期成长、装备经济、任务系统或边界情况。它只定义 1-2 个场景内可以完成的最小核心游玩闭环，让玩家能从地图移动进入战斗，并在胜利或失败后得到明确反馈。
+本文件用于 RPG 类型的 prototype lane。它不是完整 GDD，也不处理数值平衡、长期成长、装备经济、任务系统或边界情况。它定义 1-2 个场景内可以完成的最小核心游玩闭环，但不把所有 RPG/JRPG 项目固定成“地图 -> 战斗 -> 奖励”脚本。
 
 ## 参考项目依据
 
 本版 RPG kit 吸收了 `C:/buildgame/nightday/godotgame` 中 `He-is-Coming` prototype 的实践结果：
 
-- 地图与战斗拆成 `MapScene` / `BattleScene` 两个主场景根，但仍由一个 prototype loop 统一调度。
-- 地图上有网格移动、遇敌进度、宝箱奖励和障碍物，但不扩展到完整大地图。
-- 战斗可以是回合推进感的自动战斗，不必一定要从第一版就做指令按钮。
+- 地图必须有 `MapScene` 或等价 field/town 场景；`BattleScene` 只在表单/合同/traceability 选择战斗或冲突能力时作为独立场景根。
+- 地图上可以有网格移动、遇敌进度、宝箱奖励和障碍物，但这些都应由项目表单或选中 capability 决定，不扩展到完整大地图。
+- 战斗可以是回合推进感的自动战斗，不必一定要从第一版就做指令按钮，且只在战斗/冲突 capability 被选中时需要。
 - 战后肉鸽三选一奖励可作为 RPG prototype 的可选增强，用于验证流派感，但不要扩展成完整成长系统。
-- UI 需要明确告诉玩家当前场景、HP、遇敌或战斗状态、战斗日志和奖励/结算结果。
+- UI 需要明确告诉玩家当前场景、目标和选中 capability 的状态；HP、遇敌、战斗日志和奖励/结算结果只在对应 capability 被选中时成为验收要求。
 
 ## 适用范围
 
 - 游戏类型：`rpg`
-- Prototype 目标：验证探索 -> 遇敌 -> 战斗 -> 结算/回到地图的核心体验是否成立
+- Prototype 目标：验证 JRPG first-loop 的选中 capability 是否成立，例如探索、互动、任务进度、遇敌/战斗或奖励返回地图。
 - 推荐场景数量：2 个
 - 推荐实现粒度：可玩优先，表现和数值从简
 
@@ -37,7 +37,7 @@ RPG 类型项目必须在 prototype、iteration-plan、execute-next-goal 和 nee
 ### 场景职责
 
 - `MapScene`：负责地图展示、玩家移动、遇敌触发和返回地图后的状态呈现。
-- `BattleScene`：负责战斗展示、攻击或自动回合推进、胜负结算和战斗日志。
+- `BattleScene`：仅在选择战斗/冲突 capability 时负责战斗展示、攻击或自动回合推进、胜负结算和战斗日志。
 - `DefaultRpgPrototype`：可作为最小模板或兜底入口，但最终项目应生成项目自己的 prototype 场景。
 
 ### 素材职责
@@ -55,13 +55,29 @@ RPG 类型项目必须在 prototype、iteration-plan、execute-next-goal 和 nee
 - `execute-next-goal` 必须读取当前 step、项目 README 和 route state，只推进当前 RPG step。
 - `needs-fix` 必须只读取当前 step 的 needs-fix 产物；没有 needs-fix 产物时，再读取当前 step 的 execute-next-goal 产物和 prototype 产物。
 
-### 最低验收范围
+### Capability-Driven Minimum Acceptance
 
-- `MapScene` 必须可见、可移动，并能触发进入战斗。
-- `MapScene` 必须保留 `Grid`，并满足两套验收标记之一：旧合同 `Title` + `StatusLabel`，或当前 HUD 合同 `HeaderLabel` + `StatsLabel` + `ObjectiveLabel`。不要再引入 `MapTitle`、 `PositionLabel` 等第三套近似命名。
-- `BattleScene` 必须可见，并能展示 HP、攻击反馈、胜负状态和返回地图或结算入口。
-- 地图、主角、敌人三个基础素材必须以明确节点名实例化，不能只存在于文件系统。
-- final step 必须执行入口跳转、素材实例、主菜单默认隐藏节点和核心玩法闭环的全量检查。
+RPG/JRPG prototypes use a JRPG first-loop capability profile instead of a fixed DQ-like battle script. The route must always include:
+
+- `opening_context`: the player can understand who they control, where they are, and the immediate objective.
+- `field_navigation`: `MapScene` or an equivalent field/town scene is visible, movement is stable, and selected map/player assets are represented.
+- `final_first_loop_acceptance`: selected capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets resolve, Godot validation passes, and package readiness is proven.
+
+Conditional capabilities:
+
+- `interaction_discovery` is required when the form/contract asks for NPCs, objects, chests, inspection, discovery, events, or similar interaction beats.
+- `conflict_entry` and `battle_or_challenge_resolution` are required only when the form/contract mentions encounter, battle, combat, enemy, monster, boss, fight, challenge, or equivalent conflict language.
+- `party_or_character_state` is required when HP, stats, equipment, party, passive, or status readability matters.
+- `growth_feedback` is required when reward, item, level, experience, skill, choice, growth, or consequence feedback matters.
+- `return_or_continue_loop` is required when the first loop should continue after a resolution instead of ending terminally.
+- `quest_or_story_progress` is required when narrative framing, town events, NPC flow, quest state, or objective completion matters.
+
+BattleScene rule:
+
+- If the form/contract/input traceability has no combat or conflict semantics, do not create, require, or repair `BattleScene`.
+- If `battle_or_challenge_resolution` is selected and implemented as a battle scene, `BattleScene` must be visible and show the selected battle state, action feedback, settlement, and continue/retry/end control required by the project.
+- `MapScene` must keep `Grid` when grid movement is used, and must satisfy one accepted marker set: legacy `Title` + `StatusLabel`, or current HUD `HeaderLabel` + `StatsLabel` + `ObjectiveLabel`. Do not introduce third near-equivalent naming schemes such as `MapTitle` or `PositionLabel`.
+- Foundation asset nodes such as `RpgMapAsset`, `RpgPlayerAsset`, and `RpgEnemyAsset` are required only when the selected capability uses those assets; battle enemy assets are conditional on conflict/battle capabilities.
 
 ## Gameplay Flow / GDD Route
 

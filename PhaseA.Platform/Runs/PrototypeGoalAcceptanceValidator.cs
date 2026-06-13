@@ -24,13 +24,16 @@ internal static class PrototypeGoalAcceptanceValidator
 
         var testsPath = Path.Combine(project.RepoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
         var corePath = Path.Combine(project.RepoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
-        var assetUsageFailureReason = GetRpgSceneAssetUsageFailureReason(project.RepoPath, requireSplitScenes: contract.FinalAcceptance);
+        var assetUsageFailureReason = GetRpgSceneAssetUsageFailureReason(
+            project.RepoPath,
+            requireMapScene: contract.FinalAcceptance || contract.MapEntryAcceptance,
+            requireBattleScene: contract.BattleSceneAcceptance);
         if (contract.AssetUsageAcceptance && assetUsageFailureReason is not null)
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, assetUsageFailureReason);
         }
 
-        var mapEntryFailureReason = GetRpgMapEntryAcceptanceFailureReason(project.RepoPath);
+        var mapEntryFailureReason = GetRpgMapEntryAcceptanceFailureReason(project.RepoPath, RequiresRpgEncounterMapContract(contract));
         if (contract.MapEntryAcceptance && mapEntryFailureReason is not null)
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, mapEntryFailureReason);
@@ -53,7 +56,7 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "main_scene_default_ui_not_hidden");
         }
 
-        if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath))
+        if (contract.FinalAcceptance && !HasRpgFinalAcceptanceFiles(project.RepoPath, contract.BattleSceneAcceptance))
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "missing_rpg_final_acceptance_contract");
         }
@@ -196,6 +199,13 @@ internal static class PrototypeGoalAcceptanceValidator
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "acceptance_validation_timeout");
         }
+    }
+
+    private static bool RequiresRpgEncounterMapContract(PrototypeGoalAcceptanceContract contract)
+    {
+        return contract.BattleSceneAcceptance ||
+               contract.RequiredMarkers.Any(marker =>
+                   string.Equals(marker, "ShouldReachRewardPhase_AfterWinningTheFirstEncounter", StringComparison.Ordinal));
     }
 
     private static async Task ShutdownDotnetBuildServerAsync(
@@ -356,24 +366,28 @@ internal static class PrototypeGoalAcceptanceValidator
         }
     }
 
-    private static bool HasRpgFinalAcceptanceFiles(string repoPath)
+    private static bool HasRpgFinalAcceptanceFiles(string repoPath, bool requireBattleScene)
     {
-        var requiredFiles = new[]
+        var requiredFiles = new List<string>
         {
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn"),
-            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"),
             Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs"),
-            Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"),
             Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"),
             Path.Combine(repoPath, "Game.Godot", "Scenes", "Main.tscn")
         };
+        if (requireBattleScene)
+        {
+            requiredFiles.Add(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"));
+            requiredFiles.Add(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"));
+        }
+
         if (requiredFiles.Any(path => !File.Exists(path)))
         {
             return false;
         }
 
-        if (!HasRpgSceneAssetUsage(repoPath, requireSplitScenes: true))
+        if (!HasRpgSceneAssetUsage(repoPath, requireMapScene: true, requireBattleScene))
         {
             return false;
         }
@@ -381,8 +395,8 @@ internal static class PrototypeGoalAcceptanceValidator
         var catalogText = File.ReadAllText(Path.Combine(repoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs"));
         return catalogText.Contains("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", StringComparison.Ordinal) &&
                HasMainSceneDefaultPrototypeHostUiHidden(repoPath) &&
-               HasRpgMapEntryAcceptanceFiles(repoPath) &&
-               HasRpgBattleSceneAcceptanceFiles(repoPath);
+               HasRpgMapEntryAcceptanceFiles(repoPath, requireBattleScene) &&
+               (!requireBattleScene || HasRpgBattleSceneAcceptanceFiles(repoPath));
     }
 
     private static bool HasRpgPrototypeContractValueAcceptance(ProjectSnapshot project)
@@ -507,7 +521,7 @@ internal static class PrototypeGoalAcceptanceValidator
             RegexOptions.CultureInvariant);
     }
 
-    private static string? GetRpgMapEntryAcceptanceFailureReason(string repoPath)
+    private static string? GetRpgMapEntryAcceptanceFailureReason(string repoPath, bool requireEncounterContract)
     {
         var mainScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgPrototype.tscn");
         var mainScript = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "DqRpgPrototype.cs");
@@ -553,21 +567,28 @@ internal static class PrototypeGoalAcceptanceValidator
         AddMissing(missing, mapSceneText.Contains("Grid", StringComparison.Ordinal), "map_scene_missing_Grid");
         AddMissing(missing, mapSceneText.Contains("RpgMapAsset", StringComparison.Ordinal), "map_scene_missing_RpgMapAsset");
         AddMissing(missing, mapSceneText.Contains("RpgPlayerAsset", StringComparison.Ordinal), "map_scene_missing_RpgPlayerAsset");
-        AddMissing(missing, mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal), "map_scene_missing_RpgEnemyAsset");
+        if (requireEncounterContract)
+        {
+            AddMissing(missing, mapSceneText.Contains("RpgEnemyAsset", StringComparison.Ordinal), "map_scene_missing_RpgEnemyAsset");
+        }
+
         AddMissing(missing, mapScriptText.Contains("TrackLayer", StringComparison.Ordinal), "map_script_missing_TrackLayer_lookup");
         AddMissing(missing, HasGridToVisiblePosition(mapScriptText), "map_script_missing_GridToPosition_or_MapTokenPosition");
         AddMissing(missing, HasPlayerVisibilityRestore(mapScriptText), "map_script_missing_player_visibility_restore");
         AddMissing(missing, HasMapMovementEntry(mapScriptText), "map_script_missing_MovePlayer_or_MoveOnMap_or_TryHandleMapKey");
-        AddMissing(missing, HasEncounterEntry(mapScriptText), "map_script_missing_EncounterEntered_or_EncounterPressed_or_EncounterTriggered");
+        if (requireEncounterContract)
+        {
+            AddMissing(missing, HasEncounterEntry(mapScriptText), "map_script_missing_EncounterEntered_or_EncounterPressed_or_EncounterTriggered");
+        }
 
         return missing.Count == 0
             ? null
             : "missing_rpg_map_entry_contract: " + string.Join("; ", missing);
     }
 
-    private static bool HasRpgMapEntryAcceptanceFiles(string repoPath)
+    private static bool HasRpgMapEntryAcceptanceFiles(string repoPath, bool requireEncounterContract)
     {
-        return GetRpgMapEntryAcceptanceFailureReason(repoPath) is null;
+        return GetRpgMapEntryAcceptanceFailureReason(repoPath, requireEncounterContract) is null;
     }
 
     private static void AddMissing(List<string> missing, bool condition, string reason)
@@ -836,6 +857,11 @@ internal static class PrototypeGoalAcceptanceValidator
 
     private static string? ResolveSceneScriptPath(string repoPath, string scenePath, string fallbackRelativePath)
     {
+        if (!File.Exists(scenePath))
+        {
+            return null;
+        }
+
         var sceneText = File.ReadAllText(scenePath);
         var scriptResource = Regex.Matches(
                 sceneText,
@@ -860,12 +886,12 @@ internal static class PrototypeGoalAcceptanceValidator
             : Path.Combine(repoPath, resourcePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
-    private static bool HasRpgSceneAssetUsage(string repoPath, bool requireSplitScenes)
+    private static bool HasRpgSceneAssetUsage(string repoPath, bool requireMapScene, bool requireBattleScene)
     {
-        return GetRpgSceneAssetUsageFailureReason(repoPath, requireSplitScenes) is null;
+        return GetRpgSceneAssetUsageFailureReason(repoPath, requireMapScene, requireBattleScene) is null;
     }
 
-    private static string? GetRpgSceneAssetUsageFailureReason(string repoPath, bool requireSplitScenes)
+    private static string? GetRpgSceneAssetUsageFailureReason(string repoPath, bool requireMapScene, bool requireBattleScene)
     {
         var sceneFiles = new[]
         {
@@ -878,9 +904,14 @@ internal static class PrototypeGoalAcceptanceValidator
             return "missing_rpg_prototype_scene";
         }
 
-        if (requireSplitScenes && sceneFiles.Skip(1).Any(path => !File.Exists(path)))
+        if (requireMapScene && !File.Exists(sceneFiles[1]))
         {
-            return "missing_rpg_split_scene_asset_targets";
+            return "missing_rpg_map_scene_asset_target";
+        }
+
+        if (requireBattleScene && !File.Exists(sceneFiles[2]))
+        {
+            return "missing_rpg_battle_scene_asset_target";
         }
 
         if (File.Exists(Path.Combine(repoPath, "Game.Godot", ".gdignore")))
@@ -902,7 +933,7 @@ internal static class PrototypeGoalAcceptanceValidator
             return "missing_rpg_player_asset_usage";
         }
 
-        if (!HasRequiredRpgAssetUsage(usages, "RpgEnemyAsset", IsEnemyAssetPath))
+        if (requireBattleScene && !HasRequiredRpgAssetUsage(usages, "RpgEnemyAsset", IsEnemyAssetPath))
         {
             return "missing_rpg_enemy_asset_usage";
         }

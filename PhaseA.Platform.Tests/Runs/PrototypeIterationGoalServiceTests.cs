@@ -18,7 +18,7 @@ public sealed class PrototypeIterationGoalServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -43,7 +43,7 @@ public sealed class PrototypeIterationGoalServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -61,27 +61,30 @@ public sealed class PrototypeIterationGoalServiceTests
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
+        var targetGoal = (await store.GetLatestProjectIterationSessionAsync(projectId))!.Goals
+            .Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
+
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
 
         result.Status.Should().Be("completed");
-        result.GoalIndex.Should().Be(1);
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
         result.HasMoreGoals.Should().BeTrue();
         result.SessionStatus.Should().Be("paused_for_review");
         run!.RunType.Should().Be("prototype-iteration-goal");
         run.Status.Should().Be("completed");
         run.ProgressStep.Should().Be("completed");
         run.ProgressSubstep.Should().Be("succeeded");
-        run.ProgressLabel.Should().Be("目标 1 已完成。");
+        run.ProgressLabel.Should().Be($"目标 {targetGoal.GoalIndex} 已完成。");
         details.Should().NotBeNull();
         details!.Session.Status.Should().Be("paused_for_review");
         details.Session.LatestEvaluationJson.Should().NotBeNullOrWhiteSpace();
         details.LatestEvaluation.Should().NotBeNull();
-        details.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
-        details.Goals[0].Status.Should().Be("succeeded");
-        details.Goals[1].Status.Should().Be("pending");
+        details.LatestEvaluation!.Decision.Should().Be("should_refine_plan");
+        details.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
         codexCommand.StandardInput.Should().Contain("prototype-baseline");
         codexCommand.StandardInput.Should().Contain("Project Execution Guide");
@@ -122,9 +125,9 @@ public sealed class PrototypeIterationGoalServiceTests
         runner.Commands.Should().Contain(command =>
             command.FileName == "dotnet" &&
             command.Arguments.SequenceEqual(new[] { "build-server", "shutdown" }));
-        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain(result.RunId);
-        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("prototype_contract");
-        stateWriter.ReadLatestExecuteNextGoalState(project!, 1).Should().Contain("project_execution_guide");
+        stateWriter.ReadLatestExecuteNextGoalState(project!, targetGoal.GoalIndex).Should().Contain(result.RunId);
+        stateWriter.ReadLatestExecuteNextGoalState(project!, targetGoal.GoalIndex).Should().Contain("prototype_contract");
+        stateWriter.ReadLatestExecuteNextGoalState(project!, targetGoal.GoalIndex).Should().Contain("project_execution_guide");
         artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-iteration-goal-input",
             "prototype-iteration-goal-result",
@@ -138,7 +141,7 @@ public sealed class PrototypeIterationGoalServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
@@ -229,7 +232,7 @@ public sealed class PrototypeIterationGoalServiceTests
 
         var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, runner, CancellationToken.None);
 
-        result.Passed.Should().BeTrue();
+        result.Passed.Should().BeTrue(result.Reason);
         runner.Commands.Count(command => command.FileName == "dotnet" && command.Arguments.Contains("test")).Should().Be(2);
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("restore"));
         runner.Commands.SelectMany(command => command.Arguments).Should().Contain(argument => argument.Contains("core-tests-retry", StringComparison.Ordinal));
@@ -278,7 +281,7 @@ public sealed class BattleScene
             DateTimeOffset.UtcNow.ToString("O"),
             null);
 
-        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new StepFiveSmokeHostedProcessRunner(), CancellationToken.None);
 
         result.Passed.Should().BeFalse();
         result.Reason.Should().StartWith("missing_rpg_battle_scene_contract");
@@ -336,6 +339,1726 @@ public sealed class BattleScene
         result.Reason.Should().StartWith("missing_rpg_battle_scene_contract");
         result.Reason.Should().Contain("battle_scene_missing_RpgPlayerAsset_Texture2D");
         result.Reason.Should().Contain("battle_scene_missing_RpgEnemyAsset_Texture2D");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleScene_ForGenericFinalGoal_WhenContractHasNoCombatSemantics()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        File.Delete(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"));
+        File.Delete(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"));
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle", because: "non-combat JRPG final acceptance must not require BattleScene contracts");
+        result.Reason.Should().NotContain("enemy", because: "non-combat JRPG final acceptance must not require enemy asset contracts");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnoreTemplateBattleWords_ForGenericFinalGoal_WhenContractHasNoCombatSemantics()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        File.Delete(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "BattleScene.tscn"));
+        File.Delete(Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"));
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        File.WriteAllText(
+            Path.Combine(repoPath, "README.md"),
+            "Template recovery note: RPG battle scene and BattleScene are mentioned only as route examples.\n");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "project_execution_guide": "Template protocol mentions BattleScene and combat examples.",
+              "goals": [
+                {
+                  "title": "JRPG First Loop: opening context and player objective",
+                  "description": "Show the starting town context and objective.",
+                  "acceptanceHint": "Opening objective is readable."
+                },
+                {
+                  "title": "JRPG First Loop: field navigation and stable control",
+                  "description": "Start Adventure opens a visible town map with stable movement.",
+                  "acceptanceHint": "Map movement works."
+                },
+                {
+                  "title": "JRPG First Loop: quest or story progress",
+                  "description": "Talking to the elder updates the objective.",
+                  "acceptanceHint": "Story progress is visible."
+                },
+                {
+                  "title": "JRPG First Loop: final first-loop acceptance",
+                  "description": "Validate selected non-combat capabilities, project contract, Godot validation, package readiness, and ignore this template-only BattleScene example.",
+                  "acceptanceHint": "Final acceptance passes."
+                }
+              ]
+            }
+            """);
+        var prototypeStatePath = Path.Combine(project.MetaPath, "routes", "prototype");
+        Directory.CreateDirectory(prototypeStatePath);
+        File.WriteAllText(
+            Path.Combine(prototypeStatePath, "latest.json"),
+            """
+            {
+              "route": "prototype",
+              "project_execution_guide": "Template protocol mentions BattleScene and combat examples.",
+              "prototype_completion": {
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              }
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle", because: "template route state must not activate battle acceptance for a non-combat contract");
+        result.Reason.Should().NotContain("enemy", because: "template route state must not activate enemy asset acceptance for a non-combat contract");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnoreLegacyIterationPlanBattleWords_WhenStateHasNoSessionId()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "source_message": "Old template text asks for BattleScene, enemy assets, combat, reward choice, and RewardOptions.Count.",
+              "regeneration_guidance": "Legacy guidance says to add one battle and a reward return.",
+              "selected_capabilities": [
+                "conflict_entry",
+                "battle_or_challenge_resolution",
+                "growth_feedback"
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "current-session",
+            5,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected town exploration capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes without combat requirements.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("jrpg-final-first-loop-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle", because: "legacy iteration-plan state without session_id must not activate battle acceptance");
+        result.Reason.Should().NotContain("enemy", because: "legacy iteration-plan state without session_id must not activate enemy asset acceptance");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleScene_ForGenericRpgFinalGoal_WhenContractHasNoCombatSemantics()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle", because: "generic RPG final acceptance must follow the non-combat contract");
+        result.Reason.Should().NotContain("enemy", because: "generic RPG final acceptance must not require enemy assets for a non-combat contract");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldUseSelectedCapabilities_ForGenericRpgFinalGoal()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "selected_capabilities": [
+                "opening_context",
+                "field_navigation",
+                "quest_or_story_progress",
+                "final_first_loop_acceptance"
+              ],
+              "project_execution_guide": "Template examples mention BattleScene, combat, reward choice, RewardOptions.Count, and enemy assets.",
+              "goals": [
+                {
+                  "title": "RPG full playable prototype acceptance",
+                  "description": "Validate selected non-combat capabilities and ignore template-only BattleScene examples.",
+                  "acceptanceHint": "Final acceptance passes."
+                }
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate selected capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("RewardOptions");
+        result.Reason.Should().NotContain("enemy");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldRequireBattleScene_WhenCurrentSelectedCapabilitiesIncludeBattle()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "session_id": "session-id",
+              "selected_capabilities": [
+                "opening_context",
+                "field_navigation",
+                "battle_or_challenge_resolution",
+                "final_first_loop_acceptance"
+              ],
+              "goals": [
+                {
+                  "title": "JRPG First Loop: final first-loop acceptance",
+                  "description": "Validate selected capabilities and package readiness.",
+                  "acceptanceHint": "Final acceptance passes."
+                }
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("jrpg-final-first-loop-acceptance");
+        result.Reason.Should().Contain("missing_rpg_battle_scene", because: "current selected_capabilities are the final acceptance authority");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnoreStaleSelectedCapabilities_ForGenericRpgFinalGoal()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Battle Route",
+            "Battle Route",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "session_id": "stale-session",
+              "selected_capabilities": [
+                "opening_context",
+                "field_navigation",
+                "final_first_loop_acceptance"
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "current-session",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate the visible enemy encounter, BattleScene, reward choice, return to the map, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes after one battle and reward return.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().Contain("missing_rpg_battle_scene");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnoreIterationAnalysisSummary_ForGenericRpgFinalGoal()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "analysisSummary": "Template summary says BattleScene, combat, reward choice, RewardOptions.Count, and enemy assets are missing."
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate selected non-combat capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes without combat or reward requirements.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("RewardOptions");
+        result.Reason.Should().NotContain("enemy");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnorePrototypeSummaryBattleWords_ForGenericRpgFinalGoal()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var prototypeStatePath = Path.Combine(project.MetaPath, "routes", "prototype");
+        Directory.CreateDirectory(prototypeStatePath);
+        File.WriteAllText(
+            Path.Combine(prototypeStatePath, "latest.json"),
+            """
+            {
+              "route": "prototype",
+              "prototype_summary": "Template summary says BattleScene, combat, reward choice, RewardOptions.Count, and enemy assets are missing.",
+              "completion_summary": "Repair suggestion mentions battle reward selected and enemy presentation as examples.",
+              "prototype_completion": {
+                "summary": "BattleScene and reward flow are examples only.",
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+              }
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("RewardOptions");
+        result.Reason.Should().NotContain("enemy");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldIgnorePrototypeMetadataBattleWords_ForGenericRpgFinalGoal()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "cozy-town",
+                GameName: "Cozy Town",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town opening with exploration and objective progress.",
+                CorePlayerFantasy: "Walk through a village and help an elder.",
+                MinimumPlayableLoop: "Start Adventure, walk to the elder, inspect the keepsake, and update the objective.",
+                SuccessCriteria: ["Objective progress is visible."],
+                GameFeature: "NPC dialogue and keepsake discovery.",
+                CoreGameplayLoop: "Explore the town, talk, inspect, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-cozy-town.md",
+            "cozy-town");
+        var prototypeStatePath = Path.Combine(project.MetaPath, "routes", "prototype");
+        Directory.CreateDirectory(prototypeStatePath);
+        File.WriteAllText(
+            Path.Combine(prototypeStatePath, "latest.json"),
+            """
+            {
+              "route": "prototype",
+              "game_name": "BattleScene Combat Reward",
+              "game_type": "enemy encounter RPG",
+              "game_type_source": "battle reward template",
+              "source_message": "Template example says create BattleScene, enemy assets, and RewardOptions.Count.",
+              "prototype_completion": {
+                "smoke_scene": "res://Game.Godot/Prototypes/dq-rpg/BattleScene.tscn"
+              }
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "RPG full playable prototype acceptance",
+            "Validate project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("rpg-final-full-playable-acceptance");
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle", because: "prototype metadata must not activate battle acceptance");
+        result.Reason.Should().NotContain("enemy", because: "prototype metadata must not activate enemy asset acceptance");
+        result.Reason.Should().NotContain("RewardOptions");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleScene_ForNonCombatChallengeResolution()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Puzzle Shrine",
+            "Puzzle Shrine",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "puzzle-shrine",
+                GameName: "Puzzle Shrine",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a shrine puzzle challenge without a combat scene.",
+                CorePlayerFantasy: "Explore a shrine, read clues, solve an obstacle, and open the next route.",
+                MinimumPlayableLoop: "Start Adventure, walk to the shrine, inspect clues, resolve the obstacle, and continue to the next room.",
+                SuccessCriteria: ["Obstacle resolution is readable."],
+                GameFeature: "Puzzle challenge and route unlock.",
+                CoreGameplayLoop: "Explore, inspect, solve, and continue.",
+                WinFailConditions: "No combat failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-puzzle-shrine.md",
+            "puzzle-shrine");
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: battle or challenge resolution",
+            "Validate a readable peaceful puzzle challenge resolution.",
+            "Pass when the obstacle resolves with clear success feedback.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+        result.Kind.Should().Be("jrpg-battle-or-challenge-resolution");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireEnemyOrEncounter_ForFieldNavigationOnly()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMapEntryWithoutEnemyOrEncounter(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Cozy Town",
+            "Cozy Town",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "JRPG First Loop: field navigation and stable control",
+            "Validate Start Adventure to visible town map and stable movement.",
+            "Pass when the town map opens and movement is stable.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new StepFiveSmokeHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-field-navigation-stable-control");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireEncounterRewardMarker_ForNegatedJrpgConflictEntry()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMapEntryWithoutEnemyOrEncounter(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "JRPG First Loop: conflict entry trigger",
+            "Validate the obstacle entry as a town gate choice with no encounter and without combat.",
+            "Pass when map movement reaches the obstacle entry without enemy work.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-conflict-entry-trigger");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireRewardFlow_ForReturnContinueOnlyFinalAcceptance()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "town-errand",
+                GameName: "Town Errand",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a town errand loop that continues after story progress.",
+                CorePlayerFantasy: "Walk through town, talk to an elder, inspect a keepsake, and continue to the next objective.",
+                MinimumPlayableLoop: "Start Adventure, navigate town, complete the errand, and continue to the next playable state.",
+                SuccessCriteria: ["The next objective is visible."],
+                GameFeature: "NPC dialog and objective continuation.",
+                CoreGameplayLoop: "Explore, interact, update objective, and continue.",
+                WinFailConditions: "No failure state in this first loop.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-town-errand.md",
+            "town-errand");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "selected_capabilities": [
+                "opening_context",
+                "field_navigation",
+                "interaction_discovery",
+                "return_or_continue_loop",
+                "quest_or_story_progress",
+                "final_first_loop_acceptance"
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected town errand capabilities, contract traceability, continuation, Godot validation, and package readiness.",
+            "Final first-loop acceptance passes with objective continuation.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        (result.Reason ?? "").Should().NotStartWith("missing_rpg_reward_flow_contract");
+        (result.Reason ?? "").Should().NotContain("RewardOptions");
+        (result.Reason ?? "").Should().NotContain("ApplyReward");
+        (result.Reason ?? "").Should().NotContain("Battle reward selected");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireRewardFlow_ForReturnContinueCapabilityTitle()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: return or continue loop",
+            "Continue to the next playable town objective after the errand resolves.",
+            "Pass when the map remains visible, player input remains usable, and the next objective is clear.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        (result.Reason ?? "").Should().NotStartWith("missing_rpg_reward_flow_contract");
+        (result.Reason ?? "").Should().NotContain("RewardOptions");
+        (result.Reason ?? "").Should().NotContain("ApplyReward");
+        (result.Reason ?? "").Should().NotContain("Battle reward selected");
+        result.Kind.Should().Be("jrpg-return-or-continue-loop");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireReturnToMapMarker_ForSemanticContinueLoop()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: next objective continuation",
+            "Validate continue loop to the next playable town objective after the errand resolves.",
+            "Pass when the map remains visible, player input remains usable, and the next objective is clear.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Reason.Should().NotContain("Return to the map");
+        result.Reason.Should().NotContain("missing_marker=Return to the map");
+        result.Kind.Should().Be("jrpg-return-or-continue-loop");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireRewardFlow_ForStoryConsequenceFeedback()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: growth, reward, or consequence feedback",
+            "Show a story consequence after the elder receives the keepsake.",
+            "Pass when the objective text changes and the player understands the story consequence.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-growth-reward-consequence-feedback");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireRewardFlow_ForSemanticStoryConsequenceFeedback()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: elder story update",
+            "Show consequence feedback after the elder receives the keepsake.",
+            "Pass when the objective text changes and the player understands the story consequence.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+        result.Kind.Should().Be("jrpg-growth-reward-consequence-feedback");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotTreatExploreAsExpRewardFlow()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: exploration consequence",
+            "Explore the town and show consequence feedback after the elder receives the keepsake.",
+            "Pass when exploration changes the objective text without reward choices.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-growth-reward-consequence-feedback");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotTreatItemizedAsItemRewardFlow()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: itemized story consequence",
+            "Show consequence feedback as an itemized checklist after the elder receives the keepsake.",
+            "Pass when the itemized checklist changes objective text.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-growth-reward-consequence-feedback");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleScene_ForNonCombatFailurePath()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Puzzle Shrine",
+            "Puzzle Shrine",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: puzzle failure path",
+            "Validate failure path for an incorrect shrine answer without combat.",
+            "Pass when failure feedback is readable and the player can continue exploring.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Reason.Should().NotContain("BattleScene");
+        result.Reason.Should().NotContain("battle_scene");
+        result.Kind.Should().Be("jrpg-loop-stability");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireRewardFlow_WhenRewardLoopIsNegated()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: no reward loop continuation",
+            "Validate continuation without reward loop after the errand resolves.",
+            "Pass when the next objective is clear without reward choices.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        (result.Reason ?? "").Should().NotStartWith("missing_rpg_reward_flow_contract");
+        (result.Reason ?? "").Should().NotContain("RewardOptions");
+        (result.Reason ?? "").Should().NotContain("ApplyReward");
+        (result.Reason ?? "").Should().NotContain("Battle reward selected");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleOrReward_ForNonCombatSceneSwitching()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteMainScriptWithoutRewardFlow(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: main prototype scene switching",
+            "Validate main prototype scene switching for a non-combat town route without reward choices.",
+            "Pass when Start Adventure opens the map and the player can continue exploring.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("rpg-step4-main-loop-scene-switching");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldRequireBattleScene_WhenPeacefulContextStillMentionsBattle()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Peaceful Frontier",
+            "Peaceful Frontier",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "JRPG First Loop: battle or challenge resolution",
+            "Validate a peaceful town intro before one readable battle against a monster.",
+            "Pass when BattleScene resolves the first battle.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("jrpg-battle-or-challenge-resolution");
+        result.Reason.Should().Contain("missing_rpg_battle_scene_contract");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleScene_ForGenericBattleFallback_WhenBattleIsNegated()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "RPG settlement cleanup",
+            "Validate story settlement without battle settlement and without combat.",
+            "Pass when the story settlement is readable.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("rpg-step3-battlescene-settlement");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireEncounterRewardMarker_WhenEncounterIsNegated()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "RPG encounter cleanup",
+            "Validate map continuation with no encounter and without combat.",
+            "Pass when map movement is represented.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("rpg-step2-encounter-trigger");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldGuardLegacyRpgStepTitles_WhenCombatAndRewardAreNegated()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var step3 = new ProjectIterationGoalSnapshot(
+            "goal-step3",
+            "session-id",
+            3,
+            "RPG Step 3: BattleScene visualization and settlement validation",
+            "No battle scene; validate peaceful story settlement only.",
+            "Pass without combat.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var step4 = new ProjectIterationGoalSnapshot(
+            "goal-step4",
+            "session-id",
+            4,
+            "RPG Step 4: reward 3-choice understandability validation",
+            "No reward choices; validate continuation feedback only.",
+            "Pass without reward choices.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var step3Result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, step3, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+        var step4Result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, step4, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        step3Result.Passed.Should().BeTrue(step3Result.Reason);
+        step3Result.Kind.Should().Be("rpg-step3-battlescene-settlement");
+        step4Result.Passed.Should().BeTrue(step4Result.Reason);
+        step4Result.Kind.Should().Be("rpg-step4-reward-choice-readability");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleOrRewardMarkers_ForNonCombatContractAlignment()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Errand",
+            "Town Errand",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: contract traceability",
+            "Validate contract traceability for a no combat town request without rewards.",
+            "Pass when movement and objective contract values are represented.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("rpg-contract-alignment");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotRequireBattleOrRewardMarkers_ForNonCombatAssetAndUiValidation()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Peaceful Library",
+            "Peaceful Library",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: peaceful assets and UI validation",
+            "Validate assets and UI for a peaceful dialogue-only library route with no combat, no loot, and no leveling.",
+            "Pass when map/player assets and the core UI are represented.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("rpg-asset-usage-validation");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldNotTreatGuidanceAsUiAssetValidation()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        WriteCoreMarkersWithoutBattleOrReward(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Town Guide",
+            "Town Guide",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: story guidance update",
+            "Use project execution guide and route guidance to validate story progress after talking to the elder.",
+            "Pass when the Quest objective is represented without any asset validation requirement.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("jrpg-quest-story-progress");
+        result.Reason.Should().NotContain("rpg_asset", because: "guide/guidance must not trigger the UI asset route");
+        result.Reason.Should().NotContain("asset_usage", because: "guide/guidance must not trigger the UI asset route");
     }
 
     [Fact]
@@ -492,29 +2215,26 @@ public sealed class SurvivorsLikePrototypeLoopTests
     }
 
     [Theory]
-    [InlineData(1, "jrpg-field-navigation-stable-control")]
-    [InlineData(2, "jrpg-conflict-entry-trigger")]
-    [InlineData(3, "jrpg-battle-or-challenge-resolution")]
+    [InlineData("field navigation and stable control", "jrpg-field-navigation-stable-control")]
+    [InlineData("conflict entry trigger", "jrpg-conflict-entry-trigger")]
+    [InlineData("battle or challenge resolution", "jrpg-battle-or-challenge-resolution")]
     public async Task ExecuteNextAsync_ShouldUseRpgRouteAcceptanceKinds_ForNavigationFirstSteps(
-        int goalIndex,
+        string targetTitle,
         string expectedAcceptanceKind)
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
-        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict route-profile steps."));
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through field movement, a visible encounter trigger, one battle, reward feedback, and return to the map."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < goalIndex))
-        {
-            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
-        }
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains(targetTitle, StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
@@ -522,17 +2242,24 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WriteProjectReadme(project);
         new PrototypeContractService().WriteFromRequest(project, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
-        stateWriter.WritePrototypeState(project, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        stateWriter.WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            marker = "prototype-baseline",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
-
         result.Status.Should().Be("completed");
-        result.GoalIndex.Should().Be(goalIndex);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == goalIndex).Status.Should().Be("succeeded");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         run!.EvidenceJson.Should().Contain($"\"acceptance_validation\":\"{expectedAcceptanceKind}\"");
         run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
     }
@@ -603,6 +2330,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Build the RPG map entry step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project.RepoPath);
@@ -616,10 +2346,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var result = await service.ExecuteNextAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
-
         result.Status.Should().Be("completed");
-        result.GoalIndex.Should().Be(1);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("succeeded");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         run!.EvidenceJson.Should().Contain("\"acceptance_validation\":\"jrpg-field-navigation-stable-control\"");
         run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
     }
@@ -638,11 +2367,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
-        {
-            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
-        }
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
@@ -669,12 +2395,63 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("completed");
-        result.GoalIndex.Should().Be(7);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 7).Status.Should().Be("succeeded");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task ExecuteNextAsync_ShouldRequireBattleAcceptance_ForGenericFinalGoal_WhenContractHasCombatSemantics()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through battle, reward, and final validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        await store.UpdateProjectIterationGoalStatusAsync(
+            targetGoal.GoalId,
+            "pending",
+            "Validate selected capabilities, contract, Godot validation, and package readiness.",
+            DateTimeOffset.UtcNow.ToString("O"));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project!);
+        new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        stateWriter.WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new { smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn" },
+            godot_smoke = new { scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn" }
+        });
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        File.WriteAllText(
+            Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"),
+            "public sealed class BattleScene { public void ShowOnly() { } }\n");
+        var runner = new StepFiveSmokeHostedProcessRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+
+        result.Status.Should().Be("needs_fix");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("needs_fix");
+        run!.EvidenceJson.Should().Contain("\"acceptance_validation\":\"jrpg-final-first-loop-acceptance\"");
+        refreshed.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).ResultSummary.Should().Contain("missing_rpg_battle_scene_contract");
     }
 
     [Fact]
@@ -691,11 +2468,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
-        {
-            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
-        }
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
@@ -711,8 +2485,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
-        result.GoalIndex.Should().Be(7);
-        refreshed!.Goals.Single(goal => goal.GoalIndex == 7).Status.Should().Be("needs_fix");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("needs_fix");
         runner.Commands.Should().ContainSingle(command => command.Arguments.Contains("exec"));
     }
 
@@ -730,11 +2504,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var now = DateTimeOffset.UtcNow.ToString("O");
-        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < 7))
-        {
-            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
-        }
+        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
@@ -756,8 +2527,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var detailsAfter = await store.GetLatestProjectIterationSessionAsync(projectId);
 
         result.Status.Should().Be("needs_fix");
-        result.GoalIndex.Should().Be(7);
-        detailsAfter!.Goals.Single(goal => goal.GoalIndex == 7).ResultSummary.Should().Contain("rpg_form_contract_values_not_reflected");
+        result.GoalIndex.Should().Be(targetGoal.GoalIndex);
+        detailsAfter!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).ResultSummary.Should().Contain("rpg_form_contract_values_not_reflected");
     }
 
     [Fact]
@@ -901,6 +2672,16 @@ public sealed class SurvivorsLikePrototypeLoopTests
             Confirm: true);
     }
 
+    private static async Task CompleteGoalsBeforeAsync(PhaseAMetadataStore store, string projectId, int goalIndex)
+    {
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        foreach (var goal in details!.Goals.Where(goal => goal.GoalIndex < goalIndex))
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", $"Goal {goal.GoalIndex} already completed.", now);
+        }
+    }
+
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? godotBin = null)
     {
         var values = new Dictionary<string, string?>
@@ -936,6 +2717,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         File.WriteAllText(Path.Combine(testsPath, "DqRpgPrototypeLoopTests.cs"), """
 public sealed class DqRpgPrototypeLoopTests
 {
+    // Objective: Start Adventure, learn the town context, and enter the first field.
     // Contract values: 100 HP, 10 ATK, 2 DEF, first enemy 30 HP and 5 ATK, +5 HP, +2 ATK, +1 DEF, 10% encounter, 10 steps, 15 battles.
     public void MoveOnMap() { }
     public void ShouldReachRewardPhase_AfterWinningTheFirstEncounter() { }
@@ -958,6 +2740,7 @@ public sealed class DqRpgPrototypeLoopTests
         File.WriteAllText(Path.Combine(corePath, "DqRpgPrototypeLoop.cs"), """
 public sealed class DqRpgPrototypeLoop
 {
+    public const string Objective = "Start Adventure, learn the town context, and enter the first field.";
     public const int InitialPlayerHp = 100;
     public const int InitialPlayerAttack = 10;
     public const int InitialPlayerDefense = 2;
@@ -1000,6 +2783,8 @@ public sealed class DqRpgPrototypeLoop
 [node name="DqRpgPrototype" type="Node"]
 [node name="StartButton" type="Button" parent="."]
 text = "Start Adventure"
+[node name="ObjectiveLabel" type="Label" parent="."]
+text = "Objective: Start Adventure and find the village elder."
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 [node name="UI" type="Control" parent="CanvasLayer"]
 layout_mode = 3
@@ -1049,9 +2834,9 @@ texture = ExtResource("3")
 [node name="BattleScene" type="Node"]
 [node name="AttackButton" type="Button" parent="."]
 text = "Attack"
-[node name="RpgPlayerAsset" type="TextureRect" parent="."]
+[node name="RpgPlayerAsset" type="TextureRect" parent="BattleScene"]
 texture = ExtResource("1")
-[node name="RpgEnemyAsset" type="TextureRect" parent="."]
+[node name="RpgEnemyAsset" type="TextureRect" parent="BattleScene"]
 texture = ExtResource("2")
 """);
         var scriptPath = Path.Combine(scenePath, "Scripts");
@@ -1170,6 +2955,97 @@ public sealed class MapScene
         EncounterTriggered?.Invoke("traversal_charge");
     }
     private object GridToPosition() => new();
+}
+""");
+    }
+
+    private static void DeleteBattleSceneFiles(string repoPath)
+    {
+        var scenePath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg");
+        File.Delete(Path.Combine(scenePath, "BattleScene.tscn"));
+        File.Delete(Path.Combine(scenePath, "Scripts", "BattleScene.cs"));
+    }
+
+    private static void WriteMainScriptWithoutRewardFlow(string repoPath)
+    {
+        var scriptPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    void Ready()
+    {
+        _mapScene = GetNode<MapScene>("CanvasLayer/UI/MapScene");
+        StartButton.Pressed += ShowMapScene;
+        _mapScene.Visible = true;
+    }
+
+    void ShowMapScene() {}
+    void ContinueToNextObjective() { ShowMapScene(); }
+
+    private MapScene _mapScene = default!;
+    private dynamic StartButton;
+}
+""");
+    }
+
+    private static void WriteMapEntryWithoutEnemyOrEncounter(string repoPath)
+    {
+        var scenePath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg");
+        Directory.CreateDirectory(scenePath);
+        File.WriteAllText(Path.Combine(scenePath, "MapScene.tscn"), """
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs" id="script_map"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/map_floor_tile.png" id="1"]
+[ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/dq-rpg/Assets/player_hero.png" id="2"]
+
+[node name="MapScene" type="Control"]
+script = ExtResource("script_map")
+custom_minimum_size = Vector2(700, 700)
+[node name="TrackLayer" type="Control" parent="."]
+custom_minimum_size = Vector2(600, 600)
+[node name="RpgMapAsset" type="TextureRect" parent="TrackLayer"]
+custom_minimum_size = Vector2(600, 600)
+texture = ExtResource("1")
+[node name="Grid" type="GridContainer" parent="TrackLayer"]
+[node name="Overlay" type="Control" parent="TrackLayer"]
+[node name="RpgPlayerAsset" type="TextureRect" parent="TrackLayer/Overlay"]
+texture = ExtResource("2")
+""");
+
+        var scriptPath = Path.Combine(scenePath, "Scripts");
+        Directory.CreateDirectory(scriptPath);
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), """
+public sealed class MapScene
+{
+    private object TrackLayer = new();
+    private dynamic _player;
+    public bool TryHandleMapKey(object keycode) { MoveOnMap(); return true; }
+    private void MoveOnMap() { GridToPosition(); _player.Visible = true; }
+    private object GridToPosition() => new();
+}
+""");
+    }
+
+    private static void WriteCoreMarkersWithoutBattleOrReward(string repoPath)
+    {
+        var testsPath = Path.Combine(repoPath, "Game.Core.Tests", "Prototypes");
+        Directory.CreateDirectory(testsPath);
+        File.WriteAllText(Path.Combine(testsPath, "DqRpgPrototypeLoopTests.cs"), """
+public sealed class DqRpgPrototypeLoopTests
+{
+    public void MoveOnMap() { }
+}
+""");
+
+        var corePath = Path.Combine(repoPath, "Game.Core", "Prototypes");
+        Directory.CreateDirectory(corePath);
+        File.WriteAllText(Path.Combine(corePath, "DqRpgPrototypeLoop.cs"), """
+public sealed class DqRpgPrototypeLoop
+{
+    public const string Objective = "Start Adventure, help the elder, and continue exploring.";
+    public void MoveOnMap() { }
 }
 """);
     }
@@ -1355,6 +3231,16 @@ public sealed class MapScene
             if (command.FileName == "dotnet")
             {
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();

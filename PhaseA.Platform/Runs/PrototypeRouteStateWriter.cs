@@ -328,16 +328,17 @@ public sealed class PrototypeRouteStateWriter
                 ## RPG Type Protocol
 
                 - Treat this project as an RPG route project unless the prototype contract explicitly says otherwise.
-                - Preserve the main menu entry path: main shell -> Start Adventure -> visible MapScene -> battle/reward/map loop.
+                - Preserve the main menu entry path: main shell -> Start Adventure -> visible MapScene -> selected JRPG capability loop.
                 - User form fields override RPG defaults, template examples, and fallback kit values.
-                - RPG work should keep MapScene, BattleScene, reward selection, win/fail visibility, and final acceptance aligned.
+                - RPG work should keep MapScene, selected conflict/reward capabilities, win/fail visibility when applicable, and final acceptance aligned.
+                - Do not create, require, or repair BattleScene unless the project contract, selected capabilities, or latest failure evidence names combat/conflict work.
                 - If platform validation names a concrete compile, node, asset, navigation, or GdUnit blocker, repair that blocker before gameplay polish.
 
                 ## RPG Expected Artifact Anchors
 
                 - Prototype shell scene: Game.Godot/Prototypes/<slug>/<PascalSlug>Prototype.tscn
                 - RPG map scene: Game.Godot/Prototypes/<slug>/MapScene.tscn
-                - RPG battle scene: Game.Godot/Prototypes/<slug>/BattleScene.tscn
+                - RPG battle scene, only when battle/conflict capability is selected or named by latest failure: Game.Godot/Prototypes/<slug>/BattleScene.tscn
                 - RPG scripts: Game.Godot/Prototypes/<slug>/Scripts/
                 - RPG core loop: Game.Core/Prototypes/
                 - RPG core tests: Game.Core.Tests/Prototypes/

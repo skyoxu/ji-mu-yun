@@ -189,7 +189,8 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Goals[0].Description.Should().Contain("BattleStatusLabel");
         result.Goals[0].Description.Should().Contain(".godot/mono/temp/obj/Debug");
         result.Goals[1].Title.Should().Contain("Start Adventure");
-        result.Goals[1].Title.Should().Contain("BattleScene");
+        result.Goals[1].Title.Should().NotContain("BattleScene");
+        result.Goals[1].AcceptanceHint.Should().Contain("BattleScene is part of this smoke only when battle/conflict capability is selected or named by the latest failure");
     }
 
     [Fact]

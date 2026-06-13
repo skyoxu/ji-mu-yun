@@ -435,7 +435,7 @@ public sealed class PrototypeNeedsFixRouteService
 
         if (acceptanceReason?.StartsWith("missing_rpg_map_entry_contract", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy the platform-required map nodes, grid-position mapping, player visibility restore, and stable movement handling before reporting STATUS: completed.";
+            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy the platform-required map nodes, grid-position mapping, player visibility restore, and stable movement handling before reporting STATUS: completed. Add RpgEnemyAsset or encounter trigger wiring only when the selected route or latest failure explicitly requires encounter, conflict, or battle.";
         }
 
         return "Repair the listed platform blocker first. Do not infer success from prior assistant summaries.";

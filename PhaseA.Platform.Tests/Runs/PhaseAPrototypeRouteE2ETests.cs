@@ -229,6 +229,8 @@ namespace Game.Core.Prototypes;
 
 public sealed class DqRpgPrototypeLoop
 {
+    private const string OpeningObjectiveMarker = "Objective";
+    private const string StartAdventureMarker = "Start Adventure";
     private const string RewardOptionsMarker = "RewardOptions.Count";
     public int RewardOptionsCount => 3;
     public int VictoryBattleCount => 1;

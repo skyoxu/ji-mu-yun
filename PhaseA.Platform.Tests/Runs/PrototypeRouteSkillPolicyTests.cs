@@ -177,6 +177,90 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldUseContractKindInsteadOfGoalIndex_ForRpgSceneSwitching()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "Repair RPG scene switching for town route",
+            "Validate main prototype scene switching for a town route.",
+            "Scene switching passes for selected map and continuation flow.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for RPG scene switching");
+        prompt.Should().NotContain("Platform hard acceptance for RPG Step 4");
+        prompt.Should().NotContain("ShowRewardScene");
+        prompt.Should().NotContain("RewardOptions.Count");
+    }
+
+    [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldConditionEnemyAsset_ForJrpgFieldNavigation()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "JRPG First Loop: field navigation and stable control",
+            "Validate Start Adventure to visible town map and stable movement.",
+            "Pass when the town map opens and movement is stable.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for JRPG field navigation");
+        prompt.Should().Contain("Add RpgEnemyAsset only when");
+        prompt.Should().NotContain("RpgPlayerAsset, RpgEnemyAsset nodes");
+    }
+
+    [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldKeepRewardPrompt_ForRewardContractKind()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            4,
+            "RPG Step 4: reward 3-choice understandability validation",
+            "Validate reward choices.",
+            "Reward choice proof passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for RPG Step 4");
+        prompt.Should().Contain("RewardOptions.Count");
+    }
+
+    [Fact]
     public void GodotSmokePolicy_ShouldValidateSurvivorsLikeFirstLoopGoals()
     {
         var project = Project(

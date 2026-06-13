@@ -1262,13 +1262,49 @@ public sealed partial class PrototypeQuickFixService
 
     private static string BuildGoalRepairTimeoutFocus(ProjectIterationGoalSnapshot goal)
     {
+        var goalText = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
+        if (ContainsAny(goalText, "opening context", "player objective"))
+        {
+            return "呈现玩家身份、起点场景和当前目标，并保留 Start Adventure 到下一步能力的入口。";
+        }
+
+        if (ContainsAny(goalText, "field navigation", "stable control", "visible MapScene", "map entry", "地图", "移动"))
+        {
+            return "Start Adventure 后显示 MapScene、玩家可见、稳定移动。只有当前目标明确包含遇敌时才触发首次遇敌。";
+        }
+
+        if (ContainsAny(goalText, "conflict entry", "encounter", "first conflict", "遇敌", "冲突"))
+        {
+            return "从地图、场景或交互清晰进入首次冲突/遇敌/挑战，不推进战斗结算或奖励选择。";
+        }
+
+        if (ContainsAny(goalText, "battle or challenge resolution", "battle", "combat", "battlescene", "challenge resolution", "战斗", "挑战"))
+        {
+            return "完成选中战斗或挑战能力的可读结算；只有项目使用 BattleScene 时才创建或修复独立 BattleScene。";
+        }
+
+        if (ContainsAny(goalText, "growth", "reward", "consequence", "奖励", "成长"))
+        {
+            return "展示奖励、成长或后果反馈；若当前目标要求奖励选择，则胜利后显示 3 个奖励、选择后状态变化可见。";
+        }
+
+        if (ContainsAny(goalText, "return or continue", "return-to-map", "return to map", "返回地图"))
+        {
+            return "返回地图、继续到下一可玩状态或完成指定循环续航，并保持玩家可见和输入可用。";
+        }
+
+        if (ContainsAny(goalText, "final first-loop acceptance", "final acceptance", "端到端", "最终验收"))
+        {
+            return "完成所选 JRPG 首轮能力的端到端验收、Godot smoke、资源解析和最终可玩证明；不要补未被选择的 BattleScene。";
+        }
+
         return goal.GoalIndex switch
         {
-            1 => "Start Adventure 后显示 MapScene、玩家可见、稳定移动并触发首次遇敌。",
-            2 => "创建独立 BattleScene 场景与脚本，完成敌人展示、攻击反馈以及胜利或失败结算；不要推进奖励选择。",
-            3 => "胜利后显示 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。",
-            4 => "串联 Start Adventure、地图、遇敌、战斗、奖励选择和返回地图的首轮场景切换。",
-            5 => "让 15 场胜利、任一失败和遇敌规则对玩家清晰可读。",
+            1 => "Start Adventure 后显示 MapScene、玩家可见、稳定移动。只有当前目标明确包含遇敌时才触发首次遇敌。",
+            2 => "修复当前目标明确要求的第二个 JRPG 能力；只有目标或最新失败证据包含战斗/冲突时才创建或修复 BattleScene。",
+            3 => "修复当前目标明确要求的第三个 JRPG 能力；只有目标要求奖励时才补奖励选择与状态变化。",
+            4 => "串联当前已选择的 JRPG 首轮能力，不要补未被选择的战斗、奖励或返回地图能力。",
+            5 => "让当前目标明确要求的胜负、失败或进度规则对玩家清晰可读；不要替项目补默认战斗胜负规则。",
             6 => "完成 RPG 原型端到端验收、Godot smoke 和最终可玩证明。",
             _ => string.IsNullOrWhiteSpace(goal.AcceptanceHint) ? goal.Description : goal.AcceptanceHint
         };
@@ -1818,7 +1854,7 @@ public sealed partial class PrototypeQuickFixService
     {
         if (validation.Reason?.StartsWith("missing_rpg_map_entry_contract", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return "- RepairFocus: Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy map nodes, grid-position mapping, player visibility restore, and stable movement handling.";
+            return "- RepairFocus: Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy map nodes, grid-position mapping, player visibility restore, and stable movement handling. Add RpgEnemyAsset or encounter trigger wiring only when the selected route or latest failure explicitly requires encounter, conflict, or battle.";
         }
 
         if (validation.Reason?.StartsWith("missing_rpg_battle_scene_contract", StringComparison.OrdinalIgnoreCase) == true)
@@ -2024,13 +2060,19 @@ public sealed partial class PrototypeQuickFixService
             return false;
         }
 
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+        if (string.Equals(contract?.Kind, "jrpg-conflict-entry-trigger", StringComparison.Ordinal) ||
+            string.Equals(contract?.Kind, "rpg-step2-encounter-trigger", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
         var goalText = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
-        return goal.GoalIndex == 1 &&
-               (goalText.Contains("encounter", StringComparison.Ordinal) ||
-                goalText.Contains("battle", StringComparison.Ordinal) ||
-                goalText.Contains("enemy", StringComparison.Ordinal) ||
-                goalText.Contains("遇敌", StringComparison.Ordinal) ||
-                goalText.Contains("遭遇", StringComparison.Ordinal));
+        return goalText.Contains("conflict entry", StringComparison.Ordinal) ||
+               goalText.Contains("encounter", StringComparison.Ordinal) ||
+               goalText.Contains("first conflict", StringComparison.Ordinal) ||
+               goalText.Contains("遇敌", StringComparison.Ordinal) ||
+               goalText.Contains("遭遇", StringComparison.Ordinal);
     }
 
     private static string AppendAcceptanceValidationSummary(string assistantMessage, ProjectIterationGoalSnapshot goal)

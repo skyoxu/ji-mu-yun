@@ -26,22 +26,22 @@ This contract defines the default implementation expectations for a short playab
 
 ### JRPG First-Loop Capability Profile
 
-This RPG route uses a JRPG first-loop capability profile. The profile does not require every RPG project to follow a DQ-like seven-step map-battle-reward script. It requires the implementation and iteration routes to select the capabilities that the project contract actually implies.
+This RPG route uses a JRPG first-loop capability profile. The profile does not require every RPG project to follow a DQ-like seven-step map-battle-reward script. Implementation, iteration-plan, execute-next-goal, needs-fix, repair-plan, revalidation, and final acceptance routes must select only the capabilities implied by the project form fields, prototype contract, `input_traceability`, route state, or an explicit needs-fix blocker.
 
-Capability vocabulary:
+| Id | Design Purpose | Pass Standard | Omit When |
+|---|---|---|---|
+| `opening_context` | Establish the immediate player identity, place, and objective. | A clear controllable hero/context/objective is visible and traceable to the project contract or blocker. | Never omit. |
+| `field_navigation` | Prove the playable field, town, or map layer before adding later systems. | Entry reveals a non-empty field/map/town scene, visible player marker/character, stable movement, and selected map/player assets. | Never omit. |
+| `interaction_discovery` | Validate the first meaningful NPC, chest, inspection, event, or objective discovery beat. | A reachable interaction changes feedback, objective state, or player understanding. | Omit when no interaction/discovery semantics are present. |
+| `conflict_entry` | Validate the first transition into conflict, encounter, challenge, or battle. | The trigger or route to the first conflict is clear and visible or validated. | Omit when no combat/conflict language is present. |
+| `battle_or_challenge_resolution` | Validate one readable conflict resolution. | Conflict/challenge state, action feedback, and settlement are readable. BattleScene is required only if this capability uses a battle scene. | Omit when `conflict_entry` is omitted; do not create BattleScene for non-combat JRPG forms. |
+| `party_or_character_state` | Make relevant character/party state readable. | Relevant HP, stats, equipment, party, passive, or status state is visible and rule-consistent. | Omit when the loop does not rely on such state. |
+| `growth_feedback` | Prove first-loop reward, growth, or consequence. | Reward/growth/consequence is shown, meaningful, and changes visible or validated state. | Omit when no reward/growth/consequence semantics are present. |
+| `return_or_continue_loop` | Prove continuation after the first resolution. | The player reaches the intended next playable state with usable input and clean scene/UI state. | Omit only for intentionally terminal first loops. |
+| `quest_or_story_progress` | Prove story, quest, town-event, or objective progress. | Quest/story/objective state visibly progresses and traces to the request. | Omit when no story/quest/objective-progress semantics are present. |
+| `final_first_loop_acceptance` | Validate the selected capabilities end-to-end. | Selected capabilities are playable end-to-end, user fields are represented or explicitly blocked, assets resolve, Godot validation passes, and package readiness is proven. | Never omit. |
 
-- Opening context and player objective.
-- Field, town, or map navigation with stable control.
-- Interaction/discovery beat such as NPC dialogue, chest, investigation, or objective discovery.
-- Conflict entry when the project asks for encounter, battle, enemy, boss, or challenge.
-- Battle or challenge resolution when a conflict exists.
-- Party or character state readability when HP, stats, equipment, party, or status matter.
-- Growth, reward, or consequence feedback when reward, item, level, choice, experience, or story consequence matters.
-- Return-or-continue loop to the next playable state when the first loop continues.
-- Quest or story progress when narrative or town events are central.
-- Final first-loop acceptance across the selected capabilities.
-
-DQ-like is one possible capability selection. Town-quest, story-event, exploration, or interaction-first JRPG prototypes may omit BattleScene or reward-choice requirements unless the project contract asks for them.
+BattleScene is conditional. If the project form, prototype contract, `input_traceability`, and route state do not mention encounter, battle, combat, enemy, monster, boss, fight, challenge, or equivalent conflict language, routes must not create, require, or repair BattleScene. DQ-like is one possible capability selection; town-quest, story-event, exploration, or interaction-first JRPG prototypes may omit BattleScene and reward-choice requirements unless the project contract asks for them.
 
 ### Map Scene
 

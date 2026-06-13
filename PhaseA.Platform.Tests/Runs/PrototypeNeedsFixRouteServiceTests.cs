@@ -430,6 +430,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().Contain("RepairFocus: Repair the full RPG/JRPG map-entry contract group");
         runner.Prompt.Should().Contain("MapScene.tscn and Scripts/MapScene.cs exist together");
         runner.Prompt.Should().Contain("stable movement handling");
+        runner.Prompt.Should().Contain("Add RpgEnemyAsset or encounter trigger wiring only when");
+        runner.Prompt.Should().NotContain("RpgPlayerAsset/RpgEnemyAsset, and MapScene.cs exposes");
     }
 
     [Fact]
@@ -456,10 +458,10 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         firstResult.IterationGoalStatus.Should().Be("needs_fix");
         ledger.Should().Contain(firstResult.RunId);
-        ledger.Should().Contain("platform_acceptance:missing-rpg-map-entry-contract");
-        ledger.Should().Contain("DqRpgPrototype.tscn");
-        ledger.Should().Contain("Repair the full RPG/JRPG map-entry contract group");
-        ledger.Should().Contain("MapScene.cs");
+        ledger.Should().Contain("platform_acceptance:missing-required-core-markers-missing-marker-objective-missing-marker-start-adventure");
+        ledger.Should().Contain("missing_marker=Objective");
+        ledger.Should().Contain("missing_marker=Start Adventure");
+        ledger.Should().Contain("Add or restore the exact required markers");
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("repair_ledger_path");
 
         var secondRunner = new NeedsFixRunner();
@@ -468,10 +470,10 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step again"));
 
         secondRunner.Prompt.Should().Contain("Step repair ledger:");
-        secondRunner.Prompt.Should().Contain("platform_acceptance:missing-rpg-map-entry-contract");
-        secondRunner.Prompt.Should().Contain("DqRpgPrototype.tscn");
-        secondRunner.Prompt.Should().Contain("Repair the full RPG/JRPG map-entry contract group");
-        secondRunner.Prompt.Should().Contain("MapScene.cs");
+        secondRunner.Prompt.Should().Contain("platform_acceptance:missing-required-core-markers-missing-marker-objective-missing-marker-start-adventure");
+        secondRunner.Prompt.Should().Contain("missing_marker=Objective");
+        secondRunner.Prompt.Should().Contain("missing_marker=Start Adventure");
+        secondRunner.Prompt.Should().Contain("Add or restore the exact required markers");
         secondRunner.Prompt.Should().Contain("Current platform acceptance diagnosis overrides the ledger when they differ");
         secondRunner.Prompt.Should().Contain("continuity memory");
     }
@@ -534,14 +536,48 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().NotContain("godot_smoke:unknown");
     }
 
+    [Fact]
+    public async Task RunAsync_ShouldNotTreatNotRequiredMutationGuardAsRepairLedgerBlocker()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectWithNeedsFixGoalAsync(
+            store,
+            options,
+            accountId,
+            prototypeSucceeded: true,
+            gameTypeSource: "Action");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteProjectReadme(project!);
+        writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
+        writer.WriteExecuteNextGoalState(project!, 1, new { route = "execute-next-goal", goal_index = 1, marker = "execute-next-current-step" });
+        var runner = new SuccessRunner();
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+
+        var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "finish current step"));
+        var ledger = writer.ReadNeedsFixRepairLedger(project!, 1);
+
+        result.IterationGoalStatus.Should().Be("succeeded");
+        ledger.Should().Contain("\"currentStatus\": \"succeeded\"");
+        ledger.Should().NotContain("mutation_guard:not-specialized-prototype-project");
+        ledger.Should().NotContain("not_specialized_prototype_project");
+    }
+
     private static async Task<string> CreateProjectWithNeedsFixGoalAsync(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
         string accountId,
-        bool prototypeSucceeded)
+        bool prototypeSucceeded,
+        string gameTypeSource = "RPG")
     {
         var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
+        var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         if (prototypeSucceeded)
         {

@@ -382,6 +382,11 @@ public sealed class PrototypeIterationGoalService
         var goalId = nextGoal?.GoalId ?? "";
         var goalIndex = nextGoal?.GoalIndex ?? details.Session.CurrentGoalIndex;
         var hasMoreGoals = details.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal));
+        if (string.Equals(decision, "should_refine_plan", StringComparison.Ordinal) &&
+            IsStaleJrpgOpeningFirstBoundaryEvaluation(details, nextGoal))
+        {
+            return null;
+        }
 
         return decision switch
         {
@@ -414,6 +419,43 @@ public sealed class PrototypeIterationGoalService
                 "needs_fix"),
             _ => null
         };
+    }
+
+    private static bool IsStaleJrpgOpeningFirstBoundaryEvaluation(
+        ProjectIterationSessionDetails details,
+        ProjectIterationGoalSnapshot? nextGoal)
+    {
+        if (nextGoal is null)
+        {
+            return false;
+        }
+
+        var openingGoal = details.Goals.FirstOrDefault(goal =>
+            ContainsAny(string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint), "JRPG First Loop: opening context and player objective", "opening context"));
+        if (openingGoal is null || !string.Equals(openingGoal.Status, "succeeded", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var fieldGoal = details.Goals.FirstOrDefault(goal =>
+            ContainsAny(string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint), "JRPG First Loop: field navigation and stable control", "field navigation", "stable control", "Start Adventure", "visible MapScene"));
+        if (fieldGoal is null)
+        {
+            return false;
+        }
+
+        var evaluationText = string.Join(" ", details.LatestEvaluation?.Reason, details.LatestEvaluation?.Summary);
+        return ContainsAny(evaluationText, "Start Adventure", "visible MapScene", "visible map", "stable movement", "acceptance boundary", "step 1");
+    }
+
+    private static bool ContainsAny(string? text, params string[] needles)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
     }
 
     private HostedProcessCommand BuildCodexCommand(string prompt, string outputPath, string model, string repositoryRoot)

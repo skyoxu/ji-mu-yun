@@ -184,7 +184,8 @@ internal sealed class PrototypeNeedsFixRepairLedger
     private static void AddAcceptanceBlocker(List<PrototypeNeedsFixRepairLedgerBlocker> blockers, JsonElement root, string runId, string now)
     {
         var status = ReadString(root, "acceptance_validation_status");
-        if (string.Equals(status, "passed", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(status, "passed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "not_required", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -214,13 +215,16 @@ internal sealed class PrototypeNeedsFixRepairLedger
             return;
         }
 
+        var reason = ReadString(guard, "reason") ?? "unknown";
         var status = ReadString(guard, "status");
-        if (string.Equals(status, "passed", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(status, "passed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "not_required", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(reason, "not_specialized_prototype_project", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(reason, "not_goal_repair", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        var reason = ReadString(guard, "reason") ?? "unknown";
         blockers.Add(NewBlocker(
             $"mutation_guard:{NormalizeToken(reason)}",
             "mutation_guard",
@@ -348,7 +352,7 @@ internal sealed class PrototypeNeedsFixRepairLedger
 
         if (StartsWithReason(reason, "missing_rpg_map_entry_contract"))
         {
-            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure Game.Godot/Prototypes/dq-rpg/MapScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs exist together, MapScene.tscn has MapScene/TrackLayer/RpgMapAsset/Grid/Overlay/RpgPlayerAsset/RpgEnemyAsset, and MapScene.cs exposes grid-position mapping, player visibility restore, and stable movement handling.";
+            return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure Game.Godot/Prototypes/dq-rpg/MapScene.tscn and Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs exist together, MapScene.tscn has MapScene/TrackLayer/RpgMapAsset/Grid/Overlay/RpgPlayerAsset, and MapScene.cs exposes grid-position mapping, player visibility restore, and stable movement handling. Add RpgEnemyAsset or encounter trigger wiring only when the selected route or latest failure explicitly requires encounter, conflict, or battle.";
         }
 
         if (StartsWithReason(reason, "missing_rpg_battle_scene_contract"))

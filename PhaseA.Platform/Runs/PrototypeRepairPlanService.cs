@@ -550,7 +550,7 @@ public sealed class PrototypeRepairPlanService
             "修复 RPG 场景与节点合同",
             BuildRpgSceneContractRepairDescription(context),
             """
-            This step passes only when the current RPG prototype has the required contract-aligned scene structure, including the main prototype shell, MapScene, BattleScene, and required named map/player/enemy asset nodes.
+            This step passes only when the current RPG prototype has the required contract-aligned scene structure for the selected capabilities, including the main prototype shell, MapScene, and required named map/player asset nodes. Include enemy asset nodes and BattleScene only when battle/conflict capability or the latest failure evidence names them.
             Scene/script contract drift must be eliminated before continuing.
             """);
 
@@ -643,7 +643,7 @@ public sealed class PrototypeRepairPlanService
             "Repair RPG runtime assets and Godot imports for GdUnit",
             BuildRpgGdUnitAssetRepairDescription(context),
             """
-            This step passes only when the active dq-rpg scenes no longer reference missing PNG or .ctex resources and GdUnit can load MapScene.tscn and BattleScene.tscn without ext_resource parse errors.
+            This step passes only when the active dq-rpg scenes for the selected capabilities no longer reference missing PNG or .ctex resources and GdUnit can load MapScene.tscn, plus BattleScene.tscn only when battle/conflict capability is selected or named by the latest failure, without ext_resource parse errors.
             """);
 
         Add(
@@ -732,10 +732,10 @@ public sealed class PrototypeRepairPlanService
             """);
 
         Add(
-            "Rerun Start Adventure navigation and BattleScene smoke",
-            "Rerun the user-facing Start Adventure path and verify MapScene remains visible, then trigger the BattleScene path that previously required the missing node.",
+            "Rerun Start Adventure navigation and selected capability smoke",
+            "Rerun the user-facing Start Adventure path and verify MapScene remains visible, then trigger the selected capability path that previously required the missing node. Trigger BattleScene only when battle/conflict capability is selected or the latest failure names it.",
             """
-            This step passes only when Start Adventure to visible MapScene still passes and the BattleScene UI path no longer crashes on missing labels or stale script bindings.
+            This step passes only when Start Adventure to visible MapScene still passes and the selected capability UI path no longer crashes on missing labels or stale script bindings. BattleScene is part of this smoke only when battle/conflict capability is selected or named by the latest failure.
             """);
 
         Add(
@@ -924,7 +924,7 @@ public sealed class PrototypeRepairPlanService
 
             Required focus:
             - Fix missing runtime assets or scene ext_resource paths named in the GdUnit console summary.
-            - Ensure MapScene.tscn and BattleScene.tscn do not reference missing PNG files or stale .godot/imported .ctex files.
+            - Ensure selected route scenes such as MapScene.tscn, and BattleScene.tscn only when battle/conflict capability is selected or named by the latest failure, do not reference missing PNG files or stale .godot/imported .ctex files.
             - Run Godot import through the project workflow after copying or restoring assets.
             - Do not mark this step complete if Parse Error or Failed loading resource remains.
 
@@ -939,7 +939,7 @@ public sealed class PrototypeRepairPlanService
             Repair the RPG scene/node contract that the project-specific DqRpgPrototype GdUnit tests validate.
 
             Required focus:
-            - Required test paths include CanvasLayer/UI/MapScene/RpgMapAsset, RpgPlayerAsset, RpgEnemyAsset, ChestToken, and CanvasLayer/UI/BattleScene/EnemyToken when named by the latest failure.
+            - Required test paths include selected capability nodes such as CanvasLayer/UI/MapScene/RpgMapAsset, RpgPlayerAsset, RpgEnemyAsset, ChestToken, and CanvasLayer/UI/BattleScene/EnemyToken only when named by the latest failure or battle/conflict capability is selected.
             - Keep the scene script and test contract aligned; do not move nodes without updating the authoritative scene path used by runtime code and tests together.
             - Preserve Start Adventure -> visible MapScene behavior.
 
@@ -1007,8 +1007,9 @@ public sealed class PrototypeRepairPlanService
 
             Contract requirements:
             - The project prototype contract is authoritative.
-            - MapScene, BattleScene, and the main prototype shell must have clear responsibilities.
-            - Map, player, and enemy asset instances must use the RPG contract naming rules.
+            - MapScene and the main prototype shell must have clear responsibilities.
+            - BattleScene must have clear responsibilities only when battle/conflict capability is selected or named by the latest failure.
+            - Map and player asset instances must use the RPG contract naming rules; enemy asset instances are required only for selected conflict/battle capabilities or failures that name them.
             - Main.tscn default-hidden VBox, Overlays, and ScreenRoot SOP must remain preserved where applicable.
 
             Evidence source:
