@@ -50,6 +50,7 @@ This file is the top-level navigation for project docs.
 - Prototype lane: `docs/workflows/prototype-lane.md`
 - Prototype lane playbook: `docs/workflows/prototype-lane-playbook.md`
 - Prototype TDD: `docs/workflows/prototype-tdd.md`
+- Game type route framework guide: `docs/workflows/game-type-route-framework-guide.md`
 
 ## Recovery And Stop-Loss
 

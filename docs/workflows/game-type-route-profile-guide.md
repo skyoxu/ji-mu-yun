@@ -13,12 +13,14 @@
 
 ## RPG 现状
 
+新增可执行游戏类型前，先读取 `docs/workflows/game-type-route-framework-guide.md`。该文档以当前 JRPG 路由为参考实现，说明 capability graph、可信输入边界、计划 guard、验收映射和测试矩阵。
+
 RPG 现在由两层提供专属能力：
 
 - `PhaseA.Platform/Runs/GameTypeRouteEngine.cs` 中的 `GameTypeRouteProfiles.Rpg` 负责路由 profile 和 skill 上下文。
 - `PhaseA.Platform/Runs/GameTypeRouteStrategies.cs` 中的 `RpgGameTypeRouteStrategy` 负责类型能力、验收映射和兼容旧 RPG 形状。
 
-RPG 的迭代顺序是：Start Adventure 到可见 MapScene，再到 BattleScene、奖励回地图、主循环切换、胜负可读性和最终验收。
+RPG/JRPG 现在是 capability-driven：默认只保留 opening context、field navigation、final first-loop acceptance；BattleScene、奖励、回地图、任务推进等只在当前请求、合同或 session-scoped selected capabilities 明确选择时进入计划和验收。
 
 ## BMAD/GDS 24 Game-Type Templates
 
