@@ -16,8 +16,15 @@ public static class SqliteMetadataSchema
 
         await using var transaction = connection.BeginTransaction();
 
+        var deferredLastActivityStatements = new List<string>();
         foreach (var statement in SchemaStatements)
         {
+            if (ShouldDeferLastActivityStatement(statement))
+            {
+                deferredLastActivityStatements.Add(statement);
+                continue;
+            }
+
             await ExecuteAsync(connection, statement, transaction, cancellationToken);
         }
 
@@ -90,6 +97,13 @@ public static class SqliteMetadataSchema
             "projects",
             "bootstrap_error",
             "ALTER TABLE projects ADD COLUMN bootstrap_error TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "projects",
+            "last_activity_utc",
+            "ALTER TABLE projects ADD COLUMN last_activity_utc TEXT NULL;",
             cancellationToken);
         await AddColumnIfMissingAsync(
             connection,
@@ -189,6 +203,65 @@ public static class SqliteMetadataSchema
             "coverage_missing_topics_json",
             "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_missing_topics_json TEXT NOT NULL DEFAULT '[]';",
             cancellationToken);
+
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE projects
+            SET last_activity_utc = COALESCE((
+                SELECT MAX(activity_utc)
+                FROM (
+                    SELECT projects.created_utc AS activity_utc
+                    UNION ALL
+                    SELECT MAX(created_utc) FROM runs WHERE runs.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(started_utc) FROM runs WHERE runs.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(progress_updated_utc) FROM runs WHERE runs.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(finished_utc) FROM runs WHERE runs.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(created_utc) FROM artifacts WHERE artifacts.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(created_utc) FROM project_chat_messages WHERE project_chat_messages.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(updated_utc) FROM project_chat_memories WHERE project_chat_memories.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(updated_utc) FROM project_prototype_drafts WHERE project_prototype_drafts.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(created_utc) FROM project_iteration_sessions WHERE project_iteration_sessions.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(updated_utc) FROM project_iteration_sessions WHERE project_iteration_sessions.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(completed_utc) FROM project_iteration_sessions WHERE project_iteration_sessions.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(g.created_utc)
+                    FROM project_iteration_goals g
+                    INNER JOIN project_iteration_sessions s ON s.id = g.session_id
+                    WHERE s.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(g.updated_utc)
+                    FROM project_iteration_goals g
+                    INNER JOIN project_iteration_sessions s ON s.id = g.session_id
+                    WHERE s.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(g.completed_utc)
+                    FROM project_iteration_goals g
+                    INNER JOIN project_iteration_sessions s ON s.id = g.session_id
+                    WHERE s.project_id = projects.id
+                    UNION ALL
+                    SELECT MAX(updated_utc) FROM project_run_memories WHERE project_run_memories.project_id = projects.id
+                )
+            ), projects.created_utc)
+            WHERE last_activity_utc IS NULL OR last_activity_utc < created_utc;
+            """,
+            transaction,
+            cancellationToken);
+
+        foreach (var statement in deferredLastActivityStatements)
+        {
+            await ExecuteAsync(connection, statement, transaction, cancellationToken);
+        }
 
         await BackfillRunDurationMetricsAsync(connection, transaction, cancellationToken);
         await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
@@ -321,6 +394,12 @@ public static class SqliteMetadataSchema
             cancellationToken);
     }
 
+    private static bool ShouldDeferLastActivityStatement(string statement)
+    {
+        return statement.Contains("last_activity_utc", StringComparison.Ordinal)
+            && !statement.Contains("CREATE TABLE IF NOT EXISTS projects", StringComparison.Ordinal);
+    }
+
     private static async Task ExecuteAsync(SqliteConnection connection, string sql, CancellationToken cancellationToken)
     {
         await ExecuteAsync(connection, sql, null, cancellationToken);
@@ -413,6 +492,7 @@ public static class SqliteMetadataSchema
             bootstrap_status TEXT NOT NULL DEFAULT 'initial',
             bootstrap_error TEXT NULL,
             created_utc TEXT NOT NULL,
+            last_activity_utc TEXT NULL,
             FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
         );
         """,
@@ -694,6 +774,7 @@ public static class SqliteMetadataSchema
         );
         """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
+        "CREATE INDEX IF NOT EXISTS ix_projects_account_last_activity ON projects(account_id, last_activity_utc DESC, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_runs_created_utc ON runs(created_utc);",
@@ -705,6 +786,198 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_admin_account_audit_events_created ON admin_account_audit_events(created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",
-        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);"
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);",
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_projects_last_activity_bootstrap_update
+        AFTER UPDATE OF bootstrap_status, bootstrap_error ON projects
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < strftime('%Y-%m-%dT%H:%M:%f0000+00:00', 'now') THEN strftime('%Y-%m-%dT%H:%M:%f0000+00:00', 'now')
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_runs_last_activity_insert
+        AFTER INSERT ON runs
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_runs_last_activity_update
+        AFTER UPDATE OF started_utc, progress_updated_utc, finished_utc ON runs
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < COALESCE(NEW.finished_utc, NEW.progress_updated_utc, NEW.started_utc, NEW.created_utc) THEN COALESCE(NEW.finished_utc, NEW.progress_updated_utc, NEW.started_utc, NEW.created_utc)
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_artifacts_last_activity_insert
+        AFTER INSERT ON artifacts
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_chat_messages_last_activity_insert
+        AFTER INSERT ON project_chat_messages
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_chat_memories_last_activity_upsert
+        AFTER INSERT ON project_chat_memories
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_chat_memories_last_activity_update
+        AFTER UPDATE ON project_chat_memories
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_prototype_drafts_last_activity_upsert
+        AFTER INSERT ON project_prototype_drafts
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_prototype_drafts_last_activity_update
+        AFTER UPDATE ON project_prototype_drafts
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_iteration_sessions_last_activity_insert
+        AFTER INSERT ON project_iteration_sessions
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_iteration_sessions_last_activity_update
+        AFTER UPDATE OF updated_utc, completed_utc ON project_iteration_sessions
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < COALESCE(NEW.completed_utc, NEW.updated_utc, NEW.created_utc) THEN COALESCE(NEW.completed_utc, NEW.updated_utc, NEW.created_utc)
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_iteration_goals_last_activity_insert
+        AFTER INSERT ON project_iteration_goals
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = (SELECT project_id FROM project_iteration_sessions WHERE id = NEW.session_id);
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_iteration_goals_last_activity_update
+        AFTER UPDATE OF updated_utc, completed_utc ON project_iteration_goals
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < COALESCE(NEW.completed_utc, NEW.updated_utc, NEW.created_utc) THEN COALESCE(NEW.completed_utc, NEW.updated_utc, NEW.created_utc)
+                ELSE last_activity_utc
+            END
+            WHERE id = (SELECT project_id FROM project_iteration_sessions WHERE id = NEW.session_id);
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_iteration_goal_runs_last_activity_insert
+        AFTER INSERT ON project_iteration_goal_runs
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.created_utc THEN NEW.created_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = (SELECT project_id FROM project_iteration_sessions WHERE id = NEW.session_id);
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_run_memories_last_activity_upsert
+        AFTER INSERT ON project_run_memories
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """,
+        """
+        CREATE TRIGGER IF NOT EXISTS tr_project_run_memories_last_activity_update
+        AFTER UPDATE ON project_run_memories
+        BEGIN
+            UPDATE projects
+            SET last_activity_utc = CASE
+                WHEN last_activity_utc IS NULL OR last_activity_utc < NEW.updated_utc THEN NEW.updated_utc
+                ELSE last_activity_utc
+            END
+            WHERE id = NEW.project_id;
+        END;
+        """
     ];
 }

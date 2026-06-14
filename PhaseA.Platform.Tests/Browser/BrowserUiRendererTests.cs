@@ -2,6 +2,8 @@
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Browser;
@@ -9,16 +11,184 @@ namespace PhaseA.Platform.Tests.Browser;
 public sealed class BrowserUiRendererTests
 {
     [Fact]
+    public void RenderShellV2_EmbeddedScriptsAreSyntacticallyValid()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+        var scripts = Regex.Matches(html, "<script>([\\s\\S]*?)</script>")
+            .Select(match => match.Groups[1].Value)
+            .ToArray();
+        scripts.Should().NotBeEmpty();
+
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        var scriptPath = Path.Combine(Path.GetTempPath(), $"phasea-shell-{Guid.NewGuid():N}.js");
+        try
+        {
+            File.WriteAllText(scriptPath, string.Join("\n;\n", scripts));
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = node,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            startInfo.ArgumentList.Add("--check");
+            startInfo.ArgumentList.Add(scriptPath);
+            using var process = Process.Start(startInfo);
+            process.Should().NotBeNull();
+            var checkedProcess = process!;
+            checkedProcess.WaitForExit(10_000).Should().BeTrue();
+            var output = checkedProcess.StandardOutput.ReadToEnd() + checkedProcess.StandardError.ReadToEnd();
+            checkedProcess.ExitCode.Should().Be(0, output);
+        }
+        finally
+        {
+            if (File.Exists(scriptPath))
+            {
+                File.Delete(scriptPath);
+            }
+        }
+    }
+
+    [Fact]
+    public void RenderShellV2_WorkflowMonoIconAssetExists()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "wwwroot",
+            "ui-v2",
+            "icons",
+            "workflow-icons-mono.png"));
+
+        File.Exists(path).Should().BeTrue();
+        new FileInfo(path).Length.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void RenderShellV2_TabWorkspaceKeepsChatOpenAndWorkflowTabsClosable()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("const v2OpenTabs = new Map([[\"chat\", { id: \"chat\", label: \"聊天\", panelId: \"chatPanel\", closable: false }]])");
+        html.Should().Contain("v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true })");
+        html.Should().Contain("if (!tab || !tab.closable) return");
+        html.Should().Contain("const activeTab = v2OpenTabs.get(v2ActiveTabId) || v2OpenTabs.get(\"chat\")");
+        html.Should().Contain("if (activeTab?.panelId)");
+    }
+
+    [Fact]
+    public void RenderShellV2_TabWorkspaceBehaviorSmoke()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            let v2SelectedStep = "new-project";
+            let v2UserSelectedStep = false;
+            let v2ActiveTabId = "chat";
+            let applied = 0;
+            let renderedTabs = 0;
+            let renderedProgress = 0;
+            let refreshedAcceptance = 0;
+            const actions = [];
+            const v2Steps = [
+              ["new-project", "Game Detail", 1],
+              ["create-prototype", "Prototype", 2],
+              ["iteration-plan", "Plan", 4]
+            ];
+            const v2OpenTabs = new Map([["chat", { id: "chat", label: "Chat", panelId: "chatPanel", closable: false }]]);
+            function v2StepLabel(stepId) {
+              const item = v2Steps.find(step => step[0] === stepId);
+              return item ? item[1] : "Workspace";
+            }
+            function v2PanelForStep(stepId) {
+              if (stepId === "new-project") return "currentProjectPanel";
+              if (stepId === "create-prototype") return "prototypeWorkflowPanel";
+              if (stepId === "iteration-plan") return "v2IterationPanel";
+              return "currentProjectPanel";
+            }
+            function v2ApplySelectedStepVisibility() { applied += 1; }
+            function v2RunStepAction(stepId) { actions.push(stepId); }
+            function v2RenderTabs() { renderedTabs += 1; }
+            function v2RenderProgress() { renderedProgress += 1; }
+            function v2RefreshAcceptanceActionState() { refreshedAcceptance += 1; }
+            function v2OpenStepTab(stepId) {
+              const panelId = v2PanelForStep(stepId);
+              const tabId = `step:${stepId}`;
+              v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true });
+              v2ActiveTabId = tabId;
+              v2SelectedStep = stepId;
+              v2UserSelectedStep = true;
+              v2ApplySelectedStepVisibility();
+              v2RunStepAction(stepId);
+              v2RenderTabs();
+              v2RenderProgress();
+              v2RefreshAcceptanceActionState();
+            }
+            function v2CloseTab(tabId) {
+              const tab = v2OpenTabs.get(tabId);
+              if (!tab || !tab.closable) return;
+              v2OpenTabs.delete(tabId);
+              if (v2ActiveTabId === tabId) {
+                v2ActiveTabId = "chat";
+              }
+              v2RenderTabs();
+              v2ApplySelectedStepVisibility();
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            v2CloseTab("chat");
+            assert(v2OpenTabs.has("chat"), "chat tab must not be closable");
+            v2OpenStepTab("iteration-plan");
+            assert(v2ActiveTabId === "step:iteration-plan", "workflow tab should become active");
+            assert(v2OpenTabs.get("step:iteration-plan").panelId === "v2IterationPanel", "iteration panel mapping");
+            assert(v2SelectedStep === "iteration-plan", "selected step should track opened tab");
+            assert(v2UserSelectedStep === true, "manual selection flag should be set");
+            assert(actions.length === 1 && actions[0] === "iteration-plan", "step action should run once");
+            v2CloseTab("step:iteration-plan");
+            assert(!v2OpenTabs.has("step:iteration-plan"), "closable workflow tab should close");
+            assert(v2ActiveTabId === "chat", "closing active workflow tab returns to chat");
+            assert(applied === 2 && renderedTabs === 2 && renderedProgress === 1 && refreshedAcceptance === 1, "render hooks should be invoked");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
     public void RenderShellV2_IncludesProgressComparisonPage()
     {
         var html = new BrowserUiRenderer().RenderShellV2();
 
-        html.Should().Contain("积木云 Phase A 原型控制台");
+        html.Should().Contain("Game Ren");
+        html.Should().Contain("<title>Game Ren</title>");
+        html.Should().Contain("document.title = isAdmin ? \"Game Ren Admin\" : \"Game Ren\"");
+        html.Should().Contain("document.title = \"Game Ren\"");
+        html.Should().NotContain("<title>积木云 Phase A 原型控制台</title>");
+        html.Should().NotContain("Phase A Prototype Console");
         html.Should().Contain("v2ProgressShell");
         html.Should().Contain("v2ProgressSteps");
         html.Should().Contain("v2ContentGrid");
         html.Should().Contain("v2EnsureContentGrid");
-        html.Should().Contain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)");
+        html.Should().Contain("grid-template-columns: minmax(15rem, 25%) minmax(0, 75%)");
+        html.Should().Contain("v2LeftRail");
+        html.Should().Contain("v2RightWorkspace");
+        html.Should().Contain("v2WorkspaceTabs");
+        html.Should().Contain("v2OpenStepTab");
+        html.Should().Contain("v2-left-project-button ${current ? \"current\" : \"\"}");
         html.Should().Contain("grid.appendChild(element)");
         html.Should().Contain("v2JudgeNextStep");
         html.Should().Contain("扫描项目判断下一步建议");
@@ -40,13 +210,15 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("UI 优化是可选步骤，可以在验收前或验收后执行。");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
-        html.Should().Contain("grid-template-columns: repeat(9, minmax(5.6rem, 1fr))");
+        html.Should().Contain("workflow-icons-mono.png");
+        html.Should().Contain("原型工程列表");
+        html.Should().Contain("项目列表");
         html.Should().Contain("body.v2-detail #currentProjectPanel > button { display: none; }");
         html.Should().Contain("v2RunStepAction");
         html.Should().Contain("let v2UserSelectedStep = false");
         html.Should().Contain("function v2ApplySelectedStepVisibility()");
         html.Should().Contain("function v2SelectDefaultStepForPrototypeProgress(progress)");
-        html.Should().Contain("if (v2UserSelectedStep || v2SelectedStep !== \"new-project\") return;");
+        html.Should().Contain("function v2OpenStepTab(stepId)");
         html.Should().Contain("button.onclick = () => v2ShowStep(button.dataset.v2Step, true)");
         html.Should().Contain("v2AcceptancePanel");
         html.Should().Contain("v2CreateAcceptancePanel");
@@ -77,10 +249,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("progress?.form");
         html.Should().Contain("已载入原型记录");
         html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
-        html.Should().Contain("workflow-icons-color.png");
-        html.Should().Contain("workflow-icons-gray.png");
+        html.Should().Contain("workflow-icons-mono.png");
         html.Should().Contain("v2-step-number");
-        html.Should().Contain("${index + 1}");
+        html.Should().Contain("const spriteIndex = Math.max(0, Number(iconIndex ?? (index + 1)) - 1)");
         html.Should().Contain(".v2-step-button.pending .v2-step-mark");
         html.Should().Contain(".v2-step-button.action .v2-step-mark");
         html.Should().Contain("游戏项目详情");
@@ -123,7 +294,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2IterationPanel");
         html.Should().Contain("v2CreateIterationPanel");
         html.Should().Contain("panel.appendChild(current)");
-        html.Should().Contain("show(\"v2IterationPanel\")");
+        html.Should().Contain("function v2PanelForStep(stepId)");
+        html.Should().Contain("if (stepId === \"iteration-plan\") return \"v2IterationPanel\"");
+        html.Should().Contain("if (activeTab?.panelId)");
+        html.Should().Contain("show(activeTab.panelId)");
+        html.Should().Contain("closable: false");
+        html.Should().Contain("if (!tab || !tab.closable) return");
         html.Should().Contain("v2ArrangeChatPanel");
         html.Should().Contain("v2ChatControls");
         html.Should().Contain("v2ChatComposer");
@@ -298,7 +474,8 @@ public sealed class BrowserUiRendererTests
     {
         var html = new BrowserUiRenderer().RenderShell();
 
-        html.Should().Contain("Phase A Prototype Console");
+        html.Should().Contain("Game Ren");
+        html.Should().NotContain("Phase A Prototype Console");
         html.Should().Contain("activeRunBanner");
         html.Should().Contain(".busy-banner");
         html.Should().Contain("position: fixed");
@@ -375,6 +552,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("selectDefaultProject");
         html.Should().Contain("latestProject");
         html.Should().Contain("projectTimestamp");
+        html.Should().Contain("project.lastActivityUtc || project.updatedUtc");
         html.Should().Contain("globalModel");
         html.Should().NotContain("globalModelPanel");
         html.Should().NotContain("stepsPanel");
@@ -382,8 +560,11 @@ public sealed class BrowserUiRendererTests
         html.IndexOf("id=\"globalModel\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"logout\"", StringComparison.Ordinal));
-        html.Should().Contain("<option value=\"gpt-5.5\" selected>5.5</option>");
-        html.Should().Contain("<option value=\"gpt-5.4\">5.4</option>");
+        html.Should().Contain("<h1>Game Ren</h1>");
+        html.Should().Contain("<title>Game Ren</title>");
+        html.Should().NotContain("Phase A Prototype Console");
+        html.Should().Contain("<option value=\"gpt-5.5\" selected>ChatGPT 5.5</option>");
+        html.Should().Contain("<option value=\"gpt-5.4\">ChatGPT 5.4</option>");
         html.Should().NotContain("prototypeModel");
         html.Should().NotContain("chatModel");
         html.Should().Contain("gpt-5.5");
@@ -783,5 +964,61 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("URL.createObjectURL");
         html.Should().Contain("下载失败：");
         html.Should().Contain("下载已提交给浏览器");
+    }
+
+    private static string? FindExecutableOnPath(string name)
+    {
+        var path = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        foreach (var directory in path.Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                continue;
+            }
+
+            var candidate = Path.Combine(directory.Trim(), name);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static void RunNodeScript(string node, string script)
+    {
+        var scriptPath = Path.Combine(Path.GetTempPath(), $"phasea-browser-smoke-{Guid.NewGuid():N}.js");
+        try
+        {
+            File.WriteAllText(scriptPath, script);
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = node,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            startInfo.ArgumentList.Add(scriptPath);
+            using var process = Process.Start(startInfo);
+            process.Should().NotBeNull();
+            var running = process!;
+            running.WaitForExit(10_000).Should().BeTrue();
+            var output = running.StandardOutput.ReadToEnd() + running.StandardError.ReadToEnd();
+            running.ExitCode.Should().Be(0, output);
+        }
+        finally
+        {
+            if (File.Exists(scriptPath))
+            {
+                File.Delete(scriptPath);
+            }
+        }
     }
 }

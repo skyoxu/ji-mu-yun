@@ -1093,6 +1093,7 @@ public sealed class PhaseAMetadataStore
         }
 
         var workspaceId = NewId();
+        var createdUtc = DateTimeOffset.UtcNow.ToString("O");
         var allowedWorkflowsJson = JsonSerializer.Serialize(create.AllowedWorkflows);
         await using (var command = connection.CreateCommand())
         {
@@ -1109,7 +1110,8 @@ public sealed class PhaseAMetadataStore
                     allowed_workflows_json,
                     bootstrap_status,
                     bootstrap_error,
-                    created_utc)
+                    created_utc,
+                    last_activity_utc)
                 VALUES (
                     $id,
                     $account_id,
@@ -1121,6 +1123,7 @@ public sealed class PhaseAMetadataStore
                     $allowed_workflows_json,
                     'running',
                     NULL,
+                    $created_utc,
                     $created_utc);
                 """;
             command.Parameters.AddWithValue("$id", create.ProjectId);
@@ -1131,7 +1134,7 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$template_rule_id", create.TemplateRuleId);
             command.Parameters.AddWithValue("$llm_binding_required", create.LlmBindingRequired ? 1 : 0);
             command.Parameters.AddWithValue("$allowed_workflows_json", allowedWorkflowsJson);
-            command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$created_utc", createdUtc);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -1148,7 +1151,7 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$repo_path", create.RepoPath);
             command.Parameters.AddWithValue("$runtime_path", create.RuntimePath);
             command.Parameters.AddWithValue("$meta_path", create.MetaPath);
-            command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$created_utc", createdUtc);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -1224,11 +1227,22 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT p.id, p.account_id, p.name, p.game_name, p.game_type_source, p.template_rule_id, p.bootstrap_status, p.bootstrap_error, w.root_path
+            SELECT
+                p.id,
+                p.account_id,
+                p.name,
+                p.game_name,
+                p.game_type_source,
+                p.template_rule_id,
+                p.bootstrap_status,
+                p.bootstrap_error,
+                w.root_path,
+                p.created_utc,
+                COALESCE(p.last_activity_utc, p.created_utc) AS last_activity_utc
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
             WHERE p.account_id = $account_id
-            ORDER BY p.created_utc, p.id;
+            ORDER BY COALESCE(p.last_activity_utc, p.created_utc), p.created_utc, p.id;
             """;
         command.Parameters.AddWithValue("$account_id", accountId);
 
@@ -1245,7 +1259,9 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(5),
                 reader.GetString(6),
                 reader.IsDBNull(7) ? null : reader.GetString(7),
-                reader.GetString(8)));
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.GetString(10)));
         }
 
         return projects;

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
 
@@ -10,18 +10,64 @@ public sealed class BrowserUiRenderer
     {
         return RenderShell()
             .Replace("<h2>自由对话</h2>", "<h2>自由聊天</h2>")
-            .Replace("</style>", """
+            .Replace("</style>", RenderV2EnhancementCss())
+            .Replace("<section id=\"currentProjectPanel\" class=\"stack\">", RenderV2ProgressShell())
+            .Replace("</body>", RenderV2EnhancementScript());
+    }
+
+    private static string RenderV2EnhancementCss()
+    {
+        return """
                 body.v2-detail #projectDetailPanel {
                   display: grid;
                   gap: 0.9rem;
                   align-items: start;
                 }
-                body.v2-detail #v2ProgressShell { grid-column: 1; }
+                body.v2-detail #projectDetailPanel.v2-workspace-shell {
+                  display: grid;
+                  grid-template-columns: minmax(15rem, 25%) minmax(0, 75%);
+                  gap: 1rem;
+                  height: calc(100vh - 112px);
+                  min-height: 32rem;
+                  overflow: hidden;
+                  background: transparent;
+                  border: 0;
+                  box-shadow: none;
+                  padding: 0;
+                }
+                body.v2-detail #v2LeftRail,
+                body.v2-detail #v2RightWorkspace {
+                  min-height: 0;
+                  overflow-y: auto;
+                  overflow-x: hidden;
+                  padding-right: 0.2rem;
+                }
+                body.v2-detail #v2LeftRail {
+                  display: grid;
+                  align-content: start;
+                  gap: 0;
+                  background: var(--panel);
+                  border: 1px solid var(--line);
+                  border-radius: 1rem;
+                  padding: 0.8rem;
+                  box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.08);
+                }
+                body.v2-detail #v2RightWorkspace {
+                  display: grid;
+                  grid-template-rows: auto minmax(0, 1fr);
+                  gap: 0.65rem;
+                }
+                body.v2-detail #v2ProgressShell { grid-column: 1; background: transparent; border: 0; box-shadow: none; padding: 0; }
                 body.v2-detail #v2ContentGrid {
                   display: grid;
                   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                   gap: 0.9rem;
                   align-items: start;
+                }
+                body.v2-detail #v2ContentGrid.v2-tab-content {
+                  display: block;
+                  min-height: 0;
+                  overflow: visible;
                 }
                 body.v2-detail #chatPanel { grid-column: 1; grid-row: 1; align-self: start; }
                 body.v2-detail #v2IterationPanel { grid-column: 2; grid-row: 1; align-self: start; }
@@ -33,18 +79,18 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #prototypeCommandPanel,
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
-                body.v2-detail .v2-progress-row { display: grid; grid-template-columns: repeat(9, minmax(5.6rem, 1fr)); gap: 0.45rem; overflow-x: auto; padding-bottom: 0.1rem; }
-                body.v2-detail .v2-step-button { position: relative; min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
+                body.v2-detail .v2-progress-row { display: grid; gap: 0.35rem; overflow: visible; padding: 0; }
+                body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.45rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
                 body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
-                body.v2-detail .v2-step-number { color: #15905f; font-size: 0.82rem; line-height: 1; font-weight: 800; }
-                body.v2-detail .v2-step-icon { width: 3.25rem; height: 3.25rem; background-image: var(--icon-sheet); background-size: 900% 100%; background-position: calc(var(--step-index) * -100%) 0; background-repeat: no-repeat; }
+                body.v2-detail .v2-step-number { display: none; }
+                body.v2-detail .v2-step-icon { width: 20px; height: 20px; background-image: url('/ui-v2/icons/workflow-icons-mono.png'); background-size: 900% 100%; background-position: calc(var(--step-index) * -100%) 0; background-repeat: no-repeat; image-rendering: pixelated; }
                 body.v2-detail .v2-step-button.pending,
                 body.v2-detail .v2-step-button.action { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
                 body.v2-detail .v2-step-button.done,
                 body.v2-detail .v2-step-button.fix,
                 body.v2-detail .v2-step-button.continue { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
-                body.v2-detail .v2-step-label { font-size: 0.78rem; line-height: 1.15; text-align: center; white-space: nowrap; }
-                body.v2-detail .v2-step-mark { position: absolute; left: 50%; bottom: 0.12rem; transform: translateX(-50%); width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
+                body.v2-detail .v2-step-label { min-width: 0; font-size: 0.86rem; line-height: 1.15; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                body.v2-detail .v2-step-mark { justify-self: end; width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
                 body.v2-detail .v2-step-button.pending .v2-step-mark,
                 body.v2-detail .v2-step-button.action .v2-step-mark { background: #a8afad; }
                 body.v2-detail .v2-step-button.done .v2-step-mark { background: #15905f; }
@@ -52,6 +98,19 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-step-button.continue .v2-step-mark { width: auto; height: auto; background: transparent; color: #15905f; font-size: 1.2rem; letter-spacing: 0.08rem; line-height: 1; }
                 body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
                 body.v2-detail .v2-next { margin-top: 0.7rem; }
+                body.v2-detail .v2-left-spacer { height: 50px; }
+                body.v2-detail .v2-left-title { margin: 0 0 0.55rem; font-size: 1rem; }
+                body.v2-detail .v2-left-projects { display: grid; gap: 0.35rem; }
+                body.v2-detail .v2-left-project-button { width: 100%; display: grid; gap: 0.1rem; text-align: left; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 0.65rem; padding: 0.5rem 0.55rem; }
+                body.v2-detail .v2-left-project-button.current { background: #f2d16b; border-color: #d7a924; font-weight: 800; }
+                body.v2-detail .v2-left-project-meta { color: var(--muted); font-size: 0.76rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                body.v2-detail .v2-tabs { display: flex; align-items: center; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.1rem; }
+                body.v2-detail .v2-tab { width: auto; min-width: 6.5rem; max-width: 13rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border: 1px solid var(--line); background: #fffdf8; color: var(--ink); border-radius: 999px; padding: 0.48rem 0.65rem; white-space: nowrap; }
+                body.v2-detail .v2-tab.active { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(198, 95, 45, 0.2); }
+                body.v2-detail .v2-tab-close { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); padding: 0; font-weight: 900; }
+                body.v2-detail .v2-tab-close:hover { color: var(--danger); }
+                body.v2-detail .v2-tab-pane { min-height: 0; }
+                body.v2-detail .v2-tab-pane.hidden { display: none !important; }
                 body.v2-detail .v2-action-row { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
                 body.v2-detail .v2-chat-composer { display: grid; gap: 0.55rem; border: 1px solid var(--line); border-radius: 0.9rem; background: #fffdf8; padding: 0.65rem; box-shadow: inset 0 0 0 1px rgba(23, 33, 27, 0.025); }
                 body.v2-detail .v2-chat-composer .v2-message-field { margin: 0; display: block; }
@@ -86,6 +145,16 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #iterationPlanGoals .card { position: relative; z-index: 2; pointer-events: auto; }
                 body.v2-detail [data-needs-fix-goal] { position: relative; z-index: 5; pointer-events: auto; cursor: pointer; }
                 @media (max-width: 1000px) {
+                  body.v2-detail #projectDetailPanel.v2-workspace-shell {
+                    grid-template-columns: 1fr;
+                    height: auto;
+                    min-height: 0;
+                    overflow: visible;
+                  }
+                  body.v2-detail #v2LeftRail,
+                  body.v2-detail #v2RightWorkspace {
+                    overflow: visible;
+                  }
                   body.v2-detail #v2ContentGrid,
                   body.v2-detail .v2-summary-grid,
                   body.v2-detail .v2-skill-row { grid-template-columns: 1fr; }
@@ -102,15 +171,24 @@ public sealed class BrowserUiRenderer
                   body.v2-detail .v2-chat-controls #sendChat { margin-left: 0; }
                 }
               </style>
-              """)
-            .Replace("<section id=\"currentProjectPanel\" class=\"stack\">", """
+              """;
+    }
+
+    private static string RenderV2ProgressShell()
+    {
+        return """
                   <section id="v2ProgressShell" class="stack">
+                    <h2 class="v2-left-title">原型工程列表</h2>
                     <div id="v2ProgressSteps" class="v2-progress-row"></div>
                     <div class="card v2-next"><strong>下一步建议</strong><p id="v2NextSuggestion" class="muted">点击按钮后扫描项目进度并给出下一步建议。</p><button id="v2JudgeNextStep" class="ghost" type="button">扫描项目判断下一步建议</button></div>
                   </section>
                   <section id="currentProjectPanel" class="stack">
-                  """)
-            .Replace("</body>", """
+                  """;
+    }
+
+    private static string RenderV2EnhancementScript()
+    {
+        return """
               <script>
                 document.body.classList.add("v2-detail");
                 const v2Steps = [
@@ -127,6 +205,99 @@ public sealed class BrowserUiRenderer
                 let v2SelectedStep = "new-project";
                 let v2UserSelectedStep = false;
                 let v2CurrentProjectId = "";
+                let v2ActiveTabId = "chat";
+                const v2OpenTabs = new Map([["chat", { id: "chat", label: "聊天", panelId: "chatPanel", closable: false }]]);
+                function v2StepLabel(stepId) {
+                  const item = v2Steps.find(step => step[0] === stepId);
+                  return item ? item[1] : "工程页面";
+                }
+                function v2PanelForStep(stepId) {
+                  if (stepId === "new-project") return "currentProjectPanel";
+                  if (stepId === "create-prototype") return "prototypeWorkflowPanel";
+                  if (stepId === "prototype-acceptance") return "v2AcceptancePanel";
+                  if (stepId === "iteration-plan") return "v2IterationPanel";
+                  if (stepId === "ui-optimization") return "v2UiOptimizationPanel";
+                  if (stepId === "execute-or-repair") return "v2RepairPanel";
+                  if (stepId === "asset-inventory" || stepId === "package-project" || stepId === "download-project") return "currentProjectPanel";
+                  return "currentProjectPanel";
+                }
+                function v2OpenStepTab(stepId) {
+                  const panelId = v2PanelForStep(stepId);
+                  const tabId = `step:${stepId}`;
+                  v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true });
+                  v2ActiveTabId = tabId;
+                  v2SelectedStep = stepId;
+                  v2UserSelectedStep = true;
+                  v2ApplySelectedStepVisibility();
+                  v2RunStepAction(stepId);
+                  v2RenderTabs();
+                  v2RenderProgress();
+                  v2RefreshAcceptanceActionState();
+                }
+                function v2CloseTab(tabId) {
+                  const tab = v2OpenTabs.get(tabId);
+                  if (!tab || !tab.closable) return;
+                  v2OpenTabs.delete(tabId);
+                  if (v2ActiveTabId === tabId) {
+                    v2ActiveTabId = "chat";
+                  }
+                  v2RenderTabs();
+                  v2ApplySelectedStepVisibility();
+                }
+                function v2RenderTabs() {
+                  const tabs = $("v2WorkspaceTabs");
+                  if (!tabs) return;
+                  tabs.innerHTML = Array.from(v2OpenTabs.values()).map(tab => `
+                    <button type="button" class="v2-tab ${v2ActiveTabId === tab.id ? "active" : ""}" data-v2-tab="${escapeHtml(tab.id)}">
+                      <span>${escapeHtml(tab.label)}</span>
+                      ${tab.closable ? `<span class="v2-tab-close" data-v2-tab-close="${escapeHtml(tab.id)}" aria-label="关闭">×</span>` : ""}
+                    </button>
+                  `).join("");
+                  tabs.querySelectorAll("[data-v2-tab]").forEach(button => {
+                    button.onclick = event => {
+                      const close = event.target?.closest?.("[data-v2-tab-close]");
+                      if (close) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        v2CloseTab(close.dataset.v2TabClose);
+                        return;
+                      }
+                      v2ActiveTabId = button.dataset.v2Tab;
+                      const tab = v2OpenTabs.get(v2ActiveTabId);
+                      if (tab?.stepId) {
+                        v2SelectedStep = tab.stepId;
+                        v2UserSelectedStep = true;
+                      }
+                      v2RenderTabs();
+                      v2ApplySelectedStepVisibility();
+                      v2RenderProgress();
+                    };
+                  });
+                }
+                function v2SortedProjects() {
+                  return listableProjects(state.projects || [])
+                    .slice()
+                    .sort((a, b) => (projectTimestamp(b) || 0) - (projectTimestamp(a) || 0) || String(b.projectId || "").localeCompare(String(a.projectId || "")));
+                }
+                function v2RenderLeftProjectList() {
+                  const shell = $("v2LeftProjects");
+                  if (!shell) return;
+                  const projects = v2SortedProjects();
+                  shell.innerHTML = projects.map(project => {
+                    const current = project.projectId === state.projectId;
+                    const title = project.name || project.gameName || project.projectId;
+                    const created = project.createdUtc || project.createdAtUtc || "";
+                    return `
+                      <button type="button" class="v2-left-project-button ${current ? "current" : ""}" data-v2-left-project="${escapeHtml(project.projectId)}">
+                        <span>${escapeHtml(title)}</span>
+                        <span class="v2-left-project-meta">${escapeHtml(project.gameName || project.templateRuleId || "")}${created ? ` · ${escapeHtml(created.slice(0, 10))}` : ""}</span>
+                      </button>
+                    `;
+                  }).join("") || "<p class='muted'>还没有项目。</p>";
+                  shell.querySelectorAll("[data-v2-left-project]").forEach(button => {
+                    button.onclick = () => selectProject(button.dataset.v2LeftProject);
+                  });
+                }
                 function v2HasPackages() {
                   if (Array.isArray(state.packageList)) return state.packageList.length > 0;
                   return Array.isArray(state.packageList?.packages) && state.packageList.packages.length > 0;
@@ -204,18 +375,22 @@ public sealed class BrowserUiRenderer
                   const show = id => $(id)?.classList.remove("hidden");
                   const hide = id => $(id)?.classList.add("hidden");
                   ["v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
-                  show("chatPanel");
-                  if (v2SelectedStep === "new-project") show("currentProjectPanel");
-                  if (v2SelectedStep === "create-prototype") show("prototypeWorkflowPanel");
-                  if (v2SelectedStep === "prototype-acceptance") show("v2AcceptancePanel");
-                  if (v2SelectedStep === "asset-inventory" || v2SelectedStep === "package-project" || v2SelectedStep === "download-project") show("currentProjectPanel");
-                  if (v2SelectedStep === "iteration-plan") show("v2IterationPanel");
-                  if (v2SelectedStep === "ui-optimization") show("v2UiOptimizationPanel");
-                  if (v2SelectedStep === "execute-or-repair") show("v2RepairPanel");
+                  hide("chatPanel");
+                  const activeTab = v2OpenTabs.get(v2ActiveTabId) || v2OpenTabs.get("chat");
+                  if (activeTab?.id === "chat") {
+                    show("chatPanel");
+                    return;
+                  }
+                  if (activeTab?.panelId) {
+                    show(activeTab.panelId);
+                  }
                 }
                 function v2ShowStep(stepId, userInitiated = false) {
+                  if (userInitiated) {
+                    v2OpenStepTab(stepId);
+                    return;
+                  }
                   v2SelectedStep = stepId;
-                  if (userInitiated) v2UserSelectedStep = true;
                   v2ApplySelectedStepVisibility();
                   v2ApplyPrototypeFormLock();
                   v2RunStepAction(stepId);
@@ -227,10 +402,7 @@ public sealed class BrowserUiRenderer
                   return !status || status === "idle";
                 }
                 function v2SelectDefaultStepForPrototypeProgress(progress) {
-                  if (v2UserSelectedStep || v2SelectedStep !== "new-project") return;
-                  if (v2ShouldDefaultToPrototypeCreation(progress)) {
-                    v2SelectedStep = "create-prototype";
-                  }
+                  return;
                 }
                 function v2RunStepAction(stepId) {
                   if (!state.projectId) return;
@@ -267,20 +439,59 @@ public sealed class BrowserUiRenderer
                   v2ArrangeIterationPanel();
                 }
                 function v2EnsureContentGrid() {
-                  if ($("v2ContentGrid")) return;
                   const detailPanel = $("projectDetailPanel");
                   const progressShell = $("v2ProgressShell");
                   if (!detailPanel || !progressShell) return;
-                  const grid = document.createElement("div");
-                  grid.id = "v2ContentGrid";
-                  grid.className = "v2-content-grid";
-                  progressShell.insertAdjacentElement("afterend", grid);
+                  detailPanel.classList.add("v2-workspace-shell");
+                  let leftRail = $("v2LeftRail");
+                  if (!leftRail) {
+                    leftRail = document.createElement("aside");
+                    leftRail.id = "v2LeftRail";
+                    detailPanel.insertBefore(leftRail, detailPanel.firstChild);
+                  }
+                  let leftProjects = $("v2LeftProjectsShell");
+                  if (!leftProjects) {
+                    leftProjects = document.createElement("section");
+                    leftProjects.id = "v2LeftProjectsShell";
+                    leftProjects.className = "stack";
+                    leftProjects.innerHTML = `<h2 class="v2-left-title">项目列表</h2><div id="v2LeftProjects" class="v2-left-projects"></div>`;
+                  }
+                  if (progressShell.parentElement !== leftRail) leftRail.appendChild(progressShell);
+                  if (!$("v2LeftSpacer")) {
+                    const spacer = document.createElement("div");
+                    spacer.id = "v2LeftSpacer";
+                    spacer.className = "v2-left-spacer";
+                    leftRail.appendChild(spacer);
+                  }
+                  if (leftProjects.parentElement !== leftRail) leftRail.appendChild(leftProjects);
+                  let rightWorkspace = $("v2RightWorkspace");
+                  if (!rightWorkspace) {
+                    rightWorkspace = document.createElement("div");
+                    rightWorkspace.id = "v2RightWorkspace";
+                    detailPanel.appendChild(rightWorkspace);
+                  }
+                  let tabs = $("v2WorkspaceTabs");
+                  if (!tabs) {
+                    tabs = document.createElement("div");
+                    tabs.id = "v2WorkspaceTabs";
+                    tabs.className = "v2-tabs";
+                    rightWorkspace.appendChild(tabs);
+                  }
+                  let grid = $("v2ContentGrid");
+                  if (!grid) {
+                    grid = document.createElement("div");
+                    grid.id = "v2ContentGrid";
+                    grid.className = "v2-content-grid v2-tab-content";
+                    rightWorkspace.appendChild(grid);
+                  }
                   v2CreateAcceptancePanel();
                   v2CreateUiOptimizationPanel();
                   ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
                     const element = $(id);
                     if (element) grid.appendChild(element);
                   });
+                  v2RenderTabs();
+                  v2RenderLeftProjectList();
                 }
                 function v2CreateAcceptancePanel() {
                   if ($("v2AcceptancePanel")) return;
@@ -653,7 +864,8 @@ public sealed class BrowserUiRenderer
                   shell.innerHTML = v2Steps.map(([id, label, iconIndex], index) => {
                     const status = v2StepStatus(id);
                     const mark = status === "done" ? "✓" : status === "fix" ? "×" : status === "continue" ? "•••" : "";
-                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${iconIndex ?? index}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
+                    const spriteIndex = Math.max(0, Number(iconIndex ?? (index + 1)) - 1);
+                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${spriteIndex}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
@@ -665,6 +877,10 @@ public sealed class BrowserUiRenderer
                     v2CurrentProjectId = state.projectId;
                     v2SelectedStep = "new-project";
                     v2UserSelectedStep = false;
+                    Array.from(v2OpenTabs.keys()).forEach(tabId => {
+                      if (tabId !== "chat") v2OpenTabs.delete(tabId);
+                    });
+                    v2ActiveTabId = "chat";
                   }
                   v2CreateIterationPanel();
                   v2ArrangeChatPanel();
@@ -674,6 +890,8 @@ public sealed class BrowserUiRenderer
                   v2EnsureContentGrid();
                   $("chatPanel")?.classList.remove("hidden");
                   v2ApplySelectedStepVisibility();
+                  v2RenderTabs();
+                  v2RenderLeftProjectList();
                   v2RenderProgress();
                   v2ApplyPrototypeFormLock();
                 };
@@ -686,11 +904,11 @@ public sealed class BrowserUiRenderer
                   v2EnsureContentGrid();
                   v2OriginalUpdateChatPanelVisibility(progress);
                   v2EnsureContentGrid();
-                  $("chatPanel")?.classList.remove("hidden");
                   v2SelectDefaultStepForPrototypeProgress(progress);
                   v2ApplySelectedStepVisibility();
                   v2ApplyPrototypeFormSnapshot(progress);
                   v2ApplyPrototypeFormLock();
+                  v2RenderTabs();
                   v2RenderProgress();
                 };
                 const v2OriginalSubmitIterationPlanFromFeedback = submitIterationPlanFromFeedback;
@@ -722,7 +940,7 @@ public sealed class BrowserUiRenderer
                 setInterval(v2RenderProgress, 2000);
               </script>
             </body>
-            """);
+            """;
     }
 
     public string RenderShell()
@@ -733,7 +951,7 @@ public sealed class BrowserUiRenderer
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1">
-              <title>积木云 Phase A 原型控制台</title>
+              <title>Game Ren</title>
               <style>
                 :root {
                   color-scheme: light;
@@ -758,15 +976,17 @@ public sealed class BrowserUiRenderer
                     linear-gradient(135deg, #fbf7ef, #efe5d3);
                 }
                 header {
-                  padding: 2.2rem clamp(1rem, 4vw, 4rem) 1rem;
+                  min-height: 80px;
+                  padding: 0.8rem clamp(1rem, 3vw, 2.2rem);
                   display: grid;
-                  gap: 0.8rem;
+                  gap: 0.45rem;
+                  align-items: center;
                 }
                 .header-row {
                   display: grid;
                   grid-template-columns: minmax(0, 1fr) auto;
                   gap: 1rem;
-                  align-items: start;
+                  align-items: center;
                 }
                 .top-actions {
                   display: flex;
@@ -787,7 +1007,7 @@ public sealed class BrowserUiRenderer
                   min-width: 6.5rem;
                   white-space: nowrap;
                 }
-                h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.5rem); letter-spacing: -0.06em; }
+                h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.2rem); letter-spacing: 0; line-height: 1; }
                 h2 { margin: 0 0 1rem; font-size: 1.15rem; }
                 p { color: var(--muted); }
                 main {
@@ -1012,11 +1232,10 @@ public sealed class BrowserUiRenderer
               <header>
                 <div class="header-row">
                   <div>
-                    <h1>积木云 Phase A 原型控制台</h1>
-                    <p>Phase A Prototype Console: account-scoped console for creating projects, running cloud prototype routes, reviewing logs, and downloading artifacts.</p>
+                    <h1>Game Ren</h1>
                   </div>
                   <div id="userTopActions" class="top-actions hidden">
-                    <label class="user-only-action">模型选择 <select id="globalModel"><option value="gpt-5.5" selected>5.5</option><option value="gpt-5.4">5.4</option></select></label>
+                    <label class="user-only-action"><select id="globalModel" aria-label="模型"><option value="gpt-5.5" selected>ChatGPT 5.5</option><option value="gpt-5.4">ChatGPT 5.4</option></select></label>
                     <button id="openCreateProjectPage" class="secondary user-only-action" data-global-action="true">创建项目</button>
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
                     <button id="openAdminRunDurationMetrics" class="ghost admin-only-action hidden">普通用户Run耗时</button>
@@ -2153,6 +2372,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function showLoggedOut() {
+                  document.title = "Game Ren";
                   state.authenticated = false;
                   state.activeRun = null;
                   state.localBusy = false;
@@ -2174,6 +2394,7 @@ public sealed class BrowserUiRenderer
                   state.authenticated = true;
                   state.role = role;
                   const isAdmin = role === "admin";
+                  document.title = isAdmin ? "Game Ren Admin" : "Game Ren";
                   $("sessionPanel").classList.add("hidden");
                   hideCreateProjectPage();
                   $("adminPanel").classList.remove("hidden");
@@ -3196,9 +3417,12 @@ public sealed class BrowserUiRenderer
                     const visibleProjects = listableProjects(projects);
                     const latestFailure = visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
                     const health = await loadProjectHealthSummary();
-                    $("projects").innerHTML = visibleProjects.map(p => `
+                    const sortedVisibleProjects = visibleProjects
+                      .slice()
+                      .sort((a, b) => (projectTimestamp(b) || 0) - (projectTimestamp(a) || 0) || String(b.projectId || "").localeCompare(String(a.projectId || "")));
+                    $("projects").innerHTML = sortedVisibleProjects.map(p => `
                       <div class="card">
-                        <button class="ghost" data-project="${p.projectId}">
+                        <button class="ghost ${p.projectId === state.projectId ? "current" : ""}" data-project="${p.projectId}">
                         <strong>${escapeHtml(p.name)}</strong>
                         <span class="muted">${escapeHtml(p.gameName)} · ${escapeHtml(p.templateRuleId)} · ${escapeHtml(p.bootstrapStatus)}</span>
                         ${p.bootstrapStatus === "failed" ? `<span class="danger">初始化失败：${escapeHtml(p.bootstrapError || "未知错误")}</span>` : ""}
@@ -3213,6 +3437,7 @@ public sealed class BrowserUiRenderer
                     `).join("");
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
+                    v2RenderLeftProjectList();
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
                     } else if (visibleProjects.length === 0) {
@@ -3247,7 +3472,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function projectTimestamp(project) {
-                  const value = project.updatedUtc || project.updatedAtUtc || project.lastUpdatedUtc || project.modifiedUtc || project.createdUtc || project.createdAtUtc;
+                  const value = project.lastActivityUtc || project.updatedUtc || project.updatedAtUtc || project.lastUpdatedUtc || project.modifiedUtc || project.createdUtc || project.createdAtUtc;
                   if (!value) return Number.NaN;
                   const timestamp = Date.parse(value);
                   return Number.isFinite(timestamp) ? timestamp : Number.NaN;
@@ -3288,12 +3513,14 @@ public sealed class BrowserUiRenderer
                   state.projectId = projectId;
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
+                  v2ActiveTabId = "chat";
                   setModalVisible("projectListModal", false);
                   hideCreateProjectPage();
                   loadChatHistoryForProject(projectId);
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
+                  v2RenderLeftProjectList();
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();

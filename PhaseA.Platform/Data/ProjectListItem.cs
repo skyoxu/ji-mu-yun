@@ -9,4 +9,6 @@ public sealed record ProjectListItem(
     string TemplateRuleId,
     string BootstrapStatus,
     string? BootstrapError,
-    string WorkspaceRootPath);
+    string WorkspaceRootPath,
+    string CreatedUtc,
+    string LastActivityUtc);

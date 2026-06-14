@@ -42,6 +42,37 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task InitializeAsync_MigratesLegacyProjectsBeforeCreatingLastActivityIndexesAndTriggers()
+    {
+        using var database = TempSqliteDatabase.Create();
+        await CreateLegacyDatabaseWithoutProjectLastActivityAsync(database.ConnectionString);
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString);
+        await connection.OpenAsync();
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA table_info(projects);";
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                columns.Add(reader.GetString(1));
+            }
+        }
+
+        columns.Should().Contain("last_activity_utc");
+        var lastActivityUtc = await ScalarStringAsync(connection, "SELECT last_activity_utc FROM projects WHERE id = 'legacy-project';");
+        var lastActivityIndexCount = await ScalarLongAsync(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'ix_projects_account_last_activity';");
+        var lastActivityTriggerCount = await ScalarLongAsync(connection, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger' AND name LIKE '%last_activity%';");
+
+        lastActivityUtc.Should().Be("2099-01-02T00:00:00.0000000Z");
+        lastActivityIndexCount.Should().Be(1);
+        lastActivityTriggerCount.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public async Task EnsureSingleAdminAsync_BootstrapsAdminWithDefaultProjectLimit()
     {
         using var database = TempSqliteDatabase.Create();
@@ -314,6 +345,38 @@ public sealed class SqliteMetadataSchemaTests
         third.Succeeded.Should().BeFalse();
         third.FailureCode.Should().Be("project_quota_exceeded");
         third.ProjectLimit.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task ListProjectsAsync_ReturnsCreatedUtcAndLastActivityUtc()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+
+        var first = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
+        first.Succeeded.Should().BeTrue();
+        var second = await store.CreateProjectAsync(CreateCommand(accountId, "project-two", "Game Two"));
+        second.Succeeded.Should().BeTrue();
+        var firstCreatedUtc = "2099-06-01T00:00:00.0000000Z";
+        var secondCreatedUtc = "2099-06-02T00:00:00.0000000Z";
+        var firstRunFinishedUtc = "2099-06-03T00:00:00.0000000Z";
+
+        await SetProjectCreatedUtcAsync(database.ConnectionString, first.ProjectId!, firstCreatedUtc);
+        await SetProjectCreatedUtcAsync(database.ConnectionString, second.ProjectId!, secondCreatedUtc);
+        var firstRun = await store.CreateRunAsync(first.ProjectId!, first.WorkspaceId, "prototype-chat");
+        await SetRunTimingAsync(database.ConnectionString, firstRun, firstCreatedUtc, firstCreatedUtc, firstRunFinishedUtc);
+
+        var projects = await store.ListProjectsAsync(accountId);
+
+        projects.Should().HaveCount(2);
+        projects.Single(project => project.ProjectId == first.ProjectId).CreatedUtc.Should().Be(firstCreatedUtc);
+        projects.Single(project => project.ProjectId == first.ProjectId).LastActivityUtc.Should().Be(firstRunFinishedUtc);
+        projects.Single(project => project.ProjectId == second.ProjectId).LastActivityUtc.Should().Be(secondCreatedUtc);
+        projects.Last().ProjectId.Should().Be(first.ProjectId);
     }
 
     [Fact]
@@ -602,5 +665,149 @@ public sealed class SqliteMetadataSchemaTests
             Path.Combine(root, "repo"),
             Path.Combine(root, "runtime"),
             Path.Combine(root, "meta"));
+    }
+
+    private static async Task SetProjectCreatedUtcAsync(string connectionString, string projectId, string createdUtc)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE projects SET created_utc = $created_utc, last_activity_utc = $created_utc WHERE id = $project_id;";
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$created_utc", createdUtc);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task SetRunTimingAsync(string connectionString, string runId, string createdUtc, string startedUtc, string finishedUtc)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE runs
+            SET created_utc = $created_utc,
+                started_utc = $started_utc,
+                finished_utc = $finished_utc,
+                progress_updated_utc = $finished_utc
+            WHERE id = $run_id;
+            """;
+        command.Parameters.AddWithValue("$run_id", runId);
+        command.Parameters.AddWithValue("$created_utc", createdUtc);
+        command.Parameters.AddWithValue("$started_utc", startedUtc);
+        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task CreateLegacyDatabaseWithoutProjectLastActivityAsync(string connectionString)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE accounts (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NULL,
+                token_hash TEXT NULL,
+                is_admin INTEGER NOT NULL DEFAULT 0,
+                created_utc TEXT NOT NULL
+            );
+            CREATE TABLE projects (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                game_name TEXT NOT NULL,
+                game_type_source TEXT NOT NULL,
+                template_rule_id TEXT NOT NULL,
+                llm_binding_required INTEGER NOT NULL DEFAULT 0,
+                allowed_workflows_json TEXT NOT NULL DEFAULT '[]',
+                bootstrap_status TEXT NOT NULL DEFAULT 'initial',
+                bootstrap_error TEXT NULL,
+                created_utc TEXT NOT NULL,
+                FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+            );
+            CREATE TABLE runs (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                workspace_id TEXT NULL,
+                run_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_utc TEXT NOT NULL,
+                started_utc TEXT NULL,
+                finished_utc TEXT NULL,
+                exit_code INTEGER NULL,
+                stdout_text TEXT NULL,
+                stderr_text TEXT NULL,
+                evidence_json TEXT NULL,
+                progress_step TEXT NOT NULL DEFAULT '',
+                progress_substep TEXT NOT NULL DEFAULT '',
+                progress_label TEXT NOT NULL DEFAULT '',
+                progress_updated_utc TEXT NULL,
+                queue_position_at_start INTEGER NULL,
+                llm_gateway TEXT NULL,
+                llm_request_id TEXT NULL,
+                llm_model TEXT NULL,
+                llm_cost_json TEXT NULL,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+            INSERT INTO accounts (id, username, is_admin, created_utc)
+            VALUES ('legacy-account', 'legacy', 0, '2099-01-01T00:00:00.0000000Z');
+            INSERT INTO projects (
+                id,
+                account_id,
+                name,
+                game_name,
+                game_type_source,
+                template_rule_id,
+                llm_binding_required,
+                allowed_workflows_json,
+                bootstrap_status,
+                created_utc)
+            VALUES (
+                'legacy-project',
+                'legacy-account',
+                'Legacy Project',
+                'Legacy Game',
+                'manual',
+                'godot-prototype-default',
+                0,
+                '[]',
+                'succeeded',
+                '2099-01-01T00:00:00.0000000Z');
+            INSERT INTO runs (
+                id,
+                project_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                progress_updated_utc)
+            VALUES (
+                'legacy-run',
+                'legacy-project',
+                'prototype-chat',
+                'succeeded',
+                '2099-01-01T00:00:00.0000000Z',
+                '2099-01-01T00:00:00.0000000Z',
+                '2099-01-02T00:00:00.0000000Z',
+                '2099-01-02T00:00:00.0000000Z');
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<string?> ScalarStringAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string sql)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        return await command.ExecuteScalarAsync() as string;
+    }
+
+    private static async Task<long> ScalarLongAsync(Microsoft.Data.Sqlite.SqliteConnection connection, string sql)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        var value = await command.ExecuteScalarAsync();
+        return Convert.ToInt64(value);
     }
 }
