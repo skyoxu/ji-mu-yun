@@ -42,7 +42,7 @@ This file is the top-level navigation for project docs.
 - Chapter 7 status patch applier: `py -3 scripts/python/dev_cli.py apply-chapter7-status-patch --patch <path>`
 - Upgrade guide: `docs/workflows/business-repo-upgrade-guide.md`
 - Template upgrade protocol: `docs/workflows/template-upgrade-protocol.md`
-- Cloud platform evolution plan: `docs/workflows/cloud-platform-evolution-plan.md`
+- Cloud platform evolution plan: `docs/workflows/cloud-platform-evolution-plan.md` (Phase A hosted runner boundary, Phase B workspace/ACL isolation, Phase C scale-out/strong isolation)
 - Project health dashboard: `docs/workflows/project-health-dashboard.md`
 - Local hard checks: `docs/workflows/local-hard-checks.md`
 - Stable entrypoint index: `docs/workflows/stable-public-entrypoints.md`

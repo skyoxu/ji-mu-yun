@@ -333,11 +333,17 @@ cloud worker 应承载真实 execution dependencies：
 - browser 中的 approval handling
 - 多个 persistent workspaces
 - 稳定的 runner queueing
+- `PhaseA.Platform` 与用户任务 runner 使用不同 Windows 账户
+- 对 `workspaces/<account-id>/<project-id>` 实施项目级 NTFS ACL
+- 平台程序、metadata DB、Caddy 配置与用户 workspace 做 OS 写权限分层
 
 成功标准：
 
 - 一个 platform 能安全承载多个 user/project/workspace，且不会 workspace collision
 - sidecar 保持隔离且 durable
+- runner 账户不能写平台程序目录、metadata DB 或 Caddy 配置
+- 普通项目 run 只能写当前项目 workspace；跨账户、跨项目写入被 ACL 与应用层校验共同拦截
+- runner queueing、项目级 runner lock、账号级并发限制共同避免单用户占满资源
 
 ### Phase C: Storage Abstraction And Scale-Out
 
@@ -346,11 +352,14 @@ cloud worker 应承载真实 execution dependencies：
 - 为 artifact 与 durable docs 抽象 file storage
 - 后续支持 remote/object-backed storage
 - 支持 node affinity 与 worker expansion
+- 评估并按需引入容器、Windows Sandbox 或轻量 VM 作为强隔离 runner
+- 为高风险或高价值账户提供更强 runner 隔离等级
 
 成功标准：
 
 - workspace restoration 不再永久绑定某一台机器
 - platform 能在不重写 repository workflow logic 的前提下扩展规模
+- 强隔离 runner 能在不破坏 Phase B workspace/ACL 模型的前提下替换或增强本地 runner
 
 ## 推荐的 First Build Order
 

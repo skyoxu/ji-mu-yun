@@ -23,13 +23,31 @@ public sealed class BrowserUiRenderer
                   gap: 0.9rem;
                   align-items: start;
                 }
+                body.v2-detail {
+                  height: 100vh;
+                  overflow: hidden;
+                }
+                body.v2-detail main {
+                  position: fixed;
+                  inset: 80px 0 0 0;
+                  height: auto;
+                  min-height: 0;
+                  overflow: hidden;
+                  padding-top: 1rem;
+                  padding-bottom: 1rem;
+                  grid-template-rows: minmax(0, 1fr);
+                  align-items: stretch;
+                  box-sizing: border-box;
+                }
                 body.v2-detail #projectDetailPanel.v2-workspace-shell {
                   display: grid;
                   grid-template-columns: minmax(15rem, 25%) minmax(0, 75%);
                   gap: 1rem;
-                  height: calc(100vh - 112px);
-                  min-height: 32rem;
+                  height: 100%;
+                  max-height: 100%;
+                  min-height: 0;
                   overflow: hidden;
+                  align-self: stretch;
                   background: transparent;
                   border: 0;
                   box-shadow: none;
@@ -38,9 +56,13 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #v2LeftRail,
                 body.v2-detail #v2RightWorkspace {
                   min-height: 0;
-                  overflow-y: auto;
+                  height: 100%;
+                  max-height: 100%;
                   overflow-x: hidden;
                   padding-right: 0.2rem;
+                  overscroll-behavior: contain;
+                  align-self: stretch;
+                  box-sizing: border-box;
                 }
                 body.v2-detail #v2LeftRail {
                   display: grid;
@@ -51,11 +73,15 @@ public sealed class BrowserUiRenderer
                   border-radius: 1rem;
                   padding: 0.8rem;
                   box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.08);
+                  overflow-y: scroll;
+                  scrollbar-gutter: stable;
                 }
                 body.v2-detail #v2RightWorkspace {
                   display: grid;
                   grid-template-rows: auto minmax(0, 1fr);
-                  gap: 0.65rem;
+                  gap: 0;
+                  overflow: hidden;
+                  min-width: 0;
                 }
                 body.v2-detail #v2ProgressShell { grid-column: 1; background: transparent; border: 0; box-shadow: none; padding: 0; }
                 body.v2-detail #v2ContentGrid {
@@ -67,7 +93,14 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #v2ContentGrid.v2-tab-content {
                   display: block;
                   min-height: 0;
-                  overflow: visible;
+                  height: 100%;
+                  max-height: 100%;
+                  overflow-y: scroll;
+                  overflow-x: hidden;
+                  overscroll-behavior: contain;
+                  min-width: 0;
+                  box-sizing: border-box;
+                  scrollbar-gutter: stable;
                 }
                 body.v2-detail #chatPanel { grid-column: 1; grid-row: 1; align-self: start; }
                 body.v2-detail #v2IterationPanel { grid-column: 2; grid-row: 1; align-self: start; }
@@ -83,12 +116,16 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.45rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
                 body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
                 body.v2-detail .v2-step-number { display: none; }
-                body.v2-detail .v2-step-icon { width: 20px; height: 20px; background-image: url('/ui-v2/icons/workflow-icons-mono.png'); background-size: 900% 100%; background-position: calc(var(--step-index) * -100%) 0; background-repeat: no-repeat; image-rendering: pixelated; }
+                body.v2-detail .v2-step-icon { width: 20px; height: 20px; background: currentColor; color: #24362e; -webkit-mask: var(--step-icon) center / 20px 20px no-repeat; mask: var(--step-icon) center / 20px 20px no-repeat; }
                 body.v2-detail .v2-step-button.pending,
-                body.v2-detail .v2-step-button.action { --icon-sheet: url('/ui-v2/icons/workflow-icons-gray.png'); color: var(--muted); }
+                body.v2-detail .v2-step-button.action { color: var(--muted); }
                 body.v2-detail .v2-step-button.done,
                 body.v2-detail .v2-step-button.fix,
-                body.v2-detail .v2-step-button.continue { --icon-sheet: url('/ui-v2/icons/workflow-icons-color.png'); }
+                body.v2-detail .v2-step-button.continue { color: var(--ink); }
+                body.v2-detail .v2-step-button.done .v2-step-icon { color: #15905f; }
+                body.v2-detail .v2-step-button.fix .v2-step-icon { color: #b73732; }
+                body.v2-detail .v2-step-button.pending .v2-step-icon,
+                body.v2-detail .v2-step-button.action .v2-step-icon { color: #a8afad; }
                 body.v2-detail .v2-step-label { min-width: 0; font-size: 0.86rem; line-height: 1.15; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 body.v2-detail .v2-step-mark { justify-self: end; width: 1.05rem; height: 1.05rem; border-radius: 999px; color: white; font-size: 0.75rem; display: grid; place-items: center; font-family: Arial, sans-serif; font-weight: 800; }
                 body.v2-detail .v2-step-button.pending .v2-step-mark,
@@ -104,13 +141,25 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-left-project-button { width: 100%; display: grid; gap: 0.1rem; text-align: left; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 0.65rem; padding: 0.5rem 0.55rem; }
                 body.v2-detail .v2-left-project-button.current { background: #f2d16b; border-color: #d7a924; font-weight: 800; }
                 body.v2-detail .v2-left-project-meta { color: var(--muted); font-size: 0.76rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                body.v2-detail .v2-tabs { display: flex; align-items: center; gap: 0.35rem; overflow-x: auto; padding-bottom: 0.1rem; }
-                body.v2-detail .v2-tab { width: auto; min-width: 6.5rem; max-width: 13rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border: 1px solid var(--line); background: #fffdf8; color: var(--ink); border-radius: 999px; padding: 0.48rem 0.65rem; white-space: nowrap; }
-                body.v2-detail .v2-tab.active { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(198, 95, 45, 0.2); }
+                body.v2-detail .v2-tabs { position: sticky; top: 0; z-index: 5; display: flex; align-items: end; gap: 0.12rem; overflow-x: auto; padding: 0 0.45rem; margin-bottom: -1px; border-bottom: 0; background: transparent; }
+                body.v2-detail .v2-tab { width: auto; min-width: 6.5rem; max-width: 13rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border: 1px solid var(--line); border-bottom-color: transparent; background: #e2e0dc; color: var(--muted); border-radius: 0.65rem 0.65rem 0 0; padding: 0.52rem 0.72rem 0.58rem; white-space: nowrap; box-shadow: inset 0 -0.3rem 0.45rem rgba(57, 43, 24, 0.035); }
+                body.v2-detail .v2-tab.active { background: #fffdf8; color: var(--ink); border-color: var(--line); border-bottom-color: #fffdf8; box-shadow: none; position: relative; z-index: 2; font-weight: 800; }
+                body.v2-detail .v2-tab.active > span:first-child { font-weight: 800; }
                 body.v2-detail .v2-tab-close { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); padding: 0; font-weight: 900; }
                 body.v2-detail .v2-tab-close:hover { color: var(--danger); }
                 body.v2-detail .v2-tab-pane { min-height: 0; }
                 body.v2-detail .v2-tab-pane.hidden { display: none !important; }
+                body.v2-detail #v2ContentGrid.v2-tab-content { background: #fffdf8; border: 0; border-radius: 0; padding: 0.9rem; box-shadow: none; }
+                body.v2-detail #v2ContentGrid > section { border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: 0; }
+                body.v2-detail #v2ContentGrid > section > h2:first-child,
+                body.v2-detail #v2ContentGrid > section > p.muted:first-of-type,
+                body.v2-detail #chatPanel > h2,
+                body.v2-detail #chatPanel > p.muted:first-of-type { display: none; }
+                body.v2-detail #chatPanel #feedbackSummary,
+                body.v2-detail #chatPanel #feedbackRecords { display: none !important; }
+                body.v2-detail .v2-embedded-frame { width: 100%; height: calc(100vh - 172px); min-height: 32rem; border: 0; background: #fffdf8; border-radius: 0.5rem; display: block; }
+                body.v2-detail #chatPanel { min-height: 100%; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; gap: 0.65rem; }
+                body.v2-detail #chatHistory.chat-scroll { min-height: 0; max-height: none; height: 100%; overflow-y: auto; }
                 body.v2-detail .v2-action-row { display: flex; flex-wrap: wrap; align-items: end; gap: 0.5rem; }
                 body.v2-detail .v2-chat-composer { display: grid; gap: 0.55rem; border: 1px solid var(--line); border-radius: 0.9rem; background: #fffdf8; padding: 0.65rem; box-shadow: inset 0 0 0 1px rgba(23, 33, 27, 0.025); }
                 body.v2-detail .v2-chat-composer .v2-message-field { margin: 0; display: block; }
@@ -123,8 +172,9 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-attachment-meta { color: var(--muted); font-size: 0.76rem; }
                 body.v2-detail .v2-attachment-remove { width: 1.35rem; height: 1.35rem; min-width: 1.35rem; border-radius: 999px; padding: 0; display: grid; place-items: center; }
                 body.v2-detail .v2-chat-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
-                body.v2-detail .v2-skill-row { display: grid; grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr); gap: 0.6rem; align-items: stretch; }
-                body.v2-detail .v2-skill-row #chatSkillDescription { margin: 0; }
+                body.v2-detail .v2-skill-row,
+                body.v2-detail #chatSkillDescription,
+                body.v2-detail #chatSkillMode { display: none !important; }
                 body.v2-detail #currentProjectPanel > button { display: none; }
                 body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked input,
                 body.v2-detail #prototypeWorkflowPanel.v2-prototype-locked textarea,
@@ -137,23 +187,34 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls .v2-file-button.ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
                 body.v2-detail .v2-chat-controls .v2-file-button.ghost:hover { background: rgba(15, 107, 87, 0.08); }
                 body.v2-detail .v2-chat-controls .v2-file-button input { display: none; }
+                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
+                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode.active { color: white; background: var(--accent-2); border-color: var(--accent-2); }
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
                 body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
+                .v2-fast-tooltip { position: fixed; z-index: 2500; max-width: min(28rem, calc(100vw - 2rem)); pointer-events: none; background: rgba(23, 33, 27, 0.94); color: #fffdf8; border-radius: 0.45rem; padding: 0.42rem 0.55rem; font-size: 0.82rem; line-height: 1.35; box-shadow: 0 0.75rem 1.8rem rgba(23, 33, 27, 0.22); opacity: 0; transform: translateY(0.15rem); transition: opacity 80ms ease, transform 80ms ease; }
+                .v2-fast-tooltip.open { opacity: 1; transform: translateY(0); }
                 body.v2-detail #v2IterationPanel,
                 body.v2-detail #iterationPlanGoals,
                 body.v2-detail #iterationPlanGoals .card { position: relative; z-index: 2; pointer-events: auto; }
                 body.v2-detail [data-needs-fix-goal] { position: relative; z-index: 5; pointer-events: auto; cursor: pointer; }
                 @media (max-width: 1000px) {
+                  body.v2-detail,
+                  body.v2-detail main {
+                    overflow: hidden;
+                  }
                   body.v2-detail #projectDetailPanel.v2-workspace-shell {
                     grid-template-columns: 1fr;
-                    height: auto;
+                    grid-template-rows: minmax(10rem, 34%) minmax(0, 1fr);
+                    height: 100%;
+                    max-height: 100%;
                     min-height: 0;
-                    overflow: visible;
+                    overflow: hidden;
                   }
                   body.v2-detail #v2LeftRail,
                   body.v2-detail #v2RightWorkspace {
-                    overflow: visible;
+                    min-height: 0;
+                    overflow-y: auto;
                   }
                   body.v2-detail #v2ContentGrid,
                   body.v2-detail .v2-summary-grid,
@@ -192,24 +253,28 @@ public sealed class BrowserUiRenderer
               <script>
                 document.body.classList.add("v2-detail");
                 const v2Steps = [
-                  ["new-project", "游戏项目详情", 1],
-                  ["create-prototype", "原型骨架创建", 2],
-                  ["execute-or-repair", "骨架验收修复", 3],
-                  ["iteration-plan", "完成迭代计划", 4],
-                  ["ui-optimization", "UI优化", 5],
-                  ["prototype-acceptance", "原型验收", 6],
-                  ["asset-inventory", "确认素材清单", 7],
-                  ["package-project", "打包项目文件", 8],
-                  ["download-project", "下载项目文件", 9]
+                  ["new-project", "游戏项目详情", "panel"],
+                  ["create-prototype", "原型骨架创建", "spark"],
+                  ["execute-or-repair", "骨架验收修复", "wrench"],
+                  ["iteration-plan", "完成迭代计划", "list"],
+                  ["ui-optimization", "UI优化", "layout"],
+                  ["prototype-acceptance", "原型验收", "check"],
+                  ["asset-inventory", "确认素材清单", "image"],
+                  ["package-project", "打包项目文件", "archive"],
+                  ["download-project", "下载项目文件", "download"]
                 ];
                 let v2SelectedStep = "new-project";
                 let v2UserSelectedStep = false;
                 let v2CurrentProjectId = "";
                 let v2ActiveTabId = "chat";
-                const v2OpenTabs = new Map([["chat", { id: "chat", label: "聊天", panelId: "chatPanel", closable: false }]]);
+                const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
                 function v2StepLabel(stepId) {
                   const item = v2Steps.find(step => step[0] === stepId);
                   return item ? item[1] : "工程页面";
+                }
+                function v2StepIconUrl(iconName) {
+                  const safe = String(iconName || "panel").replace(/[^a-z0-9-]/gi, "");
+                  return `/ui-v2/icons/workflow-${safe}.svg`;
                 }
                 function v2PanelForStep(stepId) {
                   if (stepId === "new-project") return "currentProjectPanel";
@@ -218,8 +283,19 @@ public sealed class BrowserUiRenderer
                   if (stepId === "iteration-plan") return "v2IterationPanel";
                   if (stepId === "ui-optimization") return "v2UiOptimizationPanel";
                   if (stepId === "execute-or-repair") return "v2RepairPanel";
-                  if (stepId === "asset-inventory" || stepId === "package-project" || stepId === "download-project") return "currentProjectPanel";
+                  if (stepId === "asset-inventory") return "v2AssetInventoryFramePanel";
+                  if (stepId === "download-project") return "v2DownloadsFramePanel";
+                  if (stepId === "gdd-outline") return "v2GddOutlineFramePanel";
+                  if (stepId === "package-project") return "currentProjectPanel";
                   return "currentProjectPanel";
+                }
+                function v2OpenEmbeddedTab(tabId, label, panelId, frameId, url) {
+                  v2OpenTabs.set(tabId, { id: tabId, label, panelId, closable: true });
+                  v2ActiveTabId = tabId;
+                  v2ApplySelectedStepVisibility();
+                  v2LoadEmbeddedFrame(frameId, url);
+                  v2RenderTabs();
+                  v2RenderProgress();
                 }
                 function v2OpenStepTab(stepId) {
                   const panelId = v2PanelForStep(stepId);
@@ -358,7 +434,7 @@ public sealed class BrowserUiRenderer
                   }
                   if (stepId === "ui-optimization") {
                     const run = v2LatestRunByType("prototype-ui-optimization");
-                    if (!run || !v2RunIsCurrentForIteration(run)) return "pending";
+                    if (!run) return "pending";
                     const substep = String(run.progressSubstep || "").toLowerCase();
                     if (substep === "validation_skipped") return "pending";
                     if (substep === "validation_failed") return "fix";
@@ -368,13 +444,13 @@ public sealed class BrowserUiRenderer
                   }
                   if (stepId === "asset-inventory") return v2AssetInventoryConfirmed() ? "done" : "pending";
                   if (stepId === "package-project") return v2HasPackages() ? "done" : "pending";
-                  if (stepId === "download-project") return v2HasPackages() ? "action" : "pending";
+                  if (stepId === "download-project") return v2HasPackages() ? "done" : "pending";
                   return "pending";
                 }
                 function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
                   const hide = id => $(id)?.classList.add("hidden");
-                  ["v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
+                  ["v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "v2AssetInventoryFramePanel", "v2DownloadsFramePanel", "v2GddOutlineFramePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
                   hide("chatPanel");
                   const activeTab = v2OpenTabs.get(v2ActiveTabId) || v2OpenTabs.get("chat");
                   if (activeTab?.id === "chat") {
@@ -407,7 +483,7 @@ public sealed class BrowserUiRenderer
                 function v2RunStepAction(stepId) {
                   if (!state.projectId) return;
                   if (stepId === "asset-inventory") {
-                    $("loadAssetInventory")?.click();
+                    v2LoadEmbeddedFrame("v2AssetInventoryFrame", `/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}&embedded=1`);
                     return;
                   }
                   if (stepId === "package-project") {
@@ -415,8 +491,78 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (stepId === "download-project") {
-                    $("openProjectDownloads")?.click();
+                    v2LoadEmbeddedFrame("v2DownloadsFrame", `/downloads?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
+                    return;
                   }
+                  if (stepId === "gdd-outline") {
+                    v2LoadEmbeddedFrame("v2GddOutlineFrame", `/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
+                  }
+                }
+                function v2LoadEmbeddedFrame(frameId, url) {
+                  const frame = $(frameId);
+                  if (!frame) return;
+                  if (frame.dataset.src !== url) {
+                    frame.dataset.src = url;
+                    frame.src = url;
+                  }
+                }
+                function v2AppendOnce(parent, element) {
+                  if (!parent || !element || element.parentElement === parent) return;
+                  parent.appendChild(element);
+                }
+                function v2InstallFastTooltips() {
+                  if (document.body.dataset.v2FastTooltips === "1") return;
+                  document.body.dataset.v2FastTooltips = "1";
+                  const tooltip = document.createElement("div");
+                  tooltip.id = "v2FastTooltip";
+                  tooltip.className = "v2-fast-tooltip";
+                  document.body.appendChild(tooltip);
+                  let timer = 0;
+                  let active = null;
+                  const titleOf = element => element?.getAttribute?.("data-v2-tooltip") || element?.getAttribute?.("title") || "";
+                  const close = () => {
+                    clearTimeout(timer);
+                    timer = 0;
+                    tooltip.classList.remove("open");
+                    if (active?.dataset?.v2NativeTitle) {
+                      active.setAttribute("title", active.dataset.v2NativeTitle);
+                      delete active.dataset.v2NativeTitle;
+                    }
+                    active = null;
+                  };
+                  const position = event => {
+                    const margin = 12;
+                    const rect = tooltip.getBoundingClientRect();
+                    let left = Math.min(window.innerWidth - rect.width - margin, event.clientX + margin);
+                    let top = Math.min(window.innerHeight - rect.height - margin, event.clientY + margin);
+                    tooltip.style.left = `${Math.max(margin, left)}px`;
+                    tooltip.style.top = `${Math.max(margin, top)}px`;
+                  };
+                  document.addEventListener("pointerover", event => {
+                    const target = event.target?.closest?.("[title], [data-v2-tooltip]");
+                    if (!target) return;
+                    const title = titleOf(target);
+                    if (!title) return;
+                    close();
+                    active = target;
+                    if (target.hasAttribute("title")) {
+                      target.dataset.v2NativeTitle = target.getAttribute("title");
+                      target.removeAttribute("title");
+                    }
+                    tooltip.textContent = title;
+                    position(event);
+                    timer = setTimeout(() => {
+                      tooltip.classList.add("open");
+                      position(event);
+                    }, 120);
+                  });
+                  document.addEventListener("pointermove", event => {
+                    if (active) position(event);
+                  });
+                  document.addEventListener("pointerout", event => {
+                    if (active && !event.relatedTarget?.closest?.("[title], [data-v2-tooltip]")) close();
+                  });
+                  document.addEventListener("scroll", close, true);
                 }
                 function v2CreateIterationPanel() {
                   if ($("v2IterationPanel")) return;
@@ -426,6 +572,7 @@ public sealed class BrowserUiRenderer
                   panel.id = "v2IterationPanel";
                   panel.className = "stack hidden";
                   panel.setAttribute("aria-label", "迭代计划");
+                  panel.innerHTML = `<div id="v2IterationSummary" class="card muted">尚未生成迭代计划。</div>`;
                   chatPanel.insertAdjacentElement("afterend", panel);
                   const firstChatRecordHeading = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "聊天记录");
                   const iterationStart = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "主流程：迭代计划");
@@ -456,14 +603,14 @@ public sealed class BrowserUiRenderer
                     leftProjects.className = "stack";
                     leftProjects.innerHTML = `<h2 class="v2-left-title">项目列表</h2><div id="v2LeftProjects" class="v2-left-projects"></div>`;
                   }
-                  if (progressShell.parentElement !== leftRail) leftRail.appendChild(progressShell);
+                  v2AppendOnce(leftRail, progressShell);
                   if (!$("v2LeftSpacer")) {
                     const spacer = document.createElement("div");
                     spacer.id = "v2LeftSpacer";
                     spacer.className = "v2-left-spacer";
                     leftRail.appendChild(spacer);
                   }
-                  if (leftProjects.parentElement !== leftRail) leftRail.appendChild(leftProjects);
+                  v2AppendOnce(leftRail, leftProjects);
                   let rightWorkspace = $("v2RightWorkspace");
                   if (!rightWorkspace) {
                     rightWorkspace = document.createElement("div");
@@ -486,12 +633,24 @@ public sealed class BrowserUiRenderer
                   }
                   v2CreateAcceptancePanel();
                   v2CreateUiOptimizationPanel();
-                  ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
+                  v2CreateEmbeddedFramePanel("v2AssetInventoryFramePanel", "v2AssetInventoryFrame", "项目素材库");
+                  v2CreateEmbeddedFramePanel("v2DownloadsFramePanel", "v2DownloadsFrame", "下载项目文件");
+                  v2CreateEmbeddedFramePanel("v2GddOutlineFramePanel", "v2GddOutlineFrame", "查阅策划大纲");
+                  ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "v2AssetInventoryFramePanel", "v2DownloadsFramePanel", "v2GddOutlineFramePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
                     const element = $(id);
-                    if (element) grid.appendChild(element);
+                    v2AppendOnce(grid, element);
                   });
                   v2RenderTabs();
                   v2RenderLeftProjectList();
+                }
+                function v2CreateEmbeddedFramePanel(panelId, frameId, title) {
+                  if ($(panelId)) return;
+                  const panel = document.createElement("section");
+                  panel.id = panelId;
+                  panel.className = "stack hidden";
+                  panel.setAttribute("aria-label", title);
+                  panel.innerHTML = `<iframe id="${frameId}" class="v2-embedded-frame" title="${escapeHtml(title)}"></iframe>`;
+                  $("v2ContentGrid")?.appendChild(panel);
                 }
                 function v2CreateAcceptancePanel() {
                   if ($("v2AcceptancePanel")) return;
@@ -619,16 +778,22 @@ public sealed class BrowserUiRenderer
                   textarea.style.height = "auto";
                   textarea.style.height = `${Math.min(textarea.scrollHeight, 176)}px`;
                 }
+                function v2HideLegacyChatFeedback() {
+                  if (!document.body.classList.contains("v2-detail")) return;
+                  $("feedbackSummary")?.classList.add("hidden");
+                  $("feedbackRecords")?.classList.add("hidden");
+                }
                 function v2ArrangeChatPanel() {
                   const chatPanel = $("chatPanel");
                   if (!chatPanel) return;
-                  const title = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "自由聊天");
+                  const title = Array.from(chatPanel.querySelectorAll("h2")).find(heading => ["自由聊天", "自由对话", "聊天记录"].includes(heading.textContent.trim()));
                   title?.classList.add("hidden");
                   if (title?.nextElementSibling?.tagName === "P") title.nextElementSibling.classList.add("hidden");
+                  const chatRecordTitle = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "聊天记录");
+                  chatRecordTitle?.classList.add("hidden");
                   const flowTitle = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "流程记录");
                   flowTitle?.classList.add("hidden");
-                  $("feedbackSummary")?.classList.add("hidden");
-                  $("feedbackRecords")?.classList.add("hidden");
+                  v2HideLegacyChatFeedback();
                   $("evaluateIterationPlanFromChat")?.classList.add("hidden");
                   if ($("v2ChatControls")) return;
                   const messageLabel = $("chatMessage")?.closest("label");
@@ -670,12 +835,37 @@ public sealed class BrowserUiRenderer
                     if (attachLabel.childNodes?.[0]?.nodeType === Node.TEXT_NODE) attachLabel.childNodes[0].textContent = "\u5bfc\u5165\u6587\u4ef6";
                     attachLabel.title = "导入 TXT 参考文件";
                   }
+                  let advancedPlanning = $("v2AdvancedPlanningMode");
+                  if (!advancedPlanning) {
+                    advancedPlanning = document.createElement("button");
+                    advancedPlanning.id = "v2AdvancedPlanningMode";
+                    advancedPlanning.type = "button";
+                    advancedPlanning.className = "ghost";
+                    advancedPlanning.textContent = "高级策划模式";
+                    advancedPlanning.title = "激活高级策划模式，帮助梳理玩法、GDD、机制、叙事与原型设计建议";
+                    advancedPlanning.onclick = v2ToggleAdvancedPlanningMode;
+                  }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
-                  [$("chatAttachmentFiles")?.closest("label"), $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  v2RenderAdvancedPlanningMode();
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
                   $("chatMessage").addEventListener("input", resizeChatComposer);
                   resizeChatComposer();
                   v2RenderChatIterationPlanButtonState();
+                }
+                function v2ToggleAdvancedPlanningMode() {
+                  const select = $("chatSkillMode");
+                  if (!select) return;
+                  select.value = select.value === "game-design-master" ? "normal" : "game-design-master";
+                  renderSelectedSkillAction();
+                }
+                function v2RenderAdvancedPlanningMode() {
+                  const button = $("v2AdvancedPlanningMode");
+                  const select = $("chatSkillMode");
+                  if (!button || !select) return;
+                  const active = select.value === "game-design-master";
+                  button.classList.toggle("active", active);
+                  button.setAttribute("aria-pressed", active ? "true" : "false");
                 }
                 function v2IterationPlanExists() {
                   return Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.length > 0;
@@ -861,11 +1051,10 @@ public sealed class BrowserUiRenderer
                 function v2RenderProgress() {
                   const shell = $("v2ProgressSteps");
                   if (!shell) return;
-                  shell.innerHTML = v2Steps.map(([id, label, iconIndex], index) => {
+                  shell.innerHTML = v2Steps.map(([id, label, iconName], index) => {
                     const status = v2StepStatus(id);
                     const mark = status === "done" ? "✓" : status === "fix" ? "×" : status === "continue" ? "•••" : "";
-                    const spriteIndex = Math.max(0, Number(iconIndex ?? (index + 1)) - 1);
-                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-index:${spriteIndex}"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
+                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-icon:url('${v2StepIconUrl(iconName)}')"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
@@ -936,6 +1125,7 @@ public sealed class BrowserUiRenderer
                 v2CreateIterationPanel();
                 v2ArrangeChatPanel();
                 v2EnsureContentGrid();
+                v2InstallFastTooltips();
                 $("v2JudgeNextStep").onclick = v2JudgeNextStepLocally;
                 setInterval(v2RenderProgress, 2000);
               </script>
@@ -976,12 +1166,24 @@ public sealed class BrowserUiRenderer
                     linear-gradient(135deg, #fbf7ef, #efe5d3);
                 }
                 header {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  z-index: 30;
                   min-height: 80px;
                   padding: 0.8rem clamp(1rem, 3vw, 2.2rem);
                   display: grid;
                   gap: 0.45rem;
                   align-items: center;
+                  background:
+                    radial-gradient(circle at 15% 10%, rgba(198, 95, 45, 0.22), transparent 34rem),
+                    radial-gradient(circle at 85% 0%, rgba(15, 107, 87, 0.18), transparent 32rem),
+                    linear-gradient(135deg, rgba(251, 247, 239, 0.96), rgba(239, 229, 211, 0.96));
+                  border-bottom: 1px solid rgba(222, 212, 196, 0.7);
+                  backdrop-filter: blur(10px);
                 }
+                body { padding-top: 80px; }
                 .header-row {
                   display: grid;
                   grid-template-columns: minmax(0, 1fr) auto;
@@ -1496,7 +1698,8 @@ public sealed class BrowserUiRenderer
                   state.chatHistory.forEach(message => {
                     if (typeof message.content === "string") message.content = sanitizePublicChatContent(message.content);
                   });
-                  $("chatHistory").innerHTML = state.chatHistory.map((message, index) => {
+                  const visibleMessages = state.chatHistory.filter(isVisibleChatMessage);
+                  $("chatHistory").innerHTML = visibleMessages.map((message, index) => {
                     const roleClass = message.role === "user" ? "v2-chat-message-user" : "v2-chat-message-assistant";
                     const pendingClass = message.pending ? " v2-chat-message-pending" : "";
                     const pendingLabel = message.pending ? "<span class=\"v2-chat-pending-label\">生成中</span>" : "";
@@ -1513,6 +1716,9 @@ public sealed class BrowserUiRenderer
                   requestAnimationFrame(() => {
                     const history = $("chatHistory");
                     if (history) history.scrollTop = history.scrollHeight;
+                  });
+                  document.querySelectorAll(".v2-open-gdd-outline").forEach(button => {
+                    button.onclick = () => v2OpenGddOutlineTab();
                   });
                 }
 
@@ -1596,7 +1802,7 @@ public sealed class BrowserUiRenderer
                   flushParagraph();
                   flushList();
                   const outlineButton = message?.gddOutlineUrl
-                    ? `<p><a class="button secondary" href="${escapeHtml(message.gddOutlineUrl)}" target="_blank" rel="noopener">&#26597;&#38405;&#31574;&#21010;&#22823;&#32434;</a></p>`
+                    ? `<p><button class="secondary v2-open-gdd-outline" type="button">&#26597;&#38405;&#31574;&#21010;&#22823;&#32434;</button></p>`
                     : "";
                   return (parts.join("") || "<p></p>") + outlineButton;
                 }
@@ -1775,6 +1981,10 @@ public sealed class BrowserUiRenderer
                 function renderIterationPlan() {
                   const plan = state.iterationPlan;
                   if (!plan || !plan.session) {
+                    $("v2IterationSummary").className = state.iterationPlanFailure ? "card" : "card muted";
+                    $("v2IterationSummary").innerHTML = state.iterationPlanFailure
+                      ? `<strong>迭代计划摘要</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
+                      : "尚未生成迭代计划。";
                     $("iterationPlanStatus").className = state.iterationPlanFailure ? "card" : "card muted";
                     const customRouteRequired = state.iterationPlanFailure && state.iterationPlanFailure.includes("联系管理员创建定制游戏类型路线");
                     $("iterationPlanStatus").innerHTML = state.iterationPlanFailure
@@ -1808,6 +2018,13 @@ public sealed class BrowserUiRenderer
                   const planComplete = isIterationPlanComplete();
                   const planStarted = isIterationPlanStarted();
                   const canUpdatePlan = !planStarted;
+                  $("v2IterationSummary").className = "card";
+                  $("v2IterationSummary").innerHTML = `
+                    <strong>迭代计划摘要</strong>
+                    <p>${escapeHtml(session.overallGoal || "")}</p>
+                    ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
+                    ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
+                  `;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
                     <strong>${escapeHtml(session.status || "ready")}</strong>
@@ -2312,9 +2529,14 @@ public sealed class BrowserUiRenderer
                 function isStoredChatMessage(message) {
                   return message &&
                     !message.pending &&
+                    message.kind !== "prototype-seed" &&
                     (message.role === "user" || message.role === "assistant") &&
                     typeof message.content === "string" &&
                     message.content.trim().length > 0;
+                }
+
+                function isVisibleChatMessage(message) {
+                  return message?.kind !== "prototype-seed";
                 }
 
                 function sanitizePublicChatContent(value) {
@@ -2519,10 +2741,25 @@ public sealed class BrowserUiRenderer
                   $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                 }
 
+
+                function v2OpenGddOutlineTab() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  if (typeof v2OpenEmbeddedTab === "function") {
+                    v2OpenEmbeddedTab(
+                      "gdd-outline",
+                      "查阅策划大纲",
+                      "v2GddOutlineFramePanel",
+                      "v2GddOutlineFrame",
+                      `/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
+                  } else {
+                    window.open(`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                  }
+                }
+
                 async function createGddDocument() {
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (state.gddOutlineReady) {
-                    window.open(`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                    v2OpenGddOutlineTab();
                     return;
                   }
                   if (!guardGlobalAction()) return;
@@ -3343,8 +3580,10 @@ public sealed class BrowserUiRenderer
 
                 function renderSkillActions() {
                   const select = $("chatSkillMode");
+                  const previous = select.value || "normal";
                   select.innerHTML = `<option value="normal">普通模式</option>` +
                     state.skillActions.map(action => `<option value="${escapeHtml(action.actionId)}">${escapeHtml(action.label)}</option>`).join("");
+                  if (Array.from(select.options).some(option => option.value === previous)) select.value = previous;
                   renderSelectedSkillAction();
                 }
 
@@ -3352,14 +3591,18 @@ public sealed class BrowserUiRenderer
                   const selected = $("chatSkillMode").value || "normal";
                   if (selected === "normal") {
                     $("chatSkillDescription").textContent = "不激活 skills，按通用 Phase A 原型顾问方式回答。";
+                    v2RenderAdvancedPlanningMode();
                     return;
                   }
                   const action = state.skillActions.find(item => item.actionId === selected);
                   if (!action) {
+                    $("chatSkillMode").value = "normal";
                     $("chatSkillDescription").textContent = "当前能力不可用，已回退为普通模式。";
+                    v2RenderAdvancedPlanningMode();
                     return;
                   }
                   $("chatSkillDescription").textContent = action.description || "当前能力暂无说明。";
+                  v2RenderAdvancedPlanningMode();
                 }
 
                 const longLlmTimeoutMs = 1200 * 1000;
@@ -3713,6 +3956,7 @@ public sealed class BrowserUiRenderer
                     `).join("") || "<p class='muted'>还没有运行记录。</p>";
                     document.querySelectorAll("[data-run]").forEach(button => button.onclick = () => loadRun(button.dataset.run));
                     renderFeedbackRecords();
+                    v2RenderProgress();
                     out(result);
                   } catch (error) { showError(error); }
                 }
@@ -3782,6 +4026,7 @@ public sealed class BrowserUiRenderer
                     if (primaryActionButton) {
                       primaryActionButton.onclick = () => runFeedbackPrimaryAction();
                     }
+                    v2HideLegacyChatFeedback();
                     return;
                   }
 
@@ -3792,11 +4037,13 @@ public sealed class BrowserUiRenderer
                       <p class="muted">当前项目还没有迭代计划，以下仅展示旧正式反馈记录。</p>
                       <p class="muted">正式反馈次数：${escapeHtml(String(legacyFeedbackRuns.length))}</p>
                     `;
+                    v2HideLegacyChatFeedback();
                     return;
                   }
 
                   $("feedbackSummary").className = "card muted";
                   $("feedbackSummary").textContent = "尚未生成迭代计划。";
+                  v2HideLegacyChatFeedback();
                 }
 
                 function feedbackPrimaryActionState() {
@@ -3978,13 +4225,14 @@ public sealed class BrowserUiRenderer
                 async function refreshActiveRun() {
                   if (!state.authenticated) return;
                   try {
+                    const wasBusy = isGlobalBusy();
                     state.activeRun = await api("/api/account/active-run");
                     applyGlobalBusyState();
                     if (state.projectId && shouldAutoRefreshIterationPlan(state.activeRun)) {
                       await loadIterationPlan();
                       await loadRuns();
                     }
-                    if (!state.activeRun?.busy && state.projectId) {
+                    if (wasBusy && !state.activeRun?.busy && state.projectId) {
                       await loadPrototypeProgress();
                       await refreshAssetInventoryAvailability();
                     }
@@ -4123,7 +4371,12 @@ public sealed class BrowserUiRenderer
                   $("createProjectPackage").title = canCreate ? "" : projectPackageDisabledText(result?.disabledReason);
                   $("openProjectDownloads").disabled = !state.projectId;
                   $("openProjectDownloads").onclick = () => {
-                    if (state.projectId) window.open(`/downloads?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                    if (!state.projectId) return;
+                    if (typeof v2OpenStepTab === "function") {
+                      v2OpenStepTab("download-project");
+                    } else {
+                      window.open(`/downloads?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
+                    }
                   };
                   if (!state.projectId) {
                     $("projectPackageStatus").className = "card muted";
@@ -4178,7 +4431,11 @@ public sealed class BrowserUiRenderer
 
                 async function loadAssetInventory() {
                   if (!state.projectId) return out("请先选择一个项目。");
-                  window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}`, "_blank", "noreferrer");
+                  if (typeof v2OpenStepTab === "function") {
+                    v2OpenStepTab("asset-inventory");
+                  } else {
+                    window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}`, "_blank", "noreferrer");
+                  }
                 }
 
                 function renderAssetInventory(result, expanded) {
@@ -4392,6 +4649,9 @@ public sealed class BrowserUiRenderer
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
+                    if (acceptanceStatus === "succeeded") {
+                      v2SetPrototypeValidationInvalidated(false);
+                    }
                     renderPrototypeProgress(progress);
                     renderPrototypeAcceptanceSummary(progress);
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
@@ -4792,7 +5052,7 @@ public sealed class BrowserUiRenderer
             CreateAcceptanceStep(6, latestPrototype, "/#v2AcceptancePanel"),
             CreateRunStep(7, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
             CreateRunStep(8, "打包项目文件", latestPackage, "/#createProjectPackage"),
-            new ProjectDetailStep(9, "下载项目文件", "pending", $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}", "")
+            CreateRunStep(9, "下载项目文件", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
     }
 
@@ -4895,13 +5155,20 @@ public sealed class BrowserUiRenderer
                 textarea { width:100%; min-height:8rem; resize:vertical; border:1px solid var(--line); border-radius:.75rem; padding:.75rem; background:#fffdf8; color:var(--ink); font:inherit; }
                 .muted { color:var(--muted); }
                 .danger { color:var(--danger); }
-                .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(18rem,1fr)); gap:.8rem; }
+                .grid { display:grid; grid-template-columns: minmax(0,1fr); gap:.8rem; }
                 .section-card { display:grid; gap:.55rem; align-content:start; }
                 .section-content { color:var(--ink); white-space:pre-wrap; }
+                .section-header { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
+                .section-header h3 { margin:0; }
+                .section-header button { width:auto; min-width:4.5rem; white-space:nowrap; }
                 dialog { width:min(840px, calc(100vw - 2rem)); max-height:90vh; overflow:auto; box-shadow:0 2rem 5rem rgba(23,33,27,.28); }
                 dialog::backdrop { background:rgba(23,33,27,.45); }
                 .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
                 .row button:last-child { margin-left:auto; }
+                body.embedded { background:#fffdf8; }
+                body.embedded main { max-width:none; padding:0; }
+                body.embedded main > header { display:none; }
+                body.embedded section, body.embedded article, body.embedded dialog { box-shadow:none; }
               </style>
             </head>
             <body>
@@ -4932,7 +5199,11 @@ public sealed class BrowserUiRenderer
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
-                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                if (params.get("embedded") === "1") document.body.classList.add("embedded");
+                const token = () => localStorage.getItem("phaseAAccessToken")
+                  || localStorage.getItem("phaseAAdminToken")
+                  || window.parent?.document?.getElementById?.("token")?.value?.trim?.()
+                  || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[ch]));
                 let outline = null;
@@ -4956,15 +5227,17 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 function renderOutline() {
-                  $("meta").textContent = `${outline.relativePath || "docs/gdd/gdd-outline.json"} ? ${outline.lastUpdatedUtc || ""}`;
+                  $("meta").textContent = `${outline.relativePath || "docs/gdd/gdd-outline.json"} - ${outline.lastUpdatedUtc || ""}`;
                   $("title").textContent = outline.title || "\u7b56\u5212\u5927\u7eb2";
                   $("summary").textContent = outline.summary || "";
                   $("sections").innerHTML = (outline.sections || []).map(section => `
                     <article class="section-card" data-section-id="${escapeHtml(section.id)}">
-                      <h3>${escapeHtml(section.title)}</h3>
+                      <div class="section-header">
+                        <h3>${escapeHtml(section.title)}</h3>
+                        <button type="button" data-edit-section="${escapeHtml(section.id)}">&#32534;&#36753;</button>
+                      </div>
                       <p><strong>&#39592;&#26550;</strong><br>${escapeHtml(section.skeleton)}</p>
                       <div class="section-content">${section.content ? escapeHtml(section.content) : "<span class='muted'>&#20855;&#20307;&#20869;&#23481;&#24453;&#29983;&#25104;&#12290;</span>"}</div>
-                      <button data-edit-section="${escapeHtml(section.id)}">&#32534;&#36753;</button>
                     </article>
                   `).join("") || "<p class='muted'>&#27809;&#26377;&#22823;&#32434;&#26465;&#30446;&#12290;</p>";
                   document.querySelectorAll("[data-edit-section]").forEach(button => button.onclick = () => openEditor(button.dataset.editSection));
@@ -5042,6 +5315,8 @@ public sealed class BrowserUiRenderer
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
                 .danger { color: var(--danger); }
                 .muted { color: var(--muted); }
+                body.embedded main { max-width: none; padding: 0; }
+                body.embedded main > header { display: none; }
               </style>
             </head>
             <body>
@@ -5059,6 +5334,7 @@ public sealed class BrowserUiRenderer
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
+                if (params.get("embedded") === "1") document.body.classList.add("embedded");
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
@@ -5207,6 +5483,7 @@ public sealed class BrowserUiRenderer
                 h2 { margin: 0 0 0.75rem; }
                 p { color: var(--muted); }
                 .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+                .page-header-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
                 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); overflow-wrap: anywhere; }
                 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.75rem; }
                 .list { display: grid; gap: 0.75rem; }
@@ -5238,6 +5515,8 @@ public sealed class BrowserUiRenderer
                 .asset-create-panel select { border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.65rem; font: inherit; background: #fffdf8; }
                 .reference-file { display: none; }
                 .reference-file.open { display: inline-flex; align-items: center; gap: 0.35rem; }
+                body.embedded main { max-width: none; padding: 0; }
+                body.embedded main > header { display: none; }
                 @media (max-width: 820px) {
                   .asset-detail-grid { grid-template-columns: 1fr; }
                   .asset-create-panel { grid-template-columns: 1fr; }
@@ -5251,7 +5530,9 @@ public sealed class BrowserUiRenderer
                     <h1>项目素材库</h1>
                     <p>查看当前项目已使用的素材、可生成的素材候选和每个素材单位的生成历史。</p>
                   </div>
-                  <button id="refreshAssetLibraryButton" class="ghost" type="button">刷新素材库</button>
+                  <div class="page-header-actions">
+                    <button id="refreshAssetLibraryButton" class="ghost" type="button">刷新素材库</button>
+                  </div>
                 </header>
                 <section id="status" class="card muted">正在读取素材清单...</section>
                 <section class="card">
@@ -5290,6 +5571,7 @@ public sealed class BrowserUiRenderer
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
                 const model = params.get("model") || "gpt-5.5";
+                if (params.get("embedded") === "1") document.body.classList.add("embedded");
                 const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
@@ -5317,6 +5599,7 @@ public sealed class BrowserUiRenderer
                 async function loadAssets(force = false) {
                   if (!projectId) { $("status").textContent = "缺少 projectId。"; return; }
                   if (!token()) { $("status").textContent = "浏览器 token 不存在，请先登录。"; return; }
+                  const refreshButton = $("refreshAssetLibraryButton");
                   if (!force) {
                     const cached = readAssetCache();
                     if (cached) {
@@ -5329,24 +5612,35 @@ public sealed class BrowserUiRenderer
                     }
                   }
 
-                  $("status").textContent = "正在刷新素材库...";
-                  const [inventoryResponse, libraryResponse] = await Promise.all([
-                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&force=${force ? "true" : "false"}&model=${encodeURIComponent(model)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" }),
-                    fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" })
-                  ]);
-                  const payload = await inventoryResponse.json();
-                  state.library = libraryResponse.ok ? await libraryResponse.json() : { units: [] };
-                  await hydrateLibraryPreviewUrls();
-                  if (!inventoryResponse.ok || !payload.canReadInventory) {
-                    const reason = payload.disabledReason || payload.error || "unknown_error";
-                    $("status").className = "card muted";
-                    $("status").textContent = assetInventoryDisabledText(reason);
-                    return;
+                  if (refreshButton) {
+                    refreshButton.disabled = true;
+                    refreshButton.textContent = force ? "刷新中..." : "读取中...";
                   }
-                  state.usedAssets = payload.usedAssets || [];
-                  state.candidates = payload.generationCandidates || [];
-                  writeAssetCache();
-                  await renderAssetData(`已刷新素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。`);
+                  $("status").textContent = "正在刷新素材库...";
+                  try {
+                    const [inventoryResponse, libraryResponse] = await Promise.all([
+                      fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-inventory?judge=true&force=${force ? "true" : "false"}&model=${encodeURIComponent(model)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" }),
+                      fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" })
+                    ]);
+                    const payload = await inventoryResponse.json();
+                    state.library = libraryResponse.ok ? await libraryResponse.json() : { units: [] };
+                    await hydrateLibraryPreviewUrls();
+                    if (!inventoryResponse.ok || !payload.canReadInventory) {
+                      const reason = payload.disabledReason || payload.error || "unknown_error";
+                      $("status").className = "card muted";
+                      $("status").textContent = assetInventoryDisabledText(reason);
+                      return;
+                    }
+                    state.usedAssets = payload.usedAssets || [];
+                    state.candidates = payload.generationCandidates || [];
+                    writeAssetCache();
+                    await renderAssetData(`已刷新素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。`);
+                  } finally {
+                    if (refreshButton) {
+                      refreshButton.disabled = false;
+                      refreshButton.textContent = "刷新素材库";
+                    }
+                  }
                 }
 
                 async function renderAssetData(statusText) {

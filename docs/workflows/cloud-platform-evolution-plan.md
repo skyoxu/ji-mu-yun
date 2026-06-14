@@ -529,11 +529,17 @@ Goal:
 - approval handling in the browser
 - multiple persistent workspaces
 - stable runner queueing
+- separate Windows accounts for `PhaseA.Platform` and user-task runners
+- project-level NTFS ACLs for `workspaces/<account-id>/<project-id>`
+- OS write-permission separation between platform binaries, metadata DB, Caddy configuration, and user workspaces
 
 Success criteria:
 
 - one platform can host multiple users/projects without workspace collisions
 - sidecars remain isolated and durable
+- the runner account cannot write platform binaries, the metadata DB, or Caddy configuration
+- ordinary project runs can write only the current project workspace; cross-account and cross-project writes are blocked by both ACLs and application checks
+- runner queueing, project runner locks, and account-level concurrency limits prevent one user from monopolizing resources
 
 ### Phase C: Storage Abstraction And Scale-Out
 
@@ -542,11 +548,14 @@ Goal:
 - abstract file storage for artifacts and durable docs
 - support remote/object-backed storage later
 - support node affinity and worker expansion
+- evaluate and optionally introduce containers, Windows Sandbox, or lightweight VMs as strong-isolation runners
+- provide stronger runner isolation tiers for high-risk or high-value accounts
 
 Success criteria:
 
 - workspace restoration is not tied to one machine forever
 - platform can scale without rewriting repository workflow logic
+- strong-isolation runners can replace or augment the local runner without breaking the Phase B workspace/ACL model
 
 ## Suggested First Build Order
 

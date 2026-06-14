@@ -131,6 +131,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/ui" ||
         context.Request.Path == "/ui-v2" ||
         context.Request.Path == "/backup" ||
+        context.Request.Path == "/gdd-outline" ||
         context.Request.Path.StartsWithSegments("/ui-v2/icons") ||
         context.Request.Path == "/downloads" ||
         context.Request.Path == "/assets" ||

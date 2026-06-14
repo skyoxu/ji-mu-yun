@@ -56,22 +56,41 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderShellV2_WorkflowMonoIconAssetExists()
+    public void RenderShellV2_WorkflowIconAssetsAreIndividualTransparentSvgIcons()
     {
-        var path = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "PhaseA.Platform",
-            "wwwroot",
-            "ui-v2",
-            "icons",
-            "workflow-icons-mono.png"));
+        foreach (var fileName in new[]
+        {
+            "workflow-panel.svg",
+            "workflow-spark.svg",
+            "workflow-wrench.svg",
+            "workflow-list.svg",
+            "workflow-layout.svg",
+            "workflow-check.svg",
+            "workflow-image.svg",
+            "workflow-archive.svg",
+            "workflow-download.svg"
+        })
+        {
+            var path = Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "..",
+                "..",
+                "..",
+                "PhaseA.Platform",
+                "wwwroot",
+                "ui-v2",
+                "icons",
+                fileName));
 
-        File.Exists(path).Should().BeTrue();
-        new FileInfo(path).Length.Should().BeGreaterThan(0);
+            File.Exists(path).Should().BeTrue();
+            new FileInfo(path).Length.Should().BeGreaterThan(0);
+            var svg = File.ReadAllText(path);
+            svg.Should().Contain("<svg");
+            svg.Should().Contain("width=\"20\"");
+            svg.Should().Contain("height=\"20\"");
+            svg.Should().Contain("currentColor");
+        }
     }
 
     [Fact]
@@ -79,7 +98,7 @@ public sealed class BrowserUiRendererTests
     {
         var html = new BrowserUiRenderer().RenderShellV2();
 
-        html.Should().Contain("const v2OpenTabs = new Map([[\"chat\", { id: \"chat\", label: \"聊天\", panelId: \"chatPanel\", closable: false }]])");
+        html.Should().Contain("const v2OpenTabs = new Map([[\"chat\", { id: \"chat\", label: \"游戏策划创作\", panelId: \"chatPanel\", closable: false }]])");
         html.Should().Contain("v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true })");
         html.Should().Contain("if (!tab || !tab.closable) return");
         html.Should().Contain("const activeTab = v2OpenTabs.get(v2ActiveTabId) || v2OpenTabs.get(\"chat\")");
@@ -169,6 +188,276 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderShellV2_TabWorkspaceDomBehaviorSmoke()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            class ClassList {
+              constructor() { this.items = new Set(); }
+              add(value) { this.items.add(value); }
+              remove(value) { this.items.delete(value); }
+              contains(value) { return this.items.has(value); }
+              toggle(value, force) {
+                if (force === undefined) {
+                  if (this.items.has(value)) this.items.delete(value);
+                  else this.items.add(value);
+                  return this.items.has(value);
+                }
+                if (force) this.items.add(value);
+                else this.items.delete(value);
+                return !!force;
+              }
+            }
+            class Element {
+              constructor(id) {
+                this.id = id;
+                this.classList = new ClassList();
+                this.dataset = {};
+                this.value = "";
+                this.src = "";
+              }
+            }
+            const elements = new Map();
+            function add(id) {
+              const element = new Element(id);
+              elements.set(id, element);
+              return element;
+            }
+            [
+              "chatPanel",
+              "v2IterationPanel",
+              "v2RepairPanel",
+              "v2UiOptimizationPanel",
+              "v2AcceptancePanel",
+              "v2AssetInventoryFramePanel",
+              "v2DownloadsFramePanel",
+              "v2GddOutlineFramePanel",
+              "currentProjectPanel",
+              "prototypeWorkflowPanel",
+              "prototypeCommandPanel",
+              "runsPanel",
+              "outputPanel",
+              "v2AssetInventoryFrame",
+              "v2DownloadsFrame",
+              "v2GddOutlineFrame",
+              "globalModel"
+            ].forEach(add);
+            elements.get("globalModel").value = "gpt-5.5";
+            const $ = id => elements.get(id) || null;
+            const state = { projectId: "project 1" };
+            let v2ActiveTabId = "chat";
+            let v2SelectedStep = "new-project";
+            let v2UserSelectedStep = false;
+            let renderedTabs = 0;
+            let renderedProgress = 0;
+            let refreshedAcceptance = 0;
+            const v2Steps = [
+              ["new-project", "游戏项目详情", 1],
+              ["asset-inventory", "确认素材清单", 7],
+              ["download-project", "下载项目文件", 9]
+            ];
+            const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
+            function v2StepLabel(stepId) {
+              const item = v2Steps.find(step => step[0] === stepId);
+              return item ? item[1] : "工程页面";
+            }
+            function v2PanelForStep(stepId) {
+              if (stepId === "new-project") return "currentProjectPanel";
+              if (stepId === "asset-inventory") return "v2AssetInventoryFramePanel";
+              if (stepId === "download-project") return "v2DownloadsFramePanel";
+              if (stepId === "gdd-outline") return "v2GddOutlineFramePanel";
+              return "currentProjectPanel";
+            }
+            function v2RenderTabs() { renderedTabs += 1; }
+            function v2RenderProgress() { renderedProgress += 1; }
+            function v2RefreshAcceptanceActionState() { refreshedAcceptance += 1; }
+            function v2LoadEmbeddedFrame(frameId, url) {
+              const frame = $(frameId);
+              if (!frame) return;
+              if (frame.dataset.src !== url) {
+                frame.dataset.src = url;
+                frame.src = url;
+              }
+            }
+            function v2ApplySelectedStepVisibility() {
+              const show = id => $(id)?.classList.remove("hidden");
+              const hide = id => $(id)?.classList.add("hidden");
+              ["v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "v2AssetInventoryFramePanel", "v2DownloadsFramePanel", "v2GddOutlineFramePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel", "outputPanel"].forEach(hide);
+              hide("chatPanel");
+              const activeTab = v2OpenTabs.get(v2ActiveTabId) || v2OpenTabs.get("chat");
+              if (activeTab?.id === "chat") {
+                show("chatPanel");
+                return;
+              }
+              if (activeTab?.panelId) {
+                show(activeTab.panelId);
+              }
+            }
+            function v2RunStepAction(stepId) {
+              if (!state.projectId) return;
+              if (stepId === "asset-inventory") {
+                v2LoadEmbeddedFrame("v2AssetInventoryFrame", `/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}&embedded=1`);
+                return;
+              }
+              if (stepId === "download-project") {
+                v2LoadEmbeddedFrame("v2DownloadsFrame", `/downloads?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
+                return;
+              }
+              if (stepId === "gdd-outline") {
+                v2LoadEmbeddedFrame("v2GddOutlineFrame", `/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
+              }
+            }
+            function v2OpenEmbeddedTab(tabId, label, panelId, frameId, url) {
+              v2OpenTabs.set(tabId, { id: tabId, label, panelId, closable: true });
+              v2ActiveTabId = tabId;
+              v2ApplySelectedStepVisibility();
+              v2LoadEmbeddedFrame(frameId, url);
+              v2RenderTabs();
+              v2RenderProgress();
+            }
+            function v2OpenStepTab(stepId) {
+              const panelId = v2PanelForStep(stepId);
+              const tabId = `step:${stepId}`;
+              v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true });
+              v2ActiveTabId = tabId;
+              v2SelectedStep = stepId;
+              v2UserSelectedStep = true;
+              v2ApplySelectedStepVisibility();
+              v2RunStepAction(stepId);
+              v2RenderTabs();
+              v2RenderProgress();
+              v2RefreshAcceptanceActionState();
+            }
+            function v2CloseTab(tabId) {
+              const tab = v2OpenTabs.get(tabId);
+              if (!tab || !tab.closable) return;
+              v2OpenTabs.delete(tabId);
+              if (v2ActiveTabId === tabId) {
+                v2ActiveTabId = "chat";
+              }
+              v2RenderTabs();
+              v2ApplySelectedStepVisibility();
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            function visible(id) {
+              return !$(id).classList.contains("hidden");
+            }
+
+            v2ApplySelectedStepVisibility();
+            assert(visible("chatPanel"), "default chat tab should be visible");
+            assert(!visible("v2AssetInventoryFramePanel"), "asset panel should start hidden");
+
+            v2OpenStepTab("asset-inventory");
+            assert(v2ActiveTabId === "step:asset-inventory", "asset inventory tab should become active");
+            assert(v2SelectedStep === "asset-inventory" && v2UserSelectedStep, "asset inventory step selection should be tracked");
+            assert(visible("v2AssetInventoryFramePanel"), "asset iframe panel should be visible");
+            assert(!visible("chatPanel"), "chat panel should hide when asset tab is active");
+            assert($("v2AssetInventoryFrame").src === "/assets?projectId=project%201&model=gpt-5.5&embedded=1", "asset iframe should use embedded URL");
+
+            v2OpenStepTab("download-project");
+            assert(visible("v2DownloadsFramePanel"), "downloads iframe panel should be visible");
+            assert(!visible("v2AssetInventoryFramePanel"), "asset panel should hide when downloads tab is active");
+            assert($("v2DownloadsFrame").src === "/downloads?projectId=project%201&embedded=1", "downloads iframe should use embedded URL");
+
+            v2OpenEmbeddedTab("gdd-outline", "查阅策划大纲", "v2GddOutlineFramePanel", "v2GddOutlineFrame", "/gdd-outline?projectId=project%201&embedded=1");
+            assert(v2OpenTabs.get("gdd-outline").label === "查阅策划大纲", "GDD outline tab should use readable label");
+            assert(visible("v2GddOutlineFramePanel"), "GDD outline panel should be visible");
+            assert($("v2GddOutlineFrame").dataset.src === "/gdd-outline?projectId=project%201&embedded=1", "GDD iframe should cache embedded URL");
+
+            v2CloseTab("gdd-outline");
+            assert(v2ActiveTabId === "chat", "closing active embedded tab should return to chat");
+            assert(visible("chatPanel"), "chat should be visible again");
+            assert(!visible("v2GddOutlineFramePanel"), "GDD panel should be hidden after closing tab");
+            assert(renderedTabs === 4 && renderedProgress === 3 && refreshedAcceptance === 2, "render hooks should match tab operations");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
+    public void RenderShellV2_ProgressStatusUsesSuccessfulUiOptimizationAndServerAcceptance()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            const state = {
+              projectId: "project-1",
+              runs: [
+                {
+                  runType: "prototype-ui-optimization",
+                  status: "succeeded",
+                  progressSubstep: "completed",
+                  progressUpdatedUtc: "2026-06-09T07:05:39.4240706+00:00"
+                }
+              ],
+              prototypeFailure: "",
+              v2PrototypeStatus: "succeeded",
+              v2PrototypeCreationStatus: "succeeded",
+              v2PrototypeValidationInvalidatedByIteration: false,
+              iterationPlan: {
+                session: {
+                  updatedUtc: "2026-06-05T07:43:48.7541844+00:00",
+                  completedUtc: "2026-06-05T07:43:48.7541716+00:00"
+                },
+                goals: [{ status: "succeeded", updatedUtc: "2026-06-05T07:43:48.7541844+00:00" }]
+              }
+            };
+            const elements = new Map([["prototypeProgress", { textContent: "succeeded" }]]);
+            const $ = id => elements.get(id) || null;
+            function v2LatestRunByType(runType) {
+              return (state.runs || []).find(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase()) || null;
+            }
+            function v2StepStatus(stepId) {
+              const progressStatus = state?.prototypeFailure ? "failed" : "";
+              const progressText = $("prototypeProgress")?.textContent || "";
+              const prototypeStatus = String(state?.v2PrototypeStatus || "").trim().toLowerCase();
+              const creationStatus = String(state?.v2PrototypeCreationStatus || prototypeStatus || "").trim().toLowerCase();
+              const succeeded = prototypeStatus === "succeeded";
+              const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
+              if (stepId === "create-prototype") {
+                if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
+                return creationStatus === "failed" ? "fix" : creationStatus === "succeeded" ? "done" : "pending";
+              }
+              if (stepId === "prototype-acceptance") {
+                if (state.v2PrototypeValidationInvalidatedByIteration) return "pending";
+                return succeeded ? "done" : failed ? "fix" : "pending";
+              }
+              if (stepId === "ui-optimization") {
+                const run = v2LatestRunByType("prototype-ui-optimization");
+                if (!run) return "pending";
+                const substep = String(run.progressSubstep || "").toLowerCase();
+                if (substep === "validation_skipped") return "pending";
+                if (substep === "validation_failed") return "fix";
+                if (String(run.status || "").toLowerCase() === "succeeded") return "done";
+                if (String(run.status || "").toLowerCase() === "failed") return "fix";
+                return "pending";
+              }
+              return "pending";
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            assert(v2StepStatus("ui-optimization") === "done", "successful UI optimization should be done");
+            assert(v2StepStatus("prototype-acceptance") === "done", "successful server acceptance should be done");
+            state.v2PrototypeValidationInvalidatedByIteration = true;
+            assert(v2StepStatus("prototype-acceptance") === "pending", "local invalidation should still block until server progress clears it");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
     public void RenderShellV2_IncludesProgressComparisonPage()
     {
         var html = new BrowserUiRenderer().RenderShellV2();
@@ -183,13 +472,41 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ProgressSteps");
         html.Should().Contain("v2ContentGrid");
         html.Should().Contain("v2EnsureContentGrid");
+        html.Should().Contain("position: fixed");
+        html.Should().Contain("inset: 80px 0 0 0");
+        html.Should().Contain("top: 0");
+        html.Should().Contain("body { padding-top: 80px; }");
         html.Should().Contain("grid-template-columns: minmax(15rem, 25%) minmax(0, 75%)");
+        html.Should().Contain("grid-template-rows: minmax(0, 1fr)");
+        html.Should().Contain("align-items: stretch");
+        html.Should().Contain("height: 100vh");
+        html.Should().Contain("overflow: hidden");
+        html.Should().Contain("height: 100%");
+        html.Should().Contain("height: 100%");
         html.Should().Contain("v2LeftRail");
+        html.Should().Contain("overflow-y: auto");
+        html.Should().Contain("overflow-y: scroll");
+        html.Should().Contain("scrollbar-gutter: stable");
+        html.Should().Contain("grid-template-rows: minmax(10rem, 34%) minmax(0, 1fr)");
+        html.Should().Contain("overscroll-behavior: contain");
+        html.Should().Contain("align-self: stretch");
+        html.Should().Contain("-webkit-mask: var(--step-icon)");
+        html.Should().Contain("mask: var(--step-icon)");
+        html.Should().NotContain("image-rendering: pixelated");
         html.Should().Contain("v2RightWorkspace");
         html.Should().Contain("v2WorkspaceTabs");
         html.Should().Contain("v2OpenStepTab");
+        html.Should().Contain("gap: 0");
+        html.Should().Contain("background: #e2e0dc");
+        html.Should().Contain("border-radius: 0.65rem 0.65rem 0 0");
+        html.Should().Contain("border-bottom-color: #fffdf8");
+        html.Should().Contain("font-weight: 800");
+        html.Should().Contain("body.v2-detail .v2-tab.active > span:first-child");
+        html.Should().Contain("position: sticky");
+        html.Should().Contain("v2AppendOnce");
+        html.Should().Contain("if (!parent || !element || element.parentElement === parent) return");
         html.Should().Contain("v2-left-project-button ${current ? \"current\" : \"\"}");
-        html.Should().Contain("grid.appendChild(element)");
+        html.Should().Contain("v2AppendOnce(grid, element)");
         html.Should().Contain("v2JudgeNextStep");
         html.Should().Contain("扫描项目判断下一步建议");
         html.Should().Contain("v2JudgeNextStepLocally");
@@ -210,7 +527,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("UI 优化是可选步骤，可以在验收前或验收后执行。");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
-        html.Should().Contain("workflow-icons-mono.png");
+        html.Should().Contain("function v2StepIconUrl(iconName)");
+        html.Should().Contain("return `/ui-v2/icons/workflow-${safe}.svg`");
         html.Should().Contain("原型工程列表");
         html.Should().Contain("项目列表");
         html.Should().Contain("body.v2-detail #currentProjectPanel > button { display: none; }");
@@ -235,9 +553,18 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("请先完成 UI 优化，再进行原型验收。");
         html.Should().NotContain("if (stepId === \"prototype-acceptance\") {\n                    $(\"validatePrototype\")?.click();");
         html.Should().NotContain("[\"revalidate-prototype\", \"重新验收\"]");
-        html.Should().Contain("$(\"loadAssetInventory\")?.click()");
+        html.Should().Contain("v2AssetInventoryFramePanel");
+        html.Should().Contain("v2DownloadsFramePanel");
+        html.Should().Contain("v2GddOutlineFramePanel");
+        html.Should().Contain("v2LoadEmbeddedFrame(\"v2AssetInventoryFrame\"");
+        html.Should().Contain("v2LoadEmbeddedFrame(\"v2DownloadsFrame\"");
+        html.Should().Contain("v2LoadEmbeddedFrame(\"v2GddOutlineFrame\"");
+        html.Should().Contain("embedded=1");
+        html.Should().Contain("v2OpenEmbeddedTab");
+        html.Should().Contain("if (typeof v2OpenStepTab === \"function\")");
+        html.Should().Contain("v2OpenStepTab(\"download-project\")");
+        html.Should().Contain("v2OpenStepTab(\"asset-inventory\")");
         html.Should().Contain("$(\"createProjectPackage\")?.click()");
-        html.Should().Contain("$(\"openProjectDownloads\")?.click()");
         html.Should().Contain("v2ApplyPrototypeFormLock");
         html.Should().Contain("v2ShouldLockPrototypeForm");
         html.Should().Contain("v2-prototype-locked");
@@ -249,9 +576,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("progress?.form");
         html.Should().Contain("已载入原型记录");
         html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
-        html.Should().Contain("workflow-icons-mono.png");
+        html.Should().Contain("[\"create-prototype\", \"原型骨架创建\", \"spark\"]");
         html.Should().Contain("v2-step-number");
-        html.Should().Contain("const spriteIndex = Math.max(0, Number(iconIndex ?? (index + 1)) - 1)");
+        html.Should().Contain("v2StepIconUrl(iconName)");
+        html.Should().Contain("--step-icon:url");
+        html.Should().NotContain("spriteIndex");
         html.Should().Contain(".v2-step-button.pending .v2-step-mark");
         html.Should().Contain(".v2-step-button.action .v2-step-mark");
         html.Should().Contain("游戏项目详情");
@@ -259,12 +588,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("完成迭代计划");
         html.Should().Contain("骨架验收修复");
         html.Should().Contain("UI优化");
-        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", 3]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", 4]", StringComparison.Ordinal));
-        html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", 4]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"UI优化\", 5]", StringComparison.Ordinal));
+        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", \"list\"]", StringComparison.Ordinal));
+        html.IndexOf("[\"iteration-plan\", \"完成迭代计划\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"UI优化\", \"layout\"]", StringComparison.Ordinal));
         html.Should().Contain("function v2RunIsCurrentForIteration(run)");
         html.Should().Contain("const sessionTime = v2IterationSessionTimestamp();");
         html.Should().Contain("const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || \"\")));");
-        html.Should().Contain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
+        html.Should().Contain("if (!run) return \"pending\";");
+        html.Should().NotContain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
         html.Should().Contain("if (substep === \"validation_skipped\") return \"pending\";");
         html.Should().Contain("if (substep === \"validation_failed\") return \"fix\";");
         html.Should().Contain("请先完成原型骨架创建，再运行 UI 优化。");
@@ -282,7 +612,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function v2AssetInventoryConfirmed()");
         html.Should().Contain("if (stepId === \"asset-inventory\") return v2AssetInventoryConfirmed() ? \"done\" : \"pending\"");
         html.Should().Contain("if (stepId === \"package-project\") return v2HasPackages() ? \"done\" : \"pending\"");
-        html.Should().Contain("if (stepId === \"download-project\") return v2HasPackages() ? \"action\" : \"pending\"");
+        html.Should().Contain("if (stepId === \"download-project\") return v2HasPackages() ? \"done\" : \"pending\"");
         html.Should().Contain("const mark = status === \"done\" ? \"✓\" : status === \"fix\" ? \"×\" : status === \"continue\" ? \"•••\" : \"\"");
         html.Should().Contain("flowTitle?.classList.add(\"hidden\")");
         html.Should().Contain("$(\"feedbackSummary\")?.classList.add(\"hidden\")");
@@ -293,6 +623,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("自由聊天");
         html.Should().Contain("v2IterationPanel");
         html.Should().Contain("v2CreateIterationPanel");
+        html.Should().Contain("v2IterationSummary");
+        html.Should().Contain("迭代计划摘要");
         html.Should().Contain("panel.appendChild(current)");
         html.Should().Contain("function v2PanelForStep(stepId)");
         html.Should().Contain("if (stepId === \"iteration-plan\") return \"v2IterationPanel\"");
@@ -306,6 +638,24 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2-chat-composer");
         html.Should().Contain("resizeChatComposer");
         html.Should().Contain("v2SkillRow");
+        html.Should().Contain("v2AdvancedPlanningMode");
+        html.Should().Contain("高级策划模式");
+        html.Should().Contain("game-design-master");
+        html.Should().Contain("激活高级策划模式，帮助梳理玩法、GDD、机制、叙事与原型设计建议");
+        html.Should().Contain("body.v2-detail #chatSkillDescription");
+        html.Should().Contain("display: none !important");
+        html.Should().Contain("body.v2-detail #chatPanel > h2");
+        html.Should().Contain("body.v2-detail #chatPanel #feedbackSummary");
+        html.Should().Contain("body.v2-detail #chatPanel #feedbackRecords");
+        html.Should().Contain("display: none !important");
+        html.Should().Contain("function v2HideLegacyChatFeedback()");
+        html.Should().Contain("[\"自由聊天\", \"自由对话\", \"聊天记录\"].includes");
+        html.Should().Contain("v2InstallFastTooltips");
+        html.Should().Contain("setTimeout(() =>");
+        html.Should().Contain("}, 120)");
+        html.Should().Contain("v2-fast-tooltip");
+        html.Should().Contain("body.v2-detail #chatPanel { min-height: 100%; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto");
+        html.Should().Contain("body.v2-detail #chatHistory.chat-scroll { min-height: 0; max-height: none; height: 100%; overflow-y: auto; }");
         html.Should().Contain("v2-skill-row");
         html.Should().Contain("skillDescription");
         html.Should().NotContain("v2CreateIterationPlanFromChat");
@@ -339,7 +689,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("createGddDocument");
         html.Should().Contain("/api/projects/${state.projectId}/gdd");
         html.Should().Contain("gddOutlineUrl");
-        html.Should().Contain("window.open(`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}`");
+        html.Should().Contain("v2OpenGddOutlineTab");
+        html.Should().Contain("v2OpenEmbeddedTab(");
+        html.Should().Contain("查阅策划大纲");
+        html.Should().Contain("if (!state.projectId) return out(\"请先选择一个项目。\")");
+        html.Should().Contain("`/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`");
         html.Should().Contain("state.gddOutlineReady = true;");
         html.Should().Contain("download=\"GDD.md\"");
         html.Should().Contain("result.downloadUrl || \"\"");
@@ -353,6 +707,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("result?.status === \"ready\" && state.iterationPlan?.session");
         html.Should().Contain("v2SetPrototypeValidationInvalidated(true)");
         html.Should().Contain("v2SetPrototypeValidationInvalidated(false)");
+        html.Should().Contain("if (acceptanceStatus === \"succeeded\")");
         html.Should().Contain("phaseA:v2PrototypeValidationInvalidated");
         html.Should().Contain("$(\"submitFormalFeedback\")?.classList.add(\"hidden\")");
         html.Should().NotContain("根据聊天内容创建新的迭代计划");
@@ -422,6 +777,51 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
         html.Should().NotContain("detail-step done\" href=\"/assets?projectId=project-1\"");
         html.Should().NotContain("detail-step done\" href=\"/#createProjectPackage\"");
+    }
+
+    [Fact]
+    public void RenderProject_MarksDownloadDone_WhenPackageExists()
+    {
+        var project = new ProjectSnapshot(
+            "project-1",
+            "account-1",
+            "Demo Project",
+            "Demo Game",
+            "rpg",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\project-1",
+            "C:\\workspaces\\project-1\\runtime",
+            "C:\\workspaces\\project-1\\.phasea");
+        var packageRun = new RunReadbackItem(
+            "run-package",
+            "project-1",
+            "workspace-1",
+            "project-package",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{}",
+            "",
+            "",
+            "",
+            DateTimeOffset.UtcNow.ToString("O"),
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [packageRun]);
+
+        html.Should().Contain("detail-step done\" href=\"/#createProjectPackage\"");
+        html.Should().Contain("detail-step done\" href=\"/downloads?projectId=project-1\"");
     }
 
     [Fact]
@@ -752,6 +1152,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("当前计划评估");
         html.Should().Contain("目标执行结果");
         html.Should().Contain("计划摘要");
+        html.Should().Contain("message.kind !== \"prototype-seed\"");
+        html.Should().Contain("function isVisibleChatMessage(message)");
         html.Should().Contain("总目标数");
         html.Should().Contain("已完成");
         html.Should().Contain("当前目标");
@@ -881,6 +1283,12 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("onclick=");
         html.Should().NotContain("onchange=");
         html.Should().Contain("asset-detail-grid");
+        html.Should().Contain("body.embedded main");
+        html.Should().Contain("params.get(\"embedded\") === \"1\"");
+        html.Should().Contain("page-header-actions");
+        html.Should().Contain("refreshButton.disabled = true");
+        html.Should().Contain("refreshButton.textContent = force ? \"刷新中...\" : \"读取中...\"");
+        html.Should().Contain("refreshButton.textContent = \"刷新素材库\"");
         html.Should().Contain("素材详情及替换");
         html.Should().Contain("image-to-image");
         html.Should().Contain("referenceImageFile");
@@ -891,6 +1299,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("phaseA.assetLibrary");
         html.Should().Contain("已载入缓存素材库");
         html.Should().Contain("已刷新素材库");
+        html.Should().Contain("loadAssets();");
+        html.Should().Contain("loadAssets(true)");
         html.Should().Contain("assetPixelSize");
         html.Should().Contain("pixelWidth");
         html.Should().Contain("pixelHeight");
@@ -947,6 +1357,32 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("exportGddMarkdown");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/export");
         html.Should().Contain("/downloads?projectId=");
+        html.Should().Contain("window.parent?.document?.getElementById?.(\"token\")");
+        html.Should().Contain(".grid { display:grid; grid-template-columns: minmax(0,1fr); gap:.8rem; }");
+        html.Should().Contain(".section-header");
+        html.Should().Contain("<div class=\"section-header\">");
+        html.Should().Contain("type=\"button\" data-edit-section");
+        html.Should().Contain("docs/gdd/gdd-outline.json\"} - ${outline.lastUpdatedUtc || \"\"}");
+        html.Should().NotContain("repeat(auto-fit,minmax(18rem,1fr))");
+    }
+
+    [Fact]
+    public void Program_AllowsGddOutlinePageBeforeBearerTokenMiddleware()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        var whitelistIndex = source.IndexOf("context.Request.Path == \"/gdd-outline\"", StringComparison.Ordinal);
+        var authFailureIndex = source.IndexOf("PhaseAAuth.AuthFailureCode", StringComparison.Ordinal);
+        whitelistIndex.Should().BeGreaterThanOrEqualTo(0);
+        whitelistIndex.Should().BeLessThan(authFailureIndex);
     }
 
     [Fact]
@@ -955,6 +1391,8 @@ public sealed class BrowserUiRendererTests
         var html = new BrowserUiRenderer().RenderDownloads();
 
         html.Should().Contain("项目文件下载");
+        html.Should().Contain("body.embedded main");
+        html.Should().Contain("params.get(\"embedded\") === \"1\"");
         html.Should().Contain("下载准备中...");
         html.Should().Contain("download-ticket");
         html.Should().Contain("/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(fileName)}/download-ticket");

@@ -61,6 +61,22 @@ One‑liner（已在 Editor 安装 Export Templates 后）：
 - CI 工作流 `windows-quality-gate.yml` / `ci-windows.yml` 已接入 `delivery_profile` 输入，并会在 Step Summary 固化 `DeliveryProfile:` 与 `SecurityProfile:`。
 - `prototype lane` 是探索通道，不是新的 `DELIVERY_PROFILE`；它只决定工作是否进入正式任务流，不替代正式交付门禁。
 
+## Phase A Runtime And Isolation Boundary
+
+Phase A is a single-node hosted runner productization layer for the existing repository workflow. It currently relies on application-level routing, project-level runner locks, account-level concurrency limits, and stable workspace paths; it is not yet a full OS-isolated multi-tenant runner model.
+
+Current boundary:
+
+- Phase A keeps the live service, metadata DB, Caddy proxy, hosted workspaces, run queues, and browser-triggered routes on one Windows host.
+- Project runs should write only through the resolved hosted project workspace and shared route entrypoints.
+- Chat, project creation, asset generation, prototype skeleton creation, and other runs use separate concurrency pools and user/project locks where configured, but they still execute inside the Phase A host model.
+
+Evolution boundary:
+
+- Phase B adds multi-tenant workspace hosting with separate Windows accounts for platform and runner processes, project-level NTFS ACLs, and OS write-permission separation for platform binaries, metadata DB, Caddy config, and user workspaces.
+- Phase C evaluates stronger runner isolation such as containers, Windows Sandbox, or lightweight VMs, while preserving the Phase B workspace/ACL model.
+- The detailed roadmap and phase boundary are maintained in `docs/workflows/cloud-platform-evolution-plan.md` and `docs/workflows/cloud-platform-evolution-plan.cn.md`.
+
 ## AI/LLM Engine And Invocation Protocol
 
 Use these shared entrypoints for all new LLM-backed routes or scripts:
