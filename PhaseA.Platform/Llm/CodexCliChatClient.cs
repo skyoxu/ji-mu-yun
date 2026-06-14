@@ -127,6 +127,11 @@ public sealed class CodexCliChatClient : ICodexChatClient
             var timeoutStderr = stderr.ToString();
             return new CodexChatClientResult(false, null, "codex_timeout", 124, timeoutStdout, timeoutStderr, CodexUsageExtractor.Extract(timeoutStdout, timeoutStderr), await CaptureBillingAfterAsync(billingBefore, resolvedBillingKeyName));
         }
+        catch (OperationCanceledException)
+        {
+            TryKill(process);
+            throw;
+        }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             var failedStdout = stdout.ToString();

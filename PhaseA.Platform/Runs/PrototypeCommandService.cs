@@ -121,7 +121,7 @@ public sealed class PrototypeCommandService
             }
 
             var command = commandFactory(project);
-            var process = await _processRunner.RunAsync(command, cancellationToken);
+            var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
             var status = process.ExitCode == 0 ? "succeeded" : "failed";
             var artifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug);
             foreach (var artifact in artifacts)

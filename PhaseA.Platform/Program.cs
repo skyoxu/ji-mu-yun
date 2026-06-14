@@ -11,6 +11,7 @@ using PhaseA.Platform.Skills;
 using PhaseA.Platform.Workspaces;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using System.Text;
 using System.Text.Json;
@@ -43,6 +44,7 @@ builder.Services.AddSingleton<ProjectCreationService>();
 builder.Services.AddSingleton<ProjectDraftImportService>();
 builder.Services.AddSingleton<ProjectInitializationService>();
 builder.Services.AddHostedService<ProjectInitializationRecoveryService>();
+builder.Services.AddSingleton<RunCancellationService>();
 builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
 builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
 builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
@@ -244,6 +246,34 @@ app.MapGet("/api/account/active-run", async (
     return Results.Ok(await readback.GetActiveRunAsync(CurrentAccountId(context), cancellationToken));
 });
 
+app.MapPost("/api/runs/{runId}/cancel", async (
+    string runId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] RunCancellationService runCancellation,
+    [FromServices] HeavyRunnerQueueService heavyRunnerQueue,
+    [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService prototypeCreationQueue,
+    [FromKeyedServices("asset-generation")] HeavyRunnerQueueService assetRunnerQueue,
+    CancellationToken cancellationToken) =>
+{
+    var result = await store.CancelRunAsync(CurrentAccountId(context), runId, cancellationToken);
+    if (result == RunCancelResult.NotFound)
+    {
+        return Results.NotFound(new { error = "run_not_found" });
+    }
+
+    if (result == RunCancelResult.NotActive)
+    {
+        return Results.Conflict(new { error = "run_not_active" });
+    }
+
+    runCancellation.Cancel(runId);
+    heavyRunnerQueue.CancelRun(runId);
+    prototypeCreationQueue.CancelRun(runId);
+    assetRunnerQueue.CancelRun(runId);
+    return Results.Ok(new { runId, status = "cancel" });
+});
+
 app.MapGet("/api/heavy-runner/queue", (
     HttpContext context,
     [FromServices] ArtifactReadbackService readback) =>
@@ -361,8 +391,15 @@ app.MapPost("/api/projects/{projectId}/packages", async (
     [FromServices] ProjectPackageService packages,
     CancellationToken cancellationToken) =>
 {
-    var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken);
-    return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    try
+    {
+        var result = await packages.CreatePackageAsync(CurrentAccountId(context), projectId, cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
 });
 
 app.MapGet("/api/projects/{projectId}/packages", async (
@@ -413,6 +450,10 @@ app.MapPost("/api/projects/{projectId}/gdd", async (
         await chatHistory.AppendAsync(accountId, projectId, "user", request.Message, "gdd-request", cancellationToken);
         await chatHistory.AppendAsync(accountId, projectId, "assistant", failureSummary, "gdd-result", cancellationToken);
         return Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -468,6 +509,18 @@ app.MapPost("/api/projects/{projectId}/gdd/outline/export", async (
         });
 });
 
+app.MapDelete("/api/projects/{projectId}/gdd/outline", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    var result = await gdd.DeleteOutlineAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "project_not_found" })
+        : Results.Ok(result);
+});
+
 app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async (
     string projectId,
     string sectionId,
@@ -484,6 +537,10 @@ app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async 
             request with { SectionId = sectionId },
             cancellationToken);
         return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -623,6 +680,10 @@ app.MapPost("/api/projects/{projectId}/asset-library/generate", async (
     {
         var result = await library.GenerateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (AssetGenerationConcurrencyLimitException ex)
     {
@@ -1194,11 +1255,16 @@ app.MapPost("/api/projects/{projectId}/chat", async (
             "succeeded" => Results.Ok(result),
             "llm_binding_required" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
             "llm_token_unresolved" => Results.Json(result, statusCode: StatusCodes.Status424FailedDependency),
+            "cancel" => Results.Json(result, statusCode: 499),
             "chat_concurrency_limit_exceeded" or "user_chat_concurrency_limit_exceeded" => Results.Json(result, statusCode: StatusCodes.Status429TooManyRequests),
             "missing_message" or "message_too_long" => Results.BadRequest(result),
             _ when result.FailureCode is "llm_run_stop_loss_exceeded" or "llm_daily_stop_loss_exceeded" => Results.Json(result, statusCode: StatusCodes.Status402PaymentRequired),
             _ => Results.BadRequest(result)
         };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1256,6 +1322,10 @@ app.MapDelete("/api/projects/{projectId}/iteration-plan", async (
         var result = await iterationPlans.DeleteAsync(CurrentAccountId(context), projectId, cancellationToken);
         return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1295,6 +1365,10 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/execute-next", async (
         var result = await iterationGoals.ExecuteNextAsync(accountId, projectId, cancellationToken);
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1308,14 +1382,21 @@ app.MapPost("/api/projects/{projectId}/ui-optimization", async (
     [FromServices] PrototypeUiOptimizationService uiOptimization,
     CancellationToken cancellationToken) =>
 {
-    var result = await uiOptimization.RunAsync(CurrentAccountId(context), projectId, request, cancellationToken);
-    return result.Status switch
+    try
     {
-        "succeeded" => Results.Ok(result),
-        "project_busy" or "iteration_plan_not_ready" or "iteration_plan_not_complete" or "prototype_skeleton_not_ready" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
-        "project_not_found" => Results.NotFound(result),
-        _ => Results.Json(result, statusCode: StatusCodes.Status500InternalServerError)
-    };
+        var result = await uiOptimization.RunAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" => Results.Ok(result),
+            "project_busy" or "iteration_plan_not_ready" or "iteration_plan_not_complete" or "prototype_skeleton_not_ready" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            "project_not_found" => Results.NotFound(result),
+            _ => Results.Json(result, statusCode: StatusCodes.Status500InternalServerError)
+        };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
@@ -1331,6 +1412,10 @@ app.MapPost("/api/projects/{projectId}/prototype-feedback-iterations", async (
         var result = await feedbackIterations.SubmitAsync(accountId, projectId, request, cancellationToken);
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1361,6 +1446,10 @@ app.MapPost("/api/projects/{projectId}/needs-fix-route", async (
         return result.Status is "completed" or "succeeded" or "needs_fix"
             ? Results.Ok(result)
             : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1411,6 +1500,10 @@ app.MapPost("/api/projects/{projectId}/repair-plan/execute-next", async (
 
         return result.Status == "completed" ? Results.Ok(result) : Results.BadRequest(result);
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1442,6 +1535,10 @@ app.MapPost("/api/projects/{projectId}/skill-actions/{actionId}", async (
             "skill_action_not_allowed" => Results.NotFound(result),
             _ => Results.BadRequest(result)
         };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1535,6 +1632,10 @@ app.MapPost("/api/projects/{projectId}/prototype-drafts/analyze", async (
             _ => Results.BadRequest(result)
         };
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1584,6 +1685,10 @@ app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
             "blocked" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
             _ => Results.BadRequest(result)
         };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1666,6 +1771,10 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async 
             _ => Results.BadRequest(result)
         };
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1684,6 +1793,10 @@ app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
         var result = await prototypeCommands.RunTddAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (InvalidOperationException ex)
     {
         return Results.NotFound(new { error = ex.Message });
@@ -1701,6 +1814,10 @@ app.MapPost("/api/projects/{projectId}/prototype-scene", async (
     {
         var result = await prototypeCommands.CreateSceneAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
     }
     catch (InvalidOperationException ex)
     {
@@ -1758,6 +1875,13 @@ static string CurrentAccountId(HttpContext context)
 static IResult AdminForbidden()
 {
     return Results.Json(new { error = "admin_required" }, statusCode: StatusCodes.Status403Forbidden);
+}
+
+static IResult CancelledRunResult()
+{
+    return Results.Json(
+        new { status = "cancel", error = "run_cancelled" },
+        statusCode: 499);
 }
 
 static bool TryReadApiProjectId(PathString path, out string projectId)

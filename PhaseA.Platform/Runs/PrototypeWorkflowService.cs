@@ -152,7 +152,7 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential).WithRunId(runId), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(project.RepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -864,7 +864,7 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential), CancellationToken.None);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential).WithRunId(runId), CancellationToken.None);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(projectRepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -973,7 +973,7 @@ public sealed class PrototypeWorkflowService
         try
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
-            process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential), timeout.Token);
+            process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(repairRequest, prototypeRecordPath, projectRepoPath), runtimeCredential).WithRunId(runId), timeout.Token);
         }
         catch (OperationCanceledException)
         {
@@ -1062,7 +1062,7 @@ public sealed class PrototypeWorkflowService
         {
             using var timeout = new CancellationTokenSource(RepairExecutionTimeout);
             codexResult = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, projectExecutionGuide, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexRepairCommand(BuildPostValidationRepairPrompt(project, prototypeRecordPath, slug, preferredShellScene, previousRepairState, projectExecutionGuide, failedRun, contract, godotDiagnostic, godotCleanup), outputPath, normalizedModel, project.RepoPath), runtimeCredential).WithRunId(runId),
                 timeout.Token);
         }
         catch (OperationCanceledException)

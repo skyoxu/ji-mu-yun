@@ -22,6 +22,7 @@ public sealed class SkillActionService
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService? _assetRunnerQueue;
+    private readonly RunCancellationService _runCancellation;
 
     public SkillActionService(
         PhaseAMetadataStore metadataStore,
@@ -33,7 +34,8 @@ public sealed class SkillActionService
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
+        RunCancellationService? runCancellation = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -45,6 +47,7 @@ public sealed class SkillActionService
         _llmRouteEngine = llmRouteEngine;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _assetRunnerQueue = assetRunnerQueue;
+        _runCancellation = runCancellation ?? new RunCancellationService();
     }
 
     public IReadOnlyList<SkillActionDefinition> ListAllowed(string role)
@@ -106,6 +109,8 @@ public sealed class SkillActionService
             : RunType;
         await using var heavyRunnerLease = await runnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, queueRunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
+        using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+        var runToken = runCancellation.Token;
         try
         {
 
@@ -129,12 +134,12 @@ public sealed class SkillActionService
                 project.GameTypeSource
             }, new JsonSerializerOptions { WriteIndented = true }),
             Encoding.UTF8,
-            cancellationToken);
+            runToken);
 
         var prompt = BuildPrompt(action, project, request);
         var sandbox = isWorkspaceWrite ? "workspace-write" : "read-only";
         var routeResult = _llmRouteEngine is null || isWorkspaceWrite
-            ? await RunLegacyCodexProcessAsync(project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), cancellationToken)
+            ? await RunLegacyCodexProcessAsync(runId, project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), runToken)
             : await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
                     EnsureSkillActionPromptWorkspace(project),
@@ -143,9 +148,9 @@ public sealed class SkillActionService
                     prompt,
                     new CodexChatClientOptions(IgnoreRules: false, ReasoningEffort: "high"),
                     project.AccountId),
-                cancellationToken);
+                runToken);
         var output = FirstNonEmpty(routeResult.AssistantMessage, routeResult.Stderr, routeResult.Stdout, "");
-        await File.WriteAllTextAsync(outputAbsolutePath, output, Encoding.UTF8, cancellationToken);
+        await File.WriteAllTextAsync(outputAbsolutePath, output, Encoding.UTF8, runToken);
         var status = routeResult.Succeeded ? "succeeded" : "failed";
 
         await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
@@ -153,13 +158,13 @@ public sealed class SkillActionService
             project.ProjectId,
             "skill-action-request",
             requestRelativePath,
-            "Skill action request payload"), cancellationToken);
+            "Skill action request payload"), CancellationToken.None);
         await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
             runId,
             project.ProjectId,
             "skill-action-output",
             outputRelativePath,
-            "Skill action output"), cancellationToken);
+            "Skill action output"), CancellationToken.None);
 
         var evidenceJson = JsonSerializer.Serialize(new
         {
@@ -170,7 +175,7 @@ public sealed class SkillActionService
             request = requestRelativePath,
             output = outputRelativePath
         });
-        await _metadataStore.CompleteRunAsync(runId, status, routeResult.ExitCode, routeResult.Stdout, routeResult.Stderr, evidenceJson, cancellationToken);
+        await _metadataStore.CompleteRunAsync(runId, status, routeResult.ExitCode, routeResult.Stdout, routeResult.Stderr, evidenceJson, CancellationToken.None);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
             "codex-cli",
@@ -187,13 +192,18 @@ public sealed class SkillActionService
                 route: "skill-action",
                 exitCode: routeResult.ExitCode,
                 providerBilling: routeResult.RawResult?.ProviderBilling),
-            cancellationToken);
+            CancellationToken.None);
 
-        var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
         return new SkillActionRunResult(runId, status, routeResult.ExitCode, action.ActionId, action.SkillName, output.Trim(), artifacts);
+        }
+        catch (OperationCanceledException) when (_runCancellation.IsCancellationRequested(runId))
+        {
+            return new SkillActionRunResult(runId, "cancel", 499, action.ActionId, action.SkillName, "", [], "cancel");
         }
         finally
         {
+            _runCancellation.Unregister(runId);
             if (runnerLockAcquired)
             {
                 await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
@@ -202,6 +212,7 @@ public sealed class SkillActionService
     }
 
     private async Task<LlmRouteResult> RunLegacyCodexProcessAsync(
+        string runId,
         ProjectSnapshot project,
         string outputAbsolutePath,
         string prompt,
@@ -212,7 +223,7 @@ public sealed class SkillActionService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox, reasoningEffort), runtimeCredential), cancellationToken);
+        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(project.RepoPath, outputAbsolutePath, prompt, sandbox, reasoningEffort), runtimeCredential).WithRunId(runId), cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var output = File.Exists(outputAbsolutePath)
             ? await File.ReadAllTextAsync(outputAbsolutePath, Encoding.UTF8, cancellationToken)

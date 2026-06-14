@@ -631,6 +631,53 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ProjectPackage_WhenQueuedRunIsCancelled_ShouldReturnCancelNotPackageFailed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
+        await using var lease = await queue.EnterAsync("held-package-run", accountId, projectId, "project-package");
+        var service = new ProjectPackageService(store, options, queue);
+        var packageTask = service.CreatePackageAsync(accountId, projectId);
+        string runId = "";
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            var active = (await store.ListRunsForProjectAsync(projectId))
+                .FirstOrDefault(run => run.RunType == "project-package" && run.Status == "queued");
+            if (active is not null)
+            {
+                runId = active.RunId;
+                break;
+            }
+
+            await Task.Delay(20);
+        }
+        runId.Should().NotBeEmpty();
+
+        (await store.CancelRunAsync(accountId, runId)).Should().Be(RunCancelResult.Cancelled);
+        queue.CancelRun(runId).Should().BeTrue();
+
+        var result = await packageTask;
+
+        result.Status.Should().Be("cancel");
+        result.FailureCode.Should().Be("cancel");
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("cancel");
+        run.ExitCode.Should().Be(499);
+    }
+
+    [Fact]
     public async Task ProjectPackage_BlocksAndCompletesRun_WhenRunnerLockIsHeld()
     {
         using var database = TempSqliteDatabase.Create();

@@ -124,7 +124,7 @@ public sealed class PrototypeUiOptimizationService
             await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", "Codex \u6b63\u5728\u8fd0\u884c UI \u4f18\u5316\u8def\u7531\u3002", CancellationToken.None);
             codexStartedUtc = DateTimeOffset.UtcNow;
             var process = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential).WithRunId(runId),
                 timeout.Token);
             var bomCleanedFiles = StripGodotTextResourceBom(project.RepoPath);
             var smokeScene = process.ExitCode == 0
@@ -200,6 +200,11 @@ public sealed class PrototypeUiOptimizationService
         }
         catch (OperationCanceledException ex)
         {
+            if (await IsRunCancelledAsync(runId, CancellationToken.None))
+            {
+                return new PrototypeUiOptimizationResult(runId, "cancel", "UI optimization cancelled.");
+            }
+
             var timeoutRecovery = await TryCompleteTimedOutRunIfValidatedAsync(
                 runId,
                 project,
@@ -627,6 +632,12 @@ public sealed class PrototypeUiOptimizationService
                source.Contains("he-is-coming", StringComparison.OrdinalIgnoreCase)
             ? "He-is-Coming"
             : "game-type-template";
+    }
+
+    private async Task<bool> IsRunCancelledAsync(string runId, CancellationToken cancellationToken)
+    {
+        var run = await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        return string.Equals(run?.Status, "cancel", StringComparison.Ordinal);
     }
 }
 

@@ -5,4 +5,12 @@ public sealed record HostedProcessCommand(
     IReadOnlyList<string> Arguments,
     string WorkingDirectory,
     IReadOnlyDictionary<string, string> Environment,
-    string? StandardInput = null);
+    string? StandardInput = null,
+    string? RunId = null)
+{
+    public HostedProcessCommand WithRunId(string runId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        return this with { RunId = runId };
+    }
+}

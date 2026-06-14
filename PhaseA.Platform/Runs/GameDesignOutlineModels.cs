@@ -19,6 +19,11 @@ public sealed record GameDesignOutlineSectionRequest(
     string? Message,
     string? Model = null);
 
+public sealed record GameDesignOutlineDeleteResult(
+    string ProjectId,
+    string Status,
+    IReadOnlyList<string> DeletedPaths);
+
 public sealed record GameDesignOutlineDocument(
     string Title,
     string Summary,

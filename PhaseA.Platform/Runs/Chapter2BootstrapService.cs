@@ -115,7 +115,7 @@ public sealed class Chapter2BootstrapService
             HostedProcessResult hardChecks;
             try
             {
-                hardChecks = await _processRunner.RunAsync(_commandBuilder.BuildLocalHardChecksCommand(project.RepoPath), timeout.Token);
+                hardChecks = await _processRunner.RunAsync(_commandBuilder.BuildLocalHardChecksCommand(project.RepoPath).WithRunId(runId), timeout.Token);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {

@@ -43,6 +43,7 @@ public sealed class ProjectDraftImportService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly RunCancellationService _runCancellation;
 
     public ProjectDraftImportService(
         PhaseAMetadataStore metadataStore,
@@ -60,7 +61,8 @@ public sealed class ProjectDraftImportService
         AiCodeMirrorKeyPoolService? keyPoolService,
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        RunCancellationService? runCancellation = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -69,6 +71,7 @@ public sealed class ProjectDraftImportService
         _keyPoolService = keyPoolService;
         _workspaceSeeder = workspaceSeeder;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _runCancellation = runCancellation ?? new RunCancellationService();
     }
 
     public async Task<ProjectDraftImportResult> AnalyzeAsync(
@@ -110,12 +113,14 @@ public sealed class ProjectDraftImportService
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
-        await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, null, cancellationToken);
+        using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+        var runToken = runCancellation.Token;
+        await SaveDraftAsync(project.ProjectId, basic with { Status = "running", RunId = runId }, null, runToken);
         try
         {
             var text = DecodeUtf8(content);
             var fallback = ApplyDeterministicFallback(basic with { RunId = runId }, project, text);
-            await SaveDraftAsync(project.ProjectId, fallback with { Status = "running" }, text, cancellationToken);
+            await SaveDraftAsync(project.ProjectId, fallback with { Status = "running" }, text, runToken);
             var normalizedModel = Runs.PrototypeModelPolicy.Normalize(model);
             var shouldUseCodex = ShouldUseCodexAnalysis(basic, text);
             CodexChatClientResult completion;
@@ -132,7 +137,7 @@ public sealed class ProjectDraftImportService
                         DraftAnalysisCodexOptions,
                         project.AccountId,
                         RequireJsonObject: true),
-                    cancellationToken);
+                    runToken);
                 completion = analysis.RawResult ?? new CodexChatClientResult(
                     analysis.Succeeded,
                     analysis.AssistantMessage,
@@ -150,7 +155,7 @@ public sealed class ProjectDraftImportService
                 analyzed = fallback;
             }
 
-            var coverage = await AnalyzeCoverageAsync(project, normalizedModel, text, analyzed, cancellationToken);
+            var coverage = await AnalyzeCoverageAsync(project, normalizedModel, text, analyzed, runToken);
             analyzed = analyzed with
             {
                 CoveragePercent = coverage.Result.CoveragePercent,
@@ -175,7 +180,7 @@ public sealed class ProjectDraftImportService
                 coverage_attempt_count = coverage.AttemptCount,
                 coverage_raw_excerpt = TruncateEvidence(coverage.RawMessage)
             });
-            await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, completion.AssistantMessage ?? "", completion.Stderr + completion.Stdout, evidenceJson, cancellationToken);
+            await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, completion.AssistantMessage ?? "", completion.Stderr + completion.Stdout, evidenceJson, CancellationToken.None);
             await _metadataStore.RecordRunLlmAuditAsync(
                 runId,
                 "codex-cli",
@@ -190,10 +195,15 @@ public sealed class ProjectDraftImportService
                     failureCode: completion.FailureCode,
                     exitCode: completion.ExitCode,
                     providerBilling: completion.ProviderBilling),
-                cancellationToken);
+                CancellationToken.None);
             var persisted = analyzed with { Status = status, FailureCode = status == "succeeded" ? analyzed.FailureCode : completion.FailureCode ?? "llm_analysis_failed" };
-            await SaveDraftAsync(project.ProjectId, persisted, text, cancellationToken);
+            await SaveDraftAsync(project.ProjectId, persisted, text, CancellationToken.None);
             return persisted;
+        }
+        catch (OperationCanceledException) when (_runCancellation.IsCancellationRequested(runId))
+        {
+            await SaveDraftAsync(project.ProjectId, basic with { Status = "cancel", RunId = runId, FailureCode = "cancel" }, null, CancellationToken.None);
+            return basic with { Status = "cancel", RunId = runId, FailureCode = "cancel" };
         }
         catch (Exception)
         {
@@ -202,6 +212,7 @@ public sealed class ProjectDraftImportService
         }
         finally
         {
+            _runCancellation.Unregister(runId);
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
     }

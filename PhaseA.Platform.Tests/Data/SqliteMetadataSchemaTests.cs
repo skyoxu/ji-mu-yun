@@ -568,6 +568,102 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task CancelRunAsync_ShouldMarkRunningRunCancelKeepLockAndIgnoreLateCompletion()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Cancel Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        await store.MarkRunStartedAsync(runId);
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, runId)).Should().BeTrue();
+
+        var result = await store.CancelRunAsync(accountId, runId);
+        await store.UpdateRunProgressAsync(runId, "failed", "late_progress", "Late failure should not replace cancel.");
+        await store.CompleteRunAsync(runId, "succeeded", 0, "late stdout", "", "{}", CancellationToken.None);
+
+        result.Should().Be(RunCancelResult.Cancelled);
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("cancel");
+        run.ExitCode.Should().Be(499);
+        run.StderrText.Should().Contain("Cancelled by user.");
+        run.ProgressStep.Should().Be("cancel");
+        run.ProgressSubstep.Should().Be("user_cancelled");
+        run.ProgressLabel.Should().Be("\u7528\u6237\u5df2\u53d6\u6d88\u5f53\u524d run\u3002");
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeTrue();
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, "next-run")).Should().BeFalse();
+
+        await store.ReleaseRunnerLockAsync(project.ProjectId, runId);
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+        (await store.HasActiveRunAsync(project.ProjectId)).Should().BeFalse();
+        var active = await store.GetActiveRunForAccountAsync(accountId);
+        active.Should().BeNull();
+        var metrics = await store.ListRunMetricsForAdminAsync(accountId, null);
+        metrics.Should().ContainSingle(row => row.Metric.RunId == runId && row.Metric.Status == "cancel");
+    }
+
+    [Fact]
+    public async Task CancelRunAsync_ShouldReleaseQueuedRunLock()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Queued Cancel Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, runId)).Should().BeTrue();
+
+        var result = await store.CancelRunAsync(accountId, runId);
+
+        result.Should().Be(RunCancelResult.Cancelled);
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("cancel");
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task MarkRunStartedAsync_ShouldNotReviveCancelledQueuedRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Queued Race Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, runId)).Should().BeTrue();
+
+        var result = await store.CancelRunAsync(accountId, runId);
+        var act = () => store.MarkRunStartedAsync(runId, 1);
+
+        result.Should().Be(RunCancelResult.Cancelled);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("cancel");
+        run.StartedUtc.Should().BeNull();
+        run.QueuePositionAtStart.Should().BeNull();
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task ReconcileAbandonedRunsAsync_CanRecoverPrototypeQuickFixRuns()
     {
         using var database = TempSqliteDatabase.Create();

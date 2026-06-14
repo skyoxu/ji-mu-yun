@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
@@ -382,6 +382,51 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderShellV2_PublicChatSanitizerRemovesPlatformRoutes()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            function sanitizePublicChatContent(value) {
+              const gddLinks = [];
+              return String(value || "")
+                .replace(/\/projects\/[^\s`'"，。；：、）)<]+\/gdd\/GDD\.md\?ticket=[^\s`'"，。；：、）)<]+/g, match => {
+                  const token = `__PHASEA_GDD_LINK_${gddLinks.length}__`;
+                  gddLinks.push(match);
+                  return token;
+                })
+                .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
+                .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
+                .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
+                .replace(/\b(?:projectId|runId|accountId|ticket|embedded)=[^\s`'"，。；：、）)<]+/gi, "")
+                .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
+                .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
+                .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
+                .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
+                .replace(/__PHASEA_GDD_LINK_(\d+)__/g, (_, index) => gddLinks[Number(index)] || "")
+                .replace(/[ \t]{2,}/g, " ")
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            const sanitized = sanitizePublicChatContent("查阅策划大纲：/gdd-outline?projectId=406cd69e993c44c3850490b403b7f024&embedded=1");
+            assert(!sanitized.includes("/gdd-outline"), "platform route should be hidden");
+            assert(!sanitized.includes("projectId="), "platform query should be hidden");
+            const link = "/projects/demo/gdd/GDD.md?ticket=abc123";
+            assert(sanitizePublicChatContent(`下载：${link}`).includes(link), "GDD download links should stay visible");
+            assert(sanitizePublicChatContent("Godot path res://Game/Scenes/Main.tscn").includes("res://Game/Scenes/Main.tscn"), "Godot resource paths should remain visible");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
     public void RenderShellV2_ProgressStatusUsesSuccessfulUiOptimizationAndServerAcceptance()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
@@ -508,15 +553,23 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2-left-project-button ${current ? \"current\" : \"\"}");
         html.Should().Contain("v2AppendOnce(grid, element)");
         html.Should().Contain("v2JudgeNextStep");
-        html.Should().Contain("扫描项目判断下一步建议");
+        html.Should().Contain("nextStepButton.textContent = \"下一步建议\"");
+        html.Should().Contain("nextStepButton.title = \"扫描当前项目状态，并在聊天窗口显示系统下一步建议\"");
+        html.Should().Contain("advancedPlanning, nextStepButton");
+        html.Should().NotContain("v2NextSuggestion");
+        html.Should().NotContain("v2-next");
+        html.Should().NotContain("扫描项目判断下一步建议");
         html.Should().Contain("v2JudgeNextStepLocally");
         html.Should().Contain("v2BuildLocalNextStepSuggestion");
         html.Should().Contain("正在扫描项目状态");
+        html.Should().Contain("v2ShowChatTab");
+        html.Should().Contain("startChatThinkingMessage(\"正在扫描项目状态...\")");
+        html.Should().Contain("系统扫描结果：");
+        html.Should().Contain("next-step-scan");
         html.Should().Contain("Promise.allSettled");
         html.Should().Contain("withTimeout(loadProjectPackages(), \"packages\")");
         html.Should().Contain("withTimeout(refreshAssetInventoryAvailability(), \"asset_inventory\")");
         html.Should().Contain("已基于当前缓存状态生成建议");
-        html.Should().Contain("点击按钮后扫描项目进度并给出下一步建议。");
         html.Should().Contain("项目状态扫描失败，请稍后重试或先刷新页面。");
         html.Should().NotContain("调用 LLM 判断下一步");
         html.Should().NotContain("v2NextSuggestionHasLlmResult");
@@ -883,6 +936,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("pointer-events: auto");
         html.Should().Contain("role=\"status\" aria-live=\"polite\"");
         html.Should().Contain("/api/account/active-run");
+        html.Should().Contain("cancelActiveRun");
+        html.Should().Contain("/api/runs/${encodeURIComponent(runId)}/cancel");
+        html.Should().Contain("\\u786e\\u5b9a\\u8981\\u53d6\\u6d88\\u5f53\\u524d run \\u5417");
         html.Should().Contain("当前任务执行中");
         html.Should().Contain("guardGlobalAction");
         html.Should().Contain("data-global-action");
@@ -1027,6 +1083,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("建议谨慎");
         html.Should().Contain("暂不建议");
         html.Should().Contain("sanitizePublicChatContent");
+        html.Should().Contain("/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)");
+        html.Should().Contain("(?:projectId|runId|accountId|ticket|embedded)");
         html.Should().Contain("Recovery source consumed:");
         html.Should().NotContain("latestPrototypeTerminalOutput");
         html.Should().NotContain("stdoutText || run.stderrText");
@@ -1356,13 +1414,23 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("showModal");
         html.Should().Contain("exportGddMarkdown");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/export");
+        html.Should().Contain("deleteGddOutline");
+        html.Should().Contain("/api/projects/${projectId}/gdd/outline`, { method:\"DELETE\" }");
+        html.Should().Contain("phasea:gdd-outline-deleted");
         html.Should().Contain("/downloads?projectId=");
         html.Should().Contain("window.parent?.document?.getElementById?.(\"token\")");
         html.Should().Contain(".grid { display:grid; grid-template-columns: minmax(0,1fr); gap:.8rem; }");
         html.Should().Contain(".section-header");
         html.Should().Contain("<div class=\"section-header\">");
         html.Should().Contain("type=\"button\" data-edit-section");
-        html.Should().Contain("docs/gdd/gdd-outline.json\"} - ${outline.lastUpdatedUtc || \"\"}");
+        html.Should().Contain("已载入策划大纲");
+        html.Should().Contain("button.textContent = \"\\u751f\\u6210\\u4e2d...\"");
+        html.Should().Contain("button.textContent = \"\\u751f\\u6210\\u5177\\u4f53\\u5185\\u5bb9\"");
+        html.Should().Contain("button.textContent = \"\\u5bfc\\u51fa\\u4e2d...\"");
+        html.Should().Contain("button.textContent = \"\\u5bfc\\u51fa\\u4e3a GDD.md\"");
+        html.Should().NotContain("outline.relativePath");
+        html.Should().NotContain("docs/gdd/gdd-outline.json");
+        html.Should().NotContain("???");
         html.Should().NotContain("repeat(auto-fit,minmax(18rem,1fr))");
     }
 
@@ -1383,6 +1451,55 @@ public sealed class BrowserUiRendererTests
         var authFailureIndex = source.IndexOf("PhaseAAuth.AuthFailureCode", StringComparison.Ordinal);
         whitelistIndex.Should().BeGreaterThanOrEqualTo(0);
         whitelistIndex.Should().BeLessThan(authFailureIndex);
+    }
+
+
+    [Fact]
+    public void Program_SynchronousRunEndpointsTranslateServerSideRunCancellation()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().Contain("static IResult CancelledRunResult()");
+        source.Should().Contain("new { status = \"cancel\", error = \"run_cancelled\" }");
+        source.Should().Contain("statusCode: 499");
+
+        var routes = new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/packages\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd/outline/sections/{sectionId}\"",
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/generate\"",
+            "app.MapPost(\"/api/projects/{projectId}/chat\"",
+            "app.MapPost(\"/api/projects/{projectId}/iteration-plan/execute-next\"",
+            "app.MapPost(\"/api/projects/{projectId}/ui-optimization\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-feedback-iterations\"",
+            "app.MapPost(\"/api/projects/{projectId}/needs-fix-route\"",
+            "app.MapPost(\"/api/projects/{projectId}/repair-plan/execute-next\"",
+            "app.MapPost(\"/api/projects/{projectId}/skill-actions/{actionId}\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-drafts/analyze\"",
+            "app.MapPost(\"/api/projects/{projectId}/chapter2-bootstrap\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-7day-playable/validate\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-tdd\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-scene\""
+        };
+
+        foreach (var route in routes)
+        {
+            var routeIndex = source.IndexOf(route, StringComparison.Ordinal);
+            routeIndex.Should().BeGreaterThanOrEqualTo(0, $"{route} should exist");
+            var nextRouteIndex = source.IndexOf("app.Map", routeIndex + route.Length, StringComparison.Ordinal);
+            var endpointSource = source[routeIndex..(nextRouteIndex < 0 ? source.Length : nextRouteIndex)];
+            endpointSource.Should().Contain("catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)", $"{route} should translate queued or running cancellation");
+            endpointSource.Should().Contain("return CancelledRunResult();", $"{route} should return the standard cancel payload");
+        }
     }
 
     [Fact]

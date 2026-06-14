@@ -152,6 +152,43 @@ public sealed class HeavyRunnerQueueService
         }
     }
 
+    public bool CancelRun(string runId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        lock (_gate)
+        {
+            var running = _running.FirstOrDefault(item => string.Equals(item.RunId, runId, StringComparison.Ordinal));
+            if (running is not null)
+            {
+                running.Ready.TrySetCanceled();
+                return true;
+            }
+
+            var cancelled = false;
+            var retained = new List<HeavyRunnerQueueItem>();
+            while (_waiting.Count > 0)
+            {
+                var waiting = _waiting.Dequeue();
+                if (string.Equals(waiting.RunId, runId, StringComparison.Ordinal))
+                {
+                    waiting.Ready.TrySetCanceled();
+                    cancelled = true;
+                    continue;
+                }
+
+                retained.Add(waiting);
+            }
+
+            foreach (var waiting in retained)
+            {
+                _waiting.Enqueue(waiting);
+            }
+
+            return cancelled;
+        }
+    }
+
     private void Enqueue(HeavyRunnerQueueItem item)
     {
         lock (_gate)

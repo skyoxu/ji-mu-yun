@@ -73,15 +73,18 @@ public sealed class ProjectPackageService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly RunCancellationService _runCancellation;
 
     public ProjectPackageService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        RunCancellationService? runCancellation = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _runCancellation = runCancellation ?? new RunCancellationService();
     }
 
     public async Task<ProjectPackageResult> CreatePackageAsync(
@@ -128,7 +131,9 @@ public sealed class ProjectPackageService
         {
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
             await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
-            var packageOrdinal = await NextPackageOrdinalAsync(project.ProjectId, cancellationToken);
+            using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+            var runToken = runCancellation.Token;
+            var packageOrdinal = await NextPackageOrdinalAsync(project.ProjectId, runToken);
             var version = CreateVersion(packageOrdinal);
             var safeName = SafeFileName(project.Name);
             var fileName = $"{safeName}-{version}.zip";
@@ -140,8 +145,8 @@ public sealed class ProjectPackageService
                 File.Delete(packagePath);
             }
 
-            var appliedAssetSelectionCount = ApplySelectedAssetLibraryEntries(projectRoot);
-            var includedFileCount = CreateZip(projectRoot, packagePath, project, version);
+            var appliedAssetSelectionCount = ApplySelectedAssetLibraryEntries(projectRoot, runToken);
+            var includedFileCount = CreateZip(projectRoot, packagePath, project, version, runToken);
             var sizeBytes = new FileInfo(packagePath).Length;
             var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
             await _metadataStore.AddArtifactAsync(
@@ -151,7 +156,7 @@ public sealed class ProjectPackageService
                     PackageArtifactType,
                     relativePath,
                     "Downloadable project-only package"),
-                cancellationToken);
+                runToken);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -166,8 +171,8 @@ public sealed class ProjectPackageService
                 included_roots = IncludedRoots,
                 included_root_files = IncludedRootFiles
             });
-            await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, $"Created {fileName}", "", evidenceJson, cancellationToken);
-            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+            await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, $"Created {fileName}", "", evidenceJson, runToken);
+            var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, runToken);
 
             return new ProjectPackageResult(
                 project.ProjectId,
@@ -181,6 +186,15 @@ public sealed class ProjectPackageService
                 includedFileCount,
                 artifacts);
         }
+        catch (OperationCanceledException)
+        {
+            if (await IsRunCancelledAsync(runId, CancellationToken.None))
+            {
+                return new ProjectPackageResult(projectId, runId, "cancel", "", "", "", "", 0, 0, [], "cancel");
+            }
+
+            throw;
+        }
         catch (Exception ex)
         {
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), "{}", CancellationToken.None);
@@ -188,6 +202,7 @@ public sealed class ProjectPackageService
         }
         finally
         {
+            _runCancellation.Unregister(runId);
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
     }
@@ -301,8 +316,9 @@ public sealed class ProjectPackageService
         return runs.Any(run => run.RunType == "prototype-7day-playable" && run.Status == "succeeded");
     }
 
-    private static int CreateZip(string projectRoot, string packagePath, ProjectSnapshot project, string version)
+    private static int CreateZip(string projectRoot, string packagePath, ProjectSnapshot project, string version, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         using var stream = File.Create(packagePath);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
         var included = 0;
@@ -310,6 +326,7 @@ public sealed class ProjectPackageService
 
         foreach (var root in IncludedRoots)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var absoluteRoot = Path.Combine(projectRoot, root.Replace('/', Path.DirectorySeparatorChar));
             if (!Directory.Exists(absoluteRoot))
             {
@@ -318,6 +335,7 @@ public sealed class ProjectPackageService
 
             foreach (var file in Directory.EnumerateFiles(absoluteRoot, "*", SearchOption.AllDirectories))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!ShouldIncludeFile(projectRoot, file))
                 {
                     continue;
@@ -330,6 +348,7 @@ public sealed class ProjectPackageService
 
         foreach (var rootFile in IncludedRootFiles)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var absoluteFile = Path.Combine(projectRoot, rootFile);
             if (!File.Exists(absoluteFile) || !ShouldIncludeFile(projectRoot, absoluteFile))
             {
@@ -343,8 +362,9 @@ public sealed class ProjectPackageService
         return included;
     }
 
-    private static int ApplySelectedAssetLibraryEntries(string projectRoot)
+    private static int ApplySelectedAssetLibraryEntries(string projectRoot, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var libraryPath = ResolveUnderProject(projectRoot, "meta/assets/library.json");
         if (!File.Exists(libraryPath))
         {
@@ -371,6 +391,7 @@ public sealed class ProjectPackageService
         var applied = 0;
         foreach (var unit in library.Units)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!IsResPath(unit.ScenePath) || !unit.ScenePath.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -423,6 +444,12 @@ public sealed class ProjectPackageService
         }
 
         return applied;
+    }
+
+    private async Task<bool> IsRunCancelledAsync(string runId, CancellationToken cancellationToken)
+    {
+        var run = await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        return string.Equals(run?.Status, "cancel", StringComparison.Ordinal);
     }
 
     private static bool IsResPath(string? value)

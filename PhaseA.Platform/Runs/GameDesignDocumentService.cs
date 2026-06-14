@@ -138,7 +138,7 @@ public sealed class GameDesignDocumentService
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, project.RepoPath), runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, project.RepoPath), runtimeCredential).WithRunId(runId),
                 timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
 
@@ -215,6 +215,11 @@ public sealed class GameDesignDocumentService
         }
         catch (OperationCanceledException)
         {
+            if (await IsRunCancelledAsync(runId, CancellationToken.None))
+            {
+                return Cancelled(project.ProjectId, runId, "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5df2\u53d6\u6d88\u3002");
+            }
+
             await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"GDD generation exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", "{}", CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(runId, "failed", "timeout", "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u8d85\u65f6\uff0c\u8bf7\u7f29\u5c0f\u8f93\u5165\u540e\u91cd\u8bd5\u3002", CancellationToken.None);
             return Failure(project.ProjectId, "timeout", "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u8d85\u65f6\uff0c\u8bf7\u7f29\u5c0f\u8f93\u5165\u540e\u91cd\u8bd5\u3002", runId);
@@ -337,6 +342,42 @@ public sealed class GameDesignDocumentService
         return await ReadAsync(accountId, projectId, cancellationToken);
     }
 
+    public async Task<GameDesignOutlineDeleteResult?> DeleteOutlineAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var projectRoot = Path.GetFullPath(project.RepoPath);
+        if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
+        {
+            throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
+        }
+
+        var deleted = new List<string>();
+        foreach (var relativePath in new[] { OutlineRelativePath, OutputRelativePath })
+        {
+            var absolutePath = ResolveUnderProject(projectRoot, relativePath);
+            if (!File.Exists(absolutePath))
+            {
+                continue;
+            }
+
+            File.Delete(absolutePath);
+            deleted.Add(relativePath);
+        }
+
+        return new GameDesignOutlineDeleteResult(
+            project.ProjectId,
+            deleted.Count > 0 ? "deleted" : "not_found",
+            deleted);
+    }
+
     public async Task<GameDesignDocumentResult> GenerateSectionAsync(
         string accountId,
         string projectId,
@@ -426,7 +467,7 @@ public sealed class GameDesignDocumentService
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
             var codexResult = await _processRunner.RunAsync(
-                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, project.RepoPath), runtimeCredential),
+                CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, project.RepoPath), runtimeCredential).WithRunId(runId),
                 timeout.Token);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
 
@@ -479,6 +520,11 @@ public sealed class GameDesignDocumentService
         }
         catch (OperationCanceledException)
         {
+            if (await IsRunCancelledAsync(runId, CancellationToken.None))
+            {
+                return Cancelled(project.ProjectId, runId, "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5df2\u53d6\u6d88\u3002");
+            }
+
             await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"GDD outline section generation exceeded the {_executionTimeout.TotalSeconds:0} second timeout.", "{}", CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(runId, "failed", "timeout", "\u751f\u6210\u6761\u76ee\u5185\u5bb9\u8d85\u65f6\uff0c\u8bf7\u7f29\u5c0f\u8f93\u5165\u540e\u91cd\u8bd5\u3002", CancellationToken.None);
             return Failure(project.ProjectId, "timeout", "\u751f\u6210\u6761\u76ee\u5185\u5bb9\u8d85\u65f6\uff0c\u8bf7\u7f29\u5c0f\u8f93\u5165\u540e\u91cd\u8bd5\u3002", runId);
@@ -875,5 +921,16 @@ public sealed class GameDesignDocumentService
     private static GameDesignDocumentResult Failure(string projectId, string failureCode, string summary, string runId = "")
     {
         return new GameDesignDocumentResult(projectId, runId, "failed", OutputRelativePath, "", [], failureCode, summary);
+    }
+
+    private static GameDesignDocumentResult Cancelled(string projectId, string runId, string summary)
+    {
+        return new GameDesignDocumentResult(projectId, runId, "cancel", OutputRelativePath, "", [], "cancel", summary);
+    }
+
+    private async Task<bool> IsRunCancelledAsync(string runId, CancellationToken cancellationToken)
+    {
+        var run = await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        return string.Equals(run?.Status, "cancel", StringComparison.Ordinal);
     }
 }

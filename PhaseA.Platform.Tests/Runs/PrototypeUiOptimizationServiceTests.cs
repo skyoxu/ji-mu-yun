@@ -261,6 +261,38 @@ public sealed class PrototypeUiOptimizationServiceTests
     }
 
     [Fact]
+    public async Task RunAsync_WhenUserCancelsRun_ShouldReturnCancelInsteadOfTimeout()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
+        var service = new PrototypeUiOptimizationService(
+            store,
+            options,
+            new UserCancelHostedProcessRunner(store, accountId),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromMinutes(20));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("cancel");
+        result.Summary.Should().Be("UI optimization cancelled.");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("cancel");
+        run.ExitCode.Should().Be(499);
+        run.ProgressStep.Should().NotBe("failed");
+        run.ProgressSubstep.Should().NotBe("timeout");
+    }
+
+    [Fact]
     public async Task RunAsync_ShouldMarkSucceeded_WhenCodexTimesOutAfterPrototypeUiEditsAndSmokePasses()
     {
         using var database = TempSqliteDatabase.Create();
@@ -392,6 +424,25 @@ public sealed class PrototypeUiOptimizationServiceTests
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            throw new OperationCanceledException(cancellationToken);
+        }
+    }
+
+    private sealed class UserCancelHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly PhaseAMetadataStore _store;
+        private readonly string _accountId;
+
+        public UserCancelHostedProcessRunner(PhaseAMetadataStore store, string accountId)
+        {
+            _store = store;
+            _accountId = accountId;
+        }
+
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            command.RunId.Should().NotBeNullOrWhiteSpace();
+            await _store.CancelRunAsync(_accountId, command.RunId!, CancellationToken.None);
             throw new OperationCanceledException(cancellationToken);
         }
     }

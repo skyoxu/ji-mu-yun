@@ -107,6 +107,40 @@ public sealed class GameDesignDocumentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WhenUserCancelsRun_ShouldReturnCancelInsteadOfTimeout()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new UserCancelHostedProcessRunner(store, accountId);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("cancel");
+        result.FailureCode.Should().Be("cancel");
+        result.Summary.Should().Be("\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5df2\u53d6\u6d88\u3002");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("cancel");
+        run.ExitCode.Should().Be(499);
+        run.ProgressStep.Should().NotBe("failed");
+        run.ProgressSubstep.Should().NotBe("timeout");
+    }
+
+    [Fact]
     public async Task ExportOutlineMarkdownAsync_ShouldWriteGddMarkdownFromOutline()
     {
         using var workspace = new TempWorkspace();
@@ -143,6 +177,40 @@ public sealed class GameDesignDocumentServiceTests
         markdown.Should().Contain("# Demo Outline");
         markdown.Should().Contain("## Core Loop");
         markdown.Should().Contain("Explore, fight, upgrade.");
+    }
+
+    [Fact]
+    public async Task DeleteOutlineAsync_ShouldRemoveOutlineAndExportedGdd()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """{"title":"Outline","summary":"Summary","sections":[]}""");
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "GDD.md"), "# Old GDD");
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.DeleteOutlineAsync(accountId, projectId);
+
+        result!.Status.Should().Be("deleted");
+        result.DeletedPaths.Should().Contain("docs/gdd/gdd-outline.json");
+        result.DeletedPaths.Should().Contain("docs/gdd/GDD.md");
+        File.Exists(Path.Combine(gddDir, "gdd-outline.json")).Should().BeFalse();
+        File.Exists(Path.Combine(gddDir, "GDD.md")).Should().BeFalse();
+        (await service.ReadOutlineAsync(accountId, projectId)).Should().BeNull();
+        (await service.ReadAsync(accountId, projectId)).Should().BeNull();
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
@@ -192,6 +260,25 @@ public sealed class GameDesignDocumentServiceTests
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "GDD created.");
             return Task.FromResult(new HostedProcessResult(ExitCode, "codex stdout", ExitCode == 0 ? "" : "codex failed"));
+        }
+    }
+
+    private sealed class UserCancelHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly PhaseAMetadataStore _store;
+        private readonly string _accountId;
+
+        public UserCancelHostedProcessRunner(PhaseAMetadataStore store, string accountId)
+        {
+            _store = store;
+            _accountId = accountId;
+        }
+
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            command.RunId.Should().NotBeNullOrWhiteSpace();
+            await _store.CancelRunAsync(_accountId, command.RunId!, CancellationToken.None);
+            throw new OperationCanceledException(cancellationToken);
         }
     }
 

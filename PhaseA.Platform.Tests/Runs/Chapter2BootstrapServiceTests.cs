@@ -187,6 +187,49 @@ public sealed class Chapter2BootstrapServiceTests
         run!.QueuePositionAtStart.Should().Be(1);
     }
 
+    [Fact]
+    public async Task RunAsync_QueuedCancellationBeforeStart_ShouldNotExecuteAndShouldReleaseRunnerLock()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1));
+        await using var queueBlocker = await projectCreationQueue.Queue.EnterAsync(
+            "blocking-run",
+            accountId,
+            "blocking-project",
+            "chapter2-bootstrap");
+        var runner = new FakeHostedProcessRunner([
+            new HostedProcessResult(0, "should not run\n", "")
+        ]);
+        var service = new Chapter2BootstrapService(
+            store,
+            options,
+            runner,
+            new Chapter2BootstrapCommandBuilder(options),
+            new ProjectHealthArtifactIndexer(),
+            new ProjectWorkspaceSeeder(options),
+            projectCreationRunnerQueue: projectCreationQueue);
+
+        var runTask = service.RunAsync(accountId, projectId);
+        var runId = await WaitForRunIdAsync(store, projectId, "chapter2-bootstrap");
+
+        var cancelResult = await store.CancelRunAsync(accountId, runId);
+        await queueBlocker.DisposeAsync();
+        var act = () => runTask;
+
+        cancelResult.Should().Be(RunCancelResult.Cancelled);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        runner.CallCount.Should().Be(0);
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("cancel");
+        run.StartedUtc.Should().BeNull();
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -219,6 +262,27 @@ public sealed class Chapter2BootstrapServiceTests
             runner,
             new Chapter2BootstrapCommandBuilder(options),
             new ProjectHealthArtifactIndexer());
+    }
+
+    private static async Task<string> WaitForRunIdAsync(
+        PhaseAMetadataStore store,
+        string projectId,
+        string runType)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            var run = (await store.ListRunsForProjectAsync(projectId))
+                .FirstOrDefault(candidate => string.Equals(candidate.RunType, runType, StringComparison.Ordinal));
+            if (run is not null)
+            {
+                return run.RunId;
+            }
+
+            await Task.Delay(20);
+        }
+
+        throw new TimeoutException($"Timed out waiting for {runType} run.");
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)

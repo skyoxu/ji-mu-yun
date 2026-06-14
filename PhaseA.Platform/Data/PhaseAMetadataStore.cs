@@ -1524,12 +1524,29 @@ public sealed class PhaseAMetadataStore
             SET status = 'running',
                 started_utc = $started_utc,
                 queue_position_at_start = $queue_position_at_start
-            WHERE id = $id;
+            WHERE id = $id
+              AND status = 'queued';
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$started_utc", DateTimeOffset.UtcNow.ToString("O"));
         command.Parameters.AddWithValue("$queue_position_at_start", (object?)queuePositionAtStart ?? DBNull.Value);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken);
+        if (updated > 0)
+        {
+            return;
+        }
+
+        var status = await GetRunStatusAsync(connection, runId, cancellationToken);
+        if (string.Equals(status, "cancel", StringComparison.Ordinal))
+        {
+            var projectId = await GetRunProjectIdAsync(connection, runId, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(projectId))
+            {
+                await ReleaseRunnerLockForRunAsync(connection, projectId, runId, cancellationToken);
+            }
+
+            throw new OperationCanceledException($"Run {runId} was cancelled before it started.");
+        }
     }
 
     public async Task UpdateRunProgressAsync(
@@ -1550,7 +1567,8 @@ public sealed class PhaseAMetadataStore
                 progress_substep = $progress_substep,
                 progress_label = $progress_label,
                 progress_updated_utc = $progress_updated_utc
-            WHERE id = $id;
+            WHERE id = $id
+              AND status <> 'cancel';
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$progress_step", step);
@@ -1586,7 +1604,8 @@ public sealed class PhaseAMetadataStore
                 stdout_text = $stdout_text,
                 stderr_text = $stderr_text,
                 evidence_json = $evidence_json
-            WHERE id = $id;
+            WHERE id = $id
+              AND status <> 'cancel';
             """;
         command.Parameters.AddWithValue("$id", runId);
         command.Parameters.AddWithValue("$status", status);
@@ -1595,11 +1614,77 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$stdout_text", stdoutText);
         command.Parameters.AddWithValue("$stderr_text", stderrText);
         command.Parameters.AddWithValue("$evidence_json", evidenceJson);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken);
+
+        if (updated > 0)
+        {
+            await UpsertRunDurationMetricAsync(connection, transaction, runId, finishedUtc, cancellationToken);
+            await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<RunCancelResult> CancelRunAsync(
+        string accountId,
+        string runId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var existing = await GetRunForAccountAsync(connection, accountId, runId, cancellationToken);
+        if (existing is null)
+        {
+            return RunCancelResult.NotFound;
+        }
+
+        if (!string.Equals(existing.Status, "queued", StringComparison.Ordinal) &&
+            !string.Equals(existing.Status, "running", StringComparison.Ordinal))
+        {
+            return RunCancelResult.NotActive;
+        }
+
+        var finishedUtc = DateTimeOffset.UtcNow.ToString("O");
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var evidenceJson = JsonSerializer.Serialize(new
+        {
+            cancelled_by_user = true,
+            cancelled_utc = finishedUtc
+        });
+        var updated = await TryCancelRunWithStatusAsync(connection, transaction, runId, "queued", finishedUtc, evidenceJson, cancellationToken);
+        var releaseQueuedLock = updated > 0;
+        if (updated == 0)
+        {
+            updated = await TryCancelRunWithStatusAsync(connection, transaction, runId, "running", finishedUtc, evidenceJson, cancellationToken);
+        }
+
+        if (updated == 0)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return RunCancelResult.NotActive;
+        }
+
+        if (releaseQueuedLock)
+        {
+            await using var lockCommand = connection.CreateCommand();
+            lockCommand.Transaction = transaction;
+            lockCommand.CommandText =
+                """
+                DELETE FROM runner_locks
+                WHERE project_id = $project_id
+                  AND run_id = $run_id;
+                """;
+            lockCommand.Parameters.AddWithValue("$project_id", existing.ProjectId);
+            lockCommand.Parameters.AddWithValue("$run_id", runId);
+            await lockCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
 
         await UpsertRunDurationMetricAsync(connection, transaction, runId, finishedUtc, cancellationToken);
         await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        return RunCancelResult.Cancelled;
     }
 
     public async Task AddArtifactAsync(ArtifactCreationCommand create, CancellationToken cancellationToken = default)
@@ -1670,6 +1755,128 @@ public sealed class PhaseAMetadataStore
         }
 
         return ReadRunSnapshot(reader);
+    }
+
+    private static async Task<RunSnapshot?> GetRunForAccountAsync(
+        SqliteConnection connection,
+        string accountId,
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                r.id,
+                r.project_id,
+                r.workspace_id,
+                r.run_type,
+                r.status,
+                r.created_utc,
+                r.started_utc,
+                r.finished_utc,
+                r.queue_position_at_start,
+                r.exit_code,
+                r.stdout_text,
+                r.stderr_text,
+                r.evidence_json,
+                r.progress_step,
+                r.progress_substep,
+                r.progress_label,
+                r.progress_updated_utc,
+                r.llm_gateway,
+                r.llm_request_id,
+                r.llm_model,
+                r.llm_cost_json
+            FROM runs r
+            INNER JOIN projects p ON p.id = r.project_id
+            WHERE r.id = $run_id
+              AND p.account_id = $account_id;
+            """;
+        command.Parameters.AddWithValue("$run_id", runId);
+        command.Parameters.AddWithValue("$account_id", accountId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadRunSnapshot(reader) : null;
+    }
+
+    private static async Task<string?> GetRunStatusAsync(
+        SqliteConnection connection,
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT status FROM runs WHERE id = $id;";
+        command.Parameters.AddWithValue("$id", runId);
+        var value = await command.ExecuteScalarAsync(cancellationToken);
+        return value as string;
+    }
+
+    private static async Task<string?> GetRunProjectIdAsync(
+        SqliteConnection connection,
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT project_id FROM runs WHERE id = $id;";
+        command.Parameters.AddWithValue("$id", runId);
+        var value = await command.ExecuteScalarAsync(cancellationToken);
+        return value as string;
+    }
+
+    private static async Task ReleaseRunnerLockForRunAsync(
+        SqliteConnection connection,
+        string projectId,
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            DELETE FROM runner_locks
+            WHERE project_id = $project_id
+              AND run_id = $run_id;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$run_id", runId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task<int> TryCancelRunWithStatusAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string runId,
+        string expectedStatus,
+        string finishedUtc,
+        string evidenceJson,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            UPDATE runs
+            SET status = 'cancel',
+                finished_utc = $finished_utc,
+                exit_code = 499,
+                stdout_text = COALESCE(stdout_text, ''),
+                stderr_text = CASE
+                    WHEN stderr_text IS NULL OR stderr_text = '' THEN 'Cancelled by user.'
+                    ELSE stderr_text || CHAR(10) || 'Cancelled by user.'
+                END,
+                evidence_json = $evidence_json,
+                progress_step = 'cancel',
+                progress_substep = 'user_cancelled',
+                progress_label = '用户已取消当前 run。',
+                progress_updated_utc = $finished_utc
+            WHERE id = $id
+              AND status = $expected_status;
+            """;
+        command.Parameters.AddWithValue("$id", runId);
+        command.Parameters.AddWithValue("$expected_status", expectedStatus);
+        command.Parameters.AddWithValue("$finished_utc", finishedUtc);
+        command.Parameters.AddWithValue("$evidence_json", evidenceJson);
+        return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<RunSnapshot>> ListRunsForProjectAsync(string projectId, CancellationToken cancellationToken = default)

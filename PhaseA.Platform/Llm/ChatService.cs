@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Skills;
 using PhaseA.Platform.Workspaces;
 
@@ -26,6 +27,7 @@ public sealed class ChatService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly ChatConcurrencyLimiter _concurrencyLimiter;
+    private readonly RunCancellationService _runCancellation;
 
     public ChatService(
         PhaseAMetadataStore metadataStore,
@@ -48,7 +50,8 @@ public sealed class ChatService
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
         ILlmRouteEngine? llmRouteEngine = null,
-        ChatConcurrencyLimiter? concurrencyLimiter = null)
+        ChatConcurrencyLimiter? concurrencyLimiter = null,
+        RunCancellationService? runCancellation = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -59,6 +62,7 @@ public sealed class ChatService
         _workspaceSeeder = workspaceSeeder;
         _skillActionCatalog = skillActionCatalog;
         _concurrencyLimiter = concurrencyLimiter ?? new ChatConcurrencyLimiter();
+        _runCancellation = runCancellation ?? new RunCancellationService();
     }
 
     public async Task<ChatResult> SendAsync(string accountId, string projectId, ChatRequest request, CancellationToken cancellationToken = default)
@@ -137,11 +141,15 @@ public sealed class ChatService
 
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+        var runToken = runCancellation.Token;
 
-        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, cancellationToken);
+        try
+        {
+        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, runToken);
         var memorySummary = memory?.MemorySummary;
         var messages = BuildMessages(request, memorySummary);
-        var completion = await _chatClient.CompleteAsync(binding, token, model, messages, cancellationToken);
+        var completion = await _chatClient.CompleteAsync(binding, token, model, messages, runToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var exitCode = completion.Succeeded ? 0 : 1;
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
@@ -157,23 +165,32 @@ public sealed class ChatService
             history_count = Math.Min(request.History?.Count ?? 0, MaxHistoryMessages),
             memory_chars = memorySummary?.Length ?? 0
         });
-        await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
+        await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
             binding.GatewayProvider,
             completion.RequestId,
             model,
             LlmStopLossService.BuildCostJson(estimate, stopLoss),
-            cancellationToken);
+            CancellationToken.None);
 
         if (completion.Succeeded &&
             !string.IsNullOrWhiteSpace(sanitizedAssistantMessage) &&
             ShouldUpdateProjectChatMemory(request))
         {
-            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, completion.RequestId, cancellationToken);
+            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, completion.RequestId, CancellationToken.None);
         }
 
         return new ChatResult(runId, status, exitCode, sanitizedAssistantMessage, completion.FailureCode, model);
+        }
+        catch (OperationCanceledException) when (_runCancellation.IsCancellationRequested(runId))
+        {
+            return new ChatResult(runId, "cancel", 499, "", "cancel", model);
+        }
+        finally
+        {
+            _runCancellation.Unregister(runId);
+        }
     }
 
     private async Task<ChatResult> CompleteWithCodexAsync(
@@ -184,10 +201,14 @@ public sealed class ChatService
     {
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+        var runToken = runCancellation.Token;
 
+        try
+        {
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var skillAction = ResolveSkillAction(request.SkillActionId);
-        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, cancellationToken);
+        var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, runToken);
         var memorySummary = memory?.MemorySummary;
         var prompt = BuildCodexPrompt(project, request, skillAction, memorySummary);
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -198,7 +219,7 @@ public sealed class ChatService
                 prompt,
                 null,
                 project.AccountId),
-            cancellationToken);
+            runToken);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";
@@ -216,7 +237,7 @@ public sealed class ChatService
             memory_chars = memorySummary?.Length ?? 0,
             failure_code = completion.FailureCode
         });
-        await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, stdout, stderr, evidenceJson, cancellationToken);
+        await _metadataStore.CompleteRunAsync(runId, status, completion.ExitCode, stdout, stderr, evidenceJson, CancellationToken.None);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
             "codex-cli",
@@ -229,16 +250,25 @@ public sealed class ChatService
                 runType: RunType,
                 projectId: project.ProjectId,
                 providerBilling: completion.RawResult?.ProviderBilling),
-            cancellationToken);
+            CancellationToken.None);
 
         if (completion.Succeeded &&
             !string.IsNullOrWhiteSpace(sanitizedAssistantMessage) &&
             ShouldUpdateProjectChatMemory(request))
         {
-            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, null, cancellationToken);
+            await UpdateProjectChatMemoryAsync(project, request, sanitizedAssistantMessage, null, CancellationToken.None);
         }
 
         return new ChatResult(runId, status, completion.ExitCode, sanitizedAssistantMessage, completion.FailureCode, model);
+        }
+        catch (OperationCanceledException) when (_runCancellation.IsCancellationRequested(runId))
+        {
+            return new ChatResult(runId, "cancel", 499, "", "cancel", model);
+        }
+        finally
+        {
+            _runCancellation.Unregister(runId);
+        }
     }
 
     private static string EnsureChatPromptWorkspace(ProjectSnapshot project)

@@ -66,6 +66,7 @@ public sealed partial class ProjectAssetInventoryService
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly RunCancellationService _runCancellation;
 
     public ProjectAssetInventoryService(
         PhaseAMetadataStore metadataStore,
@@ -81,13 +82,15 @@ public sealed partial class ProjectAssetInventoryService
         ICodexChatClient codexChatClient,
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        RunCancellationService? runCancellation = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _runCancellation = runCancellation ?? new RunCancellationService();
     }
 
     public async Task<ProjectAssetInventoryResult?> GetInventoryAsync(
@@ -247,6 +250,8 @@ public sealed partial class ProjectAssetInventoryService
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
+        using var runCancellation = _runCancellation.CreateLinkedTokenSource(runId, cancellationToken);
+        var runToken = runCancellation.Token;
         try
         {
             var normalizedModel = PrototypeModelPolicy.Normalize(model);
@@ -260,7 +265,7 @@ public sealed partial class ProjectAssetInventoryService
                     null,
                     project.AccountId,
                     RequireJsonObject: true),
-                cancellationToken);
+                runToken);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded
                 ? ApplyLlmJudgement(candidates, completion.JsonObjectText ?? completion.AssistantMessage, out judgementFailureCode)
@@ -281,7 +286,7 @@ public sealed partial class ProjectAssetInventoryService
                 completion.AssistantMessage ?? "",
                 completion.Stderr + completion.Stdout,
                 evidenceJson,
-                cancellationToken);
+                CancellationToken.None);
             await _metadataStore.RecordRunLlmAuditAsync(
                 runId,
                 "codex-cli",
@@ -296,11 +301,16 @@ public sealed partial class ProjectAssetInventoryService
                     failureCode: completion.FailureCode ?? judgementFailureCode,
                     exitCode: completion.ExitCode,
                     providerBilling: rawCompletion?.ProviderBilling),
-                cancellationToken);
+                CancellationToken.None);
             return judged;
+        }
+        catch (OperationCanceledException) when (_runCancellation.IsCancellationRequested(runId))
+        {
+            return candidates.Select(candidate => candidate with { LlmJudgementStatus = "cancel" }).ToArray();
         }
         finally
         {
+            _runCancellation.Unregister(runId);
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
     }

@@ -5,9 +5,20 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class HostedProcessRunner : IHostedProcessRunner
 {
+    private readonly RunCancellationService _runCancellation;
+
+    public HostedProcessRunner(RunCancellationService? runCancellation = null)
+    {
+        _runCancellation = runCancellation ?? new RunCancellationService();
+    }
+
     public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
+        using var linkedCancellation = string.IsNullOrWhiteSpace(command.RunId)
+            ? null
+            : _runCancellation.CreateLinkedTokenSource(command.RunId, cancellationToken);
+        var effectiveCancellationToken = linkedCancellation?.Token ?? cancellationToken;
 
         var startInfo = new ProcessStartInfo
         {
@@ -55,19 +66,19 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             }
         };
 
-        process.Start();
-        if (command.StandardInput is not null)
-        {
-            await process.StandardInput.WriteAsync(command.StandardInput);
-            await process.StandardInput.FlushAsync(cancellationToken);
-            process.StandardInput.Close();
-        }
-
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
         try
         {
-            await process.WaitForExitAsync(cancellationToken);
+            process.Start();
+            if (command.StandardInput is not null)
+            {
+                await process.StandardInput.WriteAsync(command.StandardInput);
+                await process.StandardInput.FlushAsync(effectiveCancellationToken);
+                process.StandardInput.Close();
+            }
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            await process.WaitForExitAsync(effectiveCancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -84,6 +95,13 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             }
 
             throw;
+        }
+        finally
+        {
+            if (!string.IsNullOrWhiteSpace(command.RunId))
+            {
+                _runCancellation.Unregister(command.RunId);
+            }
         }
 
         return new HostedProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());

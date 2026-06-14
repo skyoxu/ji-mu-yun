@@ -134,7 +134,6 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-step-button.fix .v2-step-mark { background: #b73732; }
                 body.v2-detail .v2-step-button.continue .v2-step-mark { width: auto; height: auto; background: transparent; color: #15905f; font-size: 1.2rem; letter-spacing: 0.08rem; line-height: 1; }
                 body.v2-detail .v2-summary-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.7rem; }
-                body.v2-detail .v2-next { margin-top: 0.7rem; }
                 body.v2-detail .v2-left-spacer { height: 50px; }
                 body.v2-detail .v2-left-title { margin: 0 0 0.55rem; font-size: 1rem; }
                 body.v2-detail .v2-left-projects { display: grid; gap: 0.35rem; }
@@ -241,7 +240,6 @@ public sealed class BrowserUiRenderer
                   <section id="v2ProgressShell" class="stack">
                     <h2 class="v2-left-title">原型工程列表</h2>
                     <div id="v2ProgressSteps" class="v2-progress-row"></div>
-                    <div class="card v2-next"><strong>下一步建议</strong><p id="v2NextSuggestion" class="muted">点击按钮后扫描项目进度并给出下一步建议。</p><button id="v2JudgeNextStep" class="ghost" type="button">扫描项目判断下一步建议</button></div>
                   </section>
                   <section id="currentProjectPanel" class="stack">
                   """;
@@ -460,6 +458,12 @@ public sealed class BrowserUiRenderer
                   if (activeTab?.panelId) {
                     show(activeTab.panelId);
                   }
+                }
+                function v2ShowChatTab() {
+                  v2ActiveTabId = "chat";
+                  v2RenderTabs();
+                  v2ApplySelectedStepVisibility();
+                  v2RenderProgress();
                 }
                 function v2ShowStep(stepId, userInitiated = false) {
                   if (userInitiated) {
@@ -719,7 +723,6 @@ public sealed class BrowserUiRenderer
                 async function v2ValidatePrototypeIfAllowed() {
                   const reason = v2PrototypeAcceptanceBlockReason();
                   if (reason) {
-                    $("v2NextSuggestion").textContent = reason;
                     const status = $("v2AcceptanceActionStatus");
                     if (status) {
                       status.className = "card muted";
@@ -845,8 +848,18 @@ public sealed class BrowserUiRenderer
                     advancedPlanning.title = "激活高级策划模式，帮助梳理玩法、GDD、机制、叙事与原型设计建议";
                     advancedPlanning.onclick = v2ToggleAdvancedPlanningMode;
                   }
+                  let nextStepButton = $("v2JudgeNextStep");
+                  if (!nextStepButton) {
+                    nextStepButton = document.createElement("button");
+                    nextStepButton.id = "v2JudgeNextStep";
+                    nextStepButton.type = "button";
+                    nextStepButton.className = "ghost";
+                    nextStepButton.textContent = "下一步建议";
+                    nextStepButton.title = "扫描当前项目状态，并在聊天窗口显示系统下一步建议";
+                    nextStepButton.onclick = v2JudgeNextStepLocally;
+                  }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
-                  [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, nextStepButton, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   v2RenderAdvancedPlanningMode();
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
                   $("chatMessage").addEventListener("input", resizeChatComposer);
@@ -1016,7 +1029,8 @@ public sealed class BrowserUiRenderer
                   const button = $("v2JudgeNextStep");
                   button.disabled = true;
                   button.textContent = "扫描中...";
-                  $("v2NextSuggestion").textContent = "正在扫描项目状态...";
+                  v2ShowChatTab();
+                  const thinking = startChatThinkingMessage("正在扫描项目状态...");
                   const withTimeout = (promise, label, timeoutMs = 8000) => {
                     let timeoutId;
                     const timeout = new Promise((_, reject) => {
@@ -1036,16 +1050,18 @@ public sealed class BrowserUiRenderer
                     const failed = results
                       .map((result, index) => result.status === "rejected" ? ["运行记录", "原型进度", "迭代计划", "修复计划", "项目文件包", "素材清单"][index] : "")
                       .filter(Boolean);
-                    $("v2NextSuggestion").textContent = v2BuildLocalNextStepSuggestion();
+                    let suggestion = v2BuildLocalNextStepSuggestion();
                     if (failed.length) {
-                      $("v2NextSuggestion").textContent += `\n\n提示：${failed.join("、")}读取超时或失败，已基于当前缓存状态生成建议。`;
+                      suggestion += `\n\n提示：${failed.join("、")}读取超时或失败，已基于当前缓存状态生成建议。`;
                     }
+                    thinking.complete(`系统扫描结果：\n\n${suggestion}`, false, "next-step-scan");
                   } catch (error) {
-                    $("v2NextSuggestion").textContent = "项目状态扫描失败，请稍后重试或先刷新页面。";
+                    const failure = "项目状态扫描失败，请稍后重试或先刷新页面。";
+                    thinking.complete(failure, true, "next-step-scan");
                     showError(error);
                   } finally {
                     button.disabled = false;
-                    button.textContent = "扫描项目判断下一步建议";
+                    button.textContent = "下一步建议";
                   }
                 }
                 function v2RenderProgress() {
@@ -1126,7 +1142,7 @@ public sealed class BrowserUiRenderer
                 v2ArrangeChatPanel();
                 v2EnsureContentGrid();
                 v2InstallFastTooltips();
-                $("v2JudgeNextStep").onclick = v2JudgeNextStepLocally;
+                if ($("v2JudgeNextStep")) $("v2JudgeNextStep").onclick = v2JudgeNextStepLocally;
                 setInterval(v2RenderProgress, 2000);
               </script>
             </body>
@@ -1381,7 +1397,8 @@ public sealed class BrowserUiRenderer
                   transform: translateX(-50%);
                   display: flex;
                   align-items: center;
-                  justify-content: center;
+                  justify-content: space-between;
+                  gap: 0.75rem;
                   border: 1px solid var(--accent-2);
                   background: #fff8e6;
                   border-radius: 0.9rem;
@@ -1394,6 +1411,8 @@ public sealed class BrowserUiRenderer
                   overflow-wrap: anywhere;
                   pointer-events: auto;
                 }
+                .busy-banner > span { flex: 1; }
+                .busy-banner button { flex: 0 0 auto; padding: 0.45rem 0.8rem; }
                 .modal-backdrop {
                   position: fixed;
                   inset: 0;
@@ -2548,8 +2567,10 @@ public sealed class BrowserUiRenderer
                       return token;
                     })
                     .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
-                    .replace(/[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
-                    .replace(/(?<![\w.])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
+                    .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
+                    .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
+                    .replace(/\b(?:projectId|runId|accountId|ticket|embedded)=[^\s`'"，。；：、）)<]+/gi, "")
+                    .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
                     .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
                     .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
                     .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
@@ -2559,10 +2580,10 @@ public sealed class BrowserUiRenderer
                     .trim();
                 }
 
-                function startChatThinkingMessage() {
+                function startChatThinkingMessage(initialContent = null) {
                   const id = `pending-${Date.now()}-${Math.random().toString(16).slice(2)}`;
                   let index = 0;
-                  const message = { role: "assistant", content: chatThinkingPrompts[index], pending: true, pendingId: id };
+                  const message = { role: "assistant", content: initialContent || chatThinkingPrompts[index], pending: true, pendingId: id };
                   state.chatHistory.push(message);
                   renderChatHistory();
                   const timer = setInterval(() => {
@@ -2572,20 +2593,21 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     index = (index + 1) % chatThinkingPrompts.length;
-                    pending.content = chatThinkingPrompts[index];
+                    pending.content = initialContent || chatThinkingPrompts[index];
                     renderChatHistory();
                   }, 5000);
                   return {
-                    complete(content, failed = false) {
+                    complete(content, failed = false, kind = null) {
                       clearInterval(timer);
                       const pending = state.chatHistory.find(item => item.pendingId === id);
                       if (pending) {
                         pending.content = content;
                         pending.pending = false;
                         delete pending.pendingId;
+                        if (kind) pending.kind = kind;
                         if (failed) pending.failed = true;
                       } else {
-                        state.chatHistory.push({ role: "assistant", content, failed });
+                        state.chatHistory.push({ role: "assistant", content, failed, kind });
                       }
                       renderChatHistory();
                       saveChatHistoryForProject();
@@ -4195,6 +4217,22 @@ public sealed class BrowserUiRenderer
                   applyGlobalBusyState(message);
                 }
 
+                function renderActiveRunBanner(message) {
+                  const banner = $("activeRunBanner");
+                  banner.replaceChildren();
+                  const text = document.createElement("span");
+                  text.textContent = message;
+                  banner.appendChild(text);
+                  if (state.activeRun?.runId) {
+                    const cancelButton = document.createElement("button");
+                    cancelButton.type = "button";
+                    cancelButton.className = "ghost danger";
+                    cancelButton.textContent = "\u53d6\u6d88";
+                    cancelButton.onclick = cancelActiveRun;
+                    banner.appendChild(cancelButton);
+                  }
+                }
+
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
@@ -4215,10 +4253,33 @@ public sealed class BrowserUiRenderer
                   }
                   if (busy) {
                     $("activeRunBanner").classList.remove("hidden");
-                    $("activeRunBanner").textContent = state.activeRun?.busy ? activeRunText(state.activeRun) : message;
+                    renderActiveRunBanner(state.activeRun?.busy ? activeRunText(state.activeRun) : message);
                   } else {
                     $("activeRunBanner").classList.add("hidden");
-                    $("activeRunBanner").textContent = "";
+                    $("activeRunBanner").replaceChildren();
+                  }
+                }
+
+                async function cancelActiveRun() {
+                  const runId = state.activeRun?.runId;
+                  if (!runId) return;
+                  if (!confirm("\u786e\u5b9a\u8981\u53d6\u6d88\u5f53\u524d run \u5417\uff1f")) return;
+                  try {
+                    await api(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST", body: "{}" });
+                    state.activeRun = null;
+                    out("\u5f53\u524d run \u5df2\u53d6\u6d88\u3002");
+                    await refreshActiveRun();
+                    if (state.projectId) {
+                      await Promise.allSettled([
+                        loadRuns(),
+                        loadPrototypeProgress(),
+                        refreshAssetInventoryAvailability(),
+                        refreshGddOutlineStatus()
+                      ]);
+                    }
+                  } catch (error) {
+                    showError(error);
+                    await refreshActiveRun();
                   }
                 }
 
@@ -4944,6 +5005,14 @@ public sealed class BrowserUiRenderer
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
                 $("chatSkillMode").onchange = renderSelectedSkillAction;
+                window.addEventListener("message", event => {
+                  if (event.origin !== location.origin) return;
+                  if (event.data?.type !== "phasea:gdd-outline-deleted") return;
+                  if (event.data?.projectId && event.data.projectId !== state.projectId) return;
+                  state.gddOutlineReady = false;
+                  if ($("createGddDocument")) $("createGddDocument").textContent = "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                  refreshGddOutlineStatus();
+                });
                 renderChatHistory();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
@@ -5178,7 +5247,10 @@ public sealed class BrowserUiRenderer
                     <h1>&#31574;&#21010;&#22823;&#32434;</h1>
                     <p id="meta" class="muted">&#27491;&#22312;&#35835;&#21462;&#31574;&#21010;&#22823;&#32434;...</p>
                   </div>
-                  <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
+                  <div class="row">
+                    <button id="deleteGddOutline" class="ghost" type="button">&#21024;&#38500;&#31574;&#21010;&#22823;&#32434;</button>
+                    <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
+                  </div>
                 </header>
                 <section>
                   <h2 id="title">-</h2>
@@ -5227,7 +5299,9 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 function renderOutline() {
-                  $("meta").textContent = `${outline.relativePath || "docs/gdd/gdd-outline.json"} - ${outline.lastUpdatedUtc || ""}`;
+                  $("meta").textContent = `已载入策划大纲${outline.lastUpdatedUtc ? ` · ${outline.lastUpdatedUtc}` : ""}`;
+                  $("deleteGddOutline").disabled = false;
+                  $("exportGddMarkdown").disabled = false;
                   $("title").textContent = outline.title || "\u7b56\u5212\u5927\u7eb2";
                   $("summary").textContent = outline.summary || "";
                   $("sections").innerHTML = (outline.sections || []).map(section => `
@@ -5255,7 +5329,7 @@ public sealed class BrowserUiRenderer
                   if (!selectedSection) return;
                   const button = $("generateSection");
                   button.disabled = true;
-                  button.textContent = "&#29983;&#25104;&#20013;...";
+                  button.textContent = "\u751f\u6210\u4e2d...";
                   try {
                     await api(`/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(selectedSection.id)}`, { method:"POST", body: JSON.stringify({ message: $("editorMessage").value, model: localStorage.getItem("phaseASelectedModel") || null }) });
                     outline = await api(`/api/projects/${projectId}/gdd/outline`);
@@ -5266,13 +5340,13 @@ public sealed class BrowserUiRenderer
                     alert(error?.payload?.summary || error?.payload?.error || "generate_failed");
                   } finally {
                     button.disabled = false;
-                    button.textContent = "&#29983;&#25104;&#20855;&#20307;&#20869;&#23481;";
+                    button.textContent = "\u751f\u6210\u5177\u4f53\u5185\u5bb9";
                   }
                 }
                 async function exportGddMarkdown() {
                   const button = $("exportGddMarkdown");
                   button.disabled = true;
-                  button.textContent = "&#23548;&#20986;&#20013;...";
+                  button.textContent = "\u5bfc\u51fa\u4e2d...";
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd/outline/export`, { method:"POST", body:"{}" });
                     window.open(result.downloadPageUrl || `/downloads?projectId=${encodeURIComponent(projectId)}`, "_blank", "noreferrer");
@@ -5280,12 +5354,41 @@ public sealed class BrowserUiRenderer
                     alert(error?.payload?.error || "export_failed");
                   } finally {
                     button.disabled = false;
-                    button.textContent = "&#23548;&#20986;&#20026; GDD.md";
+                    button.textContent = "\u5bfc\u51fa\u4e3a GDD.md";
+                  }
+                }
+                function notifyOutlineDeleted() {
+                  try {
+                    window.parent?.postMessage?.({ type: "phasea:gdd-outline-deleted", projectId }, location.origin);
+                    const parentButton = window.parent?.document?.getElementById?.("createGddDocument");
+                    if (parentButton) parentButton.textContent = "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                  } catch {}
+                }
+                async function deleteGddOutline() {
+                  if (!confirm("\u786e\u5b9a\u8981\u5220\u9664\u73b0\u6709\u7b56\u5212\u5927\u7eb2\u6846\u67b6\u5417\uff1f")) return;
+                  const button = $("deleteGddOutline");
+                  button.disabled = true;
+                  button.textContent = "\u5220\u9664\u4e2d...";
+                  try {
+                    await api(`/api/projects/${projectId}/gdd/outline`, { method:"DELETE" });
+                    outline = null;
+                    $("meta").textContent = "\u7b56\u5212\u5927\u7eb2\u5df2\u5220\u9664\uff0c\u53ef\u56de\u5230\u804a\u5929\u754c\u9762\u91cd\u65b0\u521b\u5efa\u3002";
+                    $("title").textContent = "\u5c1a\u672a\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                    $("summary").textContent = "";
+                    $("sections").innerHTML = "<p class='muted'>\u7b56\u5212\u5927\u7eb2\u5df2\u5220\u9664\u3002</p>";
+                    $("exportGddMarkdown").disabled = true;
+                    notifyOutlineDeleted();
+                  } catch (error) {
+                    alert(error?.payload?.error || "delete_failed");
+                    button.disabled = false;
+                  } finally {
+                    button.textContent = "\u5220\u9664\u7b56\u5212\u5927\u7eb2";
                   }
                 }
                 $("closeEditor").onclick = () => $("editor").close();
                 $("generateSection").onclick = generateSection;
                 $("exportGddMarkdown").onclick = exportGddMarkdown;
+                $("deleteGddOutline").onclick = deleteGddOutline;
                 loadOutline();
               </script>
             </body>

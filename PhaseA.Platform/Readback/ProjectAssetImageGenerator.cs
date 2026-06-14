@@ -89,7 +89,7 @@ public sealed class ProjectAssetImageGenerator
             });
 
         var stopwatch = Stopwatch.StartNew();
-        var process = await _processRunner.RunAsync(command, cancellationToken);
+        var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
         stopwatch.Stop();
 
         var generatedImagePaths = Directory.EnumerateFiles(outputAbsoluteDirectory, "*", SearchOption.TopDirectoryOnly)
