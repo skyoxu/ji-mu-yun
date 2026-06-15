@@ -190,7 +190,7 @@ public sealed class ChatServiceTests
             {
                 new ChatMessage("user", "normal-1"),
                 new ChatMessage("assistant", "normal-2"),
-                new ChatMessage("assistant", "系统扫描结果：\n\n项目状态摘要\n\n推荐 run：下载项目文件\n系统不会自动启动 run。需要你点击下方一次性按钮确认。"),
+                new ChatMessage("assistant", "系统扫描结果：\n\n项目状态摘要\n\n推荐页面：下载项目文件\n系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。"),
                 new ChatMessage("user", "normal-3")
             };
 
@@ -201,7 +201,7 @@ public sealed class ChatServiceTests
             client.LastMessages.Should().Contain(message => message.Content == "normal-2");
             client.LastMessages.Should().Contain(message => message.Content == "normal-3");
             client.LastMessages.Should().NotContain(message => message.Content.Contains("系统扫描结果", StringComparison.Ordinal));
-            client.LastMessages.Should().NotContain(message => message.Content.Contains("推荐 run", StringComparison.Ordinal));
+            client.LastMessages.Should().NotContain(message => message.Content.Contains("推荐页面", StringComparison.Ordinal));
         }
         finally
         {

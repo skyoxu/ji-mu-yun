@@ -519,7 +519,9 @@ public sealed class ChatService
         var content = message.Content.Trim();
         return !content.StartsWith("系统扫描结果：", StringComparison.Ordinal) &&
                !content.Contains("系统不会自动启动 run。需要你点击下方一次性按钮确认。", StringComparison.Ordinal) &&
-               !content.Contains("推荐 run：", StringComparison.Ordinal);
+               !content.Contains("系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。", StringComparison.Ordinal) &&
+               !content.Contains("推荐 run：", StringComparison.Ordinal) &&
+               !content.Contains("推荐页面：", StringComparison.Ordinal);
     }
 
     private async Task UpdateProjectChatMemoryAsync(

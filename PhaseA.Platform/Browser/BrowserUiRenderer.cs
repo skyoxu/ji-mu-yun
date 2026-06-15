@@ -1022,8 +1022,8 @@ public sealed class BrowserUiRenderer
                   ];
                   const actions = workflowRouteActions(route);
                   if (actions.length) {
-                    lines.push("", `推荐 run：${actions.map(action => action.runName || action.label || action.actionId).join("、")}`);
-                    lines.push("系统不会自动启动 run。需要你点击下方一次性按钮确认。");
+                    lines.push("", `推荐页面：${actions.map(action => action.runName || action.label || action.actionId).join("、")}`);
+                    lines.push("系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。");
                   }
                   return lines.filter(line => line !== null && line !== undefined).join("\n").trim();
                 }
@@ -1089,13 +1089,12 @@ public sealed class BrowserUiRenderer
                   const message = state.chatHistory.find(item => item.workflowActionToken === token);
                   const action = workflowMessageActions(message).find(item => item.actionId === actionId) || workflowMessageActions(message)[0];
                   if (!message || !action || message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
-                  if (isGlobalBusy()) return out("当前有任务正在执行，请等待当前 run 完成后再启动下一步。");
                   let currentRoute = null;
                   try {
                     currentRoute = await fetchWorkflowRoute(message.workflowIntent);
                   } catch (error) {
                     showError(error);
-                    return out("无法确认当前项目进度，请重新点击“下一步建议”后再启动推荐 run。");
+                    return out("无法确认当前项目进度，请重新点击“下一步建议”后再打开推荐页面。");
                   }
                   if (message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
                   const currentActions = workflowRouteActions(currentRoute);
@@ -1111,49 +1110,39 @@ public sealed class BrowserUiRenderer
                   switch (action.actionId) {
                     case "create-prototype":
                       v2OpenStepTab("create-prototype", false);
-                      await runPrototype();
                       return;
                     case "create-repair-plan":
                       v2OpenStepTab("execute-or-repair", false);
-                      await createRepairPlan();
                       return;
                     case "execute-repair-step":
                       v2OpenStepTab("execute-or-repair", false);
-                      await executeRepairStep();
                       return;
                     case "prototype-acceptance":
                       v2OpenStepTab(action.uiTarget === "execute-or-repair" ? "execute-or-repair" : "prototype-acceptance", false);
-                      await validatePrototype();
                       return;
                     case "create-iteration-plan":
                       v2OpenStepTab("iteration-plan", false);
-                      await createIterationPlan();
                       return;
                     case "execute-iteration-goal":
                       v2OpenStepTab("iteration-plan", false);
-                      await executeIterationGoal();
                       return;
                     case "needs-fix-route":
                       v2OpenStepTab("iteration-plan", false);
-                      await executeIterationGoal();
                       return;
                     case "ui-optimization":
                       v2OpenStepTab("ui-optimization", false);
-                      await runUiOptimization();
                       return;
                     case "asset-inventory":
                       v2OpenStepTab("asset-inventory");
                       return;
                     case "package-project":
                       v2OpenStepTab("package-project", false);
-                      await createProjectPackage();
                       return;
                     case "download-project":
                       v2OpenStepTab("download-project");
                       return;
                     case "create-next-iteration-plan":
                       v2OpenStepTab("iteration-plan", false);
-                      openIterationPlanUpdateModal("new", message.workflowIntent?.feedbackSummary || "");
                       return;
                     default:
                       out(`暂不支持的推荐动作：${action.actionId}`);

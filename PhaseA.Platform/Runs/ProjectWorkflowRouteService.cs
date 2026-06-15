@@ -273,7 +273,7 @@ public sealed class ProjectWorkflowRouteService
 
         if (!string.IsNullOrWhiteSpace(playtestFeedback) && state.HasPackage)
         {
-            return "系统判断你正在描述本地试玩后的修改需求。建议进入“完成迭代计划”，基于本次试玩反馈创建新一轮迭代计划。系统不会自动启动 run；需要你点击下方一次性按钮确认。";
+            return "系统判断你正在描述本地试玩后的修改需求。建议进入“完成迭代计划”，基于本次试玩反馈创建新一轮迭代计划。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。";
         }
 
         return action.ActionId switch
@@ -290,7 +290,7 @@ public sealed class ProjectWorkflowRouteService
             "asset-inventory" => "原型验收已经通过。建议确认素材清单，检查已使用素材和可生成素材候选，必要时替换默认素材。",
             "package-project" => "素材清单状态已满足继续推进。建议打包项目文件，生成可下载的项目压缩包。",
             "download-project" => "项目文件包已经生成。建议下载压缩包并在本地 Godot 试玩；试玩结果可以发到聊天里，准备创建第二轮迭代计划。",
-            _ => $"建议执行：{action.RunName}。系统不会自动启动 run；需要你点击下方一次性按钮确认。"
+            _ => $"建议进入：{action.RunName}。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。"
         };
     }
 

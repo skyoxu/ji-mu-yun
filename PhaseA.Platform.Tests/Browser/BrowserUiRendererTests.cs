@@ -572,8 +572,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("项目状态扫描失败，请稍后重试或先刷新页面。");
         html.Should().NotContain("调用 LLM 判断下一步");
         html.Should().NotContain("v2NextSuggestionHasLlmResult");
-        html.Should().Contain("推荐 run：${actions.map(action => action.runName || action.label || action.actionId).join(\"、\")}");
-        html.Should().Contain("系统不会自动启动 run。需要你点击下方一次性按钮确认。");
+        html.Should().Contain("推荐页面：${actions.map(action => action.runName || action.label || action.actionId).join(\"、\")}");
+        html.Should().Contain("系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
         html.Should().Contain("function v2StepIconUrl(iconName)");
@@ -812,7 +812,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2OpenStepTab(\"iteration-plan\", false)");
         html.Should().Contain("v2OpenStepTab(\"ui-optimization\", false)");
         html.Should().Contain("v2OpenStepTab(\"package-project\", false)");
-        html.Should().Contain("await createProjectPackage();");
+        html.Should().NotContain("await runPrototype();");
+        html.Should().NotContain("await createIterationPlan();");
+        html.Should().NotContain("await runUiOptimization();");
+        html.Should().NotContain("await createProjectPackage();");
+        html.Should().NotContain("openIterationPlanUpdateModal(\"new\", message.workflowIntent?.feedbackSummary || \"\")");
         html.Should().Contain("data-workflow-route-action-token");
         html.Should().Contain("workflowActionToken");
         html.Should().Contain("进度已变更");
