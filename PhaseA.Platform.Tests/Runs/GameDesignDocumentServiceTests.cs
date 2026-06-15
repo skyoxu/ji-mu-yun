@@ -54,9 +54,15 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("$bmad-agent-game-designer");
         runner.Commands[0].StandardInput.Should().Contain("I want a cozy RPG loop.");
         runner.Commands[0].StandardInput.Should().Contain("Reference file says the village hub matters.");
+        runner.Commands[0].StandardInput.Should().Contain("gdd-outline.generated.json");
+        var outlineJson = await File.ReadAllTextAsync(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json"));
+        outlineJson.Should().NotContain("???");
+        outline!.Title.Should().Be("演示策划大纲");
+        outline.Sections.Should().ContainSingle(item => item.Id == "core-loop" && item.Title == "核心循环");
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd" && item.RelativePath == "docs/gdd/GDD.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline" && item.RelativePath == "docs/gdd/gdd-outline.json");
+        artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline-draft" && item.RelativePath.EndsWith("gdd-outline.generated.json", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -141,6 +147,147 @@ public sealed class GameDesignDocumentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WhenGeneratedOutlineIsGarbled_ShouldFailInsteadOfPublishingQuestionMarks()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            OutlineMode = FakeOutlineMode.GarbledDraft
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("gdd_outline_garbled_text");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("gdd_outline_garbled_text");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenGeneratedOutlineIsTooThin_ShouldFailInsteadOfPublishingPlaceholder()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            OutlineMode = FakeOutlineMode.ThinDraft
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("gdd_outline_too_thin");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("gdd_outline_too_thin");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenGeneratedOutlineUsesPlaceholderFields_ShouldFail()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            OutlineMode = FakeOutlineMode.PlaceholderDraft
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("gdd_outline_placeholder");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("gdd_outline_placeholder");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        File.Exists(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenGeneratedOutlineUsesGenericTitleWithRealSections_ShouldSucceed()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            OutlineMode = FakeOutlineMode.GenericTitleRealDraft
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("succeeded");
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        outline!.Title.Should().Be("游戏策划大纲");
+        outline.Sections.Should().Contain(section => section.Id == "core-loop" && section.Skeleton.Contains("重复行动", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task ExportOutlineMarkdownAsync_ShouldWriteGddMarkdownFromOutline()
     {
         using var workspace = new TempWorkspace();
@@ -177,6 +324,80 @@ public sealed class GameDesignDocumentServiceTests
         markdown.Should().Contain("# Demo Outline");
         markdown.Should().Contain("## Core Loop");
         markdown.Should().Contain("Explore, fight, upgrade.");
+    }
+
+    [Fact]
+    public async Task ReadOutlineAsync_WhenExistingOutlineIsGarbled_ShouldReturnSafeEmptyOutline()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "????????????",
+              "summary": "????????????????????",
+              "sections": [
+                { "id": "core-loop", "title": "????", "skeleton": "????????????????", "content": "" }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.ReadOutlineAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Title.Should().Be("策划大纲需要重新生成");
+        result.Summary.Should().Contain("连续问号乱码");
+        result.Sections.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ExportOutlineMarkdownAsync_WhenExistingOutlineIsGarbled_ShouldFail()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "????????????",
+              "summary": "????????????????????",
+              "sections": [
+                { "id": "core-loop", "title": "????", "skeleton": "????????????????", "content": "" }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var action = async () => await service.ExportOutlineMarkdownAsync(accountId, projectId);
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("GDD outline contains garbled question-mark text.");
     }
 
     [Fact]
@@ -236,24 +457,79 @@ public sealed class GameDesignDocumentServiceTests
         public List<HostedProcessCommand> Commands { get; } = [];
         public int ExitCode { get; init; }
         public bool ShouldWriteOutline { get; init; } = true;
+        public FakeOutlineMode OutlineMode { get; init; } = FakeOutlineMode.ValidDraft;
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
-            var gddDir = Path.Combine(command.WorkingDirectory, "docs", "gdd");
-            Directory.CreateDirectory(gddDir);
             if (ShouldWriteOutline)
             {
-                var outlinePath = Path.Combine(gddDir, "gdd-outline.json");
-                File.WriteAllText(outlinePath, """
-                    {
-                      "title": "Demo GDD Outline",
-                      "summary": "Generated by BMAD.",
-                      "sections": [
-                        { "id": "core-loop", "title": "Core Loop", "skeleton": "Define loop.", "content": "" }
-                      ]
-                    }
-                    """);
+                var draftRelativePath = ExtractDraftRelativePath(command.StandardInput ?? "");
+                var outlinePath = Path.Combine(command.WorkingDirectory, draftRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(outlinePath)!);
+                File.WriteAllText(outlinePath, OutlineMode switch
+                {
+                    FakeOutlineMode.GarbledDraft => """
+                        {
+                          "title": "????????????",
+                          "summary": "????????????????????",
+                          "sections": [
+                            { "id": "core-loop", "title": "????", "skeleton": "????????????????", "content": "" }
+                          ]
+                        }
+                        """,
+                    FakeOutlineMode.ThinDraft => """
+                        {
+                          "title": "\u8fc7\u8584\u7b56\u5212\u5927\u7eb2",
+                          "summary": "\u53ea\u6709\u4e00\u4e2a\u6761\u76ee\u3002",
+                          "sections": [
+                            { "id": "core-loop", "title": "\u6838\u5fc3\u5faa\u73af", "skeleton": "\u5b9a\u4e49\u73a9\u5bb6\u91cd\u590d\u884c\u52a8\u3002", "content": "" }
+                          ]
+                        }
+                        """,
+                    FakeOutlineMode.PlaceholderDraft => """
+                        {
+                          "title": "",
+                          "summary": "",
+                          "sections": [
+                            { "id": "vision", "title": "", "skeleton": "", "content": "" },
+                            { "id": "target-player", "title": "", "skeleton": "", "content": "" },
+                            { "id": "core-loop", "title": "", "skeleton": "", "content": "" },
+                            { "id": "progression", "title": "", "skeleton": "", "content": "" },
+                            { "id": "ui-hud", "title": "", "skeleton": "", "content": "" },
+                            { "id": "acceptance", "title": "", "skeleton": "", "content": "" }
+                          ]
+                        }
+                        """,
+                    FakeOutlineMode.GenericTitleRealDraft => """
+                        {
+                          "title": "\u6e38\u620f\u7b56\u5212\u5927\u7eb2",
+                          "summary": "\u805a\u7126\u4e00\u4e2a\u53ef\u73a9\u7684\u9996\u8f6e\u539f\u578b\u5faa\u73af\u3002",
+                          "sections": [
+                            { "id": "core-loop", "title": "\u6838\u5fc3\u5faa\u73af", "skeleton": "\u5b9a\u4e49\u73a9\u5bb6\u91cd\u590d\u884c\u52a8\u3001\u53cd\u9988\u548c\u80dc\u5229\u6761\u4ef6\u3002", "content": "" },
+                            { "id": "vision", "title": "\u4f53\u9a8c\u613f\u666f", "skeleton": "\u8bf4\u660e\u6e38\u620f\u60c5\u7eea\u548c\u9996\u5c4f\u4f53\u9a8c\u3002", "content": "" },
+                            { "id": "target-player", "title": "\u76ee\u6807\u73a9\u5bb6", "skeleton": "\u63cf\u8ff0\u73a9\u5bb6\u7c7b\u578b\u548c\u9884\u671f\u8282\u594f\u3002", "content": "" },
+                            { "id": "progression", "title": "\u6210\u957f\u4e0e\u5956\u52b1", "skeleton": "\u63cf\u8ff0\u80fd\u529b\u6210\u957f\u548c\u77ed\u671f\u5956\u52b1\u3002", "content": "" },
+                            { "id": "ui-hud", "title": "\u754c\u9762\u548cHUD", "skeleton": "\u5217\u51fa\u9996\u8f6e\u539f\u578b\u9700\u8981\u7684\u4fe1\u606f\u5c42\u7ea7\u3002", "content": "" },
+                            { "id": "acceptance", "title": "\u539f\u578b\u9a8c\u6536", "skeleton": "\u5b9a\u4e49\u53ef\u8fd0\u884c\u3001\u53ef\u73a9\u548c\u53ef\u9a8c\u6536\u6807\u51c6\u3002", "content": "" }
+                          ]
+                        }
+                        """,
+                    _ => """
+                        {
+                          "title": "\u6f14\u793a\u7b56\u5212\u5927\u7eb2",
+                          "summary": "\u7531 BMAD \u751f\u6210\u3002",
+                          "sections": [
+                            { "id": "core-loop", "title": "\u6838\u5fc3\u5faa\u73af", "skeleton": "\u5b9a\u4e49\u73a9\u5bb6\u91cd\u590d\u884c\u52a8\u3002", "content": "" },
+                            { "id": "vision", "title": "\u613f\u666f", "skeleton": "\u5b9a\u4e49\u6e38\u620f\u4f53\u9a8c\u76ee\u6807\u3002", "content": "" },
+                            { "id": "target-player", "title": "\u76ee\u6807\u73a9\u5bb6", "skeleton": "\u63cf\u8ff0\u6838\u5fc3\u73a9\u5bb6\u3002", "content": "" },
+                            { "id": "progression", "title": "\u6210\u957f", "skeleton": "\u63cf\u8ff0\u6210\u957f\u548c\u5956\u52b1\u3002", "content": "" },
+                            { "id": "ui-hud", "title": "\u754c\u9762", "skeleton": "\u63cf\u8ff0 UI \u548c HUD\u3002", "content": "" },
+                            { "id": "acceptance", "title": "\u9a8c\u6536", "skeleton": "\u63cf\u8ff0\u539f\u578b\u9a8c\u6536\u6807\u51c6\u3002", "content": "" }
+                          ]
+                        }
+                        """
+                });
             }
 
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
@@ -261,6 +537,28 @@ public sealed class GameDesignDocumentServiceTests
             File.WriteAllText(outputPath, "GDD created.");
             return Task.FromResult(new HostedProcessResult(ExitCode, "codex stdout", ExitCode == 0 ? "" : "codex failed"));
         }
+
+        private static string ExtractDraftRelativePath(string prompt)
+        {
+            var marker = "logs/phase-a-gdd/";
+            var index = prompt.IndexOf(marker, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                return "logs/phase-a-gdd/test/gdd-outline.generated.json";
+            }
+
+            var end = prompt.IndexOfAny(['\r', '\n'], index);
+            return (end < 0 ? prompt[index..] : prompt[index..end]).Trim();
+        }
+    }
+
+    private enum FakeOutlineMode
+    {
+        ValidDraft,
+        GarbledDraft,
+        ThinDraft,
+        PlaceholderDraft,
+        GenericTitleRealDraft
     }
 
     private sealed class UserCancelHostedProcessRunner : IHostedProcessRunner

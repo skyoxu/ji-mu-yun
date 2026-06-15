@@ -191,6 +191,9 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
                 body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
+                body.v2-detail .v2-workflow-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 0.55rem; }
+                body.v2-detail .v2-workflow-route-action { width: auto; border-radius: 999px; padding: 0.48rem 0.8rem; }
+                body.v2-detail .v2-workflow-route-action[disabled] { opacity: 0.55; cursor: not-allowed; }
                 .v2-fast-tooltip { position: fixed; z-index: 2500; max-width: min(28rem, calc(100vw - 2rem)); pointer-events: none; background: rgba(23, 33, 27, 0.94); color: #fffdf8; border-radius: 0.45rem; padding: 0.42rem 0.55rem; font-size: 0.82rem; line-height: 1.35; box-shadow: 0 0.75rem 1.8rem rgba(23, 33, 27, 0.22); opacity: 0; transform: translateY(0.15rem); transition: opacity 80ms ease, transform 80ms ease; }
                 .v2-fast-tooltip.open { opacity: 1; transform: translateY(0); }
                 body.v2-detail #v2IterationPanel,
@@ -295,7 +298,7 @@ public sealed class BrowserUiRenderer
                   v2RenderTabs();
                   v2RenderProgress();
                 }
-                function v2OpenStepTab(stepId) {
+                function v2OpenStepTab(stepId, runAction = true) {
                   const panelId = v2PanelForStep(stepId);
                   const tabId = `step:${stepId}`;
                   v2OpenTabs.set(tabId, { id: tabId, label: v2StepLabel(stepId), panelId, stepId, closable: true });
@@ -303,7 +306,7 @@ public sealed class BrowserUiRenderer
                   v2SelectedStep = stepId;
                   v2UserSelectedStep = true;
                   v2ApplySelectedStepVisibility();
-                  v2RunStepAction(stepId);
+                  if (runAction) v2RunStepAction(stepId);
                   v2RenderTabs();
                   v2RenderProgress();
                   v2RefreshAcceptanceActionState();
@@ -856,7 +859,7 @@ public sealed class BrowserUiRenderer
                     nextStepButton.className = "ghost";
                     nextStepButton.textContent = "下一步建议";
                     nextStepButton.title = "扫描当前项目状态，并在聊天窗口显示系统下一步建议";
-                    nextStepButton.onclick = v2JudgeNextStepLocally;
+                    nextStepButton.onclick = () => queryWorkflowRoute();
                   }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
                   [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, nextStepButton, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
@@ -976,93 +979,180 @@ public sealed class BrowserUiRenderer
                   const allCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
                   return { goals, hasPlan, hasNeedsFix, hasPending, allCompleted };
                 }
-                function v2BuildLocalNextStepSuggestion() {
-                  const iteration = v2IterationPlanGoalState();
-                  const validationPassed = v2PrototypeValidationPassedForPlanning();
-                  const skeletonFailed = v2StepStatus("create-prototype") === "fix";
-                  const skeletonAcceptanceFailed = v2HasFailedPrototypeAcceptance();
-                  const repairRunnable = v2RepairPlanHasRunnableStep();
-                  const repairReadyForAcceptance = v2RepairPlanCompletedOrEmpty();
-                  const acceptanceStatus = v2StepStatus("prototype-acceptance");
-                  const assetStatus = v2StepStatus("asset-inventory");
-                  const packageStatus = v2StepStatus("package-project");
-                  if (!v2HasPrototypeSkeleton()) {
-                    return skeletonFailed
-                      ? "建议：请先处理 2. 原型骨架创建。\n\n当前原型骨架创建没有成功，后续骨架验收、迭代计划、UI优化和打包都没有可靠基础。请回到 2. 原型骨架创建查看失败原因，修正后重新创建骨架。"
-                      : "\u5efa\u8bae\uff1a\u8bf7\u5148\u8fdb\u884c 2. \u539f\u578b\u9aa8\u67b6\u521b\u5efa\u3002\n\n\u5982\u679c\u4f60\u8fd8\u6ca1\u6709\u6574\u7406\u6e05\u695a\u6e38\u620f\u8bbe\u5b9a\uff0c\u53ef\u4ee5\u5148\u5728\u81ea\u7531\u804a\u5929\u7684\u80fd\u529b\u6a21\u5f0f\u4e2d\u6fc0\u6d3b\u201c\u6e38\u620f\u7b56\u5212\u5927\u5e08\u201d\uff0c\u8ba9\u5b83\u534f\u52a9\u521b\u5efa\u7b56\u5212\u5927\u7eb2\uff1b\u51c6\u5907\u597d\u540e\u518d\u56de\u5230 2. \u539f\u578b\u9aa8\u67b6\u521b\u5efa\u586b\u5199\u8868\u5355\u5e76\u542f\u52a8\u3002";
+                function buildWorkflowRouteChatContent(route, intent = null) {
+                  const lines = [
+                    "系统扫描结果：",
+                    "",
+                    route?.summary || "",
+                    "",
+                    route?.recommendation || ""
+                  ];
+                  if (intent?.routeReason) {
+                    lines.push("", `触发原因：${intent.routeReason}`);
                   }
-                  if (skeletonAcceptanceFailed || repairRunnable) {
-                    return repairRunnable
-                      ? "建议：请先进行 3. 骨架验收修复。\n\n当前修复计划里仍有待执行或需要继续修复的步骤。请在 3. 骨架验收修复中执行下一项修复；修复计划清空后，再用同一区域里的“骨架验收”按钮重新验收。"
-                      : "建议：请先进行 3. 骨架验收修复。\n\n当前骨架验收没有通过，但还没有可执行的修复步骤。请在 3. 骨架验收修复中生成修复计划，或在修复计划已完成后点击“骨架验收”重新验证。";
+                  if (route?.nextAction?.enabled && route.nextAction.actionId !== "none") {
+                    lines.push("", `推荐 run：${route.nextAction.runName || route.nextAction.label || route.nextAction.actionId}`);
+                    lines.push("系统不会自动启动 run。需要你点击下方一次性按钮确认。");
                   }
-                  if (!validationPassed && repairReadyForAcceptance && !iteration.hasPlan) {
-                    return "建议：请先进行 3. 骨架验收修复。\n\n原型骨架已经创建，但当前没有可用的骨架验收通过状态。请在 3. 骨架验收修复中点击“骨架验收”，确认骨架可运行后再生成迭代计划。";
-                  }
-                  if (!iteration.hasPlan) {
-                    return "建议：请先进行 4. 完成迭代计划。\n\n骨架验收已经通过，但当前还没有迭代计划。请在 4. 完成迭代计划中生成新的迭代计划，把游戏功能拆成可执行 step。";
-                  }
-                  if (iteration.hasNeedsFix) {
-                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划中至少有一个 step 处于 needs fix 或 failed 状态。请在 4. 完成迭代计划里继续运行对应修复，直到所有 step 都完成。";
-                  }
-                  if (iteration.hasPending || !iteration.allCompleted) {
-                    return "建议：请先进行 4. 完成迭代计划。\n\n当前迭代计划还有 pending 或 running 的 step。请继续执行下一项迭代目标；全部完成后可以直接进入原型验收，也可以先做可选的 UI 优化。";
-                  }
-                  if (acceptanceStatus !== "done" || !validationPassed) {
-                    return acceptanceStatus === "fix"
-                      ? "建议：请进行 6. 原型验收。\n\n原型验收没有通过。请先查看 6. 原型验收结果；如果确认是骨架/运行问题，再回到 3. 骨架验收修复生成或执行修复计划。"
-                      : "建议：请进行 6. 原型验收。\n\n迭代计划已经全部完成，需要重新验收原型，确认项目仍然可以运行并满足当前可玩闭环。UI 优化是可选步骤，可以在验收前或验收后执行。";
-                  }
-                  if (assetStatus !== "done") {
-                    return "建议：请进行 7. 确认素材清单。\n\n原型验收已经通过。下一步请打开 7. 确认素材清单，检查已使用素材和可生成素材候选，必要时先替换默认素材。";
-                  }
-                  if (packageStatus !== "done") {
-                    return "建议：请进行 8. 打包项目文件。\n\n素材清单已可用，下一步请点击 8. 打包项目文件，生成可下载的项目压缩包。";
-                  }
-                  if (v2HasPackages()) {
-                    return "建议：请进行 9. 下载项目文件。\n\n项目文件包已经生成。请进入下载列表下载游戏项目压缩包，在本地 Godot 中试玩和验证；试玩结果可以发到自由聊天里，用来准备下一轮迭代计划。";
-                  }
-                  return "建议：请先刷新项目状态或重新选择项目。\n\n当前页面没有读取到足够的项目状态，无法判断下一步。";
+                  return lines.filter(line => line !== null && line !== undefined).join("\n").trim();
                 }
-                async function v2JudgeNextStepLocally() {
+
+                function buildWorkflowRouteMessageExtra(route, intent = null) {
+                  invalidateWorkflowRouteAction(false);
+                  const action = route?.nextAction || null;
+                  const token = action?.enabled && action.actionId !== "none"
+                    ? `workflow-${Date.now()}-${Math.random().toString(16).slice(2)}`
+                    : "";
+                  if (token) {
+                    state.workflowRouteActionToken = token;
+                    state.workflowRouteActionConsumed = false;
+                  }
+                  return {
+                    workflowRoute: route,
+                    workflowIntent: intent,
+                    workflowAction: action,
+                    workflowActionToken: token,
+                    workflowActionConsumed: false
+                  };
+                }
+
+                function appendWorkflowRouteMessage(route, intent = null) {
+                  state.chatHistory.push({
+                    role: "assistant",
+                    kind: "workflow-route",
+                    content: buildWorkflowRouteChatContent(route, intent),
+                    ...buildWorkflowRouteMessageExtra(route, intent)
+                  });
+                  renderChatHistory();
+                  saveChatHistoryForProject();
+                }
+
+                function invalidateWorkflowRouteAction(render = true) {
+                  if (!state.workflowRouteActionToken) return;
+                  state.workflowRouteActionConsumed = true;
+                  state.chatHistory.forEach(message => {
+                    if (message.workflowActionToken === state.workflowRouteActionToken) {
+                      message.workflowActionConsumed = true;
+                    }
+                  });
+                  state.workflowRouteActionToken = "";
+                  if (render) {
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                  }
+                }
+
+                async function runWorkflowRecommendedAction(token) {
+                  const message = state.chatHistory.find(item => item.workflowActionToken === token);
+                  const action = message?.workflowAction;
+                  if (!message || !action || message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
+                  if (isGlobalBusy()) return out("当前有任务正在执行，请等待当前 run 完成后再启动下一步。");
+                  let currentRoute = null;
+                  try {
+                    currentRoute = await fetchWorkflowRoute(message.workflowIntent);
+                  } catch (error) {
+                    showError(error);
+                    return out("无法确认当前项目进度，请重新点击“下一步建议”后再启动推荐 run。");
+                  }
+                  if (message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
+                  if (!workflowActionsMatch(currentRoute?.nextAction, action)) {
+                    message.workflowActionConsumed = true;
+                    state.workflowRouteActionConsumed = true;
+                    state.workflowRouteActionToken = "";
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    return out("项目进度已经变化，请重新点击“下一步建议”获取新的推荐。");
+                  }
+                  invalidateWorkflowRouteAction();
+                  switch (action.actionId) {
+                    case "create-prototype":
+                      v2OpenStepTab("create-prototype", false);
+                      await runPrototype();
+                      return;
+                    case "create-repair-plan":
+                      v2OpenStepTab("execute-or-repair", false);
+                      await createRepairPlan();
+                      return;
+                    case "execute-repair-step":
+                      v2OpenStepTab("execute-or-repair", false);
+                      await executeRepairStep();
+                      return;
+                    case "prototype-acceptance":
+                      v2OpenStepTab(action.uiTarget === "execute-or-repair" ? "execute-or-repair" : "prototype-acceptance", false);
+                      await validatePrototype();
+                      return;
+                    case "create-iteration-plan":
+                      v2OpenStepTab("iteration-plan", false);
+                      await createIterationPlan();
+                      return;
+                    case "execute-iteration-goal":
+                      v2OpenStepTab("iteration-plan", false);
+                      await executeIterationGoal();
+                      return;
+                    case "needs-fix-route":
+                      v2OpenStepTab("iteration-plan", false);
+                      await executeIterationGoal();
+                      return;
+                    case "ui-optimization":
+                      v2OpenStepTab("ui-optimization", false);
+                      await runUiOptimization();
+                      return;
+                    case "asset-inventory":
+                      v2OpenStepTab("asset-inventory");
+                      return;
+                    case "package-project":
+                      v2OpenStepTab("package-project", false);
+                      await createProjectPackage();
+                      return;
+                    case "download-project":
+                      v2OpenStepTab("download-project");
+                      return;
+                    case "create-next-iteration-plan":
+                      v2OpenStepTab("iteration-plan", false);
+                      openIterationPlanUpdateModal("new", message.workflowIntent?.feedbackSummary || "");
+                      return;
+                    default:
+                      out(`暂不支持的推荐动作：${action.actionId}`);
+                  }
+                }
+
+                async function queryWorkflowRoute(intent = null) {
                   if (!state.projectId) return out("请先选择一个项目。");
                   const button = $("v2JudgeNextStep");
-                  button.disabled = true;
-                  button.textContent = "扫描中...";
+                  if (button) {
+                    button.disabled = true;
+                    button.textContent = "扫描中...";
+                  }
                   v2ShowChatTab();
                   const thinking = startChatThinkingMessage("正在扫描项目状态...");
-                  const withTimeout = (promise, label, timeoutMs = 8000) => {
-                    let timeoutId;
-                    const timeout = new Promise((_, reject) => {
-                      timeoutId = setTimeout(() => reject(new Error(`${label}_timeout`)), timeoutMs);
-                    });
-                    return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-                  };
                   try {
-                    const results = await Promise.allSettled([
-                      withTimeout(loadRuns(), "runs"),
-                      withTimeout(loadPrototypeProgress(), "prototype_progress"),
-                      withTimeout(loadIterationPlan(), "iteration_plan"),
-                      withTimeout(loadRepairPlan(), "repair_plan"),
-                      withTimeout(loadProjectPackages(), "packages"),
-                      withTimeout(refreshAssetInventoryAvailability(), "asset_inventory")
-                    ]);
-                    const failed = results
-                      .map((result, index) => result.status === "rejected" ? ["运行记录", "原型进度", "迭代计划", "修复计划", "项目文件包", "素材清单"][index] : "")
-                      .filter(Boolean);
-                    let suggestion = v2BuildLocalNextStepSuggestion();
-                    if (failed.length) {
-                      suggestion += `\n\n提示：${failed.join("、")}读取超时或失败，已基于当前缓存状态生成建议。`;
-                    }
-                    thinking.complete(`系统扫描结果：\n\n${suggestion}`, false, "next-step-scan");
+                    const route = await fetchWorkflowRoute(intent);
+                    thinking.complete(buildWorkflowRouteChatContent(route, intent), false, "workflow-route", buildWorkflowRouteMessageExtra(route, intent));
+                    out({ action: "workflow_route_queried", nextAction: route?.nextAction || null });
                   } catch (error) {
                     const failure = "项目状态扫描失败，请稍后重试或先刷新页面。";
-                    thinking.complete(failure, true, "next-step-scan");
+                    thinking.complete(failure, true, "workflow-route");
                     showError(error);
                   } finally {
-                    button.disabled = false;
-                    button.textContent = "下一步建议";
+                    if (button) {
+                      button.disabled = false;
+                      button.textContent = "下一步建议";
+                    }
                   }
+                }
+                function workflowRouteQueryForIntent(intent = null) {
+                  return intent?.intent === "playtest_feedback" && intent.feedbackSummary
+                    ? `?playtestFeedback=${encodeURIComponent(intent.feedbackSummary)}`
+                    : "";
+                }
+                async function fetchWorkflowRoute(intent = null) {
+                  return await api(`/api/projects/${state.projectId}/workflow-route${workflowRouteQueryForIntent(intent)}`);
+                }
+                function workflowActionsMatch(currentAction, storedAction) {
+                  if (!currentAction || !storedAction) return false;
+                  return currentAction.enabled !== false &&
+                    currentAction.actionId === storedAction.actionId &&
+                    currentAction.uiTarget === storedAction.uiTarget;
                 }
                 function v2RenderProgress() {
                   const shell = $("v2ProgressSteps");
@@ -1142,7 +1232,7 @@ public sealed class BrowserUiRenderer
                 v2ArrangeChatPanel();
                 v2EnsureContentGrid();
                 v2InstallFastTooltips();
-                if ($("v2JudgeNextStep")) $("v2JudgeNextStep").onclick = v2JudgeNextStepLocally;
+                if ($("v2JudgeNextStep")) $("v2JudgeNextStep").onclick = () => queryWorkflowRoute();
                 setInterval(v2RenderProgress, 2000);
               </script>
             </body>
@@ -1408,11 +1498,21 @@ public sealed class BrowserUiRenderer
                   font-weight: 700;
                   line-height: 1.35;
                   text-align: center;
-                  overflow-wrap: anywhere;
+                  max-height: min(7rem, calc(100vh - 1.5rem));
+                  overflow-y: auto;
+                  overflow-wrap: break-word;
+                  word-break: normal;
                   pointer-events: auto;
                 }
-                .busy-banner > span { flex: 1; }
-                .busy-banner button { flex: 0 0 auto; padding: 0.45rem 0.8rem; }
+                .busy-banner > span { flex: 1 1 auto; min-width: 0; text-align: left; }
+                .busy-banner button {
+                  flex: 0 0 auto;
+                  width: auto;
+                  min-width: 4.5rem;
+                  max-width: 8rem;
+                  padding: 0.45rem 0.8rem;
+                  white-space: nowrap;
+                }
                 .modal-backdrop {
                   position: fixed;
                   inset: 0;
@@ -1663,7 +1763,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -1738,6 +1838,9 @@ public sealed class BrowserUiRenderer
                   });
                   document.querySelectorAll(".v2-open-gdd-outline").forEach(button => {
                     button.onclick = () => v2OpenGddOutlineTab();
+                  });
+                  document.querySelectorAll("[data-workflow-route-action-token]").forEach(button => {
+                    button.onclick = () => runWorkflowRecommendedAction(button.dataset.workflowRouteActionToken);
                   });
                 }
 
@@ -1823,7 +1926,19 @@ public sealed class BrowserUiRenderer
                   const outlineButton = message?.gddOutlineUrl
                     ? `<p><button class="secondary v2-open-gdd-outline" type="button">&#26597;&#38405;&#31574;&#21010;&#22823;&#32434;</button></p>`
                     : "";
-                  return (parts.join("") || "<p></p>") + outlineButton;
+                  return (parts.join("") || "<p></p>") + outlineButton + renderWorkflowRouteAction(message);
+                }
+
+                function renderWorkflowRouteAction(message) {
+                  const action = message?.workflowAction;
+                  if (!action?.actionId || action.actionId === "none" || action.enabled === false) return "";
+                  const consumed = !!message.workflowActionConsumed || state.workflowRouteActionConsumed || state.workflowRouteActionToken !== message.workflowActionToken;
+                  const label = consumed ? "进度已变更" : (action.buttonLabel || action.runName || action.label || "执行下一步");
+                  return `
+                    <div class="v2-workflow-action-row">
+                      <button type="button" class="secondary v2-workflow-route-action" data-workflow-route-action-token="${escapeHtml(message.workflowActionToken || "")}" ${consumed ? "disabled" : ""}>${escapeHtml(label)}</button>
+                    </div>
+                  `;
                 }
 
                 function renderInlineMarkdown(value) {
@@ -1875,6 +1990,7 @@ public sealed class BrowserUiRenderer
                   } catch {
                     state.chatHistory = [];
                   }
+                  restoreWorkflowRouteActionFromHistory();
                   renderChatHistory();
                 }
 
@@ -1888,10 +2004,16 @@ public sealed class BrowserUiRenderer
                         content: sanitizePublicChatContent(message.content),
                         kind: message.kind || null,
                         continueConsumed: !!message.continueConsumed,
-                        suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || "")
+                        suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || ""),
+                        workflowAction: message.workflowAction || null,
+                        workflowActionToken: message.workflowActionToken || "",
+                        workflowActionConsumed: !!message.workflowActionConsumed,
+                        workflowRoute: message.workflowRoute || null,
+                        workflowIntent: message.workflowIntent || null
                       }))
                       .filter(isStoredChatMessage)
                       .slice(-maxStoredChatMessages);
+                    restoreWorkflowRouteActionFromHistory();
                     renderChatHistory();
                     saveChatHistoryForProject();
                     updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
@@ -2532,11 +2654,7 @@ public sealed class BrowserUiRenderer
 
                 function saveChatHistoryForProject() {
                   if (!state.projectId) return;
-                  const compact = state.chatHistory.filter(isStoredChatMessage).slice(-maxStoredChatMessages);
-                  compact.forEach(message => message.content = sanitizePublicChatContent(message.content));
-                  compact.forEach(message => {
-                    if (message.suggestedFeedback) message.suggestedFeedback = sanitizePublicChatContent(message.suggestedFeedback);
-                  });
+                  const compact = state.chatHistory.filter(isStoredChatMessage).slice(-maxStoredChatMessages).map(normalizeStoredChatMessage);
                   state.chatHistory = compact;
                   localStorage.setItem(chatStorageKey(), JSON.stringify(compact));
                 }
@@ -2552,6 +2670,37 @@ public sealed class BrowserUiRenderer
                     (message.role === "user" || message.role === "assistant") &&
                     typeof message.content === "string" &&
                     message.content.trim().length > 0;
+                }
+
+                function normalizeStoredChatMessage(message) {
+                  const stored = {
+                    role: message.role,
+                    content: sanitizePublicChatContent(message.content),
+                    kind: message.kind || null,
+                    continueConsumed: !!message.continueConsumed,
+                    suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || "")
+                  };
+                  if (message.workflowAction) stored.workflowAction = message.workflowAction;
+                  if (message.workflowActionToken) stored.workflowActionToken = message.workflowActionToken;
+                  if (message.workflowActionConsumed) stored.workflowActionConsumed = true;
+                  if (message.workflowRoute) stored.workflowRoute = message.workflowRoute;
+                  if (message.workflowIntent) stored.workflowIntent = message.workflowIntent;
+                  if (message.gddOutlineUrl) stored.gddOutlineUrl = message.gddOutlineUrl;
+                  return stored;
+                }
+
+                function restoreWorkflowRouteActionFromHistory() {
+                  state.workflowRouteActionToken = "";
+                  state.workflowRouteActionConsumed = false;
+                  const latest = [...(state.chatHistory || [])].reverse().find(message =>
+                    message.workflowActionToken &&
+                    message.workflowAction &&
+                    message.workflowAction.actionId &&
+                    message.workflowAction.actionId !== "none" &&
+                    message.workflowAction.enabled !== false &&
+                    !message.workflowActionConsumed);
+                  if (!latest) return;
+                  state.workflowRouteActionToken = latest.workflowActionToken;
                 }
 
                 function isVisibleChatMessage(message) {
@@ -2597,7 +2746,7 @@ public sealed class BrowserUiRenderer
                     renderChatHistory();
                   }, 5000);
                   return {
-                    complete(content, failed = false, kind = null) {
+                    complete(content, failed = false, kind = null, extra = null) {
                       clearInterval(timer);
                       const pending = state.chatHistory.find(item => item.pendingId === id);
                       if (pending) {
@@ -2606,8 +2755,9 @@ public sealed class BrowserUiRenderer
                         delete pending.pendingId;
                         if (kind) pending.kind = kind;
                         if (failed) pending.failed = true;
+                        if (extra) Object.assign(pending, extra);
                       } else {
-                        state.chatHistory.push({ role: "assistant", content, failed, kind });
+                        state.chatHistory.push({ role: "assistant", content, failed, kind, ...(extra || {}) });
                       }
                       renderChatHistory();
                       saveChatHistoryForProject();
@@ -2710,7 +2860,28 @@ public sealed class BrowserUiRenderer
                   if (!message) return out("请输入消息。");
                   $("sendChat").disabled = true;
                   $("sendChat").textContent = "发送中...";
+                  let shouldClearChatAttachments = false;
                   try {
+                    let routeIntent = null;
+                    try {
+                      routeIntent = await api(`/api/projects/${state.projectId}/workflow-route/intent`, {
+                        method: "POST",
+                        timeoutMs: 90 * 1000,
+                        body: JSON.stringify({ message, model: $("globalModel").value || null })
+                      });
+                    } catch {
+                      routeIntent = null;
+                    }
+                    if (routeIntent?.shouldRoute) {
+                      state.chatHistory.push({ role: "user", content: message });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                      $("chatMessage").value = "";
+                      await queryWorkflowRoute(routeIntent);
+                      return;
+                    }
+                    invalidateWorkflowRouteAction();
+                    shouldClearChatAttachments = true;
                     const payload = {
                       message,
                       model: $("globalModel").value || null,
@@ -2745,7 +2916,7 @@ public sealed class BrowserUiRenderer
                     showError(error);
                   }
                   finally {
-                    clearChatAttachments();
+                    if (shouldClearChatAttachments) clearChatAttachments();
                     $("sendChat").disabled = false;
                     $("sendChat").textContent = "发送";
                     await refreshActiveRun();
@@ -2755,8 +2926,8 @@ public sealed class BrowserUiRenderer
                 async function refreshGddOutlineStatus() {
                   if (!state.projectId || !$("createGddDocument")) return;
                   try {
-                    await api(`/api/projects/${state.projectId}/gdd/outline`);
-                    state.gddOutlineReady = true;
+                    const outlineStatus = await api(`/api/projects/${state.projectId}/gdd/outline`);
+                    state.gddOutlineReady = Array.isArray(outlineStatus?.sections) && outlineStatus.sections.length > 0;
                   } catch {
                     state.gddOutlineReady = false;
                   }
@@ -4213,6 +4384,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
+                  if (busy) invalidateWorkflowRouteAction();
                   state.localBusy = busy;
                   applyGlobalBusyState(message);
                 }
@@ -5234,9 +5406,12 @@ public sealed class BrowserUiRenderer
                 dialog::backdrop { background:rgba(23,33,27,.45); }
                 .row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
                 .row button:last-child { margin-left:auto; }
+                .outline-toolbar { justify-content:flex-end; margin-bottom:.8rem; }
+                .outline-toolbar button:last-child { margin-left:0; }
                 body.embedded { background:#fffdf8; }
                 body.embedded main { max-width:none; padding:0; }
                 body.embedded main > header { display:none; }
+                body.embedded .outline-toolbar { padding:.25rem 0 .75rem; }
                 body.embedded section, body.embedded article, body.embedded dialog { box-shadow:none; }
               </style>
             </head>
@@ -5247,11 +5422,11 @@ public sealed class BrowserUiRenderer
                     <h1>&#31574;&#21010;&#22823;&#32434;</h1>
                     <p id="meta" class="muted">&#27491;&#22312;&#35835;&#21462;&#31574;&#21010;&#22823;&#32434;...</p>
                   </div>
-                  <div class="row">
-                    <button id="deleteGddOutline" class="ghost" type="button">&#21024;&#38500;&#31574;&#21010;&#22823;&#32434;</button>
-                    <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
-                  </div>
                 </header>
+                <div class="row outline-toolbar" aria-label="GDD outline actions">
+                  <button id="deleteGddOutline" class="ghost" type="button">&#21024;&#38500;&#31574;&#21010;&#22823;&#32434;</button>
+                  <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
+                </div>
                 <section>
                   <h2 id="title">-</h2>
                   <p id="summary"></p>
@@ -5299,9 +5474,12 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 function renderOutline() {
-                  $("meta").textContent = `已载入策划大纲${outline.lastUpdatedUtc ? ` · ${outline.lastUpdatedUtc}` : ""}`;
+                  const hasSections = Array.isArray(outline.sections) && outline.sections.length > 0;
+                  $("meta").textContent = hasSections
+                    ? `已载入策划大纲${outline.lastUpdatedUtc ? ` · ${outline.lastUpdatedUtc}` : ""}`
+                    : "当前策划大纲不可用，请删除后重新创建。";
                   $("deleteGddOutline").disabled = false;
-                  $("exportGddMarkdown").disabled = false;
+                  $("exportGddMarkdown").disabled = !hasSections;
                   $("title").textContent = outline.title || "\u7b56\u5212\u5927\u7eb2";
                   $("summary").textContent = outline.summary || "";
                   $("sections").innerHTML = (outline.sections || []).map(section => `

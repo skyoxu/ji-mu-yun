@@ -102,6 +102,7 @@ builder.Services.AddSingleton(new ChatConcurrencyLimiter(
     options.MaxConcurrentChatsPerAccount));
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();
+builder.Services.AddSingleton<ProjectWorkflowRouteService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
@@ -1280,6 +1281,28 @@ app.MapGet("/api/projects/{projectId}/chat-history", async (
 {
     var result = await chatHistory.ListAsync(CurrentAccountId(context), projectId, cancellationToken);
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapGet("/api/projects/{projectId}/workflow-route", async (
+    string projectId,
+    string? playtestFeedback,
+    HttpContext context,
+    [FromServices] ProjectWorkflowRouteService workflowRoute,
+    CancellationToken cancellationToken) =>
+{
+    var result = await workflowRoute.QueryAsync(CurrentAccountId(context), projectId, playtestFeedback, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/workflow-route/intent", async (
+    string projectId,
+    ProjectWorkflowIntentRequest request,
+    HttpContext context,
+    [FromServices] ProjectWorkflowRouteService workflowRoute,
+    CancellationToken cancellationToken) =>
+{
+    var result = await workflowRoute.ClassifyIntentAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result.Status == "project_not_found" ? Results.NotFound(result) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/iteration-plan", async (
