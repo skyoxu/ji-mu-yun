@@ -186,8 +186,10 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-chat-controls .v2-file-button.ghost { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
                 body.v2-detail .v2-chat-controls .v2-file-button.ghost:hover { background: rgba(15, 107, 87, 0.08); }
                 body.v2-detail .v2-chat-controls .v2-file-button input { display: none; }
-                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
-                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode.active { color: white; background: var(--accent-2); border-color: var(--accent-2); }
+                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode,
+                body.v2-detail .v2-chat-controls #v2ProjectAnalysisMode { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--accent); border: 1px solid var(--accent); cursor: pointer; font-weight: 700; line-height: 1; }
+                body.v2-detail .v2-chat-controls #v2AdvancedPlanningMode.active,
+                body.v2-detail .v2-chat-controls #v2ProjectAnalysisMode.active { color: white; background: var(--accent-2); border-color: var(--accent-2); }
                 body.v2-detail .v2-chat-controls .v2-attach-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.35rem; cursor: pointer; color: var(--danger); border: 0; background: transparent; font-weight: 900; font-size: 1.65rem; line-height: 1; padding: 0.25rem 0.45rem; }
                 body.v2-detail .v2-chat-controls .v2-attach-button input { display: none; }
                 body.v2-detail .v2-chat-controls #sendChat { margin-left: auto; min-width: 4.2rem; background: var(--accent-2); }
@@ -866,9 +868,20 @@ public sealed class BrowserUiRenderer
                     nextStepButton.title = "扫描当前项目状态，并在聊天窗口显示系统下一步建议";
                     nextStepButton.onclick = () => queryWorkflowRoute();
                   }
+                  let projectAnalysis = $("v2ProjectAnalysisMode");
+                  if (!projectAnalysis) {
+                    projectAnalysis = document.createElement("button");
+                    projectAnalysis.id = "v2ProjectAnalysisMode";
+                    projectAnalysis.type = "button";
+                    projectAnalysis.className = "ghost";
+                    projectAnalysis.textContent = "项目分析模式";
+                    projectAnalysis.title = "系统会扫描项目进度后回复问题，速度慢，可以使用下一步建议按钮替代";
+                    projectAnalysis.onclick = v2ToggleProjectAnalysisMode;
+                  }
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
-                  [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, nextStepButton, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
+                  [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, projectAnalysis, nextStepButton, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   v2RenderAdvancedPlanningMode();
+                  v2RenderProjectAnalysisMode();
                   $("chatMessage").removeEventListener("input", v2RenderChatIterationPlanButtonState);
                   $("chatMessage").removeEventListener("input", resizeChatComposer);
                   $("chatMessage").removeEventListener("keydown", v2HandleChatMessageKeydown);
@@ -889,6 +902,17 @@ public sealed class BrowserUiRenderer
                   const select = $("chatSkillMode");
                   if (!button || !select) return;
                   const active = select.value === "game-design-master";
+                  button.classList.toggle("active", active);
+                  button.setAttribute("aria-pressed", active ? "true" : "false");
+                }
+                function v2ToggleProjectAnalysisMode() {
+                  state.projectAnalysisMode = !state.projectAnalysisMode;
+                  v2RenderProjectAnalysisMode();
+                }
+                function v2RenderProjectAnalysisMode() {
+                  const button = $("v2ProjectAnalysisMode");
+                  if (!button) return;
+                  const active = !!state.projectAnalysisMode;
                   button.classList.toggle("active", active);
                   button.setAttribute("aria-pressed", active ? "true" : "false");
                 }
@@ -1783,7 +1807,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
@@ -2941,14 +2965,16 @@ public sealed class BrowserUiRenderer
                   let shouldClearChatAttachments = false;
                   try {
                     let routeIntent = null;
-                    try {
-                      routeIntent = await api(`/api/projects/${state.projectId}/workflow-route/intent`, {
-                        method: "POST",
-                        timeoutMs: 90 * 1000,
-                        body: JSON.stringify({ message, model: $("globalModel").value || null })
-                      });
-                    } catch {
-                      routeIntent = null;
+                    if (state.projectAnalysisMode) {
+                      try {
+                        routeIntent = await api(`/api/projects/${state.projectId}/workflow-route/intent`, {
+                          method: "POST",
+                          timeoutMs: 90 * 1000,
+                          body: JSON.stringify({ message, model: $("globalModel").value || null })
+                        });
+                      } catch {
+                        routeIntent = null;
+                      }
                     }
                     if (routeIntent?.shouldRoute) {
                       state.chatHistory.push({ role: "user", content: message });

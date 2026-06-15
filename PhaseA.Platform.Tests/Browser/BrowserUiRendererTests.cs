@@ -555,7 +555,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2JudgeNextStep");
         html.Should().Contain("nextStepButton.textContent = \"下一步建议\"");
         html.Should().Contain("nextStepButton.title = \"扫描当前项目状态，并在聊天窗口显示系统下一步建议\"");
-        html.Should().Contain("advancedPlanning, nextStepButton");
+        html.Should().Contain("advancedPlanning, projectAnalysis, nextStepButton");
         html.Should().NotContain("v2NextSuggestion");
         html.Should().NotContain("v2-next");
         html.Should().NotContain("扫描项目判断下一步建议");
@@ -736,6 +736,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("id=\"clearChatAttachments\" class=\"ghost hidden\"");
         html.Should().Contain("最多只能导入 5 个 TXT 参考文件。");
         html.Should().Contain("clearChatAttachments();");
+        html.Should().Contain("v2ProjectAnalysisMode");
+        html.Should().Contain("项目分析模式");
+        html.Should().Contain("系统会扫描项目进度后回复问题，速度慢，可以使用下一步建议按钮替代");
+        html.Should().Contain("projectAnalysisMode: false");
+        html.Should().Contain("function v2ToggleProjectAnalysisMode()");
+        html.Should().Contain("function v2RenderProjectAnalysisMode()");
+        html.Should().Contain("if (state.projectAnalysisMode)");
         html.Should().Contain("function recentChatHistoryForLlm()");
         html.Should().Contain("message.kind !== \"workflow-route\"");
         html.Should().Contain("history: recentChatHistoryForLlm()");
