@@ -16,8 +16,12 @@ import shutil
 import subprocess
 import json
 import sys
+import threading
 import time
 import xml.etree.ElementTree as ET
+
+GODOT_LOG_LIMIT_BYTES = 32 * 1024 * 1024
+GODOT_LOG_GROWTH_LIMIT_BYTES = 16 * 1024 * 1024
 
 
 def _candidate_dotnet_paths(root: str) -> list[str]:
@@ -70,6 +74,28 @@ def _build_process_env(root: str, dotnet_bin: str) -> dict[str, str]:
     return env
 
 
+def _godot_isolation_base(root: str, date: str) -> str:
+    base = os.environ.get("PHASEA_GODOT_USER_DATA_ROOT", "").strip()
+    if not base:
+        validation_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+        base = validation_root if validation_root else os.path.join(root, "logs", "e2e", date)
+    return base
+
+
+def _isolated_godot_runtime_env(root: str, date: str) -> dict[str, str]:
+    run_id = f"gdunit-appdata-{os.getpid()}-{int(time.time() * 1000)}"
+    base = _godot_isolation_base(root, date)
+    appdata_root = os.path.join(base, run_id)
+    roaming = os.path.join(appdata_root, "Roaming")
+    local = os.path.join(appdata_root, "Local")
+    os.makedirs(os.path.join(roaming, "Godot"), exist_ok=True)
+    os.makedirs(os.path.join(local, "Godot"), exist_ok=True)
+    return {
+        "APPDATA": roaming,
+        "LOCALAPPDATA": local,
+    }
+
+
 def _msbuild_isolation_args(scope: str) -> list[str]:
     build_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
     if not build_root:
@@ -89,15 +115,17 @@ def _msbuild_isolation_args(scope: str) -> list[str]:
     ]
 
 
-def _isolated_godot_user_data_args(root: str, date: str) -> list[str]:
-    base = os.environ.get("PHASEA_GODOT_USER_DATA_ROOT", "").strip()
-    if not base:
-        validation_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
-        base = validation_root if validation_root else os.path.join(root, "logs", "e2e", date)
+def _isolated_godot_user_data_dir(root: str, date: str) -> str:
+    base = _godot_isolation_base(root, date)
     run_id = f"gdunit-user-{os.getpid()}-{int(time.time() * 1000)}"
     user_dir = os.path.join(base, run_id)
     os.makedirs(user_dir, exist_ok=True)
     os.makedirs(os.path.join(user_dir, "logs"), exist_ok=True)
+    return user_dir
+
+
+def _isolated_godot_user_data_args(root: str, date: str) -> list[str]:
+    user_dir = _isolated_godot_user_data_dir(root, date)
     return ["--user-data-dir", user_dir]
 
 
@@ -174,7 +202,66 @@ def run_cmd(args, cwd=None, timeout=600_000, env=None):
     return p.returncode, out
 
 
-def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None, env=None):
+def _godot_log_files(env: dict[str, str] | None, user_data_dir: str | None = None) -> list[str]:
+    roots: list[str] = []
+    if user_data_dir:
+        roots.append(user_data_dir)
+    if env:
+        appdata = env.get("APPDATA")
+        localappdata = env.get("LOCALAPPDATA")
+        if appdata:
+            roots.append(os.path.join(appdata, "Godot"))
+        if localappdata:
+            roots.append(os.path.join(localappdata, "Godot"))
+
+    files: list[str] = []
+    seen: set[str] = set()
+    for root in roots:
+        if not root or not os.path.isdir(root):
+            continue
+        for current_root, _, names in os.walk(root):
+            for name in names:
+                if name.lower() != "godot.log":
+                    continue
+                path = os.path.join(current_root, name)
+                key = os.path.normcase(os.path.normpath(path))
+                if key not in seen:
+                    seen.add(key)
+                    files.append(path)
+    return files
+
+
+def _godot_log_growth_failure(
+    env: dict[str, str] | None,
+    user_data_dir: str | None,
+    baseline_sizes: dict[str, int],
+    max_total_bytes: int | None = None,
+    max_growth_bytes: int | None = None,
+) -> str | None:
+    max_total_bytes = GODOT_LOG_LIMIT_BYTES if max_total_bytes is None else max_total_bytes
+    max_growth_bytes = GODOT_LOG_GROWTH_LIMIT_BYTES if max_growth_bytes is None else max_growth_bytes
+    for path in _godot_log_files(env, user_data_dir):
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            continue
+        baseline = baseline_sizes.setdefault(path, size)
+        if size > max_total_bytes:
+            return f"godot_log_size_limit_exceeded:{path}:{size}"
+        if size - baseline > max_growth_bytes:
+            return f"godot_log_growth_limit_exceeded:{path}:{size - baseline}"
+    return None
+
+
+def run_cmd_failfast(
+    args,
+    cwd=None,
+    timeout=600_000,
+    break_markers=None,
+    env=None,
+    godot_user_data_dir=None,
+    godot_log_poll_interval=1.0,
+):
     """Run a process and stream stdout; if any line contains a break marker, kill early and return rc=1.
     This avoids long timeouts when Godot enters Debugger Break state.
     """
@@ -187,6 +274,22 @@ def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None, env=No
                          text=True, encoding='utf-8', errors='ignore')
     buf_lines = []
     hit_break = False
+    log_failure_reason: list[str] = []
+    log_monitor_stop = threading.Event()
+    godot_log_baseline_sizes: dict[str, int] = {}
+
+    def monitor_godot_logs() -> None:
+        while not log_monitor_stop.wait(godot_log_poll_interval):
+            if p.poll() is not None:
+                return
+            log_failure = _godot_log_growth_failure(env, godot_user_data_dir, godot_log_baseline_sizes)
+            if log_failure:
+                log_failure_reason.append(log_failure)
+                _terminate_process_tree(p)
+                return
+
+    log_monitor = threading.Thread(target=monitor_godot_logs, daemon=True)
+    log_monitor.start()
     try:
         # Poll line-by-line up to timeout
         end_ts = dt.datetime.now().timestamp() + (timeout/1000.0)
@@ -202,16 +305,36 @@ def run_cmd_failfast(args, cwd=None, timeout=600_000, break_markers=None, env=No
             else:
                 if p.poll() is not None:
                     break
+                if log_failure_reason:
+                    hit_break = True
+                    break
             if dt.datetime.now().timestamp() > end_ts:
                 _terminate_process_tree(p)
                 return 124, ''.join(buf_lines)
         out = ''.join(buf_lines)
+        if log_failure_reason:
+            out += f"\nGDUNIT_FAILFAST {log_failure_reason[0]}\n"
+            hit_break = True
         if hit_break:
             return 1, out
         return (p.returncode or 0), out
     except Exception:
         _terminate_process_tree(p)
         return 1, ''.join(buf_lines)
+    finally:
+        log_monitor_stop.set()
+        log_monitor.join(timeout=2.0)
+        if p.poll() is None:
+            _terminate_process_tree(p)
+        try:
+            p.wait(timeout=5)
+        except Exception:
+            _terminate_process_tree(p)
+        try:
+            if p.stdout:
+                p.stdout.close()
+        except Exception:
+            pass
 
 
 def _terminate_process_tree(process) -> None:
@@ -236,8 +359,14 @@ def _terminate_process_tree(process) -> None:
 
 def write_text(path: str, content: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content)
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(content)
+    except PermissionError:
+        base, ext = os.path.splitext(path)
+        fallback = f"{base}-{os.getpid()}-{int(time.time() * 1000)}{ext or '.txt'}"
+        with open(fallback, 'w', encoding='utf-8') as f:
+            f.write(content)
 
 
 def ensure_runtime_logs_godot_ignored(repo_root: str) -> None:
@@ -335,7 +464,9 @@ def main():
     date = dt.date.today().strftime('%Y-%m-%d')
     out_dir = os.path.join(root, 'logs', 'e2e', date)
     os.makedirs(out_dir, exist_ok=True)
-    godot_user_data_args = _isolated_godot_user_data_args(root, date)
+    godot_user_data_dir = _isolated_godot_user_data_dir(root, date)
+    godot_user_data_args = ["--user-data-dir", godot_user_data_dir]
+    process_env.update(_isolated_godot_runtime_env(root, date))
 
     ensure_runtime_logs_godot_ignored(root)
     _cleanup_godot_processes(args.godot_bin)
@@ -398,15 +529,19 @@ def main():
             apath = 'res://' + apath.replace('\\', '/').lstrip('/')
         cmd += ['-a', apath]
     try:
-        rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000, env=process_env)
+        rc, out = run_cmd_failfast(cmd, cwd=proj, timeout=args.timeout_sec*1000, env=process_env, godot_user_data_dir=godot_user_data_dir)
     finally:
         _cleanup_godot_processes(args.godot_bin)
     console_path = os.path.join(out_dir, 'gdunit-console.txt')
     with open(console_path, 'w', encoding='utf-8') as f:
         f.write(out)
 
-    # Generate HTML log frame (optional)
-    _rc2, _out2 = run_cmd([args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
+    # Generate HTML log frame only after a clean GdUnit process exit. When the
+    # runner fail-fast kills a debugger break, starting Godot again can recreate
+    # the same log storm.
+    copy_log_rc = None
+    if rc == 0:
+        copy_log_rc, _out2 = run_cmd([args.godot_bin, '--headless', *godot_user_data_args, '--path', proj, '--quiet', '-s', 'res://addons/gdUnit4/bin/GdUnitCopyLog.gd'], cwd=proj, env=process_env)
 
     # Archive reports
     reports_dir = os.path.join(proj, 'reports')
@@ -455,6 +590,7 @@ def main():
         'added': args.add,
         'timeout_sec': args.timeout_sec,
         'results': parsed,
+        'copy_log_rc': copy_log_rc,
     }
     if report_copy_failures:
         summary['report_copy_failures'] = report_copy_failures

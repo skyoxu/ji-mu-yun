@@ -62,6 +62,90 @@ time.sleep(30)
         File.Exists(marker).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task RunAsync_ReturnsTimeout_WhenProcessHasNoOutputForInactivityWindow()
+    {
+        using var temp = TempDirectory.Create("phase-a-inactivity-timeout");
+        var script = Path.Combine(temp.Path, "silent-sleep.py");
+        await File.WriteAllTextAsync(script, """
+import time
+time.sleep(30)
+""");
+        var runner = new HostedProcessRunner();
+        var command = new HostedProcessCommand(
+            "py",
+            ["-3", script],
+            temp.Path,
+            new Dictionary<string, string>())
+            .WithTimeouts(inactivityTimeout: TimeSpan.FromMilliseconds(50));
+
+        var result = await runner.RunAsync(command);
+
+        result.ExitCode.Should().Be(408);
+        result.Stderr.Should().Contain("no stdout, stderr, or watched file activity");
+    }
+
+    [Fact]
+    public async Task RunAsync_DoesNotHitInactivityTimeout_WhenWatchedFileChanges()
+    {
+        using var temp = TempDirectory.Create("phase-a-file-activity");
+        var marker = Path.Combine(temp.Path, "activity", "marker.txt");
+        var script = Path.Combine(temp.Path, "touch-marker.py");
+        await File.WriteAllTextAsync(script, $"""
+import pathlib
+import time
+path = pathlib.Path(r"{marker}")
+path.parent.mkdir(parents=True, exist_ok=True)
+for index in range(8):
+    path.write_text(str(index), encoding="utf-8")
+    time.sleep(0.05)
+""");
+        var runner = new HostedProcessRunner();
+        var command = new HostedProcessCommand(
+            "py",
+            ["-3", script],
+            temp.Path,
+            new Dictionary<string, string>())
+            .WithTimeouts(
+                totalTimeout: TimeSpan.FromSeconds(5),
+                inactivityTimeout: TimeSpan.FromMilliseconds(500))
+            .WithActivityWatchPaths(["activity"], pollInterval: TimeSpan.FromMilliseconds(25));
+
+        var result = await runner.RunAsync(command);
+
+        result.ExitCode.Should().Be(0, result.Stderr);
+        File.ReadAllText(marker).Should().Be("7");
+    }
+
+    [Fact]
+    public async Task RunAsync_ReturnsTimeout_WhenTotalRuntimeExceedsLimitEvenWithOutput()
+    {
+        using var temp = TempDirectory.Create("phase-a-total-timeout");
+        var script = Path.Combine(temp.Path, "noisy-sleep.py");
+        await File.WriteAllTextAsync(script, """
+import sys
+import time
+while True:
+    print("tick", flush=True)
+    time.sleep(0.03)
+""");
+        var runner = new HostedProcessRunner();
+        var command = new HostedProcessCommand(
+            "py",
+            ["-3", script],
+            temp.Path,
+            new Dictionary<string, string>())
+            .WithTimeouts(
+                totalTimeout: TimeSpan.FromMilliseconds(120),
+                inactivityTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await runner.RunAsync(command);
+
+        result.ExitCode.Should().Be(408);
+        result.Stdout.Should().Contain("tick");
+        result.Stderr.Should().Contain("total timeout");
+    }
+
     private static async Task WaitForFileAsync(string path)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(5);

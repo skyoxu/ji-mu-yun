@@ -729,6 +729,8 @@ public sealed class PrototypeIterationPlanService
             - If some user fields are still only partial, mention the most important missing runtime proof in the relevant later steps.
             - Keep each goal narrow enough to execute independently.
             - Treat RPG as a JRPG first-loop capability profile, not a fixed DQ-like script.
+            - If the prototype contract or user fields mention encounter, enemy, monster, boss, combat, battle, fight, challenge, reward, item, experience, level, loot, or return-to-map, preserve the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
+            - Only omit BattleScene, enemy asset, reward, or return-loop capability when the project contract explicitly negates combat/conflict/reward, such as non-combat, no battle, no encounter, no enemy, or without reward choices.
             - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not turn the whole GDD template into iteration goals.
             - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
             - Final step must remain final first-loop acceptance.
@@ -2203,12 +2205,13 @@ public sealed class PrototypeIterationPlanService
     {
         var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
         var requirementSource = BuildRpgRequirementSource(sourceMessage, planningAnalysis);
-        var requiresConflict = selectedCapabilities is not null
-            ? selectedCapabilities.Contains("conflict_entry") || selectedCapabilities.Contains("battle_or_challenge_resolution")
-            : JrpgRouteSemantics.RequiresBattleScene(requirementSource);
-        var requiresReward = selectedCapabilities is not null
-            ? selectedCapabilities.Contains("growth_feedback")
-            : JrpgRouteSemantics.RequiresRewardFlow(requirementSource);
+        var requiresConflict =
+            JrpgRouteSemantics.RequiresBattleScene(requirementSource) ||
+            (selectedCapabilities is not null &&
+             (selectedCapabilities.Contains("conflict_entry") || selectedCapabilities.Contains("battle_or_challenge_resolution")));
+        var requiresReward =
+            JrpgRouteSemantics.RequiresRewardFlow(requirementSource) ||
+            (selectedCapabilities is not null && selectedCapabilities.Contains("growth_feedback"));
         var missing = new List<string>();
         var boundaryIssue = FindRpgPlanAcceptanceBoundaryIssue(goals);
         if (boundaryIssue is not null)
@@ -2746,9 +2749,10 @@ public sealed class PrototypeIterationPlanService
             sourceMessage = details.Session.OverallGoal?.Trim();
         }
 
+        var guidance = "Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route. For combat-oriented RPG/JRPG semantics, restore the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance. Omit battle/reward only when the project explicitly negates combat, encounter, enemy, or reward.";
         return string.IsNullOrWhiteSpace(sourceMessage)
-            ? "Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route."
-            : $"Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route. Source request: {sourceMessage}";
+            ? guidance
+            : $"{guidance} Source request: {sourceMessage}";
     }
 
     private static string BuildRpgPlanEvaluationPrompt(
@@ -2786,6 +2790,9 @@ public sealed class PrototypeIterationPlanService
             - decision must be one of: ready_to_execute, should_refine_plan.
             - Use the current prototype result, planning analysis, and RPG/JRPG type requirements.
             - Treat the route as a JRPG first-loop capability profile, not a fixed DQ-like 7-step script.
+            - For combat-oriented RPG/JRPG semantics, evaluate against the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
+            - A plan that omits battle/reward/return capability despite explicit encounter, enemy, monster, boss, combat, battle, fight, reward, item, experience, level, loot, or return-to-map semantics should_refine_plan.
+            - Omit BattleScene/reward requirements only when the source semantics explicitly negates combat/conflict/reward.
             - If the plan is generic, misses the selected capability coverage, lacks field navigation, lacks final first-loop acceptance, or merges unrelated boundaries, return should_refine_plan.
             - If the latest prototype gap is navigation or visible-map related, prefer should_refine_plan unless the first executable capability clearly targets Start Adventure or the project entry into a visible playable field/map/town with stable movement.
             - Conflict-oriented projects should split conflict entry from battle/challenge resolution.

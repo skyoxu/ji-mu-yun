@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import subprocess
 import shutil
 import sys
 import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -239,6 +241,126 @@ class RunGdUnitTests(unittest.TestCase):
             self.assertTrue(args[1].startswith(tmpdir))
             self.assertTrue(Path(args[1]).is_dir())
             self.assertTrue((Path(args[1]) / "logs").is_dir())
+
+    def test_run_gdunit_should_isolate_godot_appdata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch.dict(os.environ, {"PHASEA_GODOT_USER_DATA_ROOT": tmpdir}, clear=False):
+                env = run_gdunit._isolated_godot_runtime_env(str(REPO_ROOT), "2026-06-03")
+
+            self.assertTrue(env["APPDATA"].startswith(tmpdir))
+            self.assertTrue(env["LOCALAPPDATA"].startswith(tmpdir))
+            self.assertTrue((Path(env["APPDATA"]) / "Godot").is_dir())
+            self.assertTrue((Path(env["LOCALAPPDATA"]) / "Godot").is_dir())
+
+    def test_smoke_headless_should_isolate_godot_appdata(self) -> None:
+        smoke_headless = _load_module("smoke_headless_appdata_isolation_test_module", "scripts/python/smoke_headless.py")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "repo"
+            root.mkdir()
+            with mock.patch.dict(os.environ, {"PHASEA_GODOT_USER_DATA_ROOT": tmpdir}, clear=False):
+                env = smoke_headless._isolated_godot_runtime_env(root)
+
+            self.assertTrue(env["APPDATA"].startswith(tmpdir))
+            self.assertTrue(env["LOCALAPPDATA"].startswith(tmpdir))
+            self.assertTrue((Path(env["APPDATA"]) / "Godot").is_dir())
+            self.assertTrue((Path(env["LOCALAPPDATA"]) / "Godot").is_dir())
+
+    def test_navigation_smoke_should_isolate_godot_appdata_and_preserve_base_env(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / "repo"
+            root.mkdir()
+            base_env = {"DOTNET_ROOT": r"C:\dotnet", "PATH": r"C:\dotnet"}
+            with mock.patch.dict(os.environ, {"PHASEA_GODOT_USER_DATA_ROOT": tmpdir}, clear=False):
+                env = prototype_main_menu_navigation_smoke._isolated_godot_runtime_env(root, base_env)
+
+            self.assertEqual(r"C:\dotnet", env["DOTNET_ROOT"])
+            self.assertTrue(env["APPDATA"].startswith(tmpdir))
+            self.assertTrue(env["LOCALAPPDATA"].startswith(tmpdir))
+            self.assertTrue((Path(env["APPDATA"]) / "Godot").is_dir())
+            self.assertTrue((Path(env["LOCALAPPDATA"]) / "Godot").is_dir())
+
+    def test_run_gdunit_should_detect_total_godot_log_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            appdata = Path(tmpdir) / "Roaming"
+            godot_dir = appdata / "Godot"
+            godot_dir.mkdir(parents=True)
+            log_path = godot_dir / "godot.log"
+            log_path.write_bytes(b"x" * 8)
+            env = {"APPDATA": str(appdata)}
+
+            failure = run_gdunit._godot_log_growth_failure(
+                env,
+                None,
+                {},
+                max_total_bytes=4,
+                max_growth_bytes=100,
+            )
+
+            self.assertIsNotNone(failure)
+            self.assertIn("godot_log_size_limit_exceeded", failure)
+
+    def test_run_gdunit_should_detect_godot_log_growth_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            user_data_dir = Path(tmpdir) / "user"
+            logs_dir = user_data_dir / "logs"
+            logs_dir.mkdir(parents=True)
+            log_path = logs_dir / "godot.log"
+            log_path.write_bytes(b"1234")
+            baseline = {str(log_path): 4}
+            log_path.write_bytes(b"123456789")
+
+            failure = run_gdunit._godot_log_growth_failure(
+                None,
+                str(user_data_dir),
+                baseline,
+                max_total_bytes=100,
+                max_growth_bytes=4,
+            )
+
+            self.assertIsNotNone(failure)
+            self.assertIn("godot_log_growth_limit_exceeded", failure)
+
+    def test_run_gdunit_failfast_should_stop_silent_process_when_godot_log_grows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            user_data_dir = Path(tmpdir) / "user"
+            logs_dir = user_data_dir / "logs"
+            logs_dir.mkdir(parents=True)
+            script = Path(tmpdir) / "grow_log.py"
+            script.write_text(
+                textwrap.dedent(
+                    f"""
+                    import pathlib
+                    import time
+
+                    log = pathlib.Path({str(logs_dir / 'godot.log')!r})
+                    log.parent.mkdir(parents=True, exist_ok=True)
+                    while True:
+                        with log.open("ab") as handle:
+                            handle.write(b"x" * 1024)
+                            handle.flush()
+                        time.sleep(0.02)
+                    """
+                ),
+                encoding="utf-8",
+            )
+            original_total_limit = run_gdunit.GODOT_LOG_LIMIT_BYTES
+            original_growth_limit = run_gdunit.GODOT_LOG_GROWTH_LIMIT_BYTES
+            run_gdunit.GODOT_LOG_LIMIT_BYTES = 4096
+            run_gdunit.GODOT_LOG_GROWTH_LIMIT_BYTES = 2048
+            try:
+                rc, output = run_gdunit.run_cmd_failfast(
+                    [sys.executable, str(script)],
+                    timeout=5000,
+                    godot_user_data_dir=str(user_data_dir),
+                    godot_log_poll_interval=0.05,
+                )
+            finally:
+                run_gdunit.GODOT_LOG_LIMIT_BYTES = original_total_limit
+                run_gdunit.GODOT_LOG_GROWTH_LIMIT_BYTES = original_growth_limit
+
+            self.assertEqual(1, rc)
+            self.assertIn("GDUNIT_FAILFAST", output)
+            self.assertIn("godot_log_", output)
 
     def test_ensure_tests_godot_junction_should_not_fail_when_audit_write_is_denied(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

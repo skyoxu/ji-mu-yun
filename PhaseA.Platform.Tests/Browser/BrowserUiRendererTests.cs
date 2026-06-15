@@ -1001,6 +1001,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("role=\"status\" aria-live=\"polite\"");
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("cancelActiveRun");
+        html.Should().Contain("function canCancelActiveRun(run)");
+        html.Should().Contain("\"chapter2-bootstrap\", \"project-creation\", \"project-asset-generation\", \"asset-generation\"");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}/cancel");
         html.Should().Contain("\\u786e\\u5b9a\\u8981\\u53d6\\u6d88\\u5f53\\u524d run \\u5417");
         html.Should().Contain("当前任务执行中");
@@ -1020,8 +1022,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("initStatusPanel");
         html.Should().Contain("pollProjectInitializationResult");
         html.Should().Contain(@"const createdProjectId = result.projectId || result.ProjectId || """";");
+        html.Should().Contain("if (createdProjectId) {");
+        html.Should().Contain("selectProject(createdProjectId)");
         html.Should().Contain("await pollProjectInitializationResult(createdProjectId)");
         html.Should().Contain("await refreshProjects({ autoSelect: false })");
+        html.Should().Contain("const createdProject = projects.find(project => project.projectId === createdProjectId)");
         html.Should().Contain("selectProject(createdProject.projectId)");
         html.Should().Contain("projectCreationErrorMessage");
         html.Should().Contain("project_initialization_in_progress");
@@ -1537,6 +1542,8 @@ public sealed class BrowserUiRendererTests
         source.Should().Contain("static IResult CancelledRunResult()");
         source.Should().Contain("new { status = \"cancel\", error = \"run_cancelled\" }");
         source.Should().Contain("statusCode: 499");
+        source.Should().Contain("RunCancellationPolicy.IsCancellationBlocked(run.RunType)");
+        source.Should().Contain("run_cancel_not_allowed");
 
         var routes = new[]
         {

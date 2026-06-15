@@ -4118,6 +4118,10 @@ public sealed class BrowserUiRenderer
                     const result = await api("/api/projects", { method: "POST", body: JSON.stringify(payload) });
                     const createdProjectId = result.projectId || result.ProjectId || "";
                     out(result);
+                    if (createdProjectId) {
+                      await refreshProjects({ autoSelect: false });
+                      selectProject(createdProjectId);
+                    }
                     showInitialization("running", "");
                     await pollProjectInitializationResult(createdProjectId);
                   } catch (error) {
@@ -4145,9 +4149,11 @@ public sealed class BrowserUiRenderer
                       if (visibleProjects.length > 0) {
                         $("initStatusPanel").classList.add("hidden");
                         await refreshProjects({ autoSelect: false });
-                        const createdProject = visibleProjects.find(project => project.projectId === createdProjectId);
+                        const createdProject = projects.find(project => project.projectId === createdProjectId);
                         if (createdProject?.projectId) {
                           selectProject(createdProject.projectId);
+                        } else if (createdProjectId) {
+                          selectProject(createdProjectId);
                         } else {
                           selectDefaultProject(visibleProjects);
                         }
@@ -4476,6 +4482,11 @@ public sealed class BrowserUiRenderer
                   return `当前任务执行中：${run.runType || "未知"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
 
+                function canCancelActiveRun(run) {
+                  const runType = String(run?.runType || "").trim().toLowerCase();
+                  return !!run?.runId && !["chapter2-bootstrap", "project-creation", "project-asset-generation", "asset-generation"].includes(runType);
+                }
+
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
                   if (busy) invalidateWorkflowRouteAction();
                   state.localBusy = busy;
@@ -4488,7 +4499,7 @@ public sealed class BrowserUiRenderer
                   const text = document.createElement("span");
                   text.textContent = message;
                   banner.appendChild(text);
-                  if (state.activeRun?.runId) {
+                  if (canCancelActiveRun(state.activeRun)) {
                     const cancelButton = document.createElement("button");
                     cancelButton.type = "button";
                     cancelButton.className = "ghost danger";

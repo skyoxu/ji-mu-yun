@@ -689,6 +689,8 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
 
     private static (bool RequiresBattle, bool RequiresReward) ResolveFinalRequirements(string text, IReadOnlySet<string>? selectedCapabilities)
     {
+        var textRequiresBattle = RequiresBattleScene(text);
+        var textRequiresReward = RequiresRewardFlow(text);
         if (selectedCapabilities is not null && selectedCapabilities.Count > 0)
         {
             var capabilityRequiresBattle =
@@ -696,10 +698,10 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 selectedCapabilities.Contains("battle_or_challenge_resolution");
             var capabilityRequiresReward =
                 selectedCapabilities.Contains("growth_feedback");
-            return (capabilityRequiresBattle, capabilityRequiresReward);
+            return (capabilityRequiresBattle || textRequiresBattle, capabilityRequiresReward || textRequiresReward);
         }
 
-        return (RequiresBattleScene(text), RequiresRewardFlow(text));
+        return (textRequiresBattle, textRequiresReward);
     }
 
     private static JrpgCapabilityContext BuildJrpgCapabilityContext(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)

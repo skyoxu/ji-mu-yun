@@ -251,13 +251,26 @@ app.MapPost("/api/runs/{runId}/cancel", async (
     string runId,
     HttpContext context,
     [FromServices] PhaseAMetadataStore store,
+    [FromServices] ArtifactReadbackService readback,
     [FromServices] RunCancellationService runCancellation,
     [FromServices] HeavyRunnerQueueService heavyRunnerQueue,
     [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService prototypeCreationQueue,
     [FromKeyedServices("asset-generation")] HeavyRunnerQueueService assetRunnerQueue,
     CancellationToken cancellationToken) =>
 {
-    var result = await store.CancelRunAsync(CurrentAccountId(context), runId, cancellationToken);
+    var accountId = CurrentAccountId(context);
+    var run = await readback.GetRunForAccountAsync(accountId, runId, cancellationToken);
+    if (run is null)
+    {
+        return Results.NotFound(new { error = "run_not_found" });
+    }
+
+    if (RunCancellationPolicy.IsCancellationBlocked(run.RunType))
+    {
+        return Results.Conflict(new { error = "run_cancel_not_allowed" });
+    }
+
+    var result = await store.CancelRunAsync(accountId, runId, cancellationToken);
     if (result == RunCancelResult.NotFound)
     {
         return Results.NotFound(new { error = "run_not_found" });

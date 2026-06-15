@@ -15,6 +15,8 @@ public sealed class PrototypeWorkflowService
     private const string RunType = "prototype-7day-playable";
     private const int CurrentWorkflowMaxDay = 7;
     private const string RepairReasoningEffort = "high";
+    private static readonly TimeSpan DefaultCreationTotalTimeout = TimeSpan.FromHours(1);
+    private static readonly TimeSpan DefaultCreationInactivityTimeout = TimeSpan.FromMinutes(25);
     private static readonly TimeSpan RepairExecutionTimeout = TimeSpan.FromMinutes(12);
 
     private readonly PhaseAMetadataStore _metadataStore;
@@ -33,6 +35,8 @@ public sealed class PrototypeWorkflowService
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService _prototypeCreationQueue;
+    private readonly TimeSpan _creationTotalTimeout;
+    private readonly TimeSpan _creationInactivityTimeout;
 
     public PrototypeWorkflowService(
         PhaseAMetadataStore metadataStore,
@@ -63,7 +67,9 @@ public sealed class PrototypeWorkflowService
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null)
+        [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
+        TimeSpan? creationTotalTimeout = null,
+        TimeSpan? creationInactivityTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -81,6 +87,8 @@ public sealed class PrototypeWorkflowService
         _keyPoolService = keyPoolService;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _prototypeCreationQueue = prototypeCreationQueue ?? _heavyRunnerQueue;
+        _creationTotalTimeout = creationTotalTimeout ?? DefaultCreationTotalTimeout;
+        _creationInactivityTimeout = creationInactivityTimeout ?? DefaultCreationInactivityTimeout;
     }
 
     public async Task<PrototypeWorkflowResult> RunAsync(string accountId, string projectId, PrototypeWorkflowRequest request, CancellationToken cancellationToken = default)
@@ -152,7 +160,11 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, cancellationToken);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, project.RepoPath), runtimeCredential).WithRunId(runId), cancellationToken);
+        var process = await RunPrototypeCreationCodexAsync(
+            runId,
+            _commandBuilder.Build(request, prototypeRecordPath, project.RepoPath),
+            runtimeCredential,
+            cancellationToken);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(project.RepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -864,7 +876,11 @@ public sealed class PrototypeWorkflowService
         var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
         var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
         var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
-        var process = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(_commandBuilder.Build(request, prototypeRecordPath, projectRepoPath), runtimeCredential).WithRunId(runId), CancellationToken.None);
+        var process = await RunPrototypeCreationCodexAsync(
+            runId,
+            _commandBuilder.Build(request, prototypeRecordPath, projectRepoPath),
+            runtimeCredential,
+            CancellationToken.None);
         var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
         var slug = ResolvePrototypeSlug(projectRepoPath, prototypeRecordPath, request.Slug!);
         var validation = process.ExitCode == 0
@@ -1035,6 +1051,44 @@ public sealed class PrototypeWorkflowService
                 exitCode: exitCode,
                 providerBilling: providerBilling),
             CancellationToken.None);
+    }
+
+    private async Task<HostedProcessResult> RunPrototypeCreationCodexAsync(
+        string runId,
+        HostedProcessCommand command,
+        AiCodeMirrorRuntimeCredential runtimeCredential,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SetProgressAsync(runId, "running_step07_review", "codex", "Codex is running prototype skeleton creation.", CancellationToken.None);
+            return await _processRunner.RunAsync(
+                CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential)
+                    .WithRunId(runId)
+                    .WithTimeouts(totalTimeout: _creationTotalTimeout, inactivityTimeout: _creationInactivityTimeout)
+                    .WithActivityWatchPaths(PrototypeCreationActivityWatchPaths(), TimeSpan.FromSeconds(10)),
+                cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new HostedProcessResult(
+                408,
+                "",
+                $"Prototype skeleton creation exceeded the {_creationTotalTimeout.TotalMinutes:0.##} minute timeout.");
+        }
+    }
+
+    private static IReadOnlyList<string> PrototypeCreationActivityWatchPaths()
+    {
+        return
+        [
+            Path.Combine("logs", "ci"),
+            Path.Combine("Game.Core", "Prototypes"),
+            Path.Combine("Game.Core.Tests", "Prototypes"),
+            Path.Combine("Game.Godot", "Prototypes"),
+            Path.Combine("Tests.Godot", "tests", "Prototype"),
+            Path.Combine("meta", "routes")
+        ];
     }
 
     private async Task RunPostValidationRepairQueuedAsync(

@@ -279,6 +279,60 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueAsync_TimesOutInactivePrototypeCreationCodexAndReleasesProjectLock()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new InactiveTimeoutHostedProcessRunner();
+        var service = Service(
+            store,
+            options,
+            runner,
+            creationTotalTimeout: TimeSpan.FromSeconds(5),
+            creationInactivityTimeout: TimeSpan.FromMilliseconds(50));
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        await WaitForInactiveTimeoutRunnerCommandAsync(runner);
+
+        var run = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
+
+        run.ExitCode.Should().Be(408);
+        run.StderrText.Should().Contain("no stdout, stderr, or watched file activity");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task QueueAsync_ConfiguresPrototypeCreationActivityAndTotalTimeouts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        await WaitForAtLeastCommandsAsync(runner, 1);
+        var run = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        var creationCommand = runner.Commands.First();
+        creationCommand.TotalTimeout.Should().Be(TimeSpan.FromHours(1));
+        creationCommand.InactivityTimeout.Should().Be(TimeSpan.FromMinutes(25));
+        creationCommand.ActivityWatchPollInterval.Should().Be(TimeSpan.FromSeconds(10));
+        creationCommand.ActivityWatchPaths.Should().NotBeNull();
+        creationCommand.ActivityWatchPaths!.Should().Contain(Path.Combine("logs", "ci"));
+        creationCommand.ActivityWatchPaths.Should().NotContain(Path.Combine("logs", "e2e"));
+        creationCommand.ActivityWatchPaths.Should().Contain(Path.Combine("Game.Godot", "Prototypes"));
+        run.Status.Should().Be("succeeded");
+    }
+
+    [Fact]
     public async Task GetProgressAsync_RejectsProjectOwnedByAnotherAccount()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1633,7 +1687,9 @@ public sealed class PrototypeWorkflowTests
         PhaseAPlatformOptions options,
         IHostedProcessRunner runner,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        HeavyRunnerQueueService? prototypeCreationQueue = null)
+        HeavyRunnerQueueService? prototypeCreationQueue = null,
+        TimeSpan? creationTotalTimeout = null,
+        TimeSpan? creationInactivityTimeout = null)
     {
         return new PrototypeWorkflowService(
             store,
@@ -1647,7 +1703,9 @@ public sealed class PrototypeWorkflowTests
             new ProjectWorkspaceSeeder(options),
             new GameTypeTemplateCatalog(options),
             heavyRunnerQueue: heavyRunnerQueue,
-            prototypeCreationQueue: prototypeCreationQueue);
+            prototypeCreationQueue: prototypeCreationQueue,
+            creationTotalTimeout: creationTotalTimeout,
+            creationInactivityTimeout: creationInactivityTimeout);
     }
 
     private static async Task WaitForCommandsAsync(FakeHostedProcessRunner runner, int expectedCount)
@@ -1670,6 +1728,17 @@ public sealed class PrototypeWorkflowTests
         }
 
         runner.Commands.Should().HaveCountGreaterThanOrEqualTo(expectedCount);
+    }
+
+    private static async Task WaitForInactiveTimeoutRunnerCommandAsync(InactiveTimeoutHostedProcessRunner runner)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (runner.Commands.Count == 0 && DateTimeOffset.UtcNow < deadline)
+        {
+            await Task.Delay(50);
+        }
+
+        runner.Commands.Should().NotBeEmpty();
     }
 
     private static async Task<RunSnapshot> WaitForRunStatusAsync(
@@ -2061,6 +2130,24 @@ public sealed class PrototypeWorkflowTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             throw new InvalidOperationException("runner failed");
+        }
+    }
+
+    private sealed class InactiveTimeoutHostedProcessRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (!command.Arguments.Contains("scripts/python/smoke_headless.py") &&
+                !command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") &&
+                !command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(408, "", "Process had no stdout, stderr, or watched file activity for 25 minute(s)."));
+            }
+
+            return Task.FromResult(new HostedProcessResult(0, "", ""));
         }
     }
 }

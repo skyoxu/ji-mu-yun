@@ -26,6 +26,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -119,10 +120,16 @@ def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
             pass
 
 
-def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[int, str, str]:
+def _run_captured_process(
+    cmd: list[str],
+    cwd: Path,
+    timeout_sec: int,
+    env: dict[str, str] | None = None,
+) -> tuple[int, str, str]:
     process = subprocess.Popen(
         cmd,
         cwd=cwd,
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -138,6 +145,30 @@ def _run_captured_process(cmd: list[str], cwd: Path, timeout_sec: int) -> tuple[
         prefix_stdout = exc.stdout.decode("utf-8", errors="ignore") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
         prefix_stderr = exc.stderr.decode("utf-8", errors="ignore") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
         return 124, prefix_stdout + (stdout or ""), prefix_stderr + (stderr or "")
+
+
+def _godot_isolation_base(project_root: Path) -> Path:
+    base = os.environ.get("PHASEA_GODOT_USER_DATA_ROOT", "").strip()
+    if base:
+        return Path(base)
+    validation_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+    if validation_root:
+        return Path(validation_root)
+    day = _dt.date.today().strftime("%Y-%m-%d")
+    return project_root / "logs" / "e2e" / day
+
+
+def _isolated_godot_runtime_env(project_root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    run_id = f"smoke-appdata-{os.getpid()}-{int(time.time() * 1000)}"
+    root = _godot_isolation_base(project_root) / run_id
+    roaming = root / "Roaming"
+    local = root / "Local"
+    (roaming / "Godot").mkdir(parents=True, exist_ok=True)
+    (local / "Godot").mkdir(parents=True, exist_ok=True)
+    env["APPDATA"] = str(roaming)
+    env["LOCALAPPDATA"] = str(local)
+    return env
 
 
 def _msbuild_isolation_args(scope: str) -> list[str]:
@@ -234,6 +265,7 @@ def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWA
         godot_cmd,
         project_root,
         prewarm_timeout,
+        env=_isolated_godot_runtime_env(project_root),
     )
     if godot_returncode == 124:
         _cleanup_godot_processes(godot_bin)
@@ -333,7 +365,14 @@ def _run_smoke(
     with out_path.open("w", encoding="utf-8", errors="ignore") as f_out, \
             err_path.open("w", encoding="utf-8", errors="ignore") as f_err:
         try:
-            proc = subprocess.Popen(cmd, stdout=f_out, stderr=f_err, text=True)
+            proc = subprocess.Popen(
+                cmd,
+                stdout=f_out,
+                stderr=f_err,
+                text=True,
+                env=_isolated_godot_runtime_env(project_root),
+                cwd=project_root,
+            )
         except Exception as exc:  # pragma: no cover - environment-specific failure
             print(f"[smoke_headless] failed to start Godot: {exc}", file=sys.stderr)
             return 1

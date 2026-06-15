@@ -822,6 +822,81 @@ public sealed class BattleScene
     }
 
     [Fact]
+    public async Task GoalAcceptanceValidator_ShouldRestoreBattleFinalAcceptance_WhenSelectedCapabilitiesMissCombatContract()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        DeleteBattleSceneFiles(repoPath);
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Battle Route",
+            "Battle Route",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        new PrototypeContractService().WriteFromRequest(
+            project,
+            new PrototypeWorkflowRequest(
+                Slug: "battle-route",
+                GameName: "Battle Route",
+                GameType: "rpg",
+                GameTypeSource: "RPG",
+                Hypothesis: "Validate a classic JRPG loop.",
+                CorePlayerFantasy: "Explore, encounter monsters, win battles, choose rewards, and return to the map.",
+                MinimumPlayableLoop: "Start Adventure, move on map, trigger encounter, win battle, choose reward, return to map.",
+                SuccessCriteria: ["BattleScene and reward return-to-map are playable."],
+                GameFeature: "Encounter, battle, reward, and return loop.",
+                CoreGameplayLoop: "Move, encounter, battle, reward, return.",
+                WinFailConditions: "Win after battle victory. Any battle loss is game over.",
+                Confirm: true),
+            "docs/prototypes/2026-05-20-battle-route.md",
+            "battle-route");
+        var iterationStatePath = Path.Combine(project.MetaPath, "routes", "iteration-plan");
+        Directory.CreateDirectory(iterationStatePath);
+        File.WriteAllText(
+            Path.Combine(iterationStatePath, "latest.json"),
+            """
+            {
+              "route": "iteration-plan",
+              "session_id": "session-id",
+              "selected_capabilities": [
+                "opening_context",
+                "field_navigation",
+                "final_first_loop_acceptance"
+              ]
+            }
+            """);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate selected capabilities, project contract, Godot validation, and package readiness.",
+            "Final acceptance passes.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Kind.Should().Be("jrpg-final-first-loop-acceptance");
+        result.Reason.Should().Contain("missing_rpg_battle_scene", because: "explicit combat contract must restore the older stable JRPG battle-route acceptance even if selected_capabilities are incomplete");
+    }
+
+    [Fact]
     public async Task GoalAcceptanceValidator_ShouldIgnoreStaleSelectedCapabilities_ForGenericRpgFinalGoal()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");

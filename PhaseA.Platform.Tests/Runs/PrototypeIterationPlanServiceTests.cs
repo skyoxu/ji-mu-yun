@@ -469,6 +469,8 @@ public sealed class PrototypeIterationPlanServiceTests
         codex.LastPlanningAnalysisPrompt.Should().BeNull();
         codex.LastGoalPlanPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
         codex.LastGoalPlanPrompt.Should().Contain("formal acceptance files");
+        codex.LastGoalPlanPrompt.Should().Contain("older stable battle-route coverage");
+        codex.LastGoalPlanPrompt.Should().Contain("Only omit BattleScene");
         codex.LastGoalPlanPrompt.Should().Contain("notes.txt");
         codex.LastGoalPlanPrompt.Should().Contain("Important boss design reference.");
 

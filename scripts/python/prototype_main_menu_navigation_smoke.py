@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -238,6 +239,30 @@ def _build_process_env(dotnet_bin: str) -> dict[str, str]:
     return env
 
 
+def _godot_isolation_base(project_root: Path) -> Path:
+    base = os.environ.get("PHASEA_GODOT_USER_DATA_ROOT", "").strip()
+    if base:
+        return Path(base)
+    validation_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
+    if validation_root:
+        return Path(validation_root)
+    day = _dt.date.today().strftime("%Y-%m-%d")
+    return project_root / "logs" / "e2e" / day
+
+
+def _isolated_godot_runtime_env(project_root: Path, base_env: dict[str, str] | None = None) -> dict[str, str]:
+    env = dict(base_env if base_env is not None else os.environ)
+    run_id = f"nav-smoke-appdata-{os.getpid()}-{int(time.time() * 1000)}"
+    root = _godot_isolation_base(project_root) / run_id
+    roaming = root / "Roaming"
+    local = root / "Local"
+    (roaming / "Godot").mkdir(parents=True, exist_ok=True)
+    (local / "Godot").mkdir(parents=True, exist_ok=True)
+    env["APPDATA"] = str(roaming)
+    env["LOCALAPPDATA"] = str(local)
+    return env
+
+
 def _msbuild_isolation_args(scope: str) -> list[str]:
     build_root = os.environ.get("PHASEA_VALIDATION_BUILD_ROOT", "").strip()
     if not build_root:
@@ -402,7 +427,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             prewarm_cmd,
             project_root,
             prewarm_timeout_sec,
-            env=process_env,
+            env=_isolated_godot_runtime_env(project_root, process_env),
         )
         prewarm_mode = "godot-build-solutions"
         if prewarm_returncode == 124:
@@ -448,8 +473,7 @@ def _run(godot_bin: str, project_path: str, expected_scene: str, timeout_sec: in
             "-s",
             str(temp_script),
         ]
-        env = dict(**os.environ)
-        env.update(process_env)
+        env = _isolated_godot_runtime_env(project_root, process_env)
         env["PHASEA_EXPECTED_PROTOTYPE_SCENE"] = expected_scene
 
         with _open_writer(out_path) as f_out, _open_writer(err_path) as f_err:
