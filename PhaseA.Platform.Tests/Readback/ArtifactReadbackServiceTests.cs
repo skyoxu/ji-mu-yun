@@ -87,6 +87,27 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task Readback_IgnoresActiveChatRunForBusyBanner()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var chatRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-chat");
+        await store.MarkRunStartedAsync(chatRunId);
+        var service = new ArtifactReadbackService(store, options);
+
+        var active = await service.GetActiveRunAsync(project.AccountId);
+
+        active.Busy.Should().BeFalse();
+        active.RunId.Should().BeNull();
+        active.RunType.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Readback_IncludesDedicatedPrototypeAndAssetQueues()
     {
         using var database = TempSqliteDatabase.Create();

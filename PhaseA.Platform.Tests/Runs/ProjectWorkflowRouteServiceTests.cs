@@ -139,6 +139,10 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.NextAction.ActionId.Should().Be("download-project");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "download-project",
+            "create-next-iteration-plan");
         result.Recommendation.Should().Contain("下载压缩包");
     }
 
@@ -155,6 +159,10 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId, "试玩后希望提升战斗反馈。");
 
         result!.NextAction.ActionId.Should().Be("create-next-iteration-plan");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "create-next-iteration-plan",
+            "download-project");
         result.Recommendation.Should().Contain("试玩反馈创建新一轮迭代计划");
     }
 
@@ -170,8 +178,23 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         result.ShouldRoute.Should().BeTrue();
         result.Intent.Should().Be("next_step");
-        result.RouteReason.Should().Be("用户询问下一步");
+        result.RouteReason.Should().Contain("下一步");
         result.FeedbackSummary.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ClassifyIntentAsync_WhenUserAsksHowToStartCreatingGame_RoutesWithoutLlm()
+    {
+        var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":false,"intent":"general_chat","routeReason":"","feedbackSummary":""}""");
+
+        var result = await fixture.Service.ClassifyIntentAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            new ProjectWorkflowIntentRequest("我第一次登陆这个系统，还不太会用，我要如何开始创建我的游戏？", "gpt-5.5"));
+
+        result.ShouldRoute.Should().BeTrue();
+        result.Intent.Should().Be("next_step");
+        result.RouteReason.Should().Contain("如何开始");
     }
 
     [Fact]

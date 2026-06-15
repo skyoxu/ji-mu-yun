@@ -72,7 +72,8 @@ public sealed class ProjectWorkflowRouteService
 
         var state = ProjectWorkflowState.From(project, runs, progress, iteration, repair, packageList, inventory);
         var steps = BuildSteps(state);
-        var action = ResolveNextAction(state, playtestFeedback);
+        var actions = ResolveNextActions(state, playtestFeedback);
+        var action = actions[0];
         var stage = steps.FirstOrDefault(step => step.Id == action.UiTarget) ??
                     steps.FirstOrDefault(step => step.Id == state.StageId) ??
                     steps.First();
@@ -84,7 +85,8 @@ public sealed class ProjectWorkflowRouteService
             BuildSummary(project, state),
             BuildRecommendation(state, action, playtestFeedback),
             action,
-            steps);
+            steps,
+            actions);
     }
 
     public async Task<ProjectWorkflowIntentResult> ClassifyIntentAsync(
@@ -107,6 +109,12 @@ public sealed class ProjectWorkflowRouteService
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return new ProjectWorkflowIntentResult(false, "general_chat", "project_not_found", "", "project_not_found");
+        }
+
+        var deterministicIntent = TryClassifyDeterministicIntent(message);
+        if (deterministicIntent is not null)
+        {
+            return deterministicIntent;
         }
 
         var prompt = BuildIntentPrompt(project, message);
@@ -226,6 +234,21 @@ public sealed class ProjectWorkflowRouteService
         return Action("download-project", "下载项目文件", "下载项目文件", "download-project");
     }
 
+    private static IReadOnlyList<ProjectWorkflowNextAction> ResolveNextActions(ProjectWorkflowState state, string? playtestFeedback)
+    {
+        var primary = ResolveNextAction(state, playtestFeedback);
+        if (!state.HasPackage)
+        {
+            return [primary];
+        }
+
+        var download = Action("download-project", "下载项目文件", "下载项目文件", "download-project");
+        var nextIteration = Action("create-next-iteration-plan", "创建新的迭代计划", "创建新的迭代计划", "iteration-plan");
+        return primary.ActionId == "create-next-iteration-plan"
+            ? [nextIteration, download]
+            : [download, nextIteration];
+    }
+
     private static string BuildSummary(ProjectSnapshot project, ProjectWorkflowState state)
     {
         var parts = new List<string>
@@ -302,6 +325,36 @@ public sealed class ProjectWorkflowRouteService
         return Path.Combine(_options.HostedWorkspaceRoot, "_workflow-route");
     }
 
+    private static ProjectWorkflowIntentResult? TryClassifyDeterministicIntent(string message)
+    {
+        var normalized = message.Trim().ToLowerInvariant();
+        var asksNextStep =
+            ContainsAny(normalized, "下一步", "接下来", "进度", "状态", "该做什么", "怎么继续", "如何继续") ||
+            ContainsAny(normalized, "how to start", "how do i start", "what should i do next", "next step", "getting started");
+        var asksGettingStarted =
+            ContainsAny(normalized, "第一次登录", "第一次登陆", "刚登录", "刚登陆", "不会用", "不太会用", "如何开始", "怎么开始", "从哪里开始") &&
+            ContainsAny(normalized, "创建", "游戏", "项目", "原型");
+        var asksCreateGame =
+            ContainsAny(normalized, "创建我的游戏", "创建游戏", "新建游戏", "开始创建", "生成游戏", "生成原型", "创建原型");
+
+        if (asksNextStep || asksGettingStarted || asksCreateGame)
+        {
+            return new ProjectWorkflowIntentResult(
+                true,
+                "next_step",
+                "用户在询问如何开始或下一步应该执行哪个项目流程。",
+                "",
+                "succeeded");
+        }
+
+        return null;
+    }
+
+    private static bool ContainsAny(string value, params string[] needles)
+    {
+        return needles.Any(needle => value.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static string BuildIntentPrompt(ProjectSnapshot project, string message)
     {
         return $$"""
@@ -309,7 +362,7 @@ public sealed class ProjectWorkflowRouteService
         Return exactly one JSON object and no markdown.
 
         Classify whether the user's message should route to the project workflow next-step advisor.
-        Route only when the user is asking what to do next, asking for project progress/status/run direction, or describing local playtest feedback/problems and wants the system to prepare a second iteration plan.
+        Route when the user is asking what to do next, how to get started, how to create their game/project/prototype, asking for project progress/status/run direction, or describing local playtest feedback/problems and wants the system to prepare a second iteration plan.
         Do not route ordinary game-design questions, implementation questions, casual chat, or requests that can be answered directly without querying workflow status.
 
         Project:

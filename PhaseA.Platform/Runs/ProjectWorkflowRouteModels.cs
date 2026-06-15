@@ -7,7 +7,8 @@ public sealed record ProjectWorkflowRouteResult(
     string Summary,
     string Recommendation,
     ProjectWorkflowNextAction NextAction,
-    IReadOnlyList<ProjectWorkflowRouteStep> Steps);
+    IReadOnlyList<ProjectWorkflowRouteStep> Steps,
+    IReadOnlyList<ProjectWorkflowNextAction>? Actions = null);
 
 public sealed record ProjectWorkflowRouteStep(
     string Id,

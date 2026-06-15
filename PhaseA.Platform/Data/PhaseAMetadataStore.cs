@@ -2367,6 +2367,7 @@ public sealed class PhaseAMetadataStore
             INNER JOIN projects p ON p.id = r.project_id
             WHERE p.account_id = $account_id
               AND r.status IN ('queued', 'running')
+              AND r.run_type <> 'prototype-chat'
             ORDER BY r.created_utc DESC, r.id DESC
             LIMIT 1;
             """;

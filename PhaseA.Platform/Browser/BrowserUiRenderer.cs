@@ -113,9 +113,9 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
                 body.v2-detail .v2-progress-row { display: grid; gap: 0.35rem; overflow: visible; padding: 0; }
-                body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.45rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
+                body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem 1.45rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
                 body.v2-detail .v2-step-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
-                body.v2-detail .v2-step-number { display: none; }
+                body.v2-detail .v2-step-number { display: inline-flex; align-items: center; justify-content: flex-end; color: var(--accent); font-size: 0.82rem; line-height: 1; font-weight: 800; font-family: Arial, sans-serif; }
                 body.v2-detail .v2-step-icon { width: 20px; height: 20px; background: currentColor; color: #24362e; -webkit-mask: var(--step-icon) center / 20px 20px no-repeat; mask: var(--step-icon) center / 20px 20px no-repeat; }
                 body.v2-detail .v2-step-button.pending,
                 body.v2-detail .v2-step-button.action { color: var(--muted); }
@@ -784,6 +784,11 @@ public sealed class BrowserUiRenderer
                   textarea.style.height = "auto";
                   textarea.style.height = `${Math.min(textarea.scrollHeight, 176)}px`;
                 }
+                function v2HandleChatMessageKeydown(event) {
+                  if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return;
+                  event.preventDefault();
+                  if (!$("sendChat")?.disabled) sendChat();
+                }
                 function v2HideLegacyChatFeedback() {
                   if (!document.body.classList.contains("v2-detail")) return;
                   $("feedbackSummary")?.classList.add("hidden");
@@ -864,8 +869,12 @@ public sealed class BrowserUiRenderer
                   if ($("clearChatAttachments")) $("clearChatAttachments").textContent = "清空";
                   [$("chatAttachmentFiles")?.closest("label"), advancedPlanning, nextStepButton, $("clearChatAttachments"), $("syncChatHistory"), $("downloadChatHistory"), $("createGddDocument"), $("sendChat")].filter(Boolean).forEach(element => controls.appendChild(element));
                   v2RenderAdvancedPlanningMode();
+                  $("chatMessage").removeEventListener("input", v2RenderChatIterationPlanButtonState);
+                  $("chatMessage").removeEventListener("input", resizeChatComposer);
+                  $("chatMessage").removeEventListener("keydown", v2HandleChatMessageKeydown);
                   $("chatMessage").addEventListener("input", v2RenderChatIterationPlanButtonState);
                   $("chatMessage").addEventListener("input", resizeChatComposer);
+                  $("chatMessage").addEventListener("keydown", v2HandleChatMessageKeydown);
                   resizeChatComposer();
                   v2RenderChatIterationPlanButtonState();
                 }
@@ -987,11 +996,9 @@ public sealed class BrowserUiRenderer
                     "",
                     route?.recommendation || ""
                   ];
-                  if (intent?.routeReason) {
-                    lines.push("", `触发原因：${intent.routeReason}`);
-                  }
-                  if (route?.nextAction?.enabled && route.nextAction.actionId !== "none") {
-                    lines.push("", `推荐 run：${route.nextAction.runName || route.nextAction.label || route.nextAction.actionId}`);
+                  const actions = workflowRouteActions(route);
+                  if (actions.length) {
+                    lines.push("", `推荐 run：${actions.map(action => action.runName || action.label || action.actionId).join("、")}`);
                     lines.push("系统不会自动启动 run。需要你点击下方一次性按钮确认。");
                   }
                   return lines.filter(line => line !== null && line !== undefined).join("\n").trim();
@@ -999,8 +1006,9 @@ public sealed class BrowserUiRenderer
 
                 function buildWorkflowRouteMessageExtra(route, intent = null) {
                   invalidateWorkflowRouteAction(false);
-                  const action = route?.nextAction || null;
-                  const token = action?.enabled && action.actionId !== "none"
+                  const actions = workflowRouteActions(route);
+                  const action = actions[0] || null;
+                  const token = actions.length
                     ? `workflow-${Date.now()}-${Math.random().toString(16).slice(2)}`
                     : "";
                   if (token) {
@@ -1011,6 +1019,7 @@ public sealed class BrowserUiRenderer
                     workflowRoute: route,
                     workflowIntent: intent,
                     workflowAction: action,
+                    workflowActions: actions,
                     workflowActionToken: token,
                     workflowActionConsumed: false
                   };
@@ -1042,9 +1051,19 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function runWorkflowRecommendedAction(token) {
+                function workflowRouteActions(route) {
+                  const actions = Array.isArray(route?.actions) && route.actions.length ? route.actions : [route?.nextAction].filter(Boolean);
+                  return actions.filter(action => action?.enabled !== false && action?.actionId && action.actionId !== "none");
+                }
+
+                function workflowMessageActions(message) {
+                  const actions = Array.isArray(message?.workflowActions) && message.workflowActions.length ? message.workflowActions : [message?.workflowAction].filter(Boolean);
+                  return actions.filter(action => action?.enabled !== false && action?.actionId && action.actionId !== "none");
+                }
+
+                async function runWorkflowRecommendedAction(token, actionId = "") {
                   const message = state.chatHistory.find(item => item.workflowActionToken === token);
-                  const action = message?.workflowAction;
+                  const action = workflowMessageActions(message).find(item => item.actionId === actionId) || workflowMessageActions(message)[0];
                   if (!message || !action || message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
                   if (isGlobalBusy()) return out("当前有任务正在执行，请等待当前 run 完成后再启动下一步。");
                   let currentRoute = null;
@@ -1055,7 +1074,8 @@ public sealed class BrowserUiRenderer
                     return out("无法确认当前项目进度，请重新点击“下一步建议”后再启动推荐 run。");
                   }
                   if (message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
-                  if (!workflowActionsMatch(currentRoute?.nextAction, action)) {
+                  const currentActions = workflowRouteActions(currentRoute);
+                  if (!currentActions.some(currentAction => workflowActionsMatch(currentAction, action))) {
                     message.workflowActionConsumed = true;
                     state.workflowRouteActionConsumed = true;
                     state.workflowRouteActionToken = "";
@@ -1160,7 +1180,7 @@ public sealed class BrowserUiRenderer
                   shell.innerHTML = v2Steps.map(([id, label, iconName], index) => {
                     const status = v2StepStatus(id);
                     const mark = status === "done" ? "✓" : status === "fix" ? "×" : status === "continue" ? "•••" : "";
-                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-icon:url('${v2StepIconUrl(iconName)}')"><span class="v2-step-number">${index + 1}</span><span class="v2-step-icon"></span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
+                    return `<button class="v2-step-button ${status} ${v2SelectedStep === id ? "active" : ""}" data-v2-step="${id}" style="--step-icon:url('${v2StepIconUrl(iconName)}')"><span class="v2-step-icon"></span><span class="v2-step-number">${index + 1}.</span><span class="v2-step-label">${label}</span><span class="v2-step-mark">${mark}</span></button>`;
                   }).join("");
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
@@ -1840,7 +1860,7 @@ public sealed class BrowserUiRenderer
                     button.onclick = () => v2OpenGddOutlineTab();
                   });
                   document.querySelectorAll("[data-workflow-route-action-token]").forEach(button => {
-                    button.onclick = () => runWorkflowRecommendedAction(button.dataset.workflowRouteActionToken);
+                    button.onclick = () => runWorkflowRecommendedAction(button.dataset.workflowRouteActionToken, button.dataset.workflowRouteActionId || "");
                   });
                 }
 
@@ -1930,13 +1950,15 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderWorkflowRouteAction(message) {
-                  const action = message?.workflowAction;
-                  if (!action?.actionId || action.actionId === "none" || action.enabled === false) return "";
+                  const actions = workflowMessageActions(message);
+                  if (!actions.length) return "";
                   const consumed = !!message.workflowActionConsumed || state.workflowRouteActionConsumed || state.workflowRouteActionToken !== message.workflowActionToken;
-                  const label = consumed ? "进度已变更" : (action.buttonLabel || action.runName || action.label || "执行下一步");
                   return `
                     <div class="v2-workflow-action-row">
-                      <button type="button" class="secondary v2-workflow-route-action" data-workflow-route-action-token="${escapeHtml(message.workflowActionToken || "")}" ${consumed ? "disabled" : ""}>${escapeHtml(label)}</button>
+                      ${actions.map(action => {
+                        const label = consumed ? "进度已变更" : (action.buttonLabel || action.runName || action.label || "执行下一步");
+                        return `<button type="button" class="secondary v2-workflow-route-action" data-workflow-route-action-token="${escapeHtml(message.workflowActionToken || "")}" data-workflow-route-action-id="${escapeHtml(action.actionId || "")}" ${consumed ? "disabled" : ""}>${escapeHtml(label)}</button>`;
+                      }).join("")}
                     </div>
                   `;
                 }
@@ -1997,8 +2019,11 @@ public sealed class BrowserUiRenderer
                 async function loadServerChatHistoryForProject(projectId) {
                   if (!projectId) return;
                   try {
+                    const localWorkflowRouteEntries = state.chatHistory
+                      .map((message, index) => ({ message, previousKey: previousStoredMessageKey(index), nextKey: nextStoredMessageKey(index) }))
+                      .filter(entry => entry.message?.kind === "workflow-route");
                     const result = await api(`/api/projects/${projectId}/chat-history`);
-                    state.chatHistory = (result.messages || [])
+                    const serverMessages = (result.messages || [])
                       .map(message => ({
                         role: message.role,
                         content: sanitizePublicChatContent(message.content),
@@ -2006,12 +2031,15 @@ public sealed class BrowserUiRenderer
                         continueConsumed: !!message.continueConsumed,
                         suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || ""),
                         workflowAction: message.workflowAction || null,
+                        workflowActions: message.workflowActions || null,
                         workflowActionToken: message.workflowActionToken || "",
                         workflowActionConsumed: !!message.workflowActionConsumed,
                         workflowRoute: message.workflowRoute || null,
                         workflowIntent: message.workflowIntent || null
                       }))
                       .filter(isStoredChatMessage)
+                      .slice(-maxStoredChatMessages);
+                    state.chatHistory = mergeLocalWorkflowRouteMessages(serverMessages, localWorkflowRouteEntries)
                       .slice(-maxStoredChatMessages);
                     restoreWorkflowRouteActionFromHistory();
                     renderChatHistory();
@@ -2663,6 +2691,47 @@ public sealed class BrowserUiRenderer
                   return `${message?.role || ""}|${message?.kind || ""}|${sanitizePublicChatContent(message?.content || "")}`;
                 }
 
+                function previousStoredMessageKey(index) {
+                  for (let current = index - 1; current >= 0; current--) {
+                    const message = state.chatHistory[current];
+                    if (isStoredChatMessage(message) && message?.kind !== "workflow-route") return chatMessageKey(message);
+                  }
+                  return "";
+                }
+
+                function nextStoredMessageKey(index) {
+                  for (let current = index + 1; current < state.chatHistory.length; current++) {
+                    const message = state.chatHistory[current];
+                    if (isStoredChatMessage(message) && message?.kind !== "workflow-route") return chatMessageKey(message);
+                  }
+                  return "";
+                }
+
+                function mergeLocalWorkflowRouteMessages(serverMessages, localWorkflowRouteEntries) {
+                  const merged = [...serverMessages];
+                  for (const entry of localWorkflowRouteEntries) {
+                    if (!isStoredChatMessage(entry.message)) continue;
+                    if (merged.some(message => chatMessageKey(message) === chatMessageKey(entry.message))) continue;
+                    let inserted = false;
+                    if (entry.previousKey) {
+                      const previousIndex = merged.findIndex(message => chatMessageKey(message) === entry.previousKey);
+                      if (previousIndex >= 0) {
+                        merged.splice(previousIndex + 1, 0, entry.message);
+                        inserted = true;
+                      }
+                    }
+                    if (!inserted && entry.nextKey) {
+                      const nextIndex = merged.findIndex(message => chatMessageKey(message) === entry.nextKey);
+                      if (nextIndex >= 0) {
+                        merged.splice(nextIndex, 0, entry.message);
+                        inserted = true;
+                      }
+                    }
+                    if (!inserted) merged.push(entry.message);
+                  }
+                  return merged.filter(isStoredChatMessage);
+                }
+
                 function isStoredChatMessage(message) {
                   return message &&
                     !message.pending &&
@@ -2670,6 +2739,17 @@ public sealed class BrowserUiRenderer
                     (message.role === "user" || message.role === "assistant") &&
                     typeof message.content === "string" &&
                     message.content.trim().length > 0;
+                }
+
+                function isLlmChatHistoryMessage(message) {
+                  return isStoredChatMessage(message) && message.kind !== "workflow-route";
+                }
+
+                function recentChatHistoryForLlm() {
+                  return state.chatHistory
+                    .filter(isLlmChatHistoryMessage)
+                    .slice(-3)
+                    .map(message => ({ role: message.role, content: message.content }));
                 }
 
                 function normalizeStoredChatMessage(message) {
@@ -2681,6 +2761,7 @@ public sealed class BrowserUiRenderer
                     suggestedFeedback: sanitizePublicChatContent(message.suggestedFeedback || "")
                   };
                   if (message.workflowAction) stored.workflowAction = message.workflowAction;
+                  if (message.workflowActions) stored.workflowActions = message.workflowActions;
                   if (message.workflowActionToken) stored.workflowActionToken = message.workflowActionToken;
                   if (message.workflowActionConsumed) stored.workflowActionConsumed = true;
                   if (message.workflowRoute) stored.workflowRoute = message.workflowRoute;
@@ -2694,10 +2775,7 @@ public sealed class BrowserUiRenderer
                   state.workflowRouteActionConsumed = false;
                   const latest = [...(state.chatHistory || [])].reverse().find(message =>
                     message.workflowActionToken &&
-                    message.workflowAction &&
-                    message.workflowAction.actionId &&
-                    message.workflowAction.actionId !== "none" &&
-                    message.workflowAction.enabled !== false &&
+                    workflowMessageActions(message).length &&
                     !message.workflowActionConsumed);
                   if (!latest) return;
                   state.workflowRouteActionToken = latest.workflowActionToken;
@@ -2887,7 +2965,7 @@ public sealed class BrowserUiRenderer
                       model: $("globalModel").value || null,
                       skillActionId: $("chatSkillMode").value || "normal",
                       attachments: currentChatAttachmentsForRun(),
-                      history: state.chatHistory.slice(-3)
+                      history: recentChatHistoryForLlm()
                     };
                     state.chatHistory.push({ role: "user", content: message });
                     renderChatHistory();

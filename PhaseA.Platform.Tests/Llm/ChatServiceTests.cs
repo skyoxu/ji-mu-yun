@@ -165,6 +165,52 @@ public sealed class ChatServiceTests
     }
 
     [Fact]
+    public async Task SendAsync_FiltersWorkflowRouteScanMessagesFromLlmHistory_WhenNewApiBackendIsSelected()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var variableName = "PHASEA_TEST_TOKEN_" + Guid.NewGuid().ToString("N").ToUpperInvariant();
+        Environment.SetEnvironmentVariable(variableName, "test-token");
+        Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
+        try
+        {
+            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var accountId = await store.EnsureSingleAdminAsync();
+            var projectId = await CreateProjectAsync(store, options, accountId);
+            await store.UpsertLlmBindingAsync(new LlmBindingCommand(
+                accountId,
+                "new-api",
+                "https://new-api.example.com/v1",
+                "new-api-user-1",
+                $"env:{variableName}"));
+            var client = new FakeChatClient("assistant reply");
+            var service = Service(store, options, client);
+            var history = new[]
+            {
+                new ChatMessage("user", "normal-1"),
+                new ChatMessage("assistant", "normal-2"),
+                new ChatMessage("assistant", "系统扫描结果：\n\n项目状态摘要\n\n推荐 run：下载项目文件\n系统不会自动启动 run。需要你点击下方一次性按钮确认。"),
+                new ChatMessage("user", "normal-3")
+            };
+
+            var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello", "gpt-5.4", history));
+
+            result.Status.Should().Be("succeeded");
+            client.LastMessages.Should().Contain(message => message.Content == "normal-1");
+            client.LastMessages.Should().Contain(message => message.Content == "normal-2");
+            client.LastMessages.Should().Contain(message => message.Content == "normal-3");
+            client.LastMessages.Should().NotContain(message => message.Content.Contains("系统扫描结果", StringComparison.Ordinal));
+            client.LastMessages.Should().NotContain(message => message.Content.Contains("推荐 run", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variableName, null);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", null);
+        }
+    }
+
+    [Fact]
     public async Task SendAsync_DoesNotPersistTxtAttachmentContentIntoProjectChatMemory_WhenNewApiBackendIsSelected()
     {
         using var database = TempSqliteDatabase.Create();

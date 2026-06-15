@@ -393,8 +393,7 @@ public sealed class ChatService
     {
         return string.Join(
             Environment.NewLine,
-            (request.History ?? [])
-                .TakeLast(MaxHistoryMessages)
+            FilterChatHistoryForLlm(request.History)
                 .Where(message => !string.IsNullOrWhiteSpace(message.Content))
                 .Select(message => $"{message.Role}: {message.Content.Trim()}"));
     }
@@ -480,7 +479,7 @@ public sealed class ChatService
                 $"Current project free-chat memory for continuity only. Do not repeat it unless directly useful:\n{memorySummary.Trim()}"));
         }
 
-        foreach (var message in (request.History ?? []).TakeLast(MaxHistoryMessages))
+        foreach (var message in FilterChatHistoryForLlm(request.History))
         {
             if ((message.Role == "user" || message.Role == "assistant") &&
                 !string.IsNullOrWhiteSpace(message.Content))
@@ -500,6 +499,27 @@ public sealed class ChatService
                 """;
         messages.Add(new ChatMessage("user", userMessage));
         return messages;
+    }
+
+    private static IReadOnlyList<ChatMessage> FilterChatHistoryForLlm(IReadOnlyList<ChatMessage>? history)
+    {
+        return (history ?? [])
+            .Where(IsAllowedChatHistoryMessage)
+            .TakeLast(MaxHistoryMessages)
+            .ToArray();
+    }
+
+    private static bool IsAllowedChatHistoryMessage(ChatMessage message)
+    {
+        if (message.Role is not ("user" or "assistant") || string.IsNullOrWhiteSpace(message.Content))
+        {
+            return false;
+        }
+
+        var content = message.Content.Trim();
+        return !content.StartsWith("系统扫描结果：", StringComparison.Ordinal) &&
+               !content.Contains("系统不会自动启动 run。需要你点击下方一次性按钮确认。", StringComparison.Ordinal) &&
+               !content.Contains("推荐 run：", StringComparison.Ordinal);
     }
 
     private async Task UpdateProjectChatMemoryAsync(
