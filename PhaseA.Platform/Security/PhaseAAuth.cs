@@ -9,6 +9,7 @@ public static class PhaseAAuth
     public const string AuthFailureCode = "authentication_required";
     public const string AdminRole = "admin";
     public const string UserRole = "user";
+    public const string AccessTokenCookieName = "phaseAAccessToken";
 
     public static bool IsConfigured(PhaseAPlatformOptions options)
     {
@@ -76,12 +77,22 @@ public static class PhaseAAuth
         var authorization = request.Headers.Authorization.ToString();
         if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            return authorization["Bearer ".Length..].Trim();
+            var bearerToken = authorization["Bearer ".Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(bearerToken))
+            {
+                return bearerToken;
+            }
         }
 
         if (request.Headers.TryGetValue("X-PhaseA-Admin-Token", out var adminTokenHeader))
         {
             return adminTokenHeader.ToString().Trim();
+        }
+
+        if (request.Cookies.TryGetValue(AccessTokenCookieName, out var accessTokenCookie) &&
+            !string.IsNullOrWhiteSpace(accessTokenCookie))
+        {
+            return accessTokenCookie.Trim();
         }
 
         return null;

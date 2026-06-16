@@ -175,6 +175,7 @@ app.Use(async (context, next) =>
     context.Items["phasea.role"] = identity.Role;
     context.Items["phasea.accountId"] = identity.AccountId;
     context.Items["phasea.username"] = identity.Username;
+    PersistAccessTokenCookie(context);
     await next(context);
 });
 
@@ -1894,6 +1895,28 @@ static async Task<AccountIdentity?> ResolveIdentityAsync(HttpContext context, st
     }
 
     return null;
+}
+
+static void PersistAccessTokenCookie(HttpContext context)
+{
+    var token = PhaseAAuth.ReadBearerOrHeaderToken(context.Request);
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        return;
+    }
+
+    context.Response.Cookies.Append(
+        PhaseAAuth.AccessTokenCookieName,
+        token,
+        new CookieOptions
+        {
+            HttpOnly = false,
+            IsEssential = true,
+            MaxAge = TimeSpan.FromDays(30),
+            Path = "/",
+            SameSite = SameSiteMode.Lax,
+            Secure = context.Request.IsHttps
+        });
 }
 
 static AccountIdentity CurrentIdentity(HttpContext context)

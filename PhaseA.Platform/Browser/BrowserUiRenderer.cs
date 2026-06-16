@@ -1823,6 +1823,7 @@ public sealed class BrowserUiRenderer
                   <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
                   <button id="saveToken">验证并进入</button>
                   <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
+                  <p id="sessionDiagnostics" class="muted"></p>
                 </section>
                 <section id="createProjectPanel" class="stack hidden">
                   <h2 id="createProjectTitle">创建项目</h2>
@@ -1990,8 +1991,26 @@ public sealed class BrowserUiRenderer
                 ];
                 const $ = id => document.getElementById(id);
                 const out = value => $("output").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
-                const token = () => $("token").value.trim();
-                const headers = () => ({ "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" });
+                function storedAccessToken() {
+                  return localStorage.getItem("phaseAAccessToken") || readBrowserCookie("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                }
+                function token() {
+                  const inputValue = $("token").value.trim();
+                  if (inputValue) return inputValue;
+                  const stored = storedAccessToken();
+                  if (stored) {
+                    $("token").value = stored;
+                    if (!localStorage.getItem("phaseAAccessToken")) localStorage.setItem("phaseAAccessToken", stored);
+                    if (!readBrowserCookie("phaseAAccessToken")) writeBrowserCookie("phaseAAccessToken", stored, 60 * 60 * 24 * 30);
+                  }
+                  return stored;
+                }
+                function headers() {
+                  const currentToken = token();
+                  return currentToken
+                    ? { "Authorization": `Bearer ${currentToken}`, "Content-Type": "application/json" }
+                    : { "Content-Type": "application/json" };
+                }
 
                 function setModalVisible(id, visible) {
                   $(id).classList.toggle("hidden", !visible);
@@ -2025,13 +2044,54 @@ public sealed class BrowserUiRenderer
                 }
 
                 function setTokenFromStorage() {
-                  $("token").value = localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                  $("token").value = storedAccessToken();
+                }
+                function readBrowserCookie(name) {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie
+                    .split(";")
+                    .map(part => part.trim())
+                    .filter(Boolean)
+                    .map(part => part.startsWith(prefix) ? decodeURIComponent(part.slice(prefix.length)) : "")
+                    .find(Boolean) || "";
+                }
+                function writeBrowserCookie(name, value, maxAgeSeconds) {
+                  const secure = location.protocol === "https:" ? "; Secure" : "";
+                  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value || "")}; Max-Age=${Number(maxAgeSeconds) || 0}; Path=/; SameSite=Lax${secure}`;
+                }
+                function clearBrowserCookie(name) {
+                  writeBrowserCookie(name, "", 0);
                 }
                 function persistAccessTokenFromInput() {
                   const value = token();
                   if (!value) return;
                   localStorage.setItem("phaseAAccessToken", value);
                   localStorage.removeItem("phaseAAdminToken");
+                  writeBrowserCookie("phaseAAccessToken", value, 60 * 60 * 24 * 30);
+                  updateSessionDiagnostics("token_saved");
+                }
+
+                function updateSessionDiagnostics(reason = "") {
+                  const target = $("sessionDiagnostics");
+                  if (!target) return;
+                  const inputLength = $("token")?.value?.trim?.().length || 0;
+                  const localLength = (localStorage.getItem("phaseAAccessToken") || "").length;
+                  const cookieLength = (readBrowserCookie("phaseAAccessToken") || "").length;
+                  const adminLength = (localStorage.getItem("phaseAAdminToken") || "").length;
+                  target.textContent = `登录诊断：${location.origin} | input:${inputLength} local:${localLength} cookie:${cookieLength} admin:${adminLength}${reason ? ` | ${reason}` : ""}`;
+                }
+
+                window.addEventListener("error", event => {
+                  updateSessionDiagnostics(`js_error:${event.message || "unknown"}:${event.lineno || 0}`);
+                });
+                window.addEventListener("unhandledrejection", event => {
+                  const reason = event.reason?.message || event.reason?.status || event.reason || "unknown";
+                  updateSessionDiagnostics(`promise_error:${reason}`);
+                });
+
+                function callV2(name, ...args) {
+                  const fn = globalThis[name];
+                  return typeof fn === "function" ? fn(...args) : undefined;
                 }
 
                 function renderChatHistory() {
@@ -2059,7 +2119,7 @@ public sealed class BrowserUiRenderer
                     if (history) history.scrollTop = history.scrollHeight;
                   });
                   document.querySelectorAll(".v2-open-gdd-outline").forEach(button => {
-                    button.onclick = () => v2OpenGddOutlineTab();
+                    button.onclick = () => callV2("v2OpenGddOutlineTab");
                   });
                   document.querySelectorAll("[data-workflow-route-action-token]").forEach(button => {
                     button.onclick = () => runWorkflowRecommendedAction(button.dataset.workflowRouteActionToken, button.dataset.workflowRouteActionId || "");
@@ -2778,7 +2838,7 @@ public sealed class BrowserUiRenderer
                 async function runUiOptimization() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!v2HasPrototypeSkeleton()) return out("请先完成原型骨架创建，再运行 UI 优化。");
+                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行 UI 优化。");
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
                     return out("请先完成迭代计划，再运行 UI 优化。");
@@ -2791,7 +2851,7 @@ public sealed class BrowserUiRenderer
                       body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
                     });
                     $("uiOptimizationStatus").textContent = result.summary || "UI 优化已完成。";
-                    if (String(result.status || "").toLowerCase() === "succeeded") v2SetPrototypeValidationInvalidated(true);
+                    if (String(result.status || "").toLowerCase() === "succeeded") callV2("v2SetPrototypeValidationInvalidated", true);
                     out(result);
                   } catch (error) {
                     $("uiOptimizationStatus").textContent = `UI 优化失败：${error.message || error}`;
@@ -2800,7 +2860,7 @@ public sealed class BrowserUiRenderer
                     setLocalBusy(false);
                     await loadRuns();
                     await refreshActiveRun();
-                    v2RenderProgress();
+                    callV2("v2RenderProgress");
                   }
                 }
 
@@ -3121,6 +3181,7 @@ public sealed class BrowserUiRenderer
                   $("sessionStatus").textContent = token()
                     ? "Token 已保留。连接失败或认证未通过时，请点击验证并进入重试。"
                     : "Please paste an access token to sign in.";
+                  updateSessionDiagnostics("logged_out");
                 }
 
                 function showAdminShell(role = state.role || "user") {
@@ -3238,7 +3299,7 @@ public sealed class BrowserUiRenderer
                     state.gddOutlineReady = !!cached.gddOutlineReady;
                     $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                   }
-                  v2RenderProgress();
+                  callV2("v2RenderProgress");
                 }
 
                 function hasInitializingProject(projects) {
@@ -3261,7 +3322,7 @@ public sealed class BrowserUiRenderer
                   $("chatPanel").classList.add("hidden");
                   $("initStatusPanel").classList.remove("hidden");
                   $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(sanitizePublicFailureContent(error || "初始化失败，失败项目已自动清理。"))}`;
-                  v2RenderLeftProjectList();
+                  callV2("v2RenderLeftProjectList");
                 }
 
 
@@ -3367,7 +3428,7 @@ public sealed class BrowserUiRenderer
                 async function createGddDocument() {
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (state.gddOutlineReady) {
-                    v2OpenGddOutlineTab();
+                    callV2("v2OpenGddOutlineTab");
                     return;
                   }
                   if (!guardGlobalAction()) return;
@@ -4017,7 +4078,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedback() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!v2HasPrototypeSkeleton()) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
+                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
                   const feedback = $("chatMessage").value.trim();
                   const goal = currentNeedsFixRouteGoal();
                   if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
@@ -4204,18 +4265,18 @@ public sealed class BrowserUiRenderer
                   const selected = $("chatSkillMode").value || "normal";
                   if (selected === "normal") {
                     $("chatSkillDescription").textContent = "不激活 skills，按通用 Phase A 原型顾问方式回答。";
-                    v2RenderAdvancedPlanningMode();
+                    callV2("v2RenderAdvancedPlanningMode");
                     return;
                   }
                   const action = state.skillActions.find(item => item.actionId === selected);
                   if (!action) {
                     $("chatSkillMode").value = "normal";
                     $("chatSkillDescription").textContent = "当前能力不可用，已回退为普通模式。";
-                    v2RenderAdvancedPlanningMode();
+                    callV2("v2RenderAdvancedPlanningMode");
                     return;
                   }
                   $("chatSkillDescription").textContent = action.description || "当前能力暂无说明。";
-                  v2RenderAdvancedPlanningMode();
+                  callV2("v2RenderAdvancedPlanningMode");
                 }
 
                 const longLlmTimeoutMs = 1200 * 1000;
@@ -4252,6 +4313,7 @@ public sealed class BrowserUiRenderer
                   try {
                     const session = await api("/api/session");
                     sessionValidated = true;
+                    updateSessionDiagnostics(`session_ok:${session.role || "user"}`);
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
                       state.projects = [];
@@ -4290,7 +4352,7 @@ public sealed class BrowserUiRenderer
                     `).join("");
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
-                    v2RenderLeftProjectList();
+                    callV2("v2RenderLeftProjectList");
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
                     } else if (visibleProjects.length === 0) {
@@ -4300,11 +4362,18 @@ public sealed class BrowserUiRenderer
                     }
                     out(projects);
                   } catch (error) {
-                    if (!sessionValidated && (error?.status === 401 || error?.status === 403)) {
-                      localStorage.removeItem("phaseAAccessToken");
-                      localStorage.removeItem("phaseAAdminToken");
+                    if (!sessionValidated) {
+                      if (error?.status === 401 || error?.status === 403) {
+                        localStorage.removeItem("phaseAAccessToken");
+                        localStorage.removeItem("phaseAAdminToken");
+                        clearBrowserCookie("phaseAAccessToken");
+                        updateSessionDiagnostics(`session_auth_failed:${error?.status || ""}`);
+                      }
+                      showLoggedOut();
+                    } else {
+                      $("sessionStatus").textContent = "Token 已验证。项目状态刷新失败，请稍后重试。";
+                      updateSessionDiagnostics(`project_refresh_failed:${error?.status || ""}`);
                     }
-                    showLoggedOut();
                     showError(error);
                   }
                 }
@@ -4375,7 +4444,7 @@ public sealed class BrowserUiRenderer
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
-                  v2RenderLeftProjectList();
+                  callV2("v2RenderLeftProjectList");
                   applyProjectStateCache(projectId);
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
@@ -4521,7 +4590,7 @@ public sealed class BrowserUiRenderer
                         if (createdProject?.projectId && state.projectId !== createdProject.projectId) {
                           selectProject(createdProject.projectId);
                         }
-                        v2RenderLeftProjectList();
+                        callV2("v2RenderLeftProjectList");
                         continue;
                       }
                       const visibleProjects = listableProjects(projects);
@@ -4633,7 +4702,7 @@ public sealed class BrowserUiRenderer
                     renderRunsListFromState(result.projectHealth);
                     writeProjectStateCache({ runs: state.runs, projectHealth: result.projectHealth || null });
                     renderFeedbackRecords();
-                    v2RenderProgress();
+                    callV2("v2RenderProgress");
                     out(result);
                   } catch (error) { showError(error); }
                 }
@@ -4714,7 +4783,7 @@ public sealed class BrowserUiRenderer
                     if (primaryActionButton) {
                       primaryActionButton.onclick = () => runFeedbackPrimaryAction();
                     }
-                    v2HideLegacyChatFeedback();
+                    callV2("v2HideLegacyChatFeedback");
                     return;
                   }
 
@@ -4725,13 +4794,13 @@ public sealed class BrowserUiRenderer
                       <p class="muted">当前项目还没有迭代计划，以下仅展示旧正式反馈记录。</p>
                       <p class="muted">正式反馈次数：${escapeHtml(String(legacyFeedbackRuns.length))}</p>
                     `;
-                    v2HideLegacyChatFeedback();
+                    callV2("v2HideLegacyChatFeedback");
                     return;
                   }
 
                   $("feedbackSummary").className = "card muted";
                   $("feedbackSummary").textContent = "尚未生成迭代计划。";
-                  v2HideLegacyChatFeedback();
+                  callV2("v2HideLegacyChatFeedback");
                 }
 
                 function feedbackPrimaryActionState() {
@@ -5123,7 +5192,7 @@ public sealed class BrowserUiRenderer
                   $("openProjectDownloads").onclick = () => {
                     if (!state.projectId) return;
                     if (typeof v2OpenStepTab === "function") {
-                      v2OpenStepTab("download-project");
+                      callV2("v2OpenStepTab", "download-project");
                     } else {
                       window.open(`/downloads?projectId=${encodeURIComponent(state.projectId)}`, "_blank", "noreferrer");
                     }
@@ -5189,7 +5258,7 @@ public sealed class BrowserUiRenderer
                 async function loadAssetInventory() {
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (typeof v2OpenStepTab === "function") {
-                    v2OpenStepTab("asset-inventory");
+                    callV2("v2OpenStepTab", "asset-inventory");
                   } else {
                     window.open(`/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}`, "_blank", "noreferrer");
                   }
@@ -5407,7 +5476,7 @@ public sealed class BrowserUiRenderer
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
                     if (acceptanceStatus === "succeeded") {
-                      v2SetPrototypeValidationInvalidated(false);
+                      callV2("v2SetPrototypeValidationInvalidated", false);
                     }
                     renderPrototypeProgress(progress);
                     renderPrototypeAcceptanceSummary(progress);
@@ -5643,6 +5712,7 @@ public sealed class BrowserUiRenderer
                 $("logout").onclick = () => {
                   localStorage.removeItem("phaseAAdminToken");
                   localStorage.removeItem("phaseAAccessToken");
+                  clearBrowserCookie("phaseAAccessToken");
                   $("token").value = "";
                   state.projectId = "";
                   state.projects = [];
@@ -5710,9 +5780,11 @@ public sealed class BrowserUiRenderer
                 $("executeRepairStep").onclick = executeRepairStep;
                 $("chatSkillMode").onchange = () => {
                   renderSelectedSkillAction();
-                  v2WriteProjectUiState();
+                  callV2("v2WriteProjectUiState");
                 };
-                window.addEventListener("beforeunload", v2WriteProjectUiState);
+                window.addEventListener("beforeunload", () => {
+                  callV2("v2WriteProjectUiState");
+                });
                 window.addEventListener("message", event => {
                   if (event.origin !== location.origin) return;
                   if (event.data?.type !== "phasea:gdd-outline-deleted") return;
@@ -5738,7 +5810,17 @@ public sealed class BrowserUiRenderer
                   runNeedsFixIterationGoal(button.dataset.needsFixGoal);
                 });
                 setTokenFromStorage();
+                updateSessionDiagnostics("page_loaded");
                 if (token()) refreshProjects(); else showLoggedOut();
+                setTimeout(() => {
+                  const currentToken = token();
+                  if (currentToken) {
+                    persistAccessTokenFromInput();
+                    if (!state.authenticated) refreshProjects();
+                  } else {
+                    updateSessionDiagnostics("autofill_empty");
+                  }
+                }, 250);
                 setInterval(refreshActiveRun, 5000);
               </script>
             </body>
@@ -5987,7 +6069,12 @@ public sealed class BrowserUiRenderer
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
                 if (params.get("embedded") === "1") document.body.classList.add("embedded");
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
                 const token = () => localStorage.getItem("phaseAAccessToken")
+                  || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "")
                   || localStorage.getItem("phaseAAdminToken")
                   || window.parent?.document?.getElementById?.("token")?.value?.trim?.()
                   || "";
@@ -6161,7 +6248,11 @@ public sealed class BrowserUiRenderer
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
                 if (params.get("embedded") === "1") document.body.classList.add("embedded");
-                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || window.parent?.document?.getElementById?.("token")?.value?.trim?.() || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 async function loadPackages() {
@@ -6496,7 +6587,11 @@ public sealed class BrowserUiRenderer
                 const projectId = params.get("projectId") || "";
                 const model = params.get("model") || "gpt-5.5";
                 if (params.get("embedded") === "1") document.body.classList.add("embedded");
-                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || window.parent?.document?.getElementById?.("token")?.value?.trim?.() || "";
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [], activeAsset: null };
@@ -7039,10 +7134,14 @@ public sealed class BrowserUiRenderer
                   </table>
                 </section>
               </main>
-              <script>
+                <script>
                 const $ = id => document.getElementById(id);
                 const params = new URLSearchParams(location.search);
-                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || window.parent?.document?.getElementById?.("token")?.value?.trim?.() || "";
                 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 $("grain").value = params.get("grain") || "day";
                 $("split").value = params.get("split") || "account";
@@ -7173,10 +7272,14 @@ public sealed class BrowserUiRenderer
                   </table>
                 </section>
               </main>
-              <script>
+                <script>
                 const mode = "__MODE__";
                 const $ = id => document.getElementById(id);
-                const token = () => localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || window.parent?.document?.getElementById?.("token")?.value?.trim?.() || "";
                 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 const formatSeconds = value => {
                   if (value === null || value === undefined || value === "") return "-";
