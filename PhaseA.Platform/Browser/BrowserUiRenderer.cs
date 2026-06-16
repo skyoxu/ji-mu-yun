@@ -2027,6 +2027,12 @@ public sealed class BrowserUiRenderer
                 function setTokenFromStorage() {
                   $("token").value = localStorage.getItem("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 }
+                function persistAccessTokenFromInput() {
+                  const value = token();
+                  if (!value) return;
+                  localStorage.setItem("phaseAAccessToken", value);
+                  localStorage.removeItem("phaseAAdminToken");
+                }
 
                 function renderChatHistory() {
                   applyChatWorkflowActions();
@@ -4242,8 +4248,10 @@ public sealed class BrowserUiRenderer
 
                 async function refreshProjects(options = {}) {
                   const autoSelect = options.autoSelect !== false;
+                  let sessionValidated = false;
                   try {
                     const session = await api("/api/session");
+                    sessionValidated = true;
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
                       state.projects = [];
@@ -4292,7 +4300,7 @@ public sealed class BrowserUiRenderer
                     }
                     out(projects);
                   } catch (error) {
-                    if (error?.status === 401 || error?.status === 403) {
+                    if (!sessionValidated && (error?.status === 401 || error?.status === 403)) {
                       localStorage.removeItem("phaseAAccessToken");
                       localStorage.removeItem("phaseAAdminToken");
                     }
@@ -5626,11 +5634,12 @@ public sealed class BrowserUiRenderer
                 }
 
                 $("saveToken").onclick = () => {
-                  localStorage.setItem("phaseAAccessToken", token());
-                  localStorage.removeItem("phaseAAdminToken");
+                  persistAccessTokenFromInput();
                   $("sessionStatus").textContent = token() ? "Token 验证中..." : "Token 已清空。";
                   if (token()) refreshProjects(); else showLoggedOut();
                 };
+                $("token").addEventListener("input", persistAccessTokenFromInput);
+                $("token").addEventListener("change", persistAccessTokenFromInput);
                 $("logout").onclick = () => {
                   localStorage.removeItem("phaseAAdminToken");
                   localStorage.removeItem("phaseAAccessToken");

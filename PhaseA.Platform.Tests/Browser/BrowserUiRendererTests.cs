@@ -1118,7 +1118,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setInterval(refreshActiveRun, 5000)");
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
-        html.Should().Contain("if (error?.status === 401 || error?.status === 403)");
+        html.Should().Contain("let sessionValidated = false");
+        html.Should().Contain("sessionValidated = true");
+        html.Should().Contain("if (!sessionValidated && (error?.status === 401 || error?.status === 403))");
+        html.Should().Contain("function persistAccessTokenFromInput()");
+        html.Should().Contain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
+        html.Should().Contain("$(\"token\").addEventListener(\"change\", persistAccessTokenFromInput)");
         html.Should().Contain("Token 已保留");
         html.Should().Contain("projectName");
         html.Should().Contain("projectNameError");
