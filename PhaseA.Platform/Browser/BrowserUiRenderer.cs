@@ -3112,7 +3112,9 @@ public sealed class BrowserUiRenderer
                   $("chatPanel").classList.add("hidden");
                   state.nextSuggestedFeedback = "";
                   applyGlobalBusyState();
-                  $("sessionStatus").textContent = "Please paste an access token to sign in.";
+                  $("sessionStatus").textContent = token()
+                    ? "Token 已保留。连接失败或认证未通过时，请点击验证并进入重试。"
+                    : "Please paste an access token to sign in.";
                 }
 
                 function showAdminShell(role = state.role || "user") {
@@ -4290,8 +4292,10 @@ public sealed class BrowserUiRenderer
                     }
                     out(projects);
                   } catch (error) {
-                    localStorage.removeItem("phaseAAccessToken");
-                    localStorage.removeItem("phaseAAdminToken");
+                    if (error?.status === 401 || error?.status === 403) {
+                      localStorage.removeItem("phaseAAccessToken");
+                      localStorage.removeItem("phaseAAdminToken");
+                    }
                     showLoggedOut();
                     showError(error);
                   }

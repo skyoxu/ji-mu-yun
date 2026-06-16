@@ -1118,6 +1118,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setInterval(refreshActiveRun, 5000)");
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
+        html.Should().Contain("if (error?.status === 401 || error?.status === 403)");
+        html.Should().Contain("Token 已保留");
         html.Should().Contain("projectName");
         html.Should().Contain("projectNameError");
         html.Should().Contain("gameNameError");
