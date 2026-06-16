@@ -1719,6 +1719,11 @@ public sealed class PhaseAMetadataStore
         {
             await UpsertRunDurationMetricAsync(connection, transaction, runId, finishedUtc, cancellationToken);
             await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
+            var projectId = await GetRunProjectIdAsync(connection, runId, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(projectId))
+            {
+                await ReleaseRunnerLockForRunAsync(connection, transaction, projectId, runId, cancellationToken);
+            }
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -1930,6 +1935,26 @@ public sealed class PhaseAMetadataStore
         CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            DELETE FROM runner_locks
+            WHERE project_id = $project_id
+              AND run_id = $run_id;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$run_id", runId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task ReleaseRunnerLockForRunAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string projectId,
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             DELETE FROM runner_locks

@@ -6199,6 +6199,7 @@ public sealed class BrowserUiRenderer
                 .list { display: grid; gap: 0.75rem; }
                 .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.5rem; background: #f3ead9; display: grid; place-items: center; cursor: pointer; }
                 .asset-card { display: grid; gap: 0.65rem; align-content: start; }
+                .asset-unit-name { margin: 0; color: var(--ink); font-size: 0.95rem; line-height: 1.3; font-weight: 800; }
                 .asset-role { min-height: 2.2rem; margin: 0; color: var(--ink); font-size: 0.92rem; line-height: 1.3; }
                 .asset-card-actions { display: grid; grid-template-columns: minmax(9.5rem, 1fr) minmax(4rem, 0.5fr); gap: 0.5rem; align-items: center; }
                 .asset-card-actions button { min-width: 0; white-space: nowrap; }
@@ -6231,7 +6232,7 @@ public sealed class BrowserUiRenderer
                   position: fixed;
                   inset: 0;
                   display: none;
-                  align-items: flex-start;
+                  align-items: center;
                   justify-content: center;
                   overflow: auto;
                   padding: 1rem;
@@ -6249,7 +6250,23 @@ public sealed class BrowserUiRenderer
                   border-radius: 0.5rem;
                   padding: 0.75rem;
                   box-shadow: 0 1.4rem 4rem rgba(23, 33, 27, 0.28);
-                  transform: translate(14px, 14px);
+                  position: relative;
+                }
+                .asset-original-preview-close {
+                  position: absolute;
+                  top: 0.35rem;
+                  right: 0.35rem;
+                  width: 2rem;
+                  height: 2rem;
+                  padding: 0;
+                  display: inline-grid;
+                  place-items: center;
+                  border-radius: 999px;
+                  background: rgba(255, 253, 248, 0.92);
+                  border: 1px solid var(--line);
+                  color: var(--ink);
+                  font-size: 1.2rem;
+                  line-height: 1;
                 }
                 .asset-original-preview-layer img {
                   display: block;
@@ -6316,6 +6333,7 @@ public sealed class BrowserUiRenderer
               </div>
               <div id="assetOriginalPreviewOverlay" class="asset-original-preview-overlay" aria-hidden="true">
                 <div id="assetOriginalPreviewLayer" class="asset-original-preview-layer">
+                  <button id="closeAssetOriginalPreviewButton" class="asset-original-preview-close" type="button" aria-label="关闭原图预览">×</button>
                   <strong id="assetOriginalPreviewTitle">原图预览</strong>
                   <div id="assetOriginalPreviewMeta" class="asset-original-preview-meta"></div>
                   <img id="assetOriginalPreviewImage" alt="素材原图预览">
@@ -6330,7 +6348,6 @@ public sealed class BrowserUiRenderer
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [], activeAsset: null };
-                let assetPreviewHideTimer = null;
                 const cacheKey = () => `phaseA.assetLibrary.${projectId}.${model}`;
 
                 function readAssetCache() {
@@ -6476,7 +6493,16 @@ public sealed class BrowserUiRenderer
                   const downloadUrl = previewUrl || "";
                   const downloadName = assetDownloadName(model, previewUrl);
                   const image = previewUrl ? `<img class="asset-preview" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">预览不可用</div>`;
-                  return `<article class="card asset-card"><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(downloadUrl)}" data-asset-download-name="${escapeHtml(downloadName)}" ${downloadUrl ? "" : "disabled"}>下载</button></div></article>`;
+                  return `<article class="card asset-card"><p class="asset-unit-name">使用单位：${escapeHtml(assetUnitName(model.unit))}</p><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(downloadUrl)}" data-asset-download-name="${escapeHtml(downloadName)}" ${downloadUrl ? "" : "disabled"}>下载</button></div></article>`;
+                }
+
+                function assetUnitName(unit) {
+                  const name = String(unit?.instanceName || "").trim();
+                  if (name) return name;
+                  const kind = String(unit?.kind || "").trim();
+                  if (kind.includes("map")) return "地图场景";
+                  if (kind.includes("sprite")) return "角色或物件";
+                  return "未命名单位";
                 }
 
                 function assetRoleText(unit) {
@@ -6511,7 +6537,7 @@ public sealed class BrowserUiRenderer
                   const preview = selected?.previewUrl || "";
                   const downloadName = assetDownloadName(model, preview);
                   const image = preview ? `<img class="asset-preview" src="${escapeHtml(preview)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">待生成</div>`;
-                  return `<article class="card asset-card"><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(preview)}" data-asset-download-name="${escapeHtml(downloadName)}" ${preview ? "" : "disabled"}>下载</button></div></article>`;
+                  return `<article class="card asset-card"><p class="asset-unit-name">使用单位：${escapeHtml(assetUnitName(model.unit))}</p><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(preview)}" data-asset-download-name="${escapeHtml(downloadName)}" ${preview ? "" : "disabled"}>下载</button></div></article>`;
                 }
 
                 function showAssetHistory(unitKey) {
@@ -6592,33 +6618,7 @@ public sealed class BrowserUiRenderer
                   };
                 }
 
-                function clearAssetPreviewHideTimer() {
-                  if (assetPreviewHideTimer) {
-                    clearTimeout(assetPreviewHideTimer);
-                    assetPreviewHideTimer = null;
-                  }
-                }
-
-                function scheduleHideAssetOriginalPreview() {
-                  clearAssetPreviewHideTimer();
-                  assetPreviewHideTimer = setTimeout(hideAssetOriginalPreview, 3000);
-                }
-
-                function positionAssetOriginalPreview(event) {
-                  const { layer } = assetPreviewOverlay();
-                  if (!layer || !event) return;
-                  const margin = 14;
-                  const width = layer.offsetWidth || 320;
-                  const height = layer.offsetHeight || 240;
-                  const left = Math.min(Math.max(8, event.clientX + margin), Math.max(8, window.innerWidth - width - 8));
-                  const top = Math.min(Math.max(8, event.clientY + margin), Math.max(8, window.innerHeight - height - 8));
-                  layer.style.position = "fixed";
-                  layer.style.left = `${left}px`;
-                  layer.style.top = `${top}px`;
-                }
-
                 function hideAssetOriginalPreview() {
-                  clearAssetPreviewHideTimer();
                   const { overlay, image } = assetPreviewOverlay();
                   if (!overlay || !image) return;
                   overlay.classList.remove("open");
@@ -6627,11 +6627,10 @@ public sealed class BrowserUiRenderer
                   image.alt = "素材原图预览";
                 }
 
-                function showAssetOriginalPreview(source, event = null) {
+                function showAssetOriginalPreview(source) {
                   const previewUrl = source?.getAttribute?.("src") || "";
                   if (!previewUrl) return;
-                  clearAssetPreviewHideTimer();
-                  const { overlay, title, meta, image, layer } = assetPreviewOverlay();
+                  const { overlay, title, meta, image } = assetPreviewOverlay();
                   if (!overlay || !title || !meta || !image) return;
                   const altText = source.getAttribute("alt") || "素材原图";
                   title.textContent = altText;
@@ -6639,19 +6638,13 @@ public sealed class BrowserUiRenderer
                   image.alt = altText;
                   image.onload = () => {
                     meta.textContent = `${image.naturalWidth} × ${image.naturalHeight}`;
-                    positionAssetOriginalPreview(event);
                   };
                   image.src = previewUrl;
                   if (image.complete && image.naturalWidth > 0) {
                     meta.textContent = `${image.naturalWidth} × ${image.naturalHeight}`;
                   }
-                  if (layer) {
-                    layer.style.left = "0px";
-                    layer.style.top = "0px";
-                  }
                   overlay.classList.add("open");
                   overlay.setAttribute("aria-hidden", "false");
-                  positionAssetOriginalPreview(event);
                 }
 
                 function closeAssetHistory() {
@@ -6800,6 +6793,11 @@ public sealed class BrowserUiRenderer
                 }
 
                 document.addEventListener("click", event => {
+                  const previewImage = event.target?.closest?.("img.asset-preview, img.history-thumb");
+                  if (previewImage) {
+                    showAssetOriginalPreview(previewImage);
+                    return;
+                  }
                   const detailTarget = event.target?.closest?.("[data-asset-detail-key]");
                   if (detailTarget) {
                     openAssetDetail(detailTarget.dataset.assetDetailKey || "");
@@ -6815,31 +6813,12 @@ public sealed class BrowserUiRenderer
                     selectEntry(selectButton.dataset.selectUnitKey || "", selectButton.dataset.entryId || "", selectButton);
                   }
                 });
-                document.addEventListener("mouseover", event => {
-                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
-                  if (image) {
-                    showAssetOriginalPreview(image, event);
-                  }
-                });
-                document.addEventListener("mousemove", event => {
-                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
-                  if (image) positionAssetOriginalPreview(event);
-                });
-                document.addEventListener("mouseout", event => {
-                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
-                  if (!image) return;
-                  const related = event.relatedTarget;
-                  const layer = $("assetOriginalPreviewLayer");
-                  if (related && (layer?.contains?.(related) || image.contains(related))) return;
-                  scheduleHideAssetOriginalPreview();
-                });
-                $("assetOriginalPreviewLayer").addEventListener("mouseenter", clearAssetPreviewHideTimer);
-                $("assetOriginalPreviewLayer").addEventListener("mouseleave", scheduleHideAssetOriginalPreview);
                 $("assetOriginalPreviewOverlay").addEventListener("click", event => {
                   if (event.target === $("assetOriginalPreviewOverlay")) {
                     hideAssetOriginalPreview();
                   }
                 });
+                $("closeAssetOriginalPreviewButton").addEventListener("click", hideAssetOriginalPreview);
                 $("closeAssetHistoryButton").addEventListener("click", closeAssetHistory);
                 $("modalGenerateAsset").addEventListener("click", event => generateActiveAsset(event.currentTarget));
                 $("refreshAssetLibraryButton").addEventListener("click", () => loadAssets(true));

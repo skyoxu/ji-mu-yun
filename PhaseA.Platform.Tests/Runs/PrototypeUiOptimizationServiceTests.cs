@@ -79,6 +79,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         runner.Commands[0].StandardInput.Should().Contain("meta/routes/prototype-contract/latest.json");
         runner.Commands[0].StandardInput.Should().Contain("legacy fallback");
         runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after Codex exits");
+        runner.Commands[0].StandardInput.Should().Contain("project.godot -> main scene -> Start Adventure");
+        runner.Commands[0].StandardInput.Should().Contain("Do not leave UI optimization in an unreferenced side scene");
+        runner.Commands[0].StandardInput.Should().Contain("A thin wrapper scene or a standalone visual mock");
         runner.Commands[0].StandardInput.Should().Contain("Player-visible text rule");
         runner.Commands[0].StandardInput.Should().Contain("must default to Chinese");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
@@ -99,7 +102,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         var promptPath = Path.Combine(project!.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
         File.ReadAllText(promptPath).Should().Contain("$prototype-rpg-ui-optimizer-zh");
         File.ReadAllText(promptPath).Should().Contain("meta/routes/prototype-contract/latest.json");
-        File.ReadAllText(promptPath).Should().Contain("Do not rename platform-validated fixed nodes");
+        File.ReadAllText(promptPath).Should().Contain("project.godot must use it as run/main_scene");
     }
 
     [Fact]
@@ -183,6 +186,35 @@ public sealed class PrototypeUiOptimizationServiceTests
         run!.ProgressSubstep.Should().Be("completed");
         run.EvidenceJson.Should().Contain("\"validation_required\":true");
         run.EvidenceJson.Should().Contain("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldValidateProjectGodotMainScene_BeforePrototypeEvidenceSmokeScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(
+            store,
+            options,
+            accountId,
+            seedProjectGodot: true,
+            mainScene: "res://Game.Godot/Prototypes/dq-rpg/DqRpgUiOptimized.tscn");
+        await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
+        await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+
+        var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
+
+        result.Status.Should().Be("succeeded");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.EvidenceJson.Should().Contain("res://Game.Godot/Prototypes/dq-rpg/DqRpgUiOptimized.tscn");
+        run.EvidenceJson.Should().NotContain("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
     }
 
     [Fact]
@@ -336,7 +368,12 @@ public sealed class PrototypeUiOptimizationServiceTests
         artifacts.Should().Contain(item => item.ArtifactType == "prototype-ui-optimization-output");
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool seedProjectGodot = true)
+    private static async Task<string> CreateProjectAsync(
+        PhaseAMetadataStore store,
+        PhaseAPlatformOptions options,
+        string accountId,
+        bool seedProjectGodot = true,
+        string mainScene = "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn")
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
@@ -347,7 +384,7 @@ public sealed class PrototypeUiOptimizationServiceTests
             Directory.CreateDirectory(project!.RepoPath);
             await File.WriteAllTextAsync(
                 Path.Combine(project.RepoPath, "project.godot"),
-                "[application]\nrun/main_scene=\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"\n");
+                $"[application]\nrun/main_scene=\"{mainScene}\"\n");
         }
 
         return result.ProjectId!;

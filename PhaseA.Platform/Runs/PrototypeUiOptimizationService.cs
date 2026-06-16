@@ -457,6 +457,12 @@ public sealed class PrototypeUiOptimizationService
 
     private async Task<string?> ResolveLatestPrototypeSmokeSceneAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
+        var mainScene = TryReadMainSceneFromProjectGodot(project.RepoPath);
+        if (!string.IsNullOrWhiteSpace(mainScene))
+        {
+            return mainScene;
+        }
+
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
         foreach (var run in runs.Where(run =>
                      string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
@@ -469,7 +475,7 @@ public sealed class PrototypeUiOptimizationService
             }
         }
 
-        return TryReadMainSceneFromProjectGodot(project.RepoPath);
+        return null;
     }
 
     private static string? TryReadMainSceneFromProjectGodot(string repoPath)
@@ -609,6 +615,9 @@ public sealed class PrototypeUiOptimizationService
             - Inspect Game.Godot/Prototypes and project.godot before editing.
             - Prefer modifying existing prototype scenes, scripts, labels, layout, theme, and asset references.
             - Do not create a second unrelated prototype. Do not add new workflow rules.
+            - Do not leave UI optimization in an unreferenced side scene. If you create an optimized scene such as *UiOptimized.tscn, project.godot must use it as run/main_scene or the existing main prototype scene must instance it before you report success.
+            - Prefer improving the actual playable entry path: project.godot -> main scene -> Start Adventure -> MapScene/BattleScene/reward/status/log UI. A thin wrapper scene or a standalone visual mock that is not reachable from this path is incomplete.
+            - If the main scene only instances MapScene and BattleScene, improve those child scenes and the main scene HUD together so the launched game has the optimized RPG presentation.
             - Do not delete existing playable logic.
 
             RPG UI target:

@@ -30,6 +30,8 @@ Align the current RPG prototype UI with the project game-type template. For RPG/
 ## Editing Rules
 
 - Do not create a second unrelated prototype.
+- Do not leave UI optimization in an unreferenced side scene. If an optimized scene such as `*UiOptimized.tscn` is created, it must be referenced by `project.godot` as the main scene or instanced from the existing main prototype entry before reporting success.
+- Prefer improving the existing `DqRpgPrototype.tscn`, `MapScene.tscn`, and `BattleScene.tscn` entry path. A thin wrapper scene is not sufficient unless the actual playable map, battle, reward, status, and log UI are reachable through the normal Start Adventure path.
 - Do not remove playable logic.
 - Do not invent a new game loop.
 - Prefer modifying existing `Game.Godot/Prototypes/**` scenes and scripts.
