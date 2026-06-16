@@ -271,7 +271,127 @@ public sealed class BrowserUiRenderer
                 let v2UserSelectedStep = false;
                 let v2CurrentProjectId = "";
                 let v2ActiveTabId = "chat";
+                let v2RestoredProjectUiStateId = "";
+                let v2PendingProjectUiSkillMode = "";
+                const v2ProjectUiStateVersion = 1;
                 const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
+                function v2ProjectUiStateKey(projectId = state.projectId) {
+                  return `phaseA.projectUiState.v${v2ProjectUiStateVersion}.${projectId || "none"}`;
+                }
+                function v2ReadProjectUiState(projectId = state.projectId) {
+                  if (!projectId) return null;
+                  try {
+                    const cached = JSON.parse(localStorage.getItem(v2ProjectUiStateKey(projectId)) || "null");
+                    return cached && cached.projectId === projectId ? cached : null;
+                  } catch {
+                    return null;
+                  }
+                }
+                function v2WriteProjectUiState() {
+                  if (!state.projectId) return;
+                  const tabs = Array.from(v2OpenTabs.values())
+                    .filter(tab => tab.id !== "chat")
+                    .map(tab => ({
+                      id: tab.id,
+                      label: tab.label,
+                      panelId: tab.panelId,
+                      stepId: tab.stepId || "",
+                      closable: tab.closable !== false,
+                      frameId: tab.frameId || "",
+                      url: tab.url || ""
+                    }));
+                  const settings = {
+                    advancedPlanningMode: ($("chatSkillMode")?.value || "normal") === "game-design-master",
+                    chatSkillMode: $("chatSkillMode")?.value || "normal",
+                    projectAnalysisMode: !!state.projectAnalysisMode
+                  };
+                  const payload = {
+                    projectId: state.projectId,
+                    activeTabId: v2ActiveTabId,
+                    selectedStep: v2SelectedStep,
+                    userSelectedStep: !!v2UserSelectedStep,
+                    tabs,
+                    settings,
+                    updatedAt: new Date().toISOString()
+                  };
+                  try { localStorage.setItem(v2ProjectUiStateKey(state.projectId), JSON.stringify(payload)); } catch {}
+                }
+                function v2EmbeddedTabUrl(tab) {
+                  if (!state.projectId || !tab) return "";
+                  if (tab.frameId === "v2AssetInventoryFrame" || tab.id === "step:asset-inventory") {
+                    return `/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel")?.value || "gpt-5.5")}&embedded=1`;
+                  }
+                  if (tab.frameId === "v2DownloadsFrame" || tab.id === "step:download-project") {
+                    return `/downloads?projectId=${encodeURIComponent(state.projectId)}&embedded=1`;
+                  }
+                  if (tab.frameId === "v2GddOutlineFrame" || tab.id === "gdd-outline" || tab.id === "step:gdd-outline") {
+                    return `/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`;
+                  }
+                  return "";
+                }
+                function v2EmbeddedFrameId(tab) {
+                  if (!tab) return "";
+                  if (tab.frameId) return tab.frameId;
+                  if (tab.id === "step:asset-inventory") return "v2AssetInventoryFrame";
+                  if (tab.id === "step:download-project") return "v2DownloadsFrame";
+                  if (tab.id === "gdd-outline" || tab.id === "step:gdd-outline") return "v2GddOutlineFrame";
+                  return "";
+                }
+                function v2RestoreProjectUiState() {
+                  if (!state.projectId || v2RestoredProjectUiStateId === state.projectId) return;
+                  v2RestoredProjectUiStateId = state.projectId;
+                  const cached = v2ReadProjectUiState(state.projectId);
+                  if (!cached) {
+                    state.projectAnalysisMode = false;
+                    v2PendingProjectUiSkillMode = "";
+                    if ($("chatSkillMode")) $("chatSkillMode").value = "normal";
+                    renderSelectedSkillAction();
+                    v2RenderProjectAnalysisMode();
+                    return;
+                  }
+                  Array.from(v2OpenTabs.keys()).forEach(tabId => {
+                    if (tabId !== "chat") v2OpenTabs.delete(tabId);
+                  });
+                  for (const tab of Array.isArray(cached.tabs) ? cached.tabs : []) {
+                    const id = String(tab.id || "");
+                    const panelId = String(tab.panelId || "");
+                    if (!id || id === "chat" || !panelId || !$(panelId)) continue;
+                    const frameId = v2EmbeddedFrameId({ id, frameId: String(tab.frameId || "") });
+                    v2OpenTabs.set(id, {
+                      id,
+                      label: String(tab.label || "工程页面"),
+                      panelId,
+                      stepId: String(tab.stepId || ""),
+                      closable: tab.closable !== false,
+                      frameId,
+                      url: v2EmbeddedTabUrl({ id, frameId })
+                    });
+                  }
+                  const activeTabId = String(cached.activeTabId || "chat");
+                  v2ActiveTabId = v2OpenTabs.has(activeTabId) ? activeTabId : "chat";
+                  if (typeof cached.selectedStep === "string" && cached.selectedStep) {
+                    v2SelectedStep = cached.selectedStep;
+                  }
+                  v2UserSelectedStep = !!cached.userSelectedStep;
+                  const activeTab = v2OpenTabs.get(v2ActiveTabId);
+                  if (activeTab?.stepId) {
+                    v2SelectedStep = activeTab.stepId;
+                    v2UserSelectedStep = true;
+                  }
+                  state.projectAnalysisMode = !!cached.settings?.projectAnalysisMode;
+                  const skillMode = cached.settings?.advancedPlanningMode ? "game-design-master" : String(cached.settings?.chatSkillMode || "");
+                  if ($("chatSkillMode") && Array.from($("chatSkillMode").options).some(option => option.value === skillMode)) {
+                    $("chatSkillMode").value = skillMode || "normal";
+                    v2PendingProjectUiSkillMode = "";
+                  } else {
+                    v2PendingProjectUiSkillMode = skillMode || "";
+                  }
+                  for (const tab of v2OpenTabs.values()) {
+                    if (tab.frameId && tab.url) v2LoadEmbeddedFrame(tab.frameId, tab.url);
+                  }
+                  renderSelectedSkillAction();
+                  v2RenderProjectAnalysisMode();
+                }
                 function v2StepLabel(stepId) {
                   const item = v2Steps.find(step => step[0] === stepId);
                   return item ? item[1] : "工程页面";
@@ -293,12 +413,13 @@ public sealed class BrowserUiRenderer
                   return "currentProjectPanel";
                 }
                 function v2OpenEmbeddedTab(tabId, label, panelId, frameId, url) {
-                  v2OpenTabs.set(tabId, { id: tabId, label, panelId, closable: true });
+                  v2OpenTabs.set(tabId, { id: tabId, label, panelId, frameId, url, closable: true });
                   v2ActiveTabId = tabId;
                   v2ApplySelectedStepVisibility();
                   v2LoadEmbeddedFrame(frameId, url);
                   v2RenderTabs();
                   v2RenderProgress();
+                  v2WriteProjectUiState();
                 }
                 function v2OpenStepTab(stepId, runAction = true) {
                   const panelId = v2PanelForStep(stepId);
@@ -312,6 +433,7 @@ public sealed class BrowserUiRenderer
                   v2RenderTabs();
                   v2RenderProgress();
                   v2RefreshAcceptanceActionState();
+                  v2WriteProjectUiState();
                 }
                 function v2CloseTab(tabId) {
                   const tab = v2OpenTabs.get(tabId);
@@ -322,6 +444,7 @@ public sealed class BrowserUiRenderer
                   }
                   v2RenderTabs();
                   v2ApplySelectedStepVisibility();
+                  v2WriteProjectUiState();
                 }
                 function v2RenderTabs() {
                   const tabs = $("v2WorkspaceTabs");
@@ -350,6 +473,7 @@ public sealed class BrowserUiRenderer
                       v2RenderTabs();
                       v2ApplySelectedStepVisibility();
                       v2RenderProgress();
+                      v2WriteProjectUiState();
                     };
                   });
                 }
@@ -503,6 +627,7 @@ public sealed class BrowserUiRenderer
                   v2RenderTabs();
                   v2ApplySelectedStepVisibility();
                   v2RenderProgress();
+                  v2WriteProjectUiState();
                 }
                 function v2ShowStep(stepId, userInitiated = false) {
                   if (userInitiated) {
@@ -515,6 +640,7 @@ public sealed class BrowserUiRenderer
                   v2RunStepAction(stepId);
                   v2RenderProgress();
                   v2RefreshAcceptanceActionState();
+                  v2WriteProjectUiState();
                 }
                 function v2ShouldDefaultToPrototypeCreation(progress) {
                   const status = String(progress?.status || "").trim().toLowerCase();
@@ -926,6 +1052,7 @@ public sealed class BrowserUiRenderer
                   if (!select) return;
                   select.value = select.value === "game-design-master" ? "normal" : "game-design-master";
                   renderSelectedSkillAction();
+                  v2WriteProjectUiState();
                 }
                 function v2RenderAdvancedPlanningMode() {
                   const button = $("v2AdvancedPlanningMode");
@@ -938,6 +1065,7 @@ public sealed class BrowserUiRenderer
                 function v2ToggleProjectAnalysisMode() {
                   state.projectAnalysisMode = !state.projectAnalysisMode;
                   v2RenderProjectAnalysisMode();
+                  v2WriteProjectUiState();
                 }
                 function v2RenderProjectAnalysisMode() {
                   const button = $("v2ProjectAnalysisMode");
@@ -1226,6 +1354,7 @@ public sealed class BrowserUiRenderer
                 showProjectDetail = function() {
                   if (v2CurrentProjectId !== state.projectId) {
                     v2CurrentProjectId = state.projectId;
+                    v2RestoredProjectUiStateId = "";
                     v2SelectedStep = "new-project";
                     v2UserSelectedStep = false;
                     Array.from(v2OpenTabs.keys()).forEach(tabId => {
@@ -1239,6 +1368,7 @@ public sealed class BrowserUiRenderer
                   v2OriginalShowProjectDetail();
                   v2LoadPrototypeValidationInvalidation();
                   v2EnsureContentGrid();
+                  v2RestoreProjectUiState();
                   $("chatPanel")?.classList.remove("hidden");
                   v2ApplySelectedStepVisibility();
                   v2RenderTabs();
@@ -4053,7 +4183,12 @@ public sealed class BrowserUiRenderer
                   const previous = select.value || "normal";
                   select.innerHTML = `<option value="normal">普通模式</option>` +
                     state.skillActions.map(action => `<option value="${escapeHtml(action.actionId)}">${escapeHtml(action.label)}</option>`).join("");
-                  if (Array.from(select.options).some(option => option.value === previous)) select.value = previous;
+                  if (v2PendingProjectUiSkillMode && Array.from(select.options).some(option => option.value === v2PendingProjectUiSkillMode)) {
+                    select.value = v2PendingProjectUiSkillMode;
+                    v2PendingProjectUiSkillMode = "";
+                  } else if (Array.from(select.options).some(option => option.value === previous)) {
+                    select.value = previous;
+                  }
                   renderSelectedSkillAction();
                 }
 
@@ -5560,7 +5695,11 @@ public sealed class BrowserUiRenderer
                 $("iterationPlanUpdateInput").addEventListener("input", event => autoGrowTextarea(event.target));
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
-                $("chatSkillMode").onchange = renderSelectedSkillAction;
+                $("chatSkillMode").onchange = () => {
+                  renderSelectedSkillAction();
+                  v2WriteProjectUiState();
+                };
+                window.addEventListener("beforeunload", v2WriteProjectUiState);
                 window.addEventListener("message", event => {
                   if (event.origin !== location.origin) return;
                   if (event.data?.type !== "phasea:gdd-outline-deleted") return;
