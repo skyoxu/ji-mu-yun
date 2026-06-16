@@ -172,8 +172,7 @@ public sealed class ProjectWorkflowRouteService
             new("ui-optimization", "UI优化", state.UiOptimizationStatus, state.UiOptimizationEvidence),
             new("prototype-acceptance", "原型验收", state.AcceptanceStatus, state.AcceptanceEvidence),
             new("asset-inventory", "确认素材清单", state.AssetInventoryStatus, state.AssetInventoryEvidence),
-            new("package-project", "打包项目文件", state.PackageStatus, state.PackageEvidence),
-            new("download-project", "下载项目文件", state.DownloadStatus, state.DownloadEvidence)
+            new("download-project", "打包下载项目", state.DownloadStatus, state.DownloadEvidence)
         ];
     }
 
@@ -228,10 +227,10 @@ public sealed class ProjectWorkflowRouteService
 
         if (!state.HasPackage)
         {
-            return Action("package-project", "打包项目文件", "打包项目文件", "package-project");
+            return Action("download-project", "打包下载项目", "打包下载项目", "download-project");
         }
 
-        return Action("download-project", "下载项目文件", "下载项目文件", "download-project");
+        return Action("download-project", "打包下载项目", "打包下载项目", "download-project");
     }
 
     private static IReadOnlyList<ProjectWorkflowNextAction> ResolveNextActions(ProjectWorkflowState state, string? playtestFeedback)
@@ -242,11 +241,24 @@ public sealed class ProjectWorkflowRouteService
             return [primary];
         }
 
-        var download = Action("download-project", "下载项目文件", "下载项目文件", "download-project");
+        var download = Action("download-project", "打包下载项目", "打包下载项目", "download-project");
         var nextIteration = Action("create-next-iteration-plan", "创建新的迭代计划", "创建新的迭代计划", "iteration-plan");
-        return primary.ActionId == "create-next-iteration-plan"
-            ? [nextIteration, download]
+        var actions = primary.ActionId == "create-next-iteration-plan"
+            ? new List<ProjectWorkflowNextAction> { nextIteration, download }
             : [download, nextIteration];
+        if (!state.UsesGenericPrototypeRoute)
+        {
+            var insertIndex = primary.ActionId == "create-next-iteration-plan" ? 2 : 1;
+            if (!state.UiOptimizationSucceeded)
+            {
+                actions.Insert(insertIndex, Action("ui-optimization", "运行 UI 优化", "运行 UI 优化", "ui-optimization"));
+                insertIndex++;
+            }
+
+            actions.Insert(insertIndex, Action("asset-inventory", "查看项目素材库", "查看项目素材库", "asset-inventory"));
+        }
+
+        return actions;
     }
 
     private static string BuildSummary(ProjectSnapshot project, ProjectWorkflowState state)
@@ -288,8 +300,12 @@ public sealed class ProjectWorkflowRouteService
             "ui-optimization" => "迭代计划已经完成。UI 优化是可选项，不会卡住后续流程；如果希望界面更贴近当前游戏类型模板，可以运行 UI 优化。",
             "prototype-acceptance" => "迭代计划已经完成，建议重新进行原型验收，确认当前可玩闭环仍然成立。UI 优化是可选项，如果希望先调整界面表现，可以从左侧进度栏进入 UI 优化；它不会阻塞原型验收。",
             "asset-inventory" => "原型验收已经通过。建议确认素材清单，检查已使用素材和可生成素材候选，必要时替换默认素材。",
-            "package-project" => "素材清单状态已满足继续推进。建议打包项目文件，生成可下载的项目压缩包。",
-            "download-project" => "项目文件包已经生成。建议下载压缩包并在本地 Godot 试玩；试玩结果可以发到聊天里，准备创建第二轮迭代计划。",
+            "download-project" when !state.HasPackage => "素材清单状态已满足继续推进。建议进入“打包下载项目”，点击“打包项目文件”生成可下载的项目压缩包。",
+            "download-project" => state.UsesGenericPrototypeRoute
+                ? "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；试玩结果可以发到聊天里，准备创建第二轮迭代计划。"
+                : state.UiOptimizationSucceeded
+                    ? "项目文件包已经生成，UI 优化也已完成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；也可以查看项目素材库确认和替换素材。试玩结果可以发到聊天里，准备创建第二轮迭代计划。"
+                    : "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；也可以先进入 UI 优化，让界面更贴近当前游戏类型模板，或查看项目素材库确认和替换素材。试玩结果可以发到聊天里，准备创建第二轮迭代计划。",
             _ => $"建议进入：{action.RunName}。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。"
         };
     }
@@ -443,6 +459,7 @@ public sealed class ProjectWorkflowRouteService
         bool UiOptimizationSucceeded,
         bool AssetInventoryAvailable,
         bool HasPackage,
+        bool UsesGenericPrototypeRoute,
         string StageId,
         string PrototypeCreationStatus,
         string PrototypeCreationEvidence,
@@ -504,6 +521,10 @@ public sealed class ProjectWorkflowRouteService
             var packages = packageList?.Packages ?? [];
             var hasPackage = packages.Count > 0;
             var inventoryAvailable = inventory?.CanReadInventory == true;
+            var usesGenericRoute = string.Equals(
+                PrototypeRouteSkillPolicy.ResolveProfile(project).GameTypeId,
+                "default",
+                StringComparison.OrdinalIgnoreCase);
 
             var prototypeStepStatus = !hasPrototype
                 ? creationStatus == "failed" ? "fix" : "pending"
@@ -543,6 +564,7 @@ public sealed class ProjectWorkflowRouteService
                 uiSucceeded,
                 inventoryAvailable,
                 hasPackage,
+                usesGenericRoute,
                 stageId,
                 prototypeStepStatus,
                 hasPrototype ? "原型骨架已创建。" : progress.PrototypeCreationFailure ?? progress.Failure ?? progress.Label ?? "尚未创建原型骨架。",
@@ -578,7 +600,7 @@ public sealed class ProjectWorkflowRouteService
             if (!hasPlan || hasNeedsFix || !iterationCompleted) return "iteration-plan";
             if (!acceptancePassed) return "prototype-acceptance";
             if (!inventoryAvailable) return "asset-inventory";
-            if (!hasPackage) return "package-project";
+            if (!hasPackage) return "download-project";
             return "download-project";
         }
 

@@ -647,6 +647,7 @@ public sealed class PrototypeIterationPlanService
             - Focus on prototype-form fields and the current route profile. For RPG/JRPG, judge only the JRPG first-loop capabilities implied by the project semantics instead of forcing every map/battle/reward template section.
             - Keep evidence and missingReason short and browser-safe.
             - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not treat it as an executable route profile or a requirement to add every listed GDD section.
+            - Player-visible text rule for planning: any future goal that creates or changes in-game Godot text should require Chinese player-visible text by default, while preserving English code identifiers, fixed node names, resource paths, tests, logs, and platform validation names.
 
             Project:
             - Name: {project.Name}
@@ -738,6 +739,7 @@ public sealed class PrototypeIterationPlanService
             - Only omit BattleScene, enemy asset, reward, or return-loop capability when the project contract explicitly negates combat/conflict/reward, such as non-combat, no battle, no encounter, no enemy, or without reward choices.
             - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not turn the whole GDD template into iteration goals.
             - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
+            - If a goal creates or changes any player-visible Godot text, its description or acceptanceHint must preserve this rule: Label, Button, RichTextLabel, HUD, menus, battle logs, quest prompts, result prompts, and win/fail/error prompts default to Chinese; code identifiers, fixed node names, resource paths, tests, logs, and platform validation names remain English.
             - Final step must remain final first-loop acceptance.
             - If regeneration guidance is provided, treat it as a hard constraint from the previous plan evaluation.
             - When regeneration guidance says the current blocker is Start Adventure, visible MapScene, or stable movement, goal 1 must remain focused on that blocker.
@@ -3036,6 +3038,7 @@ public sealed class PrototypeIterationPlanService
             - Conflict-oriented projects should split conflict entry from battle/challenge resolution.
             - Reward or growth projects should include growth/reward/consequence feedback and a return-or-continue loop, unless the project explicitly ends after the reward.
             - Story or town-first JRPGs do not need BattleScene/reward steps unless the source semantics asks for conflict or growth.
+            - A plan should_refine_plan if its goals require new player-visible Godot text but allow that text to default to English instead of Chinese. Do not treat English code identifiers, fixed node names, resource paths, tests, logs, or platform validation names as localization failures.
             - suggestedPromptForRegeneration should be null only when decision is ready_to_execute.
             - Keep output browser-safe.
 

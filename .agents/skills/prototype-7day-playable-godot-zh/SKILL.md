@@ -46,6 +46,7 @@ If a mandatory recovery source is missing, fail closed or record the missing sou
 - Keep logs and generated command output in English.
 - Use Python with UTF-8 for document reads and writes.
 - All user-facing interaction text emitted by the prototype top-level router must be Chinese (questions, missing-field prompts, confirmation summaries, resume hints).
+- Player-visible text inside the generated Godot game screen must default to Chinese: Label, Button, RichTextLabel, HUD, menus, battle logs, quest prompts, result prompts, and win/fail/error prompts. Keep code identifiers, class names, method names, node names, resource paths, tests, logs, and platform-required fixed node names in English. Use non-Chinese player-visible text only when the user explicitly requests another language or the game setting requires it. Do not rename platform-validated fixed nodes for localization.
 - Do not create formal task refs, acceptance refs, overlay refs, or Chapter 6 evidence from prototype-lane output.
 - Treat `docs/game-type-guides/` as extracted BMAD/GDS guide material. Use it to ask better prototype questions; do not copy a full GDD workflow into the prototype record.
 - Treat `docs/prototype-type-kits/` as prototype-only default flow/UI material for 1-2 scene playable loops. Use it to confirm or adjust the default route; do not expand it into full GDD, balance, economy, progression, or boundary design.

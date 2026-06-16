@@ -79,6 +79,8 @@ public sealed class PrototypeUiOptimizationServiceTests
         runner.Commands[0].StandardInput.Should().Contain("meta/routes/prototype-contract/latest.json");
         runner.Commands[0].StandardInput.Should().Contain("legacy fallback");
         runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after Codex exits");
+        runner.Commands[0].StandardInput.Should().Contain("Player-visible text rule");
+        runner.Commands[0].StandardInput.Should().Contain("must default to Chinese");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.ProgressStep.Should().Be("succeeded");
@@ -97,6 +99,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         var promptPath = Path.Combine(project!.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
         File.ReadAllText(promptPath).Should().Contain("$prototype-rpg-ui-optimizer-zh");
         File.ReadAllText(promptPath).Should().Contain("meta/routes/prototype-contract/latest.json");
+        File.ReadAllText(promptPath).Should().Contain("Do not rename platform-validated fixed nodes");
     }
 
     [Fact]

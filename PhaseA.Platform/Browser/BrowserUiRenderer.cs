@@ -111,6 +111,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #prototypeWorkflowPanel,
                 body.v2-detail #prototypeCommandPanel,
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
+                body.v2-detail .prototype-draft-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; align-items: end; }
+                body.v2-detail .prototype-draft-row button { width: auto; min-width: 8.5rem; white-space: nowrap; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
                 body.v2-detail .v2-progress-row { display: grid; gap: 0.35rem; overflow: visible; padding: 0; }
                 body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem 1.45rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
@@ -263,8 +265,7 @@ public sealed class BrowserUiRenderer
                   ["ui-optimization", "UI优化", "layout"],
                   ["prototype-acceptance", "原型验收", "check"],
                   ["asset-inventory", "确认素材清单", "image"],
-                  ["package-project", "打包项目文件", "archive"],
-                  ["download-project", "下载项目文件", "download"]
+                  ["download-project", "打包下载项目", "download"]
                 ];
                 let v2SelectedStep = "new-project";
                 let v2UserSelectedStep = false;
@@ -289,7 +290,6 @@ public sealed class BrowserUiRenderer
                   if (stepId === "asset-inventory") return "v2AssetInventoryFramePanel";
                   if (stepId === "download-project") return "v2DownloadsFramePanel";
                   if (stepId === "gdd-outline") return "v2GddOutlineFramePanel";
-                  if (stepId === "package-project") return "currentProjectPanel";
                   return "currentProjectPanel";
                 }
                 function v2OpenEmbeddedTab(tabId, label, panelId, frameId, url) {
@@ -384,8 +384,13 @@ public sealed class BrowserUiRenderer
                 function v2AssetInventoryConfirmed() {
                   return !!state.assetInventory?.canReadInventory;
                 }
+                function v2RunTimestamp(run) {
+                  return v2IsoTime(run?.finishedUtc || run?.progressUpdatedUtc || run?.startedUtc || run?.createdUtc || "");
+                }
                 function v2LatestRunByType(runType) {
-                  return (state.runs || []).find(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase()) || null;
+                  return (state.runs || [])
+                    .filter(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase())
+                    .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
                 }
                 function v2IsoTime(value) {
                   const time = Date.parse(value || "");
@@ -447,9 +452,37 @@ public sealed class BrowserUiRenderer
                     return "pending";
                   }
                   if (stepId === "asset-inventory") return v2AssetInventoryConfirmed() ? "done" : "pending";
-                  if (stepId === "package-project") return v2HasPackages() ? "done" : "pending";
                   if (stepId === "download-project") return v2HasPackages() ? "done" : "pending";
                   return "pending";
+                }
+                function v2RenderUiOptimizationStatus() {
+                  const status = $("uiOptimizationStatus");
+                  if (!status) return;
+                  const run = v2LatestRunByType("prototype-ui-optimization");
+                  if (!run) {
+                    status.className = "card muted";
+                    status.textContent = "完成迭代计划后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
+                    return;
+                  }
+                  const runStatus = String(run.status || "").toLowerCase();
+                  const substep = String(run.progressSubstep || "").toLowerCase();
+                  if (runStatus === "succeeded" && substep !== "validation_skipped") {
+                    status.className = "card";
+                    status.textContent = run.progressLabel || "UI 优化已完成，短验证已通过。左侧进度栏已标记为完成；如需再次调整，可以重新运行 UI 优化。";
+                    return;
+                  }
+                  if (runStatus === "failed" || substep === "validation_failed") {
+                    status.className = "card";
+                    status.textContent = run.progressLabel || "最近一次 UI 优化失败，请检查运行记录后重新运行。";
+                    return;
+                  }
+                  if (runStatus === "running" || runStatus === "queued") {
+                    status.className = "card muted";
+                    status.textContent = run.progressLabel || "UI 优化正在运行，请等待后台任务完成。";
+                    return;
+                  }
+                  status.className = "card muted";
+                  status.textContent = run.progressLabel || `最近一次 UI 优化状态：${run.status || "未知"}。`;
                 }
                 function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
@@ -494,10 +527,6 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return;
                   if (stepId === "asset-inventory") {
                     v2LoadEmbeddedFrame("v2AssetInventoryFrame", `/assets?projectId=${encodeURIComponent(state.projectId)}&model=${encodeURIComponent($("globalModel").value || "gpt-5.5")}&embedded=1`);
-                    return;
-                  }
-                  if (stepId === "package-project") {
-                    $("createProjectPackage")?.click();
                     return;
                   }
                   if (stepId === "download-project") {
@@ -644,7 +673,7 @@ public sealed class BrowserUiRenderer
                   v2CreateAcceptancePanel();
                   v2CreateUiOptimizationPanel();
                   v2CreateEmbeddedFramePanel("v2AssetInventoryFramePanel", "v2AssetInventoryFrame", "项目素材库");
-                  v2CreateEmbeddedFramePanel("v2DownloadsFramePanel", "v2DownloadsFrame", "下载项目文件");
+                  v2CreateEmbeddedFramePanel("v2DownloadsFramePanel", "v2DownloadsFrame", "打包下载项目");
                   v2CreateEmbeddedFramePanel("v2GddOutlineFramePanel", "v2GddOutlineFrame", "查阅策划大纲");
                   ["chatPanel", "v2IterationPanel", "v2RepairPanel", "v2UiOptimizationPanel", "v2AcceptancePanel", "v2AssetInventoryFramePanel", "v2DownloadsFramePanel", "v2GddOutlineFramePanel", "currentProjectPanel", "prototypeWorkflowPanel", "prototypeCommandPanel", "runsPanel"].forEach(id => {
                     const element = $(id);
@@ -979,10 +1008,6 @@ public sealed class BrowserUiRenderer
                   if (form.gameFeature) $("gameFeature").value = form.gameFeature;
                   if (form.coreGameplayLoop) $("coreGameplayLoop").value = form.coreGameplayLoop;
                   if (form.winFailConditions) $("winFailConditions").value = form.winFailConditions;
-                  if (form.sourcePath) {
-                    $("draftImportStatus").className = "card muted";
-                    $("draftImportStatus").textContent = `已载入原型记录：${form.sourcePath}`;
-                  }
                 }
                 function v2CompletedIterationStatus(status) {
                   return ["succeeded", "completed", "done"].includes(String(status || "").trim().toLowerCase());
@@ -1136,9 +1161,6 @@ public sealed class BrowserUiRenderer
                     case "asset-inventory":
                       v2OpenStepTab("asset-inventory");
                       return;
-                    case "package-project":
-                      v2OpenStepTab("package-project", false);
-                      return;
                     case "download-project":
                       v2OpenStepTab("download-project");
                       return;
@@ -1162,7 +1184,6 @@ public sealed class BrowserUiRenderer
                   try {
                     const route = await fetchWorkflowRoute(intent);
                     thinking.complete(buildWorkflowRouteChatContent(route, intent), false, "workflow-route", buildWorkflowRouteMessageExtra(route, intent));
-                    out({ action: "workflow_route_queried", nextAction: route?.nextAction || null });
                   } catch (error) {
                     const failure = "项目状态扫描失败，请稍后重试或先刷新页面。";
                     thinking.complete(failure, true, "workflow-route");
@@ -1199,6 +1220,7 @@ public sealed class BrowserUiRenderer
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
                   v2RefreshAcceptanceActionState();
+                  v2RenderUiOptimizationStatus();
                 }
                 const v2OriginalShowProjectDetail = showProjectDetail;
                 showProjectDetail = function() {
@@ -1744,10 +1766,12 @@ public sealed class BrowserUiRenderer
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
                     <h2>原型骨架创建</h2>
-                    <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
-                    <button id="importDraft" class="ghost" data-global-action="true">分析草稿并回填</button>
-                    <div id="draftImportStatus" class="card muted">可选：创建项目后上传 txt 草稿，由后端模型分析后回填原型表单。</div>
-                    <label>原型标识 Slug <input id="protoSlug" placeholder="demo-prototype"></label>
+                    <div class="prototype-draft-row">
+                      <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
+                      <button id="importDraft" class="ghost" data-global-action="true" disabled>分析草稿并回填</button>
+                    </div>
+                    <div id="draftImportStatus" class="card muted hidden"></div>
+                    <label>游戏原型ID <input id="protoSlug" placeholder="demo-prototype"></label>
                     <label>原型假设 <textarea id="hypothesis" placeholder="这个原型要验证什么？"></textarea></label>
                     <label>核心玩家幻想 <textarea id="corePlayerFantasy" placeholder="玩家应该感受到什么？"></textarea></label>
                     <label>最小可玩循环 <textarea id="minimumPlayableLoop" placeholder="玩家反复执行的最小闭环是什么？"></textarea></label>
@@ -1755,7 +1779,6 @@ public sealed class BrowserUiRenderer
                     <label>游戏功能 <textarea id="gameFeature" placeholder="本次要实现或验证的核心功能"></textarea></label>
                     <label>核心玩法循环 <textarea id="coreGameplayLoop" placeholder="输入、反馈、奖励、升级或失败的循环"></textarea></label>
                     <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
-                    <button id="repairPrototype" class="ghost hidden" data-global-action="true">生成修复计划</button>
                     <button id="runPrototype" class="secondary" data-global-action="true">运行原型骨架创建</button>
                   </section>
                   <section id="prototypeCommandPanel" class="stack hidden">
@@ -1825,6 +1848,7 @@ public sealed class BrowserUiRenderer
               <script>
                 const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
+                const projectStateCacheVersion = 1;
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
                 const chatThinkingPrompts = [
@@ -2104,10 +2128,13 @@ public sealed class BrowserUiRenderer
                     state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
                     state.iterationPlanFailure = "";
                     syncIterationPlanRegenerationSuggestion();
+                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: "" });
                   } catch (error) {
                     if (error?.status === 404) {
                       state.iterationPlan = null;
                       state.iterationPlanEvaluation = null;
+                      state.iterationPlanFailure = "";
+                      writeProjectStateCache({ iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" });
                     } else {
                       showError(error);
                     }
@@ -2123,9 +2150,11 @@ public sealed class BrowserUiRenderer
                   }
                   try {
                     state.repairPlan = await api(`/api/projects/${state.projectId}/repair-plan/latest`);
+                    writeProjectStateCache({ repairPlan: state.repairPlan });
                   } catch (error) {
                     if (error?.status === 404) {
                       state.repairPlan = null;
+                      writeProjectStateCache({ repairPlan: null });
                     } else {
                       showError(error);
                     }
@@ -3007,6 +3036,73 @@ public sealed class BrowserUiRenderer
                   $("projectDetailPanel").classList.remove("hidden");
                 }
 
+                function projectStateCacheKey(projectId = state.projectId) {
+                  return `phaseA.projectStateCache.v${projectStateCacheVersion}.${projectId || "none"}`;
+                }
+
+                function readProjectStateCache(projectId = state.projectId) {
+                  if (!projectId) return null;
+                  try {
+                    const cached = JSON.parse(localStorage.getItem(projectStateCacheKey(projectId)) || "null");
+                    return cached && cached.projectId === projectId ? cached : null;
+                  } catch {
+                    return null;
+                  }
+                }
+
+                function writeProjectStateCache(patch = {}) {
+                  if (!state.projectId) return;
+                  const previous = readProjectStateCache(state.projectId) || { projectId: state.projectId };
+                  const next = { ...previous, ...patch, projectId: state.projectId, updatedAt: new Date().toISOString() };
+                  try { localStorage.setItem(projectStateCacheKey(state.projectId), JSON.stringify(next)); } catch {}
+                }
+
+                function applyProjectStateCache(projectId) {
+                  const cached = readProjectStateCache(projectId);
+                  if (!cached) return;
+                  if (Array.isArray(cached.runs)) {
+                    state.runs = cached.runs;
+                    renderRunsListFromState(cached.projectHealth || null);
+                    renderFeedbackRecords();
+                  }
+                  if (cached.latestPrototypeDraft) {
+                    applyDraftToForm(cached.latestPrototypeDraft);
+                    renderDraftImportStatus(cached.latestPrototypeDraft);
+                  }
+                  if (cached.prototypeProgress) {
+                    const progress = cached.prototypeProgress;
+                    const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
+                    state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
+                    renderPrototypeProgress(progress);
+                    renderPrototypeAcceptanceSummary(progress);
+                    setPrototypeFormLocked(isPrototypeCreationLocked(progress));
+                    updateChatPanelVisibility(progress);
+                  }
+                  if (cached.packageList) {
+                    state.packageList = cached.packageList;
+                    renderProjectPackages(cached.packageList);
+                  }
+                  if (cached.assetInventory) {
+                    state.assetInventory = cached.assetInventory;
+                    renderAssetInventory(cached.assetInventory, state.assetInventoryExpanded);
+                  }
+                  if (cached.iterationPlan !== undefined) {
+                    state.iterationPlan = cached.iterationPlan;
+                    state.iterationPlanEvaluation = cached.iterationPlan?.latestEvaluation || cached.iterationPlanEvaluation || null;
+                    state.iterationPlanFailure = cached.iterationPlanFailure || "";
+                    renderIterationPlan();
+                  }
+                  if (cached.repairPlan !== undefined) {
+                    state.repairPlan = cached.repairPlan;
+                    renderRepairPlan();
+                  }
+                  if (cached.gddOutlineReady !== undefined && $("createGddDocument")) {
+                    state.gddOutlineReady = !!cached.gddOutlineReady;
+                    $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                  }
+                  v2RenderProgress();
+                }
+
                 function hasInitializingProject(projects) {
                   return projects.some(p => p.bootstrapStatus === "running");
                 }
@@ -3111,6 +3207,7 @@ public sealed class BrowserUiRenderer
                   } catch {
                     state.gddOutlineReady = false;
                   }
+                  writeProjectStateCache({ gddOutlineReady: state.gddOutlineReady });
                   $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                 }
 
@@ -4132,6 +4229,7 @@ public sealed class BrowserUiRenderer
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
                   v2RenderLeftProjectList();
+                  applyProjectStateCache(projectId);
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();
@@ -4153,13 +4251,15 @@ public sealed class BrowserUiRenderer
                     const draft = await api(`/api/projects/${state.projectId}/prototype-drafts/latest`);
                     applyDraftToForm(draft);
                     renderDraftImportStatus(draft);
+                    writeProjectStateCache({ latestPrototypeDraft: draft });
                     if (forceVisibleNotice && draft.status === "succeeded") {
                       showPrototypeNotice("已同步最近一次草稿分析结果，表单已自动补全到最新状态。", "info");
                     }
                     return draft;
                   } catch {
                     $("draftImportStatus").className = "card muted";
-                    $("draftImportStatus").textContent = "可选：创建项目后上传 txt 草稿，由后端模型分析后回填原型表单。";
+                    $("draftImportStatus").textContent = "";
+                    $("draftImportStatus").classList.add("hidden");
                     return null;
                   }
                 }
@@ -4383,17 +4483,23 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${state.projectId}/runs`);
                     state.runs = result.runs || [];
                     renderProjectHealth(result.projectHealth);
-                    $("runs").innerHTML = result.runs.map(r => `
-                      <button class="card ghost" data-run="${r.runId}">
-                        <strong>${escapeHtml(r.runType)} · ${escapeHtml(r.status)}</strong>
-                        <span class="muted">${escapeHtml(r.runId)}</span>
-                      </button>
-                    `).join("") || "<p class='muted'>还没有运行记录。</p>";
-                    document.querySelectorAll("[data-run]").forEach(button => button.onclick = () => loadRun(button.dataset.run));
+                    renderRunsListFromState(result.projectHealth);
+                    writeProjectStateCache({ runs: state.runs, projectHealth: result.projectHealth || null });
                     renderFeedbackRecords();
                     v2RenderProgress();
                     out(result);
                   } catch (error) { showError(error); }
+                }
+
+                function renderRunsListFromState(projectHealth = null) {
+                  if (projectHealth) renderProjectHealth(projectHealth);
+                  $("runs").innerHTML = (state.runs || []).map(r => `
+                    <button class="card ghost" data-run="${r.runId}">
+                      <strong>${escapeHtml(r.runType)} · ${escapeHtml(r.status)}</strong>
+                      <span class="muted">${escapeHtml(r.runId)}</span>
+                    </button>
+                  `).join("") || "<p class='muted'>还没有运行记录。</p>";
+                  document.querySelectorAll("[data-run]").forEach(button => button.onclick = () => loadRun(button.dataset.run));
                 }
 
                 function renderFeedbackRecords() {
@@ -4670,6 +4776,7 @@ public sealed class BrowserUiRenderer
                   if (!busy && state.assetInventory) {
                     renderAssetInventory(state.assetInventory, state.assetInventoryExpanded);
                   }
+                  updateDraftImportButtonState();
                   if (busy) {
                     $("activeRunBanner").classList.remove("hidden");
                     renderActiveRunBanner(state.activeRun?.busy ? activeRunText(state.activeRun) : message);
@@ -4752,13 +4859,15 @@ public sealed class BrowserUiRenderer
                 function renderDraftImportStatus(draft) {
                   if (!draft || draft.status === "failed") {
                     $("draftImportStatus").className = "card muted";
-                    $("draftImportStatus").textContent = draft?.failureCode ? `草稿分析失败：${draft.failureCode}` : "尚未分析草稿。";
+                    $("draftImportStatus").textContent = draft?.failureCode ? `草稿分析失败：${draft.failureCode}` : "";
+                    $("draftImportStatus").classList.toggle("hidden", !draft?.failureCode);
                     return;
                   }
                   if (draft.status === "running") {
                     state.draftAnalysisRunning = true;
                     $("draftImportStatus").className = "card muted";
                     $("draftImportStatus").textContent = "草稿分析中...完成前不能启动原型创建，刷新页面后会自动恢复状态。";
+                    $("draftImportStatus").classList.remove("hidden");
                     setPrototypeFormLocked(true);
                     return;
                   }
@@ -4772,6 +4881,7 @@ public sealed class BrowserUiRenderer
                     <p class="muted">覆盖缺口：${escapeHtml((draft.coverageMissingTopics || []).join(" · ") || "无")}</p>
                     <p class="muted">警告：${escapeHtml((draft.warnings || []).join(" · ") || "无")}</p>
                   `;
+                  $("draftImportStatus").classList.remove("hidden");
                 }
 
                 async function importDraft() {
@@ -4784,6 +4894,7 @@ public sealed class BrowserUiRenderer
                   $("runPrototype").textContent = "草稿分析中..暂不可启动原型.";
                   $("draftImportStatus").className = "card muted";
                   $("draftImportStatus").textContent = "后端正在调用模型分析 txt 草稿，完成前不能启动原型创建。";
+                  $("draftImportStatus").classList.remove("hidden");
                   try {
                     const form = new FormData();
                     form.append("draftFile", file);
@@ -4798,13 +4909,24 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     $("draftImportStatus").className = "card muted";
                     $("draftImportStatus").textContent = `草稿分析失败：${error?.error || error?.failureCode || "unknown_error"}`;
+                    $("draftImportStatus").classList.remove("hidden");
                     showError(error);
                   } finally {
                     setLocalBusy(false);
                     $("importDraft").disabled = false;
                     $("importDraft").textContent = "分析草稿并回填";
+                    updateDraftImportButtonState();
                     await refreshActiveRun();
                   }
+                }
+
+                function updateDraftImportButtonState() {
+                  const file = $("draftFile")?.files?.[0];
+                  const button = $("importDraft");
+                  if (!button) return;
+                  const canImport = !!state.projectId && !!file && !isGlobalBusy();
+                  button.disabled = !canImport;
+                  button.title = canImport ? "" : "请选择一个 txt 文件后再分析草稿并回填。";
                 }
 
                 async function createProjectPackage() {
@@ -4838,6 +4960,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${state.projectId}/packages`);
                     state.packageList = result;
                     renderProjectPackages(result);
+                    writeProjectStateCache({ packageList: result });
                   } catch (error) {
                     $("projectPackageStatus").className = "card muted";
                     $("projectPackageStatus").textContent = "项目文件包列表暂不可用。";
@@ -4908,6 +5031,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${state.projectId}/asset-inventory?judge=false`);
                     state.assetInventory = result;
                     renderAssetInventory(result, state.assetInventoryExpanded);
+                    writeProjectStateCache({ assetInventory: result });
                   } catch {
                     $("loadAssetInventory").disabled = true;
                     $("assetInventoryStatus").className = "card muted";
@@ -5142,6 +5266,7 @@ public sealed class BrowserUiRenderer
                     renderPrototypeAcceptanceSummary(progress);
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
                     updateChatPanelVisibility(progress);
+                    writeProjectStateCache({ prototypeProgress: progress });
                   } catch (error) { showError(error); }
                 }
 
@@ -5156,7 +5281,7 @@ public sealed class BrowserUiRenderer
                     ${progress.updatedUtc ? `<p class="muted">更新时间：${escapeHtml(progress.updatedUtc)}</p>` : ""}
                     ${progress.failure ? `<p class="danger">${escapeHtml(sanitizePublicFailureContent(progress.failure))}</p><p class="danger">可以点击“生成修复计划”把失败拆成小步骤，再逐项执行修复。</p>` : ""}
                   `;
-                  $("repairPrototype").classList.toggle("hidden", status !== "failed");
+                  $("repairPrototype")?.classList.toggle("hidden", true);
                 }
 
                 function renderPrototypeAcceptanceSummary(progress) {
@@ -5308,8 +5433,10 @@ public sealed class BrowserUiRenderer
                   prototypeInputIds.forEach(id => $(id).disabled = locked);
                   $("runPrototype").disabled = locked || isGlobalBusy();
                   $("runPrototype").textContent = locked ? "原型骨架创建中..刷新页面查阅创建进度." : "运行原型骨架创建";
-                  $("repairPrototype").disabled = locked || isGlobalBusy();
-                  $("repairPrototype").textContent = locked ? "修复计划处理中..刷新页面查阅进度." : "生成修复计划";
+                  if ($("repairPrototype")) {
+                    $("repairPrototype").disabled = locked || isGlobalBusy();
+                    $("repairPrototype").textContent = locked ? "修复计划处理中..刷新页面查阅进度." : "生成修复计划";
+                  }
                 }
 
                 async function runTdd(stage) {
@@ -5414,6 +5541,7 @@ public sealed class BrowserUiRenderer
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("importDraft").onclick = importDraft;
+                $("draftFile").onchange = updateDraftImportButtonState;
                 $("sendChat").onclick = sendChat;
                 $("createGddDocument").onclick = createGddDocument;
                 $("syncChatHistory").onclick = syncChatHistory;
@@ -5446,7 +5574,7 @@ public sealed class BrowserUiRenderer
                 $("createProjectPackage").onclick = createProjectPackage;
                 $("loadAssetInventory").onclick = loadAssetInventory;
                 $("runPrototype").onclick = runPrototype;
-                $("repairPrototype").onclick = repairPrototype;
+                if ($("repairPrototype")) $("repairPrototype").onclick = repairPrototype;
                 $("refreshPrototypeProgress").onclick = loadPrototypeProgress;
                 $("validatePrototype").onclick = validatePrototype;
                 $("createScene").onclick = createScene;
@@ -5553,8 +5681,7 @@ public sealed class BrowserUiRenderer
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
             CreateAcceptanceStep(6, latestPrototype, "/#v2AcceptancePanel"),
             CreateRunStep(7, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
-            CreateRunStep(8, "打包项目文件", latestPackage, "/#createProjectPackage"),
-            CreateRunStep(9, "下载项目文件", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
+            CreateRunStep(8, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
     }
 
@@ -5855,6 +5982,7 @@ public sealed class BrowserUiRenderer
                 .downloads-grid { display: grid; gap: 1rem; }
                 button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
+                .toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
                 .danger { color: var(--danger); }
                 .muted { color: var(--muted); }
                 body.embedded main { max-width: none; padding: 0; }
@@ -5868,6 +5996,10 @@ public sealed class BrowserUiRenderer
                   <p>按版本号/时间戳从近到远列出所有已打包的项目文件。压缩包只包含项目相关文件，不包含平台工程代码。</p>
                 </header>
                 <section id="status" class="card muted">正在读取项目文件包列表...</section>
+                <section class="card toolbar">
+                  <button id="createPackage" disabled>打包项目文件</button>
+                  <span id="createPackageHint" class="muted">正在检查是否可以打包。</span>
+                </section>
                 <section class="downloads-grid">
                   <section id="gddDownload" class="card"></section>
                   <section id="packages" class="card"></section>
@@ -5895,6 +6027,7 @@ public sealed class BrowserUiRenderer
                     $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(payload.error || "unknown_error")}</span>`;
                     return;
                   }
+                  renderCreatePackageAction(payload);
                   $("status").textContent = payload.canCreatePackage ? "可以继续生成新的项目文件包。" : disabledText(payload.disabledReason);
                   $("packages").innerHTML = (payload.packages || []).map(item => `
                     <article class="package card">
@@ -5907,6 +6040,38 @@ public sealed class BrowserUiRenderer
                     button.onclick = () => downloadPackage(button, button.dataset.downloadUrl, button.dataset.fileName);
                   });
                   await loadGddDownload();
+                }
+                function renderCreatePackageAction(payload) {
+                  const button = $("createPackage");
+                  const hint = $("createPackageHint");
+                  if (!button || !hint) return;
+                  const canCreate = !!payload?.canCreatePackage;
+                  button.disabled = !canCreate;
+                  button.title = canCreate ? "" : disabledText(payload?.disabledReason);
+                  hint.textContent = canCreate ? "点击后生成新的项目压缩包。" : disabledText(payload?.disabledReason);
+                }
+                async function createPackage() {
+                  const button = $("createPackage");
+                  if (!projectId || !button || button.disabled) return;
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "打包中...";
+                  $("status").textContent = "正在生成项目压缩包，请等待当前任务完成。";
+                  try {
+                    const response = await fetch(`/api/projects/${projectId}/packages`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, cache: "no-store" });
+                    let payload = {};
+                    try { payload = await response.json(); } catch {}
+                    if (!response.ok) {
+                      $("status").innerHTML = `<span class="danger">打包失败：${escapeHtml(payload.error || payload.status || "unknown_error")}</span>`;
+                      return;
+                    }
+                    $("status").textContent = "项目压缩包已生成，正在刷新下载列表。";
+                  } catch {
+                    $("status").innerHTML = "<span class='danger'>打包失败：浏览器未能发起项目文件打包。</span>";
+                  } finally {
+                    button.textContent = originalText;
+                    await loadPackages();
+                  }
                 }
                 async function loadGddDownload() {
                   const response = await fetch(`/api/projects/${projectId}/gdd`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
@@ -6001,6 +6166,7 @@ public sealed class BrowserUiRenderer
                     button.textContent = originalText;
                   }
                 }
+                $("createPackage").onclick = createPackage;
                 loadPackages();
               </script>
             </body>
@@ -6033,7 +6199,9 @@ public sealed class BrowserUiRenderer
                 .list { display: grid; gap: 0.75rem; }
                 .asset-preview { width: 100%; height: 10rem; object-fit: contain; border: 1px solid var(--line); border-radius: 0.5rem; background: #f3ead9; display: grid; place-items: center; cursor: pointer; }
                 .asset-card { display: grid; gap: 0.65rem; align-content: start; }
-                .asset-card .asset-detail-button { justify-self: center; }
+                .asset-role { min-height: 2.2rem; margin: 0; color: var(--ink); font-size: 0.92rem; line-height: 1.3; }
+                .asset-card-actions { display: grid; grid-template-columns: minmax(9.5rem, 1fr) minmax(4rem, 0.5fr); gap: 0.5rem; align-items: center; }
+                .asset-card-actions button { min-width: 0; white-space: nowrap; }
                 button { border: 0; border-radius: 0.4rem; padding: 0.65rem 0.9rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
                 button.secondary { background: var(--accent-2); }
                 button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
@@ -6059,6 +6227,41 @@ public sealed class BrowserUiRenderer
                 .asset-create-panel select { border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.65rem; font: inherit; background: #fffdf8; }
                 .reference-file { display: none; }
                 .reference-file.open { display: inline-flex; align-items: center; gap: 0.35rem; }
+                .asset-original-preview-overlay {
+                  position: fixed;
+                  inset: 0;
+                  display: none;
+                  align-items: flex-start;
+                  justify-content: center;
+                  overflow: auto;
+                  padding: 1rem;
+                  background: rgba(23, 33, 27, 0.22);
+                  z-index: 60;
+                }
+                .asset-original-preview-overlay.open { display: flex; }
+                .asset-original-preview-layer {
+                  width: max-content;
+                  height: max-content;
+                  display: grid;
+                  gap: 0.35rem;
+                  background: var(--panel);
+                  border: 1px solid var(--line);
+                  border-radius: 0.5rem;
+                  padding: 0.75rem;
+                  box-shadow: 0 1.4rem 4rem rgba(23, 33, 27, 0.28);
+                  transform: translate(14px, 14px);
+                }
+                .asset-original-preview-layer img {
+                  display: block;
+                  max-width: none;
+                  max-height: none;
+                  width: auto;
+                  height: auto;
+                  border: 0;
+                  border-radius: 0.25rem;
+                  background: transparent;
+                }
+                .asset-original-preview-meta { color: var(--muted); font-size: 0.85rem; }
                 body.embedded main { max-width: none; padding: 0; }
                 body.embedded main > header { display: none; }
                 @media (max-width: 820px) {
@@ -6111,6 +6314,13 @@ public sealed class BrowserUiRenderer
                   </div>
                 </div>
               </div>
+              <div id="assetOriginalPreviewOverlay" class="asset-original-preview-overlay" aria-hidden="true">
+                <div id="assetOriginalPreviewLayer" class="asset-original-preview-layer">
+                  <strong id="assetOriginalPreviewTitle">原图预览</strong>
+                  <div id="assetOriginalPreviewMeta" class="asset-original-preview-meta"></div>
+                  <img id="assetOriginalPreviewImage" alt="素材原图预览">
+                </div>
+              </div>
               <script>
                 const params = new URLSearchParams(location.search);
                 const projectId = params.get("projectId") || "";
@@ -6120,6 +6330,7 @@ public sealed class BrowserUiRenderer
                 const $ = id => document.getElementById(id);
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
                 const state = { assetUnits: {}, library: { units: [] }, usedAssets: [], candidates: [], activeAsset: null };
+                let assetPreviewHideTimer = null;
                 const cacheKey = () => `phaseA.assetLibrary.${projectId}.${model}`;
 
                 function readAssetCache() {
@@ -6262,8 +6473,19 @@ public sealed class BrowserUiRenderer
                   const item = model.item;
                   const selected = selectedLibraryEntry(model.libraryUnit);
                   const previewUrl = selected?.previewUrl || item.previewUrl || "";
+                  const downloadUrl = previewUrl || "";
+                  const downloadName = assetDownloadName(model, previewUrl);
                   const image = previewUrl ? `<img class="asset-preview" src="${escapeHtml(previewUrl)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">预览不可用</div>`;
-                  return `<article class="card asset-card">${image}<button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button></article>`;
+                  return `<article class="card asset-card"><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(downloadUrl)}" data-asset-download-name="${escapeHtml(downloadName)}" ${downloadUrl ? "" : "disabled"}>下载</button></div></article>`;
+                }
+
+                function assetRoleText(unit) {
+                  const kind = String(unit?.kind || "").trim();
+                  const use = String(unit?.intendedUse || unit?.reason || "").trim();
+                  if (use) return use;
+                  if (kind.includes("map")) return "地图或场景背景素材。";
+                  if (kind.includes("sprite")) return "角色、敌人、道具或效果精灵素材。";
+                  return "用于替换当前素材单位的默认显示。";
                 }
 
                 function assetPixelSize(item) {
@@ -6287,8 +6509,9 @@ public sealed class BrowserUiRenderer
                   const item = model.item;
                   const selected = selectedLibraryEntry(model.libraryUnit);
                   const preview = selected?.previewUrl || "";
+                  const downloadName = assetDownloadName(model, preview);
                   const image = preview ? `<img class="asset-preview" src="${escapeHtml(preview)}" alt="${escapeHtml(item.instanceName || "asset")}" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">` : `<div class='asset-preview muted' data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">待生成</div>`;
-                  return `<article class="card asset-card">${image}<button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button></article>`;
+                  return `<article class="card asset-card"><p class="asset-role">${escapeHtml(assetRoleText(model.unit))}</p>${image}<div class="asset-card-actions"><button class="secondary asset-detail-button" type="button" data-asset-detail-key="${escapeHtml(model.unit.clientKey)}">素材详情及替换</button><button class="ghost" type="button" data-asset-download-url="${escapeHtml(preview)}" data-asset-download-name="${escapeHtml(downloadName)}" ${preview ? "" : "disabled"}>下载</button></div></article>`;
                 }
 
                 function showAssetHistory(unitKey) {
@@ -6332,7 +6555,107 @@ public sealed class BrowserUiRenderer
                   $("assetHistoryModal").setAttribute("aria-hidden", "false");
                 }
 
+                function assetDownloadName(model, previewUrl) {
+                  const baseName = sanitizeFileName(model?.unit?.instanceName || model?.item?.instanceName || model?.unit?.kind || "asset");
+                  const extension = extensionFromPath(model?.item?.resourcePath || model?.unit?.resourcePath || previewUrl || "") || "png";
+                  return `${baseName}.${extension}`;
+                }
+
+                function sanitizeFileName(name) {
+                  return String(name || "asset").replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, " ").trim() || "asset";
+                }
+
+                function extensionFromPath(value) {
+                  const base = String(value || "").split("?")[0].split("#")[0];
+                  const match = base.match(/\.([a-zA-Z0-9]+)$/);
+                  return match ? match[1] : "";
+                }
+
+                function downloadAsset(url, fileName) {
+                  if (!url) return;
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = fileName || "asset.png";
+                  link.rel = "noopener";
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                }
+
+                function assetPreviewOverlay() {
+                  return {
+                    overlay: $("assetOriginalPreviewOverlay"),
+                    layer: $("assetOriginalPreviewLayer"),
+                    title: $("assetOriginalPreviewTitle"),
+                    meta: $("assetOriginalPreviewMeta"),
+                    image: $("assetOriginalPreviewImage")
+                  };
+                }
+
+                function clearAssetPreviewHideTimer() {
+                  if (assetPreviewHideTimer) {
+                    clearTimeout(assetPreviewHideTimer);
+                    assetPreviewHideTimer = null;
+                  }
+                }
+
+                function scheduleHideAssetOriginalPreview() {
+                  clearAssetPreviewHideTimer();
+                  assetPreviewHideTimer = setTimeout(hideAssetOriginalPreview, 3000);
+                }
+
+                function positionAssetOriginalPreview(event) {
+                  const { layer } = assetPreviewOverlay();
+                  if (!layer || !event) return;
+                  const margin = 14;
+                  const width = layer.offsetWidth || 320;
+                  const height = layer.offsetHeight || 240;
+                  const left = Math.min(Math.max(8, event.clientX + margin), Math.max(8, window.innerWidth - width - 8));
+                  const top = Math.min(Math.max(8, event.clientY + margin), Math.max(8, window.innerHeight - height - 8));
+                  layer.style.position = "fixed";
+                  layer.style.left = `${left}px`;
+                  layer.style.top = `${top}px`;
+                }
+
+                function hideAssetOriginalPreview() {
+                  clearAssetPreviewHideTimer();
+                  const { overlay, image } = assetPreviewOverlay();
+                  if (!overlay || !image) return;
+                  overlay.classList.remove("open");
+                  overlay.setAttribute("aria-hidden", "true");
+                  image.removeAttribute("src");
+                  image.alt = "素材原图预览";
+                }
+
+                function showAssetOriginalPreview(source, event = null) {
+                  const previewUrl = source?.getAttribute?.("src") || "";
+                  if (!previewUrl) return;
+                  clearAssetPreviewHideTimer();
+                  const { overlay, title, meta, image, layer } = assetPreviewOverlay();
+                  if (!overlay || !title || !meta || !image) return;
+                  const altText = source.getAttribute("alt") || "素材原图";
+                  title.textContent = altText;
+                  meta.textContent = "原始尺寸加载中...";
+                  image.alt = altText;
+                  image.onload = () => {
+                    meta.textContent = `${image.naturalWidth} × ${image.naturalHeight}`;
+                    positionAssetOriginalPreview(event);
+                  };
+                  image.src = previewUrl;
+                  if (image.complete && image.naturalWidth > 0) {
+                    meta.textContent = `${image.naturalWidth} × ${image.naturalHeight}`;
+                  }
+                  if (layer) {
+                    layer.style.left = "0px";
+                    layer.style.top = "0px";
+                  }
+                  overlay.classList.add("open");
+                  overlay.setAttribute("aria-hidden", "false");
+                  positionAssetOriginalPreview(event);
+                }
+
                 function closeAssetHistory() {
+                  hideAssetOriginalPreview();
                   $("assetHistoryModal").classList.remove("open");
                   $("assetHistoryModal").setAttribute("aria-hidden", "true");
                 }
@@ -6482,9 +6805,39 @@ public sealed class BrowserUiRenderer
                     openAssetDetail(detailTarget.dataset.assetDetailKey || "");
                     return;
                   }
+                  const downloadButton = event.target?.closest?.("[data-asset-download-url]");
+                  if (downloadButton) {
+                    downloadAsset(downloadButton.dataset.assetDownloadUrl || "", downloadButton.dataset.assetDownloadName || "asset.png");
+                    return;
+                  }
                   const selectButton = event.target?.closest?.("[data-select-unit-key][data-entry-id]");
                   if (selectButton) {
                     selectEntry(selectButton.dataset.selectUnitKey || "", selectButton.dataset.entryId || "", selectButton);
+                  }
+                });
+                document.addEventListener("mouseover", event => {
+                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
+                  if (image) {
+                    showAssetOriginalPreview(image, event);
+                  }
+                });
+                document.addEventListener("mousemove", event => {
+                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
+                  if (image) positionAssetOriginalPreview(event);
+                });
+                document.addEventListener("mouseout", event => {
+                  const image = event.target?.closest?.("img.asset-preview, img.history-thumb");
+                  if (!image) return;
+                  const related = event.relatedTarget;
+                  const layer = $("assetOriginalPreviewLayer");
+                  if (related && (layer?.contains?.(related) || image.contains(related))) return;
+                  scheduleHideAssetOriginalPreview();
+                });
+                $("assetOriginalPreviewLayer").addEventListener("mouseenter", clearAssetPreviewHideTimer);
+                $("assetOriginalPreviewLayer").addEventListener("mouseleave", scheduleHideAssetOriginalPreview);
+                $("assetOriginalPreviewOverlay").addEventListener("click", event => {
+                  if (event.target === $("assetOriginalPreviewOverlay")) {
+                    hideAssetOriginalPreview();
                   }
                 });
                 $("closeAssetHistoryButton").addEventListener("click", closeAssetHistory);

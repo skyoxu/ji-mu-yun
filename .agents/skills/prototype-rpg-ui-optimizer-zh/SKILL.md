@@ -24,7 +24,7 @@ Align the current RPG prototype UI with the project game-type template. For RPG/
 - launch into the actual playable RPG prototype instead of the generic template `Main.tscn` demo UI;
 - map/status UI should make movement, encounter pressure, chest/reward state, and party state visible;
 - battle UI should make player/enemy state, turn result, reward choice, and battle log visible;
-- user-facing labels should be Chinese when the project input/GDD is Chinese;
+- 玩家可见文本默认必须使用中文，包括 Label、Button、RichTextLabel、HUD、菜单、战斗日志、任务提示、结算提示、胜负/错误提示；代码标识符、节点名、资源路径、测试、日志和平台验证要求的固定节点名保持英文，不得为了中文化而改动平台验证依赖的固定节点名；
 - prefer reusing existing scenes, scripts, panels, and nodes.
 
 ## Editing Rules

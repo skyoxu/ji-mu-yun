@@ -160,6 +160,8 @@ public sealed class PrototypeWorkflowTests
         record.Should().Contain("- Game Type: rpg");
         record.Should().Contain("- Game Type Source: 勇者斗恶龙");
         record.Should().Contain("## Prototype Input Contract");
+        record.Should().Contain("Player-visible text inside the generated Godot game screen must default to Chinese");
+        record.Should().Contain("Keep code identifiers, class names, method names, node names, resource paths, tests, logs, and platform-required fixed node names in English");
         record.Should().Contain("| Field | Value | Must Reflect In |");
         record.Should().Contain("| core_gameplay_loop | Move, choose action, resolve enemy response. | Map/battle/reward/control flow and loop continuity |");
         runner.Commands.Should().HaveCount(3);

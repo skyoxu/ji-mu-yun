@@ -190,7 +190,7 @@ public sealed class ChatServiceTests
             {
                 new ChatMessage("user", "normal-1"),
                 new ChatMessage("assistant", "normal-2"),
-                new ChatMessage("assistant", "系统扫描结果：\n\n项目状态摘要\n\n推荐页面：下载项目文件\n系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。"),
+                new ChatMessage("assistant", "系统扫描结果：\n\n项目状态摘要\n\n推荐页面：打包下载项目\n系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。"),
                 new ChatMessage("user", "normal-3")
             };
 

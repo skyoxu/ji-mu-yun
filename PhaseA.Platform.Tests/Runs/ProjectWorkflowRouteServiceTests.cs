@@ -109,7 +109,9 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.Steps.Single(step => step.Id == "prototype-acceptance").Status.Should().Be("done");
-        result.NextAction.ActionId.Should().Be("package-project");
+        result.NextAction.ActionId.Should().Be("download-project");
+        result.NextAction.ButtonLabel.Should().Be("打包下载项目");
+        result.Recommendation.Should().Contain("打包下载项目");
     }
 
     [Fact]
@@ -142,8 +144,84 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "download-project",
+            "ui-optimization",
+            "asset-inventory",
+            "create-next-iteration-plan");
+        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行 UI 优化");
+        result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
+        result.Recommendation.Should().Contain("下载压缩包");
+        result.Recommendation.Should().Contain("UI 优化");
+        result.Recommendation.Should().Contain("项目素材库");
+    }
+
+    [Fact]
+    public async Task QueryAsync_WhenPackageExistsForDragonQuestLikeRoute_RecommendsSpecializedUiAndAssets()
+    {
+        var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        await fixture.SeedPrototypeCreationAsync("succeeded");
+        await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
+        await Task.Delay(20);
+        await fixture.SeedValidationOnlyRunAsync("succeeded");
+        await fixture.SeedPackageRunAsync();
+
+        var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
+
+        result!.NextAction.ActionId.Should().Be("download-project");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "download-project",
+            "ui-optimization",
+            "asset-inventory",
+            "create-next-iteration-plan");
+        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行 UI 优化");
+        result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
+        result.Recommendation.Should().Contain("UI 优化");
+        result.Recommendation.Should().Contain("项目素材库");
+    }
+
+    [Fact]
+    public async Task QueryAsync_WhenPackageExistsAndUiOptimizationAlreadySucceeded_HidesUiOptimizationAction()
+    {
+        var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        await fixture.SeedPrototypeCreationAsync("succeeded");
+        await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
+        await Task.Delay(20);
+        await fixture.SeedValidationOnlyRunAsync("succeeded");
+        await fixture.SeedPackageRunAsync();
+        await fixture.SeedUiOptimizationRunAsync("succeeded");
+
+        var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
+
+        result!.NextAction.ActionId.Should().Be("download-project");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "download-project",
+            "asset-inventory",
+            "create-next-iteration-plan");
+        result.Actions!.Should().NotContain(action => action.ActionId == "ui-optimization");
+        result.Recommendation.Should().Contain("UI 优化也已完成");
+        result.Recommendation.Should().Contain("项目素材库");
+    }
+
+    [Fact]
+    public async Task QueryAsync_WhenPackageExistsForGenericRoute_DoesNotRecommendSpecializedUiOrAssets()
+    {
+        var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "platformer");
+        await fixture.SeedPrototypeCreationAsync("succeeded");
+        await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
+        await Task.Delay(20);
+        await fixture.SeedValidationOnlyRunAsync("succeeded");
+        await fixture.SeedPackageRunAsync();
+
+        var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
+
+        result!.NextAction.ActionId.Should().Be("download-project");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "download-project",
             "create-next-iteration-plan");
         result.Recommendation.Should().Contain("下载压缩包");
+        result.Recommendation.Should().NotContain("项目素材库");
     }
 
     [Fact]
@@ -162,8 +240,32 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "create-next-iteration-plan",
-            "download-project");
+            "download-project",
+            "ui-optimization",
+            "asset-inventory");
         result.Recommendation.Should().Contain("试玩反馈创建新一轮迭代计划");
+    }
+
+    [Fact]
+    public async Task QueryAsync_WhenPlaytestFeedbackAndUiOptimizationAlreadySucceeded_HidesUiOptimizationAction()
+    {
+        var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        await fixture.SeedPrototypeCreationAsync("succeeded");
+        await fixture.CreateIterationSessionAsync(["succeeded"]);
+        await Task.Delay(20);
+        await fixture.SeedValidationOnlyRunAsync("succeeded");
+        await fixture.SeedPackageRunAsync();
+        await fixture.SeedUiOptimizationRunAsync("succeeded");
+
+        var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId, "试玩后希望提升战斗反馈。");
+
+        result!.NextAction.ActionId.Should().Be("create-next-iteration-plan");
+        result.Actions.Should().NotBeNull();
+        result.Actions!.Select(action => action.ActionId).Should().Equal(
+            "create-next-iteration-plan",
+            "download-project",
+            "asset-inventory");
+        result.Actions!.Should().NotContain(action => action.ActionId == "ui-optimization");
     }
 
     [Fact]
@@ -263,7 +365,7 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         public ProjectWorkflowRouteService Service { get; }
 
-        public static async Task<WorkflowFixture> CreateAsync(string? llmJson = null)
+        public static async Task<WorkflowFixture> CreateAsync(string? llmJson = null, string gameTypeSource = "RPG")
         {
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = TempDirectory.Create("phase-a-workflow-route-workspaces");
@@ -277,7 +379,7 @@ public sealed class ProjectWorkflowRouteServiceTests
             await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var accountId = await store.EnsureSingleAdminAsync();
-            var projectId = await CreateProjectAsync(store, options, accountId);
+            var projectId = await CreateProjectAsync(store, options, accountId, gameTypeSource);
             var service = CreateService(store, options, llmJson);
             return new WorkflowFixture(database, workspaceRoot, repoRoot, options, store, accountId, projectId, service);
         }
@@ -389,10 +491,10 @@ public sealed class ProjectWorkflowRouteServiceTests
             return new ProjectWorkflowRouteService(store, options, workflow, repair, packages, inventory, new LlmRouteEngine(codex));
         }
 
-        private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
+        private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
         {
             var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-            var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
+            var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
             await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
             return result.ProjectId!;
         }

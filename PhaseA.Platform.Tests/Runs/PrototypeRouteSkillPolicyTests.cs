@@ -31,6 +31,9 @@ public sealed class PrototypeRouteSkillPolicyTests
         prompt.Should().Contain("CodexHostedProcessCommandFactory");
         prompt.Should().Contain("do not run a bare/generic prototype route");
         prompt.Should().Contain("do not use AGENTS.md as hosted project memory");
+        prompt.Should().Contain("Player-visible text rule");
+        prompt.Should().Contain("must default to Chinese");
+        prompt.Should().Contain("Do not rename platform-validated fixed nodes");
     }
 
     [Fact]
@@ -78,6 +81,7 @@ public sealed class PrototypeRouteSkillPolicyTests
         profile.RouteSkill.ContractRelativePath.Should().Be(".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md");
         prompt.Should().Contain("MandatorySkillEntry: $prototype-survivorslike-godot-zh");
         prompt.Should().Contain("GameTypeId: survivorslike");
+        prompt.Should().Contain("Player-visible text rule");
     }
 
     [Fact]
@@ -354,11 +358,14 @@ public sealed class PrototypeRouteSkillPolicyTests
             repoPath: Path.GetTempPath());
 
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
+        var prompt = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
 
         profile.GameTypeId.Should().Be("default");
         profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
         profile.RouteSetId.Should().Be("default-prototype-routes-v1");
         profile.RouteSkill.ContractRelativePath.Should().BeNull();
+        prompt.Should().Contain("Player-visible text rule");
+        prompt.Should().Contain("must default to Chinese");
     }
 
     [Fact]

@@ -614,7 +614,7 @@ public sealed class PrototypeUiOptimizationService
             RPG UI target:
             - Current game should launch into the actual playable RPG prototype, not the generic template Main.tscn demo UI.
             - UI should include RPG-specific status, encounter, map, battle, reward, result, and log panels where applicable.
-            - Use Chinese user-facing labels when the project input/GDD is Chinese.
+            - {PrototypePlayerVisibleTextPolicy.PromptRule}
             - If a DefaultRpgTemplate or He-is-Coming-like prototype exists locally, reuse its layout/style patterns rather than inventing a new UI.
 
             Validation:

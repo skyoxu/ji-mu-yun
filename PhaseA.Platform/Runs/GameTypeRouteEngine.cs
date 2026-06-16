@@ -71,6 +71,7 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
             - Rule: do not run a bare/generic prototype route when the route skill is missing or unresolved; report route_skill_required instead.
             - Rule: recover hosted project memory from project guide, contract, route state, ledger, and latest validation; do not use AGENTS.md as hosted project memory.
             - Rule: read-only JSON routes must use ILlmRouteEngine; executable Codex routes must use CodexHostedProcessCommandFactory with stdin prompt transport.
+            - {PrototypePlayerVisibleTextPolicy.PromptRule}
             """;
     }
 

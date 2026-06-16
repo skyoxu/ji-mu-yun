@@ -259,7 +259,7 @@ public sealed class BrowserUiRendererTests
             const v2Steps = [
               ["new-project", "游戏项目详情", 1],
               ["asset-inventory", "确认素材清单", 7],
-              ["download-project", "下载项目文件", 9]
+              ["download-project", "打包下载项目", 8]
             ];
             const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
             function v2StepLabel(stepId) {
@@ -448,9 +448,17 @@ public sealed class BrowserUiRendererTests
               runs: [
                 {
                   runType: "prototype-ui-optimization",
+                  status: "failed",
+                  progressSubstep: "validation_failed",
+                  progressUpdatedUtc: "2026-06-09T07:01:39.4240706+00:00",
+                  runId: "old"
+                },
+                {
+                  runType: "prototype-ui-optimization",
                   status: "succeeded",
                   progressSubstep: "completed",
-                  progressUpdatedUtc: "2026-06-09T07:05:39.4240706+00:00"
+                  progressUpdatedUtc: "2026-06-09T07:05:39.4240706+00:00",
+                  runId: "new"
                 }
               ],
               prototypeFailure: "",
@@ -467,8 +475,17 @@ public sealed class BrowserUiRendererTests
             };
             const elements = new Map([["prototypeProgress", { textContent: "succeeded" }]]);
             const $ = id => elements.get(id) || null;
+            function v2IsoTime(value) {
+              const time = Date.parse(value || "");
+              return Number.isFinite(time) ? time : 0;
+            }
+            function v2RunTimestamp(run) {
+              return v2IsoTime(run?.finishedUtc || run?.progressUpdatedUtc || run?.startedUtc || run?.createdUtc || "");
+            }
             function v2LatestRunByType(runType) {
-              return (state.runs || []).find(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase()) || null;
+              return (state.runs || [])
+                .filter(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase())
+                .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
             }
             function v2StepStatus(stepId) {
               const progressStatus = state?.prototypeFailure ? "failed" : "";
@@ -573,6 +590,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("workflow-route");
         html.Should().Contain("buildWorkflowRouteChatContent");
         html.Should().Contain("renderWorkflowRouteAction");
+        html.Should().Contain("function v2RunTimestamp(run)");
+        html.Should().Contain("v2RenderUiOptimizationStatus");
+        html.Should().Contain("UI 优化已完成，短验证已通过");
+        html.Should().Contain("左侧进度栏已标记为完成");
         html.Should().Contain("workflowRouteActionConsumed");
         html.Should().NotContain("withTimeout(loadProjectPackages(), \"packages\")");
         html.Should().NotContain("已基于当前缓存状态生成建议");
@@ -581,6 +602,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("v2NextSuggestionHasLlmResult");
         html.Should().Contain("推荐页面：${actions.map(action => action.runName || action.label || action.actionId).join(\"、\")}");
         html.Should().Contain("系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。");
+        html.Should().NotContain("workflow_route_queried");
         html.Should().NotContain("function v2Suggestion()");
         html.Should().NotContain("dataset.llmPinned");
         html.Should().Contain("function v2StepIconUrl(iconName)");
@@ -620,7 +642,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (typeof v2OpenStepTab === \"function\")");
         html.Should().Contain("v2OpenStepTab(\"download-project\")");
         html.Should().Contain("v2OpenStepTab(\"asset-inventory\")");
-        html.Should().Contain("$(\"createProjectPackage\")?.click()");
+        html.Should().NotContain("$(\"createProjectPackage\")?.click()");
         html.Should().Contain("v2ApplyPrototypeFormLock");
         html.Should().Contain("v2ShouldLockPrototypeForm");
         html.Should().Contain("v2-prototype-locked");
@@ -630,7 +652,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setPrototypeFormLocked = function(locked)");
         html.Should().Contain("v2ApplyPrototypeFormSnapshot");
         html.Should().Contain("progress?.form");
-        html.Should().Contain("已载入原型记录");
+        html.Should().NotContain("已载入原型记录");
+        html.Should().Contain("游戏原型ID");
+        html.Should().Contain("prototype-draft-row");
+        html.Should().Contain("updateDraftImportButtonState");
+        html.Should().Contain("$(\"draftFile\").onchange = updateDraftImportButtonState");
+        html.Should().Contain("projectStateCacheKey");
+        html.Should().Contain("applyProjectStateCache(projectId)");
+        html.Should().Contain("writeProjectStateCache({ prototypeProgress: progress })");
+        html.Should().Contain("writeProjectStateCache({ packageList: result })");
+        html.Should().Contain("writeProjectStateCache({ assetInventory: result })");
+        html.Should().Contain("renderRunsListFromState");
         html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
         html.Should().Contain("[\"create-prototype\", \"原型骨架创建\", \"spark\"]");
         html.Should().Contain("v2-step-number");
@@ -665,14 +697,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (!goals.length && v2HasPrototypeSkeleton()) return \"done\";");
         html.Should().Contain("确认素材清单");
         html.Should().Contain("打包项目文件");
-        html.Should().Contain("下载项目文件");
+        html.Should().Contain("打包下载项目");
         html.Should().Contain("if (stepId === \"new-project\") return state.projectId ? \"done\" : \"pending\"");
         html.Should().Contain("if (stepId === \"iteration-plan\") {");
         html.Should().Contain("return \"continue\"");
         html.Should().Contain("•••");
         html.Should().Contain("function v2AssetInventoryConfirmed()");
         html.Should().Contain("if (stepId === \"asset-inventory\") return v2AssetInventoryConfirmed() ? \"done\" : \"pending\"");
-        html.Should().Contain("if (stepId === \"package-project\") return v2HasPackages() ? \"done\" : \"pending\"");
         html.Should().Contain("if (stepId === \"download-project\") return v2HasPackages() ? \"done\" : \"pending\"");
         html.Should().Contain("const mark = status === \"done\" ? \"✓\" : status === \"fix\" ? \"×\" : status === \"continue\" ? \"•••\" : \"\"");
         html.Should().Contain("flowTitle?.classList.add(\"hidden\")");
@@ -821,7 +852,6 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2OpenStepTab(\"execute-or-repair\", false)");
         html.Should().Contain("v2OpenStepTab(\"iteration-plan\", false)");
         html.Should().Contain("v2OpenStepTab(\"ui-optimization\", false)");
-        html.Should().Contain("v2OpenStepTab(\"package-project\", false)");
         html.Should().NotContain("await runPrototype();");
         html.Should().NotContain("await createIterationPlan();");
         html.Should().NotContain("await runUiOptimization();");
@@ -893,8 +923,8 @@ public sealed class BrowserUiRendererTests
 
         html.Should().Contain("detail-progress");
         html.Should().Contain("detail-step-number\">1</span>");
-        html.Should().Contain("detail-step-number\">9</span>");
-        html.Should().Contain("打包项目文件");
+        html.Should().Contain("detail-step-number\">8</span>");
+        html.Should().Contain("打包下载项目");
         html.Should().Contain("detail-step pending");
         html.Should().NotContain("detail-step fix");
         html.Should().NotContain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
@@ -989,7 +1019,6 @@ public sealed class BrowserUiRendererTests
 
         var html = new BrowserUiRenderer().RenderProject(project, [packageRun]);
 
-        html.Should().Contain("detail-step done\" href=\"/#createProjectPackage\"");
         html.Should().Contain("detail-step done\" href=\"/downloads?projectId=project-1\"");
     }
 
@@ -1499,8 +1528,22 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("showAssetHistory");
         html.Should().Contain("openAssetDetail");
         html.Should().Contain("data-asset-detail-key");
+        html.Should().Contain("data-asset-download-url");
+        html.Should().Contain("assetOriginalPreviewOverlay");
+        html.Should().Contain("assetOriginalPreviewLayer");
+        html.Should().Contain("downloadAsset");
+        html.Should().Contain("asset-role");
+        html.Should().Contain("assetRoleText");
+        html.Should().Contain("grid-template-columns: minmax(9.5rem, 1fr) minmax(4rem, 0.5fr)");
+        html.Should().Contain("let assetPreviewHideTimer = null");
+        html.Should().Contain("scheduleHideAssetOriginalPreview");
+        html.Should().Contain("setTimeout(hideAssetOriginalPreview, 3000)");
+        html.Should().Contain("positionAssetOriginalPreview(event)");
         html.Should().Contain("data-select-unit-key");
         html.Should().Contain("addEventListener(\"click\"");
+        html.Should().Contain("addEventListener(\"mouseover\"");
+        html.Should().Contain("addEventListener(\"mousemove\"");
+        html.Should().Contain("addEventListener(\"mouseout\"");
         html.Should().NotContain("onclick=");
         html.Should().NotContain("onchange=");
         html.Should().Contain("asset-detail-grid");
@@ -1676,6 +1719,12 @@ public sealed class BrowserUiRendererTests
         var html = new BrowserUiRenderer().RenderDownloads();
 
         html.Should().Contain("项目文件下载");
+        html.Should().Contain("id=\"createPackage\"");
+        html.Should().Contain("打包项目文件");
+        html.Should().Contain("function renderCreatePackageAction(payload)");
+        html.Should().Contain("async function createPackage()");
+        html.Should().Contain("fetch(`/api/projects/${projectId}/packages`, { method: \"POST\"");
+        html.Should().Contain("$(\"createPackage\").onclick = createPackage");
         html.Should().Contain("body.embedded main");
         html.Should().Contain("params.get(\"embedded\") === \"1\"");
         html.Should().Contain("下载准备中...");

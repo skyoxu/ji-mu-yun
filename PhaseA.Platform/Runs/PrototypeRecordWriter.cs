@@ -57,6 +57,7 @@ public sealed class PrototypeRecordWriter
             "## Prototype Input Contract",
             "- Rule: Every non-empty field in this section is user/project intent and must be reflected in gameplay, UI, scene flow, validation, or an explicit needs-fix blocker.",
             "- Rule: Type templates and RPG defaults may fill gaps, but must not override concrete user values.",
+            $"- {PrototypePlayerVisibleTextPolicy.PrototypeRecordRule}",
             "",
             "| Field | Value | Must Reflect In |",
             "| --- | --- | --- |",

@@ -80,6 +80,7 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Status.Should().Be("ready");
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().NotBeNullOrWhiteSpace();
+        codex.LastGoalPlanPrompt.Should().Contain("default to Chinese");
 
         var latest = await service.GetLatestAsync(accountId, projectId);
         latest.Should().NotBeNull();
