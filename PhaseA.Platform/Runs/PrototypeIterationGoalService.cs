@@ -122,6 +122,7 @@ public sealed class PrototypeIterationGoalService
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
+        await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备目标 {nextGoal.GoalIndex}。", CancellationToken.None);
@@ -266,7 +267,6 @@ public sealed class PrototypeIterationGoalService
                     providerBilling: providerBilling),
                 CancellationToken.None);
             await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, goalOutcome.GoalStatus, publicSummary, goalOutcome.MarkCompleted ? now : null, CancellationToken.None);
-            await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(
                 runId,
                 goalOutcome.ResultStatus,
@@ -848,14 +848,41 @@ public sealed class PrototypeIterationGoalService
         ProjectIterationGoalSnapshot goal,
         PrototypeGoalAcceptanceValidationResult validation)
     {
+        var publicDetails = BuildPublicAcceptanceValidationDetails(validation);
         return $"""
             {publicSummary.Trim()}
 
             Platform acceptance:
             Goal {goal.GoalIndex} did not pass platform validation. The current goal remains needs_fix.
             Reason: {validation.Reason ?? validation.Status}
-            Details: {validation.Details ?? "none"}
+            Details: {publicDetails}
             """;
+    }
+
+    private static string BuildPublicAcceptanceValidationDetails(PrototypeGoalAcceptanceValidationResult validation)
+    {
+        if (string.Equals(validation.Reason, "core_tests_failed", StringComparison.OrdinalIgnoreCase) &&
+            IsCoreTestPackageReferenceFailure(validation.Details))
+        {
+            return "Core test project package references are incomplete. Repair Game.Core.Tests package references for xunit, xunit.runner.visualstudio, FluentAssertions, Microsoft.NET.Test.Sdk, and related test dependencies before continuing gameplay work.";
+        }
+
+        var sanitized = PublicChatSanitizer.Sanitize(validation.Details);
+        return string.IsNullOrWhiteSpace(sanitized)
+            ? "See the current platform acceptance reason and repair the listed blocker."
+            : sanitized;
+    }
+
+    private static bool IsCoreTestPackageReferenceFailure(string? details)
+    {
+        if (string.IsNullOrWhiteSpace(details))
+        {
+            return false;
+        }
+
+        return details.Contains("CS0246", StringComparison.OrdinalIgnoreCase) &&
+               (details.Contains("Xunit", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("FluentAssertions", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string AppendAcceptanceValidationFailureEvidence(

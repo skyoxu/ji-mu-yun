@@ -252,14 +252,15 @@ internal sealed class PrototypeNeedsFixRepairLedger
 
         var reason = ReadValidationReason(validation);
         var scene = ReadValidationScene(validation);
+        var details = BuildValidationDetails(validation);
         var suggestedFix = source == "godot_smoke"
-            ? BuildGodotSmokeSuggestedFix(reason, scene)
+            ? BuildGodotSmokeSuggestedFix(reason, scene, details)
             : "Fix the RPG acceptance test mismatch named by the validation evidence.";
         blockers.Add(NewBlocker(
             $"{source}:{NormalizeToken(reason)}",
             source,
             reason,
-            validation.ToString(),
+            details,
             runId,
             now,
             source == "godot_smoke" ? 3 : 4,
@@ -315,7 +316,7 @@ internal sealed class PrototypeNeedsFixRepairLedger
         {
             Id = $"godot_smoke:{NormalizeToken(reason)}",
             Reason = reason,
-            SuggestedFix = BuildGodotSmokeSuggestedFix(reason, scene)
+            SuggestedFix = BuildGodotSmokeSuggestedFix(reason, scene, blocker.Details)
         };
     }
 
@@ -362,7 +363,7 @@ internal sealed class PrototypeNeedsFixRepairLedger
 
         if (StartsWithReason(reason, "missing_rpg_reward_flow_contract"))
         {
-            return "Repair the full RPG/JRPG reward-flow contract. Ensure victory or consequence exposes exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, visibly updates stats or consequence text, returns or refreshes the map, and restores player visibility. A DqRpgPrototype.cs-owned reward panel is valid if it keeps the reward entry, selection, ApplyReward, visible feedback, and map-return contract together.";
+            return "Repair the full RPG/JRPG reward-flow contract. Ensure victory or consequence exposes exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, visibly updates stats or consequence text, returns or refreshes the map, and restores player visibility. Leave a validation-facing map-return feedback marker such as ShowRewardReturnFeedback, ShowRewardReturnStatus, Returned to map, movement is restored, or rpg_reward_flow_contract in the active DqRpgPrototype.cs/MapScene.cs flow. A DqRpgPrototype.cs-owned reward panel is valid if it keeps the reward entry, selection, ApplyReward, visible feedback, and map-return contract together.";
         }
 
         if (StartsWithReason(reason, "missing_required_core_markers"))
@@ -384,14 +385,82 @@ internal sealed class PrototypeNeedsFixRepairLedger
                actual.Trim().StartsWith(expected, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string BuildGodotSmokeSuggestedFix(string reason, string? scene)
+    private static string BuildGodotSmokeSuggestedFix(string reason, string? scene, string? details = null)
     {
+        var text = details ?? "";
+        if (text.Contains("resource_diagnostics", StringComparison.OrdinalIgnoreCase) ||
+            text.Contains("resource_path", StringComparison.OrdinalIgnoreCase))
+        {
+            if (text.Contains("\"file_exists\": false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("file_exists\":false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("missing resource file", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Restore or copy the missing Godot resource file named in resource_diagnostics, then rerun or regenerate Godot import metadata before reporting completion.";
+            }
+
+            if (text.Contains("\"import_exists\": false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("import_exists\":false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("Regenerate Godot import metadata", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Regenerate Godot import metadata for the named resource in resource_diagnostics so Godot can load it again. Keep the repair scoped to the listed resource and scene reference.";
+            }
+
+            if (text.Contains("\"png_valid\": false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("png_valid\":false", StringComparison.OrdinalIgnoreCase) ||
+                text.Contains("invalid PNG", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Replace the named PNG in resource_diagnostics with a valid PNG file, then rerun Godot smoke.";
+            }
+
+            return "Repair the exact Godot resource(s) named in resource_diagnostics and then rerun Godot smoke. Do not shift to unrelated gameplay/UI work.";
+        }
+
+        if (text.Contains("No loader found for resource", StringComparison.OrdinalIgnoreCase) ||
+            text.Contains("referenced non-existent resource", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Restore or copy the exact missing Godot resource files named in diagnostic_excerpt, then repair the scene ext_resource references that point to them. Do not report completion until the named resources load and Godot smoke passes.";
+        }
+
+        if (text.Contains("Parse Error", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Fix the exact scene parse error named in diagnostic_excerpt. If the error references a missing ext_resource, restore the resource or update the scene reference before changing gameplay logic.";
+        }
+
         if (string.Equals(reason, "prototype_main_menu_navigation_failed", StringComparison.OrdinalIgnoreCase))
         {
             return $"Static/platform acceptance already passed; repair only the Godot smoke main-menu navigation failure for {scene ?? "the prototype scene"}. Do not revisit unrelated gameplay or test package work.";
         }
 
         return "Fix the concrete Godot smoke/runtime validation error named by the validation evidence.";
+    }
+
+    private static string BuildValidationDetails(JsonElement validation)
+    {
+        var diagnosticExcerpt = ReadValidationDiagnosticExcerpt(validation);
+        if (string.IsNullOrWhiteSpace(diagnosticExcerpt))
+        {
+            return validation.ToString();
+        }
+
+        return $"{validation}{Environment.NewLine}diagnostic_excerpt:{Environment.NewLine}{diagnosticExcerpt}";
+    }
+
+    private static string? ReadValidationDiagnosticExcerpt(JsonElement validation)
+    {
+        var topLevelExcerpt = ReadString(validation, "diagnostic_excerpt");
+        if (!string.IsNullOrWhiteSpace(topLevelExcerpt))
+        {
+            return topLevelExcerpt;
+        }
+
+        if (validation.ValueKind == JsonValueKind.Object &&
+            validation.TryGetProperty("smoke", out var smoke) &&
+            smoke.ValueKind == JsonValueKind.Object)
+        {
+            return ReadString(smoke, "diagnostic_excerpt");
+        }
+
+        return null;
     }
 
     private static string? TryReadReasonFromDetails(string? details)

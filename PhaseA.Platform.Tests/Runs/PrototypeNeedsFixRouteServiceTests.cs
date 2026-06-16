@@ -505,7 +505,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
                     id = "godot_smoke:unknown",
                     source = "godot_smoke",
                     reason = "unknown",
-                    details = "{\"required\":true,\"passed\":false,\"smoke\":{\"ran\":true,\"exit_code\":1,\"reason\":\"prototype_main_menu_navigation_failed\",\"scene\":\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"}}",
+                    details = "{\"required\":true,\"passed\":false,\"smoke\":{\"ran\":true,\"exit_code\":1,\"reason\":\"prototype_main_menu_navigation_failed\",\"scene\":\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\",\"diagnostic_excerpt\":\"ERROR: No loader found for resource: res://Game.Godot/Prototypes/dq-rpg/Assets/map_player.png\"}}",
                     first_seen_run_id = "previous-run",
                     last_seen_run_id = "previous-run",
                     first_seen_utc = "2026-06-03T00:00:00+00:00",
@@ -532,7 +532,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         runner.Prompt.Should().Contain("godot_smoke:prototype-main-menu-navigation-failed");
         runner.Prompt.Should().Contain("prototype_main_menu_navigation_failed");
-        runner.Prompt.Should().Contain("Static/platform acceptance already passed; repair only the Godot smoke main-menu navigation failure");
+        runner.Prompt.Should().Contain("map_player.png");
+        runner.Prompt.Should().Contain("Restore or copy the exact missing Godot resource files named in diagnostic_excerpt");
         runner.Prompt.Should().NotContain("godot_smoke:unknown");
     }
 

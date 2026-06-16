@@ -108,9 +108,10 @@ public sealed class ProjectPackageService
             return Failure(projectId, "project_busy");
         }
 
-        if (!await HasSucceededPrototypeRunAsync(project.ProjectId, cancellationToken))
+        var gate = await ResolvePackageGateAsync(project.ProjectId, cancellationToken);
+        if (!gate.CanCreate)
         {
-            return Failure(projectId, "prototype_not_created");
+            return Failure(projectId, gate.DisabledReason ?? "package_prerequisites_not_met");
         }
 
         var projectRoot = Path.GetFullPath(project.RepoPath);
@@ -227,15 +228,11 @@ public sealed class ProjectPackageService
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
         }
 
-        var hasPrototype = await HasSucceededPrototypeRunAsync(project.ProjectId, cancellationToken);
+        var gate = await ResolvePackageGateAsync(project.ProjectId, cancellationToken);
         var isBusy = project.BootstrapStatus == "running" ||
-                     await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
-                     await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken);
-        var disabledReason = !hasPrototype
-            ? "prototype_not_created"
-            : isBusy
-                ? "project_busy"
-                : null;
+                      await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
+                      await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken);
+        var disabledReason = isBusy ? "project_busy" : gate.DisabledReason;
 
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
         var packages = new List<ProjectPackageListItem>();
@@ -263,7 +260,7 @@ public sealed class ProjectPackageService
 
         return new ProjectPackageListResult(
             project.ProjectId,
-            hasPrototype && !isBusy,
+            gate.CanCreate && !isBusy,
             disabledReason,
             packages
                 .OrderByDescending(package => package.CreatedUtc, StringComparer.Ordinal)
@@ -310,11 +307,93 @@ public sealed class ProjectPackageService
         return runs.Count(run => run.RunType == RunType && run.Status == "succeeded") + 1;
     }
 
-    private async Task<bool> HasSucceededPrototypeRunAsync(string projectId, CancellationToken cancellationToken)
+    private async Task<PackageGate> ResolvePackageGateAsync(string projectId, CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(projectId, cancellationToken);
-        return runs.Any(run => run.RunType == "prototype-7day-playable" && run.Status == "succeeded");
+        if (!runs.Any(run => run.RunType == "prototype-7day-playable" && IsDone(run.Status)))
+        {
+            return new PackageGate(false, "prototype_not_created");
+        }
+
+        var iteration = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (iteration is null || iteration.Goals.Count == 0 || !iteration.Goals.All(goal => IsDone(goal.Status)))
+        {
+            return new PackageGate(false, "iteration_plan_not_completed");
+        }
+
+        var latestValidation = runs
+            .Where(run => run.RunType == "prototype-7day-playable" && IsValidationOnlyRun(run))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
+        var latestIterationCompletionUtc = LatestIterationCompletionUtc(iteration);
+        var latestValidationUtc = RunSortTimeUtc(latestValidation);
+        if (latestValidation is null ||
+            !IsDone(latestValidation.Status) ||
+            (latestIterationCompletionUtc.HasValue && latestValidationUtc < latestIterationCompletionUtc.Value))
+        {
+            return new PackageGate(false, "prototype_acceptance_not_passed");
+        }
+
+        return new PackageGate(true, null);
     }
+
+    private static DateTimeOffset? LatestIterationCompletionUtc(ProjectIterationSessionDetails iteration)
+    {
+        var times = iteration.Goals
+            .Select(goal => ParseUtc(goal.CompletedUtc ?? goal.UpdatedUtc ?? goal.CreatedUtc))
+            .Where(time => time.HasValue)
+            .Select(time => time!.Value)
+            .ToArray();
+        return times.Length == 0 ? null : times.Max();
+    }
+
+    private static DateTimeOffset RunSortTimeUtc(RunSnapshot? run)
+    {
+        if (run is null)
+        {
+            return DateTimeOffset.MinValue;
+        }
+
+        return ParseUtc(run.FinishedUtc) ??
+               ParseUtc(run.ProgressUpdatedUtc) ??
+               ParseUtc(run.StartedUtc) ??
+               ParseUtc(run.CreatedUtc) ??
+               DateTimeOffset.MinValue;
+    }
+
+    private static DateTimeOffset? ParseUtc(string? value)
+    {
+        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
+    }
+
+    private static bool IsDone(string? status)
+    {
+        return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "done", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsValidationOnlyRun(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("validation_only", out var value) &&
+                   value.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private sealed record PackageGate(bool CanCreate, string? DisabledReason);
 
     private static int CreateZip(string projectRoot, string packagePath, ProjectSnapshot project, string version, CancellationToken cancellationToken)
     {

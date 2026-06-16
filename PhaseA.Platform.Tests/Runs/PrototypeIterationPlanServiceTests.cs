@@ -1342,6 +1342,46 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task EvaluateWithRunAsync_ShouldCreateVisibleEvaluationRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var codex = new LlmEvaluationCodexClient();
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, codex);
+
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Improve RPG loop.",
+            "Demo Game: improve RPG loop.",
+            ValidRpgIterationGoalCommands());
+
+        var result = await service.EvaluateWithRunAsync(
+            accountId,
+            projectId,
+            new PrototypeWorkflowProgress("failed", "failed", "", "done", null, null, null, "navigation failed", "system", "recommended", "MapScene is not visible after Start Adventure."));
+
+        result.Status.Should().Be("succeeded");
+        result.RunId.Should().NotBeNullOrWhiteSpace();
+        result.Evaluation.Decision.Should().Be("should_refine_plan");
+        var run = (await store.ListRunsForProjectAsync(projectId)).Should()
+            .ContainSingle(item => item.RunId == result.RunId)
+            .Subject;
+        run.RunType.Should().Be("prototype-iteration-plan-evaluation");
+        run.Status.Should().Be("succeeded");
+        run.ProgressStep.Should().Be("succeeded");
+        run.ProgressSubstep.Should().Be(result.Evaluation.Decision);
+        run.StdoutText.Should().Contain("should_refine_plan");
+    }
+
+    [Fact]
     public async Task EvaluateAsync_ShouldReturnLlmFailed_WhenRpgLlmEvaluationFails()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1969,6 +2009,54 @@ public sealed class PrototypeIterationPlanServiceTests
             new PrototypeWorkflowProgress("succeeded", "succeeded", "", "done", null, null, null));
 
         result.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldInjectExplicitRpgContractRulesIntoJrpgGoals()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeContractService().WriteFromRequest(
+            project!,
+            new PrototypeWorkflowRequest(
+                "rpg-explicit-rules-demo",
+                "RPG Explicit Rules Demo",
+                "rpg",
+                "RPG",
+                "Validate explicit battle rules.",
+                "Explore a field, trigger danger, win after 15 battles, and lose if any battle is lost.",
+                "Move on map, each movement increases encounter chance by 10%, guaranteed encounter within 10 steps, fight, grow, return.",
+                ["Each next enemy gains +5 HP and +2 ATK."],
+                "Each movement increases encounter chance by 10%; encounter is guaranteed within 10 steps.",
+                "Move, trigger encounter, battle, track enemy scaling, return to map.",
+                "Win after 15 battles; any battle loss means game loss.",
+                true),
+            "docs/prototypes/2026-06-15-rpg-explicit-rules-demo.md",
+            "rpg-explicit-rules-demo");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Regenerate the RPG iteration plan as a JRPG first-loop capability plan.", "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        var planText = string.Join(" ", result.Goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint)));
+        planText.Should().Contain("10%");
+        planText.Should().Contain("10 steps");
+        planText.Should().Contain("15 battles");
+        planText.Should().Contain("any battle loss");
+        planText.Should().Contain("+5 HP");
+        planText.Should().Contain("+2 ATK");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().NotBe("should_refine_plan", result.LatestEvaluation.Reason);
     }
 
     [Fact]

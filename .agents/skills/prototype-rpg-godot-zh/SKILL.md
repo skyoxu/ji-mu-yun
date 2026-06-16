@@ -26,7 +26,7 @@ Before any hosted prototype route implements or repairs a game project, restore 
 
 1. Read the resolved game-type route profile and this route skill prompt block.
 2. Read `meta/project-execution-guide.md` as the project-level `/new` recovery protocol.
-3. Read `routes/prototype-contract/latest.json`; concrete user form fields and `input_traceability` override templates.
+3. Read `meta/routes/prototype-contract/latest.json` as the primary project contract source; concrete user form fields and `input_traceability` override templates. Use `routes/prototype-contract/latest.json` only as a legacy fallback when the meta/routes contract file is missing.
 4. Read only the latest route state relevant to the current route and current step, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, `meta/routes/execute-next-goal/latest.json`, `meta/routes/prototype-repair/latest.json`, or `meta/routes/repair-plan/latest.json`.
 5. For needs-fix, read the current step `meta/routes/needs-fix/step-XX/repair-ledger.json` before changing files and update it with fixed, remaining, and newly found blockers.
 6. Treat the latest platform validation blocker as higher priority than older assistant summaries, route state, or repair ledger memory.

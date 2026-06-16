@@ -404,7 +404,11 @@ public sealed class PrototypeNeedsFixRouteService
         var ran = ReadBool(validation, "ran");
         var passed = ReadBool(validation, "passed");
         var reason = ReadValidationReason(validation);
-        return $"required={required?.ToString() ?? "unknown"}; ran={ran?.ToString() ?? "unknown"}; passed={passed?.ToString() ?? "unknown"}; reason={reason}";
+        var diagnosticExcerpt = ReadValidationDiagnosticExcerpt(validation);
+        var summary = $"required={required?.ToString() ?? "unknown"}; ran={ran?.ToString() ?? "unknown"}; passed={passed?.ToString() ?? "unknown"}; reason={reason}";
+        return string.IsNullOrWhiteSpace(diagnosticExcerpt)
+            ? summary
+            : $"{summary}; diagnostic_excerpt={TrimForPrompt(diagnosticExcerpt, 1400)}";
     }
 
     private static string BuildRepairFocusInstruction(string? acceptanceReason, string? acceptanceDetails)
@@ -436,6 +440,47 @@ public sealed class PrototypeNeedsFixRouteService
         if (acceptanceReason?.StartsWith("missing_rpg_map_entry_contract", StringComparison.OrdinalIgnoreCase) == true)
         {
             return "Repair the full RPG/JRPG map-entry contract group, not only the first missing_file. Ensure MapScene.tscn and Scripts/MapScene.cs exist together, and satisfy the platform-required map nodes, grid-position mapping, player visibility restore, and stable movement handling before reporting STATUS: completed. Add RpgEnemyAsset or encounter trigger wiring only when the selected route or latest failure explicitly requires encounter, conflict, or battle.";
+        }
+
+        if (acceptanceReason?.StartsWith("missing_rpg_battle_scene_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "Repair the full RPG/JRPG battle-scene contract group, not only the first missing token. Ensure BattleScene.tscn and Scripts/BattleScene.cs exist together, BattleScene.tscn exposes BattleScene, AttackButton, RpgPlayerAsset, and RpgEnemyAsset, and BattleScene.cs exposes BattleFinished plus ResolveBattle or ResolveAttackTurn settlement wiring.";
+        }
+
+        if (acceptanceReason?.StartsWith("missing_rpg_reward_flow_contract", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return "Repair the full RPG/JRPG reward-flow contract group. Victory or consequence must expose exactly three understandable reward choices, selecting one must call ApplyReward or equivalent, apply visible state/consequence feedback, close reward UI, return or refresh the map, restore player visibility/input, and leave a validation-facing feedback marker such as ShowRewardReturnFeedback, ShowRewardReturnStatus, Returned to map, movement is restored, or rpg_reward_flow_contract.";
+        }
+
+        if (acceptanceReason?.StartsWith("missing_required_core_markers", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            if (details.Contains("MoveOnMap", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Repair the full JRPG navigation or return-loop contract around MoveOnMap. Ensure the active playable field/map/town remains visible, player visibility and input are restored, and movement proof exists in runtime code, scene wiring, or validation-facing tests before reporting completion.";
+            }
+
+            if (details.Contains("RewardOptions.Count", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("ApplyReward", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Battle reward selected", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Repair the full JRPG reward/growth contract. Ensure three reward/consequence choices exist when selected by the route, selection applies visible state change, and return/feedback remains coherent before reporting completion.";
+            }
+
+            if (details.Contains("Objective", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Quest", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Interact", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Repair the full JRPG objective, interaction, or quest progress contract. Player action must visibly update objective/interaction/story feedback in runtime UI or scene text; do not satisfy this with isolated code-only markers.";
+            }
+
+            if (details.Contains("HP", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Stats", StringComparison.OrdinalIgnoreCase) ||
+                details.Contains("Status", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Repair the full JRPG character-state readability contract. HP, stats, status, or equivalent character state must be visible to the player and remain consistent after the relevant loop event.";
+            }
+
+            return "Repair the complete current JRPG capability contract named by the missing markers. Represent each marker in runtime behavior, scene UI, or validation-facing tests as a coherent group; do not add isolated strings just to satisfy static scanning.";
         }
 
         return "Repair the listed platform blocker first. Do not infer success from prior assistant summaries.";
@@ -658,6 +703,24 @@ public sealed class PrototypeNeedsFixRouteService
         }
 
         return "none";
+    }
+
+    private static string? ReadValidationDiagnosticExcerpt(JsonElement validation)
+    {
+        var topLevelExcerpt = ReadString(validation, "diagnostic_excerpt");
+        if (!string.IsNullOrWhiteSpace(topLevelExcerpt))
+        {
+            return topLevelExcerpt;
+        }
+
+        if (validation.ValueKind == JsonValueKind.Object &&
+            validation.TryGetProperty("smoke", out var smoke) &&
+            smoke.ValueKind == JsonValueKind.Object)
+        {
+            return ReadString(smoke, "diagnostic_excerpt");
+        }
+
+        return null;
     }
 
     private static string TrimForPrompt(string value, int maxLength = 4000)

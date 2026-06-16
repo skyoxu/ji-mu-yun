@@ -76,6 +76,8 @@ public sealed class PrototypeUiOptimizationServiceTests
         runner.Commands[0].Arguments.Should().Contain("workspace-write");
         runner.Commands[0].Environment.Should().ContainKey("PHASEA_CODEX_DEFAULT_MODEL").WhoseValue.Should().Be("gpt-5.4");
         runner.Commands[0].StandardInput.Should().Contain("$prototype-rpg-ui-optimizer-zh");
+        runner.Commands[0].StandardInput.Should().Contain("meta/routes/prototype-contract/latest.json");
+        runner.Commands[0].StandardInput.Should().Contain("legacy fallback");
         runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after Codex exits");
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -94,6 +96,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         var promptArtifact = artifacts.Single(item => item.ArtifactType == "prototype-ui-optimization-prompt");
         var promptPath = Path.Combine(project!.RepoPath, promptArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
         File.ReadAllText(promptPath).Should().Contain("$prototype-rpg-ui-optimizer-zh");
+        File.ReadAllText(promptPath).Should().Contain("meta/routes/prototype-contract/latest.json");
     }
 
     [Fact]

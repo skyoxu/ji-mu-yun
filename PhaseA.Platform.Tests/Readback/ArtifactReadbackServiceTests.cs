@@ -25,7 +25,7 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var project = await store.GetProjectSnapshotAsync(projectId);
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var runId = await store.CreateRunAsync(projectId, null, "prototype-tdd-green");
         await store.CompleteRunAsync(runId, "succeeded", 0, "stdout", "", "{}", CancellationToken.None);
         Write(project!.RepoPath, "logs/ci/sample-artifact.txt", "artifact text");
@@ -72,7 +72,7 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var project = await store.GetProjectSnapshotAsync(projectId);
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
         await store.MarkRunStartedAsync(runId);
         await store.UpdateRunProgressAsync(runId, "analyzing", "", "正在分析草稿。");
@@ -95,7 +95,7 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var project = await store.GetProjectSnapshotAsync(projectId);
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var chatRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-chat");
         await store.MarkRunStartedAsync(chatRunId);
         var service = new ArtifactReadbackService(store, options);
@@ -116,7 +116,7 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var projectId = await CreateProjectAsync(store, options);
-        var project = await store.GetProjectSnapshotAsync(projectId);
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
         await using var prototypeLease = await prototypeQueue.EnterAsync(
@@ -498,6 +498,50 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task StartupReconcile_ShouldRestoreInterruptedIterationGoalToPending()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Iteration Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "test",
+            "test",
+            "test",
+            [
+                new ProjectIterationGoalCreateCommand(1, "step1", "step1", null),
+                new ProjectIterationGoalCreateCommand(2, "step2", "step2", null)
+            ]);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var first = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        var second = details.Goals.Single(goal => goal.GoalIndex == 2);
+        await store.UpdateProjectIterationGoalStatusAsync(first.GoalId, "succeeded", "done", DateTimeOffset.UtcNow.ToString("O"));
+        await store.UpdateProjectIterationGoalStatusAsync(second.GoalId, "running", null, null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "running", 2, "running step2");
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-iteration-goal");
+        await store.MarkRunStartedAsync(runId);
+        (await store.TryAcquireRunnerLockAsync(projectId, runId)).Should().BeTrue();
+
+        var recovered = await store.ReconcileInterruptedRunsAsync("Run was interrupted because the service restarted before completion.");
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var run = await store.GetRunSnapshotAsync(runId);
+
+        recovered.Should().Be(1);
+        run!.Status.Should().Be("failed");
+        refreshed!.Session.Status.Should().Be("paused_for_review");
+        refreshed.Session.CurrentGoalIndex.Should().Be(2);
+        refreshed.Goals.Single(goal => goal.GoalIndex == 1).Status.Should().Be("succeeded");
+        refreshed.Goals.Single(goal => goal.GoalIndex == 2).Status.Should().Be("pending");
+        (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
+    }
+
+    [Fact]
     public void ReadProjectHealth_ReturnsHtmlAndJson()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -612,8 +656,7 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.RepoPath, "Game.Core/Domain/Combat.cs", "public sealed class Combat {}");
         Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
@@ -664,8 +707,7 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
         await using var lease = await queue.EnterAsync("held-package-run", accountId, projectId, "project-package");
@@ -736,8 +778,7 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         WriteBytes(project.RepoPath, "Game.Godot/Assets/player-old.png", MinimalPng(16, 16));
         WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png", MinimalPng(16, 16));
         Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
@@ -805,8 +846,7 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var prototypeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
-        await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-candidate/entry-1/player-generated.png", MinimalPng(16, 16));
         Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
             [gd_scene format=3]
@@ -877,6 +917,77 @@ public sealed class ArtifactReadbackServiceTests
         created.Status.Should().Be("prototype_not_created");
         packages!.CanCreatePackage.Should().BeFalse();
         packages.DisabledReason.Should().Be("prototype_not_created");
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksUntilIterationPlanCompleted()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        await SeedPrototypeCreationRunAsync(store, projectId);
+        var service = new ProjectPackageService(store, options);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("iteration_plan_not_completed");
+        created.FailureCode.Should().Be("iteration_plan_not_completed");
+        packages!.CanCreatePackage.Should().BeFalse();
+        packages.DisabledReason.Should().Be("iteration_plan_not_completed");
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksUntilPostIterationPrototypeAcceptancePasses()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        await SeedPrototypeCreationRunAsync(store, projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        var service = new ProjectPackageService(store, options);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("prototype_acceptance_not_passed");
+        created.FailureCode.Should().Be("prototype_acceptance_not_passed");
+        packages!.CanCreatePackage.Should().BeFalse();
+        packages.DisabledReason.Should().Be("prototype_acceptance_not_passed");
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksWhenValidationOnlyRunPredatesCompletedIteration()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        await SeedPrototypeCreationRunAsync(store, projectId);
+        await SeedPrototypeAcceptanceRunAsync(store, projectId);
+        await Task.Delay(20);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        var service = new ProjectPackageService(store, options);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("prototype_acceptance_not_passed");
+        packages!.DisabledReason.Should().Be("prototype_acceptance_not_passed");
     }
 
     [Fact]
@@ -1567,6 +1678,47 @@ public sealed class ArtifactReadbackServiceTests
         }
 
         await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "completed", 2, "done", null, DateTimeOffset.UtcNow.ToString("O"));
+    }
+
+    private static async Task SeedPackagePrerequisitesAsync(
+        PhaseAMetadataStore store,
+        string accountId,
+        string projectId)
+    {
+        await SeedPrototypeCreationRunAsync(store, projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        await Task.Delay(20);
+        await SeedPrototypeAcceptanceRunAsync(store, projectId);
+    }
+
+    private static async Task SeedPrototypeCreationRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
+        var runId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "succeeded",
+            0,
+            "prototype complete",
+            "",
+            """{"prototype_completion":{"succeeded":true},"godot_smoke":{"exit_code":0}}""",
+            CancellationToken.None);
+    }
+
+    private static async Task SeedPrototypeAcceptanceRunAsync(PhaseAMetadataStore store, string projectId)
+    {
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
+        var runId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(
+            runId,
+            "succeeded",
+            0,
+            "prototype validation",
+            "",
+            """{"validation_only":true,"prototype_completion":{"succeeded":true},"godot_smoke":{"exit_code":0}}""",
+            CancellationToken.None);
     }
 
     private static IReadOnlyList<string> ZipEntryNames(byte[] content)

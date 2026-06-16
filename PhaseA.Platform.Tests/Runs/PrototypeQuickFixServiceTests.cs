@@ -737,8 +737,11 @@ namespace Xunit
         var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
         codexCommand.StandardInput.Should().Contain("Latest Godot smoke validation failed after platform static acceptance");
         codexCommand.StandardInput.Should().Contain("prototype_main_menu_navigation_failed");
+        codexCommand.StandardInput.Should().Contain("rpg_map_visible_markers_missing_after_start");
         run!.EvidenceJson.Should().NotContain("\"preflight\":true");
         run.EvidenceJson.Should().Contain("\"godot_smoke_validation\"");
+        run.EvidenceJson.Should().Contain("diagnostic_excerpt");
+        run.EvidenceJson.Should().Contain("rpg_map_visible_markers_missing_after_start");
     }
 
     [Fact]
@@ -908,6 +911,47 @@ namespace Xunit
         runner.LastPrompt.Should().Contain("This overrides the generic RPG gameplay-only edit scope");
         runner.LastPrompt.Should().Contain("Required first target: inspect and repair Game.Core.Tests/Game.Core.Tests.csproj PackageReference entries");
         runner.LastPrompt.Should().Contain("Do not create hand-written Xunit shims");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldSanitizeAcceptanceFailureDetails_InPublicGoalSummary()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+        EnsureCoreTestsNeedPackageReferences(project.RepoPath);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the final RPG acceptance step."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "final first-loop acceptance");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core test packages missing", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
+        var runner = new AbsolutePathCoreTestPackageFailurePromptRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var goal = refreshed!.Goals.Single(item => item.GoalId == targetGoal.GoalId);
+
+        goal.Status.Should().Be("needs_fix");
+        goal.ResultSummary.Should().Contain("核心测试项目缺少测试框架包引用");
+        goal.ResultSummary.Should().NotContain(@"C:\jimuyun");
+        goal.ResultSummary.Should().NotContain("phase-a-innernet");
+        goal.ResultSummary.Should().NotContain("workspaces");
     }
 
     [Fact]
@@ -1124,6 +1168,8 @@ namespace Xunit
         runner.LastPrompt.Should().Contain("统一 smoke");
         runner.LastPrompt.Should().Contain("exactly three understandable reward choices");
         runner.LastPrompt.Should().Contain("visible state change");
+        runner.LastPrompt.Should().Contain("ShowRewardReturnFeedback");
+        runner.LastPrompt.Should().Contain("movement is restored");
     }
 
     [Fact]
@@ -2826,6 +2872,39 @@ SUMMARY: Core test package references still need repair.
 CHANGED: none
 VERIFY: package restore still blocked.
 REMAINING: repair Game.Core.Tests.csproj package references
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class AbsolutePathCoreTestPackageFailurePromptRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    1,
+                    "",
+                    @"C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\GameConfigTests.cs(1,7): error CS0246: The type or namespace name 'FluentAssertions' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]
+C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\PlayerTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]"));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
+                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
+                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: The repair pass updated the current goal.
+CHANGED: Updated hosted files.
+VERIFY: Await platform validation.
+REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }

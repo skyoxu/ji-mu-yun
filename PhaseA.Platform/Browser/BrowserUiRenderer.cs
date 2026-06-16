@@ -433,6 +433,7 @@ public sealed class BrowserUiRenderer
                     if (failed) return "fix";
                     if (goals.some(goal => goal.status === "needs_fix" || goal.status === "failed")) return "fix";
                     if (goals.length && goals.every(goal => goal.status === "succeeded" || goal.status === "completed")) return "done";
+                    if (!goals.length && v2HasPrototypeSkeleton()) return "done";
                     return "pending";
                   }
                   if (stepId === "ui-optimization") {
@@ -1391,6 +1392,27 @@ public sealed class BrowserUiRenderer
                 button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
                 button.danger-button { background: var(--danger); }
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
+                label.field-invalid input,
+                label.field-invalid textarea,
+                label.field-invalid select {
+                  border-color: var(--danger);
+                  box-shadow: 0 0 0 0.16rem rgba(162, 52, 47, 0.16);
+                }
+                .field-error {
+                  color: var(--danger);
+                  border: 1px solid rgba(162, 52, 47, 0.35);
+                  border-radius: 0.55rem;
+                  background: #fff5f3;
+                  padding: 0.4rem 0.55rem;
+                  font-size: 0.86rem;
+                }
+                .form-error {
+                  color: var(--danger);
+                  border: 1px solid rgba(162, 52, 47, 0.45);
+                  border-radius: 0.7rem;
+                  background: #fff5f3;
+                  padding: 0.7rem 0.8rem;
+                }
                 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
                 .card-list { display: grid; gap: 0.6rem; }
                 .card {
@@ -1557,6 +1579,7 @@ public sealed class BrowserUiRenderer
                 }
                 .modal-card {
                   width: min(42rem, 100%);
+                  max-height: min(90vh, 54rem);
                   background: #fffdf8;
                   border: 1px solid var(--line);
                   border-radius: 1.2rem;
@@ -1564,8 +1587,11 @@ public sealed class BrowserUiRenderer
                   padding: 1rem;
                   display: grid;
                   gap: 0.8rem;
+                  overflow: hidden;
                 }
                 .modal-card.modal-card-large { width: min(58rem, 100%); }
+                .modal-card > .stack { min-height: 0; max-height: calc(min(90vh, 54rem) - 2rem); overflow-y: auto; overscroll-behavior: contain; padding-right: 0.25rem; }
+                #iterationPlanUpdateModal .modal-card > .stack { max-height: calc(100vh - 4rem); }
                 .modal-scroll { max-height: min(70vh, 42rem); overflow-y: auto; padding-right: 0.25rem; }
                 .login-shell { max-width: 34rem; justify-self: center; width: 100%; }
                 .token-box {
@@ -1648,9 +1674,10 @@ public sealed class BrowserUiRenderer
                 </section>
                 <section id="createProjectPanel" class="stack hidden">
                   <h2 id="createProjectTitle">创建项目</h2>
-                  <label>项目名 <input id="projectName" placeholder="可选，不填会自动生成"></label>
-                  <label>游戏名 <input id="gameName" placeholder="例如：Demo Game"></label>
-                  <label>游戏类型/玩法方向 <input id="gameTypeSource" placeholder="例如：RPG、塔防、Roguelike、平台跳跃、解谜冒险"></label>
+                  <label id="projectNameField">项目名 <input id="projectName" placeholder="可选，不填会自动生成"><span id="projectNameError" class="field-error hidden"></span></label>
+                  <label id="gameNameField">游戏名 <input id="gameName" placeholder="例如：Demo Game"><span id="gameNameError" class="field-error hidden"></span></label>
+                  <label id="gameTypeSourceField">游戏类型/玩法方向 <input id="gameTypeSource" placeholder="例如：RPG、塔防、Roguelike、平台跳跃、解谜冒险"><span id="gameTypeSourceError" class="field-error hidden"></span></label>
+                  <p id="createProjectValidation" class="form-error hidden"></p>
                   <button id="createProject" data-global-action="true">创建项目</button>
                 </section>
                 <div id="llmBindingStatus" class="hidden"></div>
@@ -1834,6 +1861,8 @@ public sealed class BrowserUiRenderer
                   closeUserModals();
                   $("sessionPanel").classList.add("hidden");
                   $("adminPanel").classList.add("hidden");
+                  $("projectDetailPanel").classList.add("hidden");
+                  $("chatPanel").classList.add("hidden");
                   $("createProjectPanel").classList.remove("hidden");
                 }
 
@@ -2134,7 +2163,7 @@ public sealed class BrowserUiRenderer
                       <p>${escapeHtml(goal.title || "")}</p>
                       <p class="muted">${escapeHtml(repairGoalDisplayText(goal.description || ""))}</p>
                       ${goal.acceptanceHint ? `<p class="muted">验收：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
-                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
+                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(publicIterationGoalResultSummary(goal))}</p>` : ""}
                     </div>`).join("");
                 }
 
@@ -2254,8 +2283,19 @@ public sealed class BrowserUiRenderer
                       <p>${escapeHtml(goal.title || "")}</p>
                       <p class="muted">${escapeHtml(goal.description || "")}</p>
                       ${goal.acceptanceHint ? `<p class="muted">完成判断：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
-                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(goal.resultSummary)}</p>` : ""}
+                      ${goal.resultSummary ? `<p class="muted">结果：${escapeHtml(publicIterationGoalResultSummary(goal))}</p>` : ""}
                     </div>`).join("");
+                }
+
+                function publicIterationGoalResultSummary(goal) {
+                  const status = String(goal?.status || "").trim().toLowerCase();
+                  if (["needs_fix", "failed"].includes(status)) {
+                    const details = sanitizePublicFailureContent(goal?.resultSummary || "");
+                    return details
+                      ? `该 step 未通过。失败详情：${details}（路径和文件名已隐藏。）请点击 Needs Fix 路由继续修复。`
+                      : "该 step 未通过。失败详情不可展示，请点击 Needs Fix 路由继续修复，后台记录会保留完整证据。";
+                  }
+                  return sanitizePublicIterationPlanText(goal?.resultSummary || "");
                 }
 
                 function iterationPlanGoals() {
@@ -2327,13 +2367,15 @@ public sealed class BrowserUiRenderer
                       ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
                       : "推荐先处理当前阻塞项，再决定是否继续。";
                   $("iterationPlanEvaluation").className = "card";
+                  const safeSummary = sanitizePublicIterationPlanText(evaluation.summary || "");
+                  const safeSuggestedAction = sanitizePublicIterationPlanText(evaluation.suggestedAction || "");
+                  const safeRegenerationPrompt = sanitizePublicIterationPlanText(evaluation.suggestedPromptForRegeneration || "");
                   $("iterationPlanEvaluation").innerHTML = `
                     <strong>${escapeHtml(evaluation.decision || "pending")}</strong>
-                    <p>${escapeHtml(evaluation.summary || "")}</p>
-                    ${evaluation.reason ? `<p class="muted">${escapeHtml(evaluation.reason)}</p>` : ""}
-                    ${evaluation.suggestedAction ? `<p class="muted">建议动作：${escapeHtml(evaluation.suggestedAction)}</p>` : ""}
+                    ${safeSummary ? `<p>${escapeHtml(safeSummary)}</p>` : ""}
+                    ${safeSuggestedAction ? `<p class="muted">建议动作：${escapeHtml(safeSuggestedAction)}</p>` : ""}
                     <p class="muted">页面建议：${escapeHtml(actionHint)}</p>
-                    ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议重拆提示词：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
+                    ${safeRegenerationPrompt ? `<p class="muted">建议重拆提示词：${escapeHtml(safeRegenerationPrompt)}</p>` : ""}
                   `;
                 }
 
@@ -2366,12 +2408,14 @@ public sealed class BrowserUiRenderer
 
                 function iterationPlanEvaluationHtml(evaluation) {
                   if (!evaluation) return "<p class='muted'>尚未评估当前迭代计划。可以先关闭弹窗并点击“评估当前迭代计划”。</p>";
+                  const safeSummary = sanitizePublicIterationPlanText(evaluation.summary || "");
+                  const safeSuggestedAction = sanitizePublicIterationPlanText(evaluation.suggestedAction || "");
+                  const safeRegenerationPrompt = sanitizePublicIterationPlanText(evaluation.suggestedPromptForRegeneration || "");
                   return `
                     <strong>${escapeHtml(evaluation.decision || "unknown")}</strong>
-                    <p>${escapeHtml(evaluation.summary || "")}</p>
-                    <p class="muted">${escapeHtml(evaluation.reason || "")}</p>
-                    <p class="muted">${escapeHtml(evaluation.suggestedAction || "")}</p>
-                    ${evaluation.suggestedPromptForRegeneration ? `<p class="muted">建议：${escapeHtml(evaluation.suggestedPromptForRegeneration)}</p>` : ""}
+                    ${safeSummary ? `<p>${escapeHtml(safeSummary)}</p>` : ""}
+                    ${safeSuggestedAction ? `<p class="muted">${escapeHtml(safeSuggestedAction)}</p>` : ""}
+                    ${safeRegenerationPrompt ? `<p class="muted">建议：${escapeHtml(safeRegenerationPrompt)}</p>` : ""}
                   `;
                 }
 
@@ -2424,11 +2468,12 @@ public sealed class BrowserUiRenderer
                   if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
                   setLocalBusy(true, "正在评估当前迭代计划，请等待当前任务执行完毕。");
                   try {
-                    state.iterationPlanEvaluation = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
+                    const response = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
                     });
+                    state.iterationPlanEvaluation = response?.evaluation || response;
                     if (state.iterationPlan) {
                       state.iterationPlan.latestEvaluation = state.iterationPlanEvaluation;
                     }
@@ -2443,11 +2488,19 @@ public sealed class BrowserUiRenderer
                         suggestedAction: state.iterationPlanEvaluation?.suggestedAction || ""
                       });
                     }
-                    out(state.iterationPlanEvaluation);
+                    out({
+                      action: "iteration_plan_evaluated",
+                      decision: state.iterationPlanEvaluation?.decision || "",
+                      summary: sanitizePublicIterationPlanText(state.iterationPlanEvaluation?.summary || ""),
+                      suggestedAction: sanitizePublicIterationPlanText(state.iterationPlanEvaluation?.suggestedAction || "")
+                    });
                   } catch (error) {
                     const payload = error?.payload;
                     if (payload?.status && payload?.summary) {
-                      out({ status: error.status, ...payload });
+                      out({
+                        status: error.status,
+                        summary: "迭代计划评估失败。失败详情已隐藏，请稍后重试或联系管理员查看后台记录。"
+                      });
                     } else {
                     showError(error);
                     }
@@ -2471,11 +2524,11 @@ public sealed class BrowserUiRenderer
                       : result.summary;
                     if (result.status !== "ready") {
                       state.iterationPlanEvaluation = null;
-                    state.iterationPlanFailure = summary || "迭代计划生成失败。";
-                    renderIterationPlan();
-                    out(result);
-                    return result;
-                  }
+                      state.iterationPlanFailure = publicIterationPlanFailureMessage(summary);
+                      renderIterationPlan();
+                      out({ status: result.status || "failed", summary: state.iterationPlanFailure });
+                      return result;
+                    }
                     state.iterationPlan = {
                       session: {
                         sessionId: result.sessionId,
@@ -2807,17 +2860,45 @@ public sealed class BrowserUiRenderer
                       return token;
                     })
                     .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
-                    .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
+                    .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "[路径已隐藏]")
+                    .replace(/\bres:\/\/[^\s`'"，。；：、）)<]+/gi, "[路径已隐藏]")
                     .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
                     .replace(/\b(?:projectId|runId|accountId|ticket|embedded)=[^\s`'"，。；：、）)<]+/gi, "")
-                    .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
-                    .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
+                    .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "[路径已隐藏]")
+                    .replace(/(?<![\w])(?:[A-Za-z0-9_.-]+[\\/]){1,}[A-Za-z0-9_.-]+/g, "[路径已隐藏]")
+                    .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|cs|csproj|sln|json|toml|yaml|yml|md|log|txt|tscn|tres|res|gd|png|jpg|jpeg|webp|svg|ogg|wav|mp3|ttf|otf|import|dll|exe|pdb|cache|sqlite|sqlite3|db|zip)(?::\d+(?::\d+)?)?(?![\w.-])/gi, "[文件已隐藏]")
                     .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
                     .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
+                    .replace(/\b(?:Game\.Godot|Tests\.Godot|Game\.Core(?:\.Tests)?|PhaseA\.Platform(?:\.Tests)?|GodotGame)\b/gi, "[模块已隐藏]")
                     .replace(/__PHASEA_GDD_LINK_(\d+)__/g, (_, index) => gddLinks[Number(index)] || "")
+                    .replace(/(?:\[(?:路径已隐藏|文件已隐藏|模块已隐藏)\]\s*){2,}/g, "[详情已隐藏] ")
                     .replace(/[ \t]{2,}/g, " ")
                     .replace(/\n{3,}/g, "\n\n")
                     .trim();
+                }
+
+                function sanitizePublicFailureContent(value) {
+                  return sanitizePublicChatContent(value || "")
+                    .replace(/\[(?:路径已隐藏|文件已隐藏|模块已隐藏)\](?:\s*[:：]\s*)?/g, "[详情已隐藏]")
+                    .replace(/(?:\[详情已隐藏\]\s*){2,}/g, "[详情已隐藏] ")
+                    .replace(/[ \t]{2,}/g, " ")
+                    .replace(/\n{3,}/g, "\n\n")
+                    .trim();
+                }
+
+                function sanitizePublicIterationPlanText(value) {
+                  return sanitizePublicChatContent(value || "");
+                }
+
+                function publicIterationPlanFailureMessage(value) {
+                  const raw = String(value || "");
+                  if (raw.includes("联系管理员创建定制游戏类型路线")) {
+                    return "当前项目需要联系管理员创建定制游戏类型路线。";
+                  }
+                  const details = sanitizePublicFailureContent(raw);
+                  return details
+                    ? `迭代计划生成失败。失败详情：${details}（路径和文件名已隐藏。）`
+                    : "迭代计划生成失败。失败详情不可展示，请稍后重试或联系管理员查看后台记录。";
                 }
 
                 function startChatThinkingMessage(initialContent = null) {
@@ -2912,7 +2993,9 @@ public sealed class BrowserUiRenderer
                   if (status === "failed") {
                     showCreateProjectPage();
                     $("adminPanel").classList.remove("hidden");
-                    $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(error || "初始化失败，请查看运行记录。")}`;
+                    $("projectDetailPanel").classList.add("hidden");
+                    $("chatPanel").classList.add("hidden");
+                    $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(sanitizePublicFailureContent(error || "初始化失败，请查看运行记录。"))}`;
                     return;
                   }
                   $("initStatusText").textContent = "项目初始化配置中...请稍等 2-5 分钟后刷新页面。";
@@ -2933,14 +3016,18 @@ public sealed class BrowserUiRenderer
                 }
 
                 function listableProjects(projects) {
-                  return projects.filter(p => p.bootstrapStatus !== "running");
+                  return projects.filter(p => p.bootstrapStatus !== "failed");
                 }
 
                 function showCreationFailure(error) {
                   showCreateProjectPage();
+                  state.projectId = "";
                   $("adminPanel").classList.remove("hidden");
+                  $("projectDetailPanel").classList.add("hidden");
+                  $("chatPanel").classList.add("hidden");
                   $("initStatusPanel").classList.remove("hidden");
-                  $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(error || "初始化失败，失败项目已自动清理。")}`;
+                  $("initStatusText").innerHTML = `<strong class="danger">创建失败。</strong><br>${escapeHtml(sanitizePublicFailureContent(error || "初始化失败，失败项目已自动清理。"))}`;
+                  v2RenderLeftProjectList();
                 }
 
 
@@ -3933,15 +4020,10 @@ public sealed class BrowserUiRenderer
 
                     const projects = await api("/api/projects");
                     state.projects = projects;
+                    $("initStatusPanel").classList.toggle("hidden", !hasInitializingProject(projects));
                     if (hasInitializingProject(projects)) {
-                      showInitialization("running", "");
-                      out(projects);
-                      return;
+                      $("initStatusText").textContent = "\u9879\u76ee\u521d\u59cb\u5316\u914d\u7f6e\u4e2d...\u53ef\u4ee5\u5148\u8fdb\u5165\u9879\u76ee\u8be6\u60c5\u9875\uff0c\u521d\u59cb\u5316\u5b8c\u6210\u540e\u4f1a\u81ea\u52a8\u66f4\u65b0\u72b6\u6001\u3002";
                     }
-
-                    // Once no project is still bootstrapping, always clear the
-                    // initialization overlay before rendering the steady-state UI.
-                    $("initStatusPanel").classList.add("hidden");
 
                     const visibleProjects = listableProjects(projects);
                     const latestFailure = visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
@@ -3954,7 +4036,7 @@ public sealed class BrowserUiRenderer
                         <button class="ghost ${p.projectId === state.projectId ? "current" : ""}" data-project="${p.projectId}">
                         <strong>${escapeHtml(p.name)}</strong>
                         <span class="muted">${escapeHtml(p.gameName)} · ${escapeHtml(p.templateRuleId)} · ${escapeHtml(p.bootstrapStatus)}</span>
-                        ${p.bootstrapStatus === "failed" ? `<span class="danger">初始化失败：${escapeHtml(p.bootstrapError || "未知错误")}</span>` : ""}
+                        ${p.bootstrapStatus === "failed" ? `<span class="danger">初始化失败：${escapeHtml(sanitizePublicFailureContent(p.bootstrapError || "未知错误"))}</span>` : ""}
                         ${renderProjectHealthInline(health)}
                         </button>
                         <div class="grid">
@@ -4104,11 +4186,56 @@ public sealed class BrowserUiRenderer
                   `;
                 }
 
+                function setCreateProjectFieldError(fieldId, errorId, message) {
+                  const field = $(fieldId);
+                  const error = $(errorId);
+                  if (!field || !error) return;
+                  field.classList.toggle("field-invalid", !!message);
+                  error.classList.toggle("hidden", !message);
+                  error.textContent = message || "";
+                }
+
+                function validateCreateProjectForm(showSummary = true) {
+                  const fields = [
+                    { inputId: "projectName", fieldId: "projectNameField", errorId: "projectNameError", required: false, requiredMessage: "" },
+                    { inputId: "gameName", fieldId: "gameNameField", errorId: "gameNameError", required: true, requiredMessage: "请输入游戏名称" },
+                    { inputId: "gameTypeSource", fieldId: "gameTypeSourceField", errorId: "gameTypeSourceError", required: true, requiredMessage: "请输入参考游戏类型或游戏名称" }
+                  ];
+                  const messages = [];
+                  for (const field of fields) {
+                    const value = String($(field.inputId)?.value || "").trim();
+                    let message = "";
+                    if (field.required && !value) {
+                      message = field.requiredMessage;
+                    } else if (value && Array.from(value).length < 3) {
+                      message = "输入信息过少";
+                    }
+                    setCreateProjectFieldError(field.fieldId, field.errorId, message);
+                    if (message) messages.push(message);
+                  }
+                  const uniqueMessages = [...new Set(messages)];
+                  const summary = $("createProjectValidation");
+                  if (summary) {
+                    summary.classList.toggle("hidden", !showSummary || uniqueMessages.length === 0);
+                    summary.textContent = uniqueMessages.join("；");
+                  }
+                  return uniqueMessages.length === 0;
+                }
+
+                function isProjectCreationFailureForAttempt(failure, createdProjectId, attemptStartedAt) {
+                  if (!failure?.failureError) return false;
+                  if (createdProjectId && failure.projectId && failure.projectId === createdProjectId) return true;
+                  const failureTime = Date.parse(failure.createdUtc || failure.CreatedUtc || "");
+                  return Number.isFinite(failureTime) && Number.isFinite(attemptStartedAt) && failureTime >= attemptStartedAt - 5000;
+                }
+
                 async function createProject() {
+                  if (!validateCreateProjectForm(true)) return;
                   if (!guardGlobalAction()) return;
                   setLocalBusy(true, "创建项目中，请等待当前任务执行完毕。");
                   $("createProject").disabled = true;
                   $("createProject").textContent = "创建中...";
+                  const creationAttemptStartedAt = Date.now();
                   try {
                     const payload = {
                       projectName: $("projectName").value.trim() || null,
@@ -4121,9 +4248,10 @@ public sealed class BrowserUiRenderer
                     if (createdProjectId) {
                       await refreshProjects({ autoSelect: false });
                       selectProject(createdProjectId);
+                    } else {
+                      showInitialization("running", "");
                     }
-                    showInitialization("running", "");
-                    await pollProjectInitializationResult(createdProjectId);
+                    await pollProjectInitializationResult(createdProjectId, creationAttemptStartedAt);
                   } catch (error) {
                     showCreationFailure(projectCreationErrorMessage(error));
                     showError(error);
@@ -4135,17 +4263,26 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function pollProjectInitializationResult(createdProjectId = "", maxAttempts = 24, delayMs = 5000) {
+                async function pollProjectInitializationResult(createdProjectId = "", attemptStartedAt = Date.now(), maxAttempts = 24, delayMs = 5000) {
                   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
                     await new Promise(resolve => setTimeout(resolve, delayMs));
                     try {
                       const projects = await api("/api/projects");
                       state.projects = projects;
                       if (hasInitializingProject(projects)) {
+                        const createdProject = projects.find(project => project.projectId === createdProjectId);
+                        if (createdProject?.projectId && state.projectId !== createdProject.projectId) {
+                          selectProject(createdProject.projectId);
+                        }
+                        v2RenderLeftProjectList();
                         continue;
                       }
                       const visibleProjects = listableProjects(projects);
                       const latestFailure = await loadLatestProjectCreationFailure();
+                      if (isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)) {
+                        showCreationFailure(latestFailure.failureError);
+                        return;
+                      }
                       if (visibleProjects.length > 0) {
                         $("initStatusPanel").classList.add("hidden");
                         await refreshProjects({ autoSelect: false });
@@ -4164,11 +4301,17 @@ public sealed class BrowserUiRenderer
                         return;
                       }
                     } catch {
-                      await refreshProjects();
+                      await refreshProjects({ autoSelect: false });
                       return;
                     }
                   }
-                  await refreshProjects();
+                  const latestFailure = await loadLatestProjectCreationFailure();
+                  if (isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)) {
+                    showCreationFailure(latestFailure.failureError);
+                    return;
+                  }
+                  await refreshProjects({ autoSelect: false });
+                  if (createdProjectId) selectProject(createdProjectId);
                 }
 
                 function projectCreationErrorMessage(error) {
@@ -4184,10 +4327,10 @@ public sealed class BrowserUiRenderer
                     return `项目数量已达到上限${payload.projectLimit ? `（${payload.projectLimit} 个）` : ""}，请先删除旧项目后再创建。`;
                   }
                   if (code === "game_name_required") {
-                    return "请填写游戏名称。";
+                    return "请输入游戏名称";
                   }
                   if (code === "game_type_source_required") {
-                    return "请填写游戏类型/玩法方向。";
+                    return "请输入参考游戏类型或游戏名称";
                   }
                   if (code === "git_url_not_allowed") {
                     return "当前入口不允许从浏览器提交 Git URL。";
@@ -4273,7 +4416,7 @@ public sealed class BrowserUiRenderer
                             ${isNext ? goalBadge("下一目标", "goal-badge-next") : ""}
                           </div>
                           <span class="muted">${escapeHtml(run?.status || "未执行")}</span>
-                          ${record.goal.resultSummary ? `<p>${escapeHtml(record.goal.resultSummary)}</p>` : "<p class='muted'>该目标尚未产出结果摘要。</p>"}
+                          ${record.goal.resultSummary ? `<p>${escapeHtml(publicIterationGoalResultSummary(record.goal))}</p>` : "<p class='muted'>该目标尚未产出结果摘要。</p>"}
                           ${run ? `<p class="muted">Run: ${escapeHtml(run.runId)}</p>` : "<p class='muted'>该目标尚未关联执行记录。</p>"}
                           <p>${downloads || "暂无可下载日志"}</p>
                         </div>
@@ -4720,11 +4863,9 @@ public sealed class BrowserUiRenderer
                     $("projectPackageStatus").textContent = "选择项目后显示项目文件包。";
                     return;
                   }
-                  if (!result?.canCreatePackage && result?.disabledReason === "prototype_not_created") {
+                  if (!result?.canCreatePackage && isProjectPackagePrerequisiteReason(result?.disabledReason)) {
                     $("projectPackageStatus").className = "card muted";
-                    $("projectPackageStatus").textContent = state.prototypeFailure === "没有创建有效的godot场景文件"
-                      ? "没有创建有效的godot场景文件，暂不能打包项目文件。"
-                      : "尚未成功运行原型创建，暂不能打包项目文件。";
+                    $("projectPackageStatus").textContent = projectPackageDisabledText(result.disabledReason);
                     return;
                   }
                   $("projectPackageStatus").className = "card";
@@ -4744,8 +4885,16 @@ public sealed class BrowserUiRenderer
                       : "成功运行原型创建后才可以打包项目文件。";
                   }
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
+                  if (reason === "iteration_plan_not_completed") return "迭代计划完成后才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "迭代计划完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
+                }
+
+                function isProjectPackagePrerequisiteReason(reason) {
+                  return reason === "prototype_not_created" ||
+                    reason === "iteration_plan_not_completed" ||
+                    reason === "prototype_acceptance_not_passed";
                 }
 
                 async function refreshAssetInventoryAvailability() {
@@ -5005,7 +5154,7 @@ public sealed class BrowserUiRenderer
                     <p>${escapeHtml(progress.label || "")}</p>
                     <p class="muted">step：${escapeHtml(progress.step || "-")} · substep：${escapeHtml(progress.substep || "-")}</p>
                     ${progress.updatedUtc ? `<p class="muted">更新时间：${escapeHtml(progress.updatedUtc)}</p>` : ""}
-                    ${progress.failure ? `<p class="danger">${escapeHtml(progress.failure)}</p><p class="danger">可以点击“生成修复计划”把失败拆成小步骤，再逐项执行修复。</p>` : ""}
+                    ${progress.failure ? `<p class="danger">${escapeHtml(sanitizePublicFailureContent(progress.failure))}</p><p class="danger">可以点击“生成修复计划”把失败拆成小步骤，再逐项执行修复。</p>` : ""}
                   `;
                   $("repairPrototype").classList.toggle("hidden", status !== "failed");
                 }
@@ -5013,7 +5162,7 @@ public sealed class BrowserUiRenderer
                 function renderPrototypeAcceptanceSummary(progress) {
                   const status = progress?.status || "idle";
                   if (status === "failed") {
-                    const failure = progress?.failure || "原型验收未通过。";
+                    const failure = sanitizePublicFailureContent(progress?.failure || "原型验收未通过。");
                     $("prototypeAcceptanceSummary").className = "card";
                     $("prototypeAcceptanceSummary").innerHTML = `
                       <strong>原型验收摘要</strong>
@@ -5232,6 +5381,9 @@ public sealed class BrowserUiRenderer
                 $("closeProjectListModal").onclick = () => setModalVisible("projectListModal", false);
                 $("refreshProjects").onclick = () => refreshProjects({ autoSelect: false });
                 $("createProject").onclick = createProject;
+                ["projectName", "gameName", "gameTypeSource"].forEach(id => {
+                  $(id)?.addEventListener("input", () => validateCreateProjectForm(false));
+                });
                 $("createUserAccount").onclick = createUserAccount;
                 $("copyOneTimeToken").onclick = async () => {
                   const value = $("oneTimeTokenValue").value || "";
@@ -5384,6 +5536,7 @@ public sealed class BrowserUiRenderer
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
         var prototypeFailed = latestPrototype?.Status == "failed";
+        var prototypeSucceeded = latestPrototype?.Status == "succeeded";
 
         return
         [
@@ -5391,7 +5544,11 @@ public sealed class BrowserUiRenderer
             CreateRunStep(2, "原型骨架创建", latestPrototype, "/#prototypeWorkflowPanel"),
             prototypeFailed && latestRepair is null
                 ? new ProjectDetailStep(3, "骨架验收修复", "fix", "/#v2RepairPanel", "×")
-                : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
+                : latestRepair is not null
+                    ? CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel")
+                    : prototypeSucceeded
+                        ? new ProjectDetailStep(3, "骨架验收修复", "done", "/#v2RepairPanel", "✓")
+                        : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
             CreateRunStep(4, "完成迭代计划", latestIteration, "/#v2IterationPanel"),
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
             CreateAcceptanceStep(6, latestPrototype, "/#v2AcceptancePanel"),
@@ -5771,6 +5928,8 @@ public sealed class BrowserUiRenderer
                 function disabledText(reason) {
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
+                  if (reason === "iteration_plan_not_completed") return "迭代计划完成后才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "迭代计划完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
                   return "当前暂不能生成新的项目文件包。";
                 }
                 async function downloadPackage(button, downloadUrl, fileName) {

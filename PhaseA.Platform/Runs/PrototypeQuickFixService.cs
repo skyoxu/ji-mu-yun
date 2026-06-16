@@ -1285,7 +1285,7 @@ public sealed partial class PrototypeQuickFixService
 
         if (ContainsAny(goalText, "growth", "reward", "consequence", "奖励", "成长"))
         {
-            return "展示奖励、成长或后果反馈；若当前目标要求奖励选择，则胜利后显示 3 个奖励、选择后状态变化可见。";
+            return "展示奖励、成长或后果反馈；若当前目标要求奖励选择，则胜利后显示 3 个奖励、选择后状态变化可见，并通过 ShowRewardReturnFeedback/ShowRewardReturnStatus、Returned to map、movement is restored 或 rpg_reward_flow_contract 之一留下返回地图反馈契约。";
         }
 
         if (ContainsAny(goalText, "return or continue", "return-to-map", "return to map", "返回地图"))
@@ -1864,12 +1864,19 @@ public sealed partial class PrototypeQuickFixService
 
         if (validation.Reason?.StartsWith("missing_rpg_reward_flow_contract", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return "- RepairFocus: Repair the RPG/JRPG reward-flow contract. Ensure victory or consequence creates exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, shows visible stat/consequence feedback, returns or refreshes the map view, and restores player visibility. If the reward panel is owned by DqRpgPrototype.cs instead of BattleScene.cs, keep that shape coherent and expose the same contract markers there.";
+            return "- RepairFocus: Repair the RPG/JRPG reward-flow contract. Ensure victory or consequence creates exactly three understandable reward choices, selecting one calls ApplyReward, closes the reward panel, shows visible stat/consequence feedback, returns or refreshes the map view, and restores player visibility. Also leave a validation-facing map-return feedback marker such as ShowRewardReturnFeedback, ShowRewardReturnStatus, Returned to map, movement is restored, or rpg_reward_flow_contract in the active DqRpgPrototype.cs/MapScene.cs flow. If the reward panel is owned by DqRpgPrototype.cs instead of BattleScene.cs, keep that shape coherent and expose the same contract markers there.";
         }
 
         if (validation.Reason?.StartsWith("missing_required_core_markers", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return "- RepairFocus: Add or restore the exact required runtime/test evidence markers listed in PlatformAcceptanceReason. Keep the repair scoped to the current goal capability; do not report completion until each missing_marker item is represented in gameplay code, tests, UI text, or a clear validation-facing contract marker.";
+            return validation.Kind switch
+            {
+                "jrpg-party-character-state-readability" => "- RepairFocus: Repair the complete JRPG character-state readability contract. Make HP/stats/status or equivalent character state visible in runtime UI and keep the state consistent after the relevant loop event; do not satisfy this step with code-only markers.",
+                "jrpg-return-or-continue-loop" => "- RepairFocus: Repair the complete JRPG return/continue contract. After resolution or reward, return to a visible playable field/map/town or the intended next playable state, restore player visibility, restore input, and show feedback that explains the transition.",
+                "jrpg-quest-story-progress" => "- RepairFocus: Repair the complete JRPG quest/story progress contract. Player action must visibly change objective, quest, story, dialog, or narrative state and communicate the next objective; do not add BattleScene or reward work unless the project contract requires it.",
+                "jrpg-final-first-loop-acceptance" => "- RepairFocus: Repair the selected JRPG first-loop end-to-end contract as a group. Preserve opening context, field navigation, selected conflict/battle/reward/return/quest capabilities, runtime asset usage, Main.tscn hidden host UI, Godot validation, and package readiness together before reporting completion.",
+                _ => "- RepairFocus: Add or restore the exact required runtime/test evidence markers listed in PlatformAcceptanceReason. Keep the repair scoped to the current goal capability; do not report completion until each missing_marker item is represented in gameplay code, tests, UI text, or a clear validation-facing contract marker."
+            };
         }
 
         return "";
@@ -2100,14 +2107,29 @@ public sealed partial class PrototypeQuickFixService
         ProjectIterationGoalSnapshot goal,
         PrototypeGoalAcceptanceValidationResult validation)
     {
+        var publicDetails = BuildPublicAcceptanceValidationDetails(validation);
         return $"""
             {assistantMessage.Trim()}
 
             平台验收：
             目标 {goal.GoalIndex} 没有通过平台验收，当前目标仍保持 needs_fix。
             原因：{validation.Reason ?? validation.Status}
-            细节：{validation.Details ?? "none"}
+            细节：{publicDetails}
             """;
+    }
+
+    private static string BuildPublicAcceptanceValidationDetails(PrototypeGoalAcceptanceValidationResult validation)
+    {
+        if (string.Equals(validation.Reason, "core_tests_failed", StringComparison.OrdinalIgnoreCase) &&
+            IsCoreTestPackageReferenceFailure(validation))
+        {
+            return "核心测试项目缺少测试框架包引用。请优先修复 Game.Core.Tests 的 xunit、xunit.runner.visualstudio、FluentAssertions、Microsoft.NET.Test.Sdk 等 PackageReference，再继续玩法或 UI 修复。";
+        }
+
+        var sanitized = PublicChatSanitizer.Sanitize(validation.Details);
+        return string.IsNullOrWhiteSpace(sanitized)
+            ? "请根据当前平台验收原因修复对应阻塞项。"
+            : sanitized;
     }
 
     private static string AppendAcceptanceValidationFailureEvidence(

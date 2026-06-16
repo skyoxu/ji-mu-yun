@@ -87,7 +87,7 @@ internal static class PrototypeGodotSmokeService
         var sceneSmokeExitCode = ResolvePrototypeSmokeExitCode(result);
         if (sceneSmokeHasGodotFailure || (sceneSmokeExitCode != 0 && requireDirectSceneSmoke))
         {
-            return new PrototypeGodotSmokeResult(true, sceneSmokeExitCode, result.Stdout, result.Stderr, "strict_headless_prototype_scene", scenePath);
+            return new PrototypeGodotSmokeResult(true, sceneSmokeExitCode, result.Stdout, result.Stderr, "strict_headless_prototype_scene", scenePath, projectRepoPath);
         }
 
         var navigationCommand = new HostedProcessCommand(
@@ -124,7 +124,8 @@ internal static class PrototypeGodotSmokeService
             stdout,
             stderr,
             reason,
-            scenePath);
+            scenePath,
+            projectRepoPath);
     }
 
     internal static IReadOnlyList<string> NormalizeGodotCSharpNamespaceAliases(string projectRepoPath)
@@ -468,8 +469,13 @@ internal sealed record PrototypeGodotSmokeResult(
     string Stdout,
     string Stderr,
     string Reason,
-    string? ScenePath)
+    string? ScenePath,
+    string? ProjectRepoPath = null)
 {
+    private static readonly Regex GodotResourcePathPattern = new(
+        @"res://[^\s`'""\)\]]+\.(?:png|jpg|jpeg|webp|svg|ogg|wav|mp3|ttf|otf|tscn|tres|res)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     public static PrototypeGodotSmokeResult NotRun(string reason, string? scenePath = null)
     {
         return new PrototypeGodotSmokeResult(false, 0, "", "", reason, scenePath);
@@ -482,7 +488,184 @@ internal sealed record PrototypeGodotSmokeResult(
             ran = Ran,
             exit_code = ExitCode,
             reason = Reason,
-            scene = ScenePath
+            scene = ScenePath,
+            diagnostic_excerpt = BuildDiagnosticExcerpt(Stdout, Stderr),
+            resource_diagnostics = BuildResourceDiagnostics(ProjectRepoPath, Stdout, Stderr).Select(d => d.ToEvidence()).ToArray()
+        };
+    }
+
+    private static string BuildDiagnosticExcerpt(string stdout, string stderr)
+    {
+        var lines = string.Join(
+                Environment.NewLine,
+                new[] { stdout, stderr }.Where(static value => !string.IsNullOrWhiteSpace(value)))
+            .Replace("\r", "", StringComparison.Ordinal)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(static line =>
+                line.Contains("ERROR:", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("SCRIPT ERROR", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("Parse Error", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("No loader found for resource", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("referenced non-existent resource", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("Node not found", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("MAIN_MENU_PROTOTYPE_NAV FAIL", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("C# backtrace", StringComparison.OrdinalIgnoreCase) ||
+                line.Contains("Nodes with non-equal opposite anchors", StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.Ordinal)
+            .Take(12)
+            .ToArray();
+
+        var excerpt = string.Join(Environment.NewLine, lines);
+        if (excerpt.Length <= 1800)
+        {
+            return excerpt;
+        }
+
+        return excerpt[..1800].TrimEnd();
+    }
+
+    private static IReadOnlyList<PrototypeGodotResourceDiagnostic> BuildResourceDiagnostics(string? projectRepoPath, string stdout, string stderr)
+    {
+        if (string.IsNullOrWhiteSpace(projectRepoPath))
+        {
+            return [];
+        }
+
+        var combined = string.Join(
+            Environment.NewLine,
+            new[] { stdout, stderr }.Where(static value => !string.IsNullOrWhiteSpace(value)));
+
+        var results = new List<PrototypeGodotResourceDiagnostic>();
+        foreach (Match match in GodotResourcePathPattern.Matches(combined))
+        {
+            var resourcePath = NormalizeResourceDiagnosticPath(match.Value);
+            if (!ShouldInspectResourcePath(combined, resourcePath))
+            {
+                continue;
+            }
+
+            var relative = resourcePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar);
+            var filePath = Path.Combine(projectRepoPath, relative);
+            var importPath = filePath + ".import";
+            var fileExists = File.Exists(filePath);
+            var requiresImport = RequiresGodotImportMetadata(resourcePath);
+            var importExists = !requiresImport || File.Exists(importPath);
+            var pngValid = !fileExists || !string.Equals(Path.GetExtension(filePath), ".png", StringComparison.OrdinalIgnoreCase) || HasPngSignature(filePath);
+
+            if (!results.Any(item => string.Equals(item.ResourcePath, resourcePath, StringComparison.OrdinalIgnoreCase)))
+            {
+                results.Add(new PrototypeGodotResourceDiagnostic(
+                    resourcePath,
+                    fileExists,
+                    importExists,
+                    pngValid,
+                    BuildResourceDiagnosticFix(resourcePath, fileExists, importExists, pngValid)));
+            }
+        }
+
+        return results;
+    }
+
+    private static string NormalizeResourceDiagnosticPath(string value)
+    {
+        return value.TrimEnd('.', ',', ';', ':');
+    }
+
+    private static bool ShouldInspectResourcePath(string combinedOutput, string resourcePath)
+    {
+        var extension = Path.GetExtension(resourcePath);
+        if (string.Equals(extension, ".gd", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (RequiresGodotImportMetadata(resourcePath))
+        {
+            return combinedOutput.Contains($"No loader found for resource: {resourcePath}", StringComparison.OrdinalIgnoreCase) ||
+                   combinedOutput.Contains($"referenced non-existent resource at: {resourcePath}", StringComparison.OrdinalIgnoreCase) ||
+                   combinedOutput.Contains(resourcePath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return combinedOutput.Contains($"Parse Error: [ext_resource] referenced non-existent resource at: {resourcePath}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool RequiresGodotImportMetadata(string resourcePath)
+    {
+        var extension = Path.GetExtension(resourcePath);
+        return extension.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".webp", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".svg", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".ogg", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".wav", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".mp3", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".ttf", StringComparison.OrdinalIgnoreCase) ||
+               extension.Equals(".otf", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasPngSignature(string filePath)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(filePath);
+            return bytes.Length >= 8 &&
+                   bytes[0] == 0x89 &&
+                   bytes[1] == 0x50 &&
+                   bytes[2] == 0x4E &&
+                   bytes[3] == 0x47 &&
+                   bytes[4] == 0x0D &&
+                   bytes[5] == 0x0A &&
+                   bytes[6] == 0x1A &&
+                   bytes[7] == 0x0A;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private static string BuildResourceDiagnosticFix(string resourcePath, bool fileExists, bool importExists, bool pngValid)
+    {
+        if (!fileExists)
+        {
+            return $"Restore or copy the missing resource file at {resourcePath} and regenerate its Godot import metadata.";
+        }
+
+        if (!pngValid)
+        {
+            return $"Replace the invalid PNG at {resourcePath} with a valid PNG file before retrying Godot smoke.";
+        }
+
+        if (!importExists)
+        {
+            return $"Regenerate Godot import metadata for {resourcePath} so the loader can open the resource again.";
+        }
+
+        return $"Recheck the Godot import cache and scene ext_resource entry for {resourcePath}.";
+    }
+}
+
+internal sealed record PrototypeGodotResourceDiagnostic(
+    string ResourcePath,
+    bool FileExists,
+    bool ImportExists,
+    bool PngValid,
+    string SuggestedFix)
+{
+    public object ToEvidence()
+    {
+        return new
+        {
+            resource_path = ResourcePath,
+            file_exists = FileExists,
+            import_exists = ImportExists,
+            png_valid = PngValid,
+            suggested_fix = SuggestedFix
         };
     }
 }

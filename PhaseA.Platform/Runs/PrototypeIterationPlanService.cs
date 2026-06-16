@@ -9,6 +9,7 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeIterationPlanService
 {
+    private const string EvaluationRunType = "prototype-iteration-plan-evaluation";
     private const int MaxTextAttachments = 5;
     private const int MaxTextAttachmentChars = 12000;
     private static readonly Regex SplitRegex = new(@"[。！？!?]\s*|\r?\n+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -297,7 +298,11 @@ public sealed class PrototypeIterationPlanService
                 return new IterationGoalBuildResult(scaffold, false);
             }
 
-            return await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, model, cancellationToken);
+            var refined = await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, model, cancellationToken);
+            return refined with
+            {
+                Goals = EnsureJrpgExplicitRuleCoverage(refined.Goals, prototypeContract, message, regenerationGuidance)
+            };
         }
 
         if (routeStrategy.UsesSpecializedIterationPlanning &&
@@ -482,7 +487,7 @@ public sealed class PrototypeIterationPlanService
     {
         if (string.Equals(planningContext.LatestPrototypeStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            return BuildRpgClosureGoals(planningContext, regenerationGuidance);
+            return BuildRpgClosureGoals(planningContext, prototypeContract, regenerationGuidance);
         }
 
         var goals = BuildGoals(message, sourceKind);
@@ -496,9 +501,9 @@ public sealed class PrototypeIterationPlanService
             string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static List<PrototypeIterationPlanGoalResult> BuildRpgClosureGoals(IterationPlanningContext planningContext, string? regenerationGuidance)
+    private static List<PrototypeIterationPlanGoalResult> BuildRpgClosureGoals(IterationPlanningContext planningContext, PrototypeContractSnapshot prototypeContract, string? regenerationGuidance)
     {
-        return BuildJrpgFirstLoopGoals(planningContext.SourceMessage, planningContext, null, regenerationGuidance);
+        return BuildJrpgFirstLoopGoals(planningContext.SourceMessage, planningContext, prototypeContract, regenerationGuidance);
     }
 
     private static List<PrototypeIterationPlanGoalResult> BuildNavigationFirstRpgClosureGoals(IterationPlanningContext planningContext, string? regenerationGuidance)
@@ -1506,7 +1511,8 @@ public sealed class PrototypeIterationPlanService
             string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             var routeContext = TryReadCurrentIterationRouteContext(_routeStateWriter.ReadLatestIterationPlanState(project), details.Session.SessionId);
-            var rpgPlanIssue = FindRpgPlanContractIssue(goals, routeContext.PlanningAnalysis, details.Session.SourceMessage, routeContext.SelectedCapabilities);
+            var prototypeContract = _contractService.Read(project);
+            var rpgPlanIssue = FindRpgPlanContractIssue(goals, routeContext.PlanningAnalysis, details.Session.SourceMessage, routeContext.SelectedCapabilities, prototypeContract);
             if (rpgPlanIssue is not null)
             {
                 return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
@@ -1571,6 +1577,75 @@ public sealed class PrototypeIterationPlanService
             $"当前待执行目标“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
             "可以直接点击“执行下一目标”。",
             null));
+    }
+
+    public async Task<PrototypeIterationPlanEvaluationRunResult> EvaluateWithRunAsync(
+        string accountId,
+        string projectId,
+        PrototypeWorkflowProgress? prototypeProgress,
+        string? model = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Project not found.");
+        }
+
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, EvaluationRunType, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, cancellationToken);
+        await _metadataStore.UpdateRunProgressAsync(
+            runId,
+            "running",
+            "plan_evaluation",
+            "正在评估当前迭代计划。",
+            CancellationToken.None);
+
+        try
+        {
+            var evaluation = await EvaluateAsync(accountId, projectId, prototypeProgress, model, cancellationToken);
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = EvaluationRunType,
+                evaluation,
+                evaluated_utc = DateTimeOffset.UtcNow.ToString("O")
+            });
+            await _metadataStore.CompleteRunAsync(
+                runId,
+                "succeeded",
+                0,
+                JsonSerializer.Serialize(evaluation),
+                "",
+                evidenceJson,
+                CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(
+                runId,
+                "succeeded",
+                evaluation.Decision,
+                "迭代计划评估已完成。",
+                CancellationToken.None);
+            return new PrototypeIterationPlanEvaluationRunResult(runId, "succeeded", evaluation);
+        }
+        catch (OperationCanceledException)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "cancel", 499, "", "Iteration plan evaluation cancelled.", "{}", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "cancel", "cancelled", "迭代计划评估已取消。", CancellationToken.None);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            var evidenceJson = JsonSerializer.Serialize(new
+            {
+                run_type = EvaluationRunType,
+                error = ex.Message
+            });
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), evidenceJson, CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "error", "迭代计划评估失败。", CancellationToken.None);
+            throw;
+        }
     }
 
     private async Task<PrototypeSkeletonRegenerationDecision> EvaluatePrototypeSkeletonRegenerationNeedAsync(
@@ -1876,16 +1951,21 @@ public sealed class PrototypeIterationPlanService
         var contractInstruction = prototypeContract is null
             ? "Use the project execution guide, current prototype state, and route-skill contract as hard acceptance input."
             : BuildContractGoalInstruction(prototypeContract);
+        var explicitRules = ExtractExplicitContractRuleClauses(
+            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json),
+            message,
+            regenerationGuidance);
         var hint = TrimForHint(string.Join(" ", message, regenerationGuidance).Trim(), 120);
         var goals = new List<PrototypeIterationPlanGoalResult>(selected.Count);
         var index = 1;
         foreach (var capability in selected)
         {
+            var explicitRuleClause = BuildExplicitRuleClauseForCapability(capability.Id, explicitRules);
             var description = capability.DescriptionTemplate
                 .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
-                .Replace("{sourceHint}", hint, StringComparison.Ordinal);
+                .Replace("{sourceHint}", hint, StringComparison.Ordinal) + explicitRuleClause;
             var acceptance = capability.AcceptanceTemplate
-                .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal);
+                .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal) + explicitRuleClause;
             goals.Add(new PrototypeIterationPlanGoalResult(
                 index++,
                 $"JRPG First Loop: {capability.Title}",
@@ -2046,7 +2126,7 @@ public sealed class PrototypeIterationPlanService
         new(
             "field_navigation",
             "field navigation and stable control",
-            "Validate the field or town movement layer as its own capability: Start Adventure or the project entry must reveal a non-empty playable field, show the player marker or character, and support stable controllable movement before conflict, rewards, or final acceptance are mixed in. {contractInstruction}",
+            "Validate the field or town movement layer as its own capability: Start Adventure or the project entry must reveal a non-empty playable field, show the player marker or character, and support stable controllable movement. {contractInstruction}",
             "Pass only when the entry opens a visible playable field/map/town scene, movement is stable, and player/map asset usage is visible."),
         new(
             "interaction_discovery",
@@ -2187,6 +2267,146 @@ public sealed class PrototypeIterationPlanService
             : "Use the project prototype contract and input_traceability as hard acceptance input; every non-empty user field must map to a goal, validation check, or explicit needs_fix blocker, and user form values override type template defaults.";
     }
 
+    private static ExplicitContractRules ExtractExplicitContractRuleClauses(params string?[] sources)
+    {
+        var text = string.Join(" ", sources.Where(source => !string.IsNullOrWhiteSpace(source))).ToLowerInvariant();
+        return new ExplicitContractRules(
+            EncounterProbability: ContainsAny(text, "10%", "10 %"),
+            GuaranteedEncounter: ContainsAny(text, "10步", "10 steps", "10-step"),
+            FifteenBattleVictory: ContainsAny(text, "15场", "15 battles", "15 battle"),
+            AnyLossDefeat: ContainsAny(text, "任一战斗失败", "any battle loss", "any-loss defeat", "game loss"),
+            EnemyScaling: ContainsAny(text, "每个怪物", "下一个怪物", "+5", "+2", "5点生命", "5 hp", "+5 hp", "2点攻击", "2 atk", "+2 atk", "enemy scaling"));
+    }
+
+    private static string BuildExplicitRuleClauseForCapability(string capabilityId, ExplicitContractRules rules)
+    {
+        var clauses = new List<string>();
+        if (string.Equals(capabilityId, "conflict_entry", StringComparison.OrdinalIgnoreCase))
+        {
+            if (rules.EncounterProbability)
+            {
+                clauses.Add("explicit encounter probability rule: 10%");
+            }
+
+            if (rules.GuaranteedEncounter)
+            {
+                clauses.Add("explicit guaranteed encounter rule: 10 steps / 10-step");
+            }
+        }
+
+        if (string.Equals(capabilityId, "battle_or_challenge_resolution", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(capabilityId, "party_or_character_state", StringComparison.OrdinalIgnoreCase))
+        {
+            if (rules.FifteenBattleVictory)
+            {
+                clauses.Add("explicit 15-battle victory rule: 15 battles");
+            }
+
+            if (rules.AnyLossDefeat)
+            {
+                clauses.Add("explicit any-loss defeat rule: any battle loss means game loss");
+            }
+
+            if (rules.EnemyScaling)
+            {
+                clauses.Add("explicit enemy scaling rule: +5 HP / +2 ATK or project-specific enemy scaling");
+            }
+        }
+
+        if (string.Equals(capabilityId, "final_first_loop_acceptance", StringComparison.OrdinalIgnoreCase))
+        {
+            if (rules.EncounterProbability)
+            {
+                clauses.Add("10% encounter probability");
+            }
+
+            if (rules.GuaranteedEncounter)
+            {
+                clauses.Add("10-step guaranteed encounter");
+            }
+
+            if (rules.FifteenBattleVictory)
+            {
+                clauses.Add("15-battle victory");
+            }
+
+            if (rules.AnyLossDefeat)
+            {
+                clauses.Add("any-loss defeat");
+            }
+        }
+
+        return clauses.Count == 0
+            ? string.Empty
+            : $" Explicit project rule coverage required here: {string.Join("; ", clauses)}.";
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> EnsureJrpgExplicitRuleCoverage(
+        IReadOnlyList<PrototypeIterationPlanGoalResult> goals,
+        PrototypeContractSnapshot prototypeContract,
+        string message,
+        string? regenerationGuidance)
+    {
+        var rules = ExtractExplicitContractRuleClauses(
+            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract.Json),
+            message,
+            regenerationGuidance);
+        if (!rules.HasAny)
+        {
+            return goals.ToList();
+        }
+
+        return goals.Select(goal =>
+        {
+            var capabilityId = ResolveJrpgCapabilityIdFromGoalTitle(goal.Title);
+            if (string.IsNullOrWhiteSpace(capabilityId))
+            {
+                return goal;
+            }
+
+            var clause = BuildExplicitRuleClauseForCapability(capabilityId, rules);
+            if (string.IsNullOrWhiteSpace(clause))
+            {
+                return goal;
+            }
+
+            var existing = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
+            if (ContainsAny(existing, clause))
+            {
+                return goal;
+            }
+
+            return goal with
+            {
+                Description = goal.Description + clause,
+                AcceptanceHint = goal.AcceptanceHint + clause
+            };
+        }).ToList();
+    }
+
+    private static string? ResolveJrpgCapabilityIdFromGoalTitle(string title)
+    {
+        foreach (var capability in JrpgFirstLoopCapabilities)
+        {
+            if (title.Contains(capability.Title, StringComparison.OrdinalIgnoreCase))
+            {
+                return capability.Id;
+            }
+        }
+
+        return null;
+    }
+
+    private sealed record ExplicitContractRules(
+        bool EncounterProbability,
+        bool GuaranteedEncounter,
+        bool FifteenBattleVictory,
+        bool AnyLossDefeat,
+        bool EnemyScaling)
+    {
+        public bool HasAny => EncounterProbability || GuaranteedEncounter || FifteenBattleVictory || AnyLossDefeat || EnemyScaling;
+    }
+
     private static bool IsFinalAcceptanceGoal(PrototypeIterationPlanGoalResult goal)
     {
         var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
@@ -2201,10 +2421,11 @@ public sealed class PrototypeIterationPlanService
         ProjectIterationGoalSnapshot[] goals,
         PrototypeIterationPlanningAnalysisResult? planningAnalysis,
         string? sourceMessage,
-        HashSet<string>? selectedCapabilities)
+        HashSet<string>? selectedCapabilities,
+        PrototypeContractSnapshot? prototypeContract)
     {
         var combined = string.Join("\n", goals.Select(goal => string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint))).ToLowerInvariant();
-        var requirementSource = BuildRpgRequirementSource(sourceMessage, planningAnalysis);
+        var requirementSource = BuildRpgRequirementSource(sourceMessage, planningAnalysis, prototypeContract);
         var requiresConflict =
             JrpgRouteSemantics.RequiresBattleScene(requirementSource) ||
             (selectedCapabilities is not null &&
@@ -2247,7 +2468,7 @@ public sealed class PrototypeIterationPlanService
             missing.Add("final first-loop acceptance capability");
         }
 
-        var explicitContractRuleIssues = FindMissingExplicitContractRules(combined, planningAnalysis, sourceMessage);
+        var explicitContractRuleIssues = FindMissingExplicitContractRules(combined, planningAnalysis, sourceMessage, prototypeContract);
         missing.AddRange(explicitContractRuleIssues);
 
         if (missing.Count == 0)
@@ -2260,7 +2481,8 @@ public sealed class PrototypeIterationPlanService
 
     private static string BuildRpgRequirementSource(
         string? sourceMessage,
-        PrototypeIterationPlanningAnalysisResult? planningAnalysis)
+        PrototypeIterationPlanningAnalysisResult? planningAnalysis,
+        PrototypeContractSnapshot? prototypeContract)
     {
         var evidence = planningAnalysis is null
             ? []
@@ -2272,13 +2494,15 @@ public sealed class PrototypeIterationPlanService
         return string.Join(
             " ",
             sourceMessage ?? string.Empty,
+            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json),
             string.Join(" ", evidence)).ToLowerInvariant();
     }
 
     private static List<string> FindMissingExplicitContractRules(
         string combined,
         PrototypeIterationPlanningAnalysisResult? planningAnalysis,
-        string? sourceMessage)
+        string? sourceMessage,
+        PrototypeContractSnapshot? prototypeContract)
     {
         var missing = new List<string>();
         var evidenceTexts = new List<(string Field, string Evidence)>();
@@ -2305,10 +2529,16 @@ public sealed class PrototypeIterationPlanService
             evidenceTexts.Add(("source_message", sourceMessage.Trim()));
         }
 
+        var contractIntentText = JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json);
+        if (!string.IsNullOrWhiteSpace(contractIntentText))
+        {
+            evidenceTexts.Add(("prototype_contract", contractIntentText));
+        }
+
         foreach (var (field, evidence) in evidenceTexts)
         {
-            var checksWinFail = field is "win_fail_conditions" or "source_message";
-            var checksFlowRules = field is "game_feature" or "core_gameplay_loop" or "source_message";
+            var checksWinFail = field is "win_fail_conditions" or "source_message" or "prototype_contract";
+            var checksFlowRules = field is "game_feature" or "core_gameplay_loop" or "source_message" or "prototype_contract";
 
             if (checksWinFail)
             {
@@ -2359,11 +2589,7 @@ public sealed class PrototypeIterationPlanService
             return null;
         }
 
-        var fieldGoal = orderedGoals.FirstOrDefault(goal =>
-        {
-            var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
-            return ContainsAny(text, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "field", "movement", "地图", "移动", "场景");
-        });
+        var fieldGoal = orderedGoals.FirstOrDefault(IsJrpgFieldNavigationGoal);
 
         if (fieldGoal is null)
         {
@@ -2445,6 +2671,18 @@ public sealed class PrototypeIterationPlanService
         }
 
         return selected;
+    }
+
+    private static bool IsJrpgFieldNavigationGoal(ProjectIterationGoalSnapshot goal)
+    {
+        var title = goal.Title.ToLowerInvariant();
+        if (ContainsAny(title, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "地图", "移动"))
+        {
+            return true;
+        }
+
+        var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
+        return ContainsAny(text, "start adventure", "visible map", "visible mapscene", "mapscene", "map scene", "playable field", "playable map", "town scene", "stable movement", "controllable movement");
     }
 
     private static void AddJrpgCapabilitiesFromText(HashSet<string> selected, string text)

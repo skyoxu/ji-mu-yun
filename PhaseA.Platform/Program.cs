@@ -1380,7 +1380,7 @@ app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     {
         var accountId = CurrentAccountId(context);
         var progress = await prototypeWorkflow.GetProgressAsync(accountId, projectId, cancellationToken);
-        var result = await iterationPlans.EvaluateAsync(accountId, projectId, progress, request.Model, cancellationToken);
+        var result = await iterationPlans.EvaluateWithRunAsync(accountId, projectId, progress, request.Model, cancellationToken);
         return Results.Ok(result);
     }
     catch (InvalidOperationException ex)

@@ -400,14 +400,18 @@ public sealed class BrowserUiRendererTests
                   return token;
                 })
                 .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
-                .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "")
+                .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "[路径已隐藏]")
+                .replace(/\bres:\/\/[^\s`'"，。；：、）)<]+/gi, "[路径已隐藏]")
                 .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
                 .replace(/\b(?:projectId|runId|accountId|ticket|embedded)=[^\s`'"，。；：、）)<]+/gi, "")
-                .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "")
-                .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|csproj|sln|json|toml|yaml|yml|md|log)(?![\w.-])/gi, "")
+                .replace(/(?<![\w.:/])\/(?:[A-Za-z0-9._-]+\/)+[A-Za-z0-9._-]+/g, "[路径已隐藏]")
+                .replace(/(?<![\w])(?:[A-Za-z0-9_.-]+[\\/]){1,}[A-Za-z0-9_.-]+/g, "[路径已隐藏]")
+                .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|cs|csproj|sln|json|toml|yaml|yml|md|log|txt|tscn|tres|res|gd|png|jpg|jpeg|webp|svg|ogg|wav|mp3|ttf|otf|import|dll|exe|pdb|cache|sqlite|sqlite3|db|zip)(?::\d+(?::\d+)?)?(?![\w.-])/gi, "[文件已隐藏]")
                 .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
                 .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
+                .replace(/\b(?:Game\.Godot|Tests\.Godot|Game\.Core(?:\.Tests)?|PhaseA\.Platform(?:\.Tests)?|GodotGame)\b/gi, "[模块已隐藏]")
                 .replace(/__PHASEA_GDD_LINK_(\d+)__/g, (_, index) => gddLinks[Number(index)] || "")
+                .replace(/(?:\[(?:路径已隐藏|文件已隐藏|模块已隐藏)\]\s*){2,}/g, "[详情已隐藏] ")
                 .replace(/[ \t]{2,}/g, " ")
                 .replace(/\n{3,}/g, "\n\n")
                 .trim();
@@ -420,7 +424,10 @@ public sealed class BrowserUiRendererTests
             assert(!sanitized.includes("projectId="), "platform query should be hidden");
             const link = "/projects/demo/gdd/GDD.md?ticket=abc123";
             assert(sanitizePublicChatContent(`下载：${link}`).includes(link), "GDD download links should stay visible");
-            assert(sanitizePublicChatContent("Godot path res://Game/Scenes/Main.tscn").includes("res://Game/Scenes/Main.tscn"), "Godot resource paths should remain visible");
+            const godot = sanitizePublicChatContent("Godot path res://Game/Scenes/Main.tscn and Main.cs:12");
+            assert(!godot.includes("res://Game/Scenes/Main.tscn"), "Godot resource paths should be hidden");
+            assert(!godot.includes("Main.cs"), "file names should be hidden");
+            assert(godot.includes("[路径已隐藏]"), "path placeholder should remain");
             """;
 
         RunNodeScript(node, script);
@@ -655,6 +662,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2CreateRepairPanel");
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
         html.Should().Contain("if (failed) return \"fix\";");
+        html.Should().Contain("if (!goals.length && v2HasPrototypeSkeleton()) return \"done\";");
         html.Should().Contain("确认素材清单");
         html.Should().Contain("打包项目文件");
         html.Should().Contain("下载项目文件");
@@ -713,6 +721,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("skillDescription");
         html.Should().NotContain("v2CreateIterationPlanFromChat");
         html.Should().Contain("iterationPlanUpdateModal");
+        html.Should().Contain(".modal-card > .stack { min-height: 0; max-height: calc(min(90vh, 54rem) - 2rem); overflow-y: auto;");
+        html.Should().Contain("#iterationPlanUpdateModal .modal-card > .stack { max-height: calc(100vh - 4rem); }");
         html.Should().Contain("confirmIterationPlanUpdate");
         html.Should().Contain("deleteIterationPlan");
         html.Should().Contain("重新生成迭代计划");
@@ -893,6 +903,52 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderProject_MarksSkeletonRepairDone_WhenPrototypeCreationSucceededWithoutRepair()
+    {
+        var project = new ProjectSnapshot(
+            "project-1",
+            "account-1",
+            "Demo Project",
+            "Demo Game",
+            "rpg",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\project-1",
+            "C:\\workspaces\\project-1\\runtime",
+            "C:\\workspaces\\project-1\\.phasea");
+        var prototypeRun = new RunReadbackItem(
+            "run-prototype",
+            "project-1",
+            "workspace-1",
+            "prototype-7day-playable",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{}",
+            "succeeded",
+            "strict_headless_main_menu_navigation",
+            "Prototype creation completed.",
+            DateTimeOffset.UtcNow.ToString("O"),
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [prototypeRun]);
+
+        html.Should().Contain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
+        html.Should().Contain("detail-step done\" href=\"/#v2RepairPanel\"");
+        html.Should().NotContain("detail-step fix\" href=\"/#v2RepairPanel\"");
+    }
+
+    [Fact]
     public void RenderProject_MarksDownloadDone_WhenPackageExists()
     {
         var project = new ProjectSnapshot(
@@ -1013,6 +1069,15 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
         html.Should().Contain("projectName");
+        html.Should().Contain("projectNameError");
+        html.Should().Contain("gameNameError");
+        html.Should().Contain("gameTypeSourceError");
+        html.Should().Contain("createProjectValidation");
+        html.Should().Contain("validateCreateProjectForm");
+        html.Should().Contain("setCreateProjectFieldError");
+        html.Should().Contain("输入信息过少");
+        html.Should().Contain("请输入游戏名称");
+        html.Should().Contain("请输入参考游戏类型或游戏名称");
         html.Should().Contain("游戏类型/玩法方向");
         html.Should().Contain("Roguelike");
         html.Should().NotContain("打开完整 project-health 页面");
@@ -1024,14 +1089,20 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain(@"const createdProjectId = result.projectId || result.ProjectId || """";");
         html.Should().Contain("if (createdProjectId) {");
         html.Should().Contain("selectProject(createdProjectId)");
-        html.Should().Contain("await pollProjectInitializationResult(createdProjectId)");
+        html.Should().Contain("await pollProjectInitializationResult(createdProjectId, creationAttemptStartedAt)");
         html.Should().Contain("await refreshProjects({ autoSelect: false })");
+        html.Should().NotContain("selectProject(createdProjectId);\n                    }\n                    showInitialization(\"running\", \"\");");
+        html.Should().Contain("if (createdProjectId) selectProject(createdProjectId);");
+        html.Should().Contain("isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)");
         html.Should().Contain("const createdProject = projects.find(project => project.projectId === createdProjectId)");
+        html.Should().Contain("if (createdProject?.projectId && state.projectId !== createdProject.projectId)");
         html.Should().Contain("selectProject(createdProject.projectId)");
         html.Should().Contain("projectCreationErrorMessage");
         html.Should().Contain("project_initialization_in_progress");
         html.Should().Contain("project_quota_exceeded");
         html.Should().Contain("project_creation_failed");
+        html.Should().Contain(@"$(""projectDetailPanel"").classList.add(""hidden"")");
+        html.Should().Contain(@"$(""chatPanel"").classList.add(""hidden"")");
         html.Should().Contain("showLoggedOut");
         html.Should().Contain("logout");
         html.Should().Contain("退出登录");
@@ -1040,7 +1111,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadLatestProjectCreationFailure");
         html.Should().Contain("/api/project-creation-failures/latest");
         html.Should().Contain("listableProjects");
-        html.Should().Contain(@"p.bootstrapStatus !== ""running""");
+        html.Should().Contain(@"p.bootstrapStatus !== ""failed""");
+        html.Should().Contain(@"classList.toggle(""hidden"", !hasInitializingProject(projects))");
+        html.Should().NotContain("showInitialization(\"running\", \"\");\n                      out(projects);\n                      return;");
         html.Should().Contain(@"$(""sessionPanel"").classList.add(""hidden"")");
         html.Should().Contain("项目初始化配置中");
         html.Should().NotContain(@"$(""chapter2"")");
@@ -1085,6 +1158,8 @@ public sealed class BrowserUiRendererTests
         html.IndexOf("id=\"globalModel\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"logout\"", StringComparison.Ordinal));
+        html.IndexOf("isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)", StringComparison.Ordinal)
+            .Should().BeLessThan(html.IndexOf("if (visibleProjects.length > 0)", StringComparison.Ordinal));
         html.Should().Contain("<h1>Game Ren</h1>");
         html.Should().Contain("<title>Game Ren</title>");
         html.Should().NotContain("Phase A Prototype Console");
@@ -1352,6 +1427,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("请先修复当前目标");
         html.Should().Contain("/iteration-plan");
         html.Should().Contain("/iteration-plan/evaluate");
+        html.Should().Contain("state.iterationPlanEvaluation = response?.evaluation || response;");
         html.Should().Contain("const longLlmTimeoutMs = 1200 * 1000;");
         html.Should().Contain("failureCode: \"client_timeout\"");
         html.Should().Contain("timeoutMs: longLlmTimeoutMs");
@@ -1380,6 +1456,24 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("renderAssetInventory(state.assetInventory, state.assetInventoryExpanded)");
         html.Should().Contain("用途：");
         html.Should().Contain("asset-grid");
+    }
+
+    [Fact]
+    public void RenderShellV2_ShowsSanitizedIterationPlanFailureReasonInUserUi()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("publicIterationPlanFailureMessage(summary)");
+        html.Should().Contain("sanitizePublicFailureContent");
+        html.Should().Contain("路径和文件名已隐藏");
+        html.Should().Contain("sanitizePublicIterationPlanText");
+        html.Should().Contain("publicIterationGoalResultSummary(goal)");
+        html.Should().Contain("后台记录会保留完整证据");
+        html.Should().NotContain("evaluation.reason ? `<p");
+        html.Should().NotContain("escapeHtml(evaluation.reason");
+        html.Should().NotContain("escapeHtml(goal.resultSummary)");
+        html.Should().NotContain("out(state.iterationPlanEvaluation)");
+        html.Should().NotContain("state.iterationPlanFailure = summary");
     }
 
     [Fact]

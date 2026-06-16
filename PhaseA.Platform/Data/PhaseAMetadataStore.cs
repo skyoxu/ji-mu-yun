@@ -680,6 +680,105 @@ public sealed class PhaseAMetadataStore
                 lockCommand.Parameters.AddWithValue("$run_id", run.RunId);
                 await lockCommand.ExecuteNonQueryAsync(cancellationToken);
             }
+
+            if (string.Equals(run.RunType, "prototype-iteration-goal", StringComparison.Ordinal))
+            {
+                const string goalSummary = "本轮目标执行因服务重启中断，已恢复为可重新执行状态。";
+                await using (var goalCommand = connection.CreateCommand())
+                {
+                    goalCommand.Transaction = transaction;
+                    goalCommand.CommandText =
+                        """
+                        UPDATE project_iteration_goals
+                        SET status = 'pending',
+                            result_summary = CASE
+                                WHEN result_summary IS NULL OR result_summary = '' THEN $goal_summary
+                                ELSE result_summary
+                            END,
+                            updated_utc = $finished_utc,
+                            completed_utc = NULL
+                        WHERE status = 'running'
+                          AND session_id IN (
+                              SELECT id
+                              FROM project_iteration_sessions
+                              WHERE project_id = $project_id
+                                AND status = 'running'
+                          )
+                          AND (
+                              id IN (
+                                  SELECT goal_id
+                                  FROM project_iteration_goal_runs
+                                  WHERE run_id = $run_id
+                                    AND run_type = 'prototype-iteration-goal'
+                              )
+                              OR NOT EXISTS (
+                                  SELECT 1
+                                  FROM project_iteration_goal_runs
+                                  WHERE run_id = $run_id
+                                    AND run_type = 'prototype-iteration-goal'
+                              )
+                          );
+                        """;
+                    goalCommand.Parameters.AddWithValue("$project_id", run.ProjectId);
+                    goalCommand.Parameters.AddWithValue("$run_id", run.RunId);
+                    goalCommand.Parameters.AddWithValue("$goal_summary", goalSummary);
+                    goalCommand.Parameters.AddWithValue("$finished_utc", finishedUtc);
+                    await goalCommand.ExecuteNonQueryAsync(cancellationToken);
+                }
+
+                await using (var sessionCommand = connection.CreateCommand())
+                {
+                    sessionCommand.Transaction = transaction;
+                    sessionCommand.CommandText =
+                        """
+                        UPDATE project_iteration_sessions
+                        SET status = 'paused_for_review',
+                            current_goal_index = COALESCE(
+                                (
+                                    SELECT g.goal_index
+                                    FROM project_iteration_goals g
+                                    INNER JOIN project_iteration_goal_runs gr ON gr.goal_id = g.id
+                                    WHERE gr.run_id = $run_id
+                                      AND gr.run_type = 'prototype-iteration-goal'
+                                    ORDER BY g.goal_index ASC
+                                    LIMIT 1
+                                ),
+                                (
+                                    SELECT g.goal_index
+                                    FROM project_iteration_goals g
+                                    WHERE g.session_id = project_iteration_sessions.id
+                                      AND g.status = 'pending'
+                                    ORDER BY g.goal_index ASC
+                                    LIMIT 1
+                                ),
+                                current_goal_index),
+                            latest_summary = $goal_summary,
+                            updated_utc = $finished_utc,
+                            completed_utc = NULL
+                        WHERE project_id = $project_id
+                          AND status = 'running'
+                          AND (
+                              id IN (
+                                  SELECT session_id
+                                  FROM project_iteration_goal_runs
+                                  WHERE run_id = $run_id
+                                    AND run_type = 'prototype-iteration-goal'
+                              )
+                              OR NOT EXISTS (
+                                  SELECT 1
+                                  FROM project_iteration_goal_runs
+                                  WHERE run_id = $run_id
+                                    AND run_type = 'prototype-iteration-goal'
+                              )
+                          );
+                        """;
+                    sessionCommand.Parameters.AddWithValue("$project_id", run.ProjectId);
+                    sessionCommand.Parameters.AddWithValue("$run_id", run.RunId);
+                    sessionCommand.Parameters.AddWithValue("$goal_summary", goalSummary);
+                    sessionCommand.Parameters.AddWithValue("$finished_utc", finishedUtc);
+                    await sessionCommand.ExecuteNonQueryAsync(cancellationToken);
+                }
+            }
         }
 
         await transaction.CommitAsync(cancellationToken);

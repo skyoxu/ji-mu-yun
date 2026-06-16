@@ -66,7 +66,7 @@ internal static class PrototypeGoalAcceptanceValidator
             return PrototypeGoalAcceptanceValidationResult.Failed(contract.Kind, "rpg_form_contract_values_not_reflected");
         }
 
-        var missingMarkers = GetMissingRequiredMarkers(testsPath, corePath, contract.RequiredMarkers);
+        var missingMarkers = GetMissingRequiredMarkers(project.RepoPath, testsPath, corePath, contract.RequiredMarkers);
         if (missingMarkers.Count > 0)
         {
             return PrototypeGoalAcceptanceValidationResult.Failed(
@@ -328,13 +328,15 @@ internal static class PrototypeGoalAcceptanceValidator
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
     }
 
-    private static IReadOnlyList<string> GetMissingRequiredMarkers(string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)
+    private static IReadOnlyList<string> GetMissingRequiredMarkers(string repoPath, string testsPath, string corePath, IReadOnlyList<string> requiredMarkers)
     {
         var searchFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         AddMarkerSearchFile(searchFiles, testsPath);
         AddMarkerSearchFile(searchFiles, corePath);
         AddMarkerSearchDirectory(searchFiles, Path.GetDirectoryName(testsPath));
         AddMarkerSearchDirectory(searchFiles, Path.GetDirectoryName(corePath));
+        AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg"), "*.tscn");
+        AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts"), "*.cs");
 
         var text = string.Join(
             Environment.NewLine,
@@ -353,14 +355,14 @@ internal static class PrototypeGoalAcceptanceValidator
         }
     }
 
-    private static void AddMarkerSearchDirectory(HashSet<string> searchFiles, string? directory)
+    private static void AddMarkerSearchDirectory(HashSet<string> searchFiles, string? directory, string searchPattern = "*.cs")
     {
         if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
         {
             return;
         }
 
-        foreach (var path in Directory.EnumerateFiles(directory, "*.cs", SearchOption.TopDirectoryOnly))
+        foreach (var path in Directory.EnumerateFiles(directory, searchPattern, SearchOption.TopDirectoryOnly))
         {
             searchFiles.Add(path);
         }
@@ -755,8 +757,28 @@ internal static class PrototypeGoalAcceptanceValidator
 
     private static bool HasRewardReturnFeedback(string mainScriptText, string mapScriptText)
     {
-        return ContainsAny(mapScriptText, "ShowRewardReturnStatus", "ApplyState", "ResumeAfterReward") ||
-               ContainsAny(mainScriptText, "ShowRewardReturnStatus", "ApplyState", "ResumeAfterReward", "Return to the map", "Battle reward selected", "rpg_reward_flow_contract");
+        return ContainsAny(
+                   mapScriptText,
+                   "ShowRewardReturnStatus",
+                   "ShowRewardReturnFeedback",
+                   "ApplyState",
+                   "ResumeAfterReward",
+                   "Return to the map",
+                   "Returned to map",
+                   "movement is restored",
+                   "movement is active again") ||
+               ContainsAny(
+                   mainScriptText,
+                   "ShowRewardReturnStatus",
+                   "ShowRewardReturnFeedback",
+                   "ApplyState",
+                   "ResumeAfterReward",
+                   "Return to the map",
+                   "Returned to map",
+                   "Battle reward selected",
+                   "movement is restored",
+                   "movement is active again",
+                   "rpg_reward_flow_contract");
     }
 
     private static bool HasMainScriptRewardRefresh(string mainScriptText)

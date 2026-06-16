@@ -94,6 +94,49 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public void GodotSmokeEvidence_ShouldDiagnoseOnlyRuntimeResources_NotSceneLineMarkers()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "dq-rpg");
+        var assetDir = Path.Combine(prototypeDir, "Assets");
+        Directory.CreateDirectory(assetDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "DqRpgPrototype.tscn"), "[gd_scene]\n");
+        File.WriteAllText(Path.Combine(prototypeDir, "MapScene.tscn"), "[gd_scene]\n");
+        File.WriteAllBytes(
+            Path.Combine(assetDir, "map_player.png"),
+            [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]);
+        var stderr = """
+        ERROR: res://Game.Godot/Prototypes/dq-rpg/MapScene.tscn:46 - Parse Error: [ext_resource] referenced non-existent resource at: res://Game.Godot/Prototypes/dq-rpg/Assets/map_player.png.
+        ERROR: No loader found for resource: res://Game.Godot/Prototypes/dq-rpg/Assets/map_player.png (expected type: Texture2D)
+        C# backtrace (most recent call first):
+        at: res://Game.Godot/Scripts/Main.gd:107
+        ERROR: res://logs/phase-a-validation-temp/main-menu-navigation-smoke.gd:12 - Parse Error: smoke script
+        """;
+        var result = new PrototypeGodotSmokeResult(
+            true,
+            1,
+            "",
+            stderr,
+            "prototype_main_menu_navigation_failed",
+            "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn",
+            repoRoot.Path);
+
+        var json = System.Text.Json.JsonSerializer.Serialize(result.ToEvidence());
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var resources = document.RootElement
+            .GetProperty("resource_diagnostics")
+            .EnumerateArray()
+            .Select(item => item.GetProperty("resource_path").GetString())
+            .ToArray();
+
+        resources.Should().Equal("res://Game.Godot/Prototypes/dq-rpg/Assets/map_player.png");
+        var diagnostic = document.RootElement.GetProperty("resource_diagnostics").EnumerateArray().Single();
+        diagnostic.GetProperty("file_exists").GetBoolean().Should().BeTrue();
+        diagnostic.GetProperty("import_exists").GetBoolean().Should().BeFalse();
+        diagnostic.GetProperty("png_valid").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
     public async Task RunAsync_WritesPrototypeRecord_RunsRouter_AndIndexesPrototypeArtifacts()
     {
         using var database = TempSqliteDatabase.Create();

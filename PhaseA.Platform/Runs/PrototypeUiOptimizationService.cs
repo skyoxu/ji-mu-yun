@@ -601,7 +601,11 @@ public sealed class PrototypeUiOptimizationService
             - TemplateReference: {templateName}
 
             Recovery protocol:
-            - Read AGENTS.md, README.md, meta/project-context.md when present, and the latest route state under meta/routes/.
+            - Read AGENTS.md and README.md only for repository-level operating rules; do not use them as project completion memory.
+            - Read meta/project-execution-guide.md and meta/project-context.md when present.
+            - Read meta/routes/prototype-contract/latest.json as the primary project contract source.
+            - Use routes/prototype-contract/latest.json only as a legacy fallback when the meta/routes contract file is missing.
+            - Read latest route state under meta/routes/prototype/, meta/routes/iteration-plan/, and meta/routes/execute-next-goal/ when present.
             - Inspect Game.Godot/Prototypes and project.godot before editing.
             - Prefer modifying existing prototype scenes, scripts, labels, layout, theme, and asset references.
             - Do not create a second unrelated prototype. Do not add new workflow rules.

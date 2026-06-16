@@ -9,10 +9,13 @@ Use this skill only for the dedicated `prototype-ui-optimization` route after th
 
 ## Recovery
 
-1. Read `AGENTS.md` and `README.md`.
-2. Read `meta/project-context.md` when present.
-3. Read latest route state under `meta/routes/prototype/`, `meta/routes/iteration-plan/`, and `meta/routes/execute-next-goal/` when present.
-4. Inspect `project.godot` and `Game.Godot/Prototypes/**`.
+1. Read `AGENTS.md` and `README.md` only for repository-level operating rules; do not use them as project completion memory.
+2. Read `meta/project-execution-guide.md` and `meta/project-context.md` when present.
+3. Read `meta/routes/prototype-contract/latest.json` as the primary project contract source. Concrete user form fields and `input_traceability` override templates and examples.
+4. Use `routes/prototype-contract/latest.json` only as a legacy fallback when `meta/routes/prototype-contract/latest.json` is missing.
+5. Read latest route state under `meta/routes/prototype/`, `meta/routes/iteration-plan/`, and `meta/routes/execute-next-goal/` when present.
+6. Inspect `project.godot` and `Game.Godot/Prototypes/**`.
+7. If a mandatory recovery source is missing, report the missing source explicitly and continue only when enough current project state exists to keep UI changes scoped.
 
 ## Goal
 

@@ -42,6 +42,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 Platform hard acceptance for JRPG interaction and discovery:
                 - The player must be able to discover or interact with at least one meaningful object, NPC, dialog, clue, chest, or inspectable target.
                 - The interaction result must be visible and understandable in runtime UI or scene feedback.
+                - Objective and Interact evidence must be connected to runtime UI/scene behavior, not added as isolated static strings.
                 - Do not hide conflict, battle, reward, or final acceptance requirements inside this step.
                 - Missing interaction/discovery proof means STATUS: needs_fix.
                 """,
@@ -49,6 +50,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 Platform hard acceptance for JRPG conflict entry:
                 - Map, field, town, or interaction progress must expose a clear first conflict, encounter, challenge, or obstacle entry.
                 - The trigger must be visible and verifiable from player action or traversal.
+                - If the route requires encounter wiring, repair the MapScene movement/trigger group together instead of adding only one marker.
                 - Do not advance this step into battle/challenge settlement or reward selection.
                 - Missing conflict entry proof means STATUS: needs_fix.
                 """,
@@ -56,6 +58,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 Platform hard acceptance for JRPG battle or challenge resolution:
                 - A readable battle, challenge, or obstacle resolution loop must show player state, opponent/obstacle state, action feedback, and success/failure settlement.
                 - If the project uses BattleScene, keep battle UI and runtime behavior in the dedicated battle scene instead of only inside the main prototype controller.
+                - Repair BattleScene.tscn and BattleScene.cs as a pair when battle is selected; one file without the other is not sufficient.
                 - Do not advance this step into reward selection or return-loop proof unless the project explicitly has no separate reward/return requirement.
                 - Missing resolution proof means STATUS: needs_fix.
                 """,
@@ -64,6 +67,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - Player, party, HP, stats, status, equipment, or equivalent character state must be readable at runtime.
                 - State must update or remain visibly consistent after the relevant loop event.
                 - Do not treat code-only state as sufficient player-facing proof.
+                - Repair UI text/state binding and runtime state updates together when HP, Stats, or Status evidence is missing.
                 - Missing state readability proof means STATUS: needs_fix.
                 """,
             "jrpg-growth-reward-consequence-feedback" => """
@@ -71,6 +75,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - The loop must show an understandable reward, growth, item, stat change, experience, skill unlock, or story consequence.
                 - If the route uses the RPG reward contract, victory must expose exactly three understandable reward choices.
                 - Choosing a reward must apply a visible state change when a reward choice is part of the selected capability.
+                - Repair reward entry, choice count, ApplyReward, visible feedback, and return/refresh behavior as one group when reward flow is selected.
                 - Missing reward/growth/consequence proof means STATUS: needs_fix.
                 """,
             "jrpg-return-or-continue-loop" => """
@@ -78,12 +83,14 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - After resolution or reward, the prototype must return to the active playable field/map/town or continue to a clear next playable state.
                 - The player must remain visible and controllable when the selected loop expects continued play.
                 - Runtime feedback must make the transition understandable.
+                - Repair scene visibility, player visibility, input restoration, and transition feedback together; do not add only a MoveOnMap marker.
                 - Missing return/continue proof means STATUS: needs_fix.
                 """,
             "jrpg-quest-story-progress" => """
                 Platform hard acceptance for JRPG quest or story progress:
                 - The prototype must show visible quest, story, objective, or narrative progress caused by player action.
                 - The player must understand what changed and what the next objective is.
+                - Objective or Quest evidence must be visible in runtime UI/dialog/scene text and trace to player action.
                 - Do not force BattleScene or reward work unless the project semantics require it.
                 - Missing quest/story progress proof means STATUS: needs_fix.
                 """,

@@ -83,7 +83,7 @@ public sealed class PrototypeIterationGoalServiceTests
         details!.Session.Status.Should().Be("paused_for_review");
         details.Session.LatestEvaluationJson.Should().NotBeNullOrWhiteSpace();
         details.LatestEvaluation.Should().NotBeNull();
-        details.LatestEvaluation!.Decision.Should().Be("should_refine_plan");
+        details.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
         details.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         var codexCommand = runner.Commands.Single(command => command.Arguments.LastOrDefault() == "-");
         codexCommand.StandardInput.Should().Contain("prototype-baseline");
@@ -181,6 +181,44 @@ public sealed class PrototypeIterationGoalServiceTests
     }
 
     [Fact]
+    public async Task ExecuteNextAsync_ShouldSanitizeAcceptanceFailureDetails_InPublicGoalSummary()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先修地图移动。"));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        var stateWriter = new PrototypeRouteStateWriter();
+        stateWriter.WriteProjectReadme(project);
+        var contract = new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
+        stateWriter.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
+        stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        var runner = new AbsolutePathCorePackageFailureRunner();
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var targetGoal = (await store.GetLatestProjectIterationSessionAsync(projectId))!.Goals
+            .Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
+
+        var result = await service.ExecuteNextAsync(accountId, projectId);
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var goal = refreshed!.Goals.Single(item => item.GoalId == result.GoalId);
+
+        result.Status.Should().Be("needs_fix");
+        goal.ResultSummary.Should().Contain("Core test project package references are incomplete");
+        goal.ResultSummary.Should().NotContain(@"C:\jimuyun");
+        goal.ResultSummary.Should().NotContain("phase-a-innernet");
+        goal.ResultSummary.Should().NotContain("workspaces");
+    }
+
+    [Fact]
     public async Task GoalAcceptanceValidator_ShouldRetryRestore_WhenTestFrameworkReferencesArePresentButCompileLooksStale()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -236,6 +274,58 @@ public sealed class PrototypeIterationGoalServiceTests
         runner.Commands.Count(command => command.FileName == "dotnet" && command.Arguments.Contains("test")).Should().Be(2);
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("restore"));
         runner.Commands.SelectMany(command => command.Arguments).Should().Contain(argument => argument.Contains("core-tests-retry", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldAcceptOpeningContextMarkers_FromGodotPrototypeShell()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        File.WriteAllText(Path.Combine(repoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs"), """
+public sealed class DqRpgPrototypeLoopTests
+{
+}
+""");
+        File.WriteAllText(Path.Combine(repoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs"), """
+public sealed class DqRpgPrototypeLoop
+{
+}
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "JRPG First Loop: opening context and player objective",
+            "Establish who the player controls, where they are, and the next objective.",
+            "Pass only when a clear controllable hero/context/objective is visible.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("jrpg-opening-context-objective");
     }
 
     [Fact]
@@ -2232,6 +2322,98 @@ public sealed class DqRpgPrototype
     }
 
     [Fact]
+    public async Task GoalAcceptanceValidator_ShouldAcceptRewardReturnFeedbackMarker()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        EnsureRpgAcceptanceMarkers(repoPath);
+        EnsureRpgSmokeSceneFile(repoPath);
+        var scriptPath = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts");
+        File.WriteAllText(Path.Combine(scriptPath, "DqRpgPrototype.cs"), """
+public sealed class DqRpgPrototype
+{
+    private DqRpgPrototypeLoop _loop = new();
+    private dynamic _state;
+    private dynamic _rewardPanel;
+    private dynamic[] _rewardButtons = new dynamic[3];
+    private MapScene _mapScene = new();
+
+    private void ShowRewardScene(System.Collections.Generic.IReadOnlyList<object> rewards)
+    {
+        if (rewards.Count > 0)
+        {
+            for (var i = 0; i < _rewardButtons.Length; i++)
+            {
+                _rewardButtons[i].Visible = i < rewards.Count;
+            }
+
+            _rewardPanel.Visible = true;
+        }
+    }
+
+    private void OnRewardSelected(int rewardIndex)
+    {
+        if (_state.RewardOptions.Count != 3)
+        {
+            return;
+        }
+
+        _state = _loop.ApplyReward(_state, rewardIndex, fromChest: false);
+        _rewardPanel.Visible = false;
+        _mapScene.ShowRewardReturnFeedback("Growth applied. Returned to map; hero is visible and movement is restored.");
+        RefreshView();
+    }
+
+    private void RefreshView() { }
+}
+""");
+        File.WriteAllText(Path.Combine(scriptPath, "MapScene.cs"), """
+public sealed class MapScene
+{
+    private dynamic _player;
+    public void ShowRewardReturnFeedback(string rewardSummary)
+    {
+        _player.Visible = true;
+        var status = $"Growth applied: {rewardSummary}. Returned to map; hero is visible and movement is restored.";
+    }
+}
+""");
+        var project = new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "RPG",
+            "rpg",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot.Path,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            7,
+            "JRPG First Loop: growth, reward, or consequence feedback",
+            "Validate reward choice and return feedback.",
+            "Pass when a visible reward choice updates state and returns to map.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new RestoreRetryHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue();
+        result.Kind.Should().Be("jrpg-growth-reward-consequence-feedback");
+    }
+
+    [Fact]
     public async Task GoalAcceptanceValidator_ShouldAcceptSurvivorsLikeMarkersOutsideRpgLoopFiles()
     {
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -3353,6 +3535,41 @@ REMAINING: none
             }
 
             return Task.FromResult(new HostedProcessResult(0, "ok", ""));
+        }
+    }
+
+    private sealed class AbsolutePathCorePackageFailureRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    1,
+                    "",
+                    @"C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\GameConfigTests.cs(1,7): error CS0246: The type or namespace name 'FluentAssertions' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]
+C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\PlayerTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]"));
+            }
+
+            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
+                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Field navigation was implemented.
+CHANGED: Updated map movement.
+VERIFY: Await platform validation.
+REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "iteration goal stdout", ""));
         }
     }
 
