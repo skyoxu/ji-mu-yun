@@ -122,6 +122,18 @@ public sealed class PrototypeIterationPlanService
         }
 
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase) &&
+            (previousIterationPlan is null || !IsIterationPlanComplete(previousIterationPlan.Goals)))
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                "iteration_plan_update_blocked",
+                "创建新一轮游戏模块前，需要先完成当前游戏模块的所有目标。",
+                [],
+                null,
+                previousIterationPlan?.LatestEvaluation);
+        }
+
         if (previousIterationPlan is not null &&
             IsIterationPlanStarted(previousIterationPlan) &&
             !IsIterationPlanComplete(previousIterationPlan.Goals))
@@ -148,7 +160,7 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult(
                 "",
                 "llm_failed",
-                $"迭代计划生成需要 LLM 成功参与，但当前调用失败：{ex.Message}",
+                $"游戏模块生成需要 LLM 成功参与，但当前调用失败：{ex.Message}",
                 [],
                 null,
                 null);
@@ -162,7 +174,7 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult(
                 "",
                 "custom_route_required",
-                "当前表单识别出的最小循环已经超过通用迭代计划能力范围，请联系管理员创建定制游戏类型路线后再继续。",
+                "当前表单识别出的最小循环已经超过通用游戏模块能力范围，请联系管理员创建定制游戏类型路线后再继续。",
                 [],
                 ToPlanningAnalysisResult(planningContext),
                 null);
@@ -178,7 +190,7 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult(
                 "",
                 "llm_failed",
-                $"迭代计划生成需要 LLM 成功细化目标，但当前调用失败：{ex.Message}",
+                $"游戏模块生成需要 LLM 成功细化目标，但当前调用失败：{ex.Message}",
                 [],
                 ToPlanningAnalysisResult(planningContext),
                 null);
@@ -190,7 +202,7 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult(
                 "",
                 "llm_failed",
-                "迭代计划生成需要 LLM 成功细化目标，但当前没有得到可用目标。",
+                "游戏模块生成需要 LLM 成功细化目标，但当前没有得到可用目标。",
                 [],
                 ToPlanningAnalysisResult(planningContext),
                 null);
@@ -206,12 +218,18 @@ public sealed class PrototypeIterationPlanService
             cancellationToken);
         if (skeletonGuard.RequiresPrototypeRecreation)
         {
+            var recreationMessage = string.IsNullOrWhiteSpace(skeletonGuard.Reason)
+                ? "\u6e38\u620f\u529f\u80fd\u8ba1\u5212\u6539\u52a8\u8fc7\u5927\uff0c\u9700\u8981\u65b0\u5efa\u9879\u76ee\u91cd\u65b0\u521b\u5efa\u6e38\u620f\u539f\u578b\u9aa8\u67b6\u3002"
+                : skeletonGuard.Reason;
+            if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase))
+            {
+                recreationMessage = $"新一轮游戏模块没有创建：{recreationMessage}";
+            }
+
             return new PrototypeIterationPlanResult(
                 "",
                 "prototype_recreation_required",
-                string.IsNullOrWhiteSpace(skeletonGuard.Reason)
-                    ? "\u6e38\u620f\u529f\u80fd\u8ba1\u5212\u6539\u52a8\u8fc7\u5927\uff0c\u9700\u8981\u65b0\u5efa\u9879\u76ee\u91cd\u65b0\u521b\u5efa\u6e38\u620f\u539f\u578b\u9aa8\u67b6\u3002"
-                    : skeletonGuard.Reason,
+                recreationMessage,
                 [],
                 ToPlanningAnalysisResult(planningContext),
                 null);
@@ -298,7 +316,7 @@ public sealed class PrototypeIterationPlanService
                 return new IterationGoalBuildResult(scaffold, false);
             }
 
-            var refined = await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, scaffold, regenerationGuidance, model, cancellationToken);
+            var refined = await RefineRpgGoalsWithRequiredModelAsync(project, routeProfile, planningContext, message, sourceKind, scaffold, regenerationGuidance, model, cancellationToken);
             return refined with
             {
                 Goals = EnsureJrpgExplicitRuleCoverage(refined.Goals, prototypeContract, message, regenerationGuidance)
@@ -442,6 +460,7 @@ public sealed class PrototypeIterationPlanService
         GameTypeRouteProfile routeProfile,
         IterationPlanningContext planningContext,
         string message,
+        string sourceKind,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
         string? regenerationGuidance,
         string model,
@@ -475,6 +494,14 @@ public sealed class PrototypeIterationPlanService
         var parsed = ParseRefinedRpgGoalPlan(completion.JsonObjectText ?? completion.AssistantMessage, scaffold);
         if (parsed.Goals.Count == 0)
         {
+            if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase))
+            {
+                return new IterationGoalBuildResult(CloneScaffoldGoals(scaffold), true)
+                {
+                    StageTelemetry = [BuildTelemetry("goal-plan", completion)]
+                };
+            }
+
             throw new PrototypeIterationPlanLlmException("goal_plan_parse_failed");
         }
 
@@ -884,6 +911,11 @@ public sealed class PrototypeIterationPlanService
             return new IterationGoalBuildResult([], false);
         }
 
+        if (IsRecoverableJrpgScaffoldResponse(parsed, scaffold))
+        {
+            return new IterationGoalBuildResult(CloneScaffoldGoals(scaffold), true);
+        }
+
         var refined = new List<PrototypeIterationPlanGoalResult>(scaffold.Count);
         var parsedByTitle = parsed
             .GroupBy(goal => goal.Title, StringComparer.Ordinal)
@@ -938,6 +970,30 @@ public sealed class PrototypeIterationPlanService
         return parsed.Any(goal => string.Equals(goal.Title, firstTitle, StringComparison.Ordinal)) &&
                parsed.Any(goal => string.Equals(goal.Title, finalTitle, StringComparison.Ordinal)) &&
                parsed.All(goal => goal.Title.StartsWith("JRPG First Loop:", StringComparison.Ordinal));
+    }
+
+    private static bool IsRecoverableJrpgScaffoldResponse(
+        IReadOnlyList<PrototypeIterationPlanGoalResult> parsed,
+        IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
+    {
+        if (parsed.Count != scaffold.Count || scaffold.Count < 4)
+        {
+            return false;
+        }
+
+        if (!parsed.All(goal => goal.Title.StartsWith("JRPG First Loop:", StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        if (!string.Equals(parsed[0].Title, scaffold[0].Title, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var scaffoldTitles = scaffold.Select(goal => goal.Title).ToHashSet(StringComparer.Ordinal);
+        var exactMatches = parsed.Count(goal => scaffoldTitles.Contains(goal.Title));
+        return exactMatches >= Math.Max(2, scaffold.Count / 2);
     }
 
     private static bool WeakensRpgScaffoldContract(PrototypeIterationPlanGoalResult expected, string actualText)
@@ -1412,7 +1468,7 @@ public sealed class PrototypeIterationPlanService
             routeContext.PlanningAnalysis);
     }
 
-    public async Task<PrototypeIterationPlanDeleteResult> DeleteAsync(
+    public async Task<IReadOnlyList<PrototypeIterationPlanRoundDetails>> ListAsync(
         string accountId,
         string projectId,
         CancellationToken cancellationToken = default)
@@ -1423,24 +1479,113 @@ public sealed class PrototypeIterationPlanService
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
+            return [];
+        }
+
+        var sessions = FilterDisplayIterationRounds(await _metadataStore.ListProjectIterationSessionsAsync(projectId, cancellationToken));
+        var stateText = _routeStateWriter.ReadLatestIterationPlanState(project);
+        return sessions
+            .Select((details, index) =>
+            {
+                var routeContext = TryReadCurrentIterationRouteContext(stateText, details.Session.SessionId);
+                return new PrototypeIterationPlanRoundDetails(
+                    index + 1,
+                    details.Session,
+                    details.Goals,
+                    details.GoalRuns,
+                    details.LatestEvaluation,
+                    routeContext.PlanningAnalysis);
+            })
+            .ToArray();
+    }
+
+    private static IReadOnlyList<ProjectIterationSessionDetails> FilterDisplayIterationRounds(
+        IReadOnlyList<ProjectIterationSessionDetails> sessions)
+    {
+        if (sessions.Count <= 1)
+        {
+            return sessions;
+        }
+
+        var baseRound = sessions
+            .Where(details => !string.Equals(details.Session.SourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(details => ParseIsoTimestamp(details.Session.CreatedUtc))
+            .FirstOrDefault();
+        var newRounds = sessions
+            .Where(details => string.Equals(details.Session.SourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(details => ParseIsoTimestamp(details.Session.CreatedUtc))
+            .ToList();
+        var rounds = new List<ProjectIterationSessionDetails>();
+        if (baseRound is not null)
+        {
+            rounds.Add(baseRound);
+        }
+
+        rounds.AddRange(newRounds);
+        return rounds;
+    }
+
+    private static long ParseIsoTimestamp(string? value)
+    {
+        return DateTimeOffset.TryParse(value, out var timestamp) ? timestamp.ToUnixTimeMilliseconds() : 0;
+    }
+
+    public async Task<PrototypeIterationPlanDeleteResult> DeleteAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        var latest = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        if (latest is null)
+        {
+            var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+            if (project is not null && string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+            {
+                _routeStateWriter.ClearIterationPlanState(project);
+            }
+
+            return new PrototypeIterationPlanDeleteResult("not_found", "当前没有可删除的游戏模块。", 0);
+        }
+
+        return await DeleteSessionAsync(accountId, projectId, latest.Session.SessionId, cancellationToken);
+    }
+
+    public async Task<PrototypeIterationPlanDeleteResult> DeleteSessionAsync(
+        string accountId,
+        string projectId,
+        string sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
             throw new InvalidOperationException("Project not found.");
         }
 
-        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        var details = await _metadataStore.GetProjectIterationSessionAsync(projectId, sessionId, cancellationToken);
         if (details is null)
         {
-            _routeStateWriter.ClearIterationPlanState(project);
-            return new PrototypeIterationPlanDeleteResult("not_found", "\u5f53\u524d\u6ca1\u6709\u53ef\u5220\u9664\u7684\u8fed\u4ee3\u8ba1\u5212\u3002", 0);
+            return new PrototypeIterationPlanDeleteResult("not_found", "当前没有可删除的游戏模块。", 0);
         }
 
         if (IsIterationPlanComplete(details.Goals))
         {
-            return new PrototypeIterationPlanDeleteResult("blocked", "\u8fed\u4ee3\u8ba1\u5212\u5df2\u5168\u90e8\u5b8c\u6210\uff0c\u4e0d\u53ef\u518d\u5220\u9664\u3002", 0);
+            return new PrototypeIterationPlanDeleteResult("blocked", "当前轮游戏模块已经全部完成，不可以删除。", 0);
         }
 
-        var deleted = await _metadataStore.DeleteProjectIterationSessionsAsync(projectId, accountId, cancellationToken);
-        _routeStateWriter.ClearIterationPlanState(project);
-        return new PrototypeIterationPlanDeleteResult("deleted", "\u8fed\u4ee3\u8ba1\u5212\u5df2\u5220\u9664\uff0c\u72b6\u6001\u5df2\u91cd\u7f6e\u3002", deleted);
+        var latest = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+        var wasLatest = latest is not null && string.Equals(latest.Session.SessionId, sessionId, StringComparison.Ordinal);
+        var deleted = await _metadataStore.DeleteProjectIterationSessionAsync(projectId, accountId, sessionId, cancellationToken);
+        if (wasLatest)
+        {
+            _routeStateWriter.ClearIterationPlanState(project);
+        }
+
+        return new PrototypeIterationPlanDeleteResult("deleted", "当前轮游戏模块已删除。", deleted);
     }
 
     public async Task<PrototypeIterationPlanEvaluationResult> EvaluateAsync(
@@ -1464,9 +1609,9 @@ public sealed class PrototypeIterationPlanService
         {
             var result = new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
-                "当前项目还没有迭代计划。",
+                "当前项目还没有游戏模块。",
                 "还没有可执行的目标列表，无法判断是否适合直接进入下一目标。",
-                "请先生成迭代计划。",
+                "请先生成游戏模块。",
                 null);
             return result;
         }
@@ -1478,7 +1623,7 @@ public sealed class PrototypeIterationPlanService
                 "should_refine_plan",
                 "当前计划没有有效目标。",
                 "计划会话存在，但没有生成任何可执行目标。",
-                "请重新生成迭代计划。",
+                "请重新生成游戏模块。",
                 BuildRegenerationPrompt(prototypeProgress, details)));
         }
 
@@ -1525,9 +1670,9 @@ public sealed class PrototypeIterationPlanService
             {
                 return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                     "should_refine_plan",
-                    "当前 RPG 迭代计划缺少类型路由要求的场景、顺序或验收覆盖。",
+                    "当前 RPG 游戏模块缺少类型路由要求的场景、顺序或验收覆盖。",
                     rpgPlanIssue,
-                    "请按 JRPG first-loop capability profile 重新生成迭代计划：目标 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
+                    "请按 JRPG first-loop capability profile 重新生成游戏模块：目标 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
                     BuildRpgRegenerationPrompt(details)));
             }
 
@@ -1597,7 +1742,7 @@ public sealed class PrototypeIterationPlanService
                 "should_refine_plan",
                 "当前计划不适合直接执行，第一目标仍然偏大，需要先重新拆解。",
                 $"当前第一个待执行目标“{firstPending.Title}”混合了多个连续实现点，更像总任务而不是单次小目标。",
-                "建议先重生成一次更细的迭代计划，再执行下一目标。",
+                "建议先重生成一次更细的游戏模块，再执行下一目标。",
                 BuildRegenerationPrompt(prototypeProgress, details)));
         }
 
@@ -1631,7 +1776,7 @@ public sealed class PrototypeIterationPlanService
             runId,
             "running",
             "plan_evaluation",
-            "正在评估当前迭代计划。",
+            "正在评估当前游戏模块。",
             CancellationToken.None);
 
         try
@@ -1655,14 +1800,14 @@ public sealed class PrototypeIterationPlanService
                 runId,
                 "succeeded",
                 evaluation.Decision,
-                "迭代计划评估已完成。",
+                "游戏模块评估已完成。",
                 CancellationToken.None);
             return new PrototypeIterationPlanEvaluationRunResult(runId, "succeeded", evaluation);
         }
         catch (OperationCanceledException)
         {
             await _metadataStore.CompleteRunAsync(runId, "cancel", 499, "", "Iteration plan evaluation cancelled.", "{}", CancellationToken.None);
-            await _metadataStore.UpdateRunProgressAsync(runId, "cancel", "cancelled", "迭代计划评估已取消。", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "cancel", "cancelled", "游戏模块评估已取消。", CancellationToken.None);
             throw;
         }
         catch (Exception ex)
@@ -1673,7 +1818,7 @@ public sealed class PrototypeIterationPlanService
                 error = ex.Message
             });
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), evidenceJson, CancellationToken.None);
-            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "error", "迭代计划评估失败。", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "failed", "error", "游戏模块评估失败。", CancellationToken.None);
             throw;
         }
     }
@@ -1944,7 +2089,7 @@ public sealed class PrototypeIterationPlanService
             return new GenericCoreLoopGateResult(
                 true,
                 null,
-                "最小循环同时包含战斗、掉落、成长、装备/商店、多地图或 Boss 等多个系统，超过通用迭代计划能力范围。");
+                "最小循环同时包含战斗、掉落、成长、装备/商店、多地图或 Boss 等多个系统，超过通用游戏模块能力范围。");
         }
 
         var planningMessage = """
@@ -3433,6 +3578,11 @@ public sealed class PrototypeIterationPlanService
         string message,
         string sourceKind)
     {
+        if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
         var candidates = new List<string>();
         if (previousIterationPlan?.LatestEvaluation is not null &&
             string.Equals(previousIterationPlan.LatestEvaluation.Decision, "should_refine_plan", StringComparison.OrdinalIgnoreCase))
@@ -3465,7 +3615,7 @@ public sealed class PrototypeIterationPlanService
 
         return ContainsAny(
             value,
-            "重写 RPG 迭代计划",
+            "重写 RPG 游戏模块",
             "重拆",
             "Regenerate the RPG iteration plan",
             "Start Adventure",
@@ -3832,9 +3982,9 @@ public sealed class PrototypeIterationPlanService
         var code = string.IsNullOrWhiteSpace(failureCode) ? "llm_failed" : failureCode.Trim();
         return new PrototypeIterationPlanEvaluationResult(
             "llm_failed",
-            "迭代计划评估需要 LLM 成功参与，但当前调用失败。",
+            "游戏模块评估需要 LLM 成功参与，但当前调用失败。",
             $"LLM 调用失败：{code}。系统不会使用本地规则假装评估成功。",
-            "请先修复 LLM 调用，再重新评估当前迭代计划。",
+            "请先修复 LLM 调用，再重新评估当前游戏模块。",
             null);
     }
 
@@ -4078,6 +4228,14 @@ public sealed class PrototypeIterationPlanService
 }
 
 public sealed record PrototypeIterationPlanDetails(
+    ProjectIterationSessionSnapshot Session,
+    IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
+    IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
+    PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
+    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);
+
+public sealed record PrototypeIterationPlanRoundDetails(
+    int RoundIndex,
     ProjectIterationSessionSnapshot Session,
     IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,

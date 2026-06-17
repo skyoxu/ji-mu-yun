@@ -120,7 +120,7 @@ public sealed partial class PrototypeQuickFixService
             iterationDetails = await ResolveGoalRepairSessionAsync(project.ProjectId, request.GoalRepair!, cancellationToken);
             if (iterationDetails is null)
             {
-                return new PrototypeFeedbackResult("", "missing_plan", "当前项目还没有可修复的迭代计划。", []);
+                return new PrototypeFeedbackResult("", "missing_plan", "当前项目还没有可修复的游戏模块。", []);
             }
 
             goalRepair = request.GoalRepair!;

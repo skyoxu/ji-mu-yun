@@ -516,7 +516,7 @@ public sealed class PrototypeUiOptimizationService
                 runId,
                 "running",
                 "short_validation",
-                "正在运行 UI 优化短验证。",
+                "正在运行游戏界面优化短验证。",
                 CancellationToken.None);
             return await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(_options, _processRunner, project.RepoPath, scenePath, timeout.Token);
         }

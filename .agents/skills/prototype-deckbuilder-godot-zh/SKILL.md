@@ -1,6 +1,6 @@
 ---
 name: prototype-deckbuilder-godot-zh
-description: Use when the prototype top-level router has identified game_type deckbuilder / roguelike deckbuilder / card-building battler and the repo should implement or refine a short playable Godot deckbuilder prototype with cards, deck flow, resource turns, enemy intent, rewards, deck mutation, and optional route nodes.
+description: "Use when the prototype top-level router has identified game_type deckbuilder / roguelike deckbuilder / card-building battler and the repo should implement or refine a short playable Godot deckbuilder prototype with cards, deck flow, resource turns, enemy intent, rewards, deck mutation, and optional route nodes."
 ---
 
 # Prototype Deckbuilder Godot Route

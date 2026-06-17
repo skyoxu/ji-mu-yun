@@ -1302,10 +1302,30 @@ app.MapGet("/api/projects/{projectId}/workflow-route", async (
     string? playtestFeedback,
     HttpContext context,
     [FromServices] ProjectWorkflowRouteService workflowRoute,
+    [FromServices] ILoggerFactory loggerFactory,
     CancellationToken cancellationToken) =>
 {
-    var result = await workflowRoute.QueryAsync(CurrentAccountId(context), projectId, playtestFeedback, cancellationToken);
-    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    try
+    {
+        var result = await workflowRoute.QueryAsync(CurrentAccountId(context), projectId, playtestFeedback, cancellationToken);
+        return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (Exception ex)
+    {
+        loggerFactory.CreateLogger("PhaseA.ProjectWorkflowRoute")
+            .LogError(ex, "Unhandled project workflow route failure for {ProjectId}", projectId);
+        return Results.Json(
+            new
+            {
+                error = "workflow_route_failed",
+                failureCode = "workflow_route_failed"
+            },
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/workflow-route/intent", async (
@@ -1348,6 +1368,16 @@ app.MapGet("/api/projects/{projectId}/iteration-plan/latest", async (
     return result is null ? Results.NotFound(new { error = "iteration_plan_not_found" }) : Results.Ok(result);
 });
 
+app.MapGet("/api/projects/{projectId}/iteration-plans", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    CancellationToken cancellationToken) =>
+{
+    var result = await iterationPlans.ListAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return Results.Ok(new { rounds = result });
+});
+
 app.MapDelete("/api/projects/{projectId}/iteration-plan", async (
     string projectId,
     HttpContext context,
@@ -1357,6 +1387,28 @@ app.MapDelete("/api/projects/{projectId}/iteration-plan", async (
     try
     {
         var result = await iterationPlans.DeleteAsync(CurrentAccountId(context), projectId, cancellationToken);
+        return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapDelete("/api/projects/{projectId}/iteration-plans/{sessionId}", async (
+    string projectId,
+    string sessionId,
+    HttpContext context,
+    [FromServices] PrototypeIterationPlanService iterationPlans,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await iterationPlans.DeleteSessionAsync(CurrentAccountId(context), projectId, sessionId, cancellationToken);
         return result.Status == "blocked" ? Results.BadRequest(result) : Results.Ok(result);
     }
     catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

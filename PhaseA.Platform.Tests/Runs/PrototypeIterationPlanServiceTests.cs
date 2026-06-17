@@ -2259,6 +2259,39 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task DeleteSessionAsync_ShouldDeleteOnlySelectedIterationRound()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var first = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Complete the first JRPG loop with movement, battle, reward, and return to map.", "completion_suggestion"));
+        var firstDetails = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in firstDetails!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        await store.UpdateProjectIterationSessionStatusAsync(first.SessionId, "completed", firstDetails.Goals.Count, "First round completed.", null, DateTimeOffset.UtcNow.ToString("O"));
+        var second = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Second round: add a shop and stronger enemy.", "new_iteration_plan"));
+
+        var result = await service.DeleteSessionAsync(accountId, projectId, second.SessionId);
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        result.Status.Should().Be("deleted");
+        result.DeletedSessions.Should().Be(1);
+        rounds.Should().HaveCount(1);
+        rounds[0].Session.SessionId.Should().Be(first.SessionId);
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldBlockUpdate_WhenIterationPlanHasStarted()
     {
         using var database = TempSqliteDatabase.Create();
@@ -2286,6 +2319,229 @@ public sealed class PrototypeIterationPlanServiceTests
         second.Goals.Should().BeEmpty();
         latestAfterUpdate!.Session.SessionId.Should().Be(first.SessionId);
         latestAfterUpdate.Goals.Should().Contain(goal => goal.Status == "completed");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateNewIterationPlan_WhenPreviousPlanIsComplete()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var first = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Complete the first JRPG loop with movement, battle, reward, and return to map.", "completion_suggestion"));
+        var firstDetails = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in firstDetails!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        await store.UpdateProjectIterationSessionStatusAsync(
+            first.SessionId,
+            "completed",
+            firstDetails.Goals.Count,
+            "First round completed.",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"));
+
+        var second = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("第二轮目标：增加村庄支线、商店补给和一次更强敌人挑战。", "new_iteration_plan"));
+        var latest = await service.GetLatestAsync(accountId, projectId);
+
+        second.Status.Should().Be("ready");
+        second.SessionId.Should().NotBe(first.SessionId);
+        latest!.Session.SessionId.Should().Be(second.SessionId);
+        latest.Session.SourceKind.Should().Be("new_iteration_plan");
+        latest.Session.SourceMessage.Should().Be("第二轮目标：增加村庄支线、商店补给和一次更强敌人挑战。");
+        latest.Goals.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateNewIterationPlanWithScaffoldFallback_WhenRpgGoalJsonHasRecoverableTitleDamage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new DamagedRpgTitleCodexClient());
+        var first = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Complete the first JRPG loop with movement, battle, reward, and return to map.", "completion_suggestion"));
+        var firstDetails = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in firstDetails!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        await store.UpdateProjectIterationSessionStatusAsync(
+            first.SessionId,
+            "completed",
+            firstDetails.Goals.Count,
+            "First round completed.",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"));
+
+        var second = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("现在每次战斗，敌人的数量为随机1-3名，依旧是回合制自动战斗。", "new_iteration_plan"));
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        second.Status.Should().Be("ready");
+        second.SessionId.Should().NotBe(first.SessionId);
+        second.Summary.Should().Contain("model_plan_degraded=scaffold_fallback");
+        rounds.Should().HaveCount(2);
+        rounds[1].Session.SessionId.Should().Be(second.SessionId);
+        rounds[1].Session.SourceKind.Should().Be("new_iteration_plan");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateNewIterationPlanWithScaffoldFallback_WhenNewRpgPlanRefinementDoesNotMatchScaffold()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SecondGoalPlanGenericRpgCodexClient());
+        var first = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Complete the first JRPG loop with movement, battle, reward, and return to map.", "completion_suggestion"));
+        var firstDetails = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in firstDetails!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        await store.UpdateProjectIterationSessionStatusAsync(
+            first.SessionId,
+            "completed",
+            firstDetails.Goals.Count,
+            "First round completed.",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"));
+
+        var second = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("第二轮目标：每次战斗随机出现 1-3 名敌人。", "new_iteration_plan"));
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        second.Status.Should().Be("ready");
+        second.Summary.Should().Contain("model_plan_degraded=scaffold_fallback");
+        rounds.Should().HaveCount(2);
+        rounds[1].Session.SessionId.Should().Be(second.SessionId);
+        rounds[1].Goals.Should().Contain(goal => goal.Title == "JRPG First Loop: battle or challenge resolution");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldBlockNewIterationPlan_WhenPreviousPlanIsNotComplete()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var first = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("Complete the first JRPG loop with movement, battle, reward, and return to map.", "completion_suggestion"));
+
+        var second = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest("第二轮目标：增加村庄支线。", "new_iteration_plan"));
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        first.Status.Should().Be("ready");
+        second.Status.Should().Be("iteration_plan_update_blocked");
+        second.Summary.Should().Contain("需要先完成当前游戏模块");
+        rounds.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task ListAsync_ShouldReturnIterationPlanRoundsInCreationOrder()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store, new PrototypeRouteStateWriter(), null, new SuccessfulRpgPlanCodexClient());
+        var first = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("First round JRPG loop.", "completion_suggestion"));
+        var firstDetails = await store.GetLatestProjectIterationSessionAsync(projectId);
+        foreach (var goal in firstDetails!.Goals)
+        {
+            await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "done", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        await store.UpdateProjectIterationSessionStatusAsync(first.SessionId, "completed", firstDetails.Goals.Count, "First round completed.", null, DateTimeOffset.UtcNow.ToString("O"));
+        var second = await service.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Second round: add a shop and stronger enemy.", "new_iteration_plan"));
+
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        rounds.Should().HaveCount(2);
+        rounds[0].RoundIndex.Should().Be(1);
+        rounds[0].Session.SessionId.Should().Be(first.SessionId);
+        rounds[1].RoundIndex.Should().Be(2);
+        rounds[1].Session.SessionId.Should().Be(second.SessionId);
+        rounds[1].Session.SourceKind.Should().Be("new_iteration_plan");
+    }
+
+    [Fact]
+    public async Task ListAsync_ShouldCollapseLegacyRegeneratedPlansIntoSingleBaseRound()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
+        var service = new PrototypeIterationPlanService(store);
+        var first = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "First old plan.",
+            "First old plan.",
+            ValidRpgIterationGoalCommands());
+        await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "completion_suggestion",
+            "Regenerated old plan.",
+            "Regenerated old plan.",
+            ValidRpgIterationGoalCommands(stepOneDescription: "Second old plan supersedes first."));
+
+        var rounds = await service.ListAsync(accountId, projectId);
+
+        rounds.Should().HaveCount(1);
+        rounds[0].RoundIndex.Should().Be(1);
+        rounds[0].Session.SessionId.Should().NotBe(first.SessionId);
+        rounds[0].Session.SourceMessage.Should().Be("Regenerated old plan.");
     }
 
     [Fact]
@@ -2416,7 +2672,7 @@ public sealed class PrototypeIterationPlanServiceTests
               "decision": "should_refine_plan",
               "summary": "当前计划仍需要重拆。",
               "reason": "The plan does not start from the navigation blocker. It should begin with Start Adventure to visible MapScene, then movement and encounter, before any generic contract-alignment step.",
-              "suggestedAction": "请先按导航阻塞点重拆 RPG 迭代计划。",
+              "suggestedAction": "请先按导航阻塞点重拆 RPG 游戏模块。",
               "suggestedPromptForRegeneration": "Regenerate the RPG iteration plan starting with Start Adventure to visible MapScene, movement and first encounter, BattleScene, reward loop return-to-map, and final playable acceptance."
             }
             """;
@@ -2424,7 +2680,7 @@ public sealed class PrototypeIterationPlanServiceTests
         }
     }
 
-    private sealed class SuccessfulRpgPlanCodexClient : ICodexChatClient
+    private class SuccessfulRpgPlanCodexClient : ICodexChatClient
     {
         private readonly bool _includeContractInstruction;
 
@@ -2484,7 +2740,7 @@ public sealed class PrototypeIterationPlanServiceTests
             return Task.FromResult(new CodexChatClientResult(true, evaluation, null, 0, "", ""));
         }
 
-        private string BuildGoalPlanFromScaffold(string prompt)
+        protected virtual string BuildGoalPlanFromScaffold(string prompt)
         {
             var scaffold = ExtractScaffoldGoals(prompt);
             var selectedTitles = scaffold.Select(goal => goal.Title).ToArray();
@@ -2536,7 +2792,7 @@ public sealed class PrototypeIterationPlanServiceTests
             return goal.AcceptanceHint;
         }
 
-        private static IReadOnlyList<ScaffoldGoal> ExtractScaffoldGoals(string prompt)
+        protected static IReadOnlyList<ScaffoldGoal> ExtractScaffoldGoals(string prompt)
         {
             const string marker = "Goal scaffold that must be preserved:";
             var markerIndex = prompt.IndexOf(marker, StringComparison.Ordinal);
@@ -2629,7 +2885,7 @@ public sealed class PrototypeIterationPlanServiceTests
                 : null;
         }
 
-        private sealed record ScaffoldGoal(string Title, string Description, string AcceptanceHint);
+        protected sealed record ScaffoldGoal(string Title, string Description, string AcceptanceHint);
     }
 
     private sealed class RpgEvaluationCodexClient : ICodexChatClient
@@ -2781,7 +3037,7 @@ public sealed class PrototypeIterationPlanServiceTests
                 {
                   "goals": [
                     {
-                      "title": "RPG Godot 原型迭代计划",
+                      "title": "RPG Godot 原型游戏模块",
                       "description": "给出一个通用的 RPG 原型计划。",
                       "acceptanceHint": "通用计划"
                     },
@@ -2799,6 +3055,54 @@ public sealed class PrototypeIterationPlanServiceTests
                 }
                 """;
             return Task.FromResult(new CodexChatClientResult(true, payload, null, 0, "", ""));
+        }
+    }
+
+    private sealed class SecondGoalPlanGenericRpgCodexClient : SuccessfulRpgPlanCodexClient
+    {
+        private int _goalPlanCalls;
+
+        protected override string BuildGoalPlanFromScaffold(string prompt)
+        {
+            _goalPlanCalls++;
+            if (_goalPlanCalls == 1)
+            {
+                return base.BuildGoalPlanFromScaffold(prompt);
+            }
+
+            var goals = new[]
+            {
+                new
+                {
+                    title = "RPG Godot 原型游戏模块",
+                    description = "给出一个通用的 RPG 原型计划。",
+                    acceptanceHint = "通用计划"
+                },
+                new
+                {
+                    title = "迭代 1：可玩底座",
+                    description = "实现基础地图与移动。",
+                    acceptanceHint = "可玩"
+                }
+            };
+            return JsonSerializer.Serialize(new { goals });
+        }
+    }
+
+    private sealed class DamagedRpgTitleCodexClient : SuccessfulRpgPlanCodexClient
+    {
+        protected override string BuildGoalPlanFromScaffold(string prompt)
+        {
+            var scaffold = ExtractScaffoldGoals(prompt);
+            var goals = scaffold.Select((goal, index) => new
+            {
+                title = index == scaffold.Count - 1
+                    ? goal.Title + "},{"
+                    : goal.Title,
+                description = goal.Description,
+                acceptanceHint = goal.AcceptanceHint
+            });
+            return JsonSerializer.Serialize(new { goals });
         }
     }
 

@@ -111,8 +111,12 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #prototypeWorkflowPanel,
                 body.v2-detail #prototypeCommandPanel,
                 body.v2-detail #runsPanel { grid-column: 2; grid-row: 1; align-self: start; }
-                body.v2-detail .prototype-draft-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; align-items: end; }
+                body.v2-detail .prototype-draft-row { display: grid; grid-template-columns: max-content auto; justify-content: start; gap: 0.35rem; align-items: end; }
+                body.v2-detail .prototype-draft-row label { display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+                body.v2-detail #draftFile { width: 15rem; max-width: 100%; }
                 body.v2-detail .prototype-draft-row button { width: auto; min-width: 8.5rem; white-space: nowrap; }
+                body.v2-detail .prototype-draft-row .import-draft-button:not(:disabled) { background: #d92d20; border-color: #d92d20; color: #fff; font-weight: 800; box-shadow: 0 8px 18px rgba(217, 45, 32, 0.18); }
+                body.v2-detail .prototype-draft-row .import-draft-button:not(:disabled):hover { background: #b42318; border-color: #b42318; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
                 body.v2-detail .v2-progress-row { display: grid; gap: 0.35rem; overflow: visible; padding: 0; }
                 body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem 1.45rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
@@ -146,11 +150,14 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-tab { width: auto; min-width: 6.5rem; max-width: 13rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border: 1px solid var(--line); border-bottom-color: transparent; background: #e2e0dc; color: var(--muted); border-radius: 0.65rem 0.65rem 0 0; padding: 0.52rem 0.72rem 0.58rem; white-space: nowrap; box-shadow: inset 0 -0.3rem 0.45rem rgba(57, 43, 24, 0.035); }
                 body.v2-detail .v2-tab.active { background: #fffdf8; color: var(--ink); border-color: var(--line); border-bottom-color: #fffdf8; box-shadow: none; position: relative; z-index: 2; font-weight: 800; }
                 body.v2-detail .v2-tab.active > span:first-child { font-weight: 800; }
-                body.v2-detail .v2-tab-close { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); padding: 0; font-weight: 900; }
-                body.v2-detail .v2-tab-close:hover { color: var(--danger); }
-                body.v2-detail .v2-tab-pane { min-height: 0; }
-                body.v2-detail .v2-tab-pane.hidden { display: none !important; }
-                body.v2-detail #v2ContentGrid.v2-tab-content { background: #fffdf8; border: 0; border-radius: 0; padding: 0.9rem; box-shadow: none; }
+                  body.v2-detail .v2-tab-close { width: 1.15rem; height: 1.15rem; min-width: 1.15rem; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); padding: 0; font-weight: 900; }
+                  body.v2-detail .v2-tab-close:hover { color: var(--danger); }
+                  body.v2-detail .v2-tab-pane { min-height: 0; }
+                  body.v2-detail .v2-tab-pane.hidden { display: none !important; }
+                  body.v2-detail #v2ContentGrid.v2-tab-content { background: #fffdf8; border: 0; border-radius: 0; padding: 0.9rem; box-shadow: none; }
+                  body.v2-detail .v2-round-tabs { display: flex; align-items: center; gap: 0.4rem; overflow-x: auto; padding: 0.2rem 0 0.35rem; }
+                  body.v2-detail .v2-round-tab { width: auto; border: 1px solid var(--line); background: #f4f1ea; color: var(--muted); border-radius: 999px; padding: 0.38rem 0.75rem; font-weight: 700; white-space: nowrap; }
+                  body.v2-detail .v2-round-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
                 body.v2-detail #v2ContentGrid > section { border: 0; border-radius: 0; box-shadow: none; background: transparent; padding: 0; }
                 body.v2-detail #v2ContentGrid > section > h2:first-child,
                 body.v2-detail #v2ContentGrid > section > p.muted:first-of-type,
@@ -261,8 +268,8 @@ public sealed class BrowserUiRenderer
                   ["new-project", "游戏项目详情", "panel"],
                   ["create-prototype", "原型骨架创建", "spark"],
                   ["execute-or-repair", "骨架验收修复", "wrench"],
-                  ["iteration-plan", "完成迭代计划", "list"],
-                  ["ui-optimization", "UI优化", "layout"],
+                  ["iteration-plan", "完成游戏模块", "list"],
+                  ["ui-optimization", "游戏界面优化", "layout"],
                   ["prototype-acceptance", "原型验收", "check"],
                   ["asset-inventory", "确认素材清单", "image"],
                   ["download-project", "打包下载项目", "download"]
@@ -511,9 +518,25 @@ public sealed class BrowserUiRenderer
                 function v2RunTimestamp(run) {
                   return v2IsoTime(run?.finishedUtc || run?.progressUpdatedUtc || run?.startedUtc || run?.createdUtc || "");
                 }
+                function v2RunEvidence(run) {
+                  if (!run) return null;
+                  const evidence = run.evidenceJson ?? run.evidence ?? null;
+                  if (!evidence) return null;
+                  if (typeof evidence === "object") return evidence;
+                  try { return JSON.parse(String(evidence)); } catch { return null; }
+                }
+                function v2IsValidationOnlyRun(run) {
+                  const evidence = v2RunEvidence(run);
+                  return evidence?.validation_only === true;
+                }
                 function v2LatestRunByType(runType) {
                   return (state.runs || [])
                     .filter(run => String(run.runType || "").toLowerCase() === String(runType || "").toLowerCase())
+                    .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
+                }
+                function v2LatestValidationOnlyAcceptanceRun() {
+                  return (state.runs || [])
+                    .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsValidationOnlyRun(run))
                     .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
                 }
                 function v2IsoTime(value) {
@@ -533,6 +556,16 @@ public sealed class BrowserUiRenderer
                   const runTime = v2IsoTime(run.progressUpdatedUtc || run.updatedUtc || run.completedUtc || run.createdUtc || "");
                   return runTime >= sessionTime;
                 }
+                function v2IterationPlanDone() {
+                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  return goals.length > 0 && goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+                function v2FinalPrototypeAcceptanceRun() {
+                  const run = v2LatestValidationOnlyAcceptanceRun();
+                  if (!run || String(run.status || "").toLowerCase() !== "succeeded") return null;
+                  if (!v2IterationPlanDone()) return null;
+                  return v2RunIsCurrentForIteration(run) ? run : null;
+                }
                 function v2StepStatus(stepId) {
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
                   const progressText = $("prototypeProgress")?.textContent || "";
@@ -547,7 +580,10 @@ public sealed class BrowserUiRenderer
                   }
                   if (stepId === "prototype-acceptance") {
                     if (state.v2PrototypeValidationInvalidatedByIteration) return "pending";
-                    return succeeded ? "done" : failed ? "fix" : "pending";
+                    if (v2FinalPrototypeAcceptanceRun()) return "done";
+                    const validationRun = v2LatestValidationOnlyAcceptanceRun();
+                    if (validationRun && v2RunIsCurrentForIteration(validationRun) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
+                    return failed && v2IterationPlanDone() ? "fix" : "pending";
                   }
                   if (stepId === "iteration-plan") {
                     const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
@@ -585,28 +621,28 @@ public sealed class BrowserUiRenderer
                   const run = v2LatestRunByType("prototype-ui-optimization");
                   if (!run) {
                     status.className = "card muted";
-                    status.textContent = "完成迭代计划后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
+                    status.textContent = "完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
                     return;
                   }
                   const runStatus = String(run.status || "").toLowerCase();
                   const substep = String(run.progressSubstep || "").toLowerCase();
                   if (runStatus === "succeeded" && substep !== "validation_skipped") {
                     status.className = "card";
-                    status.textContent = run.progressLabel || "UI 优化已完成，短验证已通过。左侧进度栏已标记为完成；如需再次调整，可以重新运行 UI 优化。";
+                    status.textContent = run.progressLabel || "游戏界面优化已完成，短验证已通过。左侧进度栏已标记为完成；如需再次调整，可以重新运行游戏界面优化。";
                     return;
                   }
                   if (runStatus === "failed" || substep === "validation_failed") {
                     status.className = "card";
-                    status.textContent = run.progressLabel || "最近一次 UI 优化失败，请检查运行记录后重新运行。";
+                    status.textContent = run.progressLabel || "最近一次游戏界面优化失败，请检查运行记录后重新运行。";
                     return;
                   }
                   if (runStatus === "running" || runStatus === "queued") {
                     status.className = "card muted";
-                    status.textContent = run.progressLabel || "UI 优化正在运行，请等待后台任务完成。";
+                    status.textContent = run.progressLabel || "游戏界面优化正在运行，请等待后台任务完成。";
                     return;
                   }
                   status.className = "card muted";
-                  status.textContent = run.progressLabel || `最近一次 UI 优化状态：${run.status || "未知"}。`;
+                  status.textContent = run.progressLabel || `最近一次游戏界面优化状态：${run.status || "未知"}。`;
                 }
                 function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
@@ -736,18 +772,20 @@ public sealed class BrowserUiRenderer
                   const panel = document.createElement("section");
                   panel.id = "v2IterationPanel";
                   panel.className = "stack hidden";
-                  panel.setAttribute("aria-label", "迭代计划");
-                  panel.innerHTML = `<div id="v2IterationSummary" class="card muted">尚未生成迭代计划。</div>`;
+                  panel.setAttribute("aria-label", "游戏模块");
+                  panel.innerHTML = `<div id="v2IterationSummary" class="card muted">尚未生成游戏模块。</div>`;
                   chatPanel.insertAdjacentElement("afterend", panel);
-                  const firstChatRecordHeading = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "聊天记录");
-                  const iterationStart = Array.from(chatPanel.querySelectorAll("h2")).find(heading => heading.textContent.trim() === "主流程：迭代计划");
-                  if (!iterationStart || !firstChatRecordHeading) return;
-                  let current = iterationStart;
-                  while (current && current !== firstChatRecordHeading) {
-                    const next = current.nextElementSibling;
-                    panel.appendChild(current);
-                    current = next;
-                  }
+                  [
+                    "createIterationPlan",
+                    "evaluateIterationPlan",
+                    "deleteIterationPlan",
+                    "executeIterationGoal",
+                    "iterationAutoRefreshHint",
+                    "iterationPlanStatus",
+                    "iterationPlanEvaluation",
+                    "iterationNeedsFixStatus",
+                    "iterationPlanGoals"
+                  ].map($).filter(Boolean).forEach(element => panel.appendChild(element));
                   v2ArrangeIterationPanel();
                 }
                 function v2EnsureContentGrid() {
@@ -840,7 +878,7 @@ public sealed class BrowserUiRenderer
                   const status = document.createElement("div");
                   status.id = "v2AcceptanceActionStatus";
                   status.className = "card muted";
-                  status.textContent = "原型验收入口会在迭代计划完成后启用。UI 优化是可选步骤，不会阻塞验收。";
+                  status.textContent = "原型验收入口会在游戏模块完成后启用。游戏界面优化是可选步骤，不会阻塞验收。";
                   panel.appendChild(status);
                 }
                 function v2CreateUiOptimizationPanel() {
@@ -849,10 +887,10 @@ public sealed class BrowserUiRenderer
                   panel.id = "v2UiOptimizationPanel";
                   panel.className = "stack hidden";
                   panel.innerHTML = `
-                    <h2>UI优化</h2>
+                    <h2>游戏界面优化</h2>
                     <p class="muted">按照当前游戏类型模板重新对齐原型 UI。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。</p>
-                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true">运行UI优化</button>
-                    <div id="uiOptimizationStatus" class="card muted">完成迭代计划后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
+                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true">运行游戏界面优化</button>
+                    <div id="uiOptimizationStatus" class="card muted">完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
                   `;
                   $("v2AcceptancePanel")?.insertAdjacentElement("beforebegin", panel);
                   $("runUiOptimization").onclick = runUiOptimization;
@@ -864,7 +902,7 @@ public sealed class BrowserUiRenderer
                 }
                 function v2PrototypeAcceptanceBlockReason() {
                   if (!v2IterationPlanAllowsAcceptance()) {
-                    return "请先完成当前迭代计划，所有目标完成后再进行原型验收。";
+                    return "请先完成当前游戏模块，所有目标完成后再进行原型验收。";
                   }
                   if (isGlobalBusy()) {
                     return "当前有任务正在执行，请等待当前 run 完成后再进行原型验收。";
@@ -905,6 +943,10 @@ public sealed class BrowserUiRenderer
                   const executeGoal = $("executeIterationGoal");
                   const deletePlan = $("deleteIterationPlan");
                   createPlan?.insertAdjacentElement("beforebegin", mainActions);
+                  const roundTabs = document.createElement("div");
+                  roundTabs.id = "v2IterationRoundTabs";
+                  roundTabs.className = "v2-round-tabs hidden";
+                  mainActions.insertAdjacentElement("beforebegin", roundTabs);
                   [createPlan, evaluatePlan, executeGoal, deletePlan].filter(Boolean).forEach(button => mainActions.appendChild(button));
 
                   v2CreateRepairPanel();
@@ -917,25 +959,18 @@ public sealed class BrowserUiRenderer
                   panel.id = "v2RepairPanel";
                   panel.className = "stack hidden";
                   $("v2IterationPanel").insertAdjacentElement("afterend", panel);
-                  const repairHeading = Array.from($("v2IterationPanel").querySelectorAll("h2")).find(heading => heading.textContent.trim() === "异常修复计划");
-                  let current = repairHeading;
-                  while (current) {
-                    const next = current.nextElementSibling;
-                    panel.appendChild(current);
-                    if (current.id === "repairPlanGoals") break;
-                    current = next;
-                  }
                   const actions = document.createElement("div");
                   actions.id = "v2RepairActions";
                   actions.className = "v2-action-row";
+                  panel.appendChild(actions);
                   const skeletonAcceptance = document.createElement("button");
                   skeletonAcceptance.id = "v2SkeletonAcceptance";
                   skeletonAcceptance.className = "secondary";
                   skeletonAcceptance.type = "button";
                   skeletonAcceptance.textContent = "骨架验收";
                   skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed;
-                  createRepair?.insertAdjacentElement("beforebegin", actions);
                   [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
+                  ["repairPlanStatus", "repairPlanGoals"].map($).filter(Boolean).forEach(element => panel.appendChild(element));
                 }
                 function resizeChatComposer() {
                   const textarea = $("chatMessage");
@@ -1169,8 +1204,6 @@ public sealed class BrowserUiRenderer
                 }
                 function buildWorkflowRouteChatContent(route, intent = null) {
                   const lines = [
-                    "系统扫描结果：",
-                    "",
                     route?.summary || "",
                     "",
                     route?.recommendation || ""
@@ -1261,7 +1294,6 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                     return out("项目进度已经变化，请重新点击“下一步建议”获取新的推荐。");
                   }
-                  invalidateWorkflowRouteAction();
                   switch (action.actionId) {
                     case "create-prototype":
                       v2OpenStepTab("create-prototype", false);
@@ -1294,7 +1326,7 @@ public sealed class BrowserUiRenderer
                       v2OpenStepTab("download-project");
                       return;
                     case "create-next-iteration-plan":
-                      v2OpenStepTab("iteration-plan", false);
+                      openIterationPlanUpdateModal("new");
                       return;
                     default:
                       out(`暂不支持的推荐动作：${action.actionId}`);
@@ -1314,7 +1346,7 @@ public sealed class BrowserUiRenderer
                     const route = await fetchWorkflowRoute(intent);
                     thinking.complete(buildWorkflowRouteChatContent(route, intent), false, "workflow-route", buildWorkflowRouteMessageExtra(route, intent));
                   } catch (error) {
-                    const failure = "项目状态扫描失败，请稍后重试或先刷新页面。";
+                    const failure = workflowRouteFailureMessage(error);
                     thinking.complete(failure, true, "workflow-route");
                     showError(error);
                   } finally {
@@ -1323,6 +1355,19 @@ public sealed class BrowserUiRenderer
                       button.textContent = "下一步建议";
                     }
                   }
+                }
+                function workflowRouteFailureMessage(error) {
+                  const code = error?.payload?.failureCode || error?.payload?.error || error?.payload?.status || error?.status || "unknown_error";
+                  if (code === "authentication_required" || error?.status === 401) {
+                    return "项目状态扫描失败：登录状态无效，请重新输入登录 token。";
+                  }
+                  if (code === "project_not_found" || error?.status === 404) {
+                    return "项目状态扫描失败：当前项目不可访问，请刷新项目列表后重新选择项目。";
+                  }
+                  if (code === "workflow_route_failed") {
+                    return "项目状态扫描失败：项目状态读取异常，请稍后重试或联系管理员查看后台记录。";
+                  }
+                  return `项目状态扫描失败：${String(code || "unknown_error")}。请稍后重试或先刷新页面。`;
                 }
                 function workflowRouteQueryForIntent(intent = null) {
                   return intent?.intent === "playtest_feedback" && intent.feedbackSummary
@@ -1805,13 +1850,13 @@ public sealed class BrowserUiRenderer
               <div id="iterationPlanUpdateModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="iterationPlanUpdateTitle">
                 <div class="modal-card modal-card-large">
                   <section class="stack">
-                    <h2 id="iterationPlanUpdateTitle">重新生成迭代计划</h2>
-                    <div id="iterationPlanUpdateEvaluation" class="card muted">尚未评估当前迭代计划。</div>
+                    <h2 id="iterationPlanUpdateTitle">重新生成游戏模块</h2>
+                    <div id="iterationPlanUpdateEvaluation" class="card muted">尚未评估当前游戏模块。</div>
                     <label>补充要求
-                      <textarea id="iterationPlanUpdateInput" rows="1" placeholder="输入本次更新迭代计划的补充要求。"></textarea>
+                      <textarea id="iterationPlanUpdateInput" rows="1" placeholder="输入本次更新游戏模块的补充要求。"></textarea>
                     </label>
                     <div class="split-actions">
-                      <button id="confirmIterationPlanUpdate" class="secondary" data-global-action="true">更新迭代计划</button>
+                      <button id="confirmIterationPlanUpdate" class="secondary" data-global-action="true">更新游戏模块</button>
                       <button id="closeIterationPlanUpdateModal" class="ghost" type="button">关闭</button>
                     </div>
                     <p id="iterationPlanUpdateHint" class="muted"></p>
@@ -1899,7 +1944,7 @@ public sealed class BrowserUiRenderer
                     <h2>原型骨架创建</h2>
                     <div class="prototype-draft-row">
                       <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
-                      <button id="importDraft" class="ghost" data-global-action="true" disabled>分析草稿并回填</button>
+                      <button id="importDraft" class="ghost import-draft-button" data-global-action="true" disabled>分析草稿并回填</button>
                     </div>
                     <div id="draftImportStatus" class="card muted hidden"></div>
                     <label>游戏原型ID <input id="protoSlug" placeholder="demo-prototype"></label>
@@ -1932,15 +1977,15 @@ public sealed class BrowserUiRenderer
                     <p class="muted">选择项目后即可聊天。后端会映射到服务器本机 Codex CLI 配置；需要执行工作流时仍使用上方固定按钮。</p>
                     <label>能力模式 <select id="chatSkillMode"><option value="normal">普通模式</option></select></label>
                     <div id="chatSkillDescription" class="card muted">普通模式：不激活 skills。</div>
-                    <h2>主流程：迭代计划</h2>
+                    <h2>主流程：游戏模块</h2>
                     <p class="muted">推荐流程：先把较大的优化目标拆成 3-7 个小目标，再逐个执行。每次只推进一个目标，完成后停下，由你决定是否继续。</p>
-                    <button id="createIterationPlan" class="ghost" data-global-action="true">生成迭代计划</button>
-                    <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前迭代计划</button>
-                    <button id="deleteIterationPlan" class="ghost" data-global-action="true">删除迭代计划</button>
+                    <button id="createIterationPlan" class="ghost" data-global-action="true">生成游戏模块</button>
+                    <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前游戏模块</button>
+                    <button id="deleteIterationPlan" class="ghost" data-global-action="true">删除当前轮游戏模块</button>
                     <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一目标</button>
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
-                    <div id="iterationPlanStatus" class="card muted">尚未生成迭代计划。</div>
-                    <div id="iterationPlanEvaluation" class="card muted">尚未评估当前迭代计划。</div>
+                    <div id="iterationPlanStatus" class="card muted">尚未生成游戏模块。</div>
+                    <div id="iterationPlanEvaluation" class="card muted">尚未评估当前游戏模块。</div>
                     <div id="iterationNeedsFixStatus" class="card muted">step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
                     <h2>异常修复计划</h2>
@@ -1962,7 +2007,7 @@ public sealed class BrowserUiRenderer
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
                     <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
                     <h2>流程记录</h2>
-                    <div id="feedbackSummary" class="card muted">尚未生成迭代计划。</div>
+                    <div id="feedbackSummary" class="card muted">尚未生成游戏模块。</div>
                     <div id="feedbackRecords" class="card-list feedback-scroll"></div>
                   </section>
                   <section id="runsPanel" class="hidden">
@@ -1977,9 +2022,9 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
-                const projectStateCacheVersion = 1;
+                const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
                 const chatThinkingPrompts = [
@@ -2195,7 +2240,7 @@ public sealed class BrowserUiRenderer
                 function renderWorkflowRouteAction(message) {
                   const actions = workflowMessageActions(message);
                   if (!actions.length) return "";
-                  const consumed = !!message.workflowActionConsumed || state.workflowRouteActionConsumed || state.workflowRouteActionToken !== message.workflowActionToken;
+                  const consumed = !!message.workflowActionConsumed || state.workflowRouteActionToken !== message.workflowActionToken;
                   return `
                     <div class="v2-workflow-action-row">
                       ${actions.map(action => {
@@ -2296,27 +2341,68 @@ public sealed class BrowserUiRenderer
                 async function loadIterationPlan() {
                   if (!state.projectId) {
                     state.iterationPlan = null;
+                    state.iterationPlans = [];
+                    state.selectedIterationSessionId = "";
                     state.iterationPlanEvaluation = null;
                     renderIterationPlan();
                     return;
                   }
                   try {
-                    state.iterationPlan = await api(`/api/projects/${state.projectId}/iteration-plan/latest`);
+                    const result = await api(`/api/projects/${state.projectId}/iteration-plans`);
+                    state.iterationPlans = normalizeIterationPlanRounds(Array.isArray(result?.rounds) ? result.rounds : []);
+                    state.iterationPlan = selectIterationPlanForDisplay(state.iterationPlans);
                     state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
                     state.iterationPlanFailure = "";
                     syncIterationPlanRegenerationSuggestion();
-                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: "" });
+                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlans: state.iterationPlans, selectedIterationSessionId: state.selectedIterationSessionId, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: "" });
                   } catch (error) {
                     if (error?.status === 404) {
                       state.iterationPlan = null;
+                      state.iterationPlans = [];
+                      state.selectedIterationSessionId = "";
                       state.iterationPlanEvaluation = null;
                       state.iterationPlanFailure = "";
-                      writeProjectStateCache({ iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "" });
+                      writeProjectStateCache({ iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "" });
                     } else {
                       showError(error);
                     }
                   }
                   renderIterationPlan();
+                  await loadProjectPackages();
+                }
+
+                function selectIterationPlanForDisplay(rounds) {
+                  const plans = Array.isArray(rounds) ? rounds : [];
+                  if (!plans.length) {
+                    state.selectedIterationSessionId = "";
+                    return null;
+                  }
+                  const selected = state.selectedIterationSessionId
+                    ? plans.find(plan => plan?.session?.sessionId === state.selectedIterationSessionId)
+                    : null;
+                  const plan = selected || plans[plans.length - 1];
+                  state.selectedIterationSessionId = plan?.session?.sessionId || "";
+                  return plan || null;
+                }
+
+                function normalizeIterationPlanRounds(rounds) {
+                  const plans = Array.isArray(rounds) ? rounds.filter(Boolean) : [];
+                  if (plans.length <= 1) return plans;
+                  const timestamp = plan => Date.parse(plan?.session?.createdUtc || plan?.session?.updatedUtc || "") || 0;
+                  const isNewRound = plan => String(plan?.session?.sourceKind || "").toLowerCase() === "new_iteration_plan";
+                  const baseRound = plans
+                    .filter(plan => !isNewRound(plan))
+                    .sort((a, b) => timestamp(b) - timestamp(a))[0] || null;
+                  const realNewRounds = plans
+                    .filter(isNewRound)
+                    .sort((a, b) => timestamp(a) - timestamp(b));
+                  return baseRound ? [baseRound, ...realNewRounds] : realNewRounds;
+                }
+
+                function isDisplayingLatestIterationPlan() {
+                  const plans = Array.isArray(state.iterationPlans) ? state.iterationPlans : [];
+                  if (!plans.length || !state.iterationPlan?.session) return true;
+                  return plans[plans.length - 1]?.session?.sessionId === state.iterationPlan.session.sessionId;
                 }
 
                 async function loadRepairPlan() {
@@ -2395,33 +2481,64 @@ public sealed class BrowserUiRenderer
                   $("repairPlanStatus").scrollIntoView({ behavior: "smooth", block: "center" });
                 }
 
+                function renderIterationRoundTabs() {
+                  const tabs = $("v2IterationRoundTabs");
+                  if (!tabs) return;
+                  const plans = Array.isArray(state.iterationPlans) ? state.iterationPlans : [];
+                  if (plans.length <= 1) {
+                    tabs.classList.add("hidden");
+                    tabs.innerHTML = "";
+                    return;
+                  }
+                  tabs.classList.remove("hidden");
+                  tabs.innerHTML = plans.map((plan, index) => {
+                    const sessionId = plan?.session?.sessionId || "";
+                    const active = sessionId && state.iterationPlan?.session?.sessionId === sessionId;
+                    const label = `第 ${Number(plan?.roundIndex || index + 1)} 轮`;
+                    return `<button type="button" class="v2-round-tab ${active ? "active" : ""}" data-iteration-session-id="${escapeHtml(sessionId)}">${escapeHtml(label)}</button>`;
+                  }).join("");
+                  tabs.querySelectorAll("[data-iteration-session-id]").forEach(button => {
+                    button.onclick = () => {
+                      const sessionId = button.dataset.iterationSessionId || "";
+                      const plan = plans.find(item => item?.session?.sessionId === sessionId) || null;
+                      if (!plan) return;
+                      state.selectedIterationSessionId = sessionId;
+                      state.iterationPlan = plan;
+                      state.iterationPlanEvaluation = plan.latestEvaluation || null;
+                      writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlans: state.iterationPlans, selectedIterationSessionId: state.selectedIterationSessionId, iterationPlanEvaluation: state.iterationPlanEvaluation });
+                      renderIterationPlan();
+                    };
+                  });
+                }
+
                 function renderIterationPlan() {
+                  renderIterationRoundTabs();
                   const plan = state.iterationPlan;
                   if (!plan || !plan.session) {
                     $("v2IterationSummary").className = state.iterationPlanFailure ? "card" : "card muted";
                     $("v2IterationSummary").innerHTML = state.iterationPlanFailure
-                      ? `<strong>迭代计划摘要</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
-                      : "尚未生成迭代计划。";
+                      ? `<strong>游戏模块摘要</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
+                      : "尚未生成游戏模块。";
                     $("iterationPlanStatus").className = state.iterationPlanFailure ? "card" : "card muted";
                     const customRouteRequired = state.iterationPlanFailure && state.iterationPlanFailure.includes("联系管理员创建定制游戏类型路线");
                     $("iterationPlanStatus").innerHTML = state.iterationPlanFailure
-                      ? `<strong>${customRouteRequired ? "需要定制路线" : "迭代计划生成失败"}</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
-                      : "尚未生成迭代计划。";
+                      ? `<strong>${customRouteRequired ? "需要定制路线" : "游戏模块生成失败"}</strong><p>${escapeHtml(state.iterationPlanFailure)}</p>`
+                      : "尚未生成游戏模块。";
                   $("iterationPlanEvaluation").className = "card muted";
-                  $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
+                  $("iterationPlanEvaluation").textContent = "尚未评估当前游戏模块。";
                   $("iterationNeedsFixStatus").className = "card muted";
                   $("iterationNeedsFixStatus").textContent = "step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。";
                   $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
-                    $("createIterationPlan").textContent = "生成新的迭代计划";
+                    $("createIterationPlan").textContent = "生成新的游戏模块";
                     $("deleteIterationPlan").classList.add("hidden");
                     $("deleteIterationPlan").disabled = true;
                     $("evaluateIterationPlan").disabled = true;
-                    $("evaluateIterationPlan").textContent = "请先生成迭代计划";
+                    $("evaluateIterationPlan").textContent = "请先生成游戏模块";
                     $("evaluateIterationPlanFromChat").disabled = true;
-                    $("evaluateIterationPlanFromChat").textContent = "请先生成迭代计划";
+                    $("evaluateIterationPlanFromChat").textContent = "请先生成游戏模块";
                     $("executeIterationGoal").disabled = true;
-                    $("executeIterationGoal").textContent = "请先生成迭代计划";
+                    $("executeIterationGoal").textContent = "请先生成游戏模块";
                     return;
                   }
                   const session = plan.session;
@@ -2434,10 +2551,12 @@ public sealed class BrowserUiRenderer
                   const blockedByCurrentGoal = evaluationDecision === "blocked_by_current_goal" || evaluationDecision === "llm_failed";
                   const planComplete = isIterationPlanComplete();
                   const planStarted = isIterationPlanStarted();
+                  const isLatestPlan = isDisplayingLatestIterationPlan();
                   const canUpdatePlan = !planStarted;
                   $("v2IterationSummary").className = "card";
                   $("v2IterationSummary").innerHTML = `
-                    <strong>迭代计划摘要</strong>
+                    <strong>游戏模块摘要</strong>
+                    ${state.iterationPlanFailure ? `<p class="danger">${escapeHtml(state.iterationPlanFailure)}</p>` : ""}
                     <p>${escapeHtml(session.overallGoal || "")}</p>
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
@@ -2445,6 +2564,7 @@ public sealed class BrowserUiRenderer
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
                     <strong>${escapeHtml(session.status || "ready")}</strong>
+                    ${state.iterationPlanFailure ? `<p class="danger">${escapeHtml(state.iterationPlanFailure)}</p>` : ""}
                     <p>${escapeHtml(session.overallGoal || "")}</p>
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
                     <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
@@ -2454,21 +2574,22 @@ public sealed class BrowserUiRenderer
                       ? `<p class="muted">字段判断：${escapeHtml(planningAnalysis.fieldCoverage.map(item => `${item.field}:${item.status}${item.missingReason ? `(${item.missingReason})` : item.evidence ? `(${item.evidence})` : ""}`).join(" · "))}</p>`
                       : ""}
                   `;
-                  $("createIterationPlan").disabled = planComplete ? isGlobalBusy() : (!canUpdatePlan || blockedByCurrentGoal || isGlobalBusy());
-                  $("createIterationPlan").textContent = planComplete ? "创建新的迭代计划" : "重新生成迭代计划";
+                  $("createIterationPlan").disabled = !isLatestPlan || (planComplete ? isGlobalBusy() : (!canUpdatePlan || blockedByCurrentGoal || isGlobalBusy()));
+                  $("createIterationPlan").textContent = planComplete ? "创建新的游戏模块" : "重新生成游戏模块";
                   $("deleteIterationPlan").classList.remove("hidden");
-                  $("deleteIterationPlan").disabled = planComplete || isGlobalBusy();
-                  $("evaluateIterationPlan").disabled = isGlobalBusy() || state.iterationPlanEvaluationRunning;
-                  $("evaluateIterationPlan").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前迭代计划";
-                  $("evaluateIterationPlanFromChat").disabled = isGlobalBusy() || state.iterationPlanEvaluationRunning;
+                  $("deleteIterationPlan").textContent = "删除当前轮游戏模块";
+                  $("deleteIterationPlan").disabled = !isLatestPlan || planComplete || isGlobalBusy();
+                  $("evaluateIterationPlan").disabled = !isLatestPlan || isGlobalBusy() || state.iterationPlanEvaluationRunning;
+                  $("evaluateIterationPlan").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前游戏模块";
+                  $("evaluateIterationPlanFromChat").disabled = !isLatestPlan || isGlobalBusy() || state.iterationPlanEvaluationRunning;
                   $("evaluateIterationPlanFromChat").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前计划是否值得继续";
                   $("executeIterationGoal").disabled = hasNeedsFix
-                    ? isGlobalBusy()
-                    : (!hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
+                    ? (!isLatestPlan || isGlobalBusy())
+                    : (!isLatestPlan || !hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
                   $("executeIterationGoal").textContent = hasNeedsFix
                     ? "运行 Needs Fix 路由"
                     : shouldRefinePlan
-                      ? "建议先重拆迭代计划"
+                      ? "建议先重拆游戏模块"
                       : hasPending
                         ? "执行下一目标"
                         : "当前没有待执行目标";
@@ -2546,7 +2667,7 @@ public sealed class BrowserUiRenderer
                   const lines = [
                     goal
                       ? `用户提交了当前目标的报错/修复反馈，请通过 needs-fix 顶层路由处理 step ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`
-                      : "用户提交了报错/修复反馈，请通过 needs-fix 顶层路由处理。如果当前项目还没有可修复目标，请返回明确的前置条件提示，不要生成迭代计划。",
+                      : "用户提交了报错/修复反馈，请通过 needs-fix 顶层路由处理。如果当前项目还没有可修复目标，请返回明确的前置条件提示，不要生成游戏模块。",
                     "",
                     "用户反馈：",
                     String(userFeedback || "").trim()
@@ -2561,7 +2682,7 @@ public sealed class BrowserUiRenderer
                   if (state.iterationPlanEvaluationRunning) {
                     $("iterationPlanEvaluation").className = "card";
                     $("iterationPlanEvaluation").innerHTML = `
-                      <strong>正在评估当前迭代计划</strong>
+                      <strong>正在评估当前游戏模块</strong>
                       <p class="muted">系统正在判断当前计划是否可以直接执行，完成后结果会保留在这里。</p>
                     `;
                     return;
@@ -2569,14 +2690,14 @@ public sealed class BrowserUiRenderer
                   const evaluation = state.iterationPlanEvaluation;
                   if (!evaluation) {
                     $("iterationPlanEvaluation").className = "card muted";
-                    $("iterationPlanEvaluation").textContent = "尚未评估当前迭代计划。";
+                    $("iterationPlanEvaluation").textContent = "尚未评估当前游戏模块。";
                     return;
                   }
                   const decision = String(evaluation.decision || "").trim().toLowerCase();
                   const actionHint = decision === "llm_failed"
                     ? "LLM 调用失败，需先修复 LLM 后再继续；系统不会用本地规则替代评估。"
                     : decision === "should_refine_plan"
-                    ? "推荐先点击“重新生成迭代计划”，不要直接执行下一目标。"
+                    ? "推荐先点击“重新生成游戏模块”，不要直接执行下一目标。"
                     : decision === "ready_to_execute"
                       ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
                       : "推荐先处理当前阻塞项，再决定是否继续。";
@@ -2602,7 +2723,7 @@ public sealed class BrowserUiRenderer
                 function openIterationPlanUpdateModal(mode, initialValue = "") {
                   state.iterationPlanUpdateMode = mode;
                   const isNewPlan = mode === "new";
-                  $("iterationPlanUpdateTitle").textContent = isNewPlan ? "创建新的迭代计划" : "重新生成迭代计划";
+                  $("iterationPlanUpdateTitle").textContent = isNewPlan ? "创建新的游戏模块" : "重新生成游戏模块";
                   $("iterationPlanUpdateEvaluation").className = isNewPlan ? "card muted hidden" : "card";
                   $("iterationPlanUpdateEvaluation").innerHTML = isNewPlan
                     ? ""
@@ -2611,9 +2732,9 @@ public sealed class BrowserUiRenderer
                   $("iterationPlanUpdateInput").placeholder = isNewPlan
                     ? "输入第二轮或新一轮迭代目标。"
                     : "输入本次更新计划的补充要求；留空时会优先使用评估结果中的重拆建议。";
-                  $("confirmIterationPlanUpdate").textContent = isNewPlan ? "创建新的迭代计划" : "更新迭代计划";
+                  $("confirmIterationPlanUpdate").textContent = isNewPlan ? "创建新的游戏模块" : "更新游戏模块";
                   $("iterationPlanUpdateHint").textContent = isNewPlan
-                    ? "当前迭代计划已完成，将基于这里输入的新目标创建下一轮计划。"
+                    ? "当前游戏模块已完成，将基于这里输入的新目标创建下一轮计划。"
                     : "更新时会优先参考输入框信息，其次参考当前评估结果。";
                   setModalVisible("iterationPlanUpdateModal", true);
                   autoGrowTextarea($("iterationPlanUpdateInput"));
@@ -2621,7 +2742,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function iterationPlanEvaluationHtml(evaluation) {
-                  if (!evaluation) return "<p class='muted'>尚未评估当前迭代计划。可以先关闭弹窗并点击“评估当前迭代计划”。</p>";
+                  if (!evaluation) return "<p class='muted'>尚未评估当前游戏模块。可以先关闭弹窗并点击“评估当前游戏模块”。</p>";
                   const safeSummary = sanitizePublicIterationPlanText(evaluation.summary || "");
                   const safeSuggestedAction = sanitizePublicIterationPlanText(evaluation.suggestedAction || "");
                   const safeRegenerationPrompt = sanitizePublicIterationPlanText(evaluation.suggestedPromptForRegeneration || "");
@@ -2638,10 +2759,16 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   const mode = state.iterationPlanUpdateMode || "update";
                   if (mode !== "new" && isIterationPlanStarted()) {
-                    out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                    out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                     return;
                   }
                   const typedMessage = $("iterationPlanUpdateInput").value.trim();
+                  if (mode === "new" && !typedMessage) {
+                    $("iterationPlanUpdateHint").textContent = "请输入第二轮游戏模块目标。";
+                    $("iterationPlanUpdateInput").classList.add("field-invalid");
+                    $("iterationPlanUpdateInput").focus();
+                    return;
+                  }
                   const evaluationMessage = currentIterationPlanRegenerationPrompt()
                     || state.iterationPlanEvaluation?.suggestedAction
                     || state.iterationPlanEvaluation?.reason
@@ -2649,7 +2776,7 @@ public sealed class BrowserUiRenderer
                   const message = typedMessage || evaluationMessage || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = mode === "new" ? "new_iteration_plan" : typedMessage ? "iteration_plan_update" : "completion_suggestion";
                   setModalVisible("iterationPlanUpdateModal", false);
-                  await submitIterationPlanFromFeedback(message, mode === "new" ? "正在创建新的迭代计划..." : "正在更新迭代计划...", sourceKind);
+                  await submitIterationPlanFromFeedback(message, mode === "new" ? "正在创建新的游戏模块..." : "正在更新游戏模块...", sourceKind);
                 }
 
                 async function createIterationPlan() {
@@ -2661,7 +2788,7 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     if (isIterationPlanStarted()) {
-                      out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                      out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                       return;
                     }
                     openIterationPlanUpdateModal("update");
@@ -2671,15 +2798,15 @@ public sealed class BrowserUiRenderer
                   const message = typedMessage || currentIterationPlanRegenerationPrompt() || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = typedMessage ? "manual_feedback" : "completion_suggestion";
                   if (!typedMessage) {
-                    out("未输入优化目标，已使用当前下一步建议生成迭代计划。");
+                    out("未输入优化目标，已使用当前下一步建议生成游戏模块。");
                   }
-                  await submitIterationPlanFromFeedback(message, "正在生成迭代计划...", sourceKind);
+                  await submitIterationPlanFromFeedback(message, "正在生成游戏模块...", sourceKind);
                 }
 
                 async function evaluateIterationPlan(announceInChat = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  if (!state.iterationPlan?.session) return out("请先生成游戏模块。");
                   state.iterationPlanEvaluationRunning = true;
                   renderIterationPlan();
                   try {
@@ -2714,7 +2841,7 @@ public sealed class BrowserUiRenderer
                     if (payload?.status && payload?.summary) {
                       out({
                         status: error.status,
-                        summary: "迭代计划评估失败。失败详情已隐藏，请稍后重试或联系管理员查看后台记录。"
+                        summary: "游戏模块评估失败。失败详情已隐藏，请稍后重试或联系管理员查看后台记录。"
                       });
                     } else {
                     showError(error);
@@ -2727,7 +2854,8 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function submitIterationPlanFromFeedback(message, busyText, sourceKind = "manual_feedback") {
-                  setLocalBusy(true, "正在生成迭代计划，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "正在生成游戏模块，请等待当前任务执行完毕。");
+                  let shouldReloadIterationPlan = true;
                   try {
                     $("chatMessage").value = "";
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
@@ -2743,9 +2871,11 @@ public sealed class BrowserUiRenderer
                       state.iterationPlanFailure = publicIterationPlanFailureMessage(summary);
                       renderIterationPlan();
                       out({ status: result.status || "failed", summary: state.iterationPlanFailure });
+                      shouldReloadIterationPlan = false;
                       return result;
                     }
                     state.iterationPlan = {
+                      roundIndex: (Array.isArray(state.iterationPlans) ? state.iterationPlans.length : 0) + 1,
                       session: {
                         sessionId: result.sessionId,
                         status: result.status,
@@ -2757,6 +2887,8 @@ public sealed class BrowserUiRenderer
                       goalRuns: [],
                       latestEvaluation: result.latestEvaluation || null
                     };
+                    state.iterationPlans = [...(Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(plan => plan?.session?.sessionId !== result.sessionId) : []), state.iterationPlan];
+                    state.selectedIterationSessionId = result.sessionId;
                     state.iterationPlanEvaluation = result.latestEvaluation || null;
                     state.iterationPlanFailure = "";
                     renderIterationPlan();
@@ -2764,11 +2896,17 @@ public sealed class BrowserUiRenderer
                     return result;
                   } catch (error) {
                     showError(error);
+                    shouldReloadIterationPlan = false;
                     return null;
                   } finally {
                     clearChatAttachments();
                     setLocalBusy(false);
-                    await loadIterationPlan();
+                    if (shouldReloadIterationPlan) {
+                      await loadIterationPlan();
+                    } else {
+                      renderIterationPlan();
+                    }
+                    await loadProjectPackages();
                     await refreshActiveRun();
                   }
                 }
@@ -2776,22 +2914,28 @@ public sealed class BrowserUiRenderer
                 async function deleteIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!hasAnyIterationPlan()) return out("当前没有可删除的迭代计划。");
-                  if (isIterationPlanComplete()) return out("迭代计划已经全部完成，不可以删除。");
-                  if (!confirm("确定要删除当前迭代计划吗？这会删除所有 step 并重置迭代计划状态。")) return;
-                  setLocalBusy(true, "正在删除迭代计划...");
+                  if (!hasAnyIterationPlan()) return out("当前没有可删除的游戏模块。");
+                  if (isIterationPlanComplete()) return out("游戏模块已经全部完成，不可以删除。");
+                  const sessionId = state.iterationPlan?.session?.sessionId || state.selectedIterationSessionId || "";
+                  const roundIndex = state.iterationPlan?.roundIndex || "";
+                  if (!sessionId) return out("当前没有选中的游戏模块轮次。");
+                  const roundLabel = roundIndex ? `第 ${roundIndex} 轮` : "当前轮";
+                  if (!confirm(`确定要删除${roundLabel}游戏模块吗？该操作不会删除其他轮次。`)) return;
+                  setLocalBusy(true, `正在删除${roundLabel}游戏模块...`);
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/iteration-plan`, { method: "DELETE" });
+                    const result = await api(`/api/projects/${state.projectId}/iteration-plans/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
                     state.iterationPlan = null;
+                    state.selectedIterationSessionId = "";
                     state.iterationPlanEvaluation = null;
                     state.iterationPlanFailure = "";
                     renderIterationPlan();
-                    out(result.summary || "迭代计划已删除。");
+                    out(result.summary || `${roundLabel}游戏模块已删除。`);
                     await loadIterationPlan();
                   } catch (error) {
                     showError(error);
                   } finally {
                     setLocalBusy(false);
+                    await loadProjectPackages();
                     await refreshActiveRun();
                   }
                 }
@@ -2799,15 +2943,15 @@ public sealed class BrowserUiRenderer
                 async function executeIterationGoal() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
+                  if (!state.iterationPlan?.session) return out("请先生成游戏模块。");
                   const needsFixGoal = currentNeedsFixRouteGoal();
                   if (needsFixGoal) {
                     await runNeedsFixIterationGoal(needsFixGoal.goalIndex);
                     return;
                   }
                   const evaluationDecision = currentIterationPlanDecision();
-                  if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆迭代计划，已停止执行旧目标。");
-                  if (evaluationDecision === "llm_failed") return out("当前迭代计划评估失败，请先修复评估调用并重新评估计划。");
+                  if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆游戏模块，已停止执行旧目标。");
+                  if (evaluationDecision === "llm_failed") return out("当前游戏模块评估失败，请先修复评估调用并重新评估计划。");
                   if (evaluationDecision === "blocked_by_current_goal") return out("当前评估显示已有目标阻塞，请先处理当前阻塞项。");
                   setLocalBusy(true, "正在执行下一目标，请等待当前任务执行完毕。");
                   try {
@@ -2823,6 +2967,7 @@ public sealed class BrowserUiRenderer
                     setLocalBusy(false);
                     await loadIterationPlan();
                     await loadRuns();
+                    await loadProjectPackages();
                     await refreshActiveRun();
                   }
                 }
@@ -2830,23 +2975,23 @@ public sealed class BrowserUiRenderer
                 async function runUiOptimization() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行 UI 优化。");
+                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行游戏界面优化。");
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
-                    return out("请先完成迭代计划，再运行 UI 优化。");
+                    return out("请先完成游戏模块，再运行游戏界面优化。");
                   }
-                  $("uiOptimizationStatus").textContent = "正在运行 UI 优化，请等待后台任务完成。";
-                  setLocalBusy(true, "正在运行 UI 优化，请等待当前任务执行完毕。");
+                  $("uiOptimizationStatus").textContent = "正在运行游戏界面优化，请等待后台任务完成。";
+                  setLocalBusy(true, "正在运行游戏界面优化，请等待当前任务执行完毕。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/ui-optimization`, {
                       method: "POST",
                       body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
                     });
-                    $("uiOptimizationStatus").textContent = result.summary || "UI 优化已完成。";
+                    $("uiOptimizationStatus").textContent = result.summary || "游戏界面优化已完成。";
                     if (String(result.status || "").toLowerCase() === "succeeded") callV2("v2SetPrototypeValidationInvalidated", true);
                     out(result);
                   } catch (error) {
-                    $("uiOptimizationStatus").textContent = `UI 优化失败：${error.message || error}`;
+                    $("uiOptimizationStatus").textContent = `游戏界面优化失败：${error.message || error}`;
                     showError(error);
                   } finally {
                     setLocalBusy(false);
@@ -2967,7 +3112,11 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return;
                   const compact = state.chatHistory.filter(isStoredChatMessage).slice(-maxStoredChatMessages).map(normalizeStoredChatMessage);
                   state.chatHistory = compact;
-                  localStorage.setItem(chatStorageKey(), JSON.stringify(compact));
+                  try {
+                    localStorage.setItem(chatStorageKey(), JSON.stringify(compact));
+                  } catch {
+                    // Chat persistence is best-effort; it must not turn a successful workflow scan into a failed user action.
+                  }
                 }
 
                 function chatMessageKey(message) {
@@ -3114,8 +3263,8 @@ public sealed class BrowserUiRenderer
                   }
                   const details = sanitizePublicFailureContent(raw);
                   return details
-                    ? `迭代计划生成失败。失败详情：${details}（路径和文件名已隐藏。）`
-                    : "迭代计划生成失败。失败详情不可展示，请稍后重试或联系管理员查看后台记录。";
+                    ? `游戏模块生成失败。失败详情：${details}（路径和文件名已隐藏。）`
+                    : "游戏模块生成失败。失败详情不可展示，请稍后重试或联系管理员查看后台记录。";
                 }
 
                 function startChatThinkingMessage(initialContent = null) {
@@ -3230,6 +3379,25 @@ public sealed class BrowserUiRenderer
                   return `phaseA.projectStateCache.v${projectStateCacheVersion}.${projectId || "none"}`;
                 }
 
+                function selectedProjectIdKey() {
+                  return "phaseA.selectedProjectId";
+                }
+
+                function readSelectedProjectId() {
+                  try {
+                    return localStorage.getItem(selectedProjectIdKey()) || "";
+                  } catch {
+                    return "";
+                  }
+                }
+
+                function writeSelectedProjectId(projectId) {
+                  try {
+                    if (projectId) localStorage.setItem(selectedProjectIdKey(), projectId);
+                    else localStorage.removeItem(selectedProjectIdKey());
+                  } catch {}
+                }
+
                 function readProjectStateCache(projectId = state.projectId) {
                   if (!projectId) return null;
                   try {
@@ -3277,7 +3445,12 @@ public sealed class BrowserUiRenderer
                     renderAssetInventory(cached.assetInventory, state.assetInventoryExpanded);
                   }
                   if (cached.iterationPlan !== undefined) {
+                    state.iterationPlans = normalizeIterationPlanRounds(Array.isArray(cached.iterationPlans) ? cached.iterationPlans : []);
+                    state.selectedIterationSessionId = cached.selectedIterationSessionId || "";
                     state.iterationPlan = cached.iterationPlan;
+                    if (state.iterationPlans.length) {
+                      state.iterationPlan = selectIterationPlanForDisplay(state.iterationPlans);
+                    }
                     state.iterationPlanEvaluation = cached.iterationPlan?.latestEvaluation || cached.iterationPlanEvaluation || null;
                     state.iterationPlanFailure = cached.iterationPlanFailure || "";
                     renderIterationPlan();
@@ -3317,6 +3490,7 @@ public sealed class BrowserUiRenderer
                 function showCreationFailure(error) {
                   showCreateProjectPage();
                   state.projectId = "";
+                  writeSelectedProjectId("");
                   $("adminPanel").classList.remove("hidden");
                   $("projectDetailPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
@@ -4110,7 +4284,7 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (hasPendingPlan && currentIterationPlanDecision() === "should_refine_plan") {
-                    if (isIterationPlanStarted()) return out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                    if (isIterationPlanStarted()) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                     openIterationPlanUpdateModal("update", suggestion);
                     return;
                   }
@@ -4118,7 +4292,7 @@ public sealed class BrowserUiRenderer
                     await executeIterationGoal();
                     return;
                   }
-                  await submitIterationPlanFromFeedback(suggestion, "正在生成迭代计划...", "completion_suggestion");
+                  await submitIterationPlanFromFeedback(suggestion, "正在生成游戏模块...", "completion_suggestion");
                 }
 
                 async function submitFormalFeedbackText(feedback, busyText) {
@@ -4145,6 +4319,7 @@ public sealed class BrowserUiRenderer
                   finally {
                     setLocalBusy(false);
                     setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    await loadProjectPackages();
                     await refreshActiveRun();
                   }
                 }
@@ -4173,7 +4348,7 @@ public sealed class BrowserUiRenderer
                   const goal = goals.find(item => String(item.goalIndex) === String(goalIndex));
                   if (!goal) {
                     $("iterationNeedsFixStatus").className = "card";
-                    $("iterationNeedsFixStatus").textContent = "未找到需要 needs-fix 处理的目标，请刷新迭代计划后再试。";
+                    $("iterationNeedsFixStatus").textContent = "未找到需要 needs-fix 处理的目标，请刷新游戏模块后再试。";
                     return out("未找到需要 needs-fix 处理的目标。");
                   }
                   const feedback = buildNeedsFixFeedbackForGoal(goal);
@@ -4353,13 +4528,20 @@ public sealed class BrowserUiRenderer
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
                     callV2("v2RenderLeftProjectList");
+                    const currentProjectVisible = !state.projectId || visibleProjects.some(project => project.projectId === state.projectId);
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
                     } else if (initializing && !state.projectId) {
                       showInitialization("running", "");
                     } else if (visibleProjects.length === 0) {
+                      state.projectId = "";
+                      writeSelectedProjectId("");
                       showCreateProjectPage();
-                    } else if (autoSelect) {
+                    } else if (!currentProjectVisible) {
+                      state.projectId = "";
+                      writeSelectedProjectId("");
+                      selectDefaultProject(visibleProjects);
+                    } else if (autoSelect || !state.projectId) {
                       selectDefaultProject(visibleProjects);
                     }
                     out(projects);
@@ -4380,7 +4562,16 @@ public sealed class BrowserUiRenderer
 
                 function selectDefaultProject(projects) {
                   if (!Array.isArray(projects) || projects.length === 0) return;
-                  if (state.projectId && projects.some(project => project.projectId === state.projectId)) return;
+                  const current = state.projectId ? projects.find(project => project.projectId === state.projectId) : null;
+                  if (current?.projectId) {
+                    selectProject(current.projectId);
+                    return;
+                  }
+                  const remembered = readSelectedProjectId();
+                  if (remembered && projects.some(project => project.projectId === remembered)) {
+                    selectProject(remembered);
+                    return;
+                  }
                   const latest = latestProject(projects);
                   if (latest?.projectId) selectProject(latest.projectId);
                 }
@@ -4435,8 +4626,20 @@ public sealed class BrowserUiRenderer
 
                 function selectProject(projectId) {
                   state.projectId = projectId;
+                  writeSelectedProjectId(projectId);
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
+                  state.packageList = null;
+                  state.runs = [];
+                  state.prototypeFailure = "";
+                  state.v2PrototypeStatus = "";
+                  state.v2PrototypeCreationStatus = "";
+                  state.iterationPlan = null;
+                  state.iterationPlans = [];
+                  state.selectedIterationSessionId = "";
+                  state.iterationPlanEvaluation = null;
+                  state.iterationPlanFailure = "";
+                  state.repairPlan = null;
                   v2ActiveTabId = "chat";
                   setModalVisible("projectListModal", false);
                   hideCreateProjectPage();
@@ -4685,6 +4888,7 @@ public sealed class BrowserUiRenderer
                     });
                     if (state.projectId === projectId) {
                       state.projectId = "";
+                      writeSelectedProjectId("");
                       $("projectDetailPanel").classList.add("hidden");
                     }
                     out(result);
@@ -4798,7 +5002,7 @@ public sealed class BrowserUiRenderer
                     $("feedbackSummary").className = "card";
                     $("feedbackSummary").innerHTML = `
                       <strong>流程摘要</strong>
-                      <p class="muted">当前项目还没有迭代计划，以下仅展示旧正式反馈记录。</p>
+                      <p class="muted">当前项目还没有游戏模块，以下仅展示旧正式反馈记录。</p>
                       <p class="muted">正式反馈次数：${escapeHtml(String(legacyFeedbackRuns.length))}</p>
                     `;
                     callV2("v2HideLegacyChatFeedback");
@@ -4806,7 +5010,7 @@ public sealed class BrowserUiRenderer
                   }
 
                   $("feedbackSummary").className = "card muted";
-                  $("feedbackSummary").textContent = "尚未生成迭代计划。";
+                  $("feedbackSummary").textContent = "尚未生成游戏模块。";
                   callV2("v2HideLegacyChatFeedback");
                 }
 
@@ -4822,7 +5026,7 @@ public sealed class BrowserUiRenderer
                     return { label: "LLM 调用失败，先修复", action: "", source: "当前计划评估", disabled: true };
                   }
                   if (decision === "should_refine_plan") {
-                    return { label: "重新生成迭代计划", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() || isIterationPlanStarted() };
+                    return { label: "重新生成游戏模块", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() || isIterationPlanStarted() };
                   }
                   if (hasNeedsFix || hasPending) {
                     return { label: "继续评估当前计划", action: "evaluate", source: "目标执行结果", disabled: isGlobalBusy() };
@@ -4849,7 +5053,7 @@ public sealed class BrowserUiRenderer
                   const state = feedbackPrimaryActionState();
                   if (!state.action) return out("当前没有可执行的推荐动作。");
                   if (state.action === "refine") {
-                    if (isIterationPlanStarted()) return out("当前迭代计划已经开始执行，不允许更新迭代计划。");
+                    if (isIterationPlanStarted()) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                     const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
                     if (evaluationSuggestion) {
                       openIterationPlanUpdateModal("update", evaluationSuggestion);
@@ -5049,6 +5253,7 @@ public sealed class BrowserUiRenderer
                     }
                     if (wasBusy && !state.activeRun?.busy && state.projectId) {
                       await loadPrototypeProgress();
+                      await loadProjectPackages();
                       await refreshAssetInventoryAvailability();
                     }
                   } catch {
@@ -5170,7 +5375,12 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                     await loadProjectPackages();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    const reason = error?.payload?.failureCode || error?.payload?.disabledReason || error?.payload?.error || error?.payload?.status || error?.message || "unknown_error";
+                    $("projectPackageStatus").className = "card";
+                    $("projectPackageStatus").textContent = `打包失败：${projectPackageDisabledText(reason)} (${reason})`;
+                    showError(error);
+                  }
                   finally {
                     setLocalBusy(false);
                     $("createProjectPackage").textContent = "打包项目文件";
@@ -5236,8 +5446,8 @@ public sealed class BrowserUiRenderer
                       : "成功运行原型创建后才可以打包项目文件。";
                   }
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
-                  if (reason === "iteration_plan_not_completed") return "迭代计划完成后才可以打包项目文件。";
-                  if (reason === "prototype_acceptance_not_passed") return "迭代计划完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
+                  if (reason === "iteration_plan_not_completed") return "游戏模块完成后才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
                 }
@@ -5597,7 +5807,7 @@ public sealed class BrowserUiRenderer
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如需执行，请使用迭代计划或 Needs Fix 的固定功能按钮。`.trim();
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如需执行，请使用游戏模块或 Needs Fix 的固定功能按钮。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
@@ -5727,6 +5937,7 @@ public sealed class BrowserUiRenderer
                   clearBrowserCookie("phaseAAccessToken");
                   $("token").value = "";
                   state.projectId = "";
+                  writeSelectedProjectId("");
                   state.projects = [];
                   showLoggedOut();
                 };
@@ -5920,22 +6131,31 @@ public sealed class BrowserUiRenderer
                     : prototypeSucceeded
                         ? new ProjectDetailStep(3, "骨架验收修复", "done", "/#v2RepairPanel", "✓")
                         : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(4, "完成迭代计划", latestIteration, "/#v2IterationPanel"),
+            CreateRunStep(4, "完成游戏模块", latestIteration, "/#v2IterationPanel"),
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
-            CreateAcceptanceStep(6, latestPrototype, "/#v2AcceptancePanel"),
+            CreateAcceptanceStep(6, runs, latestIteration, "/#v2AcceptancePanel"),
             CreateRunStep(7, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
             CreateRunStep(8, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
     }
 
-    private static ProjectDetailStep CreateAcceptanceStep(int number, RunReadbackItem? prototypeRun, string href)
+    private static ProjectDetailStep CreateAcceptanceStep(int number, IReadOnlyList<RunReadbackItem> runs, RunReadbackItem? latestIterationRun, string href)
     {
-        if (prototypeRun is null || string.IsNullOrWhiteSpace(prototypeRun.ProgressStep))
+        var latestValidation = runs
+            .Where(run => string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+                          IsValidationOnlyRun(run))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
+        if (latestValidation is null ||
+            latestIterationRun is null ||
+            !string.Equals(latestIterationRun.Status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+            RunSortTimeUtc(latestValidation) < RunSortTimeUtc(latestIterationRun))
         {
             return new ProjectDetailStep(number, "原型验收", "pending", href, "");
         }
 
-        return prototypeRun.Status switch
+        return latestValidation.Status switch
         {
             "succeeded" => new ProjectDetailStep(number, "原型验收", "done", href, "✓"),
             "failed" => new ProjectDetailStep(number, "原型验收", "fix", href, "×"),
@@ -5962,25 +6182,54 @@ public sealed class BrowserUiRenderer
     {
         if (run is null)
         {
-            return new ProjectDetailStep(number, "UI优化", "pending", href, "");
+            return new ProjectDetailStep(number, "游戏界面优化", "pending", href, "");
         }
 
         if (string.Equals(run.ProgressSubstep, "validation_skipped", StringComparison.OrdinalIgnoreCase))
         {
-            return new ProjectDetailStep(number, "UI优化", "pending", href, "");
+            return new ProjectDetailStep(number, "游戏界面优化", "pending", href, "");
         }
 
         if (string.Equals(run.ProgressSubstep, "validation_failed", StringComparison.OrdinalIgnoreCase))
         {
-            return new ProjectDetailStep(number, "UI优化", "fix", href, "×");
+            return new ProjectDetailStep(number, "游戏界面优化", "fix", href, "×");
         }
 
-        return CreateRunStep(number, "UI优化", run, href);
+        return CreateRunStep(number, "游戏界面优化", run, href);
     }
 
     private static RunReadbackItem? LatestRun(IReadOnlyList<RunReadbackItem> runs, params string[] runTypes)
     {
         return runs.FirstOrDefault(run => runTypes.Contains(run.RunType, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static DateTimeOffset RunSortTimeUtc(RunReadbackItem run)
+    {
+        return ParseUtc(run.ProgressUpdatedUtc) ?? DateTimeOffset.MinValue;
+    }
+
+    private static DateTimeOffset? ParseUtc(string? value)
+    {
+        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
+    }
+
+    private static bool IsValidationOnlyRun(RunReadbackItem run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("validation_only", out var value) &&
+                   value.ValueKind == System.Text.Json.JsonValueKind.True;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
     }
 
     private sealed record ProjectDetailStep(int Number, string Label, string Status, string Href, string Mark);
@@ -6314,7 +6563,8 @@ public sealed class BrowserUiRenderer
                     let payload = {};
                     try { payload = await response.json(); } catch {}
                     if (!response.ok) {
-                      $("status").innerHTML = `<span class="danger">打包失败：${escapeHtml(payload.error || payload.status || "unknown_error")}</span>`;
+                      const reason = payload.failureCode || payload.disabledReason || payload.error || payload.status || "unknown_error";
+                      $("status").innerHTML = `<span class="danger">打包失败：${escapeHtml(disabledText(reason))} (${escapeHtml(reason)})</span>`;
                       return;
                     }
                     $("status").textContent = "项目压缩包已生成，正在刷新下载列表。";
@@ -6345,8 +6595,8 @@ public sealed class BrowserUiRenderer
                 function disabledText(reason) {
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
-                  if (reason === "iteration_plan_not_completed") return "迭代计划完成后才可以打包项目文件。";
-                  if (reason === "prototype_acceptance_not_passed") return "迭代计划完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
+                  if (reason === "iteration_plan_not_completed") return "游戏模块完成后才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
                   return "当前暂不能生成新的项目文件包。";
                 }
                 async function downloadPackage(button, downloadUrl, fileName) {

@@ -37,7 +37,7 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         result!.NextAction.ActionId.Should().Be("create-iteration-plan");
         result.Recommendation.Should().Contain("骨架验收已经通过");
-        result.Recommendation.Should().Contain("生成迭代计划");
+        result.Recommendation.Should().Contain("生成游戏模块");
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.NextAction.ActionId.Should().Be("execute-iteration-goal");
-        result.Recommendation.Should().Contain("当前迭代计划还有待执行 step");
+        result.Recommendation.Should().Contain("当前游戏模块还有待执行 step");
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         result!.NextAction.ActionId.Should().Be("prototype-acceptance");
         result.Steps.Single(step => step.Id == "prototype-acceptance").Status.Should().Be("pending");
-        result.Recommendation.Should().Contain("迭代计划已经完成");
+        result.Recommendation.Should().Contain("游戏模块已经完成");
         result.Recommendation.Should().Contain("重新进行原型验收");
     }
 
@@ -125,7 +125,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.Steps.Single(step => step.Id == "ui-optimization").Status.Should().Be("done");
-        result.Steps.Single(step => step.Id == "ui-optimization").Evidence.Should().Be("UI 优化已完成。");
+        result.Steps.Single(step => step.Id == "ui-optimization").Evidence.Should().Be("游戏界面优化已完成。");
     }
 
     [Fact]
@@ -147,10 +147,10 @@ public sealed class ProjectWorkflowRouteServiceTests
             "ui-optimization",
             "asset-inventory",
             "create-next-iteration-plan");
-        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行 UI 优化");
+        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行游戏界面优化");
         result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
         result.Recommendation.Should().Contain("下载压缩包");
-        result.Recommendation.Should().Contain("UI 优化");
+        result.Recommendation.Should().Contain("游戏界面优化");
         result.Recommendation.Should().Contain("项目素材库");
     }
 
@@ -173,9 +173,9 @@ public sealed class ProjectWorkflowRouteServiceTests
             "ui-optimization",
             "asset-inventory",
             "create-next-iteration-plan");
-        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行 UI 优化");
+        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行游戏界面优化");
         result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
-        result.Recommendation.Should().Contain("UI 优化");
+        result.Recommendation.Should().Contain("游戏界面优化");
         result.Recommendation.Should().Contain("项目素材库");
     }
 
@@ -199,7 +199,7 @@ public sealed class ProjectWorkflowRouteServiceTests
             "asset-inventory",
             "create-next-iteration-plan");
         result.Actions!.Should().NotContain(action => action.ActionId == "ui-optimization");
-        result.Recommendation.Should().Contain("UI 优化也已完成");
+        result.Recommendation.Should().Contain("游戏界面优化也已完成");
         result.Recommendation.Should().Contain("项目素材库");
     }
 
@@ -243,7 +243,7 @@ public sealed class ProjectWorkflowRouteServiceTests
             "download-project",
             "ui-optimization",
             "asset-inventory");
-        result.Recommendation.Should().Contain("试玩反馈创建新一轮迭代计划");
+        result.Recommendation.Should().Contain("试玩反馈创建新一轮游戏模块");
     }
 
     [Fact]

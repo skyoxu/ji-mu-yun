@@ -41,7 +41,7 @@ public sealed class PrototypeNeedsFixRouteService
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
         if (details is null)
         {
-            return new PrototypeNeedsFixRouteResult("", "missing_plan", "当前项目还没有迭代计划。请先使用固定的“生成迭代计划”按钮创建计划；提交反馈不会自动生成计划。", 0, null, null, []);
+            return new PrototypeNeedsFixRouteResult("", "missing_plan", "当前项目还没有游戏模块。请先使用固定的“生成游戏模块”按钮创建计划；提交反馈不会自动生成计划。", 0, null, null, []);
         }
 
         var goal = ResolveGoal(details, request);

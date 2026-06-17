@@ -73,7 +73,7 @@ public sealed class PrototypeIterationGoalService
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         if (details is null)
         {
-            return new PrototypeIterationGoalExecutionResult("", "", "", "missing_plan", "当前项目还没有迭代计划。", 0, false, "failed");
+            return new PrototypeIterationGoalExecutionResult("", "", "", "missing_plan", "当前项目还没有游戏模块。", 0, false, "failed");
         }
 
         var blockingEvaluation = BuildBlockingEvaluationResult(details);
@@ -395,7 +395,7 @@ public sealed class PrototypeIterationGoalService
                 goalId,
                 "",
                 "plan_needs_refinement",
-                "当前迭代计划评估建议先重拆计划，系统已停止执行旧目标。请按评估建议重新生成迭代计划。",
+                "当前游戏模块评估建议先重拆计划，系统已停止执行旧目标。请按评估建议重新生成游戏模块。",
                 goalIndex,
                 hasMoreGoals,
                 "plan_needs_refinement"),
@@ -404,7 +404,7 @@ public sealed class PrototypeIterationGoalService
                 goalId,
                 "",
                 "plan_evaluation_failed",
-                "当前迭代计划评估失败，系统已停止执行旧目标。请先修复评估调用并重新评估计划。",
+                "当前游戏模块评估失败，系统已停止执行旧目标。请先修复评估调用并重新评估计划。",
                 goalIndex,
                 hasMoreGoals,
                 "plan_evaluation_failed"),
