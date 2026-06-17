@@ -112,23 +112,23 @@ public sealed class Chapter2BootstrapService
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(_executionTimeout);
-            HostedProcessResult hardChecks;
+            HostedProcessResult bootstrapPreflight;
             try
             {
-                hardChecks = await _processRunner.RunAsync(_commandBuilder.BuildLocalHardChecksCommand(project.RepoPath).WithRunId(runId), timeout.Token);
+                bootstrapPreflight = await _processRunner.RunAsync(_commandBuilder.BuildProjectBootstrapPreflightCommand(project.RepoPath).WithRunId(runId), timeout.Token);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
-                hardChecks = new HostedProcessResult(
+                bootstrapPreflight = new HostedProcessResult(
                     124,
                     "",
                     $"Chapter 2 bootstrap timed out after {_executionTimeout.TotalMinutes:0} minutes.");
             }
 
-            var exitCode = hardChecks.ExitCode;
+            var exitCode = bootstrapPreflight.ExitCode;
             var status = exitCode == 0 ? "succeeded" : "failed";
-            var stdout = hardChecks.Stdout;
-            var stderr = hardChecks.Stderr;
+            var stdout = bootstrapPreflight.Stdout;
+            var stderr = bootstrapPreflight.Stderr;
             var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId);
 
             foreach (var artifact in discoveredArtifacts)

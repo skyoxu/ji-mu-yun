@@ -13,7 +13,8 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         if (contract is null ||
             (!contract.Kind.StartsWith("rpg-", StringComparison.Ordinal) &&
              !contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal) &&
-             !contract.Kind.StartsWith("survivorslike-", StringComparison.Ordinal)))
+             !contract.Kind.StartsWith("survivorslike-", StringComparison.Ordinal) &&
+             !contract.Kind.StartsWith("deckbuilder-", StringComparison.Ordinal)))
         {
             return "";
         }
@@ -179,6 +180,87 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         if (!string.IsNullOrWhiteSpace(survivorsLike))
         {
             return survivorsLike;
+        }
+
+        var deckbuilder = contract.Kind switch
+        {
+            "deckbuilder-run-context" => """
+                Platform hard acceptance for deckbuilder run context:
+                - The prototype must expose a clear run entry and explain the current role, short-term objective, failure condition, or forward direction.
+                - Runtime UI must make it clear this is a run context, not an isolated card test panel.
+                - Do not advance this step into deck implementation, combat settlement, reward, route choice, or final acceptance work.
+                - Missing run context proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-starter-deck-readability" => """
+                Platform hard acceptance for deckbuilder starter deck readability:
+                - The player must be able to read at least one hand, draw pile, discard pile, deck list, or starter deck summary surface.
+                - Card names, costs/resources, and effects must be readable in runtime UI.
+                - Do not treat invisible data models or code-only card definitions as sufficient proof.
+                - Missing starter deck readability proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-resource-turn-rules" => """
+                Platform hard acceptance for deckbuilder resources and turns:
+                - Energy, mana, action points, candles, or project-specific costs must be visible.
+                - Playing a card must consume the correct resource and the player must be able to end or advance a turn.
+                - Invalid plays such as insufficient resource should give readable feedback.
+                - Missing resource or turn rule proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-enemy-intent-pressure" => """
+                Platform hard acceptance for deckbuilder enemy intent or pressure:
+                - The player must see why card choice matters: enemy intent, attack, buff, countdown, track pressure, narrative threat, or equivalent pressure.
+                - Pressure must be visible in runtime UI, not only implied by code.
+                - Missing enemy intent or pressure proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-card-play-resolution" => """
+                Platform hard acceptance for deckbuilder card play resolution:
+                - The player must be able to play at least one card.
+                - The card must create immediate visible feedback such as damage, block, summon, sacrifice, draw, status, or project-specific effect.
+                - Resource, target, and battle log or equivalent feedback should stay coherent after play.
+                - Missing card play resolution proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-deck-cycle-hand-flow" => """
+                Platform hard acceptance for deckbuilder deck cycle and hand flow:
+                - Cards must visibly move through at least one draw, discard, shuffle, exhaust, or equivalent hand-flow process.
+                - The flow must be repeatable and must not deadlock after the first card play or turn transition.
+                - Missing deck cycle or hand flow proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-combat-resolution" => """
+                Platform hard acceptance for deckbuilder combat resolution:
+                - Combat must be able to reach victory or defeat.
+                - Result state must be visible and understandable before reward, deck mutation, or next-route work.
+                - Missing combat win/fail resolution proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-reward-card-draft" => """
+                Platform hard acceptance for deckbuilder reward or card draft:
+                - Victory must lead to at least two or three understandable reward/card choices unless the project contract explicitly replaces rewards with another deckbuilding mutation.
+                - The player must be able to choose or skip, and the selected choice must affect deck or run state.
+                - Missing reward/card draft proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-deck-mutation-feedback" => """
+                Platform hard acceptance for deckbuilder deck mutation feedback:
+                - A card addition, removal, upgrade, relic/artifact/totem, or rule mutation must visibly change the deck or run state.
+                - The player must be able to understand what changed after the choice.
+                - Text-only claims are not sufficient when runtime state does not reflect the mutation.
+                - Missing deck mutation feedback means STATUS: needs_fix.
+                """,
+            "deckbuilder-map-route-choice" => """
+                Platform hard acceptance for deckbuilder route choice:
+                - This capability is conditional. Only implement it when the project asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map.
+                - The player must be able to choose among at least two next nodes/routes/events, or a non-map project must clearly advance into the next combat/event state.
+                - Missing route or next-state choice proof means STATUS: needs_fix.
+                """,
+            "deckbuilder-final-first-loop-acceptance" => """
+                Platform hard acceptance for deckbuilder final first-loop acceptance:
+                - The selected deckbuilder first-loop capabilities must work end-to-end from run entry through combat, card play, result, reward/deck mutation, and continuation or terminal prototype state.
+                - Route/map choice is required only when the project selected that conditional capability.
+                - Project-specific contract fields, runtime proof, Godot smoke, selected asset usage, main host UI hiding, and package readiness must pass.
+                - Missing final deckbuilder first-loop proof means STATUS: needs_fix.
+                """,
+            _ => ""
+        };
+        if (!string.IsNullOrWhiteSpace(deckbuilder))
+        {
+            return deckbuilder;
         }
 
         return contract.Kind switch

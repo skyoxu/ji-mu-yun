@@ -903,8 +903,9 @@ public sealed class BrowserUiRenderer
                   const createPlan = $("createIterationPlan");
                   const evaluatePlan = $("evaluateIterationPlan");
                   const executeGoal = $("executeIterationGoal");
+                  const deletePlan = $("deleteIterationPlan");
                   createPlan?.insertAdjacentElement("beforebegin", mainActions);
-                  [createPlan, evaluatePlan, executeGoal].filter(Boolean).forEach(button => mainActions.appendChild(button));
+                  [createPlan, evaluatePlan, executeGoal, deletePlan].filter(Boolean).forEach(button => mainActions.appendChild(button));
 
                   v2CreateRepairPanel();
                 }
@@ -1823,7 +1824,6 @@ public sealed class BrowserUiRenderer
                   <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
                   <button id="saveToken">验证并进入</button>
                   <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
-                  <p id="sessionDiagnostics" class="muted"></p>
                 </section>
                 <section id="createProjectPanel" class="stack hidden">
                   <h2 id="createProjectTitle">创建项目</h2>
@@ -1977,7 +1977,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const projectStateCacheVersion = 1;
                 const chatStorageVersion = "v2";
@@ -2068,26 +2068,7 @@ public sealed class BrowserUiRenderer
                   localStorage.setItem("phaseAAccessToken", value);
                   localStorage.removeItem("phaseAAdminToken");
                   writeBrowserCookie("phaseAAccessToken", value, 60 * 60 * 24 * 30);
-                  updateSessionDiagnostics("token_saved");
                 }
-
-                function updateSessionDiagnostics(reason = "") {
-                  const target = $("sessionDiagnostics");
-                  if (!target) return;
-                  const inputLength = $("token")?.value?.trim?.().length || 0;
-                  const localLength = (localStorage.getItem("phaseAAccessToken") || "").length;
-                  const cookieLength = (readBrowserCookie("phaseAAccessToken") || "").length;
-                  const adminLength = (localStorage.getItem("phaseAAdminToken") || "").length;
-                  target.textContent = `登录诊断：${location.origin} | input:${inputLength} local:${localLength} cookie:${cookieLength} admin:${adminLength}${reason ? ` | ${reason}` : ""}`;
-                }
-
-                window.addEventListener("error", event => {
-                  updateSessionDiagnostics(`js_error:${event.message || "unknown"}:${event.lineno || 0}`);
-                });
-                window.addEventListener("unhandledrejection", event => {
-                  const reason = event.reason?.message || event.reason?.status || event.reason || "unknown";
-                  updateSessionDiagnostics(`promise_error:${reason}`);
-                });
 
                 function callV2(name, ...args) {
                   const fn = globalThis[name];
@@ -2477,10 +2458,10 @@ public sealed class BrowserUiRenderer
                   $("createIterationPlan").textContent = planComplete ? "创建新的迭代计划" : "重新生成迭代计划";
                   $("deleteIterationPlan").classList.remove("hidden");
                   $("deleteIterationPlan").disabled = planComplete || isGlobalBusy();
-                  $("evaluateIterationPlan").disabled = isGlobalBusy();
-                  $("evaluateIterationPlan").textContent = "评估当前迭代计划";
-                  $("evaluateIterationPlanFromChat").disabled = isGlobalBusy();
-                  $("evaluateIterationPlanFromChat").textContent = "评估当前计划是否值得继续";
+                  $("evaluateIterationPlan").disabled = isGlobalBusy() || state.iterationPlanEvaluationRunning;
+                  $("evaluateIterationPlan").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前迭代计划";
+                  $("evaluateIterationPlanFromChat").disabled = isGlobalBusy() || state.iterationPlanEvaluationRunning;
+                  $("evaluateIterationPlanFromChat").textContent = state.iterationPlanEvaluationRunning ? "评估中..." : "评估当前计划是否值得继续";
                   $("executeIterationGoal").disabled = hasNeedsFix
                     ? isGlobalBusy()
                     : (!hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
@@ -2577,6 +2558,14 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderIterationPlanEvaluation() {
+                  if (state.iterationPlanEvaluationRunning) {
+                    $("iterationPlanEvaluation").className = "card";
+                    $("iterationPlanEvaluation").innerHTML = `
+                      <strong>正在评估当前迭代计划</strong>
+                      <p class="muted">系统正在判断当前计划是否可以直接执行，完成后结果会保留在这里。</p>
+                    `;
+                    return;
+                  }
                   const evaluation = state.iterationPlanEvaluation;
                   if (!evaluation) {
                     $("iterationPlanEvaluation").className = "card muted";
@@ -2691,7 +2680,8 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!state.iterationPlan?.session) return out("请先生成迭代计划。");
-                  setLocalBusy(true, "正在评估当前迭代计划，请等待当前任务执行完毕。");
+                  state.iterationPlanEvaluationRunning = true;
+                  renderIterationPlan();
                   try {
                     const response = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
                       method: "POST",
@@ -2730,7 +2720,8 @@ public sealed class BrowserUiRenderer
                     showError(error);
                     }
                   } finally {
-                    setLocalBusy(false);
+                    state.iterationPlanEvaluationRunning = false;
+                    renderIterationPlan();
                     await refreshActiveRun();
                   }
                 }
@@ -2787,6 +2778,7 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!hasAnyIterationPlan()) return out("当前没有可删除的迭代计划。");
                   if (isIterationPlanComplete()) return out("迭代计划已经全部完成，不可以删除。");
+                  if (!confirm("确定要删除当前迭代计划吗？这会删除所有 step 并重置迭代计划状态。")) return;
                   setLocalBusy(true, "正在删除迭代计划...");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan`, { method: "DELETE" });
@@ -3181,7 +3173,6 @@ public sealed class BrowserUiRenderer
                   $("sessionStatus").textContent = token()
                     ? "Token 已保留。连接失败或认证未通过时，请点击验证并进入重试。"
                     : "Please paste an access token to sign in.";
-                  updateSessionDiagnostics("logged_out");
                 }
 
                 function showAdminShell(role = state.role || "user") {
@@ -3310,8 +3301,17 @@ public sealed class BrowserUiRenderer
                   return projects.find(p => p.bootstrapStatus === "failed");
                 }
 
+                function isProjectReady(project) {
+                  return String(project?.bootstrapStatus || "").toLowerCase() === "succeeded";
+                }
+
+                function isProjectPendingInitialization(project) {
+                  const status = String(project?.bootstrapStatus || "").toLowerCase();
+                  return status === "initial" || status === "running";
+                }
+
                 function listableProjects(projects) {
-                  return projects.filter(p => p.bootstrapStatus !== "failed");
+                  return projects.filter(isProjectReady);
                 }
 
                 function showCreationFailure(error) {
@@ -4313,7 +4313,6 @@ public sealed class BrowserUiRenderer
                   try {
                     const session = await api("/api/session");
                     sessionValidated = true;
-                    updateSessionDiagnostics(`session_ok:${session.role || "user"}`);
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
                       state.projects = [];
@@ -4324,13 +4323,14 @@ public sealed class BrowserUiRenderer
 
                     const projects = await api("/api/projects");
                     state.projects = projects;
-                    $("initStatusPanel").classList.toggle("hidden", !hasInitializingProject(projects));
-                    if (hasInitializingProject(projects)) {
-                      $("initStatusText").textContent = "\u9879\u76ee\u521d\u59cb\u5316\u914d\u7f6e\u4e2d...\u53ef\u4ee5\u5148\u8fdb\u5165\u9879\u76ee\u8be6\u60c5\u9875\uff0c\u521d\u59cb\u5316\u5b8c\u6210\u540e\u4f1a\u81ea\u52a8\u66f4\u65b0\u72b6\u6001\u3002";
+                    const initializing = hasInitializingProject(projects);
+                    $("initStatusPanel").classList.toggle("hidden", !initializing);
+                    if (initializing) {
+                      $("initStatusText").textContent = "\u9879\u76ee\u521d\u59cb\u5316\u914d\u7f6e\u4e2d...\u521d\u59cb\u5316\u5b8c\u6210\u540e\u4f1a\u81ea\u52a8\u8fdb\u5165\u9879\u76ee\u8be6\u60c5\u9875\u3002";
                     }
 
                     const visibleProjects = listableProjects(projects);
-                    const latestFailure = visibleProjects.length === 0 ? await loadLatestProjectCreationFailure() : null;
+                    const latestFailure = visibleProjects.length === 0 && !initializing ? await loadLatestProjectCreationFailure() : null;
                     const health = await loadProjectHealthSummary();
                     const sortedVisibleProjects = visibleProjects
                       .slice()
@@ -4355,6 +4355,8 @@ public sealed class BrowserUiRenderer
                     callV2("v2RenderLeftProjectList");
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
+                    } else if (initializing && !state.projectId) {
+                      showInitialization("running", "");
                     } else if (visibleProjects.length === 0) {
                       showCreateProjectPage();
                     } else if (autoSelect) {
@@ -4367,12 +4369,10 @@ public sealed class BrowserUiRenderer
                         localStorage.removeItem("phaseAAccessToken");
                         localStorage.removeItem("phaseAAdminToken");
                         clearBrowserCookie("phaseAAccessToken");
-                        updateSessionDiagnostics(`session_auth_failed:${error?.status || ""}`);
                       }
                       showLoggedOut();
                     } else {
                       $("sessionStatus").textContent = "Token 已验证。项目状态刷新失败，请稍后重试。";
-                      updateSessionDiagnostics(`project_refresh_failed:${error?.status || ""}`);
                     }
                     showError(error);
                   }
@@ -4563,10 +4563,8 @@ public sealed class BrowserUiRenderer
                     out(result);
                     if (createdProjectId) {
                       await refreshProjects({ autoSelect: false });
-                      selectProject(createdProjectId);
-                    } else {
-                      showInitialization("running", "");
                     }
+                    showInitialization("running", "");
                     await pollProjectInitializationResult(createdProjectId, creationAttemptStartedAt);
                   } catch (error) {
                     showCreationFailure(projectCreationErrorMessage(error));
@@ -4585,11 +4583,24 @@ public sealed class BrowserUiRenderer
                     try {
                       const projects = await api("/api/projects");
                       state.projects = projects;
+                      const createdProject = projects.find(project => project.projectId === createdProjectId);
+                      if (createdProject?.bootstrapStatus === "failed") {
+                        showCreationFailure(createdProject.bootstrapError || "初始化失败，请查看运行记录。");
+                        return;
+                      }
+                      if (isProjectReady(createdProject)) {
+                        $("initStatusPanel").classList.add("hidden");
+                        await refreshProjects({ autoSelect: false });
+                        selectProject(createdProject.projectId);
+                        return;
+                      }
+                      if (createdProjectId && isProjectPendingInitialization(createdProject)) {
+                        showInitialization("running", "");
+                        callV2("v2RenderLeftProjectList");
+                        continue;
+                      }
                       if (hasInitializingProject(projects)) {
-                        const createdProject = projects.find(project => project.projectId === createdProjectId);
-                        if (createdProject?.projectId && state.projectId !== createdProject.projectId) {
-                          selectProject(createdProject.projectId);
-                        }
+                        showInitialization("running", "");
                         callV2("v2RenderLeftProjectList");
                         continue;
                       }
@@ -4600,16 +4611,12 @@ public sealed class BrowserUiRenderer
                         return;
                       }
                       if (visibleProjects.length > 0) {
-                        $("initStatusPanel").classList.add("hidden");
                         await refreshProjects({ autoSelect: false });
-                        const createdProject = projects.find(project => project.projectId === createdProjectId);
-                        if (createdProject?.projectId) {
-                          selectProject(createdProject.projectId);
-                        } else if (createdProjectId) {
-                          selectProject(createdProjectId);
-                        } else {
+                        if (!createdProjectId) {
                           selectDefaultProject(visibleProjects);
+                          return;
                         }
+                        showCreationFailure("项目初始化未成功完成，请稍后重试。");
                         return;
                       }
                       if (latestFailure?.failureError) {
@@ -4627,7 +4634,7 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   await refreshProjects({ autoSelect: false });
-                  if (createdProjectId) selectProject(createdProjectId);
+                  showInitialization("running", "");
                 }
 
                 function projectCreationErrorMessage(error) {
@@ -4933,7 +4940,12 @@ public sealed class BrowserUiRenderer
                 }
 
                 function isGlobalBusy() {
-                  return state.localBusy || !!state.activeRun?.busy;
+                  return state.localBusy || (!!state.activeRun?.busy && !isInlineOnlyRun(state.activeRun));
+                }
+
+                function isInlineOnlyRun(run) {
+                  const runType = String(run?.runType || "").trim().toLowerCase();
+                  return runType === "prototype-iteration-plan-evaluation";
                 }
 
                 function activeRunText(run) {
@@ -5810,15 +5822,12 @@ public sealed class BrowserUiRenderer
                   runNeedsFixIterationGoal(button.dataset.needsFixGoal);
                 });
                 setTokenFromStorage();
-                updateSessionDiagnostics("page_loaded");
                 if (token()) refreshProjects(); else showLoggedOut();
                 setTimeout(() => {
                   const currentToken = token();
                   if (currentToken) {
                     persistAccessTokenFromInput();
                     if (!state.authenticated) refreshProjects();
-                  } else {
-                    updateSessionDiagnostics("autofill_empty");
                   }
                 }, 250);
                 setInterval(refreshActiveRun, 5000);

@@ -337,13 +337,16 @@ internal static class PrototypeGoalAcceptanceValidator
         AddMarkerSearchDirectory(searchFiles, Path.GetDirectoryName(corePath));
         AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg"), "*.tscn");
         AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts"), "*.cs");
+        AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes"), "*.tscn", SearchOption.AllDirectories);
+        AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Game.Godot", "Prototypes"), "*.cs", SearchOption.AllDirectories);
+        AddMarkerSearchDirectory(searchFiles, Path.Combine(repoPath, "Tests.Godot", "tests", "Prototype"), "*.gd", SearchOption.AllDirectories);
 
         var text = string.Join(
             Environment.NewLine,
             searchFiles.Select(path => File.ReadAllText(path)));
 
         return requiredMarkers
-            .Where(marker => !text.Contains(marker, StringComparison.Ordinal))
+            .Where(marker => !ContainsMarker(text, marker))
             .ToArray();
     }
 
@@ -355,17 +358,38 @@ internal static class PrototypeGoalAcceptanceValidator
         }
     }
 
-    private static void AddMarkerSearchDirectory(HashSet<string> searchFiles, string? directory, string searchPattern = "*.cs")
+    private static void AddMarkerSearchDirectory(
+        HashSet<string> searchFiles,
+        string? directory,
+        string searchPattern = "*.cs",
+        SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
         {
             return;
         }
 
-        foreach (var path in Directory.EnumerateFiles(directory, searchPattern, SearchOption.TopDirectoryOnly))
+        foreach (var path in Directory.EnumerateFiles(directory, searchPattern, searchOption))
         {
             searchFiles.Add(path);
         }
+    }
+
+    private static bool ContainsMarker(string text, string marker)
+    {
+        if (string.IsNullOrWhiteSpace(marker))
+        {
+            return true;
+        }
+
+        var alternatives = marker
+            .Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (alternatives.Length == 0)
+        {
+            return true;
+        }
+
+        return alternatives.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool HasRpgFinalAcceptanceFiles(string repoPath, bool requireBattleScene)

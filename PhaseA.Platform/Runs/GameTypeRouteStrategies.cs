@@ -24,6 +24,7 @@ internal static class GameTypeRouteStrategies
 {
     private static readonly IGameTypeRouteStrategy Rpg = new RpgGameTypeRouteStrategy();
     private static readonly IGameTypeRouteStrategy SurvivorsLike = new SurvivorsLikeGameTypeRouteStrategy();
+    private static readonly IGameTypeRouteStrategy Deckbuilder = new DeckbuilderGameTypeRouteStrategy();
     private static readonly IGameTypeRouteStrategy Default = new DefaultGameTypeRouteStrategy();
 
     public static IGameTypeRouteStrategy Resolve(ProjectSnapshot project)
@@ -40,6 +41,11 @@ internal static class GameTypeRouteStrategies
         if (string.Equals(profile.GameTypeId, "survivorslike", StringComparison.OrdinalIgnoreCase))
         {
             return SurvivorsLike;
+        }
+
+        if (string.Equals(profile.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
+        {
+            return Deckbuilder;
         }
 
         return string.Equals(profile.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase) || RpgGameTypeRouteStrategy.HasLegacyRpgShape(project)
@@ -64,7 +70,69 @@ internal sealed class DefaultGameTypeRouteStrategy : IGameTypeRouteStrategy
     {
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(goal);
+
+        var text = string.Join(" ", goal.Title ?? "", goal.Description ?? "", goal.AcceptanceHint ?? "").ToLowerInvariant();
+        if (ContainsAny(text, "craft", "make", "produce", "production", "cook", "build", "\u5236\u4f5c", "\u751f\u4ea7", "\u5408\u6210", "\u70f9\u996a"))
+        {
+            return Static(
+                "default-production-feedback",
+                [
+                    "Craft|Make|Produce|Production|Cook|Build|\u5236\u4f5c|\u751f\u4ea7|\u5408\u6210|\u70f9\u996a",
+                    "Feedback|Result|Change|Message|Label|\u53cd\u9988|\u7ed3\u679c|\u53d8\u5316|\u6d88\u606f"
+                ]);
+        }
+
+        if (ContainsAny(text, "buy", "purchase", "acquire", "procure", "collect", "\u91c7\u8d2d", "\u8d2d\u4e70", "\u8fdb\u8d27", "\u6536\u96c6", "\u83b7\u53d6"))
+        {
+            return Static(
+                "default-acquisition-feedback",
+                [
+                    "Buy|Purchase|Acquire|Procure|Collect|\u91c7\u8d2d|\u8d2d\u4e70|\u8fdb\u8d27|\u6536\u96c6|\u83b7\u53d6",
+                    "Inventory|Stock|Resource|Ingredient|Item|\u5e93\u5b58|\u539f\u6599|\u8d44\u6e90|\u7269\u54c1"
+                ]);
+        }
+
+        if (ContainsAny(text, "sell", "sale", "customer", "profit", "revenue", "price", "\u9500\u552e", "\u552e\u51fa", "\u987e\u5ba2", "\u5229\u6da6", "\u6536\u5165", "\u5b9a\u4ef7"))
+        {
+            return Static(
+                "default-sale-economy-feedback",
+                [
+                    "Sell|Sale|Customer|Profit|Revenue|Price|\u9500\u552e|\u552e\u51fa|\u987e\u5ba2|\u5229\u6da6|\u6536\u5165|\u5b9a\u4ef7",
+                    "Feedback|Result|Cash|Money|Listed|Message|\u53cd\u9988|\u7ed3\u679c|\u8d44\u91d1|\u4e0a\u67b6|\u6d88\u606f"
+                ]);
+        }
+
+        if (ContainsAny(text, "upgrade", "growth", "progression", "unlock", "improve", "\u5347\u7ea7", "\u6210\u957f", "\u8fdb\u9636", "\u89e3\u9501", "\u5f3a\u5316"))
+        {
+            return Static(
+                "default-growth-progression-feedback",
+                [
+                    "Upgrade|Growth|Progression|Unlock|Improve|\u5347\u7ea7|\u6210\u957f|\u8fdb\u9636|\u89e3\u9501|\u5f3a\u5316",
+                    "Feedback|Result|State|Message|Label|\u53cd\u9988|\u7ed3\u679c|\u72b6\u6001|\u6d88\u606f"
+                ]);
+        }
+
+        if (ContainsAny(text, "loop", "continue", "restart", "repeat", "next round", "first loop", "\u5faa\u73af", "\u7ee7\u7eed", "\u91cd\u65b0", "\u53cd\u590d", "\u4e0b\u4e00\u8f6e", "\u6700\u5c0f\u5faa\u73af"))
+        {
+            return Static(
+                "default-playable-loop-continuity",
+                [
+                    "Loop|Continue|Restart|Repeat|Next|\u5faa\u73af|\u7ee7\u7eed|\u91cd\u65b0|\u53cd\u590d|\u4e0b\u4e00\u8f6e",
+                    "State|Feedback|Message|Objective|Result|\u72b6\u6001|\u53cd\u9988|\u6d88\u606f|\u76ee\u6807|\u7ed3\u679c"
+                ]);
+        }
+
         return null;
+    }
+
+    private static PrototypeGoalAcceptanceContract Static(string kind, IReadOnlyList<string> markers)
+    {
+        return new PrototypeGoalAcceptanceContract(kind, markers, StaticAcceptanceOnly: true);
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 }
 
@@ -907,6 +975,104 @@ internal sealed class SurvivorsLikeGameTypeRouteStrategy : IGameTypeRouteStrateg
         if (ContainsAny(text, "run end", "summary", "restart loop", "final first-loop acceptance"))
         {
             return Static("survivorslike-run-end-summary-restart-loop", ["RunSummary", "Restart", "SurvivalObjective"]);
+        }
+
+        return null;
+    }
+
+    private static PrototypeGoalAcceptanceContract Static(string kind, IReadOnlyList<string> markers)
+    {
+        return new PrototypeGoalAcceptanceContract(kind, markers, StaticAcceptanceOnly: true);
+    }
+
+    private static bool ContainsAny(string text, params string[] values)
+    {
+        return values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
+internal sealed class DeckbuilderGameTypeRouteStrategy : IGameTypeRouteStrategy
+{
+    public string GameTypeId => "deckbuilder";
+
+    public bool RequiresModelBackedIterationPlanning => false;
+
+    public bool RequiresNonEmptyIterationGoals => true;
+
+    public bool UsesSpecializedIterationPlanning => true;
+
+    public bool UsesSpecializedPlanEvaluation => true;
+
+    public PrototypeGoalAcceptanceContract? ResolveAcceptanceContract(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        ArgumentNullException.ThrowIfNull(goal);
+
+        if (!PrototypeRouteSkillPolicy.IsDeckbuilderProject(project))
+        {
+            return null;
+        }
+
+        var text = string.Join(" ", goal.Title ?? "", goal.Description ?? "", goal.AcceptanceHint ?? "").ToLowerInvariant();
+        if (ContainsAny(text, "run context", "opening run context", "开局目标", "路线语境"))
+        {
+            return Static("deckbuilder-run-context", ["RunContext", "Objective", "FailureCondition"]);
+        }
+
+        if (ContainsAny(text, "starter deck readability", "starter deck", "initial deck", "初始牌组"))
+        {
+            return Static("deckbuilder-starter-deck-readability", ["Deck", "Hand", "CardName", "Cost"]);
+        }
+
+        if (ContainsAny(text, "resource and turn", "resource rules", "turn rules", "费用", "回合规则"))
+        {
+            return Static("deckbuilder-resource-turn-rules", ["Energy", "Cost", "EndTurn"]);
+        }
+
+        if (ContainsAny(text, "enemy intent", "pressure source", "pressure", "敌方意图", "压力源"))
+        {
+            return Static("deckbuilder-enemy-intent-pressure", ["EnemyIntent", "Pressure", "Countdown"]);
+        }
+
+        if (ContainsAny(text, "card play resolution", "play a card", "出牌结算"))
+        {
+            return Static("deckbuilder-card-play-resolution", ["PlayCard", "Damage", "Block", "Feedback"]);
+        }
+
+        if (ContainsAny(text, "deck cycle", "hand flow", "draw", "discard", "shuffle", "牌库循环", "手牌流转"))
+        {
+            return Static("deckbuilder-deck-cycle-hand-flow", ["DrawPile", "DiscardPile", "Shuffle", "Hand"]);
+        }
+
+        if (ContainsAny(text, "combat resolution", "victory", "defeat", "战斗胜负", "胜负结算"))
+        {
+            return Static("deckbuilder-combat-resolution", ["Victory", "Defeat", "CombatResult"]);
+        }
+
+        if (ContainsAny(text, "reward", "card draft", "draft", "战后选牌", "奖励"))
+        {
+            return Static("deckbuilder-reward-card-draft", ["Reward", "Draft", "ChooseCard"]);
+        }
+
+        if (ContainsAny(text, "deck mutation", "deck change", "upgrade", "remove", "牌组变化", "删牌", "升级"))
+        {
+            return Static("deckbuilder-deck-mutation-feedback", ["DeckMutation", "DeckChanged", "Upgrade"]);
+        }
+
+        if (ContainsAny(text, "map or route", "route choice", "node choice", "event/shop/elite", "路线选择", "节点", "商店", "精英"))
+        {
+            return Static("deckbuilder-map-route-choice", ["RouteChoice", "Node", "Next"]);
+        }
+
+        if (ContainsAny(text, "final deckbuilder first loop", "final first-loop acceptance", "final acceptance", "最终验收"))
+        {
+            return new PrototypeGoalAcceptanceContract(
+                "deckbuilder-final-first-loop-acceptance",
+                ["RunContext", "Deck", "Energy", "PlayCard", "CombatResult", "Reward", "DeckMutation"],
+                AssetUsageAcceptance: true,
+                MainSceneHostUiHiddenAcceptance: true,
+                FinalAcceptance: true,
+                StaticAcceptanceOnly: true);
         }
 
         return null;

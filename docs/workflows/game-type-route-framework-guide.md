@@ -5,12 +5,15 @@
 建议同时读取：
 
 - `docs/workflows/game-type-route-profile-guide.md`
+- `docs/prototype-type-kits/README.md`
 - `docs/prototype-type-kits/rpg.md`
 - `.agents/skills/prototype-rpg-godot-zh/SKILL.md`
 - `.agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md`
 - `PhaseA.Platform/Runs/GameTypeRouteStrategies.cs`
 - `PhaseA.Platform/Runs/JrpgRouteSemantics.cs`
+- `PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs`
 - `PhaseA.Platform/Runs/PrototypeIterationPlanService.cs`
+- `PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs`
 - `PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs`
 - `PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs`
 
@@ -28,6 +31,12 @@
 6. 模板、metadata、历史 summary、旧 route state 不能强行激活未请求的场景或系统。
 
 未来其他游戏类型应该借鉴这个“能力图 + 可信输入边界 + 本地 guard + 条件验收”的结构，而不是复制 JRPG 的 10 个模块名称。
+
+当前已经有两个可执行 route 参考实现：
+
+- `rpg` / JRPG：当前主参考实现，使用 capability-driven first loop。
+- `survivorslike`：第二个可执行 route 参考实现，验证 route profile 不只服务 RPG。
+- `deckbuilder`：当前卡牌构筑 / roguelike deckbuilder 可执行 route，使用 deckbuilder first-loop capability profile；路线/节点选择是条件能力。
 
 ## 2. 公开入口与内部路由
 
@@ -55,11 +64,15 @@ JRPG 没有新增公开 API。它复用 Phase A 现有入口：
 | `PhaseA.Platform/Runs/GameTypeRouteEngine.cs` | 注册和解析 game-type route profile。 |
 | `PhaseA.Platform/Runs/GameTypeRouteStrategies.cs` | 按游戏类型把 goal 映射为 acceptance contract；`RpgGameTypeRouteStrategy` 是 JRPG 参考实现。 |
 | `PhaseA.Platform/Runs/JrpgRouteSemantics.cs` | JRPG battle/reward/negation/contract intent 的集中语义判断。 |
+| `PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs` | 顶层项目工作流路由，负责下一步建议、UI 优化、素材清单和打包下载的项目级建议。 |
 | `PhaseA.Platform/Runs/PrototypeIterationPlanService.cs` | JRPG capability 选择、scaffold 生成、LLM refinement 解析、本地计划 guard。 |
 | `PhaseA.Platform/Runs/PrototypeGoalAcceptanceValidator.cs` | 执行 strategy 产出的 `PrototypeGoalAcceptanceContract`。 |
 | `PhaseA.Platform/Runs/PrototypeRouteStateWriter.cs` | 写入 route state 和 project execution guide，供后续 route 恢复和执行。 |
 | `.agents/skills/prototype-rpg-godot-zh/SKILL.md` | JRPG/RPG 可执行实现 skill。 |
 | `.agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md` | JRPG/RPG 实现合同。 |
+| `.agents/skills/prototype-deckbuilder-godot-zh/SKILL.md` | Deckbuilder 可执行实现 skill。 |
+| `.agents/skills/prototype-deckbuilder-godot-zh/references/deckbuilder-prototype-contract.md` | Deckbuilder 实现合同。 |
+| `docs/prototype-type-kits/README.md` | Phase A prototype-lane type kits 索引。 |
 | `docs/prototype-type-kits/rpg.md` | RPG type kit 与 capability-driven minimum acceptance。 |
 
 ### 3.1 复用 JRPG 时的改造对照
@@ -74,6 +87,7 @@ JRPG 没有新增公开 API。它复用 Phase A 现有入口：
 | `FindRpgPlanContractIssue(...)` | 本地 guard 先于 LLM evaluation，负责硬边界。 | 新类型自己的缺步、宽泛步骤、越界验收、stale state 规则。 |
 | `RpgGameTypeRouteStrategy` | strategy 把 goal title 映射到 acceptance contract。 | 新类型自己的 scene、marker、file proof、final acceptance 组合。 |
 | `prototype-rpg-godot-zh` skill | skill 约束执行 agent 的可交付边界。 | 新类型 Godot 场景、测试、素材、UI、循环验收合同。 |
+| `prototype-survivorslike-godot-zh` skill | 第二个可执行 route 的参考实现。 | 新类型的 arena survival first loop、脚本、测试和验收合同。 |
 | JRPG tests | 测试覆盖 profile、计划、执行、修复、最终验收。 | 新类型正反例、session scoped state、模板污染、conditional acceptance。 |
 
 判断是否可以“照搬”某段 JRPG 逻辑的标准：如果这段逻辑表达的是 Phase A 路由骨架，可以保留；如果它表达的是地图、队伍、战斗、奖励、任务等 JRPG 语义，必须替换。
@@ -416,21 +430,25 @@ git diff --check
 
 ## 14. 卡牌构筑类型的参考起点
 
-如果下一个类型是卡牌构筑，建议用 JRPG 框架，但定义独立 capability graph：
+如果下一个类型是卡牌构筑，请以 `docs/prototype-type-kits/deckbuilder.md` 作为正式输入源，`docs/game-type-guides/card-game.md` 只作为通用术语参考，不要把 card-game 目录里的常见系统全部自动升级为默认验收。`deckbuilder` 当前只是 type kit / 文档输入，还没有注册可执行 route profile。
 
-| Capability | 是否默认 | 说明 |
+Deckbuilder capability graph 的最小输入如下：
+
+| Capability | 默认性 | 说明 |
 | --- | --- | --- |
-| `run_start` | Always | 开始一局，显示 deck/hand/discard/draw pile 上下文。 |
-| `hand_and_energy_readability` | Always | 手牌、费用/能量、可打出状态、目标/意图清晰。 |
-| `turn_resolution` | Always | 打出卡牌、结算效果、敌方或环境响应、结束回合。 |
-| `route_choice` | Conditional but common | 战斗后或节点间路线选择。 |
-| `event_shop_elite_node` | Conditional but common | 事件、商店、精英节点；请求没有时不要强制。 |
-| `deck_reward` | Conditional | 卡牌奖励、跳过/拿取、牌组更新。 |
-| `deck_editing` | Conditional | 删除、升级、转换、牌库操作。 |
-| `relic_or_modifier` | Conditional | 遗物、被动、局内 modifier。 |
-| `final_run_acceptance` | Always | 选中 capability 端到端可玩。 |
+| `run_context` | Always | 开局目标与路线语境。 |
+| `starter_deck_readability` | Always | 初始牌组可读性。 |
+| `resource_and_turn_rules` | Always | 费用与回合规则。 |
+| `enemy_intent_or_pressure` | Always | 敌方意图或压力源。 |
+| `card_play_resolution` | Always | 出牌结算反馈。 |
+| `deck_cycle_and_hand_flow` | Always | 手牌流转与牌库循环。 |
+| `combat_resolution` | Always | 战斗胜负结算。 |
+| `reward_or_card_draft` | Always | 战后选牌/奖励。 |
+| `deck_mutation_feedback` | Always | 牌组变化反馈。 |
+| `map_or_route_choice` | Conditional | 路线选择、事件/商店/精英节点。 |
+| `final_deckbuilder_first_loop_acceptance` | Always | 最终验收。 |
 
-卡牌构筑 route 的条件规则可以类比 JRPG 的 BattleScene/Reward：
+卡牌构筑 route 的条件规则可以类比 JRPG 的 BattleScene/Reward，但应由当前 request、contract 或 current selected capabilities 激活，而不是由 genre guide 里的名词自动触发：
 
 | 系统 | 何时激活 | 不应由什么激活 |
 | --- | --- | --- |
@@ -440,8 +458,7 @@ git diff --check
 | 牌组编辑 | 请求、合同或 selected capability 明确要求删除、升级、转换、构筑调整。 | 只因为存在 deck/hand/discard UI。 |
 | 遗物/modifier | 请求、合同或 selected capability 明确要求 relic、artifact、passive、modifier。 | 只因为参考游戏有遗物系统。 |
 
-
-不要因为模板提到杀戮尖塔/怪物火车/邪恶冥刻，就默认要求路线选择、商店、事件、精英、遗物、奖励全部出现。它们应该由当前 request、contract 或 current selected capabilities 激活。
+不要因为模板提到杀戮尖塔、怪物火车、邪恶冥刻，就默认要求路线选择、商店、事件、精英、遗物、奖励全部出现。它们应该由当前 request、contract 或 current selected capabilities 激活。
 
 ## 15. 未来 agent 交接摘要模板
 
@@ -463,4 +480,3 @@ Files changed:
 ```
 
 这份摘要的目的不是替代文档，而是让下一位 agent 能快速判断：当前工作是否已经覆盖 profile、strategy、plan、acceptance、repair、tests 和索引入口。
-

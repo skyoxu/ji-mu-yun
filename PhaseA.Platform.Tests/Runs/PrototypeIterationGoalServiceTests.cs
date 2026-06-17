@@ -13,6 +13,73 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class PrototypeIterationGoalServiceTests
 {
     [Fact]
+    public async Task GoalAcceptanceValidator_ShouldPassDefaultProductionFeedback_FromGenericPrototypeFiles()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        WriteText(Path.Combine(repoPath, "Game.Core", "Prototypes", "DemoPrototypeLoop.cs"), """
+public sealed class DemoPrototypeLoop
+{
+    public DemoPrototypeState CraftBurger(DemoPrototypeState state)
+    {
+        return state with { LastMessage = "Craft result feedback is visible.", CraftFeedback = "Result state changed." };
+    }
+}
+
+public sealed record DemoPrototypeState(string LastMessage, string CraftFeedback);
+""");
+        WriteText(Path.Combine(repoPath, "Game.Core.Tests", "Prototypes", "DemoPrototypeLoopTests.cs"), """
+public sealed class DemoPrototypeLoopTests
+{
+    public void ShouldShowCraftFeedback_WhenPlayerMakesItem() { }
+}
+""");
+        WriteText(Path.Combine(repoPath, "Game.Godot", "Prototypes", "demo", "Scripts", "DemoPrototype.cs"), """
+public sealed class DemoPrototype
+{
+    private string _craftFeedbackLabel = "Feedback Label";
+}
+""");
+        var project = DefaultProject(workspaceRoot.Path, repoPath);
+        var goal = DefaultGoal(
+            2,
+            "Goal 2: production feedback",
+            "Improve crafting feedback for the generic playable loop.");
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new ThrowingHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeTrue(result.Reason);
+        result.Kind.Should().Be("default-production-feedback");
+    }
+
+    [Fact]
+    public async Task GoalAcceptanceValidator_ShouldFailDefaultProductionFeedback_WhenFeedbackMarkerIsMissing()
+    {
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoPath = workspaceRoot.Path;
+        WriteText(Path.Combine(repoPath, "Game.Core", "Prototypes", "DemoPrototypeLoop.cs"), """
+public sealed class DemoPrototypeLoop
+{
+    public DemoPrototypeState CraftBurger(DemoPrototypeState state) => state;
+}
+
+public sealed record DemoPrototypeState;
+""");
+        var project = DefaultProject(workspaceRoot.Path, repoPath);
+        var goal = DefaultGoal(
+            2,
+            "Goal 2: production feedback",
+            "Improve crafting feedback for the generic playable loop.");
+
+        var result = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, goal, new ThrowingHostedProcessRunner(), CancellationToken.None);
+
+        result.Passed.Should().BeFalse();
+        result.Status.Should().Be("failed");
+        result.Kind.Should().Be("default-production-feedback");
+        result.Reason.Should().Contain("missing_required_core_markers");
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldRejectInternalExecutionCompletionSuggestion()
     {
         using var database = TempSqliteDatabase.Create();
@@ -3679,6 +3746,56 @@ VERIFY: Godot verification was blocked by an existing log file permission issue.
 REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "", ""));
+        }
+    }
+
+    private static ProjectSnapshot DefaultProject(string workspaceRoot, string repoPath)
+    {
+        return new ProjectSnapshot(
+            "project-id",
+            "account-id",
+            "Demo Game",
+            "Demo Game",
+            "Simulation",
+            "default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-id",
+            workspaceRoot,
+            repoPath,
+            Path.Combine(repoPath, "runtime"),
+            Path.Combine(repoPath, "meta"));
+    }
+
+    private static ProjectIterationGoalSnapshot DefaultGoal(int index, string title, string description)
+    {
+        return new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            index,
+            title,
+            description,
+            "The generic playable loop shows clear feedback and state changes.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+    }
+
+    private static void WriteText(string path, string content)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, content);
+    }
+
+    private sealed class ThrowingHostedProcessRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("Static default acceptance should not run external processes.");
         }
     }
 

@@ -779,6 +779,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("#iterationPlanUpdateModal .modal-card > .stack { max-height: calc(100vh - 4rem); }");
         html.Should().Contain("confirmIterationPlanUpdate");
         html.Should().Contain("deleteIterationPlan");
+        html.Should().Contain("[createPlan, evaluatePlan, executeGoal, deletePlan]");
+        html.Should().Contain("确定要删除当前迭代计划吗？");
         html.Should().Contain("重新生成迭代计划");
         html.Should().Contain("创建新的迭代计划");
         html.Should().Contain("downloadChatHistory");
@@ -1129,12 +1131,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function readBrowserCookie(name)");
         html.Should().Contain("function writeBrowserCookie(name, value, maxAgeSeconds)");
         html.Should().Contain("function clearBrowserCookie(name)");
-        html.Should().Contain("sessionDiagnostics");
-        html.Should().Contain("function updateSessionDiagnostics(reason = \"\")");
-        html.Should().Contain("登录诊断：${location.origin}");
-        html.Should().Contain("window.addEventListener(\"error\"");
+        html.Should().NotContain("sessionDiagnostics");
+        html.Should().NotContain("function updateSessionDiagnostics(reason = \"\")");
+        html.Should().NotContain("登录诊断：${location.origin}");
+        html.Should().NotContain("window.addEventListener(\"error\"");
         html.Should().Contain("setTimeout(() =>");
-        html.Should().Contain("autofill_empty");
+        html.Should().NotContain("autofill_empty");
         html.Should().Contain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
         html.Should().Contain("$(\"token\").addEventListener(\"change\", persistAccessTokenFromInput)");
         html.Should().Contain("Token 已保留");
@@ -1158,15 +1160,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("pollProjectInitializationResult");
         html.Should().Contain(@"const createdProjectId = result.projectId || result.ProjectId || """";");
         html.Should().Contain("if (createdProjectId) {");
-        html.Should().Contain("selectProject(createdProjectId)");
+        html.Should().NotContain("selectProject(createdProjectId)");
+        html.Should().Contain("showInitialization(\"running\", \"\")");
         html.Should().Contain("await pollProjectInitializationResult(createdProjectId, creationAttemptStartedAt)");
         html.Should().Contain("await refreshProjects({ autoSelect: false })");
-        html.Should().NotContain("selectProject(createdProjectId);\n                    }\n                    showInitialization(\"running\", \"\");");
-        html.Should().Contain("if (createdProjectId) selectProject(createdProjectId);");
         html.Should().Contain("isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)");
+        html.Should().Contain("function isProjectReady(project)");
+        html.Should().Contain("function isProjectPendingInitialization(project)");
         html.Should().Contain("const createdProject = projects.find(project => project.projectId === createdProjectId)");
-        html.Should().Contain("if (createdProject?.projectId && state.projectId !== createdProject.projectId)");
+        html.Should().Contain("if (isProjectReady(createdProject))");
         html.Should().Contain("selectProject(createdProject.projectId)");
+        html.Should().Contain("if (createdProjectId && isProjectPendingInitialization(createdProject))");
         html.Should().Contain("projectCreationErrorMessage");
         html.Should().Contain("project_initialization_in_progress");
         html.Should().Contain("project_quota_exceeded");
@@ -1181,8 +1185,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("loadLatestProjectCreationFailure");
         html.Should().Contain("/api/project-creation-failures/latest");
         html.Should().Contain("listableProjects");
-        html.Should().Contain(@"p.bootstrapStatus !== ""failed""");
-        html.Should().Contain(@"classList.toggle(""hidden"", !hasInitializingProject(projects))");
+        html.Should().Contain("projects.filter(isProjectReady)");
+        html.Should().Contain(@"classList.toggle(""hidden"", !initializing)");
         html.Should().NotContain("showInitialization(\"running\", \"\");\n                      out(projects);\n                      return;");
         html.Should().Contain(@"$(""sessionPanel"").classList.add(""hidden"")");
         html.Should().Contain("项目初始化配置中");
@@ -1228,8 +1232,9 @@ public sealed class BrowserUiRendererTests
         html.IndexOf("id=\"globalModel\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"logout\"", StringComparison.Ordinal));
-        html.IndexOf("isProjectCreationFailureForAttempt(latestFailure, createdProjectId, attemptStartedAt)", StringComparison.Ordinal)
+        html.IndexOf("if (isProjectReady(createdProject))", StringComparison.Ordinal)
             .Should().BeLessThan(html.IndexOf("if (visibleProjects.length > 0)", StringComparison.Ordinal));
+        html.Should().NotContain("项目初始化超时，请稍后重试。");
         html.Should().Contain("<h1>Game Ren</h1>");
         html.Should().Contain("<title>Game Ren</title>");
         html.Should().NotContain("Phase A Prototype Console");
@@ -1464,7 +1469,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("resolveIterationPlanEvaluationSuggestedFeedback");
         html.Should().Contain("__iteration_plan_evaluate__");
         html.Should().Contain("__iteration_plan_execute_next__");
-        html.Should().NotContain("iteration-plan-evaluation");
+        html.Should().NotContain("kind: \"iteration-plan-evaluation\"");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");
         html.Should().Contain("<button id=\"executeIterationGoal\" class=\"secondary\" data-global-action=\"true\">执行下一目标</button>");
@@ -1482,6 +1487,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("主流程：迭代计划");
         html.Should().Contain("评估当前迭代计划");
         html.Should().Contain("renderIterationPlanEvaluation");
+        html.Should().Contain("iterationPlanEvaluationRunning");
+        html.Should().Contain("正在评估当前迭代计划");
+        html.Should().Contain("isInlineOnlyRun");
+        html.Should().Contain("prototype-iteration-plan-evaluation");
+        html.Should().NotContain("setLocalBusy(true, \"正在评估当前迭代计划");
         html.Should().Contain("页面建议：");
         html.Should().Contain("suggestedPromptForRegeneration");
         html.Should().Contain("重新生成迭代计划");

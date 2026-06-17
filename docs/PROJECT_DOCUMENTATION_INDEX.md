@@ -99,4 +99,5 @@ Current stop-loss families:
 - Project-health report catalog: `logs/ci/project-health/report-catalog.latest.json`
 
 - Game Type Guides: `docs/game-type-guides/README.md`
+- Prototype Type Kits: `docs/prototype-type-kits/README.md`
 - Prototype 7-Day Playable Godot ZH Skill: `.agents/skills/prototype-7day-playable-godot-zh/SKILL.md`

@@ -51,6 +51,8 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Decision.Should().Be("should_refine_plan");
         result.Summary.Should().NotBeNullOrWhiteSpace();
+        result.Summary.Should().Contain("不适合直接执行");
+        result.Summary.Should().NotContain("可以用");
         result.Reason.Should().NotBeNullOrWhiteSpace();
         result.SuggestedAction.Should().NotBeNullOrWhiteSpace();
         result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
@@ -86,6 +88,43 @@ public sealed class PrototypeIterationPlanServiceTests
         latest.Should().NotBeNull();
         latest!.LatestEvaluation.Should().NotBeNull();
         latest.LatestEvaluation!.Decision.Should().Be(result.LatestEvaluation.Decision);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldSplitGenericLoopActionListIntoSmallGoals()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "模拟经营");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "请继续把当前原型补成一个可反复试玩的最小闭环：围绕“采购、尝试制作、销售、盈利、继续采购、升级产品。”补齐关键反馈、状态切换和完成判定。完成后先验证“玩家能采购原材料。”是否真正成立。",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(8);
+        result.Goals.Select(goal => goal.Title).Should().ContainInOrder(
+            "目标 1：验证玩家能采购",
+            "目标 2：补通制作反馈",
+            "目标 3：补通销售反馈",
+            "目标 4：补通盈利反馈",
+            "目标 5：补通继续采购反馈",
+            "目标 6：补通升级产品反馈",
+            "目标 7：最小闭环回归验收",
+            "Final Step: full playable prototype acceptance");
+        result.Goals[0].Description.Should().Contain("只处理“采购”这个最小动作");
+        result.Goals[0].Description.Should().NotContain("可反复试玩的最小闭环");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
     }
 
     [Fact]
@@ -887,6 +926,72 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Goals[9].Title.Should().Be("Vampire Survivors-like First Loop: run end, summary, and restart loop");
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldUseDeckbuilderFirstLoopGoals_WhenProjectIsDeckbuilder()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Roguelike Deckbuilder");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Build a card-building first loop with readable starter deck, energy, enemy intent, play cards, draw/discard, win combat, choose a reward, and mutate the deck.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(10);
+        result.Goals.Select(goal => goal.Title).Should().ContainInOrder(
+            "Deckbuilder First Loop: run context and objective",
+            "Deckbuilder First Loop: starter deck readability",
+            "Deckbuilder First Loop: resource and turn rules",
+            "Deckbuilder First Loop: enemy intent or pressure source",
+            "Deckbuilder First Loop: card play resolution feedback",
+            "Deckbuilder First Loop: deck cycle and hand flow",
+            "Deckbuilder First Loop: combat win/fail resolution",
+            "Deckbuilder First Loop: post-combat card draft or reward",
+            "Deckbuilder First Loop: deck mutation feedback",
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance");
+        result.Goals.Select(goal => goal.Title).Should().NotContain(title => title.Contains("map or route choice", StringComparison.OrdinalIgnoreCase));
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldIncludeDeckbuilderRouteChoice_WhenSourceRequestsRoutes()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Slay the Spire-like deckbuilder");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Build a deckbuilder run loop with a route map, event nodes, shop nodes, elites, combat, rewards, and deck mutation.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(11);
+        result.Goals.Select(goal => goal.Title).Should().Contain("Deckbuilder First Loop: map or route choice");
+        result.Goals[^1].Title.Should().Be("Deckbuilder First Loop: final deckbuilder first-loop acceptance");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
     }
 
     [Fact]

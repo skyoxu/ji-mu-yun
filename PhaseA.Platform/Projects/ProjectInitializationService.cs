@@ -171,7 +171,19 @@ public sealed class ProjectInitializationService
             return null;
         }
 
-        var latest = Directory.EnumerateFiles(Path.Combine(repoPath, "logs", "ci"), "local-hard-checks-latest.json", SearchOption.AllDirectories)
+        var projectHealth = BuildProjectHealthFailureDiagnostics(repoPath);
+        if (!string.IsNullOrWhiteSpace(projectHealth))
+        {
+            return projectHealth;
+        }
+
+        var ciRoot = Path.Combine(repoPath, "logs", "ci");
+        if (!Directory.Exists(ciRoot))
+        {
+            return null;
+        }
+
+        var latest = Directory.EnumerateFiles(ciRoot, "local-hard-checks-latest.json", SearchOption.AllDirectories)
             .Select(path => new FileInfo(path))
             .OrderByDescending(file => file.LastWriteTimeUtc)
             .FirstOrDefault();
@@ -214,6 +226,67 @@ public sealed class ProjectInitializationService
         catch (Exception ex)
         {
             return $"LOCAL_HARD_CHECKS status=fail diagnostics_error={ex.GetType().Name}:{ex.Message}";
+        }
+    }
+
+    private static string? BuildProjectHealthFailureDiagnostics(string repoPath)
+    {
+        var scanPath = Path.Combine(repoPath, "logs", "ci", "project-health", "project-health-scan.latest.json");
+        if (!File.Exists(scanPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var scanDoc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(scanPath));
+            var status = scanDoc.RootElement.TryGetProperty("status", out var statusElement)
+                ? statusElement.GetString()
+                : "";
+            var exitCode = scanDoc.RootElement.TryGetProperty("exit_code", out var exitCodeElement) &&
+                exitCodeElement.TryGetInt32(out var exitCodeValue)
+                    ? exitCodeValue
+                    : 0;
+            if (!string.Equals(status, "fail", StringComparison.OrdinalIgnoreCase) && exitCode == 0)
+            {
+                return null;
+            }
+
+            var failedChecks = new List<string>();
+            if (scanDoc.RootElement.TryGetProperty("results", out var results) &&
+                results.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var result in results.EnumerateArray())
+                {
+                    var resultStatus = result.TryGetProperty("status", out var resultStatusElement)
+                        ? resultStatusElement.GetString()
+                        : "";
+                    var resultExitCode = result.TryGetProperty("exit_code", out var resultExitCodeElement) &&
+                        resultExitCodeElement.TryGetInt32(out var resultExitCodeValue)
+                            ? resultExitCodeValue
+                            : 0;
+                    if (!string.Equals(resultStatus, "fail", StringComparison.OrdinalIgnoreCase) && resultExitCode == 0)
+                    {
+                        continue;
+                    }
+
+                    var name = result.TryGetProperty("name", out var nameElement)
+                        ? nameElement.GetString()
+                        : "unknown";
+                    failedChecks.Add($"{name}(status={resultStatus},rc={resultExitCode})");
+                }
+            }
+
+            return string.Join(Environment.NewLine, new[]
+            {
+                "PROJECT_BOOTSTRAP_PREFLIGHT status=fail",
+                $"summary={ToRepoRelative(repoPath, scanPath)}",
+                $"failed_checks={string.Join(",", failedChecks)}"
+            }.Where(static line => !string.IsNullOrWhiteSpace(line)));
+        }
+        catch (Exception ex)
+        {
+            return $"PROJECT_BOOTSTRAP_PREFLIGHT status=fail diagnostics_error={ex.GetType().Name}:{ex.Message}";
         }
     }
 

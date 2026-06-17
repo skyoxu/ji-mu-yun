@@ -21,7 +21,7 @@ public sealed class Chapter2BootstrapServiceTests
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
-            new HostedProcessResult(0, "hard checks ok\n", "")
+            new HostedProcessResult(0, "bootstrap preflight ok\n", "")
         ], writeProjectHealth: true);
         var service = Service(store, options, runner);
 
@@ -29,7 +29,7 @@ public sealed class Chapter2BootstrapServiceTests
 
         result.Status.Should().Be("succeeded");
         result.ExitCode.Should().Be(0);
-        result.Stdout.Should().Contain("hard checks ok");
+        result.Stdout.Should().Contain("bootstrap preflight ok");
         result.Artifacts.Select(a => a.RelativePath).Should().Contain([
             "logs/ci/project-health/latest.html",
             "logs/ci/project-health/latest.json",
@@ -41,9 +41,13 @@ public sealed class Chapter2BootstrapServiceTests
         run!.RunType.Should().Be("chapter2-bootstrap");
         run.Status.Should().Be("succeeded");
         run.ExitCode.Should().Be(0);
-        run.StdoutText.Should().Contain("hard checks ok");
+        run.StdoutText.Should().Contain("bootstrap preflight ok");
         run.EvidenceJson.Should().Contain("project_health_artifacts");
         runner.CallCount.Should().Be(1);
+        runner.LastCommand.Should().NotBeNull();
+        runner.LastCommand!.Arguments.Should().Contain("project-health-scan");
+        runner.LastCommand.Arguments.Should().NotContain("run-local-hard-checks");
+        runner.LastCommand.Arguments.Should().NotContain("run-dotnet");
     }
 
     [Fact]
@@ -316,10 +320,12 @@ public sealed class Chapter2BootstrapServiceTests
         }
 
         public int CallCount { get; private set; }
+        public HostedProcessCommand? LastCommand { get; private set; }
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             CallCount++;
+            LastCommand = command;
             if (_writeProjectHealth)
             {
                 WriteProjectHealthArtifacts(command.WorkingDirectory);

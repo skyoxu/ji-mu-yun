@@ -1,6 +1,6 @@
 # 游戏类型路由 Profile 接入指南
 
-本文说明后续如何像 RPG 一样添加新的游戏类型路由，并让原型创建、迭代计划、执行下一目标、Needs Fix 和最终验收都切到该类型的专属规则。
+本文说明后续如何像现有 RPG / Survivors-like 路由一样添加新的游戏类型路由，并让原型创建、迭代计划、执行下一目标、Needs Fix 和最终验收都切到该类型的专属规则。
 
 ## 设计原则
 
@@ -22,6 +22,45 @@ RPG 现在由两层提供专属能力：
 
 RPG/JRPG 现在是 capability-driven：默认只保留 opening context、field navigation、final first-loop acceptance；BattleScene、奖励、回地图、任务推进等只在当前请求、合同或 session-scoped selected capabilities 明确选择时进入计划和验收。
 
+## 当前已注册 Route Profiles
+
+当前平台内已经存在的 route profile 不止 RPG：
+
+| Game type | Profile | 状态 | 说明 |
+| --- | --- | --- | --- |
+| `default` | `godot-playable-default-v1` | Active | 通用原型路由，供未识别类型使用。 |
+| `rpg` | `godot-rpg-v1` | Active | 当前 JRPG/RPG 可执行专属路由。 |
+| `survivorslike` | `godot-survivorslike-v1` | Active | 当前 Vampire Survivors-like 可执行专属路由。 |
+| `deckbuilder` | `godot-deckbuilder-v1` | Active | 当前卡牌构筑 / roguelike deckbuilder 可执行专属路由；路线/节点选择是条件能力。 |
+
+这意味着新增游戏类型的文档不应该假装当前系统只有 RPG。后续维护者必须先区分：
+
+- 已注册的可执行 route profile。
+- 仅有文档输入的未来类型。
+- 仍然回退到 default 路由的泛型项目。
+
+## 顶层项目工作流路由关系
+
+`ProjectWorkflowRouteService` 是当前普通用户“下一步建议”和项目进度查询的顶层路由。它不会替代 `GameTypeRouteProfile` 或 `IGameTypeRouteStrategy`，但会把项目状态整理成用户可见流程，并决定下一步应该打开哪个页面或 run 入口。
+
+当前顶层进度步骤是：
+
+1. 游戏项目详情
+2. 原型骨架创建
+3. 骨架验收修复
+4. 完成迭代计划
+5. UI优化
+6. 原型验收
+7. 确认素材清单
+8. 打包下载项目
+
+新增可执行游戏类型时，除了接入 profile、strategy、skill 和计划/验收外，还要确认 `ProjectWorkflowRouteService` 的下一步建议是否需要类型差异：
+
+- 非 generic route 在已打包后会额外建议 UI 优化和项目素材库。
+- UI 优化是 option，不应卡住原型验收或打包下载。
+- 素材清单和打包下载属于项目级工作流，不应该写进单个 game-type strategy 的 acceptance contract。
+- 聊天里的“下一步建议”只查询顶层项目路由；一次性按钮只打开对应页面，不自动启动 run。
+
 ## BMAD/GDS 24 Game-Type Templates
 
 BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog first reads `docs/game-type-guides/game-types.csv` and `docs/game-type-guides/<game-type>.md`; if those extracted docs are missing, it falls back to `.agents/skills/gds-create-gdd/game-types.csv` and matching fragments.
@@ -38,6 +77,9 @@ Current runtime integration:
 - `BmadGameTypeDesignCatalog` loads the 24 design templates read-only.
 - RPG/JRPG iteration planning injects the `rpg` guide excerpt as taxonomy and semantic hints.
 - RPG/JRPG execution boundaries still come from `prototype-rpg-godot-zh`, `GameTypeRouteProfiles.Rpg`, and `RpgGameTypeRouteStrategy`.
+- Survivors-like execution boundaries come from `prototype-survivorslike-godot-zh`, `GameTypeRouteProfiles.SurvivorsLike`, and `SurvivorsLikeGameTypeRouteStrategy`.
+- Deckbuilder execution boundaries come from `prototype-deckbuilder-godot-zh`, `GameTypeRouteProfiles.Deckbuilder`, and `DeckbuilderGameTypeRouteStrategy`.
+- Generic project-level next-step advice, UI optimization prompts, asset inventory prompts, package/download prompts, and route buttons are produced by `ProjectWorkflowRouteService`, not by the game-type route strategy itself.
 
 When adding a new game type, extract first-loop capability vocabulary from the BMAD/GDS guide first, then decide whether the type deserves a Phase A executable route profile.
 
@@ -91,11 +133,12 @@ When adding a new game type, extract first-loop capability vocabulary from the B
 - `PrototypeRouteSkillPolicyTests`：新类型能解析到正确 profile、skill、contract 和 prompt block。
 - `PrototypeIterationPlanServiceTests`：新类型能生成专属 step 顺序，错误或泛化计划会被拒绝或要求重拆。
 - `PrototypeIterationGoalServiceTests`：执行目标时能使用新类型的 acceptance kind。
+- `ProjectWorkflowRouteServiceTests`：顶层项目路由能根据项目状态、UI 优化、素材清单、打包下载和试玩反馈给出正确下一步建议。
 
 ## 验证命令
 
 ```powershell
-dotnet test PhaseA.Platform.Tests\PhaseA.Platform.Tests.csproj --filter "FullyQualifiedName~PrototypeRouteSkillPolicyTests|FullyQualifiedName~PrototypeIterationPlanServiceTests|FullyQualifiedName~PrototypeIterationGoalServiceTests|FullyQualifiedName~PrototypeRepairPlanServiceTests" --no-restore
+dotnet test PhaseA.Platform.Tests\PhaseA.Platform.Tests.csproj --filter "FullyQualifiedName~PrototypeRouteSkillPolicyTests|FullyQualifiedName~PrototypeIterationPlanServiceTests|FullyQualifiedName~PrototypeIterationGoalServiceTests|FullyQualifiedName~PrototypeRepairPlanServiceTests|FullyQualifiedName~ProjectWorkflowRouteServiceTests" --no-restore
 git diff --check
 ```
 
@@ -114,10 +157,13 @@ git diff --check
 ```text
 .agents/skills/prototype-<type>-godot-zh/SKILL.md
 .agents/skills/prototype-<type>-godot-zh/references/<type>-prototype-contract.md
+docs/prototype-type-kits/<type>.md
 PhaseA.Platform/Runs/GameTypeRouteEngine.cs
 PhaseA.Platform/Runs/GameTypeRouteStrategies.cs
+PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs
 PhaseA.Platform/Runs/PrototypeIterationPlanService.cs
 PhaseA.Platform.Tests/Runs/PrototypeRouteSkillPolicyTests.cs
 PhaseA.Platform.Tests/Runs/PrototypeIterationPlanServiceTests.cs
 PhaseA.Platform.Tests/Runs/PrototypeIterationGoalServiceTests.cs
+PhaseA.Platform.Tests/Runs/ProjectWorkflowRouteServiceTests.cs
 ```

@@ -2339,7 +2339,8 @@ public sealed partial class PrototypeQuickFixService
     {
         var combined = string.Join("\n", new[] { codexOutput, codexResult.Stdout, codexResult.Stderr }.Where(static value => !string.IsNullOrWhiteSpace(value)));
         var normalized = combined.ToLowerInvariant();
-        var structuredStatus = ParseStructuredStatus(codexOutput)
+        var structuredStatus = ParseStructuredStatus(assistantMessage)
+            ?? ParseStructuredStatus(codexOutput)
             ?? ParseStructuredStatus(codexResult.Stdout)
             ?? ParseStructuredStatus(codexResult.Stderr);
         if (string.Equals(structuredStatus, "needs_fix", StringComparison.OrdinalIgnoreCase))
@@ -2377,7 +2378,7 @@ public sealed partial class PrototypeQuickFixService
         var offTopicMatched = HasOffTopicEvidence(offTopicSource) && !GoalAllowsInfraTerms(goal);
         if (string.Equals(structuredStatus, "completed", StringComparison.OrdinalIgnoreCase))
         {
-            return offTopicMatched || !HasCompletionEvidence(codexOutput)
+            return offTopicMatched || !HasCompletionEvidence(assistantMessage, codexOutput)
                 ? new GoalRepairOutcome("needs_fix", false)
                 : new GoalRepairOutcome("succeeded", true);
         }
@@ -2542,6 +2543,17 @@ public sealed partial class PrototypeQuickFixService
             "static check",
             "static inspection",
             "checked",
+            "should show",
+            "should see",
+            "should become",
+            "should be",
+            "should remain",
+            "应看到",
+            "应显示",
+            "应出现",
+            "应重新可用",
+            "应保持",
+            "应变为",
             "no longer contains",
             "通过",
             "已确认",

@@ -307,6 +307,11 @@ internal static class PrototypeGodotSmokeService
             return goal.GoalIndex is >= 1 and <= 10;
         }
 
+        if (PrototypeRouteSkillPolicy.IsDeckbuilderProject(project))
+        {
+            return goal.GoalIndex is >= 1 and <= 11;
+        }
+
         return false;
     }
 
@@ -320,6 +325,11 @@ internal static class PrototypeGodotSmokeService
         if (PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
         {
             return goal.GoalIndex is >= 5 and <= 10;
+        }
+
+        if (PrototypeRouteSkillPolicy.IsDeckbuilderProject(project))
+        {
+            return goal.GoalIndex is >= 5 and <= 11;
         }
 
         return false;

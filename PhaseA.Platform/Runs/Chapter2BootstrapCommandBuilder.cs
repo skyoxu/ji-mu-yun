@@ -38,4 +38,26 @@ public sealed class Chapter2BootstrapCommandBuilder
 
         return new HostedProcessCommand(_options.PythonCommand, arguments, repositoryRoot, environment);
     }
+
+    public HostedProcessCommand BuildProjectBootstrapPreflightCommand(string repositoryRoot)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+
+        var arguments = new List<string>
+        {
+            "-3",
+            "scripts/python/dev_cli.py",
+            "project-health-scan",
+            "--repo-root",
+            "."
+        };
+
+        var environment = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(_options.GodotBin))
+        {
+            environment["GODOT_BIN"] = _options.GodotBin;
+        }
+
+        return new HostedProcessCommand(_options.PythonCommand, arguments, repositoryRoot, environment);
+    }
 }

@@ -79,6 +79,66 @@ REMAINING: none
     }
 
     [Fact]
+    public void GoalRepairCompletionEvidence_ShouldAcceptPlayableLoopDeferredVerification()
+    {
+        var output = """
+STATUS: completed
+
+SUMMARY: 当前 step 2 已补强为“制作完成后仍可继续当前制作循环”：玩家采购后能制作，画面会显示原料扣减、待命名汉堡增加、制作完成反馈，并提示可继续采购后再次制作。没有加入命名、定价或销售入口。
+
+CHANGED: 制作完成后的目标与阶段反馈改为明确提示“继续采购并再次制作”。
+CHANGED: 制作按钮逻辑保持有原料时可用、无原料时禁用，并补充场景测试断言再次采购后可继续制作。
+
+VERIFY: 进入游戏后点击“采购原料”，再点击“开始制作”，应看到基础原料变为 0/3、待命名汉堡变为 1。
+VERIFY: 再次点击“采购原料”后，“开始制作”应重新可用，且仍不出现销售相关入口。
+VERIFY: 按要求未运行本地 dotnet 或 Godot 验证，等待平台隔离验收。
+
+REMAINING: none
+""";
+
+        PrototypeQuickFixService.HasGoalRepairCompletionEvidenceForTesting(output).Should().BeTrue();
+    }
+
+    [Fact]
+    public void GoalRepairOutcome_ShouldAcceptAssistantMessageWhenCodexOutputHasToolNoise()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "目标 2：补通制作反馈",
+            "在前一步“采购”已经成立的基础上，只补通“制作”及其必要状态变化和可见反馈。不要同时处理后续“销售”。",
+            "完成并验证：玩家能制作，且反馈和状态变化清楚可见。",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var output = """
+STATUS: completed
+
+SUMMARY: 当前 step 2 已补强为“制作完成后仍可继续当前制作循环”：玩家采购后能制作，画面会显示原料扣减、待命名汉堡增加、制作完成反馈，并提示可继续采购后再次制作。没有加入命名、定价或销售入口。
+
+CHANGED: 制作完成后的目标与阶段反馈改为明确提示“继续采购并再次制作”。
+CHANGED: 制作按钮逻辑保持有原料时可用、无原料时禁用，并补充场景测试断言再次采购后可继续制作。
+
+VERIFY: 进入游戏后点击“采购原料”，再点击“开始制作”，应看到基础原料变为 0/3、待命名汉堡变为 1。
+VERIFY: 再次点击“采购原料”后，“开始制作”应重新可用，且仍不出现销售相关入口。
+VERIFY: 按要求未运行本地 dotnet 或 Godot 验证，等待平台隔离验收。
+
+REMAINING: none
+""";
+
+        var status = PrototypeQuickFixService.DetermineGoalRepairOutcomeStatusForTesting(
+            goal,
+            output,
+            "Reading route files and command event stream.",
+            "Get-ChildItem : path Game.Godot/Prototypes/dq-rpg not found while probing an unrelated old route.");
+
+        status.Should().Be("succeeded");
+    }
+
+    [Fact]
     public void GoalRepairCompletionEvidence_ShouldRejectMissingGameplayVerification()
     {
         var output = """

@@ -189,6 +189,11 @@ public static class GameTypeRouteProfiles
             return SurvivorsLike;
         }
 
+        if (IsDeckbuilderProject(project))
+        {
+            return Deckbuilder;
+        }
+
         if (IsRpgProject(project))
         {
             return Rpg;
@@ -228,6 +233,83 @@ public static class GameTypeRouteProfiles
                text.Contains("\u8089\u9e3d\u5272\u8349", StringComparison.Ordinal);
     }
 
+    public static bool IsDeckbuilderProject(ProjectSnapshot project)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
+        var explicitDeckbuilder =
+            text.Contains("deckbuilder", StringComparison.Ordinal) ||
+            text.Contains("deck builder", StringComparison.Ordinal) ||
+            text.Contains("deck-building", StringComparison.Ordinal) ||
+            text.Contains("deck building", StringComparison.Ordinal) ||
+            text.Contains("deckbuilding", StringComparison.Ordinal) ||
+            text.Contains("deck-building roguelike", StringComparison.Ordinal) ||
+            text.Contains("deckbuilding roguelike", StringComparison.Ordinal) ||
+            text.Contains("roguelike deckbuilder", StringComparison.Ordinal) ||
+            text.Contains("roguelite deckbuilder", StringComparison.Ordinal) ||
+            text.Contains("card battler", StringComparison.Ordinal) ||
+            text.Contains("card builder", StringComparison.Ordinal) ||
+            text.Contains("card roguelike", StringComparison.Ordinal) ||
+            text.Contains("card roguelite", StringComparison.Ordinal) ||
+            text.Contains("slay the spire", StringComparison.Ordinal) ||
+            text.Contains("monster train", StringComparison.Ordinal) ||
+            text.Contains("inscryption", StringComparison.Ordinal) ||
+            text.Contains("balatro", StringComparison.Ordinal) ||
+            text.Contains("wildfrost", StringComparison.Ordinal) ||
+            text.Contains("griftlands", StringComparison.Ordinal) ||
+            text.Contains("across the obelisk", StringComparison.Ordinal) ||
+            text.Contains("vault of the void", StringComparison.Ordinal) ||
+            text.Contains("roguebook", StringComparison.Ordinal) ||
+            text.Contains("cobalt core", StringComparison.Ordinal) ||
+            text.Contains("dicey dungeons", StringComparison.Ordinal) ||
+            text.Contains("night of full moon", StringComparison.Ordinal) ||
+            text.Contains("\u5361\u724c\u6784\u7b51", StringComparison.Ordinal) ||
+            text.Contains("\u5361\u724c\u6784\u5efa", StringComparison.Ordinal) ||
+            text.Contains("\u6784\u7b51\u5361\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u7b51", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u5efa", StringComparison.Ordinal) ||
+            text.Contains("\u6784\u5efa\u724c\u7ec4", StringComparison.Ordinal) ||
+            text.Contains("\u6784\u7b51\u724c\u7ec4", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u5efa\u5f0f", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u7b51\u5f0f", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u5efa\u5f0f\u7c7brogue", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4\u6784\u7b51\u5f0f\u7c7brogue", StringComparison.Ordinal) ||
+            text.Contains("\u8089\u9e3d\u5361\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u5361\u724c\u8089\u9e3d", StringComparison.Ordinal) ||
+            text.Contains("\u5361\u724c\u7c7brogue", StringComparison.Ordinal) ||
+            text.Contains("\u722c\u5854\u5361\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u6740\u622e\u5c16\u5854", StringComparison.Ordinal) ||
+            text.Contains("\u602a\u7269\u706b\u8f66", StringComparison.Ordinal) ||
+            text.Contains("\u90aa\u6076\u51a5\u523b", StringComparison.Ordinal) ||
+            text.Contains("\u5c0f\u4e11\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u6708\u5706\u4e4b\u591c", StringComparison.Ordinal) ||
+            text.Contains("\u5938\u8d8a\u65b9\u5c16\u7891", StringComparison.Ordinal);
+        if (explicitDeckbuilder)
+        {
+            return true;
+        }
+
+        var cardGameTaxonomy =
+            text.Contains("card-game", StringComparison.Ordinal) ||
+            text.Contains("card game", StringComparison.Ordinal) ||
+            text.Contains("\u5361\u724c\u6e38\u620f", StringComparison.Ordinal);
+        var deckbuildingContext =
+            text.Contains("deck", StringComparison.Ordinal) ||
+            text.Contains("draft", StringComparison.Ordinal) ||
+            text.Contains("hand", StringComparison.Ordinal) ||
+            text.Contains("discard", StringComparison.Ordinal) ||
+            text.Contains("draw pile", StringComparison.Ordinal) ||
+            text.Contains("roguelike", StringComparison.Ordinal) ||
+            text.Contains("roguelite", StringComparison.Ordinal) ||
+            text.Contains("\u724c\u7ec4", StringComparison.Ordinal) ||
+            text.Contains("\u624b\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u5f03\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u62bd\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u9009\u724c", StringComparison.Ordinal) ||
+            text.Contains("\u6784\u7b51", StringComparison.Ordinal);
+        return cardGameTaxonomy && deckbuildingContext;
+    }
+
     public static readonly GameTypeRouteProfile Rpg = new(
         "rpg",
         "godot-rpg-v1",
@@ -263,6 +345,24 @@ public static class GameTypeRouteProfiles
         "survivorslike-goal-executor-v1",
         "survivorslike-needs-fix-v1",
         "survivorslike-final-acceptance-v1");
+
+    public static readonly GameTypeRouteProfile Deckbuilder = new(
+        "deckbuilder",
+        "godot-deckbuilder-v1",
+        "deckbuilder-prototype-routes-v1",
+        "deckbuilder-prompt-protocol-v1",
+        new PrototypeRouteSkillContext(
+            "prototype-deckbuilder-godot-zh",
+            "Deckbuilder prototype skill",
+            "Deckbuilder route skill",
+            "Constrain prototype / iteration-plan / execute-next-goal / needs-fix around a short card-building first loop.",
+            "Run context, readable starter deck, resources and turns, enemy intent, card play, deck cycling, combat result, reward draft, deck mutation, optional route choice",
+            ".agents/skills/prototype-deckbuilder-godot-zh/references/deckbuilder-prototype-contract.md"),
+        "deckbuilder-iteration-planner-v1",
+        "deckbuilder-plan-evaluator-v1",
+        "deckbuilder-goal-executor-v1",
+        "deckbuilder-needs-fix-v1",
+        "deckbuilder-final-acceptance-v1");
 
     public static readonly GameTypeRouteProfile Default = new(
         "default",

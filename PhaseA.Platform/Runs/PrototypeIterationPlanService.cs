@@ -311,6 +311,12 @@ public sealed class PrototypeIterationPlanService
             return new IterationGoalBuildResult(BuildSurvivorsLikeFirstLoopGoals(message, prototypeContract, regenerationGuidance), false);
         }
 
+        if (routeStrategy.UsesSpecializedIterationPlanning &&
+            string.Equals(routeStrategy.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
+        {
+            return new IterationGoalBuildResult(BuildDeckbuilderFirstLoopGoals(message, prototypeContract, regenerationGuidance), false);
+        }
+
         var genericMessage = string.IsNullOrWhiteSpace(genericCoreLoopGate.PlanningMessage)
             ? message
             : genericCoreLoopGate.PlanningMessage;
@@ -1556,6 +1562,28 @@ public sealed class PrototypeIterationPlanService
                 null));
         }
 
+        if (routeStrategy.UsesSpecializedPlanEvaluation &&
+            string.Equals(routeStrategy.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
+        {
+            var deckbuilderPlanIssue = FindDeckbuilderPlanContractIssue(goals, details.Session.SourceMessage);
+            if (deckbuilderPlanIssue is not null)
+            {
+                return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
+                    "should_refine_plan",
+                    "Current deckbuilder iteration plan is missing required first-loop route coverage.",
+                    deckbuilderPlanIssue,
+                    "Regenerate the plan with the deckbuilder first-loop route: run context, starter deck readability, resources/turns, enemy intent, card play, deck cycle, combat result, reward draft, deck mutation, optional route choice, and final first-loop acceptance.",
+                    BuildDeckbuilderRegenerationPrompt(details)));
+            }
+
+            return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
+                "ready_to_execute",
+                "Current deckbuilder iteration plan matches the first-loop route profile.",
+                "The plan includes run context, deck readability, resource/turn rules, enemy pressure, card play, deck cycle, combat result, reward draft, deck mutation feedback, optional route choice when requested, and final first-loop acceptance in a valid order.",
+                "Execute the next pending goal first, then continue through the route one goal at a time.",
+                null));
+        }
+
         var firstPending = pendingGoals[0];
         var firstGoalLooksTooLarge = !IsRecognizedSmallGoal(firstPending) && (LooksTooBroad(firstPending.Title) || LooksTooBroad(firstPending.Description));
         var overallLooksLarge = goals.Length <= 3 && goals.Any(goal => LooksTooBroad(goal.Description));
@@ -1567,7 +1595,7 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
-                "当前计划可以用，但第一目标仍然偏大，直接执行风险较高。",
+                "当前计划不适合直接执行，第一目标仍然偏大，需要先重新拆解。",
                 $"当前第一个待执行目标“{firstPending.Title}”混合了多个连续实现点，更像总任务而不是单次小目标。",
                 "建议先重生成一次更细的迭代计划，再执行下一目标。",
                 BuildRegenerationPrompt(prototypeProgress, details)));
@@ -2003,6 +2031,31 @@ public sealed class PrototypeIterationPlanService
         return goals;
     }
 
+    private static List<PrototypeIterationPlanGoalResult> BuildDeckbuilderFirstLoopGoals(
+        string message,
+        PrototypeContractSnapshot prototypeContract,
+        string? regenerationGuidance)
+    {
+        var contractInstruction = BuildContractGoalInstruction(prototypeContract);
+        var hint = TrimForHint(string.Join(" ", message, regenerationGuidance).Trim(), 120);
+        var selected = SelectDeckbuilderFirstLoopCapabilities(message, prototypeContract, regenerationGuidance);
+        var goals = new List<PrototypeIterationPlanGoalResult>(selected.Count);
+        var index = 1;
+        foreach (var capability in selected)
+        {
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                index++,
+                $"Deckbuilder First Loop: {capability.Title}",
+                capability.DescriptionTemplate
+                    .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
+                    .Replace("{sourceHint}", hint, StringComparison.Ordinal),
+                capability.AcceptanceTemplate.Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal),
+                "pending"));
+        }
+
+        return goals;
+    }
+
     private static IReadOnlyList<JrpgFirstLoopCapability> SelectJrpgFirstLoopCapabilities(
         string message,
         IterationPlanningContext? planningContext,
@@ -2095,6 +2148,13 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractSnapshot? prototypeContract,
         string? regenerationGuidance)
     {
+        if (string.Equals(routeStrategy.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
+        {
+            return SelectDeckbuilderFirstLoopCapabilities(message, prototypeContract, regenerationGuidance)
+                .Select(capability => capability.Id)
+                .ToArray();
+        }
+
         if (!string.Equals(routeStrategy.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             return [];
@@ -2237,6 +2297,127 @@ public sealed class PrototypeIterationPlanService
     ];
 
     private sealed record SurvivorsLikeFirstLoopCapability(
+        string Id,
+        string Title,
+        string DescriptionTemplate,
+        string AcceptanceTemplate);
+
+    private static IReadOnlyList<DeckbuilderFirstLoopCapability> SelectDeckbuilderFirstLoopCapabilities(
+        string message,
+        PrototypeContractSnapshot? prototypeContract,
+        string? regenerationGuidance)
+    {
+        var text = string.Join(
+            " ",
+            message ?? string.Empty,
+            regenerationGuidance ?? string.Empty,
+            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json)).ToLowerInvariant();
+        var selectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "run_context",
+            "starter_deck_readability",
+            "resource_and_turn_rules",
+            "enemy_intent_or_pressure",
+            "card_play_resolution",
+            "deck_cycle_and_hand_flow",
+            "combat_resolution",
+            "reward_or_card_draft",
+            "deck_mutation_feedback",
+            "final_deckbuilder_first_loop_acceptance"
+        };
+
+        if (RequiresDeckbuilderRouteChoice(text))
+        {
+            selectedIds.Add("map_or_route_choice");
+        }
+
+        return DeckbuilderFirstLoopCapabilities
+            .Where(capability => selectedIds.Contains(capability.Id))
+            .ToArray();
+    }
+
+    private static bool RequiresDeckbuilderRouteChoice(string text)
+    {
+        return ContainsAny(
+            text,
+            "map",
+            "route",
+            "node",
+            "event",
+            "shop",
+            "elite",
+            "branch",
+            "path choice",
+            "slay the spire",
+            "\u8def\u7ebf",
+            "\u8282\u70b9",
+            "\u4e8b\u4ef6",
+            "\u5546\u5e97",
+            "\u7cbe\u82f1",
+            "\u5206\u652f",
+            "\u722c\u5854");
+    }
+
+    private static readonly DeckbuilderFirstLoopCapability[] DeckbuilderFirstLoopCapabilities =
+    [
+        new(
+            "run_context",
+            "run context and objective",
+            "Establish the deckbuilder run context before expanding systems: the player must know what run they are in, who or what they control, the short-term objective, failure condition, or next direction. {contractInstruction} Source request: {sourceHint}",
+            "Pass only when the playable scene presents clear run context, current role/faction, short-term objective, failure condition, or forward direction."),
+        new(
+            "starter_deck_readability",
+            "starter deck readability",
+            "Validate the starter deck or tool-box readability: at least one of hand, draw pile, discard pile, deck list, or starter deck summary must be visible, and card name, cost, and effect must be readable. {contractInstruction}",
+            "Pass only when cards are player-readable with name, cost/resource, and effect, and at least one deck/hand/pile surface is visible."),
+        new(
+            "resource_and_turn_rules",
+            "resource and turn rules",
+            "Validate the resource and turn constraint layer: energy, mana, action point, candle, or project-specific cost must be visible, card play must consume it correctly, and the player can end or advance a turn. {contractInstruction}",
+            "Pass only when the resource/cost and turn rules are visible and executable, including resource consumption and end-turn or equivalent flow."),
+        new(
+            "enemy_intent_or_pressure",
+            "enemy intent or pressure source",
+            "Validate why the player needs to make tactical card choices: show enemy intent, attack, buff, countdown, track pressure, narrative threat, or another pressure source. {contractInstruction}",
+            "Pass only when enemy intent or equivalent pressure is visible and changes or matters to play decisions."),
+        new(
+            "card_play_resolution",
+            "card play resolution feedback",
+            "Validate the minimum card-play feel: the player can play at least one card and immediately see damage, block, summon, sacrifice, draw, status, or project-specific feedback. {contractInstruction}",
+            "Pass only when at least one card can be played and produces visible immediate resolution feedback."),
+        new(
+            "deck_cycle_and_hand_flow",
+            "deck cycle and hand flow",
+            "Validate that cards move through the deck system instead of remaining as static buttons: draw, discard, shuffle, exhaust, or equivalent hand-flow must be visible and must not deadlock. {contractInstruction}",
+            "Pass only when at least one draw/discard/shuffle/exhaust flow is visible and repeatable without deadlocking."),
+        new(
+            "combat_resolution",
+            "combat win/fail resolution",
+            "Validate the first card-combat conflict result: combat can reach victory or defeat, and the result is readable before reward or next-node work. {contractInstruction}",
+            "Pass only when combat can win or fail and exposes an explicit result state."),
+        new(
+            "reward_or_card_draft",
+            "post-combat card draft or reward",
+            "Validate the bridge from card combat to deckbuilding: after victory, show at least two or three reward/card choices, allow the player to select or skip, and route the choice into deck state. {contractInstruction}",
+            "Pass only when post-combat reward or card draft choices are visible, selectable, and affect the deck or run state."),
+        new(
+            "deck_mutation_feedback",
+            "deck mutation feedback",
+            "Validate that deckbuilding choices actually matter: selected card, removed card, upgraded card, relic/artifact/totem, or rule change must be visible in deck or run-state feedback. {contractInstruction}",
+            "Pass only when deck or rule state visibly changes after a deckbuilding choice."),
+        new(
+            "map_or_route_choice",
+            "map or route choice",
+            "Validate route choice only when requested: the player can choose among routes, nodes, events, shops, elites, next combat, or equivalent next-run branch without forcing every deckbuilder into a map game. {contractInstruction}",
+            "Pass only when at least two next nodes/routes/events are selectable, or when a non-map project clearly advances into the next combat/event state."),
+        new(
+            "final_deckbuilder_first_loop_acceptance",
+            "final deckbuilder first-loop acceptance",
+            "Run final deckbuilder first-loop acceptance after selected capabilities have evidence. Cover run context, deck readability, resource/turn rules, enemy pressure, card play, deck cycle, combat result, reward/deck mutation, optional route choice, project-specific contract fields, Godot validation evidence, and package readiness. {contractInstruction}",
+            "Pass only when the selected deckbuilder first-loop capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets resolve, Godot validation passes, and package readiness is proven.")
+    ];
+
+    private sealed record DeckbuilderFirstLoopCapability(
         string Id,
         string Title,
         string DescriptionTemplate,
@@ -2875,6 +3056,133 @@ public sealed class PrototypeIterationPlanService
             """;
     }
 
+    private static string? FindDeckbuilderPlanContractIssue(ProjectIterationGoalSnapshot[] goals, string? sourceMessage)
+    {
+        if (goals.Length == 0)
+        {
+            return "Deckbuilder plan boundary mismatch: the plan has no executable goals.";
+        }
+
+        var orderedGoals = goals.OrderBy(goal => goal.GoalIndex).ToArray();
+        var selected = ResolveDeckbuilderCapabilitiesFromGoals(orderedGoals);
+        var sourceRequiresRoute = RequiresDeckbuilderRouteChoice((sourceMessage ?? string.Empty).ToLowerInvariant());
+        var required = DeckbuilderFirstLoopCapabilities
+            .Where(capability => sourceRequiresRoute || !string.Equals(capability.Id, "map_or_route_choice", StringComparison.OrdinalIgnoreCase))
+            .Select(capability => capability.Id)
+            .ToArray();
+        var missing = required.Where(id => !selected.Contains(id)).ToArray();
+        if (missing.Length > 0)
+        {
+            return "Deckbuilder plan boundary mismatch: missing first-loop capabilities: " + string.Join(", ", missing) + ".";
+        }
+
+        if (!sourceRequiresRoute && selected.Contains("map_or_route_choice"))
+        {
+            return "Deckbuilder plan boundary mismatch: route/map choice is conditional and must not be required unless the source request asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map.";
+        }
+
+        var firstText = string.Join(" ", orderedGoals[0].Title, orderedGoals[0].Description, orderedGoals[0].AcceptanceHint).ToLowerInvariant();
+        if (!ContainsAny(firstText, "run context", "objective", "failure condition", "开局目标"))
+        {
+            return "Deckbuilder plan boundary mismatch: step 1 must establish run context and objective before deck, combat, rewards, route choice, or final acceptance.";
+        }
+
+        var finalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint).ToLowerInvariant();
+        if (!ContainsAny(finalText, "final deckbuilder", "final first-loop", "final acceptance", "end-to-end", "package readiness"))
+        {
+            return "Deckbuilder plan boundary mismatch: the final goal must be final deckbuilder first-loop acceptance.";
+        }
+
+        return null;
+    }
+
+    private static HashSet<string> ResolveDeckbuilderCapabilitiesFromGoals(ProjectIterationGoalSnapshot[] goals)
+    {
+        var selected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var goal in goals)
+        {
+            var title = goal.Title.ToLowerInvariant();
+            var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
+            if (ContainsAny(text, "run context", "opening run context", "failure condition", "开局目标"))
+            {
+                selected.Add("run_context");
+            }
+
+            if (ContainsAny(text, "starter deck readability", "starter deck", "deck readability", "initial deck", "初始牌组"))
+            {
+                selected.Add("starter_deck_readability");
+            }
+
+            if (ContainsAny(text, "resource and turn", "resource rules", "turn rules", "energy", "cost", "费用", "回合规则"))
+            {
+                selected.Add("resource_and_turn_rules");
+            }
+
+            if (ContainsAny(text, "enemy intent", "pressure source", "pressure", "敌方意图", "压力源"))
+            {
+                selected.Add("enemy_intent_or_pressure");
+            }
+
+            if (ContainsAny(text, "card play resolution", "play a card", "card-play", "出牌结算"))
+            {
+                selected.Add("card_play_resolution");
+            }
+
+            if (ContainsAny(text, "deck cycle", "hand flow", "draw", "discard", "shuffle", "牌库循环", "手牌流转"))
+            {
+                selected.Add("deck_cycle_and_hand_flow");
+            }
+
+            if (ContainsAny(text, "combat win/fail", "combat resolution", "victory", "defeat", "战斗胜负", "胜负结算"))
+            {
+                selected.Add("combat_resolution");
+            }
+
+            if (ContainsAny(text, "post-combat card draft", "card draft", "reward", "draft", "战后选牌", "奖励"))
+            {
+                selected.Add("reward_or_card_draft");
+            }
+
+            if (ContainsAny(text, "deck mutation", "deck change", "upgrade", "remove", "牌组变化", "删牌", "升级"))
+            {
+                selected.Add("deck_mutation_feedback");
+            }
+
+            if (ContainsAny(title, "map or route choice", "route choice", "node choice", "路线选择") ||
+                ContainsAny(text, "selected route choice capability", "route/node choice", "routes, nodes, events, shops, elites", "事件节点", "商店节点", "精英节点"))
+            {
+                selected.Add("map_or_route_choice");
+            }
+
+            if (ContainsAny(text, "final deckbuilder first-loop acceptance", "final deckbuilder", "final first-loop acceptance"))
+            {
+                selected.Add("final_deckbuilder_first_loop_acceptance");
+            }
+        }
+
+        return selected;
+    }
+
+    private static string BuildDeckbuilderRegenerationPrompt(ProjectIterationSessionDetails details)
+    {
+        return $"""
+            Regenerate the iteration plan as deckbuilder first-loop capability steps:
+            1. run context and objective
+            2. starter deck readability
+            3. resource and turn rules
+            4. enemy intent or pressure source
+            5. card play resolution feedback
+            6. deck cycle and hand flow
+            7. combat win/fail resolution
+            8. post-combat card draft or reward
+            9. deck mutation feedback
+            10. map or route choice only if the source request explicitly asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map
+            11. final deckbuilder first-loop acceptance
+
+            Keep the source request in scope: {TrimForHint(details.Session.SourceMessage, 160)}
+            """;
+    }
+
     private static string StripRpgStepOneBoundaryExclusionClauses(string value)
     {
         var clauses = Regex.Split(value, @"(?<=[.;??])\s+|\s+(?=\bPass only when\b)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -3210,13 +3518,19 @@ public sealed class PrototypeIterationPlanService
 
     private static List<PrototypeIterationPlanGoalResult> TryBuildRefinedGoals(string message, string sourceKind)
     {
-        if (!string.Equals(sourceKind, "completion_suggestion", StringComparison.OrdinalIgnoreCase))
+        var normalized = message.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
         {
             return [];
         }
 
-        var normalized = message.Trim();
-        if (string.IsNullOrWhiteSpace(normalized))
+        var genericLoopGoals = TryBuildGenericLoopGoalsFromActionList(normalized);
+        if (genericLoopGoals.Count > 0)
+        {
+            return genericLoopGoals;
+        }
+
+        if (!string.Equals(sourceKind, "completion_suggestion", StringComparison.OrdinalIgnoreCase))
         {
             return [];
         }
@@ -3228,38 +3542,158 @@ public sealed class PrototypeIterationPlanService
             normalized.Contains("遇敌", StringComparison.Ordinal) &&
             normalized.Contains("战斗", StringComparison.Ordinal) &&
             normalized.Contains("奖励 3 选 1", StringComparison.Ordinal);
-        if (!looksLikeRpgClosure)
+        if (looksLikeRpgClosure)
+        {
+            return
+            [
+                new PrototypeIterationPlanGoalResult(
+                    1,
+                    "目标 1：补稳地图移动与可见遇敌触发",
+                    "先让玩家能稳定移动，并且能清楚看到或明确触发第一次遇敌，不要把战斗、奖励和胜负提示一起塞进这一步。",
+                    "完成并验证：玩家能稳定移动，并能明确进入第一次遇敌。",
+                    "pending"),
+                new PrototypeIterationPlanGoalResult(
+                    2,
+                    "目标 2：补通单场战斗与基础结算",
+                    "在首次遇敌后完成一场可读、可结束的战斗，至少让玩家能看到战斗开始、行动结果和胜利结算，不要在这一步同时处理奖励理解问题。",
+                    "完成并验证：玩家能完整打完一场战斗，并看到明确的胜利结算。",
+                    "pending"),
+                new PrototypeIterationPlanGoalResult(
+                    3,
+                    "目标 3：补通奖励 3 选 1 并返回地图",
+                    "战斗胜利后展示奖励 3 选 1，并在选择后正确返回地图继续流程，重点保证奖励含义可理解、选择后状态变化可见。",
+                    "完成并验证：奖励 3 选 1 可理解、可选择，且选择后能正确返回地图。",
+                    "pending"),
+                new PrototypeIterationPlanGoalResult(
+                    4,
+                    "目标 4：补齐胜负目标提示与最小验证",
+                    "把“打赢 15 场胜利、任一战斗失败即失败”的规则做成玩家一眼能看懂的提示，并补一轮最小验证，确认首轮闭环与目标提示能一起工作。",
+                    "完成并验证：玩家能清楚理解胜负条件，且首轮闭环在提示存在时仍可正常工作。",
+                    "pending"),
+            ];
+        }
+
+        return [];
+    }
+
+    private static List<PrototypeIterationPlanGoalResult> TryBuildGenericLoopGoalsFromActionList(string message)
+    {
+        var actionList = ExtractGenericLoopActionList(message);
+        if (actionList.Count < 3)
         {
             return [];
         }
 
-        return
-        [
-            new PrototypeIterationPlanGoalResult(
-                1,
-                "目标 1：补稳地图移动与可见遇敌触发",
-                "先让玩家能稳定移动，并且能清楚看到或明确触发第一次遇敌，不要把战斗、奖励和胜负提示一起塞进这一步。",
-                "完成并验证：玩家能稳定移动，并能明确进入第一次遇敌。",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                2,
-                "目标 2：补通单场战斗与基础结算",
-                "在首次遇敌后完成一场可读、可结束的战斗，至少让玩家能看到战斗开始、行动结果和胜利结算，不要在这一步同时处理奖励理解问题。",
-                "完成并验证：玩家能完整打完一场战斗，并看到明确的胜利结算。",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                3,
-                "目标 3：补通奖励 3 选 1 并返回地图",
-                "战斗胜利后展示奖励 3 选 1，并在选择后正确返回地图继续流程，重点保证奖励含义可理解、选择后状态变化可见。",
-                "完成并验证：奖励 3 选 1 可理解、可选择，且选择后能正确返回地图。",
-                "pending"),
-            new PrototypeIterationPlanGoalResult(
-                4,
-                "目标 4：补齐胜负目标提示与最小验证",
-                "把“打赢 15 场胜利、任一战斗失败即失败”的规则做成玩家一眼能看懂的提示，并补一轮最小验证，确认首轮闭环与目标提示能一起工作。",
-                "完成并验证：玩家能清楚理解胜负条件，且首轮闭环在提示存在时仍可正常工作。",
-                "pending"),
-        ];
+        var goals = new List<PrototypeIterationPlanGoalResult>();
+        var maxActionGoals = Math.Min(actionList.Count, 6);
+        for (var index = 0; index < maxActionGoals; index++)
+        {
+            var action = actionList[index];
+            var previous = index == 0 ? null : actionList[index - 1];
+            var next = index + 1 < actionList.Count ? actionList[index + 1] : null;
+            var title = index == 0
+                ? $"目标 1：验证玩家能{action}"
+                : $"目标 {index + 1}：补通{action}反馈";
+            var description = index == 0
+                ? $"只处理“{action}”这个最小动作：让玩家能触发该动作，并看到明确反馈。不要在这一步同时实现{string.Join("、", actionList.Skip(1).Take(3))}等后续动作。"
+                : $"在前一步“{previous}”已经成立的基础上，只补通“{action}”及其必要状态变化和可见反馈。{(next is null ? "不要扩大到完整闭环之外的新系统。" : $"不要同时处理后续“{next}”。")}";
+            goals.Add(new PrototypeIterationPlanGoalResult(
+                index + 1,
+                title,
+                description,
+                $"完成并验证：玩家能{action}，且反馈和状态变化清楚可见。",
+                "pending"));
+        }
+
+        goals.Add(new PrototypeIterationPlanGoalResult(
+            goals.Count + 1,
+            $"目标 {goals.Count + 1}：最小闭环回归验收",
+            $"串联验证本轮最小闭环：{string.Join(" -> ", actionList.Take(maxActionGoals))}。只做验收和必要修补，不新增闭环之外的大系统。",
+            "完成并验证：玩家能按顺序完成本轮最小闭环，并能从结果继续下一轮操作。",
+            "pending"));
+
+        return goals;
+    }
+
+    private static List<string> ExtractGenericLoopActionList(string message)
+    {
+        var rawItems = ExtractDelimitedLoopItems(message);
+        if (string.IsNullOrWhiteSpace(rawItems))
+        {
+            return [];
+        }
+
+        rawItems = Regex.Replace(rawItems, @"补齐.*$", "", RegexOptions.CultureInvariant).Trim();
+        return Regex.Split(rawItems, @"[、,，/／]+|\s*->\s*|\s+then\s+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+            .Select(NormalizeGoalSegment)
+            .Select(RemoveGenericActionNoise)
+            .Where(IsMeaningfulLoopActionSegment)
+            .Where(item => item.Length <= 20)
+            .Distinct(StringComparer.Ordinal)
+            .Take(8)
+            .ToList();
+    }
+
+    private static string ExtractDelimitedLoopItems(string message)
+    {
+        var source = message.Trim();
+        var marker = new[] { "围绕", "包括", "包含", "核心循环", "最小循环" }
+            .Select(value => new { Marker = value, Index = source.IndexOf(value, StringComparison.Ordinal) })
+            .FirstOrDefault(item => item.Index >= 0);
+        if (marker is null)
+        {
+            return string.Empty;
+        }
+
+        var start = marker.Index + marker.Marker.Length;
+        while (start < source.Length && (source[start] == ':' || source[start] == '：' || char.IsWhiteSpace(source[start])))
+        {
+            start++;
+        }
+
+        if (start >= source.Length)
+        {
+            return string.Empty;
+        }
+
+        var quotePairs = new Dictionary<char, char>
+        {
+            ['“'] = '”',
+            ['"'] = '"',
+            ['\''] = '\''
+        };
+        if (quotePairs.TryGetValue(source[start], out var closingQuote))
+        {
+            var endQuote = source.IndexOf(closingQuote, start + 1);
+            return endQuote > start ? source[(start + 1)..endQuote].Trim() : string.Empty;
+        }
+
+        var end = source.IndexOfAny(['。', '.', '！', '!', '？', '?', '\r', '\n'], start);
+        return (end < 0 ? source[start..] : source[start..end]).Trim(' ', '。', '.', '；', ';');
+    }
+
+    private static string RemoveGenericActionNoise(string value)
+    {
+        return value
+            .Replace("尝试", "", StringComparison.Ordinal)
+            .Replace("玩家能", "", StringComparison.Ordinal)
+            .Trim();
+    }
+
+    private static bool IsMeaningfulLoopActionSegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length < 2)
+        {
+            return false;
+        }
+
+        return trimmed.Count(char.IsLetterOrDigit) >= 2;
     }
 
     private static List<string> ExtractStructuredGoals(string message)
@@ -3379,6 +3813,12 @@ public sealed class PrototypeIterationPlanService
              description.Contains("战斗入口", StringComparison.Ordinal)) ||
             (description.Contains("击败一个普通敌人", StringComparison.Ordinal) &&
              description.Contains("战斗结果反馈", StringComparison.Ordinal)) ||
+            (title.StartsWith("目标 ", StringComparison.Ordinal) &&
+             (title.Contains("验证玩家能", StringComparison.Ordinal) || title.Contains("补通", StringComparison.Ordinal)) &&
+             description.Contains("只", StringComparison.Ordinal) &&
+             (description.Contains("可见反馈", StringComparison.Ordinal) || description.Contains("明确反馈", StringComparison.Ordinal))) ||
+            (title.Contains("最小闭环回归验收", StringComparison.Ordinal) &&
+             description.Contains("只做验收和必要修补", StringComparison.Ordinal)) ||
             (description.Contains("获得一个明确奖励", StringComparison.Ordinal) &&
              description.Contains("三选一", StringComparison.Ordinal)) ||
             (description.Contains("展示玩家状态变化", StringComparison.Ordinal) &&
