@@ -128,8 +128,7 @@ public sealed record DemoPrototypeState;
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
-        var targetGoal = (await store.GetLatestProjectIterationSessionAsync(projectId))!.Goals
-            .Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
@@ -145,7 +144,7 @@ public sealed record DemoPrototypeState;
         run.Status.Should().Be("completed");
         run.ProgressStep.Should().Be("completed");
         run.ProgressSubstep.Should().Be("succeeded");
-        run.ProgressLabel.Should().Be($"目标 {targetGoal.GoalIndex} 已完成。");
+        run.ProgressLabel.Should().Be($"任务 {targetGoal.GoalIndex} 已完成。");
         details.Should().NotBeNull();
         details!.Session.Status.Should().Be("paused_for_review");
         details.Session.LatestEvaluationJson.Should().NotBeNullOrWhiteSpace();
@@ -270,8 +269,7 @@ public sealed record DemoPrototypeState;
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new AbsolutePathCorePackageFailureRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
-        var targetGoal = (await store.GetLatestProjectIterationSessionAsync(projectId))!.Goals
-            .Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var result = await service.ExecuteNextAsync(accountId, projectId);
@@ -279,7 +277,7 @@ public sealed record DemoPrototypeState;
         var goal = refreshed!.Goals.Single(item => item.GoalId == result.GoalId);
 
         result.Status.Should().Be("needs_fix");
-        goal.ResultSummary.Should().Contain("Core test project package references are incomplete");
+        goal.ResultSummary.Should().Contain("核心测试项目缺少测试框架包引用");
         goal.ResultSummary.Should().NotContain(@"C:\jimuyun");
         goal.ResultSummary.Should().NotContain("phase-a-innernet");
         goal.ResultSummary.Should().NotContain("workspaces");
@@ -2557,7 +2555,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through field movement, a visible encounter trigger, one battle, reward feedback, and return to the map."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains(targetTitle, StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, targetTitle);
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2602,7 +2600,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through movement, encounter, battle, reward, and return to the map."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("growth, reward, or consequence feedback", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "growth, reward, or consequence feedback");
         var now = DateTimeOffset.UtcNow.ToString("O");
         foreach (var goal in details.Goals.Where(goal => goal.GoalIndex < targetGoal.GoalIndex))
         {
@@ -2655,7 +2653,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Build the RPG map entry step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
@@ -2691,7 +2689,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "final first-loop acceptance");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2741,13 +2739,27 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through battle, reward, and final validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "final first-loop acceptance");
         await store.UpdateProjectIterationGoalStatusAsync(
             targetGoal.GoalId,
             "pending",
             "Validate selected capabilities, contract, Godot validation, and package readiness.",
             DateTimeOffset.UtcNow.ToString("O"));
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
+
+        var evaluationJson = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+            "ready_to_execute",
+            "The plan is ready for execution.",
+            "The JRPG first loop has enough validated scope for final battle acceptance.",
+            "Execute the next goal.",
+            null));
+        await store.UpdateProjectIterationSessionStatusAsync(
+            details!.Session.SessionId,
+            details.Session.Status,
+            details.Session.CurrentGoalIndex,
+            details.Session.LatestSummary,
+            evaluationJson,
+            details.Session.CompletedUtc);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateWriter = new PrototypeRouteStateWriter();
@@ -2792,7 +2804,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "final first-loop acceptance");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2828,7 +2840,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG prototype through the strict contract steps."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
-        var targetGoal = details!.Goals.Single(goal => goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal));
+        var targetGoal = FindGoal(details!, "final first-loop acceptance");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2882,7 +2894,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var run = await store.GetRunSnapshotAsync(result.RunId);
         run!.ProgressStep.Should().Be("needs_fix");
         run.ProgressSubstep.Should().Be("needs_fix");
-        run.ProgressLabel.Should().Be("目标 1 需要修复。");
+        run.ProgressLabel.Should().Be("任务 1 需要修复。");
         details.Should().NotBeNull();
         details!.Goals[0].Status.Should().Be("needs_fix");
         details.Session.Status.Should().Be("needs_fix");
@@ -3747,6 +3759,32 @@ REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "", ""));
         }
+    }
+
+    private static ProjectIterationGoalSnapshot FindGoal(ProjectIterationSessionDetails details, string titlePart)
+    {
+        return details.Goals.Single(goal => GoalTitleMatches(goal.Title, titlePart));
+    }
+
+    private static bool GoalTitleMatches(string title, string titlePart)
+    {
+        return title.Contains(titlePart, StringComparison.OrdinalIgnoreCase) ||
+               title.Contains(TranslateGoalTitle(titlePart), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string TranslateGoalTitle(string titlePart)
+    {
+        return titlePart switch
+        {
+            "field navigation and stable control" => "地图导航与稳定操控",
+            "conflict entry trigger" => "冲突入口触发",
+            "battle or challenge resolution" => "战斗或挑战结算",
+            "growth, reward, or consequence feedback" => "成长、奖励或后果反馈",
+            "return or continue loop" => "返回或继续循环",
+            "final first-loop acceptance" => "最终首轮闭环验收",
+            "opening context and player objective" => "开局语境与玩家目标",
+            _ => titlePart
+        };
     }
 
     private static ProjectSnapshot DefaultProject(string workspaceRoot, string repoPath)

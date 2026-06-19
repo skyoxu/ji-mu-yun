@@ -795,7 +795,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, new FakeHostedProcessRunner());
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         await store.MarkRunStartedAsync(runId);
-        await store.UpdateRunProgressAsync(runId, "running_step07_review", "", "Step 07：正在生成最终摘要。");
+        await store.UpdateRunProgressAsync(runId, "running_step07_review", "", "任务 07：正在生成最终摘要。");
         var prototypeFile = "docs/prototypes/2026-06-03-demo-prototype.md";
         WriteFile(Path.Combine(project.RepoPath, prototypeFile.Replace('/', Path.DirectorySeparatorChar)), "# Demo prototype\n");
         WriteFile(Path.Combine(project.RepoPath, "docs/prototypes/demo-prototype.prototype.json"), """

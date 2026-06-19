@@ -257,8 +257,8 @@ public sealed class BrowserUiRendererTests
             let renderedProgress = 0;
             let refreshedAcceptance = 0;
             const v2Steps = [
-              ["new-project", "游戏项目详情", 1],
-              ["asset-inventory", "确认素材清单", 7],
+              ["new-project", "游戏项目概述", 1],
+              ["asset-inventory", "项目素材库", 7],
               ["download-project", "打包下载项目", 8]
             ];
             const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
@@ -399,7 +399,7 @@ public sealed class BrowserUiRendererTests
                   gddLinks.push(match);
                   return token;
                 })
-                .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
+                .replace(/(?:本轮目标：|本轮任务：|Direction lock:|方向锁定：|Project README:|Project Execution Guide:|Recovery source consumed:|已读取恢复来源：|Current goal:|当前任务：|Previous platform rejection:|上一轮平台拒绝：|Task repair ledger:|任务修复台账：|User feedback:|用户反馈：|Scope rule:|范围规则：)[\s\S]*$/gi, "")
                 .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "[路径已隐藏]")
                 .replace(/\bres:\/\/[^\s`'"，。；：、）)<]+/gi, "[路径已隐藏]")
                 .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
@@ -428,6 +428,10 @@ public sealed class BrowserUiRendererTests
             assert(!godot.includes("res://Game/Scenes/Main.tscn"), "Godot resource paths should be hidden");
             assert(!godot.includes("Main.cs"), "file names should be hidden");
             assert(godot.includes("[路径已隐藏]"), "path placeholder should remain");
+            const chineseRoute = sanitizePublicChatContent("用户可见摘要\n方向锁定：\n- 内部规则\n当前任务：secret");
+            assert(chineseRoute === "用户可见摘要", "Chinese route context should be truncated");
+            const chineseLedger = sanitizePublicChatContent("本轮结论\n任务修复台账：\n- hidden");
+            assert(chineseLedger === "本轮结论", "Chinese repair ledger should be truncated");
             """;
 
         RunNodeScript(node, script);
@@ -846,17 +850,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("button.onclick = () => v2ShowStep(button.dataset.v2Step, true)");
         html.Should().Contain("v2AcceptancePanel");
         html.Should().Contain("v2CreateAcceptancePanel");
-        html.Should().Contain("原型验收结果");
-        html.Should().Contain("重新触发原型验收");
+        html.Should().Contain("原型项目验收结果");
+        html.Should().Contain("重新触发原型项目验收");
         html.Should().Contain("rerun.onclick = v2ValidatePrototypeIfAllowed");
         html.Should().Contain("skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed");
         html.Should().Contain("v2PrototypeAcceptanceBlockReason");
         html.Should().Contain("v2AcceptanceActionStatus");
         html.Should().Contain("await validatePrototype();");
         html.Should().Contain("v2IterationPlanAllowsAcceptance");
-        html.Should().Contain("请先完成当前游戏模块，所有目标完成后再进行原型验收。");
+        html.Should().Contain("请先完成当前游戏模块，所有任务完成后再进行原型项目验收。");
         html.Should().Contain("游戏界面优化是可选步骤，不会阻塞验收。");
-        html.Should().NotContain("请先完成游戏界面优化，再进行原型验收。");
+        html.Should().NotContain("请先完成游戏界面优化，再进行原型项目验收。");
         html.Should().NotContain("if (stepId === \"prototype-acceptance\") {\n                    $(\"validatePrototype\")?.click();");
         html.Should().NotContain("[\"revalidate-prototype\", \"重新验收\"]");
         html.Should().Contain("v2AssetInventoryFramePanel");
@@ -911,13 +915,13 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("spriteIndex");
         html.Should().Contain(".v2-step-button.pending .v2-step-mark");
         html.Should().Contain(".v2-step-button.action .v2-step-mark");
-        html.Should().Contain("游戏项目详情");
+        html.Should().Contain("游戏项目概述");
         html.Should().Contain("原型骨架创建");
-        html.Should().Contain("完成游戏模块");
+        html.Should().Contain("创建游戏模块");
         html.Should().Contain("骨架验收修复");
         html.Should().Contain("游戏界面优化");
-        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal));
-        html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"游戏界面优化\", \"layout\"]", StringComparison.Ordinal));
+        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"创建游戏模块\", \"list\"]", StringComparison.Ordinal));
+        html.IndexOf("[\"iteration-plan\", \"创建游戏模块\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"游戏界面优化\", \"layout\"]", StringComparison.Ordinal));
         html.Should().Contain("function v2RunIsCurrentForIteration(run)");
         html.Should().Contain("const sessionTime = v2IterationSessionTimestamp();");
         html.Should().Contain("const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || \"\")));");
@@ -931,7 +935,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
         html.Should().Contain("if (failed) return \"fix\";");
         html.Should().Contain("if (!goals.length && v2HasPrototypeSkeleton()) return \"done\";");
-        html.Should().Contain("确认素材清单");
+        html.Should().Contain("项目素材库");
         html.Should().Contain("打包项目文件");
         html.Should().Contain("打包下载项目");
         html.Should().Contain("if (stepId === \"new-project\") return state.projectId ? \"done\" : \"pending\"");
@@ -1496,6 +1500,8 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain(@"$(""chapter2"")");
         html.Should().Contain("runPrototype");
         html.Should().Contain("draftFile");
+        html.Should().Contain(@"id=""importDraft"" class=""secondary import-draft-button""");
+        html.Should().NotContain(@"id=""importDraft"" class=""ghost import-draft-button""");
         html.Should().Contain("分析草稿并回填");
         html.Should().Contain("prototype-drafts/analyze");
         html.Should().Contain("prototype-drafts/latest");
@@ -1559,7 +1565,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("refreshPrototypeProgress");
         html.Should().Contain("prototype-7day-playable/progress");
         html.Should().Contain("validatePrototype");
-        html.Should().Contain("重新验收原型");
+        html.Should().Contain("重新触发原型项目验收");
         html.Should().Contain("prototype-7day-playable/validate");
         html.Should().Contain("buildPrototypePayload");
         html.Should().Contain("missingPrototypeFields");
@@ -1674,7 +1680,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("评估当前计划是否值得继续");
         html.Should().Contain("needs-fix-route");
         html.Should().Contain("submitNeedsFixRouteRequest");
-        html.Should().Contain("运行 Needs Fix 路由");
+        html.Should().Contain("运行需要修复路由");
         html.Should().Contain("data-needs-fix-goal");
         html.Should().Contain("type=\"button\" class=\"secondary\" data-needs-fix-goal");
         html.Should().Contain("onclick=\"event.stopPropagation(); runNeedsFixIterationGoal('");
@@ -1687,9 +1693,9 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("async function submitNeedsFixRouteRequest(payload, busyText) {\n                  if (!guardGlobalAction()) return;");
         html.Should().Contain("await loadPrototypeProgress();");
         html.Should().Contain("iterationNeedsFixStatus");
-        html.Should().Contain("正在准备提交 step");
-        html.Should().Contain("Needs Fix 路由已提交，正在等待后台 run 创建。");
-        html.Should().Contain("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+        html.Should().Contain("正在准备提交任务");
+        html.Should().Contain("需要修复路由已提交，正在等待后台 run 创建。");
+        html.Should().Contain("当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。");
         html.Should().NotContain("无法启动 needs-fix：当前页面未确认原型骨架已创建。");
         html.Should().Contain("[\"needs_fix\", \"failed\"].includes");
         html.Should().Contain("feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal)");
@@ -1698,7 +1704,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("prototype-quick-fixes");
         html.Should().NotContain("兼容入口：快速修复");
         html.Should().Contain("submitFormalFeedback");
-        html.Should().Contain("提交反馈到 Needs Fix 路由");
+        html.Should().Contain("提交反馈到需要修复路由");
         html.Should().Contain("buildNeedsFixFeedbackForUserReport(goal, feedback)");
         html.Should().Contain("goalId: goal?.goalId || null");
         html.Should().Contain("如果当前项目还没有可修复目标，请返回明确的前置条件提示，不要生成游戏模块");
@@ -1716,7 +1722,6 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("renderInlineContinueAction");
         html.Should().NotContain("inlineContinueActionLabelForMessage");
         html.Should().Contain("applyChatWorkflowActions");
-        html.Should().Contain("继续当前迭代目标");
         html.Should().Contain("继续评估当前计划");
         html.Should().Contain("nextSuggestedFeedback");
         html.Should().Contain("continueConsumed");
@@ -1724,7 +1729,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("defaultNextSuggestedFeedback");
         html.Should().Contain("updateContinueSuggestionFromText");
         html.Should().Contain("如果你同意|如你同意|若你同意");
-        html.Should().Contain("如需执行，请使用游戏模块或 Needs Fix 的固定功能按钮。");
+        html.Should().Contain("如需执行，请使用游戏模块或需要修复的固定功能按钮。");
         html.Should().Contain("feedbackRecords");
         html.Should().Contain("流程记录");
         html.Should().Contain("feedbackSummary");
@@ -1736,14 +1741,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("当前推荐动作");
         html.Should().Contain("来源：");
         html.Should().Contain("当前计划评估");
-        html.Should().Contain("目标执行结果");
         html.Should().Contain("计划摘要");
         html.Should().Contain("message.kind !== \"prototype-seed\"");
         html.Should().Contain("function isVisibleChatMessage(message)");
-        html.Should().Contain("总目标数");
+        html.Should().Contain("总任务数");
         html.Should().Contain("已完成");
-        html.Should().Contain("当前目标");
-        html.Should().Contain("下一目标");
+        html.Should().Contain("当前任务");
+        html.Should().Contain("下一任务");
         html.Should().Contain("goal-card-current");
         html.Should().Contain("goal-card-next");
         html.Should().Contain("goal-badges");
@@ -1758,10 +1762,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("normalizeGoalStatus");
         html.Should().Contain("statusLabel");
         html.Should().Contain("goalBadge");
-        html.Should().Contain("进行中");
+        html.Should().Contain("执行中");
         html.Should().Contain("待执行");
         html.Should().Contain("失败");
-        html.Should().Contain("需修复");
+        html.Should().Contain("需要修复");
         html.Should().Contain("prototype-feedback-iterations");
         html.Should().NotContain("formal-feedback-failed");
         html.Should().Contain("assistantMessage");
@@ -1781,12 +1785,12 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("kind: \"iteration-plan-evaluation\"");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\").onclick = () => evaluateIterationPlan(true);");
         html.Should().Contain("executeIterationGoal");
-        html.Should().Contain("<button id=\"executeIterationGoal\" class=\"secondary\" data-global-action=\"true\">执行下一目标</button>");
+        html.Should().Contain("<button id=\"executeIterationGoal\" class=\"secondary\" data-global-action=\"true\">执行下一任务</button>");
         html.Should().Contain("$(\"executeIterationGoal\").disabled = hasNeedsFix");
         html.Should().Contain("? isGlobalBusy()");
         html.Should().Contain("iterationAutoRefreshHint");
         html.Should().Contain("await runNeedsFixIterationGoal(needsFixGoal.goalIndex);");
-        html.Should().Contain("运行 Needs Fix 路由");
+        html.Should().Contain("运行需要修复路由");
         html.Should().Contain("执行中会自动刷新进度");
         html.Should().Contain("iterationPlanStatus");
         html.Should().Contain("iterationPlanEvaluation");
@@ -1806,14 +1810,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("重新生成游戏模块");
         html.Should().Contain("删除当前轮游戏模块");
         html.Should().Contain("建议先重拆游戏模块");
-        html.Should().Contain("提交反馈到 Needs Fix 路由");
-        html.Should().NotContain("当前已有未完成计划，请先执行下一目标");
+        html.Should().Contain("提交反馈到需要修复路由");
+        html.Should().NotContain("当前已有未完成计划，请先执行下一任务");
         html.Should().Contain("生成新的游戏模块");
         html.Should().NotContain("\"当前已有未完成计划\"");
         html.Should().NotContain("\"当前计划需先修复\"");
         html.Should().Contain("请先生成游戏模块");
-        html.Should().Contain("当前没有待执行目标");
-        html.Should().Contain("请先修复当前目标");
+        html.Should().Contain("当前没有待执行任务");
+        html.Should().Contain("请先修复当前任务");
         html.Should().Contain("/iteration-plan");
         html.Should().Contain("/iteration-plan/evaluate");
         html.Should().Contain("state.iterationPlanEvaluation = response?.evaluation || response;");
@@ -1834,11 +1838,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("prototype-tdd");
         html.Should().Contain("loadAssetInventory");
         html.Should().Contain("assetInventoryStatus");
-        html.Should().Contain("查看素材清单");
+        html.Should().Contain("查看项目素材库");
         html.Should().Contain("/assets?projectId=");
         html.Should().Contain("asset-inventory");
         html.Should().Contain("asset-preview");
-        html.Should().Contain("final step 完成后才可以查看素材清单");
+        html.Should().Contain("最终任务完成后才可以查看项目素材库");
         html.Should().Contain("renderAssetInventory");
         html.Should().Contain("refreshAssetInventoryAvailability");
         html.Should().Contain("assetInventoryExpanded");

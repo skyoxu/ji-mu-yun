@@ -64,13 +64,13 @@ public sealed class PrototypeRepairPlanService
         var failureText = BuildFailureText(project, failedRun);
         var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeSkill.Context);
         var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
-        var summary = $"已基于最近一次失败生成 {goals.Count} 个修复步骤。请逐项执行，最后一步必须做全量验收。";
+        var summary = $"已基于最近一次失败生成 {goals.Count} 个修复任务。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
             project.ProjectId,
             SourceKind,
             BuildSourceMessage(failedRun, failureText, routeSkill.Context),
-            $"Repair the failed prototype route through small isolated repair steps for {routeSkill.Context.RouteSkillId}.",
+            $"通过小而独立的修复任务修复失败的原型路由：{routeSkill.Context.RouteSkillId}。",
             goals.Select(goal => new ProjectIterationGoalCreateCommand(
                 goal.GoalIndex,
                 goal.Title,
@@ -155,7 +155,7 @@ public sealed class PrototypeRepairPlanService
         }
 
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, "running", current.ResultSummary, null, cancellationToken);
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复步骤 {current.GoalIndex}。", null, null, cancellationToken);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复任务 {current.GoalIndex}。", null, null, cancellationToken);
 
         var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
         var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context, projectExecutionGuide);
@@ -197,8 +197,8 @@ public sealed class PrototypeRepairPlanService
         var hasPending = refreshed.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.OrdinalIgnoreCase));
         var sessionStatus = hasNeedsFix ? "needs_fix" : hasPending ? "paused_for_review" : "completed";
         var summary = goalCompleted
-            ? $"修复步骤 {current.GoalIndex} 已完成。"
-            : $"修复步骤 {current.GoalIndex} 仍需继续修复。";
+            ? $"修复任务 {current.GoalIndex} 已完成。"
+            : $"修复任务 {current.GoalIndex} 仍需继续修复。";
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(refreshed.Session.SessionId, sessionStatus, current.GoalIndex, summary, null, sessionStatus == "completed" ? DateTimeOffset.UtcNow.ToString("O") : null, CancellationToken.None);
 
         _stateWriter.WriteRepairPlanExecutionState(project, current.GoalIndex, new
@@ -468,26 +468,26 @@ public sealed class PrototypeRepairPlanService
         [
             new PrototypeRepairGoalResult(
                 1,
-                "Recover Step 07 final summary after service restart",
+                "服务重启后恢复第 7 步最终摘要",
                 $"""
-                The failed run was interrupted by service restart while Step 07 was generating the final summary. Do not start with gameplay, map, battle, reward, evidence, TDD, cache, or build-code edits. First recover the route completion path: preserve the latest successful prototype artifacts, rerun or resume final summary generation, and write the final completion state without losing the prototype contract.
+                失败运行在第 7 步生成最终摘要时被服务重启中断。不要从玩法、地图、战斗、奖励、证据、TDD、缓存或构建代码编辑开始。先恢复路由完成路径：保留最新成功原型产物，重跑或恢复最终摘要生成，并在不丢失原型合同的前提下写入最终完成状态。
 
-                Failure source:
+                失败来源：
                 {Trim(context.FailureText, 1200)}
                 """,
-                "This step passes only when the prototype route can reach final summary/completion after service restart recovery instead of stopping at interrupted_by_service_restart.",
+                "只有原型路由在服务重启恢复后可以到达最终摘要/完成状态，而不是停在 interrupted_by_service_restart 时，本任务才算通过。",
                 "pending"),
             new PrototypeRepairGoalResult(
                 2,
-                "Revalidate existing RPG playable evidence",
-                "Run validation against the existing RPG prototype artifacts before changing gameplay code. Confirm the last green TDD/GdUnit evidence, Godot smoke evidence, prototype record, sidecar contract, and completion artifacts are still present and consistent.",
-                "This step passes only when existing prototype evidence is readable and no stale service-restart failure is being treated as a gameplay defect.",
+                "重新验证现有 RPG 可玩证据",
+                "修改玩法代码前，先验证现有 RPG 原型产物。确认上一次通过的 TDD/GdUnit 证据、Godot smoke 证据、原型记录、旁路合同和完成产物仍然存在且一致。",
+                "只有现有原型证据可读，并且没有把陈旧的服务重启失败误当成玩法缺陷时，本任务才算通过。",
                 "pending"),
             new PrototypeRepairGoalResult(
                 3,
-                "Run final RPG acceptance only after recovery",
-                "After the service-restart recovery path is stable, run the final RPG acceptance gate. Only if this acceptance reports concrete map, movement, battle, reward, win/fail, asset, or UI failures should later repair steps modify game files.",
-                "The repair plan is complete only when final RPG acceptance succeeds or reports a new concrete gameplay blocker unrelated to service_restart_recovery.",
+                "恢复后再运行 RPG 最终验收",
+                "服务重启恢复路径稳定后，运行 RPG 最终验收门禁。只有该验收报告具体地图、移动、战斗、奖励、胜负、素材或 UI 失败时，后续修复任务才应修改游戏文件。",
+                "只有最终 RPG 验收成功，或报告了与 service_restart_recovery 无关的新具体玩法阻塞项时，修复计划才算完成。",
                 "pending")
         ];
     }
@@ -542,24 +542,24 @@ public sealed class PrototypeRepairPlanService
             "恢复原型运行证据与 TDD 绿灯",
             BuildRpgEvidenceRepairDescription(context),
             """
-            This step passes only when the latest run blocker is removed and the prototype route can write its completion/TDD evidence without permission, build, or cache-lock failures.
-            Do not report this step as succeeded if the latest failure evidence still blocks route completion artifacts.
+            只有最新运行阻塞已经移除，并且原型路由可以写入完成/TDD 证据且没有权限、构建或缓存锁失败时，本任务才算通过。
+            如果最新失败证据仍然阻塞路由完成产物，不要报告本任务成功。
             """);
 
         Add(
             "修复 RPG 场景与节点合同",
             BuildRpgSceneContractRepairDescription(context),
             """
-            This step passes only when the current RPG prototype has the required contract-aligned scene structure for the selected capabilities, including the main prototype shell, MapScene, and required named map/player asset nodes. Include enemy asset nodes and BattleScene only when battle/conflict capability or the latest failure evidence names them.
-            Scene/script contract drift must be eliminated before continuing.
+            只有当前 RPG 原型具备已选择能力所需的合同对齐场景结构，包括主原型壳、MapScene，以及必需命名的地图/玩家素材节点时，本任务才算通过。敌人素材节点和 BattleScene 只在战斗/冲突能力或最新失败证据点名时加入。
+            继续前必须消除场景/脚本合同漂移。
             """);
 
         Add(
             "修复 RPG 玩法合同与表单追踪",
             BuildRpgGameplayContractRepairDescription(context),
             """
-            This step passes only when concrete user form values from prototype-contract form_fields and input_traceability are represented in gameplay behavior, UI/state feedback, tests, or an explicit needs-fix blocker.
-            Do not replace concrete project values with RPG template defaults.
+            只有 prototype-contract 的 form_fields 和 input_traceability 中的具体用户表单值被体现在玩法行为、UI/状态反馈、测试或明确的需要修复阻塞项中时，本任务才算通过。
+            不要用 RPG 模板默认值替换具体项目值。
             """);
 
         Add(
@@ -640,38 +640,38 @@ public sealed class PrototypeRepairPlanService
         }
 
         Add(
-            "Repair RPG runtime assets and Godot imports for GdUnit",
+            "修复 RPG 运行素材与 Godot 导入",
             BuildRpgGdUnitAssetRepairDescription(context),
             """
-            This step passes only when the active dq-rpg scenes for the selected capabilities no longer reference missing PNG or .ctex resources and GdUnit can load MapScene.tscn, plus BattleScene.tscn only when battle/conflict capability is selected or named by the latest failure, without ext_resource parse errors.
+            只有已选择能力对应的 dq-rpg 活跃场景不再引用缺失的 PNG 或 .ctex 资源，GdUnit 可以加载 MapScene.tscn，并且仅在战斗/冲突能力被选择或最新失败点名时加载 BattleScene.tscn 且没有 ext_resource 解析错误时，本任务才算通过。
             """);
 
         Add(
-            "Repair RPG scene node contract expected by DqRpgPrototype tests",
+            "修复 DqRpgPrototype 测试要求的 RPG 场景节点合同",
             BuildRpgGdUnitNodeRepairDescription(context),
             """
-            This step passes only when the node paths required by the project-specific GdUnit suite exist or the tests and scripts are updated together to a single authoritative RPG contract, with no Node not found errors.
+            只有项目专属 GdUnit 套件要求的节点路径存在，或测试与脚本被同步更新到同一个权威 RPG 合同，并且不再出现 Node not found 错误时，本任务才算通过。
             """);
 
         Add(
-            "Repair RPG script input and loop behavior under the validated scene contract",
+            "修复已验证场景合同下的 RPG 脚本输入与循环行为",
             BuildRpgGdUnitScriptRepairDescription(context),
             """
-            This step passes only when the Invalid call to _UnhandledInput is gone and the map movement, encounter entry, battle, reward 3-choice, and return-to-map behaviors work through the same scene path used by GdUnit.
+            只有 Invalid call to _UnhandledInput 消失，并且地图移动、遇敌入口、战斗、奖励 3 选 1 和返回地图行为都能通过 GdUnit 使用的同一场景路径运行时，本任务才算通过。
             """);
 
         Add(
-            "Preserve project input contract while fixing RPG behavior",
+            "修复 RPG 行为时保持项目输入合同",
             BuildRpgGdUnitContractRepairDescription(context),
             """
-            This step passes only when concrete project values such as 15-battle victory, any-loss defeat, reward 3-choice, and visible battle comprehension are preserved in runtime/UI/test evidence; do not replace them with shorter template-default victory counts.
+            只有运行时、UI 或测试证据保留了项目具体值，例如 15 场战斗胜利、任一战斗失败即失败、奖励 3 选 1 和可读战斗理解反馈，并且没有替换成更短的模板默认胜利次数时，本任务才算通过。
             """);
 
         Add(
-            "Rerun RPG project-specific GdUnit and final prototype acceptance",
+            "重跑 RPG 项目专属 GdUnit 与最终原型项目验收",
             BuildRpgGdUnitFinalAcceptanceDescription(context),
             """
-            The repair is complete only when `tests/Prototype/DqRpgPrototype` runs with rc=0, no "No test cases found", no Godot ERROR/SCRIPT ERROR markers, and the front-end "重新验收原型" route succeeds.
+            只有 `tests/Prototype/DqRpgPrototype` 运行 rc=0、没有 "No test cases found"、没有 Godot ERROR/SCRIPT ERROR 标记，并且前台“重新触发原型项目验收”路由成功时，修复才算完成。
             """);
 
         return goals;
@@ -687,30 +687,30 @@ public sealed class PrototypeRepairPlanService
         }
 
         Add(
-            "Build cleanup: remove stale generated build dirs first",
+            "构建清理：先移除陈旧生成目录",
             BuildRpgBuildCleanupRepairDescription(context),
             """
-            This step passes only when the repository-local Game.Core and Game.Core.Tests obj/bin/buildcache directories are safely cleaned, generated AssemblyInfo files are not compiled from stale output, and the CS0579 duplicate assembly attribute failure is gone.
+            只有仓库内 Game.Core 与 Game.Core.Tests 的 obj/bin/buildcache 目录被安全清理，陈旧输出里的 AssemblyInfo 文件不再参与编译，并且 CS0579 重复程序集属性失败消失时，本任务才算通过。
             """);
 
         Add(
-            "Rerun prototype TDD green after build cleanup",
-            "Rerun the RPG prototype TDD green lane and confirm the dotnet verification step passes before treating any remaining failure as a gameplay or scene contract issue.",
+            "构建清理后重跑原型 TDD green",
+            "重跑 RPG 原型 TDD green 通道，并在把剩余失败视为玩法或场景合同问题前，确认 dotnet 验证步骤已经通过。",
             """
-            This step passes only when the latest prototype TDD green run no longer fails in the dotnet build/test step with CS0579, AssemblyInfo, TargetFrameworkAttribute, or obj/bin/buildcache contamination signals.
+            只有最新原型 TDD green 运行不再因为 CS0579、AssemblyInfo、TargetFrameworkAttribute 或 obj/bin/buildcache 污染信号而在 dotnet build/test 步骤失败时，本任务才算通过。
             """);
 
         Add(
-            "Inspect RPG scene and gameplay only if TDD still fails",
-            "If the clean build passes but the prototype still fails, inspect the remaining failure output and repair the concrete RPG scene, navigation, battle, reward, or form-traceability contract named by that new evidence.",
+            "仅在 TDD 仍失败时检查 RPG 场景与玩法",
+            "如果干净构建通过但原型仍失败，检查剩余失败输出，并修复新证据点名的具体 RPG 场景、导航、战斗、奖励或表单可追溯合同。",
             """
-            This step is started only after the build contamination is cleared. It passes when any remaining RPG contract failure is repaired against the current failure evidence instead of against a generic template.
+            本任务只能在构建污染清除后开始。只有剩余 RPG 合同失败按当前失败证据修复，而不是按通用模板修复时，本任务才算通过。
             """);
 
         Add(
-            "Final full acceptance after clean verification",
-            "Run the final RPG prototype acceptance after build cleanup and any evidence-driven gameplay repair are complete.",
-            "The repair is complete only when the final prototype route and verification evidence are green with no build contamination recurrence.");
+            "干净验证后的最终全量验收",
+            "在构建清理和所有证据驱动的玩法修复完成后，运行 RPG 原型最终验收。",
+            "只有最终原型路由和验证证据都通过，并且构建污染没有复发时，修复才算完成。");
 
         return goals;
     }
@@ -725,30 +725,30 @@ public sealed class PrototypeRepairPlanService
         }
 
         Add(
-            "Repair RPG scene/script node contract mismatch",
+            "修复 RPG 场景/脚本节点合同不匹配",
             BuildRpgSceneNodeContractRepairDescription(context),
             """
-            This step passes only when the node path named by the latest Godot error exists in the active prototype scene or the script binding is corrected to the real contract path, with no Node not found errors during prototype navigation smoke.
+            只有最新 Godot 错误点名的节点路径存在于活跃原型场景中，或脚本绑定被修正到真实合同路径，并且原型导航 smoke 中不再出现 Node not found 错误时，本任务才算通过。
             """);
 
         Add(
-            "Rerun Start Adventure navigation and selected capability smoke",
-            "Rerun the user-facing Start Adventure path and verify MapScene remains visible, then trigger the selected capability path that previously required the missing node. Trigger BattleScene only when battle/conflict capability is selected or the latest failure names it.",
+            "重跑 Start Adventure 导航与已选择能力 smoke",
+            "重跑面向用户的 Start Adventure 路径并确认 MapScene 仍可见，然后触发此前需要缺失节点的已选择能力路径。只有战斗/冲突能力被选择或最新失败点名时才触发 BattleScene。",
             """
-            This step passes only when Start Adventure to visible MapScene still passes and the selected capability UI path no longer crashes on missing labels or stale script bindings. BattleScene is part of this smoke only when battle/conflict capability is selected or named by the latest failure.
+            只有 Start Adventure 到可见 MapScene 仍通过，并且已选择能力的 UI 路径不再因为缺失 Label 或陈旧脚本绑定崩溃时，本任务才算通过。BattleScene 仅在战斗/冲突能力被选择或最新失败点名时属于本次 smoke 范围。
             """);
 
         Add(
-            "Verify RPG reward and win/fail contract after node repair",
-            "After the scene/script binding is stable, verify reward 3-choice return-to-map plus the concrete form rules for 15-battle victory and any-loss defeat.",
+            "节点修复后验证 RPG 奖励与胜负合同",
+            "场景/脚本绑定稳定后，验证奖励 3 选 1 返回地图，以及 15 场战斗胜利、任一战斗失败即失败这些具体表单规则。",
             """
-            This step passes only when reward 3-choice, return-to-map, 15 battles victory, and any-loss defeat are visible in runtime behavior, UI/state feedback, or explicit evidence.
+            只有奖励 3 选 1、返回地图、15 场战斗胜利和任一战斗失败即失败在运行时行为、UI/状态反馈或明确证据中可见时，本任务才算通过。
             """);
 
         Add(
-            "Final full acceptance after scene contract repair",
-            "Run the final RPG prototype acceptance after the node contract repair and follow-up gameplay checks are complete.",
-            "The repair is complete only when the final prototype route and verification evidence are green with no Node not found or scene/script contract drift recurrence.");
+            "场景合同修复后的最终全量验收",
+            "在节点合同修复和后续玩法检查完成后，运行 RPG 原型最终验收。",
+            "只有最终原型路由和验证证据都通过，并且没有 Node not found 或场景/脚本合同漂移复发时，修复才算完成。");
 
         return goals;
     }
@@ -809,22 +809,22 @@ public sealed class PrototypeRepairPlanService
             "修复 Start Adventure 到可见 MapScene 入口",
             BuildRpgNavigationRepairDescription(context),
             """
-            This step passes only when Start Adventure consistently reveals the real playable MapScene, hides stale menu-only state, and exposes visible map markers from the user-facing entry path.
+            只有 Start Adventure 能稳定展示真实可玩的 MapScene，隐藏陈旧的纯菜单状态，并从用户入口显示可见地图标记时，本任务才算通过。
             """);
 
         Add(
             "修复 RPG 奖励闭环与地图返回",
             BuildRpgRewardLoopRepairDescription(context),
             """
-            This step passes only when battle victory leads to a readable reward 3-choice flow, one choice can be applied, and the player returns to the active map loop.
-            Do not silently downgrade the reward step to a template-default omission when the project contract explicitly requires it.
+            只有战斗胜利能进入可读的奖励 3 选 1 流程，至少一个选项可应用，并且玩家能返回活跃地图循环时，本任务才算通过。
+            当项目合同明确要求奖励时，不要静默降级为模板默认省略。
             """);
 
         Add(
             "修复 RPG 胜负条件与表单硬约束落地",
             BuildRpgWinFailRepairDescription(context),
             """
-            This step passes only when concrete user form values such as 15-battle victory, any-loss defeat, encounter rules, and stat rules are reflected in gameplay behavior, readable UI/state feedback, or explicit needs-fix blockers.
+            只有 15 场战斗胜利、任一战斗失败即失败、遇敌规则、属性规则等具体用户表单值能体现在玩法行为、可读 UI/状态反馈或明确的需要修复阻塞项中时，本任务才算通过。
             """);
 
         Add(
@@ -851,12 +851,12 @@ public sealed class PrototypeRepairPlanService
         Add(
             "恢复原型运行证据",
             BuildGenericEvidenceRepairDescription(context),
-            "The latest failure reason is eliminated and the prototype route can produce completion evidence without build, cache, or write failures.");
+            "最新失败原因已经消除，并且原型路由可以生成完成证据，没有构建、缓存或写入失败。");
 
         Add(
             "修复通用原型合同缺口",
             BuildGenericContractRepairDescription(context),
-            "The default prototype route skill and project prototype contract are reflected in the repaired output, with no new prototype drift.");
+            "默认原型路由技能和项目原型合同已经体现在修复后的输出中，并且没有新的原型漂移。");
 
         Add(
             "执行最终全量验收",
@@ -888,111 +888,111 @@ public sealed class PrototypeRepairPlanService
     private static string BuildRpgBuildCleanupRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            The latest RPG prototype failure is a .NET build contamination failure, not a gameplay-design failure. Clean the repo-local build outputs before changing scene or gameplay logic.
+            最新 RPG 原型失败属于 .NET 构建污染，不是玩法设计失败。修改场景或玩法逻辑前，先清理仓库内构建输出。
 
-            Required focus:
-            - Remove stale obj/bin/buildcache directories only inside the current prototype repository and targeted dotnet projects.
-            - Verify generated AssemblyInfo and TargetFrameworkAttribute files are not duplicated by stale output.
-            - Rerun the dotnet verification step and keep the latest log as evidence.
-            - Do not start RPG scene/gameplay repair until CS0579 is gone.
+            本任务重点：
+            - 只移除当前原型仓库和目标 dotnet 项目内的陈旧 obj/bin/buildcache 目录。
+            - 确认生成的 AssemblyInfo 与 TargetFrameworkAttribute 文件不会被陈旧输出重复编译。
+            - 重跑 dotnet 验证步骤，并保留最新结果作为证据。
+            - CS0579 消失前，不要开始 RPG 场景或玩法修复。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact compiler error and generated build path.
+            证据来源：
+            - 使用修复计划源失败记录中的具体编译错误和生成构建路径。
             """;
     }
 
     private static string BuildRpgSceneNodeContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            The latest RPG prototype failure is a Godot scene/script node contract mismatch, not a build-cache failure. Repair the missing node path or script binding named by the engine error before changing broader gameplay.
+            最新 RPG 原型失败属于 Godot 场景/脚本节点合同不匹配，不是构建缓存失败。扩展玩法前，先修复引擎错误点名的缺失节点路径或脚本绑定。
 
-            Required focus:
-            - Use the latest Godot error as the source of truth.
-            - If a required UI node such as BattleStatusLabel is missing, add it at the path expected by the active prototype script or update the script to the authoritative scene path.
-            - Keep Start Adventure -> visible MapScene behavior intact.
-            - Do not treat .godot/mono/temp/obj/Debug source-generator stack paths as CS0579 build contamination.
+            本任务重点：
+            - 以最新 Godot 错误作为事实来源。
+            - 如果缺少 BattleStatusLabel 这类必需 UI 节点，就把它添加到活跃原型脚本期望的路径，或把脚本更新到权威场景路径。
+            - 保持 Start Adventure -> 可见 MapScene 行为不退化。
+            - 不要把 .godot/mono/temp/obj/Debug source-generator 栈路径误判为 CS0579 构建污染。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact Godot node/script error and stack context.
+            证据来源：
+            - 使用修复计划源失败记录里的具体 Godot 节点/脚本错误和堆栈上下文。
             """;
     }
 
     private static string BuildRpgGdUnitAssetRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            The latest RPG project-specific GdUnit validation failed while loading concrete Godot resources. Repair resource references before broad gameplay redesign.
+            最新 RPG 项目专属 GdUnit 验证在加载具体 Godot 资源时失败。先修复资源引用，再考虑更广泛的玩法调整。
 
-            Required focus:
-            - Fix missing runtime assets or scene ext_resource paths named in the GdUnit console summary.
-            - Ensure selected route scenes such as MapScene.tscn, and BattleScene.tscn only when battle/conflict capability is selected or named by the latest failure, do not reference missing PNG files or stale .godot/imported .ctex files.
-            - Run Godot import through the project workflow after copying or restoring assets.
-            - Do not mark this step complete if Parse Error or Failed loading resource remains.
+            本任务重点：
+            - 修复 GdUnit 控制台摘要点名的缺失运行素材或场景 ext_resource 路径。
+            - 确保 MapScene.tscn 等已选择路线场景，以及仅在战斗/冲突能力被选择或最新失败点名时需要的 BattleScene.tscn，不再引用缺失 PNG 或陈旧 .godot/imported .ctex 文件。
+            - 复制或恢复素材后，通过项目工作流执行 Godot 导入。
+            - 如果仍有 Parse Error 或 Failed loading resource，不得标记本任务完成。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact missing resource, parse error, and GdUnit console lines.
+            证据来源：
+            - 使用修复计划源失败记录里的具体缺失资源、解析错误和 GdUnit 控制台行。
             """;
     }
 
     private static string BuildRpgGdUnitNodeRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair the RPG scene/node contract that the project-specific DqRpgPrototype GdUnit tests validate.
+            修复项目专属 DqRpgPrototype GdUnit 测试验证的 RPG 场景/节点合同。
 
-            Required focus:
-            - Required test paths include selected capability nodes such as CanvasLayer/UI/MapScene/RpgMapAsset, RpgPlayerAsset, RpgEnemyAsset, ChestToken, and CanvasLayer/UI/BattleScene/EnemyToken only when named by the latest failure or battle/conflict capability is selected.
-            - Keep the scene script and test contract aligned; do not move nodes without updating the authoritative scene path used by runtime code and tests together.
-            - Preserve Start Adventure -> visible MapScene behavior.
+            本任务重点：
+            - 必需测试路径包含已选择能力节点，例如 CanvasLayer/UI/MapScene/RpgMapAsset、RpgPlayerAsset、RpgEnemyAsset、ChestToken；CanvasLayer/UI/BattleScene/EnemyToken 仅在最新失败点名或战斗/冲突能力被选择时需要。
+            - 保持场景脚本和测试合同一致；不要移动节点却不同时更新运行时代码和测试使用的权威场景路径。
+            - 保持 Start Adventure -> 可见 MapScene 行为。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact node path mismatch reported by GdUnit.
+            证据来源：
+            - 使用修复计划源失败记录中 GdUnit 报告的具体节点路径不匹配。
             """;
     }
 
     private static string BuildRpgGdUnitScriptRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair script/runtime errors exposed by RPG GdUnit after the resource and node contract is stable.
+            在资源和节点合同稳定后，修复 RPG GdUnit 暴露的脚本/运行时错误。
 
-            Required focus:
-            - Remove invalid calls such as calling _UnhandledInput on a Control base that does not expose that function.
-            - Keep movement, encounter entry, battle resolution, reward 3-choice, and return-to-map callable through the same prototype shell used by the test.
-            - Do not bypass failing behavior by weakening or deleting project-specific GdUnit tests.
+            本任务重点：
+            - 移除无效调用，例如在不暴露 _UnhandledInput 的 Control 基类上调用该函数。
+            - 保持移动、遇敌入口、战斗结算、奖励 3 选 1 和返回地图都能通过测试使用的同一个原型壳调用。
+            - 不要通过削弱或删除项目专属 GdUnit 测试来绕过失败行为。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact script/runtime error reported by GdUnit.
+            证据来源：
+            - 使用修复计划源失败记录中 GdUnit 报告的具体脚本/运行时错误。
             """;
     }
 
     private static string BuildRpgGdUnitContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair gameplay behavior without drifting from the project prototype contract.
+            修复玩法行为，同时不得偏离项目原型合同。
 
-            Required focus:
-            - Concrete project input values override RPG defaults and template examples.
-            - Preserve reward 3-choice and visible battle comprehension.
-            - Preserve the project win/fail condition from the contract; do not replace 15-battle victory with a shorter RPG template-default victory count unless the user contract says so.
-            - Any unimplemented concrete input must become an explicit needs-fix blocker.
+            本任务重点：
+            - 具体项目输入值优先于 RPG 默认值和模板示例。
+            - 保留奖励 3 选 1 和可见的战斗理解反馈。
+            - 保留合同里的项目胜负条件；除非用户合同要求，不要把 15 场战斗胜利替换成更短的 RPG 模板默认胜利次数。
+            - 任何未实现的具体输入都必须成为明确的需要修复阻塞项。
 
-            Contract source:
-            - Use the current prototype contract JSON and route skill contract as authoritative project input.
-            - Use the repair plan source failure record for the latest validation blocker.
+            合同来源：
+            - 使用当前原型合同 JSON 和路由技能合同作为权威项目输入。
+            - 使用修复计划源失败记录中的最新验证阻塞项。
             """;
     }
 
     private static string BuildRpgGdUnitFinalAcceptanceDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Run final RPG validation against the same blocker that generated this repair plan.
+            针对生成本修复计划的同一个阻塞项执行 RPG 最终验证。
 
-            Required validation:
-            - Project-specific GdUnit path: tests/Prototype/DqRpgPrototype.
-            - Treat wrapper output GDUNIT_DONE rc=1 as failure even when normalized_rc is 0.
-            - Treat No test cases found as failure.
-            - Re-run the front-end prototype validation route after GdUnit is clean.
+            必需验证：
+            - 项目专属 GdUnit 路径：tests/Prototype/DqRpgPrototype。
+            - 即使 normalized_rc 为 0，只要包装输出 GDUNIT_DONE rc=1 就视为失败。
+            - No test cases found 视为失败。
+            - GdUnit 干净后，重跑前台原型项目验收路由。
 
-            Evidence source:
-            - Use the repair plan source failure record for the exact validation blocker that must become green.
+            证据来源：
+            - 使用修复计划源失败记录中必须转绿的具体验证阻塞项。
             """;
     }
 
@@ -1096,36 +1096,36 @@ public sealed class PrototypeRepairPlanService
     private static string BuildGenericEvidenceRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair the latest failed prototype route evidence path using the default prototype route skill and the project contract.
+            使用默认原型路由技能和项目合同修复最新失败的原型路由证据路径。
 
             Route skill:
             - {context.RouteSkill.RouteSkillId}
             - {context.RouteSkill.RouteSkillGuide}
 
-            Required repair scope:
-            - Read the current project README and prototype contract first.
-            - Use the latest failed run output as the source of truth for what broke.
-            - Restore route completion evidence before broader gameplay repair.
-            - Preserve browser-safe output.
+            修复范围：
+            - 先读取当前项目 README 和原型合同。
+            - 以最新失败运行输出作为故障事实来源。
+            - 在更广泛的玩法修复前，先恢复路由完成证据。
+            - 保持输出对浏览器用户安全。
             """;
     }
 
     private static string BuildGenericContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair the current prototype against the default prototype route skill and project prototype contract.
+            按默认原型路由技能和项目原型合同修复当前原型。
 
             Route skill:
             - {context.RouteSkill.RouteSkillId}
             - {context.RouteSkill.RouteSkillContract}
 
-            Contract requirements:
-            - User form fields override generic defaults.
-            - The playable loop, UI feedback, and validation evidence must match the project prototype contract.
-            - Do not invent type-specific steps unless the project contract demands them.
+            合同要求：
+            - 用户表单字段优先于通用默认值。
+            - 可玩循环、UI 反馈和验证证据必须匹配项目原型合同。
+            - 除非项目合同要求，不要虚构类型专属任务。
 
-            Evidence source:
-            - Use the repair plan source failure record and prototype contract for the latest generic prototype blocker.
+            证据来源：
+            - 使用修复计划源失败记录和原型合同来定位最新通用原型阻塞项。
             """;
     }
 
@@ -1158,7 +1158,8 @@ public sealed class PrototypeRepairPlanService
             - If the failure is main-menu/navigation/map-visibility related, do not start with evidence, TDD, permission, cache, or build-recovery steps.
             - Use small isolated gameplay repair steps: MapScene entry, movement/encounter, battle, reward loop, win/fail visibility, final acceptance.
             - Mention evidence/TDD/build recovery only when the failure explicitly points to permission denied, write failure, cache lock, build failure, or missing completion artifacts.
-            - Keep the final goal as full playable prototype acceptance.
+            - Write title, description, and acceptanceHint in Simplified Chinese by default. English is allowed only for code identifiers, fixed node names, resource paths, tests, logs, route ids, and platform validation names.
+            - Keep the final goal as full playable prototype acceptance, but write the user-facing final goal title in Chinese.
             - Keep each goal narrow enough to execute independently.
 
             Project:
@@ -1215,7 +1216,7 @@ public sealed class PrototypeRepairPlanService
                     continue;
                 }
 
-                goals.Add(new PrototypeRepairGoalResult(index++, title, description, acceptance, "pending"));
+                goals.Add(new PrototypeRepairGoalResult(index++, NormalizeRepairGoalTitle(title), description, acceptance, "pending"));
             }
 
             return goals.Count >= 4 ? goals : [];
@@ -1235,13 +1236,74 @@ public sealed class PrototypeRepairPlanService
         return root;
     }
 
+    private static string NormalizeRepairGoalTitle(string title)
+    {
+        var normalized = title.Trim();
+        if (normalized.StartsWith("RPG Repair Step 1:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复任务 1：Start Adventure 到可见 MapScene";
+        }
+
+        if (normalized.StartsWith("RPG Repair Step 2:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复任务 2：移动与第一次遇敌入口";
+        }
+
+        if (normalized.StartsWith("RPG Repair Step 3:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复任务 3：BattleScene 单轮验证";
+        }
+
+        if (normalized.StartsWith("RPG Repair Step 4:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复任务 4：奖励 3 选 1 与返回地图";
+        }
+
+        if (normalized.StartsWith("RPG Repair Step 5:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复任务 5：胜负可见性";
+        }
+
+        if (normalized.StartsWith("Recover Step 07", StringComparison.OrdinalIgnoreCase))
+        {
+            return "服务重启后恢复第 7 步最终摘要";
+        }
+
+        if (normalized.StartsWith("Revalidate existing RPG playable evidence", StringComparison.OrdinalIgnoreCase))
+        {
+            return "重新验证现有 RPG 可玩证据";
+        }
+
+        if (normalized.StartsWith("Run final RPG acceptance only after recovery", StringComparison.OrdinalIgnoreCase))
+        {
+            return "恢复后再运行 RPG 最终验收";
+        }
+
+        if (normalized.StartsWith("Build cleanup:", StringComparison.OrdinalIgnoreCase))
+        {
+            return "构建清理：先移除陈旧生成目录";
+        }
+
+        if (normalized.StartsWith("Repair RPG script input and loop behavior under the validated scene contract", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复已验证场景合同下的 RPG 脚本输入与循环行为";
+        }
+
+        if (normalized.StartsWith("Repair RPG", StringComparison.OrdinalIgnoreCase))
+        {
+            return "修复 RPG 相关任务";
+        }
+
+        return normalized;
+    }
+
     private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill, string projectExecutionGuide)
     {
         var recoveryOnlyRules = IsServiceRestartRecoveryGoal(goal)
             ? """
-            Recovery-only step:
+            Recovery-only task:
             - The current failure is service_restart_recovery / interrupted_by_service_restart, not a gameplay defect.
-            - Do not add or change map, movement, battle, reward, win/fail, UI, asset, test, or scene files unless the current step explicitly names a concrete gameplay validation failure.
+            - Do not add or change map, movement, battle, reward, win/fail, UI, asset, test, or scene files unless the current task explicitly names a concrete gameplay validation failure.
             - Prefer preserving existing prototype artifacts and reporting that final prototype acceptance must be rerun after service recovery.
             - If no hosted game file change is required, return STATUS: completed with REMAINING: rerun final prototype acceptance.
             """
@@ -1253,7 +1315,7 @@ public sealed class PrototypeRepairPlanService
             Repair plan:
             - SessionId: {details.Session.SessionId}
             - SourceKind: {SourceKind}
-            - CurrentStep: {goal.GoalIndex}
+            - CurrentRepairTask: {goal.GoalIndex}
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
@@ -1262,9 +1324,9 @@ public sealed class PrototypeRepairPlanService
             {details.Session.SourceMessage}
 
             Mandatory rules:
-            - Execute only the current repair step.
+            - Execute only the current repair task.
             - Read the Project Execution Guide as the project-level /new recovery protocol before changing files.
-            - Use Prototype Chapter 6 Lite semantics: repair one current step, update lightweight route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
+            - Use Prototype Chapter 6 Lite semantics: repair one current task, update lightweight route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
             - Do not regenerate the prototype, iteration plan, or repair plan.
             - Do not repair PhaseA platform code, docs, scripts, deployment, or route code.
             - Change only hosted game project files needed for this repair step.
@@ -1272,6 +1334,7 @@ public sealed class PrototypeRepairPlanService
             - GdUnit project root is Tests.Godot; runtime assets are visible through Tests.Godot/Game.Godot.
             - If repairing asset import failures, run the import/prewarm against Tests.Godot and verify Tests.Godot/.godot/imported contains the required imported resources.
             - Keep output browser-safe: no paths, command lines, script names, logs, or environment values.
+            - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
             {recoveryOnlyRules}
 
             Project:
@@ -1292,6 +1355,13 @@ public sealed class PrototypeRepairPlanService
 
             Extra user feedback:
             {feedback}
+
+            输出格式：
+            STATUS: completed|needs_fix
+            SUMMARY: 用 2-4 句中文说明当前修复任务是否完成，以及对用户有什么变化
+            CHANGED: 用 1-3 行中文列出本轮实际完成的改动
+            VERIFY: 用 1-3 行中文说明如何验证
+            REMAINING: 若未完全完成，用中文写出剩余问题；若已完成，写 none
             """;
     }
 

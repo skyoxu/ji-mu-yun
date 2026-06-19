@@ -1190,8 +1190,8 @@ namespace Xunit
         var summary = refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).ResultSummary;
 
         result.Status.Should().Be("failed");
-        summary.Should().Contain("独立 BattleScene");
-        summary.Should().Contain("可读结算");
+        summary.Should().Contain("首次冲突");
+        summary.Should().Contain("不推进战斗结算或奖励选择");
         summary.Should().NotContain("胜利后显示 3 个奖励");
     }
 
@@ -1530,8 +1530,8 @@ public sealed class MapScene
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
-        result.AssistantMessage.Should().Contain($"目标 {targetGoal.GoalIndex} 修复已完成");
-        result.AssistantMessage.Should().Contain("passed Godot smoke validation");
+        result.AssistantMessage.Should().Contain($"任务 {targetGoal.GoalIndex} 修复已完成");
+        result.AssistantMessage.Should().Contain("已通过 Godot smoke 验证");
         result.AssistantMessage.Should().NotContain("STATUS: needs_fix");
         result.AssistantMessage.Should().NotContain("Failed to open 'user://logs");
     }
@@ -2160,13 +2160,31 @@ public sealed class DqRpgPrototype
         result.IterationSessionStatus.Should().Be("needs_fix");
         refreshed!.Goals[0].Status.Should().Be("needs_fix");
         refreshed.Session.Status.Should().Be("needs_fix");
-        runner.LastPrompt.Should().Contain("这是目标级 needs-fix 修复，不是 90 秒快速修复");
+        runner.LastPrompt.Should().Contain("这是任务级 needs-fix 修复，不是 90 秒快速修复");
     }
 
 
     private static ProjectIterationGoalSnapshot FindGoal(ProjectIterationSessionDetails details, string titlePart)
     {
-        return details.Goals.Single(goal => goal.Title.Contains(titlePart, StringComparison.Ordinal));
+        return details.Goals.Single(goal => GoalTitleMatches(goal.Title, titlePart));
+    }
+
+    private static bool GoalTitleMatches(string title, string titlePart)
+    {
+        return title.Contains(titlePart, StringComparison.OrdinalIgnoreCase) ||
+               title.Contains(TranslateGoalTitle(titlePart), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string TranslateGoalTitle(string titlePart)
+    {
+        return titlePart switch
+        {
+            "field navigation and stable control" => "地图导航与稳定操控",
+            "battle or challenge resolution" => "战斗或挑战结算",
+            "growth, reward, or consequence feedback" => "成长、奖励或后果反馈",
+            "final first-loop acceptance" => "最终首轮闭环验收",
+            _ => titlePart
+        };
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool prototypeSucceeded, string gameTypeSource = "RPG")

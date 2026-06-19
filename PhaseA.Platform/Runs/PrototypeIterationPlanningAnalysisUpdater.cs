@@ -154,7 +154,7 @@ internal static class PrototypeIterationPlanningAnalysisUpdater
         target["evidence"] = TrimForState(publicSummary, 120);
         target["missingReason"] = string.Equals(goalStatus, "succeeded", StringComparison.OrdinalIgnoreCase)
             ? null
-            : "当前目标执行后仍需补充或修复。";
+            : "当前任务执行后仍需补充或修复。";
 
         if (!fieldCoverage.Contains(target))
         {

@@ -214,7 +214,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: opening context and player objective"))
+        if (ContainsAny(title, "JRPG First Loop: opening context and player objective", "开局语境与玩家目标"))
         {
             var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
             if (ContainsAny(text, "map entry smoke", "navigation smoke", "visible MapScene", "map entry", "field movement", "stable movement"))
@@ -231,7 +231,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: field navigation and stable control"))
+        if (ContainsAny(title, "JRPG First Loop: field navigation and stable control", "地图导航与稳定操控"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-field-navigation-stable-control",
@@ -239,7 +239,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: interaction and discovery beat"))
+        if (ContainsAny(title, "JRPG First Loop: interaction and discovery beat", "交互与发现节点"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-interaction-discovery",
@@ -247,7 +247,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: conflict entry trigger"))
+        if (ContainsAny(title, "JRPG First Loop: conflict entry trigger", "冲突入口触发"))
         {
             var context = BuildJrpgCapabilityContext(project, goal);
             if (!RequiresBattleSceneForGoalContext(context.Text, goal))
@@ -265,7 +265,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: battle or challenge resolution"))
+        if (ContainsAny(title, "JRPG First Loop: battle or challenge resolution", "战斗或挑战结算"))
         {
             var context = BuildJrpgCapabilityContext(project, goal);
             if (!RequiresBattleScene(context.Text))
@@ -282,7 +282,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 BattleSceneAcceptance: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: party or character state readability"))
+        if (ContainsAny(title, "JRPG First Loop: party or character state readability", "角色或队伍状态可读性"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-party-character-state-readability",
@@ -290,7 +290,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: growth, reward, or consequence feedback"))
+        if (ContainsAny(title, "JRPG First Loop: growth, reward, or consequence feedback", "成长、奖励或后果反馈"))
         {
             var context = BuildJrpgCapabilityContext(project, goal);
             if (!RequiresRewardFlow(context.Text))
@@ -308,7 +308,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: return or continue loop"))
+        if (ContainsAny(title, "JRPG First Loop: return or continue loop", "返回或继续循环"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-return-or-continue-loop",
@@ -316,7 +316,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: quest or story progress"))
+        if (ContainsAny(title, "JRPG First Loop: quest or story progress", "任务或剧情推进"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-quest-story-progress",
@@ -324,7 +324,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 StaticAcceptanceOnly: true);
         }
 
-        if (ContainsAny(title, "JRPG First Loop: final first-loop acceptance"))
+        if (ContainsAny(title, "JRPG First Loop: final first-loop acceptance", "最终首轮闭环验收"))
         {
             var context = BuildJrpgCapabilityContext(project, goal);
             return BuildJrpgFinalAcceptanceContract(context.Text, context.SelectedCapabilities);
@@ -438,7 +438,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
             return BuildRpgFinalAcceptanceContract(contextForGenericFinal.Text, contextForGenericFinal.SelectedCapabilities);
         }
 
-        if (ContainsAny(text, "opening context", "player objective", "hero/context/objective", "\u5f00\u573a", "\u73a9\u5bb6\u76ee\u6807"))
+        if (ContainsAny(text, "opening context", "player objective", "hero/context/objective", "\u5f00\u573a", "\u73a9\u5bb6\u76ee\u6807", "开局语境"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-opening-context-objective",
@@ -447,7 +447,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
         }
 
         if (!ContainsAssetOrUiValidation(text) &&
-            ContainsAny(text, "interaction and discovery", "discovery beat", "npc", "dialog", "chest", "inspect", "\u4ea4\u4e92", "\u53d1\u73b0", "\u5bf9\u8bdd", "\u5b9d\u7bb1", "\u8c03\u67e5"))
+            ContainsAny(text, "interaction and discovery", "discovery beat", "npc", "dialog", "chest", "inspect", "\u4ea4\u4e92", "\u53d1\u73b0", "\u5bf9\u8bdd", "\u5b9d\u7bb1", "\u8c03\u67e5", "发现节点"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-interaction-discovery",
@@ -557,7 +557,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
 
         if (!ContainsAny(text, "\u573a\u666f\u5207\u6362", "scene switching", "main prototype scene", "\u4e3b\u539f\u578b") &&
             !ContainsAssetOrUiValidation(text) &&
-            ContainsAny(text, "\u5730\u56fe\u79fb\u52a8", "map", "visible map", "start adventure", "field navigation", "stable control", "town scene"))
+            ContainsAny(text, "\u5730\u56fe\u79fb\u52a8", "map", "visible map", "start adventure", "field navigation", "stable control", "town scene", "地图导航", "稳定操控"))
         {
             return new PrototypeGoalAcceptanceContract(
                 ContainsAny(text, "jrpg", "field navigation", "stable control", "town scene") ? "jrpg-field-navigation-stable-control" : "rpg-step1-visible-map-movement",
@@ -565,7 +565,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (ContainsAny(text, "\u6218\u6597", "battle", "\u7ed3\u7b97", "settlement", "battlescene", "challenge resolution"))
+        if (ContainsAny(text, "\u6218\u6597", "battle", "\u7ed3\u7b97", "settlement", "battlescene", "challenge resolution", "挑战结算"))
         {
             if (!RequiresBattleSceneForGoalContext(text, goal))
             {
@@ -581,7 +581,7 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 BattleSceneAcceptance: true);
         }
 
-        if (ContainsAny(text, "party", "character state", "hp", "stat", "status", "equipment", "\u961f\u4f0d", "\u89d2\u8272\u72b6\u6001", "\u5c5e\u6027", "\u88c5\u5907"))
+        if (ContainsAny(text, "party", "character state", "hp", "stat", "status", "equipment", "\u961f\u4f0d", "\u89d2\u8272\u72b6\u6001", "\u5c5e\u6027", "\u88c5\u5907", "状态可读性"))
         {
             return new PrototypeGoalAcceptanceContract(
                 "jrpg-party-character-state-readability",

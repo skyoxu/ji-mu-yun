@@ -99,15 +99,15 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().Contain("current needs fix step state");
         runner.Prompt.Should().NotContain("wrong-step");
         runner.Prompt.Length.Should().BeLessThan(17000);
-        runner.Prompt.Should().Contain("Project README, Project Execution Guide, and Recovery source are read-only recovery context, not repair targets.");
+        runner.Prompt.Should().Contain("Project README、Project Execution Guide 和恢复来源只作为只读恢复上下文，不是修复目标。");
         runner.Prompt.Should().Contain("Project Execution Guide");
         runner.Prompt.Should().Contain("Route Recovery Protocol");
-        runner.Prompt.Should().Contain("Prototype Chapter 6 Lite semantics");
-        runner.Prompt.Should().Contain("formal acceptance files");
-        runner.Prompt.Should().Contain("if the latest platform acceptance blocker is core_tests_failed");
-        runner.Prompt.Should().Contain("missing Xunit/FluentAssertions/package references");
-        runner.Prompt.Should().Contain("repair hosted test project/package/reference files first");
-        runner.Prompt.Should().Contain("Platform route or recovery tests passing does not prove a gameplay goal is complete.");
+        runner.Prompt.Should().Contain("使用 Prototype Chapter 6 Lite 语义");
+        runner.Prompt.Should().Contain("正式验收文件");
+        runner.Prompt.Should().Contain("如果最新平台验收阻塞是 core_tests_failed");
+        runner.Prompt.Should().Contain("缺少 Xunit/FluentAssertions/package references");
+        runner.Prompt.Should().Contain("先修托管测试项目/包/引用文件");
+        runner.Prompt.Should().Contain("平台路由或恢复测试通过，不代表玩法任务已经完成。");
         runner.Prompt.Should().Contain("Project prototype contract");
         runner.Prompt.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         runner.Prompt.Should().Contain("First enemy has 30 HP and 5 ATK.");
@@ -328,7 +328,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
-        runner.Prompt.Should().Contain("Previous platform rejection:");
+        runner.Prompt.Should().Contain("上一轮平台拒绝：");
         runner.Prompt.Should().Contain(previousRunId);
         runner.Prompt.Should().Contain("GoalRepairStatus: needs_fix");
         runner.Prompt.Should().Contain("PlatformAcceptanceReason: core_tests_failed");
@@ -340,8 +340,8 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         runner.Prompt.Should().Contain("Game.Core.Tests/Game.Core.Tests.csproj PackageReference");
         runner.Prompt.Should().Contain("Do not delete tests");
         runner.Prompt.Should().Contain("Treat this platform rejection as prior evidence");
-        runner.Prompt.Should().Contain("Current platform acceptance diagnosis overrides previous platform rejection and repair ledger");
-        runner.Prompt.Should().Contain("Step repair ledger:");
+        runner.Prompt.Should().Contain("当前平台验收结果优先于上一轮拒绝和修复台账");
+        runner.Prompt.Should().Contain("任务修复台账：");
         runner.Prompt.Should().Contain("Forbidden detours");
     }
 
@@ -469,7 +469,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step again"));
 
-        secondRunner.Prompt.Should().Contain("Step repair ledger:");
+        secondRunner.Prompt.Should().Contain("任务修复台账：");
         secondRunner.Prompt.Should().Contain("platform_acceptance:missing-required-core-markers-missing-marker-objective-missing-marker-start-adventure");
         secondRunner.Prompt.Should().Contain("missing_marker=Objective");
         secondRunner.Prompt.Should().Contain("missing_marker=Start Adventure");

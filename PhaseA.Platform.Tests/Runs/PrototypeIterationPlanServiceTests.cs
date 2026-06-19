@@ -91,6 +91,31 @@ public sealed class PrototypeIterationPlanServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldRequireCustomRoute_WhenGenericLoopRequestIsTooBroad()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "????");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "???????????????????Boss?????????????????????????????????????????",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Summary.Should().NotBeNullOrWhiteSpace();
+        result.Goals.Should().NotBeEmpty();
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldSplitGenericLoopActionListIntoSmallGoals()
     {
         using var database = TempSqliteDatabase.Create();
@@ -111,16 +136,13 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(8);
+        result.Goals.Should().HaveCount(5);
         result.Goals.Select(goal => goal.Title).Should().ContainInOrder(
-            "目标 1：验证玩家能采购",
-            "目标 2：补通制作反馈",
-            "目标 3：补通销售反馈",
-            "目标 4：补通盈利反馈",
-            "目标 5：补通继续采购反馈",
-            "目标 6：补通升级产品反馈",
-            "目标 7：最小闭环回归验收",
-            "Final Step: full playable prototype acceptance");
+            "任务 1：验证玩家能采购",
+            "任务 2：补通制作反馈",
+            "任务 3：补通销售反馈",
+            "任务 4：补通盈利反馈",
+            "最终任务：完整可玩原型验收");
         result.Goals[0].Description.Should().Contain("只处理“采购”这个最小动作");
         result.Goals[0].Description.Should().NotContain("可反复试玩的最小闭环");
         result.LatestEvaluation.Should().NotBeNull();
@@ -151,13 +173,13 @@ public sealed class PrototypeIterationPlanServiceTests
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
         result.Goals.Select(goal => goal.Title).Should().ContainInOrder(
-            "JRPG First Loop: opening context and player objective",
-            "JRPG First Loop: field navigation and stable control",
-            "JRPG First Loop: interaction and discovery beat",
-            "JRPG First Loop: quest or story progress",
-            "JRPG First Loop: final first-loop acceptance");
-        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG First Loop: conflict entry trigger");
-        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG First Loop: battle or challenge resolution");
+            "JRPG 首轮闭环：开局语境与玩家目标",
+            "JRPG 首轮闭环：地图导航与稳定操控",
+            "JRPG 首轮闭环：交互与发现节点",
+            "JRPG 首轮闭环：任务或剧情推进",
+            "JRPG 首轮闭环：最终首轮闭环验收");
+        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG 首轮闭环：冲突入口触发");
+        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG 首轮闭环：战斗或挑战结算");
         result.Goals.Select(goal => goal.Description + " " + goal.AcceptanceHint)
             .Should()
             .NotContain(text => text.Contains("BattleScene", StringComparison.OrdinalIgnoreCase));
@@ -391,10 +413,10 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: conflict entry trigger");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: growth, reward, or consequence feedback");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: return or continue loop");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：冲突入口触发");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：战斗或挑战结算");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：成长、奖励或后果反馈");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：返回或继续循环");
         var project = await store.GetProjectSnapshotAsync(projectId);
         var stateJson = new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project!);
         using var state = JsonDocument.Parse(stateJson);
@@ -619,7 +641,7 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Goals[1].Description.Should().Be("Add visible encounter trigger");
         result.Goals[2].Description.Should().Be("Finish one battle and settlement");
         result.Goals[3].Description.Should().StartWith("Reward 3 choices and return to the map");
-        result.Goals[4].Title.Should().Contain("Final Step");
+        result.Goals[4].Title.Should().Contain("最终任务");
     }
 
     [Fact]
@@ -655,7 +677,7 @@ public sealed class PrototypeIterationPlanServiceTests
             "加入可见遇敌触发并能正常进入战斗",
             "完成一场战斗并正确结算胜负",
             "胜利后给出三选一奖励并返回地图");
-        result.Goals[4].Title.Should().Contain("Final Step");
+        result.Goals[4].Title.Should().Contain("最终任务");
     }
 
     [Fact]
@@ -764,9 +786,9 @@ public sealed class PrototypeIterationPlanServiceTests
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        var finalGoal = result.Goals.Should().Contain(goal => goal.Title.Contains("Final Step", StringComparison.Ordinal)).Subject;
+        var finalGoal = result.Goals.Should().Contain(goal => goal.Title.Contains("最终任务", StringComparison.Ordinal)).Subject;
         string.Join(" ", finalGoal.Title, finalGoal.Description, finalGoal.AcceptanceHint).Should()
-            .Contain("进入一次战斗")
+            .Contain("最小闭环")
             .And.NotContain("Boss")
             .And.NotContain("购买药水");
     }
@@ -843,7 +865,7 @@ public sealed class PrototypeIterationPlanServiceTests
         result.Goals[0].Description.Should().Be("只补杀怪后的金币掉落反馈");
         result.Goals[1].Description.Should().Be("只补经验升级后的状态变化显示");
         result.Goals[2].Description.Should().Be("只补继续下一场战斗的入口提示");
-        result.Goals[3].Title.Should().Contain("Final Step");
+        result.Goals[3].Title.Should().Contain("最终任务");
     }
 
     [Fact]
@@ -869,8 +891,8 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
         string.Join(" ", result.Goals[1].Title, result.Goals[1].Description, result.Goals[1].AcceptanceHint)
             .Should()
             .Contain("Start Adventure")
@@ -881,14 +903,14 @@ public sealed class PrototypeIterationPlanServiceTests
             .And.NotContain("BattleScene")
             .And.NotContain("full playable")
             .And.NotContain("scene switching");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: growth, reward, or consequence feedback");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: growth, reward, or consequence feedback");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: return or continue loop");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
-        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("reward", StringComparison.OrdinalIgnoreCase));
-        result.Goals.Last().Title.Should().Contain("final first-loop acceptance");
-        result.Goals.Last().AcceptanceHint.Should().Contain("playable end-to-end");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：成长、奖励或后果反馈");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：战斗或挑战结算");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：成长、奖励或后果反馈");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：返回或继续循环");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：战斗或挑战结算");
+        result.Goals.Select(goal => goal.Title).Should().Contain(title => title.Contains("\u5956\u52b1", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Last().Title.Should().Contain("最终首轮闭环验收");
+        result.Goals.Last().AcceptanceHint.Should().Contain("端到端游玩");
         result.Goals.Last().AcceptanceHint.Should().Contain("project-specific contract fields");
     }
 
@@ -1034,12 +1056,12 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
-        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG First Loop: growth, reward, or consequence feedback");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: return or continue loop");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
+        result.Goals.Select(goal => goal.Title).Should().NotContain("JRPG 首轮闭环：成长、奖励或后果反馈");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：返回或继续循环");
         result.Goals[0].Title.Should().NotContain("对齐原型合同");
-        result.Goals.Last().Title.Should().Contain("final first-loop acceptance");
+        result.Goals.Last().Title.Should().Contain("最终首轮闭环验收");
     }
 
     [Fact]
@@ -1085,17 +1107,17 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
         result.Goals[1].Description.Should().Contain("Start Adventure");
         string.Join(" ", result.Goals[1].Description, result.Goals[1].AcceptanceHint).Should().Match(text => text.Contains("playable field", StringComparison.OrdinalIgnoreCase) || text.Contains("visible MapScene", StringComparison.OrdinalIgnoreCase));
         result.Goals[1].Description.Should().NotContain("encounter entry");
         result.Goals[1].AcceptanceHint.Should().Match(text =>
-            text.Contains("move continuously", StringComparison.OrdinalIgnoreCase) ||
-            text.Contains("movement is stable", StringComparison.OrdinalIgnoreCase));
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: conflict entry trigger");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: growth, reward, or consequence feedback");
+            text.Contains("stable movement", StringComparison.OrdinalIgnoreCase) ||
+            text.Contains("移动稳定", StringComparison.OrdinalIgnoreCase));
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：冲突入口触发");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：战斗或挑战结算");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：成长、奖励或后果反馈");
         result.Goals[0].Title.ToLowerInvariant().Should().NotContain("foundation asset");
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().NotBeNullOrWhiteSpace();
@@ -1124,8 +1146,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve the RPG playable loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: conflict entry trigger", "Validate encounter trigger.", "Encounter trigger passes."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: growth, reward, or consequence feedback", "Validate reward.", "Reward passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：冲突入口触发", "Validate encounter trigger.", "Encounter trigger passes."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：成长、奖励或后果反馈", "Validate reward.", "Reward passes.")
             ]);
         var evaluationJson = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
             "should_refine_plan",
@@ -1179,7 +1201,7 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve the RPG playable loop.",
             "Demo Game: improve RPG loop.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Validate map movement.", "Movement passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Validate map movement.", "Movement passes.")
             ]);
         var evaluationJson = JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
             "should_refine_plan",
@@ -1234,8 +1256,8 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
         string.Join(" ", result.Goals[1].Title, result.Goals[1].Description, result.Goals[1].AcceptanceHint)
             .Should()
             .Contain("Start Adventure")
@@ -1299,11 +1321,11 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(4);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
         result.Goals[1].Description.Should().Contain("Start Adventure");
         result.Goals[1].Description.Should().NotContain("encounter entry");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: conflict entry trigger");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：冲突入口触发");
         codex.GoalPlanCallCount.Should().Be(0);
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().Be("ready_to_execute");
@@ -1356,11 +1378,11 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCountGreaterThanOrEqualTo(5);
-        result.Goals[0].Title.Should().Be("JRPG First Loop: opening context and player objective");
-        result.Goals[1].Title.Should().Be("JRPG First Loop: field navigation and stable control");
+        result.Goals[0].Title.Should().Be("JRPG 首轮闭环：开局语境与玩家目标");
+        result.Goals[1].Title.Should().Be("JRPG 首轮闭环：地图导航与稳定操控");
         string.Join(" ", result.Goals[1].Description, result.Goals[1].AcceptanceHint).Should().Match(text => text.Contains("playable field", StringComparison.OrdinalIgnoreCase) || text.Contains("visible MapScene", StringComparison.OrdinalIgnoreCase));
         result.Goals[1].AcceptanceHint.Should().Contain("asset");
-        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG First Loop: battle or challenge resolution");
+        result.Goals.Select(goal => goal.Title).Should().Contain("JRPG 首轮闭环：战斗或挑战结算");
         result.Goals[^1].AcceptanceHint.Should().Contain("project-specific contract fields");
         result.Summary.Should().Contain("model_plan_degraded=scaffold_fallback");
         var latest = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -1576,7 +1598,7 @@ public sealed class PrototypeIterationPlanServiceTests
                 new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene creation and validation", "Create and validate BattleScene.", "BattleScene reaches settlement."),
                 new ProjectIterationGoalCreateCommand(4, "RPG Step 4: main prototype scene and scene switching validation", "Connect the main scene switching flow.", "Main prototype scene switching works."),
                 new ProjectIterationGoalCreateCommand(5, "RPG Step 5: reward loop and return-to-map validation", "Validate reward and return-to-map.", "Reward returns to the map."),
-                new ProjectIterationGoalCreateCommand(6, "JRPG First Loop: final first-loop acceptance", "Validate full playable prototype acceptance.", "Final acceptance passes with Start Adventure visible map and package readiness.")
+                new ProjectIterationGoalCreateCommand(6, "JRPG 首轮闭环：最终首轮闭环验收", "Validate full playable prototype acceptance.", "Final acceptance passes with Start Adventure visible map and package readiness.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -1650,11 +1672,11 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG village errand with no combat, no enemy encounter, and without reward choices. The route should cover Start Adventure, visible map movement, dialogue, objective progress, continuation, and final acceptance.",
             "Demo Game: non-combat village route.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene, proves stable movement, and keeps this step focused without encounter, battle, or reward work.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: interaction and discovery beat", "Validate dialogue with the elder and discovery of the lost keepsake.", "Interaction and discovery pass."),
-                new ProjectIterationGoalCreateCommand(3, "JRPG First Loop: quest or story progress", "Validate objective update after returning the keepsake.", "Objective progress is visible."),
-                new ProjectIterationGoalCreateCommand(4, "JRPG First Loop: return or continue loop", "Validate the next playable exploration state after the objective update.", "The player can continue exploring."),
-                new ProjectIterationGoalCreateCommand(5, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map, interaction, objective progress, continuation, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene, proves stable movement, and keeps this step focused without encounter, battle, or reward work.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：交互与发现节点", "Validate dialogue with the elder and discovery of the lost keepsake.", "Interaction and discovery pass."),
+                new ProjectIterationGoalCreateCommand(3, "JRPG 首轮闭环：任务或剧情推进", "Validate objective update after returning the keepsake.", "Objective progress is visible."),
+                new ProjectIterationGoalCreateCommand(4, "JRPG 首轮闭环：返回或继续循环", "Validate the next playable exploration state after the objective update.", "The player can continue exploring."),
+                new ProjectIterationGoalCreateCommand(5, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map, interaction, objective progress, continuation, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -1691,10 +1713,10 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG town walkthrough with an itemized checklist for validation notes, but no reward flow.",
             "Demo Game: town walkthrough checklist.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene, proves stable movement, and keeps this step focused before closure proof is mixed in.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: interaction and discovery beat", "Review an itemized checklist of dialogue and inspectable-object validation notes.", "The checklist supports interaction validation."),
-                new ProjectIterationGoalCreateCommand(3, "JRPG First Loop: quest or story progress", "Validate story progress after the player talks to the elder.", "Story progress is visible."),
-                new ProjectIterationGoalCreateCommand(4, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map, interaction, story progress, project contract, and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene, proves stable movement, and keeps this step focused before closure proof is mixed in.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：交互与发现节点", "Review an itemized checklist of dialogue and inspectable-object validation notes.", "The checklist supports interaction validation."),
+                new ProjectIterationGoalCreateCommand(3, "JRPG 首轮闭环：任务或剧情推进", "Validate story progress after the player talks to the elder.", "Story progress is visible."),
+                new ProjectIterationGoalCreateCommand(4, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map, interaction, story progress, project contract, and package readiness.", "Final acceptance passes.")
             ]);
 
         var result = await service.EvaluateAsync(
@@ -1732,8 +1754,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Improve the JRPG loop.",
             "Demo Game: legacy route state.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -1784,8 +1806,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG loop with a visible enemy encounter, one battle, XP reward, and return to the map.",
             "Demo Game: empty selected capabilities route state.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -1835,8 +1857,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG loop with a visible enemy encounter, one battle, XP reward, and return to the map.",
             "Demo Game: stale selected capabilities route state.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -1886,9 +1908,9 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG village errand with no combat, no enemy encounter, and without reward choices.",
             "Demo Game: stale planning analysis route state.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: interaction and discovery beat", "Validate dialogue with the elder.", "Interaction passes."),
-                new ProjectIterationGoalCreateCommand(3, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map, interaction, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：交互与发现节点", "Validate dialogue with the elder.", "Interaction passes."),
+                new ProjectIterationGoalCreateCommand(3, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map, interaction, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -1939,9 +1961,9 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG village errand with no combat, no enemy encounter, and without reward choices.",
             "Demo Game: noisy analysis summary.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: interaction and discovery beat", "Validate dialogue with the elder.", "Interaction passes."),
-                new ProjectIterationGoalCreateCommand(3, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map, interaction, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：交互与发现节点", "Validate dialogue with the elder.", "Interaction passes."),
+                new ProjectIterationGoalCreateCommand(3, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map, interaction, project contract, and package readiness.", "Final acceptance passes without combat or reward requirements.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -1988,8 +2010,8 @@ public sealed class PrototypeIterationPlanServiceTests
             "Create a JRPG loop with a visible enemy encounter, one battle, XP reward, and return to the map.",
             "Demo Game: unknown selected capabilities route state.",
             [
-                new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
-                new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
+                new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", "Start Adventure opens a visible MapScene and proves stable movement.", "Visible MapScene and stable movement pass."),
+                new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map and package readiness.", "Final acceptance passes.")
             ]);
         var project = await store.GetProjectSnapshotAsync(projectId);
         writer.WriteIterationPlanState(project!, new
@@ -2446,7 +2468,7 @@ public sealed class PrototypeIterationPlanServiceTests
         second.Summary.Should().Contain("model_plan_degraded=scaffold_fallback");
         rounds.Should().HaveCount(2);
         rounds[1].Session.SessionId.Should().Be(second.SessionId);
-        rounds[1].Goals.Should().Contain(goal => goal.Title == "JRPG First Loop: battle or challenge resolution");
+        rounds[1].Goals.Should().Contain(goal => goal.Title == "JRPG 首轮闭环：战斗或挑战结算");
     }
 
     [Fact]
@@ -2582,13 +2604,13 @@ public sealed class PrototypeIterationPlanServiceTests
     {
         return
         [
-            new ProjectIterationGoalCreateCommand(1, "JRPG First Loop: field navigation and stable control", stepOneDescription, "Visible MapScene, stable movement, and map/player asset usage pass."),
-            new ProjectIterationGoalCreateCommand(2, "JRPG First Loop: conflict entry trigger", stepTwoDescription, "Encounter trigger, encounter progress, and guaranteed encounter behavior pass."),
-            new ProjectIterationGoalCreateCommand(3, "JRPG First Loop: battle or challenge resolution", "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.", "BattleScene settlement and enemy asset usage pass."),
-            new ProjectIterationGoalCreateCommand(4, "JRPG First Loop: growth, reward, or consequence feedback", "Validate reward 3-choice readability and player understanding.", "Reward 3-choice readability passes."),
-            new ProjectIterationGoalCreateCommand(5, "JRPG First Loop: return or continue loop", "Validate reward state change and return-to-map.", "Reward application and return-to-map pass."),
-            new ProjectIterationGoalCreateCommand(6, "JRPG First Loop: party or character state readability", stepSixDescription, "Win/fail and encounter rule feedback pass."),
-            new ProjectIterationGoalCreateCommand(7, "JRPG First Loop: final first-loop acceptance", "Run final acceptance across Start Adventure visible map, encounter, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, explicit rule coverage, project contract, and asset usage pass.")
+            new ProjectIterationGoalCreateCommand(1, "JRPG 首轮闭环：地图导航与稳定操控", stepOneDescription, "Visible MapScene, stable movement, and map/player asset usage pass."),
+            new ProjectIterationGoalCreateCommand(2, "JRPG 首轮闭环：冲突入口触发", stepTwoDescription, "Encounter trigger, encounter progress, and guaranteed encounter behavior pass."),
+            new ProjectIterationGoalCreateCommand(3, "JRPG 首轮闭环：战斗或挑战结算", "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.", "BattleScene settlement and enemy asset usage pass."),
+            new ProjectIterationGoalCreateCommand(4, "JRPG 首轮闭环：成长、奖励或后果反馈", "Validate reward 3-choice readability and player understanding.", "Reward 3-choice readability passes."),
+            new ProjectIterationGoalCreateCommand(5, "JRPG 首轮闭环：返回或继续循环", "Validate reward state change and return-to-map.", "Reward application and return-to-map pass."),
+            new ProjectIterationGoalCreateCommand(6, "JRPG 首轮闭环：角色或队伍状态可读性", stepSixDescription, "Win/fail and encounter rule feedback pass."),
+            new ProjectIterationGoalCreateCommand(7, "JRPG 首轮闭环：最终首轮闭环验收", "Run final acceptance across Start Adventure visible map, encounter, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.", "Final acceptance, explicit rule coverage, project contract, and asset usage pass.")
         ];
     }
 
@@ -2755,12 +2777,14 @@ public sealed class PrototypeIterationPlanServiceTests
 
         private string RefineScaffoldDescription(ScaffoldGoal goal, IReadOnlyList<string> selectedTitles)
         {
-            if (goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal))
+            if (goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal) ||
+                goal.Title.Contains("地图导航与稳定操控", StringComparison.Ordinal))
             {
                 return "Start Adventure opens a visible playable field or MapScene, proves stable controllable movement, and shows map/player asset usage.";
             }
 
-            if (goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal))
+            if (goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal) ||
+                goal.Title.Contains("最终首轮闭环验收", StringComparison.Ordinal))
             {
                 var selected = string.Join(", ", selectedTitles);
                 return _includeContractInstruction
@@ -2773,12 +2797,14 @@ public sealed class PrototypeIterationPlanServiceTests
 
         private static string RefineScaffoldAcceptance(ScaffoldGoal goal, IReadOnlyList<string> selectedTitles)
         {
-            if (goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal))
+            if (goal.Title.Contains("field navigation and stable control", StringComparison.Ordinal) ||
+                goal.Title.Contains("地图导航与稳定操控", StringComparison.Ordinal))
             {
                 return "Pass only when Start Adventure opens a visible playable field, movement is stable, and map/player asset usage is visible.";
             }
 
-            if (goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal))
+            if (goal.Title.Contains("final first-loop acceptance", StringComparison.Ordinal) ||
+                goal.Title.Contains("最终首轮闭环验收", StringComparison.Ordinal))
             {
                 var hasBattle = selectedTitles.Any(title => title.Contains("battle or challenge", StringComparison.OrdinalIgnoreCase));
                 var hasReward = selectedTitles.Any(title => title.Contains("growth, reward", StringComparison.OrdinalIgnoreCase));
@@ -2963,42 +2989,42 @@ public sealed class PrototypeIterationPlanServiceTests
                     {
                       "goals": [
                         {
-                          "title": "JRPG First Loop: opening context and player objective",
+                          "title": "JRPG 首轮闭环：开局语境与玩家目标",
                           "description": "Establish who the player controls, where the JRPG prototype starts, and the next immediate objective.",
                           "acceptanceHint": "Pass only when the playable scene presents a clear controllable hero, context, and objective."
                         },
                         {
-                          "title": "JRPG First Loop: field navigation and stable control",
+                          "title": "JRPG 首轮闭环：地图导航与稳定操控",
                           "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene, proves stable movement, and shows map/player asset usage.",
                           "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene, movement stays stable, and map/player assets are visible."
                         },
                         {
-                          "title": "JRPG First Loop: conflict entry trigger",
+                          "title": "JRPG 首轮闭环：冲突入口触发",
                           "description": "Validate movement-driven encounter trigger, visible encounter progress, and guaranteed encounter behavior.",
                           "acceptanceHint": "Pass only when actual map traversal exposes the first encounter and any guaranteed encounter rule is proven."
                         },
                         {
-                          "title": "JRPG First Loop: battle or challenge resolution",
+                          "title": "JRPG 首轮闭环：战斗或挑战结算",
                           "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
                           "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
                         },
                         {
-                          "title": "JRPG First Loop: growth, reward, or consequence feedback",
+                          "title": "JRPG 首轮闭环：成长、奖励或后果反馈",
                           "description": "Prove reward 3-choice readability and player understanding.",
                           "acceptanceHint": "Pass only when reward choices are visible and understandable."
                         },
                         {
-                          "title": "JRPG First Loop: return or continue loop",
+                          "title": "JRPG 首轮闭环：返回或继续循环",
                           "description": "Prove reward 3-choice changes state and returns to the active map loop.",
                           "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
                         },
                         {
-                          "title": "JRPG First Loop: party or character state readability",
+                          "title": "JRPG 首轮闭环：角色或队伍状态可读性",
                           "description": "Show and validate 15-battle victory, any-loss defeat, and encounter rules.",
                           "acceptanceHint": "Pass only when players can understand win/fail and encounter rules."
                         },
                         {
-                          "title": "JRPG First Loop: final first-loop acceptance",
+                          "title": "JRPG 首轮闭环：最终首轮闭环验收",
                           "description": "Run final acceptance across Start Adventure visible map, battle, reward return, navigation, and contract-specific runtime proof.",
                           "acceptanceHint": "Pass only when the JRPG first-loop prototype, Start Adventure visible-map validation, contract-specific runtime proof, and map/player/enemy asset usage all pass."
                         }
@@ -3180,42 +3206,42 @@ public sealed class PrototypeIterationPlanServiceTests
                 {
                   "goals": [
                     {
-                      "title": "JRPG First Loop: opening context and player objective",
+                      "title": "JRPG 首轮闭环：开局语境与玩家目标",
                       "description": "Establish who the player controls, where the JRPG prototype starts, and the next immediate objective.",
                       "acceptanceHint": "Pass only when the playable scene presents a clear controllable hero, context, and objective."
                     },
                     {
-                      "title": "JRPG First Loop: field navigation and stable control",
+                      "title": "JRPG 首轮闭环：地图导航与稳定操控",
                       "description": "Resolve the navigation blocker first: Start Adventure opens a visible MapScene and proves stable controllable movement.",
                       "acceptanceHint": "Pass only when Start Adventure opens a visible RPG MapScene and the player can move continuously."
                     },
                     {
-                      "title": "JRPG First Loop: conflict entry trigger",
+                      "title": "JRPG 首轮闭环：冲突入口触发",
                       "description": "Validate movement-driven encounter trigger, visible encounter progress, and guaranteed encounter behavior.",
                       "acceptanceHint": "Pass only when actual map traversal exposes the first encounter and any guaranteed encounter rule is proven."
                     },
                     {
-                      "title": "JRPG First Loop: battle or challenge resolution",
+                      "title": "JRPG 首轮闭环：战斗或挑战结算",
                       "description": "Validate one readable BattleScene loop with enemy asset usage and settlement.",
                       "acceptanceHint": "Pass only when BattleScene reaches clear battle feedback, enemy asset usage, and settlement."
                     },
                     {
-                      "title": "JRPG First Loop: growth, reward, or consequence feedback",
+                      "title": "JRPG 首轮闭环：成长、奖励或后果反馈",
                       "description": "Prove reward 3-choice readability and player understanding.",
                       "acceptanceHint": "Pass only when reward choices are visible and understandable."
                     },
                     {
-                      "title": "JRPG First Loop: return or continue loop",
+                      "title": "JRPG 首轮闭环：返回或继续循环",
                       "description": "Prove reward 3-choice changes state and returns to the active map loop.",
                       "acceptanceHint": "Pass only when reward selection, state change, and return-to-map are visible."
                     },
                     {
-                      "title": "JRPG First Loop: party or character state readability",
+                      "title": "JRPG 首轮闭环：角色或队伍状态可读性",
                       "description": "Show and validate victory, failure, defeat, and encounter rules.",
                       "acceptanceHint": "Pass only when players can understand victory, failure, defeat, and encounter rule feedback."
                     },
                     {
-                      "title": "JRPG First Loop: final first-loop acceptance",
+                      "title": "JRPG 首轮闭环：最终首轮闭环验收",
                       "description": "Run final acceptance across map, battle, reward return, navigation, and project-specific contract fields.",
                       "acceptanceHint": "Pass only when the full playable prototype, Start Adventure visible-map validation, project-specific contract fields, and map/player/enemy asset usage all pass."
                     }
@@ -3269,42 +3295,42 @@ public sealed class PrototypeIterationPlanServiceTests
                     {
                       "goals": [
                         {
-                          "title": "JRPG First Loop: opening context and player objective",
+                          "title": "JRPG 首轮闭环：开局语境与玩家目标",
                           "description": "Establish who the player controls, where the JRPG prototype starts, and the next immediate objective.",
                           "acceptanceHint": "Pass only when the playable scene presents a clear controllable hero, context, and objective."
                         },
                         {
-                          "title": "JRPG First Loop: field navigation and stable control",
+                          "title": "JRPG 首轮闭环：地图导航与稳定操控",
                           "description": "Start Adventure opens a visible MapScene with stable movement and map/player assets.",
                           "acceptanceHint": "Visible MapScene, stable movement, and assets pass."
                         },
                         {
-                          "title": "JRPG First Loop: conflict entry trigger",
+                          "title": "JRPG 首轮闭环：冲突入口触发",
                           "description": "Validate movement-driven encounter trigger, visible encounter progress, and guaranteed encounter behavior.",
                           "acceptanceHint": "Encounter trigger, encounter progress, and guaranteed encounter behavior pass."
                         },
                         {
-                          "title": "JRPG First Loop: battle or challenge resolution",
+                          "title": "JRPG 首轮闭环：战斗或挑战结算",
                           "description": "Validate BattleScene with one readable battle, enemy asset usage, feedback, and settlement.",
                           "acceptanceHint": "BattleScene settlement and enemy asset usage pass."
                         },
                         {
-                          "title": "JRPG First Loop: growth, reward, or consequence feedback",
+                          "title": "JRPG 首轮闭环：成长、奖励或后果反馈",
                           "description": "Validate reward 3-choice readability and player understanding.",
                           "acceptanceHint": "Reward 3-choice readability passes."
                         },
                         {
-                          "title": "JRPG First Loop: return or continue loop",
+                          "title": "JRPG 首轮闭环：返回或继续循环",
                           "description": "Validate reward state change and return-to-map.",
                           "acceptanceHint": "Reward application and return-to-map pass."
                         },
                         {
-                          "title": "JRPG First Loop: party or character state readability",
+                          "title": "JRPG 首轮闭环：角色或队伍状态可读性",
                           "description": "Show and validate win after 15 battles, any battle loss means game loss, and encounter rules clearly.",
                           "acceptanceHint": "Win/fail and encounter rule feedback pass."
                         },
                         {
-                          "title": "JRPG First Loop: final first-loop acceptance",
+                          "title": "JRPG 首轮闭环：最终首轮闭环验收",
                           "description": "Run final acceptance across Start Adventure visible map, encounter, battle, reward return-to-map, project contract, map/player/enemy assets, and package readiness.",
                           "acceptanceHint": "Final acceptance, explicit rule coverage, project contract, and asset usage pass."
                         }

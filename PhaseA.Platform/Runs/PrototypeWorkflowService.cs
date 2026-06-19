@@ -2468,12 +2468,12 @@ public sealed class PrototypeWorkflowService
 
         if (rawFailure.Contains("godot_bin_not_configured", StringComparison.OrdinalIgnoreCase))
         {
-            return "服务器未配置 Godot，无法完成原型验收。";
+            return "服务器未配置 Godot，无法完成原型项目验收。";
         }
 
         if (rawFailure.Contains("prototype_completion_validation_failed", StringComparison.OrdinalIgnoreCase))
         {
-            return "原型验收未通过。";
+            return "原型项目验收未通过。";
         }
 
         return "原型骨架创建失败，请查看运行记录。";
@@ -2752,21 +2752,21 @@ public sealed class PrototypeWorkflowService
 
     private static readonly (string Step, string Substep, string Label)[] ProgressSteps =
     [
-        ("running_step01_intake", "", "Step 01：正在整理输入信息。"),
-        ("running_step02_brief", "", "Step 02：正在形成原型简报。"),
-        ("running_step03_design", "analyzing", "Step 03：正在分析玩法方向。"),
-        ("running_step03_design", "planning", "Step 03：正在规划最小可玩循环。"),
-        ("running_step03_design", "freezing_scope", "Step 03：正在冻结本次原型范围。"),
-        ("running_step04_implementation", "scaffolding", "Step 04：正在搭建实现骨架。"),
-        ("running_step04_implementation", "coding", "Step 04：正在实现核心逻辑。"),
-        ("running_step04_implementation", "asset_wiring", "Step 04：正在接线资源与占位资产。"),
-        ("running_step04_implementation", "scene_wiring", "Step 04：正在接线 Godot 原型场景。"),
-        ("running_step05_verification", "unit_tests", "Step 05：正在运行单元测试。"),
-        ("running_step05_verification", "godot_smoke", "Step 05：正在运行 Godot 冒烟验证。"),
-        ("running_step05_verification", "playability_check", "Step 05：正在检查可玩性。"),
-        ("running_step05_verification", "fixing", "Step 05：正在处理验证发现的问题。"),
-        ("running_step06_packaging", "", "Step 06：正在整理产物与报告。"),
-        ("running_step07_review", "", "Step 07：正在生成最终摘要。")
+        ("running_step01_intake", "", "任务 01：正在整理输入信息。"),
+        ("running_step02_brief", "", "任务 02：正在形成原型简报。"),
+        ("running_step03_design", "analyzing", "任务 03：正在分析玩法方向。"),
+        ("running_step03_design", "planning", "任务 03：正在规划最小可玩循环。"),
+        ("running_step03_design", "freezing_scope", "任务 03：正在冻结本次原型范围。"),
+        ("running_step04_implementation", "scaffolding", "任务 04：正在搭建实现骨架。"),
+        ("running_step04_implementation", "coding", "任务 04：正在实现核心逻辑。"),
+        ("running_step04_implementation", "asset_wiring", "任务 04：正在接线资源与占位资产。"),
+        ("running_step04_implementation", "scene_wiring", "任务 04：正在接线 Godot 原型场景。"),
+        ("running_step05_verification", "unit_tests", "任务 05：正在运行单元测试。"),
+        ("running_step05_verification", "godot_smoke", "任务 05：正在运行 Godot 冒烟验证。"),
+        ("running_step05_verification", "playability_check", "任务 05：正在检查可玩性。"),
+        ("running_step05_verification", "fixing", "任务 05：正在处理验证发现的问题。"),
+        ("running_step06_packaging", "", "任务 06：正在整理产物与报告。"),
+        ("running_step07_review", "", "任务 07：正在生成最终摘要。")
     ];
 
     private sealed record PrototypeCompletionValidation(

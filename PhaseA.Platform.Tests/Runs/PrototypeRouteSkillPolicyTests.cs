@@ -452,7 +452,7 @@ public sealed class PrototypeRouteSkillPolicyTests
             gameName: "Action Demo",
             gameTypeSource: "Action",
             repoPath: Path.GetTempPath());
-        var goal = Goal(10, "Final Step: full playable prototype acceptance");
+        var goal = Goal(10, "最终任务：完整可玩原型验收");
 
         PrototypeGodotSmokeService.ShouldValidateGoal(project, goal).Should().BeFalse();
     }

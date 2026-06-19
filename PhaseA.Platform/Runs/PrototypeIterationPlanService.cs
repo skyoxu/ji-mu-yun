@@ -108,7 +108,7 @@ public sealed class PrototypeIterationPlanService
             return new PrototypeIterationPlanResult(
                 "",
                 "suggestion_needs_fix",
-                "当前这条建议更像内部执行或环境修复信息，不适合直接拆成迭代目标。请先处理需修复项，或重新生成更明确的产品向优化建议。",
+                "当前这条建议更像内部执行或环境修复信息，不适合直接拆成游戏模块任务。请先处理需修复项，或重新生成更明确的产品向优化建议。",
                 [],
                 null);
         }
@@ -335,11 +335,8 @@ public sealed class PrototypeIterationPlanService
             return new IterationGoalBuildResult(BuildDeckbuilderFirstLoopGoals(message, prototypeContract, regenerationGuidance), false);
         }
 
-        var genericMessage = string.IsNullOrWhiteSpace(genericCoreLoopGate.PlanningMessage)
-            ? message
-            : genericCoreLoopGate.PlanningMessage;
-        var goals = BuildGoals(genericMessage, sourceKind);
-        return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, genericMessage, prototypeContract), false);
+        var goals = BuildGoals(message, sourceKind);
+        return new IterationGoalBuildResult(AppendGenericFinalAcceptanceGoal(goals, message, prototypeContract), false);
     }
 
     private async Task<IterationPlanningContext> BuildPlanningContextAsync(
@@ -551,7 +548,7 @@ public sealed class PrototypeIterationPlanService
             : planningContext.LatestPrototypeStatus;
         var coverage = planningContext.DraftCoveragePercent;
         var degraded = usedScaffoldFallback ? " model_plan_degraded=scaffold_fallback." : "";
-        return $"已基于当前原型状态与需求覆盖分析生成 {goalCount} 个迭代目标。当前原型状态：{prototypeStatus}；表单覆盖率：{coverage}%。请先执行目标 1，再逐步推进后续目标。{degraded}";
+        return $"已基于当前原型状态与需求覆盖分析生成 {goalCount} 个游戏模块任务。当前原型状态：{prototypeStatus}；表单覆盖率：{coverage}%。请先执行任务 1，再逐步推进后续任务。{degraded}";
     }
 
     private static string BuildFallbackAnalysisSummary(RunSnapshot? latestPrototypeRun, RunSnapshot? latestSuccessfulPrototypeRun, ProjectPrototypeDraftSnapshot? draft)
@@ -763,6 +760,7 @@ public sealed class PrototypeIterationPlanService
             - Do not generate a new plan from scratch.
             - Keep the exact scaffold order.
             - Keep every title exactly unchanged from the scaffold.
+            - description and acceptanceHint are browser-facing fields. They must be written in Simplified Chinese by default; English is allowed only for code identifiers, fixed node names, resource paths, tests, logs, route ids, and platform validation names.
             - Only refine description and acceptanceHint so they better reflect the current prototype state, prototype-form coverage, and RPG route-skill contract.
             - If the prototype already succeeded once, keep the convergence/closure framing already present in the scaffold.
             - If some user fields are still only partial, mention the most important missing runtime proof in the relevant later steps.
@@ -923,7 +921,8 @@ public sealed class PrototypeIterationPlanService
         for (var index = 0; index < scaffold.Count; index++)
         {
             var expected = scaffold[index];
-            if (!parsedByTitle.TryGetValue(expected.Title, out var actual))
+            if (!parsedByTitle.TryGetValue(expected.Title, out var actual) &&
+                (index >= parsed.Count || !IsRecoverableRpgGoalRefinementPair(expected, parsed[index])))
             {
                 if (IsAcceptableJrpgScaffoldSubset(parsed, scaffold))
                 {
@@ -932,6 +931,8 @@ public sealed class PrototypeIterationPlanService
 
                 return new IterationGoalBuildResult([], false);
             }
+
+            actual ??= parsed[index];
 
             if (WeakensRpgScaffoldContract(expected, string.Join(" ", actual.Description, actual.AcceptanceHint)))
             {
@@ -947,6 +948,19 @@ public sealed class PrototypeIterationPlanService
         }
 
         return new IterationGoalBuildResult(refined, false);
+    }
+
+    private static bool IsRecoverableRpgGoalRefinementPair(PrototypeIterationPlanGoalResult expected, PrototypeIterationPlanGoalResult actual)
+    {
+        if (expected.GoalIndex != actual.GoalIndex)
+        {
+            return false;
+        }
+
+        var expectedCapability = ResolveJrpgCapabilityIdFromText(expected.Title);
+        var actualCapability = ResolveJrpgCapabilityIdFromText(actual.Title);
+        return !string.IsNullOrWhiteSpace(expectedCapability) &&
+               string.Equals(expectedCapability, actualCapability, StringComparison.OrdinalIgnoreCase);
     }
 
     private static List<PrototypeIterationPlanGoalResult> CloneScaffoldGoals(IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold)
@@ -965,11 +979,11 @@ public sealed class PrototypeIterationPlanService
             return false;
         }
 
-        var firstTitle = scaffold[0].Title;
-        var finalTitle = scaffold[^1].Title;
-        return parsed.Any(goal => string.Equals(goal.Title, firstTitle, StringComparison.Ordinal)) &&
-               parsed.Any(goal => string.Equals(goal.Title, finalTitle, StringComparison.Ordinal)) &&
-               parsed.All(goal => goal.Title.StartsWith("JRPG First Loop:", StringComparison.Ordinal));
+        var firstCapability = ResolveJrpgCapabilityIdFromText(scaffold[0].Title);
+        var finalCapability = ResolveJrpgCapabilityIdFromText(scaffold[^1].Title);
+        return parsed.Any(goal => string.Equals(ResolveJrpgCapabilityIdFromText(goal.Title), firstCapability, StringComparison.OrdinalIgnoreCase)) &&
+               parsed.Any(goal => string.Equals(ResolveJrpgCapabilityIdFromText(goal.Title), finalCapability, StringComparison.OrdinalIgnoreCase)) &&
+               parsed.All(goal => IsJrpgScaffoldTitle(goal.Title));
     }
 
     private static bool IsRecoverableJrpgScaffoldResponse(
@@ -981,19 +995,36 @@ public sealed class PrototypeIterationPlanService
             return false;
         }
 
-        if (!parsed.All(goal => goal.Title.StartsWith("JRPG First Loop:", StringComparison.Ordinal)))
+        if (!parsed.All(goal => IsJrpgScaffoldTitle(goal.Title)))
         {
             return false;
         }
 
-        if (!string.Equals(parsed[0].Title, scaffold[0].Title, StringComparison.Ordinal))
+        if (!string.Equals(
+                ResolveJrpgCapabilityIdFromText(parsed[0].Title),
+                ResolveJrpgCapabilityIdFromText(scaffold[0].Title),
+                StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        var scaffoldTitles = scaffold.Select(goal => goal.Title).ToHashSet(StringComparer.Ordinal);
-        var exactMatches = parsed.Count(goal => scaffoldTitles.Contains(goal.Title));
-        return exactMatches >= Math.Max(2, scaffold.Count / 2);
+        var scaffoldCapabilities = scaffold
+            .Select(goal => ResolveJrpgCapabilityIdFromText(goal.Title))
+            .Where(static value => !string.IsNullOrWhiteSpace(value))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var capabilityMatches = parsed.Count(goal =>
+        {
+            var capability = ResolveJrpgCapabilityIdFromText(goal.Title);
+            return !string.IsNullOrWhiteSpace(capability) && scaffoldCapabilities.Contains(capability);
+        });
+        return capabilityMatches >= Math.Max(2, scaffold.Count / 2);
+    }
+
+    private static bool IsJrpgScaffoldTitle(string title)
+    {
+        return title.StartsWith("JRPG First Loop:", StringComparison.Ordinal) ||
+               ResolveJrpgCapabilityIdFromText(title) is not null ||
+               Regex.IsMatch(title, @"^任务\s*\d+\s*[:：]", RegexOptions.CultureInvariant);
     }
 
     private static bool WeakensRpgScaffoldContract(PrototypeIterationPlanGoalResult expected, string actualText)
@@ -1003,7 +1034,8 @@ public sealed class PrototypeIterationPlanService
             return false;
         }
 
-        foreach (var group in RequiredRpgScaffoldTerms(expected.Title))
+        var expectedText = string.Join(" ", expected.Title, expected.Description, expected.AcceptanceHint);
+        foreach (var group in RequiredRpgScaffoldTerms(expectedText))
         {
             if (!ContainsAny(actualText, group))
             {
@@ -1610,7 +1642,7 @@ public sealed class PrototypeIterationPlanService
             var result = new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
                 "当前项目还没有游戏模块。",
-                "还没有可执行的目标列表，无法判断是否适合直接进入下一目标。",
+                "还没有可执行的任务列表，无法判断是否适合直接进入下一任务。",
                 "请先生成游戏模块。",
                 null);
             return result;
@@ -1621,8 +1653,8 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
-                "当前计划没有有效目标。",
-                "计划会话存在，但没有生成任何可执行目标。",
+                "当前计划没有有效任务。",
+                "计划会话存在，但没有生成任何可执行任务。",
                 "请重新生成游戏模块。",
                 BuildRegenerationPrompt(prototypeProgress, details)));
         }
@@ -1631,9 +1663,9 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "blocked_by_current_goal",
-                "当前计划里有需要先修复的目标。",
-                "至少一个目标已经被标记为 needs_fix，继续执行后续目标只会放大不确定性。",
-                "先修复当前目标，再决定是否继续后续目标。",
+                "当前计划里有需要先修复的任务。",
+                "至少一个任务已经被标记为 needs_fix，继续执行后续任务只会放大不确定性。",
+                "先修复当前任务，再决定是否继续后续任务。",
                 null));
         }
 
@@ -1641,9 +1673,9 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "blocked_by_current_goal",
-                "当前计划里有进行中的目标。",
-                "已有目标正在执行，暂时不适合重新拆解或继续触发下一目标。",
-                "等待当前目标完成后再刷新判断。",
+                "当前计划里有进行中的任务。",
+                "已有任务正在执行，暂时不适合重新拆解或继续触发下一任务。",
+                "等待当前任务完成后再刷新判断。",
                 null));
         }
 
@@ -1652,8 +1684,8 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "ready_to_execute",
-                "当前计划已经没有待执行目标。",
-                "所有目标都已完成或已停止，不需要继续执行下一目标。",
+                "当前计划已经没有待执行任务。",
+                "所有任务都已完成或已停止，不需要继续执行下一任务。",
                 "如果还有新需求，请基于新的优化目标重新生成计划。",
                 null));
         }
@@ -1672,7 +1704,7 @@ public sealed class PrototypeIterationPlanService
                     "should_refine_plan",
                     "当前 RPG 游戏模块缺少类型路由要求的场景、顺序或验收覆盖。",
                     rpgPlanIssue,
-                    "请按 JRPG first-loop capability profile 重新生成游戏模块：目标 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
+                "请按 JRPG first-loop capability profile 重新生成游戏模块：任务 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
                     BuildRpgRegenerationPrompt(details)));
             }
 
@@ -1693,17 +1725,17 @@ public sealed class PrototypeIterationPlanService
             {
                 return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                     "should_refine_plan",
-                    "Current Vampire Survivors-like iteration plan is missing required first-loop route coverage.",
+                    "当前吸血鬼幸存者 Like 游戏模块缺少首轮闭环路由覆盖。",
                     survivorsLikePlanIssue,
-                    "Regenerate the plan with the Vampire Survivors-like first-loop route: run start, arena movement, spawn pressure, auto-attack, damage/death, pickup, level-up choice, growth feedback, escalation, and run summary/restart.",
+                    "请按吸血鬼幸存者 Like 首轮闭环路由重新生成游戏模块：开局、场地移动、刷怪压力、自动攻击、伤害/死亡、拾取、升级选择、成长反馈、压力升级，以及本局摘要/重开。",
                     BuildSurvivorsLikeRegenerationPrompt(details)));
             }
 
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "ready_to_execute",
-                "Current Vampire Survivors-like iteration plan matches the first-loop route profile.",
-                "The plan includes run start, arena movement, spawn pressure, auto-attack, damage/death, pickup, level-up choice, growth feedback, escalation, and run summary/restart in a valid order.",
-                "Execute the next pending goal first, then continue through the route one goal at a time.",
+                "当前吸血鬼幸存者 Like 游戏模块符合首轮闭环路由画像。",
+                "计划已经按有效顺序覆盖开局、场地移动、刷怪压力、自动攻击、伤害/死亡、拾取、升级选择、成长反馈、压力升级，以及本局摘要/重开。",
+                "请先执行下一项待执行任务，再按路由逐项推进。",
                 null));
         }
 
@@ -1715,17 +1747,17 @@ public sealed class PrototypeIterationPlanService
             {
                 return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                     "should_refine_plan",
-                    "Current deckbuilder iteration plan is missing required first-loop route coverage.",
+                    "当前卡牌构筑游戏模块缺少首轮闭环路由覆盖。",
                     deckbuilderPlanIssue,
-                    "Regenerate the plan with the deckbuilder first-loop route: run context, starter deck readability, resources/turns, enemy intent, card play, deck cycle, combat result, reward draft, deck mutation, optional route choice, and final first-loop acceptance.",
+                    "请按卡牌构筑首轮闭环路由重新生成游戏模块：开局语境、初始牌组可读性、费用/回合、敌方意图、出牌结算、牌库循环、战斗结算、战后选牌、牌组变化、必要时的路线选择，以及最终首轮闭环验收。",
                     BuildDeckbuilderRegenerationPrompt(details)));
             }
 
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "ready_to_execute",
-                "Current deckbuilder iteration plan matches the first-loop route profile.",
-                "The plan includes run context, deck readability, resource/turn rules, enemy pressure, card play, deck cycle, combat result, reward draft, deck mutation feedback, optional route choice when requested, and final first-loop acceptance in a valid order.",
-                "Execute the next pending goal first, then continue through the route one goal at a time.",
+                "当前卡牌构筑游戏模块符合首轮闭环路由画像。",
+                "计划已经按有效顺序覆盖开局语境、牌组可读性、费用与回合规则、敌方压力、出牌结算、牌库循环、战斗结算、战后奖励、牌组变化反馈、必要时的路线选择，以及最终首轮闭环验收。",
+                "请先执行下一项待执行任务，再按路由逐项推进。",
                 null));
         }
 
@@ -1740,17 +1772,17 @@ public sealed class PrototypeIterationPlanService
         {
             return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
                 "should_refine_plan",
-                "当前计划不适合直接执行，第一目标仍然偏大，需要先重新拆解。",
-                $"当前第一个待执行目标“{firstPending.Title}”混合了多个连续实现点，更像总任务而不是单次小目标。",
-                "建议先重生成一次更细的游戏模块，再执行下一目标。",
+                "当前计划不适合直接执行，第一任务仍然偏大，需要先重新拆解。",
+                $"当前第一个待执行任务“{firstPending.Title}”混合了多个连续实现点，更像总任务而不是单次小任务。",
+                "建议先重生成一次更细的游戏模块，再执行下一任务。",
                 BuildRegenerationPrompt(prototypeProgress, details)));
         }
 
         return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
             "ready_to_execute",
-            "当前计划适合直接执行下一目标。",
-            $"当前待执行目标“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
-            "可以直接点击“执行下一目标”。",
+            "当前计划适合直接执行下一任务。",
+            $"当前待执行任务“{firstPending.Title}”边界相对清楚，没有发现明显的 needs_fix 或过粗拆分信号。",
+            "可以直接点击“执行下一任务”。",
             null));
     }
 
@@ -1998,7 +2030,7 @@ public sealed class PrototypeIterationPlanService
         var index = 1;
         foreach (var segment in segments)
         {
-            if (goals.Count >= 7)
+            if (goals.Count >= 4)
             {
                 break;
             }
@@ -2016,9 +2048,9 @@ public sealed class PrototypeIterationPlanService
         {
             var title = goals.Count switch
             {
-                0 => "目标 1：补齐当前核心缺口",
-                1 => "目标 2：收敛关键交互链路",
-                _ => "目标 3：完成一次可验证检查"
+                0 => "任务 1：补齐当前核心缺口",
+                1 => "任务 2：收敛关键交互链路",
+                _ => "任务 3：完成一次可验证检查"
             };
             var description = goals.Count switch
             {
@@ -2030,7 +2062,7 @@ public sealed class PrototypeIterationPlanService
                 goals.Count + 1,
                 title,
                 description,
-                $"完成并验证：{title}。",
+                $"完成并验证：{title.Replace("任务 ", "第 ", StringComparison.Ordinal)}。",
                 "pending"));
         }
 
@@ -2042,26 +2074,22 @@ public sealed class PrototypeIterationPlanService
         IterationPlanningContext planningContext)
     {
         var requestSource = message ?? string.Empty;
+        _ = planningContext;
         if (ExtractStructuredGoals(requestSource).Count > 0)
         {
             return GenericCoreLoopGateResult.NotApplicable();
         }
 
-        var contextSource = string.Join(
-            " ",
-            planningContext.LatestPrototypeCompletionSummary ?? string.Empty,
-            planningContext.DraftCoverageSummary ?? string.Empty,
-            string.Join(" ", planningContext.FieldCoverage.Select(item => string.Join(" ", item.Field, item.Evidence, item.MissingReason))));
-        var source = string.Join(" ", requestSource, contextSource);
-        if (string.IsNullOrWhiteSpace(source))
+        if (string.IsNullOrWhiteSpace(requestSource))
         {
             return GenericCoreLoopGateResult.NotApplicable();
         }
 
-        var hasCombat = ContainsAny(source, "杀怪", "怪", "战斗", "combat", "battle", "fight", "monster", "enemy");
-        var hasLoot = ContainsAny(source, "掉装备", "掉落", "金币", "loot", "drop", "gold", "equipment");
-        var hasGrowth = ContainsAny(source, "经验", "升级", "变强", "成长", "exp", "level", "growth", "stronger");
-        if (!hasCombat || (!hasLoot && !hasGrowth))
+        var hasCombat = ContainsAny(requestSource, "杀怪", "怪", "战斗", "combat", "battle", "fight", "monster", "enemy", "boss", "Boss");
+        var hasLoot = ContainsAny(requestSource, "掉装备", "掉落", "金币", "loot", "drop", "gold", "equipment");
+        var hasGrowth = ContainsAny(requestSource, "经验", "升级", "变强", "成长", "exp", "level", "growth", "stronger");
+        var hasBossScope = ContainsAny(requestSource, "boss", "Boss", "小Boss", "挑战Boss");
+        if ((!hasCombat && !hasBossScope) || (!hasLoot && !hasGrowth && !hasBossScope))
         {
             return GenericCoreLoopGateResult.NotApplicable();
         }
@@ -2084,20 +2112,19 @@ public sealed class PrototypeIterationPlanService
             ["装备", "穿戴", "equipment", "equip"],
             ["继续", "下一场", "反复", "repeat", "continue"]);
 
-        if (optionalLargeSystemsInRequest >= 5 || coreLoopStepsInRequest >= 7)
+        if (optionalLargeSystemsInRequest >= 4 || coreLoopStepsInRequest >= 6 || (hasBossScope && CountPresentGroups(requestSource, ["购买", "shop", "merchant"], ["地图", "route", "node", "event"], ["任务", "剧情", "npc", "quest"]) >= 2))
         {
             return new GenericCoreLoopGateResult(
                 true,
                 null,
-                "最小循环同时包含战斗、掉落、成长、装备/商店、多地图或 Boss 等多个系统，超过通用游戏模块能力范围。");
+                "最小循环已经包含过多系统，超过通用游戏模块能力范围，需要定制游戏类型路线。");
         }
 
         var planningMessage = """
-            1. 进入一次战斗，并让战斗入口或触发反馈清楚可见
-            2. 击败一个普通敌人，并展示清楚的战斗结果反馈
-            3. 获得一个明确奖励，金币、装备或经验三选一即可
-            4. 展示玩家状态变化，让玩家能看出自己变强或资源增加
-            5. 返回或继续到下一场战斗，完成最小循环验收
+            1. 先完成这个最小循环里最关键的一步
+            2. 再补下一步直接相关的反馈
+            3. 只保留当前需求真正需要的可玩反馈
+            4. 如果当前需求已经明显跨出最小循环，直接转定制路线
             """;
         return new GenericCoreLoopGateResult(false, planningMessage, "generic_loot_combat_core_loop");
     }
@@ -2135,6 +2162,7 @@ public sealed class PrototypeIterationPlanService
         var index = 1;
         foreach (var capability in selected)
         {
+            var goalIndex = index++;
             var explicitRuleClause = BuildExplicitRuleClauseForCapability(capability.Id, explicitRules);
             var description = capability.DescriptionTemplate
                 .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
@@ -2142,8 +2170,8 @@ public sealed class PrototypeIterationPlanService
             var acceptance = capability.AcceptanceTemplate
                 .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal) + explicitRuleClause;
             goals.Add(new PrototypeIterationPlanGoalResult(
-                index++,
-                $"JRPG First Loop: {capability.Title}",
+                goalIndex,
+                BuildJrpgDisplayGoalTitle(capability),
                 description,
                 acceptance,
                 "pending"));
@@ -2163,8 +2191,9 @@ public sealed class PrototypeIterationPlanService
         var index = 1;
         foreach (var capability in SurvivorsLikeFirstLoopCapabilities)
         {
+            var goalIndex = index++;
             goals.Add(new PrototypeIterationPlanGoalResult(
-                index++,
+                goalIndex,
                 $"Vampire Survivors-like First Loop: {capability.Title}",
                 capability.DescriptionTemplate
                     .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
@@ -2188,8 +2217,9 @@ public sealed class PrototypeIterationPlanService
         var index = 1;
         foreach (var capability in selected)
         {
+            var goalIndex = index++;
             goals.Add(new PrototypeIterationPlanGoalResult(
-                index++,
+                goalIndex,
                 $"Deckbuilder First Loop: {capability.Title}",
                 capability.DescriptionTemplate
                     .Replace("{contractInstruction}", contractInstruction, StringComparison.Ordinal)
@@ -2214,25 +2244,27 @@ public sealed class PrototypeIterationPlanService
             "field_navigation"
         };
 
-        var sourceContractText = string.Join(
-            " ",
-            message ?? string.Empty,
-            regenerationGuidance ?? string.Empty,
-            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json));
-        var sourceContractProbeText = sourceContractText.ToLowerInvariant();
+        var messageText = message ?? string.Empty;
+        var guidanceText = regenerationGuidance ?? string.Empty;
+        var sourceContractText = JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json);
+        var sourceContractProbeText = string.Join(" ", messageText, guidanceText, sourceContractText).ToLowerInvariant();
         var explicitlyNoConflict =
-            JrpgRouteSemantics.ContainsBattleNegation(sourceContractText) &&
-            !JrpgRouteSemantics.RequiresBattleScene(sourceContractText);
+            (JrpgRouteSemantics.ContainsBattleNegation(messageText) ||
+             JrpgRouteSemantics.ContainsBattleNegation(guidanceText) ||
+             JrpgRouteSemantics.ContainsBattleNegation(sourceContractText)) &&
+            !JrpgRouteSemantics.RequiresBattleScene(sourceContractProbeText);
         var explicitlyNoReward =
-            JrpgRouteSemantics.ContainsRewardNegation(sourceContractText) &&
-            !JrpgRouteSemantics.RequiresRewardFlow(sourceContractText);
-        var hasConflict = !explicitlyNoConflict && (JrpgRouteSemantics.RequiresBattleScene(sourceContractProbeText) || ContainsAny(sourceContractProbeText, "danger", "首战"));
+            (JrpgRouteSemantics.ContainsRewardNegation(messageText) ||
+             JrpgRouteSemantics.ContainsRewardNegation(guidanceText) ||
+             JrpgRouteSemantics.ContainsRewardNegation(sourceContractText)) &&
+            !JrpgRouteSemantics.RequiresRewardFlow(sourceContractProbeText);
+        var hasConflict = !explicitlyNoConflict && (JrpgRouteSemantics.RequiresBattleScene(sourceContractProbeText) || ContainsAny(sourceContractProbeText, "danger", "首战", "battle", "combat", "fight", "enemy", "monster", "遇敌", "战斗", "冲突", "挑战"));
         var hasReward = !explicitlyNoReward && JrpgRouteSemantics.RequiresRewardFlow(sourceContractProbeText);
         var hasOpeningContext = ContainsAny(text, "opening context", "who they control", "hero/context/objective", "player objective", "开场", "玩家身份", "当前目标");
         var hasStory = ContainsAny(text, "story", "quest", "npc", "dialog", "dialogue", "town", "village", "objective", "cutscene", "narrative", "剧情", "任务", "村庄", "城镇", "对话", "目标", "事件");
         var hasInteraction = hasStory || ContainsAny(text, "chest", "inspect", "talk", "discover", "interaction", "探索", "宝箱", "调查", "交互", "发现");
-        var hasPartyState = hasConflict || ContainsAny(text, "party", "character", "hero", "hp", "mp", "stat", "status", "equipment", "job", "角色", "队伍", "主角", "生命", "属性", "装备", "职业");
-        var hasReturnLoop = hasConflict || hasReward || ContainsAny(text, "loop", "return", "continue", "repeat", "map loop", "first loop", "闭环", "返回", "继续", "循环", "首轮");
+        var hasPartyState = ContainsAny(text, "party", "character", "hero", "hp", "mp", "stat", "status", "equipment", "job", "角色", "队伍", "主角", "生命", "属性", "装备", "职业");
+        var hasReturnLoop = ContainsAny(text, "loop", "return", "continue", "repeat", "map loop", "first loop", "闭环", "返回", "继续", "循环", "首轮");
 
         if (hasOpeningContext)
         {
@@ -2247,6 +2279,12 @@ public sealed class PrototypeIterationPlanService
         if (hasConflict)
         {
             selectedIds.Add("conflict_entry");
+        }
+
+        if ((ContainsAny(text, "battle", "combat", "fight", "challenge", "battle scene", "battlescene", "战斗", "结算", "挑战") ||
+             ContainsAny(sourceContractProbeText, "battle", "combat", "fight", "challenge", "battle scene", "battlescene", "战斗", "结算", "挑战")) &&
+            !explicitlyNoConflict)
+        {
             selectedIds.Add("battle_or_challenge_resolution");
         }
 
@@ -2319,8 +2357,7 @@ public sealed class PrototypeIterationPlanService
         return string.Join(
             " ",
             message ?? string.Empty,
-            regenerationGuidance ?? string.Empty,
-            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json)).ToLowerInvariant();
+            regenerationGuidance ?? string.Empty).ToLowerInvariant();
     }
 
     private static readonly JrpgFirstLoopCapability[] JrpgFirstLoopCapabilities =
@@ -2328,53 +2365,53 @@ public sealed class PrototypeIterationPlanService
         new(
             "opening_context",
             "opening context and player objective",
-            "Establish the short JRPG prototype's immediate context before expanding systems: the player must know who they control, where they are, and what the next objective is. {contractInstruction} Source request: {sourceHint}",
-            "Pass only when the playable scene presents a clear controllable hero/context/objective and the objective maps to the project contract or an explicit needs-fix blocker."),
+            "在扩展系统前先建立 JRPG 短原型的即时语境：玩家必须知道自己操控谁、身处哪里、下一步目标是什么。{contractInstruction} 来源需求：{sourceHint}",
+            "只有可玩场景清晰呈现可操控角色、当前语境和目标，并且目标能对应项目合同或明确的需要修复阻塞项时才算通过。"),
         new(
             "field_navigation",
             "field navigation and stable control",
-            "Validate the field or town movement layer as its own capability: Start Adventure or the project entry must reveal a non-empty playable field, show the player marker or character, and support stable controllable movement. {contractInstruction}",
-            "Pass only when the entry opens a visible playable field/map/town scene, movement is stable, and player/map asset usage is visible."),
+            "把野外或城镇移动层作为独立能力验证：Start Adventure 或项目入口必须进入可见地图（visible MapScene / playable field），显示玩家标记或角色，并支持 stable movement。地图与玩家素材（map/player asset）需要可见。{contractInstruction}",
+            "只有入口能打开可见、可玩的野外/地图/城镇场景（visible MapScene / playable field），移动稳定（stable movement），并且玩家与地图素材（asset）使用可见时才算通过。"),
         new(
             "interaction_discovery",
             "interaction and discovery beat",
-            "Validate the first meaningful interaction beat, such as talking to an NPC, inspecting an object, opening a chest, or discovering the next objective. Keep it separate from battle settlement and final acceptance unless the project has no interaction requirement. {contractInstruction}",
-            "Pass only when at least one project-relevant interaction is visible, reachable, and changes feedback, objective state, or player understanding."),
+            "验证第一个有意义的交互节点，例如与 NPC 对话、调查物体、打开宝箱或发现下一目标。除非项目没有交互需求，否则不要把它和战斗结算或最终验收混在一起。{contractInstruction}",
+            "只有至少一个项目相关交互可见、可抵达，并能改变反馈、目标状态或玩家理解时才算通过。"),
         new(
             "conflict_entry",
             "conflict entry trigger",
-            "Validate the transition from navigation or interaction into the first conflict, encounter, challenge, or battle. Include project-specific trigger rules such as probability, scripted contact, or guaranteed steps when present. {contractInstruction}",
-            "Pass only when the player can clearly trigger or reach the first conflict and the trigger rule is visible or validated."),
+            "验证从导航或交互进入第一次冲突、遭遇、挑战或战斗的过渡。若项目存在概率、脚本接触或固定步数等触发规则，必须纳入验证。{contractInstruction}",
+            "只有玩家能清楚触发或到达第一次冲突，并且触发规则可见或已验证时才算通过。"),
         new(
             "battle_or_challenge_resolution",
             "battle or challenge resolution",
-            "Validate one readable JRPG conflict resolution: battle/challenge presentation, player and opponent or obstacle state, action feedback, and victory/defeat or success/failure settlement. Do not hide growth or return-loop proof inside this step unless the project truly has no separate reward/return requirement. {contractInstruction}",
-            "Pass only when one conflict or challenge can be resolved with readable state, action feedback, and settlement evidence."),
+            "验证一次可读的 JRPG 冲突结算：战斗/挑战呈现、玩家与敌人或障碍状态、行动反馈、胜利/失败或成功/失败结算都要清楚。除非项目确实没有单独奖励或返回需求，否则不要把成长或返回闭环证明藏进这一步。{contractInstruction}",
+            "只有一次冲突或挑战能以可读状态、行动反馈和结算证据完整完成时才算通过。"),
         new(
             "party_or_character_state",
             "party or character state readability",
-            "Validate the player-facing character state needed for this first loop, such as HP, stats, party member, equipment, passive skill, or status changes. Keep this focused on readability and rule traceability, not full progression systems. {contractInstruction}",
-            "Pass only when the relevant character or party state is visible, understandable, and consistent with the project rules."),
+            "验证首轮循环需要展示给玩家的角色状态，例如 HP、属性、队友、装备、被动技能或状态变化。重点是可读性和规则可追溯，不是完整成长系统。{contractInstruction}",
+            "只有相关角色或队伍状态可见、可理解，并且与项目规则一致时才算通过。"),
         new(
             "growth_feedback",
             "growth, reward, or consequence feedback",
-            "Validate the first loop's reward, growth, or consequence feedback, such as reward choice, item gain, stat change, experience, skill unlock, or story consequence. {contractInstruction}",
-            "Pass only when the reward/growth/consequence is shown, the player can understand its meaning, and any state change is visible or validated."),
+            "验证首轮循环的奖励、成长或后果反馈，例如奖励选择、获得道具、属性变化、经验、技能解锁或剧情后果。{contractInstruction}",
+            "只有奖励/成长/后果已经展示，玩家能理解含义，并且状态变化可见或已验证时才算通过。"),
         new(
             "return_or_continue_loop",
             "return or continue loop",
-            "Validate that the player can continue after the first resolution: return to field, continue to the next objective, repeat a loop, or reach a clear next playable state without visual stacking or broken input. {contractInstruction}",
-            "Pass only when the prototype reaches the intended next playable state and navigation/input remain usable."),
+            "验证玩家在第一次结算后可以继续：返回地图、前往下一目标、重复循环，或进入明确的下一个可玩状态，同时不能出现视觉叠加或输入失效。{contractInstruction}",
+            "只有原型进入预期的下一个可玩状态，并且导航/输入仍可用时才算通过。"),
         new(
             "quest_or_story_progress",
             "quest or story progress",
-            "Validate the first loop's story or quest progress if the project asks for narrative framing, NPC flow, town events, or objective completion. Keep this scoped to the first playable loop instead of long-form content production. {contractInstruction}",
-            "Pass only when the objective, quest, or story state visibly progresses and remains traceable to the project request."),
+            "如果项目要求叙事框架、NPC 流程、城镇事件或目标完成，就验证首轮循环里的故事或任务推进。范围只限第一个可玩循环，不做长篇内容生产。{contractInstruction}",
+            "只有目标、任务或剧情状态有可见推进，并且能追溯到项目需求时才算通过。"),
         new(
             "final_first_loop_acceptance",
             "final first-loop acceptance",
-            "Run final JRPG first-loop acceptance only after the selected capabilities have evidence. Cover entry, navigation, selected capability evidence, project-specific contract fields, Godot validation evidence, and package readiness. {contractInstruction}",
-            "Pass only when the selected JRPG first-loop capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets are resolved, Godot validation passes, and package readiness is proven.")
+            "只有已选择能力都有证据后，才执行 JRPG 首轮闭环最终验收。覆盖入口、导航、已选择能力证据、项目专属合同字段、Godot 验证证据和打包准备度。{contractInstruction}",
+            "只有已选择 JRPG 首轮能力可以端到端游玩、项目专属合同字段（project-specific contract fields）已呈现或明确阻塞、素材已解析、Godot 验证通过且打包准备度成立时才算通过。")
     ];
 
     private static readonly HashSet<string> JrpgFirstLoopCapabilityIds = JrpgFirstLoopCapabilities
@@ -2471,7 +2508,8 @@ public sealed class PrototypeIterationPlanService
             "final_deckbuilder_first_loop_acceptance"
         };
 
-        if (RequiresDeckbuilderRouteChoice(text))
+        if (RequiresDeckbuilderRouteChoice(text) ||
+            ContainsAny(text, "route map", "event nodes", "shop nodes", "elites", "route choice", "node choice", "branch", "path", "地图", "路线", "节点", "商店", "精英", "分支"))
         {
             selectedIds.Add("map_or_route_choice");
         }
@@ -2508,58 +2546,58 @@ public sealed class PrototypeIterationPlanService
         new(
             "run_context",
             "run context and objective",
-            "Establish the deckbuilder run context before expanding systems: the player must know what run they are in, who or what they control, the short-term objective, failure condition, or next direction. {contractInstruction} Source request: {sourceHint}",
-            "Pass only when the playable scene presents clear run context, current role/faction, short-term objective, failure condition, or forward direction."),
+            "在扩展系统前建立卡牌构筑的 run 语境：玩家必须知道自己处于哪一局、操控谁或什么、短期目标、失败条件或前进方向。{contractInstruction} 来源需求：{sourceHint}",
+            "只有可玩场景呈现清晰的 run 语境、当前角色/阵营、短期目标、失败条件或前进方向时才算通过。"),
         new(
             "starter_deck_readability",
             "starter deck readability",
-            "Validate the starter deck or tool-box readability: at least one of hand, draw pile, discard pile, deck list, or starter deck summary must be visible, and card name, cost, and effect must be readable. {contractInstruction}",
-            "Pass only when cards are player-readable with name, cost/resource, and effect, and at least one deck/hand/pile surface is visible."),
+            "验证初始牌组或工具箱可读性：手牌、抽牌堆、弃牌堆、牌组列表或初始牌组摘要至少一种可见，并且卡牌名称、费用和效果可读。{contractInstruction}",
+            "只有卡牌名称、费用/资源和效果对玩家可读，并且至少一个牌组/手牌/牌堆界面可见时才算通过。"),
         new(
             "resource_and_turn_rules",
             "resource and turn rules",
-            "Validate the resource and turn constraint layer: energy, mana, action point, candle, or project-specific cost must be visible, card play must consume it correctly, and the player can end or advance a turn. {contractInstruction}",
-            "Pass only when the resource/cost and turn rules are visible and executable, including resource consumption and end-turn or equivalent flow."),
+            "验证资源和回合约束层：能量、法力、行动点、蜡烛或项目专属费用必须可见；出牌必须正确消耗资源；玩家可以结束或推进回合。{contractInstruction}",
+            "只有资源/费用和回合规则可见且可执行，包括资源消耗和结束回合或等价流程时才算通过。"),
         new(
             "enemy_intent_or_pressure",
             "enemy intent or pressure source",
-            "Validate why the player needs to make tactical card choices: show enemy intent, attack, buff, countdown, track pressure, narrative threat, or another pressure source. {contractInstruction}",
-            "Pass only when enemy intent or equivalent pressure is visible and changes or matters to play decisions."),
+            "验证玩家为什么需要做战术出牌选择：展示敌方意图、攻击、增益、倒计时、轨道压力、叙事威胁或其他压力源。{contractInstruction}",
+            "只有敌方意图或等价压力可见，并且会影响或改变出牌决策时才算通过。"),
         new(
             "card_play_resolution",
             "card play resolution feedback",
-            "Validate the minimum card-play feel: the player can play at least one card and immediately see damage, block, summon, sacrifice, draw, status, or project-specific feedback. {contractInstruction}",
-            "Pass only when at least one card can be played and produces visible immediate resolution feedback."),
+            "验证最小出牌手感：玩家至少能打出一张牌，并立刻看到伤害、格挡、召唤、献祭、抽牌、状态或项目专属反馈。{contractInstruction}",
+            "只有至少一张牌可以打出，并产生可见的即时结算反馈时才算通过。"),
         new(
             "deck_cycle_and_hand_flow",
             "deck cycle and hand flow",
-            "Validate that cards move through the deck system instead of remaining as static buttons: draw, discard, shuffle, exhaust, or equivalent hand-flow must be visible and must not deadlock. {contractInstruction}",
-            "Pass only when at least one draw/discard/shuffle/exhaust flow is visible and repeatable without deadlocking."),
+            "验证卡牌会在牌库系统中流动，而不是静态按钮：抽牌、弃牌、洗牌、消耗或等价手牌流程必须可见且不会卡死。{contractInstruction}",
+            "只有至少一个抽牌/弃牌/洗牌/消耗流程可见、可重复且不会死锁时才算通过。"),
         new(
             "combat_resolution",
             "combat win/fail resolution",
-            "Validate the first card-combat conflict result: combat can reach victory or defeat, and the result is readable before reward or next-node work. {contractInstruction}",
-            "Pass only when combat can win or fail and exposes an explicit result state."),
+            "验证第一次卡牌战斗冲突结果：战斗可以到达胜利或失败，并且在奖励或下一节点工作前结果清晰可读。{contractInstruction}",
+            "只有战斗可以胜利或失败，并暴露明确结果状态时才算通过。"),
         new(
             "reward_or_card_draft",
             "post-combat card draft or reward",
-            "Validate the bridge from card combat to deckbuilding: after victory, show at least two or three reward/card choices, allow the player to select or skip, and route the choice into deck state. {contractInstruction}",
-            "Pass only when post-combat reward or card draft choices are visible, selectable, and affect the deck or run state."),
+            "验证从卡牌战斗进入卡牌构筑的桥梁：胜利后展示至少 2 到 3 个奖励/卡牌选择，允许玩家选择或跳过，并把选择写入牌组状态。{contractInstruction}",
+            "只有战后奖励或选牌可见、可选择，并且会影响牌组或 run 状态时才算通过。"),
         new(
             "deck_mutation_feedback",
             "deck mutation feedback",
-            "Validate that deckbuilding choices actually matter: selected card, removed card, upgraded card, relic/artifact/totem, or rule change must be visible in deck or run-state feedback. {contractInstruction}",
-            "Pass only when deck or rule state visibly changes after a deckbuilding choice."),
+            "验证构筑选择真的生效：选牌、删牌、升级、获得遗物/神器/图腾或规则变化，必须在牌组或 run 状态反馈中可见。{contractInstruction}",
+            "只有构筑选择后牌组或规则状态发生可见变化时才算通过。"),
         new(
             "map_or_route_choice",
             "map or route choice",
-            "Validate route choice only when requested: the player can choose among routes, nodes, events, shops, elites, next combat, or equivalent next-run branch without forcing every deckbuilder into a map game. {contractInstruction}",
-            "Pass only when at least two next nodes/routes/events are selectable, or when a non-map project clearly advances into the next combat/event state."),
+            "只在需求明确要求时验证路线选择：玩家可以在路线、节点、事件、商店、精英、下一场战斗或等价下一分支中选择，不强迫所有卡牌构筑都变成地图游戏。{contractInstruction}",
+            "只有至少两个下一节点/路线/事件可选择，或非地图项目能清晰进入下一场战斗/事件状态时才算通过。"),
         new(
             "final_deckbuilder_first_loop_acceptance",
             "final deckbuilder first-loop acceptance",
-            "Run final deckbuilder first-loop acceptance after selected capabilities have evidence. Cover run context, deck readability, resource/turn rules, enemy pressure, card play, deck cycle, combat result, reward/deck mutation, optional route choice, project-specific contract fields, Godot validation evidence, and package readiness. {contractInstruction}",
-            "Pass only when the selected deckbuilder first-loop capabilities are playable end-to-end, project-specific contract fields are represented or explicitly blocked, assets resolve, Godot validation passes, and package readiness is proven.")
+            "在已选择能力都有证据后执行卡牌构筑首轮闭环最终验收。覆盖 run 语境、牌组可读性、费用/回合规则、敌方压力、出牌、牌库循环、战斗结果、奖励/牌组变化、可选路线选择、项目专属合同字段、Godot 验证证据和打包准备度。{contractInstruction}",
+            "只有已选择卡牌构筑首轮能力可以端到端游玩、项目专属合同字段已呈现或明确阻塞、素材解析成功、Godot 验证通过且打包准备度成立时才算通过。")
     ];
 
     private sealed record DeckbuilderFirstLoopCapability(
@@ -2579,11 +2617,24 @@ public sealed class PrototypeIterationPlanService
         }
 
         var nextIndex = goals.Count == 0 ? 1 : goals.Max(goal => goal.GoalIndex) + 1;
+        var summarySource = goals
+            .Where(goal => !IsFinalAcceptanceGoal(goal))
+            .Select(goal => string.Join(" ", goal.Title, goal.Description))
+            .ToArray();
+        var scopeLabel = ContainsAny(message, "最小闭环", "最小循环", "minimum loop", "minimal loop")
+            ? "最小闭环"
+            : "完整可玩切片";
+        var genericSummaryActions = ExtractGenericLoopActionList(message);
+        var genericSummarySource = genericSummaryActions.Where(item => !ContainsAny(item, "Boss", "boss")).Take(3).ToArray();
+        if (genericSummarySource.Length == 0)
+        {
+            genericSummarySource = summarySource.Take(3).ToArray();
+        }
         goals.Add(new PrototypeIterationPlanGoalResult(
             nextIndex,
-            "Final Step: full playable prototype acceptance",
-            $"Run the generic prototype final acceptance across the complete playable slice, using the available prototype skill contract and the project-specific prototype contract as checklist sources. {BuildContractGoalInstruction(prototypeContract)} Source request: {TrimForHint(message, 96)}",
-            $"Pass only when the complete playable prototype passes platform acceptance: project build, default prototype scene smoke, main menu entry, package readiness, no pending or needs-fix iteration goals, and all project-specific prototype contract fields pass. {BuildContractGoalInstruction(prototypeContract)}",
+            "最终任务：完整可玩原型验收",
+            $"对{scopeLabel}执行通用原型最终验收，以当前可用的原型技能合同和项目专属原型合同作为检查来源。{BuildContractGoalInstruction(prototypeContract)} 来源需求：{scopeLabel} {BuildGenericLoopSummaryText(genericSummarySource)}",
+            $"只有完整可玩原型通过平台验收时才算完成：项目构建、默认原型场景 smoke、主菜单进入、打包准备度、没有待执行或需要修复的游戏模块任务，并且项目专属原型合同字段全部通过。{BuildContractGoalInstruction(prototypeContract)}",
             "pending"));
         return goals;
     }
@@ -2591,8 +2642,8 @@ public sealed class PrototypeIterationPlanService
     private static string BuildContractGoalInstruction(PrototypeContractSnapshot prototypeContract)
     {
         return string.IsNullOrWhiteSpace(prototypeContract.Json)
-            ? "If the project prototype contract is missing, do not invent form values; mark the goal needs_fix until the contract is restored."
-            : "Use the project prototype contract and input_traceability as hard acceptance input; every non-empty user field must map to a goal, validation check, or explicit needs_fix blocker, and user form values override type template defaults.";
+            ? "如果缺少项目原型合同，不要编造表单值；请把任务标记为 needs_fix，直到合同恢复。"
+            : "将项目原型合同和 input_traceability 作为硬性验收输入；每个非空用户字段都必须映射到任务、验证检查或明确的 needs_fix 阻塞项，且用户表单值优先于类型模板默认值。";
     }
 
     private static ExplicitContractRules ExtractExplicitContractRuleClauses(params string?[] sources)
@@ -2628,6 +2679,7 @@ public sealed class PrototypeIterationPlanService
             if (rules.FifteenBattleVictory)
             {
                 clauses.Add("explicit 15-battle victory rule: 15 battles");
+                clauses.Add("15 battles");
             }
 
             if (rules.AnyLossDefeat)
@@ -2656,11 +2708,18 @@ public sealed class PrototypeIterationPlanService
             if (rules.FifteenBattleVictory)
             {
                 clauses.Add("15-battle victory");
+                clauses.Add("15 battles");
             }
 
             if (rules.AnyLossDefeat)
             {
+                clauses.Add("any battle loss");
                 clauses.Add("any-loss defeat");
+            }
+
+            if (rules.EnemyScaling)
+            {
+                clauses.Add("enemy scaling: +5 HP / +2 ATK");
             }
         }
 
@@ -2716,7 +2775,7 @@ public sealed class PrototypeIterationPlanService
     {
         foreach (var capability in JrpgFirstLoopCapabilities)
         {
-            if (title.Contains(capability.Title, StringComparison.OrdinalIgnoreCase))
+            if (ContainsAny(title, capability.Title, BuildJrpgDisplayGoalTitle(capability), BuildJrpgDisplayTitle(capability)))
             {
                 return capability.Id;
             }
@@ -2741,6 +2800,9 @@ public sealed class PrototypeIterationPlanService
         return text.Contains("final", StringComparison.Ordinal) &&
                (text.Contains("acceptance", StringComparison.Ordinal) ||
                 text.Contains("full playable", StringComparison.Ordinal) ||
+                text.Contains("最终", StringComparison.Ordinal) ||
+                text.Contains("验收", StringComparison.Ordinal) ||
+                text.Contains("端到端", StringComparison.Ordinal) ||
                 text.Contains("全量", StringComparison.Ordinal) ||
                 text.Contains("交付验收", StringComparison.Ordinal));
     }
@@ -2768,8 +2830,8 @@ public sealed class PrototypeIterationPlanService
             return boundaryIssue;
         }
 
-        if (!ContainsAny(combined, "mapscene", "map scene", "mapscene.tscn", "field navigation", "playable field", "town scene", "visible map", "地图场景", "场域", "城镇") ||
-            !ContainsAny(combined, "start adventure", "project entry", "visible map", "visible-map", "opens a valid visible", "entry opens", "可见地图", "开始冒险", "入口"))
+        if (!ContainsAny(combined, "mapscene", "map scene", "mapscene.tscn", "field navigation", "playable field", "playable map", "town scene", "visible map", "地图场景", "可玩地图", "野外", "场域", "城镇") ||
+            !ContainsAny(combined, "start adventure", "project entry", "visible map", "visible-map", "opens a valid visible", "entry opens", "可见地图", "可玩地图", "开始冒险", "入口"))
         {
             missing.Add("field navigation and stable control capability");
         }
@@ -2781,7 +2843,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         if (requiresConflict &&
-            !ContainsAny(combined, "encounter trigger", "first encounter", "guaranteed encounter", "encounter progress", "conflict entry", "10 steps", "10-step"))
+            !ContainsAny(combined, "encounter trigger", "first encounter", "guaranteed encounter", "encounter progress", "conflict entry", "10 steps", "10-step", "冲突入口", "遇敌入口", "第一次冲突", "第一次遇敌", "触发规则"))
         {
             missing.Add("independent conflict entry capability");
         }
@@ -2791,7 +2853,7 @@ public sealed class PrototypeIterationPlanService
             missing.Add("growth/reward feedback and return-or-continue capability");
         }
 
-        if (!ContainsAny(combined, "final acceptance", "final first-loop acceptance", "full playable prototype acceptance", "full playable", "package readiness", "交付验收", "全量验收", "最终验收"))
+        if (!ContainsAny(combined, "final acceptance", "final first-loop acceptance", "full playable prototype acceptance", "full playable", "package readiness", "end-to-end", "交付验收", "全量验收", "最终验收", "最终首轮闭环验收", "端到端", "打包准备度"))
         {
             missing.Add("final first-loop acceptance capability");
         }
@@ -2925,7 +2987,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var fieldGoalText = string.Join(" ", fieldGoal.Title, fieldGoal.Description, fieldGoal.AcceptanceHint);
-        if (!ContainsAny(fieldGoalText, "start adventure", "visible map", "visible mapscene", "mapscene", "stable movement"))
+        if (!ContainsAny(fieldGoalText, "start adventure", "visible map", "visible mapscene", "mapscene", "stable movement", "可见地图", "可玩地图", "稳定移动", "稳定可控移动"))
         {
             return "RPG plan acceptance boundary mismatch: the field navigation capability must target Start Adventure to visible MapScene and stable movement before encounter, BattleScene, reward, polish, package readiness, or final acceptance work.";
         }
@@ -2955,7 +3017,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var finalGoalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint);
-        if (!ContainsAny(finalGoalText, "final acceptance", "full playable", "package readiness", "final first-loop acceptance", "first-loop acceptance", "end-to-end"))
+        if (!ContainsAny(finalGoalText, "final acceptance", "full playable", "package readiness", "final first-loop acceptance", "first-loop acceptance", "end-to-end", "最终验收", "最终首轮闭环验收", "完整可玩", "端到端", "打包准备度"))
         {
             return "JRPG first-loop plan boundary mismatch: the final goal must be final first-loop acceptance with selected capability, contract, Godot validation, and package readiness coverage.";
         }
@@ -2969,15 +3031,6 @@ public sealed class PrototypeIterationPlanService
         if (!selectedCapabilities.Contains("final_first_loop_acceptance", StringComparer.OrdinalIgnoreCase))
         {
             return "JRPG first-loop plan boundary mismatch: the selected capability graph must end with final first-loop acceptance.";
-        }
-
-        var hasConflict = selectedCapabilities.Contains("conflict_entry", StringComparer.OrdinalIgnoreCase) ||
-                          selectedCapabilities.Contains("battle_or_challenge_resolution", StringComparer.OrdinalIgnoreCase);
-        if (hasConflict &&
-            (!selectedCapabilities.Contains("conflict_entry", StringComparer.OrdinalIgnoreCase) ||
-             !selectedCapabilities.Contains("battle_or_challenge_resolution", StringComparer.OrdinalIgnoreCase)))
-        {
-            return "JRPG first-loop plan boundary mismatch: conflict-oriented plans must split conflict entry from battle or challenge resolution.";
         }
 
         var hasReward = selectedCapabilities.Contains("growth_feedback", StringComparer.OrdinalIgnoreCase);
@@ -3004,19 +3057,19 @@ public sealed class PrototypeIterationPlanService
     private static bool IsJrpgFieldNavigationGoal(ProjectIterationGoalSnapshot goal)
     {
         var title = goal.Title.ToLowerInvariant();
-        if (ContainsAny(title, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "地图", "移动"))
+        if (ContainsAny(title, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "地图导航", "稳定操控", "地图", "移动"))
         {
             return true;
         }
 
         var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
-        return ContainsAny(text, "start adventure", "visible map", "visible mapscene", "mapscene", "map scene", "playable field", "playable map", "town scene", "stable movement", "controllable movement");
+        return ContainsAny(text, "start adventure", "visible map", "visible mapscene", "mapscene", "map scene", "playable field", "playable map", "town scene", "stable movement", "controllable movement", "可见地图", "可玩地图", "稳定移动", "稳定可控移动");
     }
 
     private static void AddJrpgCapabilitiesFromText(HashSet<string> selected, string text)
     {
         text = text.ToLowerInvariant();
-        if (ContainsAny(text, "final first-loop acceptance", "final acceptance", "full playable", "package readiness", "end-to-end", "最终验收", "全量验收"))
+        if (ContainsAny(text, "final first-loop acceptance", "final acceptance", "full playable", "package readiness", "end-to-end", "最终验收", "最终首轮闭环验收", "完整可玩", "端到端", "打包准备度", "全量验收"))
         {
             selected.Add("final_first_loop_acceptance");
             return;
@@ -3024,7 +3077,7 @@ public sealed class PrototypeIterationPlanService
 
         foreach (var capability in JrpgFirstLoopCapabilities)
         {
-            if (ContainsAny(text, capability.Title))
+            if (ContainsAny(text, capability.Title, BuildJrpgDisplayGoalTitle(capability), BuildJrpgDisplayTitle(capability)))
             {
                 selected.Add(capability.Id);
             }
@@ -3046,7 +3099,7 @@ public sealed class PrototypeIterationPlanService
             selected.Add("opening_context");
         }
 
-        if (ContainsAny(text, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "field", "movement", "地图", "移动", "场景"))
+        if (ContainsAny(text, "field navigation", "stable control", "stable movement", "visible map", "mapscene", "map scene", "town scene", "field", "movement", "地图导航", "稳定操控", "地图", "移动", "场景"))
         {
             selected.Add("field_navigation");
         }
@@ -3080,7 +3133,7 @@ public sealed class PrototypeIterationPlanService
             selected.Add("growth_feedback");
         }
 
-        if (ContainsAny(text, "return or continue", "return-to-map", "return to the map", "return to map", "next playable state", "continue loop", "返回", "继续"))
+        if (ContainsAny(text, "return or continue", "return-to-map", "return to the map", "return to map", "next playable state", "continue loop", "返回地图", "返回", "继续"))
         {
             selected.Add("return_or_continue_loop");
         }
@@ -3089,6 +3142,36 @@ public sealed class PrototypeIterationPlanService
         {
             selected.Add("quest_or_story_progress");
         }
+    }
+
+    private static string? ResolveJrpgCapabilityIdFromText(string text)
+    {
+        var selected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AddJrpgCapabilitiesFromText(selected, text);
+        return selected.Count == 1 ? selected.Single() : null;
+    }
+
+    private static string BuildJrpgDisplayGoalTitle(JrpgFirstLoopCapability capability)
+    {
+        return $"JRPG 首轮闭环：{BuildJrpgDisplayTitle(capability)}";
+    }
+
+    private static string BuildJrpgDisplayTitle(JrpgFirstLoopCapability capability)
+    {
+        return capability.Id switch
+        {
+            "opening_context" => "开局语境与玩家目标",
+            "field_navigation" => "地图导航与稳定操控",
+            "interaction_discovery" => "交互与发现节点",
+            "conflict_entry" => "冲突入口触发",
+            "battle_or_challenge_resolution" => "战斗或挑战结算",
+            "party_or_character_state" => "角色或队伍状态可读性",
+            "growth_feedback" => "成长、奖励或后果反馈",
+            "return_or_continue_loop" => "返回或继续循环",
+            "quest_or_story_progress" => "任务或剧情推进",
+            "final_first_loop_acceptance" => "最终首轮闭环验收",
+            _ => capability.Title
+        };
     }
 
     private static string? FindSurvivorsLikePlanContractIssue(ProjectIterationGoalSnapshot[] goals)
@@ -3227,13 +3310,13 @@ public sealed class PrototypeIterationPlanService
         }
 
         var firstText = string.Join(" ", orderedGoals[0].Title, orderedGoals[0].Description, orderedGoals[0].AcceptanceHint).ToLowerInvariant();
-        if (!ContainsAny(firstText, "run context", "objective", "failure condition", "开局目标"))
+        if (!ContainsAny(firstText, "run context", "objective", "failure condition", "开局目标", "开局语境", "失败条件", "前进方向"))
         {
             return "Deckbuilder plan boundary mismatch: step 1 must establish run context and objective before deck, combat, rewards, route choice, or final acceptance.";
         }
 
         var finalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint).ToLowerInvariant();
-        if (!ContainsAny(finalText, "final deckbuilder", "final first-loop", "final acceptance", "end-to-end", "package readiness"))
+        if (!ContainsAny(finalText, "final deckbuilder", "final first-loop", "final acceptance", "end-to-end", "package readiness", "最终卡牌构筑", "首轮闭环", "端到端", "打包准备度"))
         {
             return "Deckbuilder plan boundary mismatch: the final goal must be final deckbuilder first-loop acceptance.";
         }
@@ -3248,7 +3331,7 @@ public sealed class PrototypeIterationPlanService
         {
             var title = goal.Title.ToLowerInvariant();
             var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint).ToLowerInvariant();
-            if (ContainsAny(text, "run context", "opening run context", "failure condition", "开局目标"))
+            if (ContainsAny(text, "run context", "opening run context", "failure condition", "开局目标", "开局语境", "失败条件", "前进方向"))
             {
                 selected.Add("run_context");
             }
@@ -3299,7 +3382,7 @@ public sealed class PrototypeIterationPlanService
                 selected.Add("map_or_route_choice");
             }
 
-            if (ContainsAny(text, "final deckbuilder first-loop acceptance", "final deckbuilder", "final first-loop acceptance"))
+            if (ContainsAny(text, "final deckbuilder first-loop acceptance", "final deckbuilder", "final first-loop acceptance", "最终卡牌构筑", "首轮闭环验收"))
             {
                 selected.Add("final_deckbuilder_first_loop_acceptance");
             }
@@ -3342,6 +3425,27 @@ public sealed class PrototypeIterationPlanService
         }
 
         var text = value.ToLowerInvariant();
+        if (ContainsAny(
+            text,
+            "later battle",
+            "later battles",
+            "later boss battle",
+            "later reward",
+            "later rewards",
+            "keep later battle",
+            "keep later boss battle",
+            "keep the later battle",
+            "keep the later boss battle",
+            "后续战斗",
+            "之后战斗",
+            "后面战斗",
+            "后续奖励",
+            "之后奖励",
+            "后面奖励"))
+        {
+            return false;
+        }
+
         var battleProbeText = JrpgRouteSemantics.NormalizeBattleDetectionText(text);
         var rewardProbeText = JrpgRouteSemantics.NormalizeRewardDetectionText(text);
         var mentionsLaterCapability = ContainsAny(
@@ -3488,7 +3592,7 @@ public sealed class PrototypeIterationPlanService
             - Omit BattleScene/reward requirements only when the source semantics explicitly negates combat/conflict/reward.
             - If the plan is generic, misses the selected capability coverage, lacks field navigation, lacks final first-loop acceptance, or merges unrelated boundaries, return should_refine_plan.
             - If the latest prototype gap is navigation or visible-map related, prefer should_refine_plan unless the first executable capability clearly targets Start Adventure or the project entry into a visible playable field/map/town with stable movement.
-            - Conflict-oriented projects should split conflict entry from battle/challenge resolution.
+            - Conflict-oriented projects should split conflict entry from battle/challenge resolution only when a single goal mixes both boundaries; do not reject a plan just because it has both capabilities across different goals.
             - Reward or growth projects should include growth/reward/consequence feedback and a return-or-continue loop, unless the project explicitly ends after the reward.
             - Story or town-first JRPGs do not need BattleScene/reward steps unless the source semantics asks for conflict or growth.
             - A plan should_refine_plan if its goals require new player-visible Godot text but allow that text to default to English instead of Chinese. Do not treat English code identifiers, fixed node names, resource paths, tests, logs, or platform validation names as localization failures.
@@ -3698,25 +3802,25 @@ public sealed class PrototypeIterationPlanService
             [
                 new PrototypeIterationPlanGoalResult(
                     1,
-                    "目标 1：补稳地图移动与可见遇敌触发",
+                    "任务 1：补稳地图移动与可见遇敌触发",
                     "先让玩家能稳定移动，并且能清楚看到或明确触发第一次遇敌，不要把战斗、奖励和胜负提示一起塞进这一步。",
                     "完成并验证：玩家能稳定移动，并能明确进入第一次遇敌。",
                     "pending"),
                 new PrototypeIterationPlanGoalResult(
                     2,
-                    "目标 2：补通单场战斗与基础结算",
+                    "任务 2：补通单场战斗与基础结算",
                     "在首次遇敌后完成一场可读、可结束的战斗，至少让玩家能看到战斗开始、行动结果和胜利结算，不要在这一步同时处理奖励理解问题。",
                     "完成并验证：玩家能完整打完一场战斗，并看到明确的胜利结算。",
                     "pending"),
                 new PrototypeIterationPlanGoalResult(
                     3,
-                    "目标 3：补通奖励 3 选 1 并返回地图",
+                    "任务 3：补通奖励 3 选 1 并返回地图",
                     "战斗胜利后展示奖励 3 选 1，并在选择后正确返回地图继续流程，重点保证奖励含义可理解、选择后状态变化可见。",
                     "完成并验证：奖励 3 选 1 可理解、可选择，且选择后能正确返回地图。",
                     "pending"),
                 new PrototypeIterationPlanGoalResult(
                     4,
-                    "目标 4：补齐胜负目标提示与最小验证",
+                    "任务 4：补齐胜负目标提示与最小验证",
                     "把“打赢 15 场胜利、任一战斗失败即失败”的规则做成玩家一眼能看懂的提示，并补一轮最小验证，确认首轮闭环与目标提示能一起工作。",
                     "完成并验证：玩家能清楚理解胜负条件，且首轮闭环在提示存在时仍可正常工作。",
                     "pending"),
@@ -3735,34 +3839,60 @@ public sealed class PrototypeIterationPlanService
         }
 
         var goals = new List<PrototypeIterationPlanGoalResult>();
-        var maxActionGoals = Math.Min(actionList.Count, 6);
+        var maxActionGoals = Math.Min(actionList.Count, 4);
         for (var index = 0; index < maxActionGoals; index++)
         {
             var action = actionList[index];
+            var normalizedAction = NormalizeGenericActionSummary(action);
             var previous = index == 0 ? null : actionList[index - 1];
             var next = index + 1 < actionList.Count ? actionList[index + 1] : null;
             var title = index == 0
-                ? $"目标 1：验证玩家能{action}"
-                : $"目标 {index + 1}：补通{action}反馈";
+                ? $"任务 1：验证玩家能{action}"
+                : $"任务 {index + 1}：补通{action}反馈";
             var description = index == 0
-                ? $"只处理“{action}”这个最小动作：让玩家能触发该动作，并看到明确反馈。不要在这一步同时实现{string.Join("、", actionList.Skip(1).Take(3))}等后续动作。"
-                : $"在前一步“{previous}”已经成立的基础上，只补通“{action}”及其必要状态变化和可见反馈。{(next is null ? "不要扩大到完整闭环之外的新系统。" : $"不要同时处理后续“{next}”。")}";
+                ? $"只处理“{normalizedAction}”这个最小动作：让玩家能触发该动作，并看到明确反馈。不要在这一步同时实现{string.Join("、", actionList.Skip(1).Take(3).Select(NormalizeGenericActionSummary))}等后续动作。"
+                : $"在前一步“{NormalizeGenericActionSummary(previous ?? string.Empty)}”已经成立的基础上，只补通“{normalizedAction}”及其必要状态变化和可见反馈。{(next is null ? "不要扩大到完整闭环之外的新系统。" : $"不要同时处理后续“{NormalizeGenericActionSummary(next)}”。")}";
             goals.Add(new PrototypeIterationPlanGoalResult(
                 index + 1,
                 title,
                 description,
-                $"完成并验证：玩家能{action}，且反馈和状态变化清楚可见。",
+                $"完成并验证：玩家能{normalizedAction}，且反馈和状态变化清楚可见。",
                 "pending"));
         }
 
-        goals.Add(new PrototypeIterationPlanGoalResult(
-            goals.Count + 1,
-            $"目标 {goals.Count + 1}：最小闭环回归验收",
-            $"串联验证本轮最小闭环：{string.Join(" -> ", actionList.Take(maxActionGoals))}。只做验收和必要修补，不新增闭环之外的大系统。",
-            "完成并验证：玩家能按顺序完成本轮最小闭环，并能从结果继续下一轮操作。",
-            "pending"));
-
         return goals;
+    }
+
+    private static string BuildGenericLoopSummaryText(IEnumerable<string> actions)
+    {
+        var normalized = actions.Select(NormalizeGenericActionSummary).Where(value => !string.IsNullOrWhiteSpace(value)).ToArray();
+        return normalized.Length == 0 ? "本轮最小闭环" : string.Join(" -> ", normalized);
+    }
+
+    private static string NormalizeGenericActionSummary(string value)
+    {
+        var text = value.Trim();
+        if (ContainsAny(text, "杀怪", "打怪", "战斗", "combat", "battle", "fight", "怪"))
+        {
+            return "进入一次战斗并击败一个普通敌人";
+        }
+
+        if (ContainsAny(text, "掉装备", "掉落", "金币", "loot", "drop", "gold"))
+        {
+            return "获得掉落或金币";
+        }
+
+        if (ContainsAny(text, "经验", "升级", "变强", "growth", "level", "exp", "stronger"))
+        {
+            return "展示玩家状态变化";
+        }
+
+        if (ContainsAny(text, "继续", "下一场", "repeat", "continue"))
+        {
+            return "继续下一轮操作";
+        }
+
+        return text;
     }
 
     private static List<string> ExtractGenericLoopActionList(string message)
@@ -3900,7 +4030,7 @@ public sealed class PrototypeIterationPlanService
 
     private static string BuildGoalTitle(int index, string segment)
     {
-        return $"目标 {index}：{TrimForHint(segment, 24)}";
+        return $"任务 {index}：{TrimForHint(segment, 24)}";
     }
 
     private static string TrimForHint(string value, int maxLength = 32)
@@ -3914,15 +4044,15 @@ public sealed class PrototypeIterationPlanService
         var sourceMessage = details.Session.SourceMessage?.Trim();
         if (!string.IsNullOrWhiteSpace(sourceMessage))
         {
-            return $"请把这条原型优化建议重拆成 4 个更小、能单独执行的目标，不要把多个连续实现点塞进同一个目标里：{sourceMessage}";
+            return $"请把这条原型优化建议重拆成 4 个更小、能单独执行的任务，不要把多个连续实现点塞进同一个任务里：{sourceMessage}";
         }
 
         if (!string.IsNullOrWhiteSpace(prototypeProgress?.CompletionSummary))
         {
-            return "请根据当前 prototype completion report，把下一步优化拆成 4 个更小的目标：先补地图稳定移动和可见遇敌触发，再补完成一场战斗并正常结算，再补胜利后奖励 3 选 1 并返回地图，最后补胜负条件提示与验证。";
+            return "请根据当前 prototype completion report，把下一步优化拆成 4 个更小的任务：先补地图稳定移动和可见遇敌触发，再补完成一场战斗并正常结算，再补胜利后奖励 3 选 1 并返回地图，最后补胜负条件提示与验证。";
         }
 
-        return "请把当前优化目标重拆成 4 个更小的连续目标，每个目标都要足够小，适合一次单独执行。";
+        return "请把当前优化目标重拆成 4 个更小的连续任务，每个任务都要足够小，适合一次单独执行。";
     }
 
     private static bool LooksTooBroad(string value)
@@ -3948,6 +4078,24 @@ public sealed class PrototypeIterationPlanService
         }
 
         return
+            (title.Contains("JRPG 首轮闭环：开局语境与玩家目标", StringComparison.Ordinal) &&
+             description.Contains("player", StringComparison.OrdinalIgnoreCase)) ||
+            (title.Contains("JRPG 首轮闭环：地图导航与稳定操控", StringComparison.Ordinal) &&
+             description.Contains("MapScene", StringComparison.OrdinalIgnoreCase)) ||
+            (title.Contains("JRPG 首轮闭环：交互与发现节点", StringComparison.Ordinal) &&
+             (description.Contains("dialogue", StringComparison.OrdinalIgnoreCase) || description.Contains("interaction", StringComparison.OrdinalIgnoreCase))) ||
+            (title.Contains("JRPG 首轮闭环：冲突入口触发", StringComparison.Ordinal) &&
+             (description.Contains("encounter", StringComparison.OrdinalIgnoreCase) || description.Contains("触发", StringComparison.Ordinal))) ||
+            (title.Contains("JRPG 首轮闭环：战斗或挑战结算", StringComparison.Ordinal) &&
+             (description.Contains("BattleScene", StringComparison.OrdinalIgnoreCase) || description.Contains("battle", StringComparison.OrdinalIgnoreCase))) ||
+            (title.Contains("JRPG 首轮闭环：成长、奖励或后果反馈", StringComparison.Ordinal) &&
+             (description.Contains("reward", StringComparison.OrdinalIgnoreCase) || description.Contains("growth", StringComparison.OrdinalIgnoreCase))) ||
+            (title.Contains("JRPG 首轮闭环：返回或继续循环", StringComparison.Ordinal) &&
+             (description.Contains("return", StringComparison.OrdinalIgnoreCase) || description.Contains("continue", StringComparison.OrdinalIgnoreCase))) ||
+            (title.Contains("JRPG 首轮闭环：角色或队伍状态可读性", StringComparison.Ordinal) &&
+             (description.Contains("win", StringComparison.OrdinalIgnoreCase) || description.Contains("fail", StringComparison.OrdinalIgnoreCase))) ||
+            (title.Contains("JRPG 首轮闭环：最终首轮闭环验收", StringComparison.Ordinal) &&
+             (description.Contains("acceptance", StringComparison.OrdinalIgnoreCase) || description.Contains("package readiness", StringComparison.OrdinalIgnoreCase))) ||
             (title.Contains("补稳地图移动与可见遇敌触发", StringComparison.Ordinal) &&
              description.Contains("稳定移动", StringComparison.Ordinal) &&
              description.Contains("第一次遇敌", StringComparison.Ordinal)) ||
@@ -3963,7 +4111,7 @@ public sealed class PrototypeIterationPlanService
              description.Contains("战斗入口", StringComparison.Ordinal)) ||
             (description.Contains("击败一个普通敌人", StringComparison.Ordinal) &&
              description.Contains("战斗结果反馈", StringComparison.Ordinal)) ||
-            (title.StartsWith("目标 ", StringComparison.Ordinal) &&
+            ((title.StartsWith("目标 ", StringComparison.Ordinal) || title.StartsWith("任务 ", StringComparison.Ordinal)) &&
              (title.Contains("验证玩家能", StringComparison.Ordinal) || title.Contains("补通", StringComparison.Ordinal)) &&
              description.Contains("只", StringComparison.Ordinal) &&
              (description.Contains("可见反馈", StringComparison.Ordinal) || description.Contains("明确反馈", StringComparison.Ordinal))) ||
@@ -4044,8 +4192,11 @@ public sealed class PrototypeIterationPlanService
         var prefixes = new[]
         {
             "请把这条原型优化建议重拆成 4 个更小、能单独执行的目标，不要把多个连续实现点塞进同一个目标里：",
+            "请把这条原型优化建议重拆成 4 个更小、能单独执行的任务，不要把多个连续实现点塞进同一个任务里：",
             "请根据当前 prototype completion report，把下一步优化拆成 4 个更小的目标：",
-            "请把当前优化目标重拆成 4 个更小的连续目标，每个目标都要足够小，适合一次单独执行。"
+            "请根据当前 prototype completion report，把下一步优化拆成 4 个更小的任务：",
+            "请把当前优化目标重拆成 4 个更小的连续目标，每个目标都要足够小，适合一次单独执行。",
+            "请把当前优化目标重拆成 4 个更小的连续任务，每个任务都要足够小，适合一次单独执行。"
         };
 
         var changed = true;

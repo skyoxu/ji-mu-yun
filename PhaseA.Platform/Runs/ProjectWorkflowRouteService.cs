@@ -165,13 +165,13 @@ public sealed class ProjectWorkflowRouteService
     {
         return
         [
-            new("new-project", "游戏项目详情", "done", state.Project.Name),
+            new("new-project", "游戏项目概述", "done", state.Project.Name),
             new("create-prototype", "原型骨架创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
             new("execute-or-repair", "骨架验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
-            new("iteration-plan", "完成游戏模块", state.IterationStatus, state.IterationEvidence),
+            new("iteration-plan", "创建游戏模块", state.IterationStatus, state.IterationEvidence),
             new("ui-optimization", "游戏界面优化", state.UiOptimizationStatus, state.UiOptimizationEvidence),
-            new("prototype-acceptance", "原型验收", state.AcceptanceStatus, state.AcceptanceEvidence),
-            new("asset-inventory", "确认素材清单", state.AssetInventoryStatus, state.AssetInventoryEvidence),
+            new("prototype-acceptance", "原型项目验收", state.AcceptanceStatus, state.AcceptanceEvidence),
+            new("asset-inventory", "项目素材库", state.AssetInventoryStatus, state.AssetInventoryEvidence),
             new("download-project", "打包下载项目", state.DownloadStatus, state.DownloadEvidence)
         ];
     }
@@ -207,22 +207,22 @@ public sealed class ProjectWorkflowRouteService
 
         if (state.HasNeedsFixIterationGoal)
         {
-            return Action("needs-fix-route", "运行 Needs Fix 路由", "运行 Needs Fix 路由", "iteration-plan");
+            return Action("needs-fix-route", "运行需要修复路由", "运行需要修复路由", "iteration-plan");
         }
 
         if (!state.IterationCompleted)
         {
-            return Action("execute-iteration-goal", "执行下一目标", "执行下一目标", "iteration-plan");
+            return Action("execute-iteration-goal", "执行下一任务", "执行下一任务", "iteration-plan");
         }
 
         if (!state.FinalAcceptancePassed)
         {
-            return Action("prototype-acceptance", "原型验收", "原型验收", "prototype-acceptance");
+            return Action("prototype-acceptance", "原型项目验收", "原型项目验收", "prototype-acceptance");
         }
 
         if (!state.AssetInventoryAvailable)
         {
-            return Action("asset-inventory", "确认素材清单", "确认素材清单", "asset-inventory");
+            return Action("asset-inventory", "项目素材库", "项目素材库", "asset-inventory");
         }
 
         if (!state.HasPackage)
@@ -268,7 +268,7 @@ public sealed class ProjectWorkflowRouteService
             $"项目：{project.Name}（{project.GameName}）",
             $"游戏类型：{project.GameTypeSource}",
             $"原型骨架：{HumanStatus(state.PrototypeCreationStatus)}",
-            $"骨架/原型验收：{HumanStatus(state.AcceptanceStatus)}",
+            $"骨架/原型项目验收：{HumanStatus(state.AcceptanceStatus)}",
             $"游戏模块：{state.IterationEvidence}",
             $"项目包：{state.PackageEvidence}"
         };
@@ -285,22 +285,22 @@ public sealed class ProjectWorkflowRouteService
 
         if (!string.IsNullOrWhiteSpace(playtestFeedback) && state.HasPackage)
         {
-            return "系统判断你正在描述本地试玩后的修改需求。建议进入“完成游戏模块”，基于本次试玩反馈创建新一轮游戏模块。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。";
+            return "系统判断你正在描述本地试玩后的修改需求。建议进入“创建游戏模块”，基于本次试玩反馈创建新一轮游戏模块。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。";
         }
 
         return action.ActionId switch
         {
             "create-prototype" => "建议先进行 2. 原型骨架创建。如果玩法设定还不清晰，可以先在聊天里使用高级策划模式梳理策划大纲；准备好后点击下方一次性按钮进入原型骨架创建。",
-            "create-repair-plan" => "当前骨架或验收存在失败记录，但还没有可执行修复步骤。建议生成修复计划，把失败拆成小步骤后逐项修复。",
-            "execute-repair-step" => "当前修复计划里仍有待执行或需要继续修复的步骤。建议继续执行下一项修复；修复计划完成后再回到骨架验收。",
+            "create-repair-plan" => "当前骨架或验收存在失败记录，但还没有可执行修复任务。建议生成修复计划，把失败拆成小任务后逐项修复。",
+            "execute-repair-step" => "当前修复计划里仍有待执行或需要继续修复的任务。建议继续执行下一项修复；修复计划完成后再回到骨架验收。",
             "prototype-acceptance" when action.UiTarget == "execute-or-repair" => "原型骨架已经创建，但当前没有可用的骨架验收通过状态。建议先做骨架验收，确认骨架可运行后再生成游戏模块。",
-            "create-iteration-plan" => "骨架验收已经通过，但当前还没有游戏模块。建议生成游戏模块，把最小可玩循环拆成可执行 step。",
-            "needs-fix-route" => "当前游戏模块中存在 needs fix 或 failed 的 step。建议运行 Needs Fix 路由，只围绕当前失败 step 修复，不推进后续目标。",
-            "execute-iteration-goal" => "当前游戏模块还有待执行 step。建议继续执行下一目标，直到所有 step 完成。",
+            "create-iteration-plan" => "骨架验收已经通过，但当前还没有游戏模块。建议生成游戏模块，把最小可玩循环拆成可执行任务。",
+            "needs-fix-route" => "当前游戏模块中存在“需要修复”的任务。建议运行需要修复路由，只围绕当前失败任务修复，不推进后续任务。",
+            "execute-iteration-goal" => "当前游戏模块还有待执行任务。建议继续执行下一任务，直到所有任务完成。",
             "ui-optimization" => "游戏模块已经完成。游戏界面优化是可选项，不会卡住后续流程；如果希望界面更贴近当前游戏类型模板，可以运行游戏界面优化。",
-            "prototype-acceptance" => "游戏模块已经完成，建议重新进行原型验收，确认当前可玩闭环仍然成立。游戏界面优化是可选项，如果希望先调整界面表现，可以从左侧进度栏进入游戏界面优化；它不会阻塞原型验收。",
-            "asset-inventory" => "原型验收已经通过。建议确认素材清单，检查已使用素材和可生成素材候选，必要时替换默认素材。",
-            "download-project" when !state.HasPackage => "素材清单状态已满足继续推进。建议进入“打包下载项目”，点击“打包项目文件”生成可下载的项目压缩包。",
+            "prototype-acceptance" => "游戏模块已经完成，建议重新进行原型项目验收，确认当前可玩闭环仍然成立。游戏界面优化是可选项，如果希望先调整界面表现，可以从左侧进度栏进入游戏界面优化；它不会阻塞原型项目验收。",
+            "asset-inventory" => "原型项目验收已经通过。建议进入项目素材库，检查已使用素材和可生成素材候选，必要时替换默认素材。",
+            "download-project" when !state.HasPackage => "项目素材库状态已满足继续推进。建议进入“打包下载项目”，点击“打包项目文件”生成可下载的项目压缩包。",
             "download-project" => state.UsesGenericPrototypeRoute
                 ? "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；试玩结果可以发到聊天里，准备创建第二轮游戏模块。"
                 : state.UiOptimizationSucceeded
@@ -569,15 +569,15 @@ public sealed class ProjectWorkflowRouteService
                 prototypeStepStatus,
                 hasPrototype ? "原型骨架已创建。" : progress.PrototypeCreationFailure ?? progress.Failure ?? progress.Label ?? "尚未创建原型骨架。",
                 repairStatus,
-                repairGoals.Count == 0 ? "尚未生成修复计划。" : $"修复计划 {repairGoals.Count} 步，待处理 {repairGoals.Count(goal => IsRunnable(goal.Status))} 步。",
+                repairGoals.Count == 0 ? "尚未生成修复计划。" : $"修复计划 {repairGoals.Count} 个任务，待处理 {repairGoals.Count(goal => IsRunnable(goal.Status))} 个任务。",
                 iterationStatus,
-                hasPlan ? $"共 {goals.Count} 个 step，已完成 {goals.Count(goal => IsDone(goal.Status))} 个，需要修复 {goals.Count(goal => IsNeedsFix(goal.Status))} 个。" : "尚未生成游戏模块。",
+                hasPlan ? $"共 {goals.Count} 个任务，完成 {goals.Count(goal => IsDone(goal.Status))} 个，需要修复 {goals.Count(goal => IsNeedsFix(goal.Status))} 个。" : "尚未生成游戏模块。",
                 uiStatus,
                 uiSucceeded ? "游戏界面优化已完成。" : uiRun is null ? "游戏界面优化尚未运行，可选。" : $"最近一次游戏界面优化状态：{uiRun.Status}。",
                 acceptanceStatus,
-                finalAcceptancePassed ? "原型验收通过。" : acceptancePassed && iterationCompleted ? "游戏模块完成后尚未重新进行原型验收。" : progress.AcceptanceFailure ?? progress.Failure ?? "尚未获得通过的原型验收。",
+                finalAcceptancePassed ? "原型项目验收通过。" : acceptancePassed && iterationCompleted ? "游戏模块完成后尚未重新进行原型项目验收。" : progress.AcceptanceFailure ?? progress.Failure ?? "尚未获得通过的原型项目验收。",
                 assetStatus,
-                inventoryAvailable ? "素材清单可用。" : inventory?.DisabledReason ?? "素材清单尚不可用。",
+                inventoryAvailable ? "项目素材库可用。" : inventory?.DisabledReason ?? "项目素材库尚不可用。",
                 packageStatus,
                 hasPackage ? $"已生成 {packages.Count} 个项目文件包。" : packageList?.DisabledReason ?? "尚未打包项目文件。",
                 downloadStatus,

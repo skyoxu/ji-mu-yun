@@ -129,7 +129,7 @@ public sealed partial class PrototypeQuickFixService
                 (goalRepair.GoalIndex > 0 && goal.GoalIndex == goalRepair.GoalIndex));
             if (targetGoal is null)
             {
-                return new PrototypeFeedbackResult("", "missing_goal", "未找到需要修复的当前目标。", []);
+                return new PrototypeFeedbackResult("", "missing_goal", "未找到需要修复的当前任务。", []);
             }
 
             runMemory = await _metadataStore.GetProjectRunMemoryAsync(project.ProjectId, BuildGoalMemoryScope(targetGoal.GoalIndex), cancellationToken);
@@ -225,7 +225,7 @@ public sealed partial class PrototypeQuickFixService
                 ? PrototypeGoalAcceptanceValidationResult.NotRun()
                 : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
-            await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复目标 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复任务 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
@@ -289,7 +289,7 @@ public sealed partial class PrototypeQuickFixService
                     ? AppendProjectSmokeValidationSummary(assistantMessage)
                     : AppendProjectSmokeValidationFailure(assistantMessage, projectSmokeValidation);
             }
-            await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "目标修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "finalize", goalRepairMode ? "任务修复结果已返回，正在整理状态。" : "快速修复结果已返回，正在整理日志。", CancellationToken.None);
 
             var mutationGuardValidation = PrototypeRepairMutationGuard.Validate(project, targetGoal);
             if (!mutationGuardValidation.AllowsProgress)
@@ -406,9 +406,9 @@ public sealed partial class PrototypeQuickFixService
                     : "needs_fix";
                 var sessionSummary = goalRepairOutcome.GoalStatus == "succeeded"
                     ? (hasMoreGoals
-                        ? $"目标 {targetGoal.GoalIndex} 已修复完成。请确认后决定是否继续目标 {targetGoal.GoalIndex + 1}。"
-                        : "所有迭代目标已完成。")
-                    : $"目标 {targetGoal.GoalIndex} 仍需修复。请继续修复当前目标，不要继续后续目标。";
+                        ? $"任务 {targetGoal.GoalIndex} 已修复完成。请确认后决定是否继续任务 {targetGoal.GoalIndex + 1}。"
+                        : "所有游戏模块任务已完成。")
+                    : $"任务 {targetGoal.GoalIndex} 仍需修复。请继续修复当前任务，不要继续后续任务。";
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(
                     iterationDetails.Session.SessionId,
                     sessionStatus,
@@ -420,7 +420,7 @@ public sealed partial class PrototypeQuickFixService
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
                 await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], CancellationToken.None);
 
-                await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"目标 {targetGoal.GoalIndex} 修复完成。" : $"目标 {targetGoal.GoalIndex} 仍需继续修复。", CancellationToken.None);
+                await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"任务 {targetGoal.GoalIndex} 修复完成。" : $"任务 {targetGoal.GoalIndex} 仍需继续修复。", CancellationToken.None);
 
                 var goalArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
                 return new PrototypeFeedbackResult(
@@ -439,7 +439,7 @@ public sealed partial class PrototypeQuickFixService
             }
             else
             {
-                await SetProgressAsync(runId, "completed", "", projectSmokeValidation.Required ? "快速修复已完成，并通过原型验收。" : "快速修复已完成。", CancellationToken.None);
+                await SetProgressAsync(runId, "completed", "", projectSmokeValidation.Required ? "快速修复已完成，并通过原型项目验收。" : "快速修复已完成。", CancellationToken.None);
             }
 
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, CancellationToken.None);
@@ -479,14 +479,14 @@ public sealed partial class PrototypeQuickFixService
                 });
                 await _metadataStore.CompleteRunAsync(runId, "failed", 408, "", $"Prototype quick fix exceeded the {effectiveTimeout.TotalSeconds:0} second timeout.", evidenceJson, CancellationToken.None);
                 var timeoutFocus = BuildGoalRepairTimeoutFocus(targetGoal);
-                var summary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus}";
+                var summary = $"任务 {targetGoal.GoalIndex} 修复超时。当前任务仍需修复；下一轮应继续聚焦当前任务，并优先缩小到最小验收范围：{timeoutFocus}";
                 var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", $"继续修复当前 step 的最小验收范围：{timeoutFocus}", summary, [summary], CancellationToken.None);
-                await SetProgressAsync(runId, "failed", "timeout", $"目标 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
-                return new PrototypeFeedbackResult(runId, "failed", "当前目标修复超时。系统没有切换到后续目标，你可以继续再次修复当前 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
+                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", $"继续修复当前任务的最小验收范围：{timeoutFocus}", summary, [summary], CancellationToken.None);
+                await SetProgressAsync(runId, "failed", "timeout", $"任务 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
+                return new PrototypeFeedbackResult(runId, "failed", "当前任务修复超时。系统没有切换到后续任务，你可以继续再次修复当前任务。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
 
             var timeoutEvidenceJson = JsonSerializer.Serialize(new
@@ -508,14 +508,14 @@ public sealed partial class PrototypeQuickFixService
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.Message, evidenceJson, CancellationToken.None);
             if (targetGoal is not null && iterationDetails is not null)
             {
-                var summary = $"目标 {targetGoal.GoalIndex} 修复失败。当前目标仍需修复，请继续聚焦本 step。";
+                var summary = $"任务 {targetGoal.GoalIndex} 修复失败。当前任务仍需修复，请继续聚焦本任务。";
                 var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", summary, "当前目标修复失败。", [summary], CancellationToken.None);
-                await SetProgressAsync(runId, "failed", "error", $"目标 {targetGoal.GoalIndex} 修复失败，仍需继续修复。", CancellationToken.None);
-                return new PrototypeFeedbackResult(runId, "failed", "当前目标修复失败。系统没有推进后续目标，请继续修复这个 step。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
+                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", summary, "当前任务修复失败。", [summary], CancellationToken.None);
+                await SetProgressAsync(runId, "failed", "error", $"任务 {targetGoal.GoalIndex} 修复失败，仍需继续修复。", CancellationToken.None);
+                return new PrototypeFeedbackResult(runId, "failed", "当前任务修复失败。系统没有推进后续任务，请继续修复这个任务。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
 
             await SetProgressAsync(runId, "failed", "error", "快速修复失败，请查看运行记录。", CancellationToken.None);
@@ -565,7 +565,7 @@ public sealed partial class PrototypeQuickFixService
         Action<PrototypeGoalGodotSmokeValidationResult>? onGodotSmokeFailure = null,
         CancellationToken cancellationToken = default)
     {
-        await SetProgressAsync(runId, "running", "preflight", $"正在检查目标 {targetGoal.GoalIndex} 是否已经满足验收。", cancellationToken);
+        await SetProgressAsync(runId, "running", "preflight", $"正在检查任务 {targetGoal.GoalIndex} 是否已经满足验收。", cancellationToken);
         var acceptanceValidation = await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, cancellationToken);
         if (!acceptanceValidation.Passed)
         {
@@ -579,10 +579,10 @@ public sealed partial class PrototypeQuickFixService
         }
 
         var assistantMessage = $"""
-            当前目标已经通过平台验收。
+            当前任务已经通过平台验收。
 
-            Platform acceptance:
-            Goal {targetGoal.GoalIndex} passed its platform validation. The current goal can move to the next step.
+            平台验收：
+            任务 {targetGoal.GoalIndex} 已通过平台验收。当前任务可以进入下一步。
             """;
         var codexOutput = "Preflight validation passed before running Codex.";
         var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
@@ -694,9 +694,9 @@ public sealed partial class PrototypeQuickFixService
             : "needs_fix";
         var sessionSummary = goalRepairOutcome.GoalStatus == "succeeded"
             ? (hasMoreGoals
-                ? $"目标 {targetGoal.GoalIndex} 已通过验收。请确认后决定是否继续目标 {targetGoal.GoalIndex + 1}。"
-                : "所有迭代目标已完成。")
-            : $"目标 {targetGoal.GoalIndex} 已通过核心验收，但仍需继续完成引擎验证。";
+                ? $"任务 {targetGoal.GoalIndex} 已通过验收。请确认后决定是否继续任务 {targetGoal.GoalIndex + 1}。"
+                : "所有游戏模块任务已完成。")
+            : $"任务 {targetGoal.GoalIndex} 已通过核心验收，但仍需继续完成引擎验证。";
         if (hasNeedsFix && goalRepairOutcome.GoalStatus == "succeeded")
         {
             sessionStatus = "needs_fix";
@@ -712,7 +712,7 @@ public sealed partial class PrototypeQuickFixService
             cancellationToken);
         PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
         await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], cancellationToken);
-        await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"目标 {targetGoal.GoalIndex} 验收完成。" : $"目标 {targetGoal.GoalIndex} 仍需继续修复。", cancellationToken);
+        await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"任务 {targetGoal.GoalIndex} 验收完成。" : $"任务 {targetGoal.GoalIndex} 仍需继续修复。", cancellationToken);
 
         var goalArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
         return new PrototypeFeedbackResult(
@@ -851,8 +851,8 @@ public sealed partial class PrototypeQuickFixService
             }
 
             var assistantMessage = $"""
-                目标 {targetGoal.GoalIndex} 修复已通过平台复验。
-                本次修复进程超过 {effectiveTimeout.TotalSeconds:0} 秒后被终止，但文件变更已经落盘，并且当前目标的静态验收与 Godot smoke 验证均已通过。
+                任务 {targetGoal.GoalIndex} 修复已通过平台复验。
+                本次修复进程超过 {effectiveTimeout.TotalSeconds:0} 秒后被终止，但文件变更已经落盘，并且当前任务的静态验收与 Godot smoke 验证均已通过。
                 """;
             await File.WriteAllTextAsync(
                 resultAbsolutePath,
@@ -923,8 +923,8 @@ public sealed partial class PrototypeQuickFixService
             var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
             var sessionStatus = hasMoreGoals ? "paused_for_review" : "completed";
             var sessionSummary = hasMoreGoals
-                ? $"目标 {targetGoal.GoalIndex} 已通过超时后复验。请确认后决定是否继续目标 {targetGoal.GoalIndex + 1}。"
-                : "所有迭代目标已完成。";
+                ? $"任务 {targetGoal.GoalIndex} 已通过超时后复验。请确认后决定是否继续任务 {targetGoal.GoalIndex + 1}。"
+                : "所有游戏模块任务已完成。";
             await _metadataStore.UpdateProjectIterationSessionStatusAsync(
                 iterationDetails.Session.SessionId,
                 sessionStatus,
@@ -935,7 +935,7 @@ public sealed partial class PrototypeQuickFixService
                 cancellationToken);
             PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "succeeded", assistantMessage, now, sessionSummary);
             await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "succeeded", sessionSummary, assistantMessage, [], cancellationToken);
-            await SetProgressAsync(runId, "completed", "", $"目标 {targetGoal.GoalIndex} 已通过超时后复验。", cancellationToken);
+            await SetProgressAsync(runId, "completed", "", $"任务 {targetGoal.GoalIndex} 已通过超时后复验。", cancellationToken);
 
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
             return new PrototypeFeedbackResult(runId, "completed", assistantMessage, artifacts, sessionStatus, "succeeded", targetGoal.GoalIndex);
@@ -978,18 +978,18 @@ public sealed partial class PrototypeQuickFixService
             : postAcceptanceReason ?? godotSmokeValidation.Smoke.Reason;
         var timeoutFocus = BuildGoalRepairTimeoutFocus(targetGoal);
         var assistantMessage = $"""
-            目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus}
+            任务 {targetGoal.GoalIndex} 修复超时。当前任务仍需修复；下一轮应继续聚焦当前任务，并优先缩小到最小验收范围：{timeoutFocus}
 
-            Goal {targetGoal.GoalIndex} repair timed out after {effectiveTimeout.TotalSeconds:0} seconds and still needs repair.
+            任务 {targetGoal.GoalIndex} 修复运行超过 {effectiveTimeout.TotalSeconds:0} 秒，当前任务仍需修复。
 
-            Platform acceptance:
+            平台验收：
             STATUS: {(acceptanceValidation.Passed ? "passed" : "needs_fix")}
             REASON: {acceptanceValidation.Reason ?? acceptanceValidation.Status}
 
-            Platform engine validation:
+            平台引擎验收：
             STATUS: {(godotSmokeValidation.Passed ? "passed" : "needs_fix")}
-            VERIFY: Godot smoke validation must pass before this goal can move forward.
-            REMAINING: Continue repairing the current goal; do not advance to later goals yet.
+            VERIFY: 当前任务必须通过 Godot smoke 验证后才能继续。
+            REMAINING: 继续修复当前任务，暂时不要推进后续任务。
             REASON: {validationReason}
             """;
 
@@ -1056,7 +1056,7 @@ public sealed partial class PrototypeQuickFixService
             cancellationToken);
 
         var iterationPlanState = _stateWriter.ReadLatestIterationPlanState(project);
-        var sessionSummary = $"目标 {targetGoal.GoalIndex} 修复超时。当前目标仍需修复；下一轮应继续聚焦当前 step，并优先缩小到最小验收范围：{timeoutFocus} 验证原因：{validationReason}";
+        var sessionSummary = $"任务 {targetGoal.GoalIndex} 修复超时。当前任务仍需修复；下一轮应继续聚焦当前任务，并优先缩小到最小验收范围：{timeoutFocus} 验证原因：{validationReason}";
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", assistantMessage, null, cancellationToken);
         await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair-timeout-validation-failed", cancellationToken);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(
@@ -1069,7 +1069,7 @@ public sealed partial class PrototypeQuickFixService
             cancellationToken);
         PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", assistantMessage, now, sessionSummary);
         await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "needs_fix", sessionSummary, assistantMessage, [sessionSummary], cancellationToken);
-        await SetProgressAsync(runId, "failed", "validation", $"Goal {targetGoal.GoalIndex} timed out and still needs validation repair.", cancellationToken);
+        await SetProgressAsync(runId, "failed", "validation", $"任务 {targetGoal.GoalIndex} 超时，仍需继续修复验证问题。", cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
         return new PrototypeFeedbackResult(runId, "failed", assistantMessage, artifacts, "needs_fix", "needs_fix", targetGoal.GoalIndex);
@@ -1555,28 +1555,28 @@ public sealed partial class PrototypeQuickFixService
             {rpgGdUnitContextBlock}
             Mandatory rules:
             - Do not define or shadow xUnit types. Never add `namespace Xunit`, `FactAttribute`, `TheoryAttribute`, `InlineDataAttribute`, or `Assert` classes in project tests. Use the existing `using Xunit;` and package references.
-            - 这次只处理当前目标，不要顺手扩展到后续目标。
-            - 这是目标级 needs-fix 修复，不是 90 秒快速修复；允许为了完成当前 step 做必要的局部实现，但仍禁止扩大到后续目标。
-            - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
+            - 这次只处理当前任务，不要顺手扩展到后续任务。
+            - 这是任务级 needs-fix 修复，不是 90 秒快速修复；允许为了完成当前任务做必要的局部实现，但仍禁止扩大到后续任务。
+            - 直接围绕当前任务实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
-            - 如果当前目标是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
+            - 如果当前任务是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
             - Godot C# 项目结构：可构建项目是仓库根目录的 GodotGame.csproj；Game.Godot/ 只是运行时场景和脚本目录，不是独立 C# 项目。不要执行或引用 Game.Godot/Game.Godot.csproj。
             - 不要在本路由中执行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些本地验证命令会写入 obj/bin/.godot 并可能触发文件锁。修复完成后由平台统一执行隔离验收。
             - 仅当 Godot stderr 明确指出 `Game.Godot/Examples/**.tscn:1 - Parse Error: Expected '['` 时，允许把被点名的示例场景重写为无 UTF-8 BOM 的 Godot 文本场景；不要借机改示例内容。
-            - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复目标。
-            - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前目标的完成内容，除非当前目标标题和验收提示明确要求。
-            - 如果当前目标是玩法/Godot/RPG 目标，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
+            - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复任务。
+            - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前任务的完成内容，除非当前任务标题和验收提示明确要求。
+            - 如果当前任务是玩法/Godot/RPG 任务，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
             - Main.tscn SOP：原型相关修复必须保持根级 VBox、Overlays、ScreenRoot 默认 visible = false；final/full-playable 目标必须修到这一点通过。
-            - Godot stderr 属于当前目标验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
-            - `This control can't grab focus` 也属于当前目标验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
+            - Godot stderr 属于当前任务验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
+            - `This control can't grab focus` 也属于当前任务验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
             - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
             - 不要自行运行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些验证由平台在隔离输出目录中执行。
-            - 对玩法/Godot/RPG 目标，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
-            - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前目标的唯一剩余问题。
-            - 优先用最小改动完成目标。
+            - 对玩法/Godot/RPG 任务，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。
+            - 不要处理测试宿主、权限、构建系统、平台链路之类的基础设施问题，除非它们是阻塞当前任务的唯一剩余问题。
+            - 优先用最小改动完成任务。
             - 如果被阻塞，直接报告阻塞原因，不要改无关基础设施。
-            - 完成后输出面向浏览器用户的简明结果，不要包含路径、命令、脚本名、日志名、环境变量。
+            - 完成后输出面向浏览器用户的简明中文结果，不要包含路径、命令、脚本名、日志名、环境变量。
 
             项目：
             - ProjectId: {project.ProjectId}
@@ -1585,7 +1585,7 @@ public sealed partial class PrototypeQuickFixService
             - GameType: {project.GameTypeSource}
             - GoalRepairRunId: {runId}
 
-            当前唯一目标：
+            当前唯一任务：
             - GoalIndex: {goal.GoalIndex}
             - Title: {goal.Title}
             - Description: {goal.Description}
@@ -1607,15 +1607,15 @@ public sealed partial class PrototypeQuickFixService
             你不需要也不应该做仓库恢复、全仓巡检、部署修复或文档整理。
 
             成功定义：
-            - 只有当当前 step 已可继续，才可视为修复成功。
-            - “已可继续”必须指当前目标的玩法/业务验收通过，不是平台路由或恢复语义通过。
+            - 只有当当前任务已可继续，才可视为修复成功。
+            - “已可继续”必须指当前任务的玩法/业务验收通过，不是平台路由或恢复语义通过。
             - 对奖励闭环目标，最小完成范围是：胜利后出现 3 个奖励、选择任一奖励后状态变化可见、随后返回地图。
-            - 如果仍未可继续，必须明确写出“当前 step 仍需修复”以及唯一剩余阻塞。
-            - 不要切换去处理 step {goal.GoalIndex + 1} 或任何后续目标。
+            - 如果仍未可继续，必须明确写出“当前任务仍需修复”以及唯一剩余阻塞。
+            - 不要切换去处理任务 {goal.GoalIndex + 1} 或任何后续任务。
 
             输出格式：
             STATUS: completed|needs_fix
-            SUMMARY: 用 2-4 句说明当前目标是否完成，以及对用户有什么变化
+            SUMMARY: 用 2-4 句中文说明当前任务是否完成，以及对用户有什么变化
             CHANGED: 用 1-3 行列出本轮实际完成的改动
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
@@ -1896,7 +1896,7 @@ public sealed partial class PrototypeQuickFixService
     private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)
     {
         return $"""
-            {(goal is null ? "快速修复已完成。" : $"目标 {goal.GoalIndex} 修复已执行。")}
+            {(goal is null ? "快速修复已完成。" : $"任务 {goal.GoalIndex} 修复已执行。")}
             完成报告：
             {publicCodexReport}
             """;
@@ -2088,7 +2088,7 @@ public sealed partial class PrototypeQuickFixService
             {assistantMessage.Trim()}
 
             平台验收：
-            目标 {goal.GoalIndex} 的最小玩法验收已通过。当前目标可以进入下一步。
+            任务 {goal.GoalIndex} 的最小玩法验收已通过。当前任务可以进入下一步。
             """;
     }
 
@@ -2112,7 +2112,7 @@ public sealed partial class PrototypeQuickFixService
             {assistantMessage.Trim()}
 
             平台验收：
-            目标 {goal.GoalIndex} 没有通过平台验收，当前目标仍保持 needs_fix。
+            任务 {goal.GoalIndex} 没有通过平台验收，当前任务仍保持需要修复。
             原因：{validation.Reason ?? validation.Status}
             细节：{publicDetails}
             """;
@@ -2192,22 +2192,22 @@ public sealed partial class PrototypeQuickFixService
         return $"""
             {assistantMessage.Trim()}
 
-            Platform engine validation:
-            Goal {goal.GoalIndex} passed Godot smoke validation.
+            平台引擎验收：
+            任务 {goal.GoalIndex} 已通过 Godot smoke 验证。
             """;
     }
 
     private static string BuildValidatedGoalRepairSummary(ProjectIterationGoalSnapshot goal)
     {
         return $"""
-            目标 {goal.GoalIndex} 修复已完成。
+            任务 {goal.GoalIndex} 修复已完成。
 
             平台验收：
-            目标 {goal.GoalIndex} 的最小玩法验收已通过。
+            任务 {goal.GoalIndex} 的最小玩法验收已通过。
 
-            Platform engine validation:
-            Goal {goal.GoalIndex} passed Godot smoke validation.
-            当前目标可以进入下一步。
+            平台引擎验收：
+            任务 {goal.GoalIndex} 已通过 Godot smoke 验证。
+            当前任务可以进入下一步。
             """;
     }
 
@@ -2218,10 +2218,10 @@ public sealed partial class PrototypeQuickFixService
         return $"""
             {assistantMessage.Trim()}
 
-            Platform engine validation:
+            平台引擎验收：
             STATUS: needs_fix
-            VERIFY: Godot smoke validation did not pass.
-            REMAINING: Run and pass Godot smoke validation for the current gameplay goal.
+            VERIFY: Godot smoke 验证未通过。
+            REMAINING: 继续修复当前玩法任务，直到 Godot smoke 验证通过。
             REASON: {validation.Smoke.Reason}
             """;
     }

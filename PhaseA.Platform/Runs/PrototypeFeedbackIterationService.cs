@@ -368,7 +368,7 @@ public sealed class PrototypeFeedbackIterationService
         return $"""
             本轮继续优化已完成。
 
-            本轮目标：
+            本轮任务：
             {feedback}
 
             完成报告：

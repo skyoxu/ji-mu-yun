@@ -265,13 +265,13 @@ public sealed class BrowserUiRenderer
               <script>
                 document.body.classList.add("v2-detail");
                 const v2Steps = [
-                  ["new-project", "游戏项目详情", "panel"],
+                  ["new-project", "游戏项目概述", "panel"],
                   ["create-prototype", "原型骨架创建", "spark"],
                   ["execute-or-repair", "骨架验收修复", "wrench"],
-                  ["iteration-plan", "完成游戏模块", "list"],
+                  ["iteration-plan", "创建游戏模块", "list"],
                   ["ui-optimization", "游戏界面优化", "layout"],
-                  ["prototype-acceptance", "原型验收", "check"],
-                  ["asset-inventory", "确认素材清单", "image"],
+                  ["prototype-acceptance", "原型项目验收", "check"],
+                  ["asset-inventory", "项目素材库", "image"],
                   ["download-project", "打包下载项目", "download"]
                 ];
                 let v2SelectedStep = "new-project";
@@ -621,7 +621,7 @@ public sealed class BrowserUiRenderer
                   const run = v2LatestRunByType("prototype-ui-optimization");
                   if (!run) {
                     status.className = "card muted";
-                    status.textContent = "完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
+                    status.textContent = "创建游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
                     return;
                   }
                   const runStatus = String(run.status || "").toLowerCase();
@@ -862,7 +862,7 @@ public sealed class BrowserUiRenderer
                   const panel = document.createElement("section");
                   panel.id = "v2AcceptancePanel";
                   panel.className = "stack hidden";
-                  panel.innerHTML = "<h2>原型验收结果</h2>";
+                  panel.innerHTML = "<h2>原型项目验收结果</h2>";
                   summary.insertAdjacentElement("beforebegin", panel);
                   panel.appendChild(summary);
                   const actions = document.createElement("div");
@@ -871,14 +871,14 @@ public sealed class BrowserUiRenderer
                   rerun.id = "v2RevalidatePrototype";
                   rerun.className = "secondary";
                   rerun.type = "button";
-                  rerun.textContent = "重新触发原型验收";
+                  rerun.textContent = "重新触发原型项目验收";
                   rerun.onclick = v2ValidatePrototypeIfAllowed;
                   actions.appendChild(rerun);
                   panel.appendChild(actions);
                   const status = document.createElement("div");
                   status.id = "v2AcceptanceActionStatus";
                   status.className = "card muted";
-                  status.textContent = "原型验收入口会在游戏模块完成后启用。游戏界面优化是可选步骤，不会阻塞验收。";
+                  status.textContent = "原型项目验收入口会在游戏模块完成后启用。游戏界面优化是可选步骤，不会阻塞验收。";
                   panel.appendChild(status);
                 }
                 function v2CreateUiOptimizationPanel() {
@@ -890,7 +890,7 @@ public sealed class BrowserUiRenderer
                     <h2>游戏界面优化</h2>
                     <p class="muted">按照当前游戏类型模板重新对齐原型 UI。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。</p>
                     <button id="runUiOptimization" class="secondary" type="button" data-global-action="true">运行游戏界面优化</button>
-                    <div id="uiOptimizationStatus" class="card muted">完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
+                    <div id="uiOptimizationStatus" class="card muted">创建游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
                   `;
                   $("v2AcceptancePanel")?.insertAdjacentElement("beforebegin", panel);
                   $("runUiOptimization").onclick = runUiOptimization;
@@ -902,10 +902,10 @@ public sealed class BrowserUiRenderer
                 }
                 function v2PrototypeAcceptanceBlockReason() {
                   if (!v2IterationPlanAllowsAcceptance()) {
-                    return "请先完成当前游戏模块，所有目标完成后再进行原型验收。";
+                    return "请先完成当前游戏模块，所有任务完成后再进行原型项目验收。";
                   }
                   if (isGlobalBusy()) {
-                    return "当前有任务正在执行，请等待当前 run 完成后再进行原型验收。";
+                    return "当前有任务正在执行，请等待当前 run 完成后再进行原型项目验收。";
                   }
                   return "";
                 }
@@ -917,7 +917,7 @@ public sealed class BrowserUiRenderer
                   rerun.disabled = !!reason;
                   rerun.title = reason || "";
                   status.className = reason ? "card muted" : "card";
-                  status.textContent = reason || "当前已满足原型验收条件，点击按钮会创建一条原型验收 run。";
+                  status.textContent = reason || "当前已满足原型项目验收条件，点击按钮会创建一条原型项目验收 run。";
                 }
                 async function v2ValidatePrototypeIfAllowed() {
                   const reason = v2PrototypeAcceptanceBlockReason();
@@ -1930,21 +1930,21 @@ public sealed class BrowserUiRenderer
                     <p id="selectedProject" class="muted">尚未选择项目。</p>
                     <button id="loadRuns" class="ghost hidden">加载运行记录</button>
                     <button id="refreshPrototypeProgress" class="ghost">刷新原型进度</button>
-                    <button id="validatePrototype" class="ghost" data-global-action="true">重新验收原型</button>
+                    <button id="validatePrototype" class="ghost" data-global-action="true">重新触发原型项目验收</button>
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
-                    <button id="loadAssetInventory" class="ghost" disabled>查看素材清单</button>
+                    <button id="loadAssetInventory" class="ghost" disabled>查看项目素材库</button>
                     <div id="prototypeProgress" class="card muted">尚未开始原型骨架创建。</div>
                     <div id="prototypeAcceptanceSummary" class="card muted">原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
-                    <div id="assetInventoryStatus" class="card muted">final step 完成后可查看项目素材清单。</div>
+                    <div id="assetInventoryStatus" class="card muted">最终任务完成后可查看项目素材库。</div>
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
                     <h2>原型骨架创建</h2>
                     <div class="prototype-draft-row">
                       <label>导入原型草稿 TXT <input id="draftFile" type="file" accept=".txt,text/plain"></label>
-                      <button id="importDraft" class="ghost import-draft-button" data-global-action="true" disabled>分析草稿并回填</button>
+                      <button id="importDraft" class="secondary import-draft-button" data-global-action="true" disabled>分析草稿并回填</button>
                     </div>
                     <div id="draftImportStatus" class="card muted hidden"></div>
                     <label>游戏原型ID <input id="protoSlug" placeholder="demo-prototype"></label>
@@ -1978,15 +1978,15 @@ public sealed class BrowserUiRenderer
                     <label>能力模式 <select id="chatSkillMode"><option value="normal">普通模式</option></select></label>
                     <div id="chatSkillDescription" class="card muted">普通模式：不激活 skills。</div>
                     <h2>主流程：游戏模块</h2>
-                    <p class="muted">推荐流程：先把较大的优化目标拆成 3-7 个小目标，再逐个执行。每次只推进一个目标，完成后停下，由你决定是否继续。</p>
+                    <p class="muted">推荐流程：先把较大的优化任务拆成 3-7 个小任务，再逐个执行。每次只推进一个任务，完成后停下，由你决定是否继续。</p>
                     <button id="createIterationPlan" class="ghost" data-global-action="true">生成游戏模块</button>
                     <button id="evaluateIterationPlan" class="ghost" data-global-action="true">评估当前游戏模块</button>
                     <button id="deleteIterationPlan" class="ghost" data-global-action="true">删除当前轮游戏模块</button>
-                    <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一目标</button>
+                    <button id="executeIterationGoal" class="secondary" data-global-action="true">执行下一任务</button>
                     <p id="iterationAutoRefreshHint" class="muted">执行中会自动刷新进度，你可以停留在当前页面直接查看状态变化。</p>
                     <div id="iterationPlanStatus" class="card muted">尚未生成游戏模块。</div>
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前游戏模块。</div>
-                    <div id="iterationNeedsFixStatus" class="card muted">step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。</div>
+                    <div id="iterationNeedsFixStatus" class="card muted">任务进入“需要修复”后，可在对应任务卡片里启动需要修复路由。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
                     <h2>异常修复计划</h2>
                     <p class="muted">用于把原型或验收失败拆成多个小修复步骤。每次只执行一个修复步骤，最后一步做全量验收。</p>
@@ -2005,7 +2005,7 @@ public sealed class BrowserUiRenderer
                     <button id="createGddDocument" class="ghost" data-global-action="true">&#21019;&#24314;&#31574;&#21010;&#22823;&#32434;</button>
                     <button id="sendChat" class="secondary">发送</button>
                     <button id="evaluateIterationPlanFromChat" class="ghost" data-global-action="true">评估当前计划是否值得继续</button>
-                    <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到 Needs Fix 路由</button>
+                    <button id="submitFormalFeedback" class="ghost" data-global-action="true">提交反馈到需要修复路由</button>
                     <h2>流程记录</h2>
                     <div id="feedbackSummary" class="card muted">尚未生成游戏模块。</div>
                     <div id="feedbackRecords" class="card-list feedback-scroll"></div>
@@ -2441,7 +2441,7 @@ public sealed class BrowserUiRenderer
                   const hasRunnable = goals.some(goal => ["pending", "needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()));
                   $("repairPlanStatus").className = "card";
                   $("repairPlanStatus").innerHTML = `
-                    <strong>${escapeHtml(plan.status || "ready")}</strong>
+                    <strong>${escapeHtml(publicStatusLabel(plan.status || "ready"))}</strong>
                     <p>${escapeHtml(plan.summary || "")}</p>
                     <p class="muted">修复计划 ID：${escapeHtml(plan.sessionId || "")}</p>
                   `;
@@ -2451,7 +2451,7 @@ public sealed class BrowserUiRenderer
                   $("v2SkeletonAcceptance")?.classList.toggle("hidden", hasRunnable);
                   $("repairPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
-                      <strong>repair-step${String(goal.goalIndex || 0).padStart(2, "0")} · ${escapeHtml(goal.status || "pending")}</strong>
+                      <strong>修复任务 ${String(goal.goalIndex || 0).padStart(2, "0")} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
                       <p>${escapeHtml(goal.title || "")}</p>
                       <p class="muted">${escapeHtml(repairGoalDisplayText(goal.description || ""))}</p>
                       ${goal.acceptanceHint ? `<p class="muted">验收：${escapeHtml(goal.acceptanceHint)}</p>` : ""}
@@ -2527,7 +2527,7 @@ public sealed class BrowserUiRenderer
                   $("iterationPlanEvaluation").className = "card muted";
                   $("iterationPlanEvaluation").textContent = "尚未评估当前游戏模块。";
                   $("iterationNeedsFixStatus").className = "card muted";
-                  $("iterationNeedsFixStatus").textContent = "step 进入 needs fix 后，可在对应 step 卡片里启动 Needs Fix 路由。";
+                  $("iterationNeedsFixStatus").textContent = "任务进入“需要修复”后，可在对应任务卡片里启动需要修复路由。";
                   $("iterationPlanGoals").innerHTML = "";
                     $("createIterationPlan").disabled = isGlobalBusy();
                     $("createIterationPlan").textContent = "生成新的游戏模块";
@@ -2563,11 +2563,11 @@ public sealed class BrowserUiRenderer
                   `;
                   $("iterationPlanStatus").className = "card";
                   $("iterationPlanStatus").innerHTML = `
-                    <strong>${escapeHtml(session.status || "ready")}</strong>
+                    <strong>${escapeHtml(publicStatusLabel(session.status || "ready"))}</strong>
                     ${state.iterationPlanFailure ? `<p class="danger">${escapeHtml(state.iterationPlanFailure)}</p>` : ""}
                     <p>${escapeHtml(session.overallGoal || "")}</p>
                     ${session.latestSummary ? `<p class="muted">${escapeHtml(session.latestSummary)}</p>` : ""}
-                    <p class="muted">当前目标序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
+                    <p class="muted">当前任务序号：${escapeHtml(String(session.currentGoalIndex || 0))}</p>
                     ${planningAnalysis ? `<p class="muted">生成依据：${escapeHtml(planningAnalysis.analysisSummary || "")}</p>` : ""}
                     ${planningAnalysis ? `<p class="muted">原型状态：${escapeHtml(planningAnalysis.latestPrototypeStatus || "未知")} · 草稿覆盖率：${escapeHtml(String(planningAnalysis.draftCoveragePercent ?? 0))}%${planningAnalysis.templateId ? ` · 模板：${escapeHtml(planningAnalysis.templateId)}` : ""}</p>` : ""}
                     ${planningAnalysis && Array.isArray(planningAnalysis.fieldCoverage) && planningAnalysis.fieldCoverage.length
@@ -2587,25 +2587,25 @@ public sealed class BrowserUiRenderer
                     ? (!isLatestPlan || isGlobalBusy())
                     : (!isLatestPlan || !hasPending || shouldRefinePlan || blockedByCurrentGoal || isGlobalBusy());
                   $("executeIterationGoal").textContent = hasNeedsFix
-                    ? "运行 Needs Fix 路由"
+                    ? "运行需要修复路由"
                     : shouldRefinePlan
                       ? "建议先重拆游戏模块"
                       : hasPending
-                        ? "执行下一目标"
-                        : "当前没有待执行目标";
+                        ? "执行下一任务"
+                        : "当前没有待执行任务";
                   renderIterationPlanEvaluation();
                   $("iterationNeedsFixStatus").className = hasNeedsFix ? "card" : "card muted";
                   $("iterationNeedsFixStatus").textContent = hasNeedsFix
-                    ? "当前有 step 需要修复。点击对应 step 卡片里的“运行 Needs Fix 路由”会直接提交后台 run。"
-                    : "当前没有 needs fix step。";
+                    ? "当前有任务需要修复。点击对应任务卡片里的“运行需要修复路由”会直接提交后台 run。"
+                    : "当前没有需要修复的任务。";
                   renderChatHistory();
                   const needsFixBusy = isGlobalBusy();
                   const needsFixDisabledAttrs = needsFixBusy ? ` disabled title="有任务正在执行，请等待当前任务执行完毕。"` : "";
                   $("iterationPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
-                      <strong>step ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(goal.status || "pending")}</strong>
+                      <strong>任务 ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
                       ${["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase())
-                        ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行 Needs Fix 路由</button></div>`
+                        ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行需要修复路由</button></div>`
                         : ""}
                       <p>${escapeHtml(goal.title || "")}</p>
                       <p class="muted">${escapeHtml(goal.description || "")}</p>
@@ -2619,8 +2619,8 @@ public sealed class BrowserUiRenderer
                   if (["needs_fix", "failed"].includes(status)) {
                     const details = sanitizePublicFailureContent(goal?.resultSummary || "");
                     return details
-                      ? `该 step 未通过。失败详情：${details}（路径和文件名已隐藏。）请点击 Needs Fix 路由继续修复。`
-                      : "该 step 未通过。失败详情不可展示，请点击 Needs Fix 路由继续修复，后台记录会保留完整证据。";
+                      ? `该任务未通过。失败详情：${details}（路径和文件名已隐藏。）请点击需要修复路由继续修复。`
+                      : "该任务未通过。失败详情不可展示，请点击需要修复路由继续修复，后台记录会保留完整证据。";
                   }
                   return sanitizePublicIterationPlanText(goal?.resultSummary || "");
                 }
@@ -2666,14 +2666,14 @@ public sealed class BrowserUiRenderer
                 function buildNeedsFixFeedbackForUserReport(goal, userFeedback) {
                   const lines = [
                     goal
-                      ? `用户提交了当前目标的报错/修复反馈，请通过 needs-fix 顶层路由处理 step ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`
+                      ? `用户提交了当前任务的报错/修复反馈，请通过 needs-fix 顶层路由处理任务 ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`
                       : "用户提交了报错/修复反馈，请通过 needs-fix 顶层路由处理。如果当前项目还没有可修复目标，请返回明确的前置条件提示，不要生成游戏模块。",
                     "",
                     "用户反馈：",
                     String(userFeedback || "").trim()
                   ];
                   if (goal?.resultSummary) {
-                    lines.push("", "当前目标最近结果：", String(goal.resultSummary).trim());
+                    lines.push("", "当前任务最近结果：", String(goal.resultSummary).trim());
                   }
                   return lines.join("\n").trim();
                 }
@@ -2697,16 +2697,16 @@ public sealed class BrowserUiRenderer
                   const actionHint = decision === "llm_failed"
                     ? "LLM 调用失败，需先修复 LLM 后再继续；系统不会用本地规则替代评估。"
                     : decision === "should_refine_plan"
-                    ? "推荐先点击“重新生成游戏模块”，不要直接执行下一目标。"
+                    ? "推荐先点击“重新生成游戏模块”，不要直接执行下一任务。"
                     : decision === "ready_to_execute"
-                      ? "推荐直接执行下一目标；如果目标变化较大，再重新生成计划。"
+                      ? "推荐直接执行下一任务；如果任务变化较大，再重新生成计划。"
                       : "推荐先处理当前阻塞项，再决定是否继续。";
                   $("iterationPlanEvaluation").className = "card";
                   const safeSummary = sanitizePublicIterationPlanText(evaluation.summary || "");
                   const safeSuggestedAction = sanitizePublicIterationPlanText(evaluation.suggestedAction || "");
                   const safeRegenerationPrompt = sanitizePublicIterationPlanText(evaluation.suggestedPromptForRegeneration || "");
                   $("iterationPlanEvaluation").innerHTML = `
-                    <strong>${escapeHtml(evaluation.decision || "pending")}</strong>
+                    <strong>${escapeHtml(publicDecisionLabel(evaluation.decision || "pending"))}</strong>
                     ${safeSummary ? `<p>${escapeHtml(safeSummary)}</p>` : ""}
                     ${safeSuggestedAction ? `<p class="muted">建议动作：${escapeHtml(safeSuggestedAction)}</p>` : ""}
                     <p class="muted">页面建议：${escapeHtml(actionHint)}</p>
@@ -2730,7 +2730,7 @@ public sealed class BrowserUiRenderer
                     : iterationPlanEvaluationHtml(state.iterationPlanEvaluation);
                   $("iterationPlanUpdateInput").value = initialValue || "";
                   $("iterationPlanUpdateInput").placeholder = isNewPlan
-                    ? "输入第二轮或新一轮迭代目标。"
+                    ? "输入第二轮或新一轮游戏模块任务目标。"
                     : "输入本次更新计划的补充要求；留空时会优先使用评估结果中的重拆建议。";
                   $("confirmIterationPlanUpdate").textContent = isNewPlan ? "创建新的游戏模块" : "更新游戏模块";
                   $("iterationPlanUpdateHint").textContent = isNewPlan
@@ -2952,8 +2952,8 @@ public sealed class BrowserUiRenderer
                   const evaluationDecision = currentIterationPlanDecision();
                   if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆游戏模块，已停止执行旧目标。");
                   if (evaluationDecision === "llm_failed") return out("当前游戏模块评估失败，请先修复评估调用并重新评估计划。");
-                  if (evaluationDecision === "blocked_by_current_goal") return out("当前评估显示已有目标阻塞，请先处理当前阻塞项。");
-                  setLocalBusy(true, "正在执行下一目标，请等待当前任务执行完毕。");
+                  if (evaluationDecision === "blocked_by_current_goal") return out("当前评估显示已有任务阻塞，请先处理当前阻塞项。");
+                  setLocalBusy(true, "正在执行下一任务，请等待当前任务执行完毕。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/iteration-plan/execute-next`, {
                       method: "POST"
@@ -2978,7 +2978,7 @@ public sealed class BrowserUiRenderer
                   if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行游戏界面优化。");
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
-                    return out("请先完成游戏模块，再运行游戏界面优化。");
+                    return out("请先创建游戏模块，再运行游戏界面优化。");
                   }
                   $("uiOptimizationStatus").textContent = "正在运行游戏界面优化，请等待后台任务完成。";
                   setLocalBusy(true, "正在运行游戏界面优化，请等待当前任务执行完毕。");
@@ -3225,7 +3225,7 @@ public sealed class BrowserUiRenderer
                       gddLinks.push(match);
                       return token;
                     })
-                    .replace(/(?:本轮目标：|Direction lock:|Project README:|Recovery source consumed:|Current goal:|Scope rule:)[\s\S]*$/gi, "")
+                    .replace(/(?:本轮目标：|本轮任务：|Direction lock:|方向锁定：|Project README:|Project Execution Guide:|Recovery source consumed:|已读取恢复来源：|Current goal:|当前任务：|Previous platform rejection:|上一轮平台拒绝：|Task repair ledger:|任务修复台账：|User feedback:|用户反馈：|Scope rule:|范围规则：)[\s\S]*$/gi, "")
                     .replace(/(?<![\w])[A-Za-z]:[\\/][^\s`'"，。；：、）)]+/g, "[路径已隐藏]")
                     .replace(/\bres:\/\/[^\s`'"，。；：、）)<]+/gi, "[路径已隐藏]")
                     .replace(/\/(?:gdd-outline|assets|downloads|runs|projects|admin|api|account)(?:\/[^\s`'"，。；：、）)<]*)?(?:\?[^\s`'"，。；：、）)<]*)?/gi, "")
@@ -4260,7 +4260,7 @@ public sealed class BrowserUiRenderer
                     feedback: feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal),
                     goalId: goal?.goalId || null,
                     goalIndex: goal?.goalIndex || null
-                  }, goal ? `Needs Fix 路由执行中 step ${String(goal.goalIndex || "")}...` : "Needs Fix 路由执行中...");
+                  }, goal ? `需要修复路由执行中，任务 ${String(goal.goalIndex || "")}...` : "需要修复路由执行中...");
                 }
 
                 async function continueSuggestedFeedback(messageIndex) {
@@ -4279,7 +4279,7 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (suggestion === "__iteration_plan_execute_next__") {
-                    if (!hasPendingPlan) return out("当前没有可继续执行的目标。");
+                    if (!hasPendingPlan) return out("当前没有可继续执行的任务。");
                     await executeIterationGoal();
                     return;
                   }
@@ -4327,53 +4327,53 @@ public sealed class BrowserUiRenderer
                 function buildNeedsFixFeedbackForGoal(goal) {
                   if (!goal) return "";
                   const parts = [
-                    `请通过 needs-fix 路由处理当前迭代目标 step ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`,
+                    `请通过需要修复路由处理当前迭代任务 ${String(goal.goalIndex || "").trim()}：${String(goal.title || "").trim()}`,
                     String(goal.description || "").trim(),
                     goal.acceptanceHint ? `本步验收提示：${String(goal.acceptanceHint || "").trim()}` : "",
-                    "要求：由系统判断当前目标是否适合短修；只围绕当前 step 本身处理，不要推进后续目标。"
+                    "要求：由系统判断当前任务是否适合短修；只围绕当前任务本身处理，不要推进后续任务。"
                   ].filter(Boolean);
                   return parts.join("\n");
                 }
 
                 async function runNeedsFixIterationGoal(goalIndex) {
                   $("iterationNeedsFixStatus").className = "card muted";
-                  $("iterationNeedsFixStatus").textContent = `正在准备提交 step ${String(goalIndex || "").trim()} 的 Needs Fix 路由...`;
+                  $("iterationNeedsFixStatus").textContent = `正在准备提交任务 ${String(goalIndex || "").trim()} 的需要修复路由...`;
                   await refreshActiveRun();
                   if (isGlobalBusy()) {
                     $("iterationNeedsFixStatus").className = "card muted";
-                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。";
-                    return out("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。";
+                    return out("当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。");
                   }
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   const goal = goals.find(item => String(item.goalIndex) === String(goalIndex));
                   if (!goal) {
                     $("iterationNeedsFixStatus").className = "card";
-                    $("iterationNeedsFixStatus").textContent = "未找到需要 needs-fix 处理的目标，请刷新游戏模块后再试。";
-                    return out("未找到需要 needs-fix 处理的目标。");
+                    $("iterationNeedsFixStatus").textContent = "未找到需要修复处理的任务，请刷新游戏模块后再试。";
+                    return out("未找到需要修复处理的任务。");
                   }
                   const feedback = buildNeedsFixFeedbackForGoal(goal);
                   if (!feedback) {
                     $("iterationNeedsFixStatus").className = "card";
-                    $("iterationNeedsFixStatus").textContent = "当前目标缺少可用于 needs-fix 路由的内容。";
-                    return out("当前目标缺少可用于 needs-fix 路由的内容。");
+                    $("iterationNeedsFixStatus").textContent = "当前任务缺少可用于需要修复路由的内容。";
+                    return out("当前任务缺少可用于需要修复路由的内容。");
                   }
                   await submitNeedsFixRouteRequest({
                     feedback,
                     goalId: goal.goalId || "",
                     goalIndex: Number(goal.goalIndex || 0)
-                  }, `Needs Fix 路由执行中 step ${String(goal.goalIndex)}...`);
+                  }, `需要修复路由执行中，任务 ${String(goal.goalIndex)}...`);
                 }
 
                 async function submitNeedsFixRouteRequest(payload, busyText) {
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (isGlobalBusy()) {
                     $("iterationNeedsFixStatus").className = "card muted";
-                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。";
-                    return out("当前有任务正在执行，请等待当前 run 完成后再启动 Needs Fix 路由。");
+                    $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。";
+                    return out("当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。");
                   }
                   setLocalBusy(true);
                   $("iterationNeedsFixStatus").className = "card muted";
-                  $("iterationNeedsFixStatus").textContent = busyText || "Needs Fix 路由已提交，正在等待后台 run 创建。";
+                  $("iterationNeedsFixStatus").textContent = busyText || "需要修复路由已提交，正在等待后台 run 创建。";
                   $("submitFormalFeedback").disabled = true;
                   try {
                     const feedback = String(payload?.feedback || "").trim();
@@ -4393,7 +4393,7 @@ public sealed class BrowserUiRenderer
                     const needsMoreFix = goalStatus === "needs_fix" || goalStatus === "failed" || routeStatus === "needs_fix" || routeStatus === "failed";
                     out(result);
                     $("iterationNeedsFixStatus").className = needsMoreFix ? "card" : "card muted";
-                    $("iterationNeedsFixStatus").textContent = result.summary || (needsMoreFix ? "Needs Fix 路由已执行，但当前 step 仍需继续修复。" : "Needs Fix 路由已完成。");
+                    $("iterationNeedsFixStatus").textContent = result.summary || (needsMoreFix ? "需要修复路由已执行，但当前任务仍需继续修复。" : "需要修复路由已完成。");
                     await loadRuns();
                     await loadIterationPlan();
                   } catch (error) {
@@ -4922,7 +4922,7 @@ public sealed class BrowserUiRenderer
                   if (projectHealth) renderProjectHealth(projectHealth);
                   $("runs").innerHTML = (state.runs || []).map(r => `
                     <button class="card ghost" data-run="${r.runId}">
-                      <strong>${escapeHtml(r.runType)} · ${escapeHtml(r.status)}</strong>
+                      <strong>${escapeHtml(r.runType)} · ${escapeHtml(publicStatusLabel(r.status))}</strong>
                       <span class="muted">${escapeHtml(r.runId)}</span>
                     </button>
                   `).join("") || "<p class='muted'>还没有运行记录。</p>";
@@ -4942,13 +4942,13 @@ public sealed class BrowserUiRenderer
                       const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
                       return `
                         <div class="${cardClass}">
-                          <strong>目标 ${escapeHtml(String(record.goal.goalIndex))} · ${escapeHtml(record.goal.title || "")}</strong>
+                          <strong>任务 ${escapeHtml(String(record.goal.goalIndex))} · ${escapeHtml(record.goal.title || "")}</strong>
                           <div class="goal-badges">
                             ${goalBadge(statusLabel(record.goal.status), `goal-badge-${normalizeGoalStatus(record.goal.status)}`)}
-                            ${isCurrent ? goalBadge("当前目标", "goal-badge-current") : ""}
-                            ${isNext ? goalBadge("下一目标", "goal-badge-next") : ""}
+                            ${isCurrent ? goalBadge("当前任务", "goal-badge-current") : ""}
+                            ${isNext ? goalBadge("下一任务", "goal-badge-next") : ""}
                           </div>
-                          <span class="muted">${escapeHtml(run?.status || "未执行")}</span>
+                          <span class="muted">${escapeHtml(publicStatusLabel(run?.status || "pending"))}</span>
                           ${record.goal.resultSummary ? `<p>${escapeHtml(publicIterationGoalResultSummary(record.goal))}</p>` : "<p class='muted'>该目标尚未产出结果摘要。</p>"}
                           ${run ? `<p class="muted">Run: ${escapeHtml(run.runId)}</p>` : "<p class='muted'>该目标尚未关联执行记录。</p>"}
                           <p>${downloads || "暂无可下载日志"}</p>
@@ -4964,7 +4964,7 @@ public sealed class BrowserUiRenderer
                     const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
                     return `
                       <div class="card">
-                        <strong>第 ${feedbackRuns.length - index} 次正式反馈 · ${escapeHtml(run.status)}</strong>
+                        <strong>第 ${feedbackRuns.length - index} 次正式反馈 · ${escapeHtml(publicStatusLabel(run.status))}</strong>
                         <span class="muted">${escapeHtml(run.runId)}</span>
                         <p>${downloads || "暂无可下载日志"}</p>
                       </div>
@@ -4985,9 +4985,9 @@ public sealed class BrowserUiRenderer
                     $("feedbackSummary").className = "card";
                     $("feedbackSummary").innerHTML = `
                       <strong>计划摘要</strong>
-                      <p class="muted">总目标数：${escapeHtml(String(goals.length))} · 已完成：${escapeHtml(String(completedGoals))}</p>
-                      <p class="muted">当前目标：${currentGoal ? escapeHtml(`step ${currentGoal.goalIndex} · ${currentGoal.title || ""}`) : "暂无"}</p>
-                      <p class="muted">下一目标：${needsFixGoal ? "请先修复当前目标" : nextGoal ? escapeHtml(`step ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
+                      <p class="muted">总任务数：${escapeHtml(String(goals.length))} · 完成：${escapeHtml(String(completedGoals))}</p>
+                      <p class="muted">当前任务：${currentGoal ? escapeHtml(`任务 ${currentGoal.goalIndex} · ${currentGoal.title || ""}`) : "暂无"}</p>
+                      <p class="muted">下一任务：${needsFixGoal ? "请先修复当前任务" : nextGoal ? escapeHtml(`任务 ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
                       ${renderFeedbackPrimaryAction()}
                     `;
                     const primaryActionButton = $("feedbackPrimaryAction");
@@ -5032,7 +5032,7 @@ public sealed class BrowserUiRenderer
                     return { label: "继续评估当前计划", action: "evaluate", source: "目标执行结果", disabled: isGlobalBusy() };
                   }
                   if (decision === "ready_to_execute") {
-                    return { label: "继续当前迭代目标", action: "execute", source: "当前计划评估", disabled: isGlobalBusy() };
+                    return { label: "继续当前任务", action: "execute", source: "当前计划评估", disabled: isGlobalBusy() };
                   }
                   return { label: "", action: "", source: "", disabled: true };
                 }
@@ -5112,13 +5112,37 @@ public sealed class BrowserUiRenderer
                   return "pending";
                 }
 
-                function statusLabel(value) {
+                function publicGoalStatusLabel(value) {
                   const normalized = normalizeGoalStatus(value);
-                  if (normalized === "succeeded") return "已完成";
-                  if (normalized === "running") return "进行中";
-                  if (normalized === "failed") return "失败";
-                  if (normalized === "needs-fix") return "需修复";
+                  if (normalized === "succeeded") return "完成";
+                  if (normalized === "running") return "执行中";
+                  if (normalized === "failed") return "需要修复";
+                  if (normalized === "needs-fix") return "需要修复";
                   return "待执行";
+                }
+
+                function statusLabel(value) {
+                  return publicGoalStatusLabel(value);
+                }
+
+                function publicStatusLabel(value) {
+                  const normalized = String(value || "").trim().toLowerCase().replace(/_/g, "-");
+                  if (normalized === "succeeded" || normalized === "completed" || normalized === "done") return "完成";
+                  if (normalized === "needs-fix" || normalized === "failed" || normalized === "fix") return "需要修复";
+                  if (normalized === "pending" || normalized === "queued" || normalized === "ready" || normalized === "idle") return "待执行";
+                  if (normalized === "running" || normalized === "preparing" || normalized === "repairing") return "执行中";
+                  if (normalized === "paused-for-review") return "等待确认";
+                  if (normalized === "cancel") return "已取消";
+                  return value || "待执行";
+                }
+
+                function publicDecisionLabel(value) {
+                  const normalized = String(value || "").trim().toLowerCase();
+                  if (normalized === "ready_to_execute") return "可以执行";
+                  if (normalized === "should_refine_plan") return "建议重拆";
+                  if (normalized === "blocked_by_current_goal") return "当前任务阻塞";
+                  if (normalized === "llm_failed") return "模型调用失败";
+                  return publicStatusLabel(value);
                 }
 
                 function goalBadge(text, className) {
@@ -5160,7 +5184,7 @@ public sealed class BrowserUiRenderer
                     return `\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
                   }
                   const label = run.progressLabel || run.progressStep || run.status || "";
-                  return `当前任务执行中：${run.runType || "未知"} · ${run.status || "running"} · ${run.runId || ""}${label ? " · " + label : ""}`;
+                  return `当前任务执行中：${run.runType || "未知"} · ${publicStatusLabel(run.status || "running")} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
 
                 function canCancelActiveRun(run) {
@@ -5447,7 +5471,7 @@ public sealed class BrowserUiRenderer
                   }
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
                   if (reason === "iteration_plan_not_completed") return "游戏模块完成后才可以打包项目文件。";
-                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型项目验收并通过，才可以打包项目文件。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
                 }
@@ -5473,7 +5497,7 @@ public sealed class BrowserUiRenderer
                   } catch {
                     $("loadAssetInventory").disabled = true;
                     $("assetInventoryStatus").className = "card muted";
-                    $("assetInventoryStatus").textContent = "素材清单暂不可用。";
+                    $("assetInventoryStatus").textContent = "项目素材库暂不可用。";
                   }
                 }
 
@@ -5492,7 +5516,7 @@ public sealed class BrowserUiRenderer
                   $("loadAssetInventory").title = canRead ? "" : assetInventoryDisabledText(result?.disabledReason);
                   if (!state.projectId) {
                     $("assetInventoryStatus").className = "card muted";
-                    $("assetInventoryStatus").textContent = "选择项目后显示素材清单入口。";
+                    $("assetInventoryStatus").textContent = "选择项目后显示项目素材库入口。";
                     return;
                   }
                   if (!result?.canReadInventory) {
@@ -5504,12 +5528,12 @@ public sealed class BrowserUiRenderer
                   const candidates = result.generationCandidates || [];
                   if (!expanded) {
                     $("assetInventoryStatus").className = "card";
-                    $("assetInventoryStatus").innerHTML = `<strong>素材清单可用</strong><p class="muted">已识别 ${escapeHtml(String(usedAssets.length))} 个素材实例，${escapeHtml(String(candidates.length))} 个可生成素材候选。点击“查看素材清单”展开。</p>`;
+                    $("assetInventoryStatus").innerHTML = `<strong>项目素材库可用</strong><p class="muted">已识别 ${escapeHtml(String(usedAssets.length))} 个素材实例，${escapeHtml(String(candidates.length))} 个可生成素材候选。点击“查看项目素材库”展开。</p>`;
                     return;
                   }
                   $("assetInventoryStatus").className = "card";
                   $("assetInventoryStatus").innerHTML = `
-                    <strong>项目素材清单</strong>
+                    <strong>项目素材库</strong>
                     <p class="muted">已使用素材实例：${escapeHtml(String(usedAssets.length))} 个；可生成素材候选：${escapeHtml(String(candidates.length))} 个。</p>
                     <h2>已使用素材</h2>
                     <div class="asset-grid">${usedAssets.length ? usedAssets.map(renderUsedAssetItem).join("") : "<p class='muted'>未识别到可预览素材引用。</p>"}</div>
@@ -5546,9 +5570,9 @@ public sealed class BrowserUiRenderer
                 }
 
                 function assetInventoryDisabledText(reason) {
-                  if (reason === "final_step_not_completed") return "final step 完成后才可以查看素材清单。";
+                  if (reason === "final_step_not_completed") return "最终任务完成后才可以查看项目素材库。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
-                  return "素材清单暂不可用。";
+                  return "项目素材库暂不可用。";
                 }
 
                 async function runPrototype() {
@@ -5667,7 +5691,7 @@ public sealed class BrowserUiRenderer
                     await loadProjectPackages();
                     await refreshAssetInventoryAvailability();
                     if (result.status === "failed") {
-                      const label = result.progress?.label || result.stderr || "原型验收失败，请查看运行记录并生成修复计划。";
+                      const label = result.progress?.label || result.stderr || "原型项目验收失败，请查看运行记录并生成修复计划。";
                       showPrototypeNotice(label, "warn");
                     }
                   } catch (error) {
@@ -5675,7 +5699,7 @@ public sealed class BrowserUiRenderer
                     await loadPrototypeProgress();
                   } finally {
                     setLocalBusy(false);
-                    $("validatePrototype").textContent = "重新验收原型";
+                    $("validatePrototype").textContent = "重新触发原型项目验收";
                     await refreshActiveRun();
                   }
                 }
@@ -5713,9 +5737,9 @@ public sealed class BrowserUiRenderer
                   const statusClass = status === "succeeded" ? "status-ok" : status === "failed" ? "status-fail" : "status-warn";
                   $("prototypeProgress").className = "card";
                   $("prototypeProgress").innerHTML = `
-                    <strong class="${statusClass}">${escapeHtml(status)}</strong>
+                    <strong class="${statusClass}">${escapeHtml(publicStatusLabel(status))}</strong>
                     <p>${escapeHtml(progress.label || "")}</p>
-                    <p class="muted">step：${escapeHtml(progress.step || "-")} · substep：${escapeHtml(progress.substep || "-")}</p>
+                    <p class="muted">任务：${escapeHtml(progress.step || "-")} · 子任务：${escapeHtml(progress.substep || "-")}</p>
                     ${progress.updatedUtc ? `<p class="muted">更新时间：${escapeHtml(progress.updatedUtc)}</p>` : ""}
                     ${progress.failure ? `<p class="danger">${escapeHtml(sanitizePublicFailureContent(progress.failure))}</p><p class="danger">可以点击“生成修复计划”把失败拆成小步骤，再逐项执行修复。</p>` : ""}
                   `;
@@ -5725,10 +5749,10 @@ public sealed class BrowserUiRenderer
                 function renderPrototypeAcceptanceSummary(progress) {
                   const status = progress?.status || "idle";
                   if (status === "failed") {
-                    const failure = sanitizePublicFailureContent(progress?.failure || "原型验收未通过。");
+                    const failure = sanitizePublicFailureContent(progress?.failure || "原型项目验收未通过。");
                     $("prototypeAcceptanceSummary").className = "card";
                     $("prototypeAcceptanceSummary").innerHTML = `
-                      <strong>原型验收摘要</strong>
+                      <strong>原型项目验收摘要</strong>
                       <p class="danger">${escapeHtml(failure)}</p>
                       <p class="muted">当前项目尚未满足原型成功标准，暂不展示默认场景、验证摘要和试玩重点。</p>
                     `;
@@ -5750,7 +5774,7 @@ public sealed class BrowserUiRenderer
                   const focusPoints = Array.isArray(progress?.playtestFocusPoints) ? progress.playtestFocusPoints.filter(Boolean) : [];
                   $("prototypeAcceptanceSummary").className = "card";
                   $("prototypeAcceptanceSummary").innerHTML = `
-                    <strong>原型验收摘要</strong>
+                    <strong>原型项目验收摘要</strong>
                     <p class="muted">默认场景：${escapeHtml(defaultScene)}</p>
                     <p class="muted">验证摘要：共 ${escapeHtml(String(tddSummaryCount))} 份 · 红灯 ${escapeHtml(String(redCount))} · 绿灯 ${escapeHtml(String(greenCount))} · 重构 ${escapeHtml(String(refactorCount))}</p>
                     <p class="muted">下一步建议来源：${escapeHtml(nextStepSource)}</p>
@@ -5777,8 +5801,8 @@ public sealed class BrowserUiRenderer
                   $("submitFormalFeedback").textContent = !canSubmit
                     ? "需先完成原型骨架创建后才能提交反馈"
                     : routeGoal
-                      ? `提交到 Needs Fix 路由 step ${String(routeGoal.goalIndex || "")}`
-                      : "提交反馈到 Needs Fix 路由";
+                      ? `提交到需要修复路由任务 ${String(routeGoal.goalIndex || "")}`
+                      : "提交反馈到需要修复路由";
                   renderChatHistory();
                 }
 
@@ -5807,7 +5831,7 @@ public sealed class BrowserUiRenderer
                     const suggestion = defaultNextSuggestedFeedback();
                     state.nextSuggestedFeedback = suggestion;
                     setFormalFeedbackAvailability(true);
-                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如需执行，请使用游戏模块或 Needs Fix 的固定功能按钮。`.trim();
+                    return `下一步建议来源：${formatNextStepSource(progress?.nextStepSource)}\n继续优化评估：${formatNextStepEvaluation(progress?.nextStepEvaluation)}\n${String(progress?.nextStepEvaluationReason || "").trim()}\n\n原型创建完成。\n\n本次完成：\n1. 已生成可玩的原型基础版本。\n2. 已完成基础启动检查。\n3. 已进入可继续优化状态。\n\n下一步建议：\n${suggestion}\n\n如需执行，请使用游戏模块或需要修复的固定功能按钮。`.trim();
                   }
                   if (status === "failed") {
                     return "原型创建未完成。你可以描述看到的问题，我可以帮你整理修复思路；需要执行修复时，请使用固定的修复按钮。";
@@ -6122,7 +6146,7 @@ public sealed class BrowserUiRenderer
 
         return
         [
-            new ProjectDetailStep(1, "游戏项目详情", "done", "/", "✓"),
+            new ProjectDetailStep(1, "游戏项目概述", "done", "/", "✓"),
             CreateRunStep(2, "原型骨架创建", latestPrototype, "/#prototypeWorkflowPanel"),
             prototypeFailed && latestRepair is null
                 ? new ProjectDetailStep(3, "骨架验收修复", "fix", "/#v2RepairPanel", "×")
@@ -6131,10 +6155,10 @@ public sealed class BrowserUiRenderer
                     : prototypeSucceeded
                         ? new ProjectDetailStep(3, "骨架验收修复", "done", "/#v2RepairPanel", "✓")
                         : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(4, "完成游戏模块", latestIteration, "/#v2IterationPanel"),
+            CreateRunStep(4, "创建游戏模块", latestIteration, "/#v2IterationPanel"),
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
             CreateAcceptanceStep(6, runs, latestIteration, "/#v2AcceptancePanel"),
-            CreateRunStep(7, "确认素材清单", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
+            CreateRunStep(7, "项目素材库", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
             CreateRunStep(8, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
     }
@@ -6152,14 +6176,14 @@ public sealed class BrowserUiRenderer
             !string.Equals(latestIterationRun.Status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
             RunSortTimeUtc(latestValidation) < RunSortTimeUtc(latestIterationRun))
         {
-            return new ProjectDetailStep(number, "原型验收", "pending", href, "");
+            return new ProjectDetailStep(number, "原型项目验收", "pending", href, "");
         }
 
         return latestValidation.Status switch
         {
-            "succeeded" => new ProjectDetailStep(number, "原型验收", "done", href, "✓"),
-            "failed" => new ProjectDetailStep(number, "原型验收", "fix", href, "×"),
-            _ => new ProjectDetailStep(number, "原型验收", "pending", href, "")
+            "succeeded" => new ProjectDetailStep(number, "原型项目验收", "done", href, "✓"),
+            "failed" => new ProjectDetailStep(number, "原型项目验收", "fix", href, "×"),
+            _ => new ProjectDetailStep(number, "原型项目验收", "pending", href, "")
         };
     }
 
@@ -6596,7 +6620,7 @@ public sealed class BrowserUiRenderer
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
                   if (reason === "iteration_plan_not_completed") return "游戏模块完成后才可以打包项目文件。";
-                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型验收并通过，才可以打包项目文件。";
+                  if (reason === "prototype_acceptance_not_passed") return "游戏模块完成后，需要重新进行原型项目验收并通过，才可以打包项目文件。";
                   return "当前暂不能生成新的项目文件包。";
                 }
                 async function downloadPackage(button, downloadUrl, fileName) {
@@ -6800,7 +6824,7 @@ public sealed class BrowserUiRenderer
                     <button id="refreshAssetLibraryButton" class="ghost" type="button">刷新素材库</button>
                   </div>
                 </header>
-                <section id="status" class="card muted">正在读取素材清单...</section>
+                <section id="status" class="card muted">正在读取项目素材库...</section>
                 <section class="card">
                   <h2>已使用素材</h2>
                   <div id="usedAssets" class="grid"></div>
@@ -7027,10 +7051,10 @@ public sealed class BrowserUiRenderer
                 }
 
                 function assetInventoryDisabledText(reason) {
-                  if (reason === "final_step_not_completed") return "final step 完成后才可以查看素材清单。";
+                  if (reason === "final_step_not_completed") return "最终任务完成后才可以查看项目素材库。";
                   if (reason === "project_busy") return "项目正在运行，请稍后再试。";
                   if (reason === "project_not_selected") return "请先选择项目。";
-                  return "素材清单暂不可用。";
+                  return "项目素材库暂不可用。";
                 }
 
                 function renderCandidates(items) {
@@ -7247,11 +7271,11 @@ public sealed class BrowserUiRenderer
                     writeAssetCache();
                     if ($("referenceImageFile")) $("referenceImageFile").value = "";
                     if (payload.status !== "succeeded") {
-                      $("status").textContent = `素材生成未完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
+                      $("status").textContent = `素材生成未完成，调用：${payload.actionId || "skill"}，状态：${publicStatusLabel(payload.status || "unknown")}。`;
                       await renderAssetData($("status").textContent);
                       return;
                     }
-                    $("status").textContent = `素材生成已完成，调用：${payload.actionId || "skill"}，状态：${payload.status || "unknown"}。`;
+                    $("status").textContent = `素材生成已完成，调用：${payload.actionId || "skill"}，状态：${publicStatusLabel(payload.status || "unknown")}。`;
                     await renderAssetData($("status").textContent);
                     showAssetHistory(unit.unitKey);
                   } catch (error) {

@@ -42,7 +42,7 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Goals[3].Title.Should().Contain("最终全量验收");
         stateJson.GetProperty("route").GetString().Should().Be("repair-plan");
         stateJson.GetProperty("route_skill").GetProperty("routeSkillId").GetString().Should().Be("prototype-rpg-godot-zh");
-        stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复步骤");
+        stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复任务");
         stateJson.GetProperty("goals").GetArrayLength().Should().Be(4);
         stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().NotContain("Permission denied");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
@@ -70,10 +70,10 @@ public sealed class PrototypeRepairPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(6);
-        result.Goals[0].Title.Should().Be("RPG Repair Step 1: Start Adventure to visible MapScene");
-        result.Goals[1].Title.Should().Contain("movement and first encounter");
+        result.Goals[0].Title.Should().Be("修复任务 1：Start Adventure 到可见 MapScene");
+        result.Goals[1].Title.Should().Contain("移动与第一次遇敌");
         result.Goals[2].Title.Should().Contain("BattleScene");
-        result.Goals[3].Title.Should().Contain("reward 3-choice");
+        result.Goals[3].Title.Should().Contain("\u5956\u52b1 3 \u9009 1");
         result.Goals[0].Title.Should().NotContain("证据");
         result.Goals[0].Title.Should().NotContain("TDD");
         codex.LastPrompt.Should().Contain("Use only the data provided in this prompt.");
@@ -130,10 +130,10 @@ public sealed class PrototypeRepairPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(3);
-        result.Goals[0].Title.Should().Contain("Step 07");
+        result.Goals[0].Title.Should().Contain("第 7 步最终摘要");
         result.Goals[0].Description.Should().Contain("interrupted_by_service_restart");
         result.Goals[0].Description.Should().NotContain("MapScene entry");
-        result.Goals[1].Title.Should().Contain("Revalidate existing RPG playable evidence");
+        result.Goals[1].Title.Should().Contain("重新验证现有 RPG 可玩证据");
         codex.LastPrompt.Should().BeNull();
     }
 
@@ -157,7 +157,7 @@ public sealed class PrototypeRepairPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(4);
-        result.Goals[0].Title.Should().Contain("Build cleanup");
+        result.Goals[0].Title.Should().Contain("构建清理");
         result.Goals[0].Description.Should().Contain("CS0579");
         result.Goals[0].Description.Should().Contain("obj/bin/buildcache");
         result.Goals[0].Title.Should().NotContain("Start Adventure");
@@ -184,13 +184,13 @@ public sealed class PrototypeRepairPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(4);
-        result.Goals[0].Title.Should().NotContain("Build cleanup");
-        result.Goals[0].Title.Should().Contain("scene/script node contract");
+        result.Goals[0].Title.Should().NotContain("构建清理");
+        result.Goals[0].Title.Should().Contain("场景/脚本节点合同");
         result.Goals[0].Description.Should().Contain("BattleStatusLabel");
         result.Goals[0].Description.Should().Contain(".godot/mono/temp/obj/Debug");
         result.Goals[1].Title.Should().Contain("Start Adventure");
         result.Goals[1].Title.Should().NotContain("BattleScene");
-        result.Goals[1].AcceptanceHint.Should().Contain("BattleScene is part of this smoke only when battle/conflict capability is selected or named by the latest failure");
+        result.Goals[1].AcceptanceHint.Should().Contain("BattleScene 仅在战斗/冲突能力被选择或最新失败点名时属于本次 smoke 范围");
     }
 
     [Fact]
@@ -241,14 +241,14 @@ public sealed class PrototypeRepairPlanServiceTests
 
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(5);
-        result.Goals[0].Title.Should().Contain("runtime assets");
+        result.Goals[0].Title.Should().Contain("运行素材");
         result.Goals[0].Description.Should().NotContain("showcase_map_overworld.png");
-        result.Goals[1].Title.Should().Contain("scene node contract");
+        result.Goals[1].Title.Should().Contain("场景节点合同");
         result.Goals[1].Description.Should().Contain("RpgEnemyAsset");
         result.Goals[2].Description.Should().Contain("_UnhandledInput");
-        result.Goals[3].Description.Should().Contain("15-battle victory");
+        result.Goals[3].Description.Should().Contain("15 场战斗胜利");
         result.Goals[3].Description.Should().NotContain("5 battles");
-        result.Goals[3].Description.Should().NotContain("5 场");
+        result.Goals[3].Description.Should().NotContain(" 5 场");
         result.Goals[4].Description.Should().Contain("tests/Prototype/DqRpgPrototype");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         details!.Session.SourceMessage.Should().Contain("showcase_map_overworld.png");
@@ -276,7 +276,7 @@ public sealed class PrototypeRepairPlanServiceTests
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(3);
         result.Goals[0].Title.Should().Contain("恢复原型运行证据");
-        result.Goals[0].Description.Should().Contain("default prototype route skill");
+        result.Goals[0].Description.Should().Contain("默认原型路由技能");
         result.Goals[0].Description.Should().NotContain("Permission denied");
         result.Goals[1].Title.Should().Contain("修复通用原型合同缺口");
         result.Goals[2].Title.Should().Contain("最终全量验收");
@@ -325,7 +325,7 @@ public sealed class PrototypeRepairPlanServiceTests
         var result = await service.ExecuteNextAsync(accountId, projectId, new PrototypeRepairStepExecutionRequest());
 
         result.GoalIndex.Should().Be(1);
-        runner.LastPrompt.Should().Contain("这是目标级 needs-fix 修复，不是 90 秒快速修复");
+        runner.LastPrompt.Should().Contain("这是任务级 needs-fix 修复，不是 90 秒快速修复");
         runner.LastPrompt.Should().Contain("Run the execute-repair-step top-level route.");
         runner.LastPrompt.Should().Contain("Repair evidence context:");
         runner.LastPrompt.Should().Contain("Permission denied");
@@ -446,7 +446,7 @@ public sealed class PrototypeRepairPlanServiceTests
             runId,
             "failed",
             500,
-            "Step 07: generating final summary.",
+            "第 7 步：正在生成最终摘要。",
             "Run was interrupted because the service restarted before completion.",
             "{\"failure_code\":\"interrupted_by_service_restart\",\"reason\":\"service_restart_recovery\"}");
     }

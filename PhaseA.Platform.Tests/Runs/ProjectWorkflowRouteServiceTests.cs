@@ -50,7 +50,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.NextAction.ActionId.Should().Be("execute-iteration-goal");
-        result.Recommendation.Should().Contain("当前游戏模块还有待执行 step");
+        result.Recommendation.Should().Contain("当前游戏模块还有待执行任务");
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.NextAction.ActionId.Should().Be("needs-fix-route");
-        result.Recommendation.Should().Contain("存在 needs fix 或 failed");
+        result.Recommendation.Should().Contain("存在“需要修复”的任务");
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         result!.NextAction.ActionId.Should().Be("prototype-acceptance");
         result.Steps.Single(step => step.Id == "prototype-acceptance").Status.Should().Be("pending");
         result.Recommendation.Should().Contain("游戏模块已经完成");
-        result.Recommendation.Should().Contain("重新进行原型验收");
+        result.Recommendation.Should().Contain("重新进行原型项目验收");
     }
 
     [Fact]

@@ -70,7 +70,7 @@ public sealed class PrototypeNeedsFixRouteService
             : "";
         if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState) && string.IsNullOrWhiteSpace(prototypeState))
         {
-            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用 Needs Fix 路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
+            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用需要修复路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
         var repairLedger = string.IsNullOrWhiteSpace(stepState) && !string.IsNullOrWhiteSpace(rawStepState)
@@ -510,17 +510,17 @@ public sealed class PrototypeNeedsFixRouteService
                 ? executeNextGoalState
                 : prototypeState);
         return $"""
-            Run the needs fix top-level route for the current prototype iteration step.
+            运行当前游戏模块任务的 needs-fix 顶层修复路由。
 
-            Direction lock:
-            - The repair target is only the Current goal below.
-            - Use Prototype Chapter 6 Lite semantics: one-step repair plus route state/ledger; no Taskmaster triplets, formal acceptance files, overlays, contracts, or review pipeline artifacts.
-            - Project README, Project Execution Guide, and Recovery source are read-only recovery context, not repair targets.
-            - The Project Execution Guide is the project-level /new recovery protocol.
-            - Do not repair Phase A routing, recovery, docs, scripts, deployment, or tests unless the Current goal asks for that.
-            - Gameplay/Godot/RPG goals: repair gameplay files only and verify AcceptanceHint.
-            - Exception: if the latest platform acceptance blocker is core_tests_failed, missing Xunit/FluentAssertions/package references, or hosted test project compile failure, repair hosted test project/package/reference files first.
-            - Platform route or recovery tests passing does not prove a gameplay goal is complete.
+            方向锁定：
+            - 本轮修复目标只能是下面的当前任务。
+            - 使用 Prototype Chapter 6 Lite 语义：一次只修复一个任务，并更新路由状态/台账；不要创建 Taskmaster 三联任务、正式验收文件、overlays、contracts 或 review pipeline 产物。
+            - Project README、Project Execution Guide 和恢复来源只作为只读恢复上下文，不是修复目标。
+            - Project Execution Guide 是项目级 /new 恢复协议。
+            - 除非当前任务明确要求，不要修 Phase A 路由、恢复逻辑、文档、脚本、部署或测试。
+            - 玩法/Godot/RPG 任务只修游戏文件，并按 AcceptanceHint 验证。
+            - 例外：如果最新平台验收阻塞是 core_tests_failed、缺少 Xunit/FluentAssertions/package references 或托管测试项目编译失败，先修托管测试项目/包/引用文件。
+            - 平台路由或恢复测试通过，不代表玩法任务已经完成。
 
             Project README:
             {TrimForPrompt(projectReadme, 220)}
@@ -535,29 +535,30 @@ public sealed class PrototypeNeedsFixRouteService
             - ContractPath: {prototypeContract.RelativePath}
             - Rule: preserve contract traceability; do not override user form values with template defaults.
 
-            Current goal:
+            当前任务：
             - GoalIndex: {goal.GoalIndex}
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
             - PreviousResultSummary: {BuildCompactSummary(goal.ResultSummary, 120)}
 
-            Previous platform rejection:
+            上一轮平台拒绝：
             {previousPlatformRejection}
 
-            Step repair ledger:
+            任务修复台账：
             {repairLedger}
 
-            Recovery source consumed: {sourceLabel}
+            已读取恢复来源：{sourceLabel}
             {TrimForPrompt(sourceState, 80)}
 
-            User feedback:
+            用户反馈：
             {userFeedback?.Trim()}
 
-            Scope rule:
-            Only repair this current step. Do not read or use needs fix state from another step.
-            Current platform acceptance overrides previous rejection and repair ledger. Ledger is continuity memory, not live-validation authority.
-            If acceptance still reports core_tests_failed or missing test framework references, do not output STATUS: completed before fixing hosted files.
+            范围规则：
+            只修复当前任务。不要读取或使用其他任务的 needs-fix 状态。
+            当前平台验收结果优先于上一轮拒绝和修复台账。台账只作为连续修复记忆，不是实时验收权威。
+            如果验收仍报告 core_tests_failed 或缺少测试框架引用，在修复托管文件前不要输出 STATUS: completed。
+            面向浏览器用户的输出必须使用简体中文。只有 STATUS: completed|needs_fix 这类机器协议值保持英文。
 
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             """;
@@ -575,13 +576,14 @@ public sealed class PrototypeNeedsFixRouteService
             Run the needs fix top-level route for a project-level runtime issue.
 
             Direction lock:
-            - This request is still needs-fix-route, but it is not bound to a single iteration step.
+            - This request is still needs-fix-route, but it is not bound to a single iteration task.
             - Use Prototype Chapter 6 Lite semantics: focused repair plus route state; no Taskmaster triplets, formal acceptance files, overlays, contracts, or review pipeline artifacts.
             - Repair the user's reported runtime issue in the hosted game project.
             - Do not generate or rewrite the iteration plan.
             - Do not repair Phase A platform routing, route-state readers, recovery logic, deployment, or tests.
             - Prefer gameplay/project files only. If the report is too vague, inspect the Godot project configuration and fix the concrete runtime wiring problem that matches the report.
             - Output must be browser-safe: do not expose paths, command lines, script names, logs, or environment variables.
+            - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
 
             Project README:
             {CompactRouteState(projectReadme)}

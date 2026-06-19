@@ -45,19 +45,19 @@ RPG/JRPG 现在是 capability-driven：默认只保留 opening context、field n
 
 当前顶层进度步骤是：
 
-1. 游戏项目详情
+1. 游戏项目概述
 2. 原型骨架创建
 3. 骨架验收修复
 4. 完成迭代计划
 5. UI优化
-6. 原型验收
-7. 确认素材清单
+6. 原型项目验收
+7. 项目素材库
 8. 打包下载项目
 
 新增可执行游戏类型时，除了接入 profile、strategy、skill 和计划/验收外，还要确认 `ProjectWorkflowRouteService` 的下一步建议是否需要类型差异：
 
 - 非 generic route 在已打包后会额外建议 UI 优化和项目素材库。
-- UI 优化是 option，不应卡住原型验收或打包下载。
+- UI 优化是 option，不应卡住原型项目验收或打包下载。
 - 素材清单和打包下载属于项目级工作流，不应该写进单个 game-type strategy 的 acceptance contract。
 - 聊天里的“下一步建议”只查询顶层项目路由；一次性按钮只打开对应页面，不自动启动 run。
 

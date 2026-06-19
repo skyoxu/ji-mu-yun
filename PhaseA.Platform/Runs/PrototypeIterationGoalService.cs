@@ -93,7 +93,7 @@ public sealed class PrototypeIterationGoalService
         var needsFixGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal));
         if (needsFixGoal is not null)
         {
-            var summary = $"当前计划存在需要修复的目标 {needsFixGoal.GoalIndex}。请先修复当前目标，不要继续执行下一目标。";
+            var summary = $"当前计划存在需要修复的任务 {needsFixGoal.GoalIndex}。请先修复当前任务，不要继续执行下一任务。";
             await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", needsFixGoal.GoalIndex, summary, details.Session.LatestEvaluationJson, null, CancellationToken.None);
             return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, needsFixGoal.GoalId, "", "needs_fix", summary, needsFixGoal.GoalIndex, true, "needs_fix");
         }
@@ -101,7 +101,7 @@ public sealed class PrototypeIterationGoalService
         var nextGoal = details.Goals.FirstOrDefault(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal));
         if (nextGoal is null)
         {
-            return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, "", "", "no_pending_goal", "当前计划中没有待执行目标。", details.Session.CurrentGoalIndex, false, details.Session.Status);
+            return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, "", "", "no_pending_goal", "当前计划中没有待执行任务。", details.Session.CurrentGoalIndex, false, details.Session.Status);
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
@@ -124,8 +124,8 @@ public sealed class PrototypeIterationGoalService
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.LinkProjectIterationGoalRunAsync(details.Session.SessionId, nextGoal.GoalId, runId, RunType, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(nextGoal.GoalId, "running", null, null, CancellationToken.None);
-        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行目标 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
-        await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备目标 {nextGoal.GoalIndex}。", CancellationToken.None);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行任务 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
+        await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备任务 {nextGoal.GoalIndex}。", CancellationToken.None);
 
         try
         {
@@ -183,7 +183,7 @@ public sealed class PrototypeIterationGoalService
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
             var prompt = BuildPrompt(project, routeProfile, details.Session, nextGoal, projectReadme, projectExecutionGuide, prototypeContract, prototypeState, iterationPlanState);
-            await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行目标 {nextGoal.GoalIndex}。", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行任务 {nextGoal.GoalIndex}。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
@@ -272,8 +272,8 @@ public sealed class PrototypeIterationGoalService
                 goalOutcome.ResultStatus,
                 goalOutcome.GoalStatus,
                 goalOutcome.GoalStatus == "succeeded"
-                    ? $"目标 {nextGoal.GoalIndex} 已完成。"
-                    : $"目标 {nextGoal.GoalIndex} 需要修复。",
+                    ? $"任务 {nextGoal.GoalIndex} 已完成。"
+                    : $"任务 {nextGoal.GoalIndex} 需要修复。",
                 CancellationToken.None);
 
             var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, CancellationToken.None);
@@ -281,10 +281,10 @@ public sealed class PrototypeIterationGoalService
             var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
             var sessionStatus = hasNeedsFix ? "needs_fix" : hasMoreGoals ? "paused_for_review" : "completed";
             var sessionSummary = hasNeedsFix
-                ? $"目标 {nextGoal.GoalIndex} 需要修复。请先修复当前目标，再决定是否继续后续目标。"
+                ? $"任务 {nextGoal.GoalIndex} 需要修复。请先修复当前任务，再决定是否继续后续任务。"
                 : hasMoreGoals
-                    ? $"目标 {nextGoal.GoalIndex} 已完成。请确认后决定是否继续目标 {nextGoal.GoalIndex + 1}。"
-                    : "所有迭代目标已完成。";
+                    ? $"任务 {nextGoal.GoalIndex} 已完成。请确认后决定是否继续任务 {nextGoal.GoalIndex + 1}。"
+                    : "所有游戏模块任务已完成。";
             await _metadataStore.UpdateProjectIterationSessionStatusAsync(
                 details.Session.SessionId,
                 sessionStatus,
@@ -334,7 +334,7 @@ public sealed class PrototypeIterationGoalService
         }
         catch (OperationCanceledException)
         {
-            var failure = "本轮目标执行超时，请缩小目标范围后重试。";
+            var failure = "本轮任务执行超时，请缩小任务范围后重试。";
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
@@ -350,7 +350,7 @@ public sealed class PrototypeIterationGoalService
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            var failure = "本轮目标执行失败，请稍后重试。";
+            var failure = "本轮任务执行失败，请稍后重试。";
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
@@ -413,7 +413,7 @@ public sealed class PrototypeIterationGoalService
                 goalId,
                 "",
                 "blocked_by_current_goal",
-                "当前评估显示已有目标阻塞，系统已停止执行下一目标。请先处理当前阻塞项。",
+                "当前评估显示已有任务阻塞，系统已停止执行下一任务。请先处理当前阻塞项。",
                 goalIndex,
                 hasMoreGoals,
                 "needs_fix"),
@@ -515,8 +515,8 @@ public sealed class PrototypeIterationGoalService
             - RouteProfileId: {routeProfile.ProfileId}
             - RouteSetId: {routeProfile.RouteSetId}
             - ExecutorId: {routeProfile.ExecutorId}
-            - Use this game-type executor protocol for the current goal only.
-            - Execute only the current goal. Do not expand into later goals.
+            - Use this game-type executor protocol for the current task only.
+            - Execute only the current task. Do not expand into later tasks.
             - Use Prototype Chapter 6 Lite semantics: read recovery context first, execute one step, leave structured route state, and do not create Taskmaster triplets, formal acceptance files, overlays, architecture contracts, or Chapter 6 review pipeline artifacts.
             - Consume Project README, Project Execution Guide, prototype route state, and iteration plan route state below only as read-only recovery context.
             - The Project Execution Guide is the project-level /new recovery protocol. Use it to locate artifacts and restore route context when no conversational memory is available.
@@ -524,17 +524,18 @@ public sealed class PrototypeIterationGoalService
             - Use the iteration plan route state as the ordered plan contract, not as a repair target.
             - Do not read or use needs-fix state from another step.
             - Unless the current goal explicitly requires it, do not edit PhaseA.Platform/**, PhaseA.Platform.Tests/**, scripts/**, docs/**, runtime/**, or cloud control-plane files.
-            - If the current goal is a gameplay/Godot/RPG goal, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
+            - If the current task is a gameplay/Godot/RPG task, repair gameplay files only and verify the gameplay acceptance described by AcceptanceHint.
             - Repository shape for Godot C#: the build project is root-level GodotGame.csproj. Game.Godot/ is a runtime scene/script directory, not a standalone C# project. Do not invoke Game.Godot/Game.Godot.csproj.
             - Main.tscn SOP for prototype goals: root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false. This is mandatory for final/full-playable acceptance and should be preserved by earlier goals.
             - Do not run dotnet build, dotnet test, Godot prewarm, or GdUnit from this route. Local validation commands can write locked obj/bin/.godot files. The platform will run isolated acceptance validation after you finish.
             - Do not launch Godot, game engines, GUI applications, or long-running smoke tests in this cloud route. The platform will run acceptance validation after you finish.
             - Prefer fast code-level validation only. If deeper runtime validation is needed, report it in VERIFY/REMAINING instead of starting a long-running process.
-            - Platform route or recovery tests passing does not prove a gameplay goal is complete.
-            - Prefer the smallest working change that completes this goal.
+            - Platform route or recovery tests passing does not prove a gameplay task is complete.
+            - Prefer the smallest working change that completes this task.
             - If blocked, report the blocker directly instead of modifying unrelated infrastructure.
             - The final answer must be safe for browser users: no paths, command lines, script names, log names, or environment variable names.
-            - If this goal is too large, complete only the core part and explicitly mark what remains.
+            - If this task is too large, complete only the core part and explicitly mark what remains.
+            - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
 
             Project:
             - ProjectId: {project.ProjectId}
@@ -556,10 +557,10 @@ public sealed class PrototypeIterationGoalService
             Iteration plan route state:
             {TrimForPrompt(iterationPlanState)}
 
-            Overall iteration goal:
+            Overall game-module objective:
             {session.OverallGoal}
 
-            Current goal:
+            Current task:
             - GoalIndex: {goal.GoalIndex}
             - Title: {goal.Title}
             - Description: {goal.Description}
@@ -569,10 +570,10 @@ public sealed class PrototypeIterationGoalService
 
             Output format:
             STATUS: completed|needs_fix
-            SUMMARY: 2-4 browser-safe sentences explaining whether this goal is complete and what changed for the user.
-            CHANGED: 1-3 browser-safe lines listing the actual changes.
-            VERIFY: 1-3 browser-safe lines explaining the verification result.
-            REMAINING: If incomplete, list remaining blockers. If complete, write none.
+            SUMMARY: 用 2-4 句中文说明当前任务是否完成，以及对用户有什么变化。
+            CHANGED: 用 1-3 行中文列出本轮实际完成的改动。
+            VERIFY: 用 1-3 行中文说明验证结果。
+            REMAINING: 若未完全完成，用中文列出剩余阻塞；若已完成，写 none。
             """;
     }
 
@@ -632,17 +633,18 @@ public sealed class PrototypeIterationGoalService
             你正在执行积木云 Phase A 的单目标迭代任务。
 
             Mandatory rules:
-            - 这次只处理当前目标，不要顺手扩展到后续目标。
-            - 直接围绕当前目标实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
-            - 除非当前目标明确要求，否则不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
-            - 除非当前目标明确要求，否则不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
-            - 历史摘要、路由状态和恢复信息只用于定位上下文，不是本轮修复目标。
-            - 不要把平台路由、恢复语义、文档、脚本或控制台测试当作玩法目标的完成证据。
-            - 如果当前目标是玩法/Godot/RPG 目标，必须围绕 Title、Description、AcceptanceHint 中的玩法验收完成并验证。
-            - 优先用最小改动完成目标。
+            - 这次只处理当前任务，不要顺手扩展到后续任务。
+            - 直接围绕当前任务实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
+            - 除非当前任务明确要求，否则不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
+            - 除非当前任务明确要求，否则不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
+            - 历史摘要、路由状态和恢复信息只用于定位上下文，不是本轮修复任务。
+            - 不要把平台路由、恢复语义、文档、脚本或控制台测试当作玩法任务的完成证据。
+            - 如果当前任务是玩法/Godot/RPG 任务，必须围绕 Title、Description、AcceptanceHint 中的玩法验收完成并验证。
+            - 优先用最小改动完成任务。
             - 如果被阻塞，直接报告阻塞原因，不要改无关基础设施。
             - 完成后输出面向浏览器用户的简明结果，不要包含路径、命令、脚本名、日志名、环境变量。
-            - 如果当前目标过大，只完成最核心的一部分，并明确指出仍未完成的点。
+            - 如果当前任务过大，只完成最核心的一部分，并明确指出仍未完成的点。
+            - 面向浏览器用户的 SUMMARY/CHANGED/VERIFY/REMAINING 必须使用中文；只有 STATUS: completed|needs_fix 这类机器协议值保持英文。
 
             项目：
             - ProjectId: {project.ProjectId}
@@ -650,20 +652,20 @@ public sealed class PrototypeIterationGoalService
             - GameName: {project.GameName}
             - GameType: {project.GameTypeSource}
 
-            本次会话总目标：
+            本次会话总任务：
             {session.OverallGoal}
 
-            当前目标：
+            当前任务：
             - GoalIndex: {goal.GoalIndex}
             - Title: {goal.Title}
             - Description: {goal.Description}
             - AcceptanceHint: {goal.AcceptanceHint}
 
-            你必须直接围绕这个目标做实现或修正，不要先做任务恢复、工作流巡检、仓库导览、规则总结，除非当前目标明确要求那样做。
+            你必须直接围绕这个任务做实现或修正，不要先做任务恢复、工作流巡检、仓库导览、规则总结，除非当前任务明确要求那样做。
 
             输出格式：
             STATUS: completed|needs_fix
-            SUMMARY: 用 2-4 句说明当前目标是否完成，以及对用户有什么变化
+            SUMMARY: 用 2-4 句说明当前任务是否完成，以及对用户有什么变化
             CHANGED: 用 1-3 行列出本轮实际完成的改动
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
@@ -747,9 +749,9 @@ public sealed class PrototypeIterationGoalService
         }
 
         return $"""
-            目标 {goal.GoalIndex} 已执行。
+            任务 {goal.GoalIndex} 已执行。
 
-            本轮目标：
+            本轮任务：
             {goal.Title}
 
             完成报告：
@@ -828,8 +830,8 @@ public sealed class PrototypeIterationGoalService
         return $"""
             {publicSummary.Trim()}
 
-            Platform acceptance:
-            Goal {goal.GoalIndex} passed its platform validation. The current goal can move to the next step.
+            平台验收：
+            任务 {goal.GoalIndex} 已通过平台验收。当前任务可以进入下一步。
             """;
     }
 
@@ -852,10 +854,10 @@ public sealed class PrototypeIterationGoalService
         return $"""
             {publicSummary.Trim()}
 
-            Platform acceptance:
-            Goal {goal.GoalIndex} did not pass platform validation. The current goal remains needs_fix.
-            Reason: {validation.Reason ?? validation.Status}
-            Details: {publicDetails}
+            平台验收：
+            任务 {goal.GoalIndex} 没有通过平台验收，当前任务仍保持需要修复。
+            原因：{validation.Reason ?? validation.Status}
+            详情：{publicDetails}
             """;
     }
 
@@ -864,12 +866,12 @@ public sealed class PrototypeIterationGoalService
         if (string.Equals(validation.Reason, "core_tests_failed", StringComparison.OrdinalIgnoreCase) &&
             IsCoreTestPackageReferenceFailure(validation.Details))
         {
-            return "Core test project package references are incomplete. Repair Game.Core.Tests package references for xunit, xunit.runner.visualstudio, FluentAssertions, Microsoft.NET.Test.Sdk, and related test dependencies before continuing gameplay work.";
+            return "核心测试项目缺少测试框架包引用。请先修复 Game.Core.Tests 的 xunit、xunit.runner.visualstudio、FluentAssertions、Microsoft.NET.Test.Sdk 等 PackageReference，再继续玩法任务。";
         }
 
         var sanitized = PublicChatSanitizer.Sanitize(validation.Details);
         return string.IsNullOrWhiteSpace(sanitized)
-            ? "See the current platform acceptance reason and repair the listed blocker."
+            ? "请根据当前平台验收原因修复对应阻塞项。"
             : sanitized;
     }
 
@@ -906,8 +908,8 @@ public sealed class PrototypeIterationGoalService
         return $"""
             {publicSummary.Trim()}
 
-            Platform engine validation:
-            Goal {goal.GoalIndex} passed Godot smoke validation.
+            平台引擎验收：
+            任务 {goal.GoalIndex} 已通过 Godot smoke 验证。
             """;
     }
 
@@ -918,10 +920,10 @@ public sealed class PrototypeIterationGoalService
         return $"""
             {publicSummary.Trim()}
 
-            Platform engine validation:
+            平台引擎验收：
             STATUS: needs_fix
-            VERIFY: Godot smoke validation did not pass.
-            REMAINING: Run and pass Godot smoke validation for the current gameplay goal.
+            VERIFY: Godot smoke 验证未通过。
+            REMAINING: 继续修复当前玩法任务，直到 Godot smoke 验证通过。
             REASON: {validation.Smoke.Reason}
             """;
     }
