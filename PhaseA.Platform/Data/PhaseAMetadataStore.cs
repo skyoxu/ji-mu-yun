@@ -1770,20 +1770,17 @@ public sealed class PhaseAMetadataStore
             return RunCancelResult.NotActive;
         }
 
-        if (releaseQueuedLock)
-        {
-            await using var lockCommand = connection.CreateCommand();
-            lockCommand.Transaction = transaction;
-            lockCommand.CommandText =
-                """
-                DELETE FROM runner_locks
-                WHERE project_id = $project_id
-                  AND run_id = $run_id;
-                """;
-            lockCommand.Parameters.AddWithValue("$project_id", existing.ProjectId);
-            lockCommand.Parameters.AddWithValue("$run_id", runId);
-            await lockCommand.ExecuteNonQueryAsync(cancellationToken);
-        }
+        await using var lockCommand = connection.CreateCommand();
+        lockCommand.Transaction = transaction;
+        lockCommand.CommandText =
+            """
+            DELETE FROM runner_locks
+            WHERE project_id = $project_id
+              AND run_id = $run_id;
+            """;
+        lockCommand.Parameters.AddWithValue("$project_id", existing.ProjectId);
+        lockCommand.Parameters.AddWithValue("$run_id", runId);
+        await lockCommand.ExecuteNonQueryAsync(cancellationToken);
 
         await UpsertRunDurationMetricAsync(connection, transaction, runId, finishedUtc, cancellationToken);
         await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);

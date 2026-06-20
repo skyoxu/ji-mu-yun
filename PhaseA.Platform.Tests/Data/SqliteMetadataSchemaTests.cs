@@ -597,14 +597,15 @@ public sealed class SqliteMetadataSchemaTests
         run.ProgressStep.Should().Be("cancel");
         run.ProgressSubstep.Should().Be("user_cancelled");
         run.ProgressLabel.Should().Be("\u7528\u6237\u5df2\u53d6\u6d88\u5f53\u524d run\u3002");
-        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeTrue();
-        (await store.TryAcquireRunnerLockAsync(project.ProjectId, "next-run")).Should().BeFalse();
-
-        await store.ReleaseRunnerLockAsync(project.ProjectId, runId);
         (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
         (await store.HasActiveRunAsync(project.ProjectId)).Should().BeFalse();
         var active = await store.GetActiveRunForAccountAsync(accountId);
         active.Should().BeNull();
+        var nextRunId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, nextRunId)).Should().BeTrue();
+
+        await store.ReleaseRunnerLockAsync(project.ProjectId, nextRunId);
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
         var metrics = await store.ListRunMetricsForAdminAsync(accountId, null);
         metrics.Should().ContainSingle(row => row.Metric.RunId == runId && row.Metric.Status == "cancel");
     }
@@ -632,6 +633,8 @@ public sealed class SqliteMetadataSchemaTests
         var run = await store.GetRunSnapshotAsync(runId);
         run!.Status.Should().Be("cancel");
         (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+        var nextRunId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, nextRunId)).Should().BeTrue();
     }
 
     [Fact]

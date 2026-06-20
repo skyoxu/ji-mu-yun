@@ -1625,6 +1625,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("缺少必填项");
         html.Should().Contain("setPrototypeFormLocked");
         html.Should().Contain("isPrototypeCreationLocked");
+        html.Should().Contain("![\"idle\", \"failed\", \"cancel\"].includes(status)");
         html.Should().Contain("原型骨架创建中..刷新页面查阅创建进度.");
         html.Should().Contain("prototypeCommandPanel");
         html.Should().Contain(@"role !== ""admin""");

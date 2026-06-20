@@ -6328,8 +6328,8 @@ public sealed class BrowserUiRenderer
                 }
 
                 function isPrototypeCreationLocked(progress) {
-                  const status = progress?.prototypeCreationStatus || progress?.status || "idle";
-                  return !["idle", "failed"].includes(status);
+                  const status = String(progress?.prototypeCreationStatus || progress?.status || "idle").trim().toLowerCase();
+                  return !["idle", "failed", "cancel"].includes(status);
                 }
 
                 function setPrototypeFormLocked(locked) {
