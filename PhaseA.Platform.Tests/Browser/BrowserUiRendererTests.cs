@@ -775,6 +775,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ReadProjectUiState");
         html.Should().Contain("v2WriteProjectUiState");
         html.Should().Contain("v2RestoreProjectUiState");
+        html.Should().Contain("v2LoadProjectUiStateTabState()");
+        html.Should().Contain("v2RestoredProjectUiStateId = \"\"");
+        html.Should().Contain("if (state.projectId && state.projectId !== projectId)");
         html.Should().Contain("window.addEventListener(\"beforeunload\", () =>");
         html.Should().Contain("callV2(\"v2WriteProjectUiState\")");
         html.Should().NotContain("window.addEventListener(\"beforeunload\", v2WriteProjectUiState)");

@@ -352,7 +352,11 @@ public sealed class BrowserUiRenderer
                   return "";
                 }
                 function v2RestoreProjectUiState() {
-                  if (!state.projectId || v2RestoredProjectUiStateId === state.projectId) return;
+                  if (!state.projectId) return;
+                  if (v2RestoredProjectUiStateId === state.projectId) {
+                    v2LoadProjectUiStateTabState();
+                    return;
+                  }
                   v2RestoredProjectUiStateId = state.projectId;
                   const cached = v2ReadProjectUiState(state.projectId);
                   if (!cached) {
@@ -405,6 +409,41 @@ public sealed class BrowserUiRenderer
                   }
                   renderSelectedSkillAction();
                   v2RenderProjectAnalysisMode();
+                  v2LoadProjectUiStateTabState();
+                }
+                function v2LoadProjectUiStateTabState() {
+                  const cached = v2ReadProjectUiState(state.projectId);
+                  if (!cached) return;
+                  if (Array.isArray(cached.tabs) && cached.tabs.length) {
+                    v2OpenTabs.forEach((tab, tabId) => {
+                      if (tabId !== "chat") v2OpenTabs.delete(tabId);
+                    });
+                    for (const tab of cached.tabs) {
+                      const id = String(tab.id || "");
+                      const panelId = String(tab.panelId || "");
+                      if (!id || id === "chat" || !panelId || !$(panelId)) continue;
+                      const frameId = v2EmbeddedFrameId({ id, frameId: String(tab.frameId || "") });
+                      v2OpenTabs.set(id, {
+                        id,
+                        label: String(tab.label || "工程页面"),
+                        panelId,
+                        stepId: String(tab.stepId || ""),
+                        closable: tab.closable !== false,
+                        frameId,
+                        url: v2EmbeddedTabUrl({ id, frameId })
+                      });
+                    }
+                  }
+                  const activeTabId = String(cached.activeTabId || "chat");
+                  v2ActiveTabId = v2OpenTabs.has(activeTabId) ? activeTabId : "chat";
+                  const activeTab = v2OpenTabs.get(v2ActiveTabId);
+                  if (activeTab?.stepId) {
+                    v2SelectedStep = activeTab.stepId;
+                    v2UserSelectedStep = true;
+                  }
+                  v2RenderTabs();
+                  v2ApplySelectedStepVisibility();
+                  v2RenderProgress();
                 }
                 function v2StepLabel(stepId) {
                   const item = v2Steps.find(step => step[0] === stepId);
@@ -4726,7 +4765,11 @@ public sealed class BrowserUiRenderer
                 }
 
                 function selectProject(projectId) {
+                  if (state.projectId && state.projectId !== projectId) {
+                    v2WriteProjectUiState();
+                  }
                   state.projectId = projectId;
+                  v2RestoredProjectUiStateId = "";
                   writeSelectedProjectId(projectId);
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
@@ -4750,6 +4793,7 @@ public sealed class BrowserUiRenderer
                   showProjectDetail();
                   callV2("v2RenderLeftProjectList");
                   applyProjectStateCache(projectId);
+                  v2RestoreProjectUiState();
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();
