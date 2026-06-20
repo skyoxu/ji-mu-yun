@@ -1441,6 +1441,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("const changed = syncPrototypeSkeletonBannerDisplayedCount();");
         html.Should().Contain("function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId)");
         html.Should().Contain("function prototypeSkeletonBannerCurrentKey()");
+        html.Should().Contain("function prototypeSkeletonBannerStoredRunId()");
         html.Should().Contain("restorePrototypeSkeletonBannerFromStorage();");
         html.Should().Contain("state.pendingPrototypeSkeletonRun = {");
         html.Should().Contain("const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;");
@@ -1463,6 +1464,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("state.pendingPrototypeSkeletonRun = state.activeRun;");
         html.Should().NotContain("state.prototypeSkeletonBannerIndex + 22");
         html.Should().NotContain("if (state.prototypeSkeletonBannerExpanded) return;");
+        html.Should().Contain("!state.pendingPrototypeSkeletonRun?.runId && !prototypeSkeletonBannerStoredRunId()");
         html.Should().Contain("\"chapter2-bootstrap\", \"project-creation\", \"project-asset-generation\", \"asset-generation\"");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}/cancel");
         html.Should().Contain("当前任务执行中");

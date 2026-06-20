@@ -5330,6 +5330,14 @@ public sealed class BrowserUiRenderer
                   return "phaseA.prototypeSkeletonBanner.current";
                 }
 
+                function prototypeSkeletonBannerStoredRunId() {
+                  try {
+                    return localStorage.getItem(prototypeSkeletonBannerCurrentKey()) || "";
+                  } catch {
+                    return "";
+                  }
+                }
+
                 function prototypeSkeletonNowMs() {
                   return Date.now ? Date.now() : new Date().getTime();
                 }
@@ -5584,7 +5592,9 @@ public sealed class BrowserUiRenderer
                       renderActiveRunBanner(runIsBusy(state.activeRun) ? activeRunText(state.activeRun) : message);
                     }
                   } else {
-                    resetPrototypeSkeletonBannerState(true);
+                    if (!state.pendingPrototypeSkeletonRun?.runId && !prototypeSkeletonBannerStoredRunId()) {
+                      resetPrototypeSkeletonBannerState(true);
+                    }
                     $("activeRunBanner").classList.add("hidden");
                     $("activeRunBanner").replaceChildren();
                   }
