@@ -1449,7 +1449,16 @@ public sealed class PhaseAMetadataStore
         await using var connection = await OpenConnectionAsync(cancellationToken);
         var count = await ExecuteScalarLongAsync(
             connection,
-            "SELECT COUNT(*) FROM runner_locks WHERE project_id = $project_id;",
+            """
+            SELECT COUNT(*)
+            FROM runner_locks rl
+            LEFT JOIN runs r ON r.id = rl.run_id
+            WHERE rl.project_id = $project_id
+              AND (
+                  rl.run_id IS NULL
+                  OR r.status IN ('queued', 'running')
+              );
+            """,
             cancellationToken,
             ("$project_id", projectId)) ?? 0;
         return count > 0;
@@ -1476,6 +1485,75 @@ public sealed class PhaseAMetadataStore
         await using var command = connection.CreateCommand();
         command.CommandText = "DELETE FROM projects WHERE id = $project_id;";
         command.Parameters.AddWithValue("$project_id", projectId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<ProjectUiStateSnapshot?> GetProjectUiStateAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT account_id, project_id, state_json, updated_utc
+            FROM project_ui_states
+            WHERE account_id = $account_id
+              AND project_id = $project_id
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectUiStateSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3));
+    }
+
+    public async Task UpsertProjectUiStateAsync(
+        string accountId,
+        string projectId,
+        string stateJson,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        stateJson = string.IsNullOrWhiteSpace(stateJson) ? "{}" : stateJson.Trim();
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_ui_states (
+                account_id,
+                project_id,
+                state_json,
+                updated_utc)
+            VALUES (
+                $account_id,
+                $project_id,
+                $state_json,
+                $updated_utc)
+            ON CONFLICT(account_id, project_id) DO UPDATE SET
+                state_json = excluded.state_json,
+                updated_utc = excluded.updated_utc;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$state_json", stateJson);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

@@ -773,6 +773,17 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_ui_states (
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            state_json TEXT NOT NULL DEFAULT '{}',
+            updated_utc TEXT NOT NULL,
+            PRIMARY KEY (account_id, project_id),
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_projects_account_last_activity ON projects(account_id, last_activity_utc DESC, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
@@ -787,6 +798,7 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_sessions_project_created ON project_iteration_sessions(project_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_ui_states_account_project ON project_ui_states(account_id, project_id);",
         """
         CREATE TRIGGER IF NOT EXISTS tr_projects_last_activity_bootstrap_update
         AFTER UPDATE OF bootstrap_status, bootstrap_error ON projects

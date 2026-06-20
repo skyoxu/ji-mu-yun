@@ -120,8 +120,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .prototype-draft-row label { display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
                 body.v2-detail #draftFile { width: 15rem; max-width: 100%; }
                 body.v2-detail .prototype-draft-row button { width: auto; min-width: 8.5rem; white-space: nowrap; }
-                body.v2-detail .prototype-draft-row .import-draft-button:not(:disabled) { background: #d92d20; border-color: #d92d20; color: #fff; font-weight: 800; box-shadow: 0 8px 18px rgba(217, 45, 32, 0.18); }
-                body.v2-detail .prototype-draft-row .import-draft-button:not(:disabled):hover { background: #b42318; border-color: #b42318; }
+                body.v2-detail .prototype-draft-row .import-draft-button.import-draft-ready:not(:disabled) { background: #d92d20; border-color: #d92d20; color: #fff; font-weight: 800; box-shadow: 0 8px 18px rgba(217, 45, 32, 0.18); }
+                body.v2-detail .prototype-draft-row .import-draft-button.import-draft-ready:not(:disabled):hover { background: #b42318; border-color: #b42318; }
                 body.v2-detail #outputPanel { grid-column: 1 / -1; }
                 body.v2-detail .v2-progress-row { display: grid; gap: 0.35rem; overflow: visible; padding: 0; }
                 body.v2-detail .v2-step-button { position: relative; width: 100%; min-height: 2.45rem; display: grid; grid-template-columns: 1.7rem 1.45rem minmax(0, 1fr) 1.35rem; align-items: center; gap: 0.4rem; padding: 0.35rem 0.45rem; color: var(--ink); background: #fffdf8; border: 1px solid var(--line); border-radius: 0.65rem; text-align: left; }
@@ -287,22 +287,90 @@ public sealed class BrowserUiRenderer
                 let v2ActiveTabId = "chat";
                 let v2RestoredProjectUiStateId = "";
                 let v2PendingProjectUiSkillMode = "";
-                const v2ProjectUiStateVersion = 1;
+                const v2ProjectUiStateVersion = 2;
                 const v2OpenTabs = new Map([["chat", { id: "chat", label: "游戏策划创作", panelId: "chatPanel", closable: false }]]);
                 function v2ProjectUiStateKey(projectId = state.projectId) {
                   return `phaseA.projectUiState.v${v2ProjectUiStateVersion}.${projectId || "none"}`;
                 }
+                function v2LegacyProjectUiStateKey(projectId = state.projectId) {
+                  return `phaseA.projectUiState.v1.${projectId || "none"}`;
+                }
+                function v2NormalizeProjectUiState(cached) {
+                  if (!cached || !cached.projectId) return null;
+                  const stateJson = cached.stateJson && typeof cached.stateJson === "string" ? cached.stateJson : null;
+                  const rawState = stateJson ? (() => { try { return JSON.parse(stateJson); } catch { return null; } })() : cached;
+                  if (!rawState || typeof rawState !== "object") return null;
+                  return {
+                    ...rawState,
+                    schemaVersion: v2ProjectUiStateVersion,
+                    projectId: String(rawState.projectId || cached.projectId || "")
+                  };
+                }
                 function v2ReadProjectUiState(projectId = state.projectId) {
                   if (!projectId) return null;
                   try {
-                    const cached = JSON.parse(localStorage.getItem(v2ProjectUiStateKey(projectId)) || "null");
-                    return cached && cached.projectId === projectId ? cached : null;
+                    const currentCached = JSON.parse(localStorage.getItem(v2ProjectUiStateKey(projectId)) || "null");
+                    const normalizedCurrent = v2NormalizeProjectUiState(currentCached);
+                    if (normalizedCurrent && Number(currentCached?.schemaVersion || v2ProjectUiStateVersion) === v2ProjectUiStateVersion) {
+                      return normalizedCurrent;
+                    }
+                    const legacyCached = JSON.parse(localStorage.getItem(v2LegacyProjectUiStateKey(projectId)) || "null");
+                    const normalizedLegacy = v2NormalizeProjectUiState(legacyCached);
+                    if (!normalizedLegacy) return null;
+                    try { localStorage.setItem(v2ProjectUiStateKey(projectId), JSON.stringify(normalizedLegacy)); } catch {}
+                    return normalizedLegacy;
                   } catch {
                     return null;
                   }
                 }
-                function v2WriteProjectUiState() {
-                  if (!state.projectId) return;
+                async function v2FetchProjectUiState(projectId = state.projectId) {
+                  if (!projectId) return null;
+                  try {
+                    const cached = await api(`/api/projects/${encodeURIComponent(projectId)}/ui-state`);
+                    const normalized = v2NormalizeProjectUiState(cached);
+                    if (!normalized) return null;
+                    try { localStorage.setItem(v2ProjectUiStateKey(projectId), JSON.stringify(normalized)); } catch {}
+                    return normalized;
+                  } catch {
+                    return null;
+                  }
+                }
+                function v2ProjectUiStateUpdatedAt(source) {
+                  const value = String(source?.updatedAt || source?.updatedUtc || source?.updated_utc || "").trim();
+                  const time = Date.parse(value);
+                  return Number.isFinite(time) ? time : 0;
+                }
+                function v2ChooseProjectUiStateSource(...sources) {
+                  return sources
+                    .filter(source => source && typeof source === "object")
+                    .sort((left, right) => v2ProjectUiStateUpdatedAt(right) - v2ProjectUiStateUpdatedAt(left))[0] || null;
+                }
+                function v2BuildProjectUiStateSeed(projectId = state.projectId) {
+                  return {
+                    projectId,
+                    schemaVersion: v2ProjectUiStateVersion,
+                    activeTabId: "chat",
+                    selectedStep: "new-project",
+                    userSelectedStep: false,
+                    tabs: [],
+                    settings: {
+                      advancedPlanningMode: ($("chatSkillMode")?.value || "normal") === "game-design-master",
+                      chatSkillMode: $("chatSkillMode")?.value || "normal",
+                      projectAnalysisMode: !!state.projectAnalysisMode
+                    },
+                    updatedAt: new Date().toISOString()
+                  };
+                }
+                function v2EnsureProjectUiStateSeed(projectId = state.projectId) {
+                  if (!projectId) return null;
+                  const cached = v2ReadProjectUiState(projectId);
+                  if (cached) return cached;
+                  const seed = v2BuildProjectUiStateSeed(projectId);
+                  try { localStorage.setItem(v2ProjectUiStateKey(projectId), JSON.stringify(seed)); } catch {}
+                  return seed;
+                }
+                function v2BuildProjectUiStatePayload() {
+                  if (!state.projectId) return null;
                   const tabs = Array.from(v2OpenTabs.values())
                     .filter(tab => tab.id !== "chat")
                     .map(tab => ({
@@ -319,8 +387,9 @@ public sealed class BrowserUiRenderer
                     chatSkillMode: $("chatSkillMode")?.value || "normal",
                     projectAnalysisMode: !!state.projectAnalysisMode
                   };
-                  const payload = {
+                  return {
                     projectId: state.projectId,
+                    schemaVersion: v2ProjectUiStateVersion,
                     activeTabId: v2ActiveTabId,
                     selectedStep: v2SelectedStep,
                     userSelectedStep: !!v2UserSelectedStep,
@@ -328,7 +397,17 @@ public sealed class BrowserUiRenderer
                     settings,
                     updatedAt: new Date().toISOString()
                   };
+                }
+                async function v2WriteProjectUiState() {
+                  const payload = v2BuildProjectUiStatePayload();
+                  if (!payload) return;
                   try { localStorage.setItem(v2ProjectUiStateKey(state.projectId), JSON.stringify(payload)); } catch {}
+                  try {
+                    await api(`/api/projects/${encodeURIComponent(state.projectId)}/ui-state`, {
+                      method: "POST",
+                      body: JSON.stringify(payload)
+                    });
+                  } catch {}
                 }
                 function v2EmbeddedTabUrl(tab) {
                   if (!state.projectId || !tab) return "";
@@ -351,7 +430,7 @@ public sealed class BrowserUiRenderer
                   if (tab.id === "gdd-outline" || tab.id === "step:gdd-outline") return "v2GddOutlineFrame";
                   return "";
                 }
-                function v2RestoreProjectUiState() {
+                async function v2RestoreProjectUiState() {
                   if (!state.projectId) return;
                   if (v2RestoredProjectUiStateId === state.projectId) {
                     v2LoadProjectUiStateTabState();
@@ -359,7 +438,12 @@ public sealed class BrowserUiRenderer
                   }
                   v2RestoredProjectUiStateId = state.projectId;
                   const cached = v2ReadProjectUiState(state.projectId);
+                  const remote = await v2FetchProjectUiState(state.projectId);
+                  const source = v2ChooseProjectUiStateSource(remote, cached) || v2BuildProjectUiStateSeed(state.projectId);
                   if (!cached) {
+                    try { localStorage.setItem(v2ProjectUiStateKey(state.projectId), JSON.stringify(source)); } catch {}
+                  }
+                  if (!source) {
                     state.projectAnalysisMode = false;
                     v2PendingProjectUiSkillMode = "";
                     if ($("chatSkillMode")) $("chatSkillMode").value = "normal";
@@ -370,7 +454,7 @@ public sealed class BrowserUiRenderer
                   Array.from(v2OpenTabs.keys()).forEach(tabId => {
                     if (tabId !== "chat") v2OpenTabs.delete(tabId);
                   });
-                  for (const tab of Array.isArray(cached.tabs) ? cached.tabs : []) {
+                  for (const tab of Array.isArray(source.tabs) ? source.tabs : []) {
                     const id = String(tab.id || "");
                     const panelId = String(tab.panelId || "");
                     if (!id || id === "chat" || !panelId || !$(panelId)) continue;
@@ -385,19 +469,19 @@ public sealed class BrowserUiRenderer
                       url: v2EmbeddedTabUrl({ id, frameId })
                     });
                   }
-                  const activeTabId = String(cached.activeTabId || "chat");
+                  const activeTabId = String(source.activeTabId || "chat");
                   v2ActiveTabId = v2OpenTabs.has(activeTabId) ? activeTabId : "chat";
-                  if (typeof cached.selectedStep === "string" && cached.selectedStep) {
-                    v2SelectedStep = cached.selectedStep;
+                  if (typeof source.selectedStep === "string" && source.selectedStep) {
+                    v2SelectedStep = source.selectedStep;
                   }
-                  v2UserSelectedStep = !!cached.userSelectedStep;
+                  v2UserSelectedStep = !!source.userSelectedStep;
                   const activeTab = v2OpenTabs.get(v2ActiveTabId);
                   if (activeTab?.stepId) {
                     v2SelectedStep = activeTab.stepId;
                     v2UserSelectedStep = true;
                   }
-                  state.projectAnalysisMode = !!cached.settings?.projectAnalysisMode;
-                  const skillMode = cached.settings?.advancedPlanningMode ? "game-design-master" : String(cached.settings?.chatSkillMode || "");
+                  state.projectAnalysisMode = !!source.settings?.projectAnalysisMode;
+                  const skillMode = source.settings?.advancedPlanningMode ? "game-design-master" : String(source.settings?.chatSkillMode || "");
                   if ($("chatSkillMode") && Array.from($("chatSkillMode").options).some(option => option.value === skillMode)) {
                     $("chatSkillMode").value = skillMode || "normal";
                     v2PendingProjectUiSkillMode = "";
@@ -409,10 +493,10 @@ public sealed class BrowserUiRenderer
                   }
                   renderSelectedSkillAction();
                   v2RenderProjectAnalysisMode();
-                  v2LoadProjectUiStateTabState();
+                  v2LoadProjectUiStateTabState(source);
                 }
-                function v2LoadProjectUiStateTabState() {
-                  const cached = v2ReadProjectUiState(state.projectId);
+                function v2LoadProjectUiStateTabState(source = null) {
+                  const cached = source || v2ReadProjectUiState(state.projectId);
                   if (!cached) return;
                   if (Array.isArray(cached.tabs) && cached.tabs.length) {
                     v2OpenTabs.forEach((tab, tabId) => {
@@ -1193,6 +1277,7 @@ public sealed class BrowserUiRenderer
                   return state.v2PrototypeStatus || "";
                 }
                 function v2ShouldLockPrototypeForm() {
+                  if (state.cancelledActiveRunId) return false;
                   const status = String(state?.v2PrototypeCreationStatus || v2PrototypeStatus() || "").trim().toLowerCase();
                   return !!state.projectId && status !== "" && !["idle", "failed"].includes(status);
                 }
@@ -1201,9 +1286,13 @@ public sealed class BrowserUiRenderer
                   $("prototypeWorkflowPanel")?.classList.toggle("v2-prototype-locked", locked);
                   prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = locked; });
                   if ($("draftFile")) $("draftFile").disabled = locked;
-                  if ($("importDraft")) $("importDraft").disabled = locked;
+                  if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "原型骨架已创建，不能重复创建。");
+                  if (!locked && typeof resetPrototypeActionButtonsVisualState === "function") {
+                    resetPrototypeActionButtonsVisualState();
+                    updateDraftImportButtonState();
+                  }
                   if ($("runPrototype")) {
-                    $("runPrototype").disabled = locked || isGlobalBusy();
+                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架已创建，不能重复创建。" : "");
                     $("runPrototype").textContent = locked ? "原型骨架已创建，不能重复创建" : "运行原型骨架创建";
                   }
                 }
@@ -1636,7 +1725,19 @@ public sealed class BrowserUiRenderer
                 button.secondary { background: var(--accent-2); }
                 button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
                 button.danger-button { background: var(--danger); }
-                button:disabled { cursor: not-allowed; opacity: 0.45; }
+                button.button-state-enabled { cursor: pointer; opacity: 1; }
+                button.button-state-disabled {
+                  cursor: not-allowed;
+                  opacity: 0.45;
+                  filter: grayscale(0.25);
+                }
+                button:disabled,
+                button[disabled],
+                button.button-state-disabled {
+                  cursor: not-allowed;
+                  opacity: 0.45 !important;
+                  filter: grayscale(0.25);
+                }
                 label.field-invalid input,
                 label.field-invalid textarea,
                 label.field-invalid select {
@@ -3573,7 +3674,12 @@ public sealed class BrowserUiRenderer
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
                     renderPrototypeProgress(progress);
                     renderPrototypeAcceptanceSummary(progress);
-                    setPrototypeFormLocked(isPrototypeCreationLocked(progress));
+                    const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
+                    const suppressLockedState = !!state.cancelledActiveRunId && ["queued", "running"].includes(creationStatus);
+                    setPrototypeFormLocked(suppressLockedState ? false : isPrototypeCreationLocked(progress));
+                    if (creationStatus === "idle" && progress?.step === "cancelled" && $("draftFile")) {
+                      $("draftFile").disabled = false;
+                    }
                     updateChatPanelVisibility(progress);
                   }
                   if (cached.packageList) {
@@ -4668,7 +4774,7 @@ public sealed class BrowserUiRenderer
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
                     callV2("v2RenderLeftProjectList");
-                    const currentProjectVisible = !state.projectId || visibleProjects.some(project => project.projectId === state.projectId);
+                    const currentProjectVisible = !!state.projectId && visibleProjects.some(project => project.projectId === state.projectId);
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
                     } else if (initializing && !state.projectId) {
@@ -4677,11 +4783,11 @@ public sealed class BrowserUiRenderer
                       state.projectId = "";
                       writeSelectedProjectId("");
                       showCreateProjectPage();
-                    } else if (!currentProjectVisible) {
+                    } else if (state.projectId && !currentProjectVisible) {
                       state.projectId = "";
                       writeSelectedProjectId("");
                       selectDefaultProject(visibleProjects);
-                    } else if (autoSelect || !state.projectId) {
+                    } else if (!state.projectId && autoSelect) {
                       selectDefaultProject(visibleProjects);
                     }
                     out(projects);
@@ -4704,16 +4810,16 @@ public sealed class BrowserUiRenderer
                   if (!Array.isArray(projects) || projects.length === 0) return;
                   const current = state.projectId ? projects.find(project => project.projectId === state.projectId) : null;
                   if (current?.projectId) {
-                    selectProject(current.projectId);
+                    void selectProject(current.projectId);
                     return;
                   }
                   const remembered = readSelectedProjectId();
                   if (remembered && projects.some(project => project.projectId === remembered)) {
-                    selectProject(remembered);
+                    void selectProject(remembered);
                     return;
                   }
                   const latest = latestProject(projects);
-                  if (latest?.projectId) selectProject(latest.projectId);
+                  if (latest?.projectId) void selectProject(latest.projectId);
                 }
 
                 function latestProject(projects) {
@@ -4764,9 +4870,9 @@ public sealed class BrowserUiRenderer
                   return `<span class="muted">健康：${escapeHtml(summary.status)} · 阶段：${escapeHtml(summary.stage || "未识别")}</span><span>${escapeHtml(summary.summary || "")}</span>`;
                 }
 
-                function selectProject(projectId) {
+                async function selectProject(projectId) {
                   if (state.projectId && state.projectId !== projectId) {
-                    v2WriteProjectUiState();
+                    await v2WriteProjectUiState();
                   }
                   state.projectId = projectId;
                   v2RestoredProjectUiStateId = "";
@@ -4784,7 +4890,12 @@ public sealed class BrowserUiRenderer
                   state.iterationPlanEvaluation = null;
                   state.iterationPlanFailure = "";
                   state.repairPlan = null;
+                  Array.from(v2OpenTabs.keys()).forEach(tabId => {
+                    if (tabId !== "chat") v2OpenTabs.delete(tabId);
+                  });
                   v2ActiveTabId = "chat";
+                  v2SelectedStep = "new-project";
+                  v2UserSelectedStep = false;
                   setModalVisible("projectListModal", false);
                   hideCreateProjectPage();
                   loadChatHistoryForProject(projectId);
@@ -4792,8 +4903,11 @@ public sealed class BrowserUiRenderer
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
                   callV2("v2RenderLeftProjectList");
+                  v2RenderTabs();
+                  v2ApplySelectedStepVisibility();
+                  v2RenderProgress();
                   applyProjectStateCache(projectId);
-                  v2RestoreProjectUiState();
+                  await v2RestoreProjectUiState();
                   loadProjectRuntimeState();
                   loadServerChatHistoryForProject(projectId);
                   loadIterationPlan();
@@ -4939,7 +5053,7 @@ public sealed class BrowserUiRenderer
                       if (isProjectReady(createdProject)) {
                         $("initStatusPanel").classList.add("hidden");
                         await refreshProjects({ autoSelect: false });
-                        selectProject(createdProject.projectId);
+                        void selectProject(createdProject.projectId);
                         return;
                       }
                       if (createdProjectId && isProjectPendingInitialization(createdProject)) {
@@ -5320,6 +5434,7 @@ public sealed class BrowserUiRenderer
 
                 function runIsBusy(run) {
                   if (!run) return false;
+                  if (!run.runId) return false;
                   if (run.busy === true) return true;
                   const status = String(run.status || "").trim().toLowerCase();
                   return status === "queued" || status === "running";
@@ -5386,6 +5501,12 @@ public sealed class BrowserUiRenderer
                   return Date.now ? Date.now() : new Date().getTime();
                 }
 
+                function prototypeSkeletonRunStartedAtMs(run) {
+                  const value = run?.startedUtc || run?.createdUtc || run?.queuedUtc || run?.progressUpdatedUtc || "";
+                  const time = Date.parse(value || "");
+                  return Number.isFinite(time) ? time : 0;
+                }
+
                 function readPrototypeSkeletonBannerState(runId) {
                   if (!runId) return null;
                   try {
@@ -5406,6 +5527,9 @@ public sealed class BrowserUiRenderer
                       displayedCount: Math.max(0, state.prototypeSkeletonBannerDisplayedCount || 0),
                       startedAtMs: Math.max(0, state.prototypeSkeletonBannerStartedAtMs || 0),
                       tick: Math.max(0, state.prototypeSkeletonBannerTick || 0),
+                      runCreatedUtc: state.pendingPrototypeSkeletonRun?.createdUtc || state.activeRun?.createdUtc || "",
+                      runStartedUtc: state.pendingPrototypeSkeletonRun?.startedUtc || state.activeRun?.startedUtc || "",
+                      runProgressUpdatedUtc: state.pendingPrototypeSkeletonRun?.progressUpdatedUtc || state.activeRun?.progressUpdatedUtc || "",
                       updatedAt: new Date().toISOString()
                     }));
                   } catch {}
@@ -5459,7 +5583,12 @@ public sealed class BrowserUiRenderer
                     state.prototypeSkeletonBannerRunId = cached.runId;
                     state.prototypeSkeletonBannerExpanded = !!cached.expanded;
                     state.prototypeSkeletonBannerTick = Math.max(0, cached.tick || 0);
-                    state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached.startedAtMs || 0) || prototypeSkeletonNowMs();
+                    const cachedRunTime = prototypeSkeletonRunStartedAtMs({
+                      startedUtc: cached.runStartedUtc,
+                      createdUtc: cached.runCreatedUtc,
+                      progressUpdatedUtc: cached.runProgressUpdatedUtc
+                    });
+                    state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached.startedAtMs || 0) || cachedRunTime || prototypeSkeletonNowMs();
                     state.prototypeSkeletonBannerDisplayedCount = Math.min(
                       PrototypeSkeletonRunNotes.length,
                       Math.max(1, cached.displayedCount || 1)
@@ -5472,6 +5601,8 @@ public sealed class BrowserUiRenderer
                       status: "running",
                       progressStep: "restored",
                       progressLabel: "正在同步任务状态。",
+                      createdUtc: cached.runCreatedUtc || "",
+                      startedUtc: cached.runStartedUtc || "",
                       progressUpdatedUtc: cached.updatedAt || new Date().toISOString()
                     };
                     applyGlobalBusyState();
@@ -5483,7 +5614,7 @@ public sealed class BrowserUiRenderer
                   if (state.prototypeSkeletonBannerRunId === run.runId) {
                     if (!state.prototypeSkeletonBannerStartedAtMs) {
                       const cached = readPrototypeSkeletonBannerState(run.runId);
-                      state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonNowMs();
+                      state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonRunStartedAtMs(run) || prototypeSkeletonNowMs();
                     }
                     syncPrototypeSkeletonBannerDisplayedCount();
                     return;
@@ -5493,7 +5624,7 @@ public sealed class BrowserUiRenderer
                   state.prototypeSkeletonBannerExpanded = !!cached?.expanded;
                   state.prototypeSkeletonBannerIndex = 0;
                   state.prototypeSkeletonBannerTick = Math.max(0, cached?.tick || 0);
-                  state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonNowMs();
+                  state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonRunStartedAtMs(run) || prototypeSkeletonNowMs();
                   state.prototypeSkeletonBannerDisplayedCount = Math.min(
                     PrototypeSkeletonRunNotes.length,
                     Math.max(1, cached?.displayedCount || 1)
@@ -5584,8 +5715,25 @@ public sealed class BrowserUiRenderer
                   return !!run?.runId && !["chapter2-bootstrap", "project-creation", "project-asset-generation", "asset-generation"].includes(runType);
                 }
 
+                function clearCancelledActiveRunState() {
+                  state.cancelledActiveRunId = "";
+                }
+
+                function cancelledPrototypeProgressSnapshot() {
+                  return {
+                    status: "idle",
+                    prototypeCreationStatus: "idle",
+                    acceptanceStatus: "idle",
+                    label: "任务已取消。",
+                    step: "cancelled",
+                    substep: "",
+                    updatedUtc: new Date().toISOString()
+                  };
+                }
+
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
                   if (busy) invalidateWorkflowRouteAction();
+                  if (busy) clearCancelledActiveRunState();
                   state.localBusy = busy;
                   applyGlobalBusyState(message);
                 }
@@ -5607,23 +5755,89 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                function hideActiveRunBanner() {
+                  const banner = $("activeRunBanner");
+                  if (!banner) return;
+                  banner.classList.add("hidden");
+                  banner.classList.remove("busy-banner-prototype-skeleton", "is-expanded");
+                  banner.replaceChildren();
+                }
+
+                function setButtonVisualState(button, enabled) {
+                  if (!button) return;
+                  button.classList.toggle("button-state-enabled", !!enabled);
+                  button.classList.toggle("button-state-disabled", !enabled);
+                }
+
+                function setButtonBaseClass(button, baseClassName) {
+                  if (!button) return;
+                  button.classList.remove("button-state-enabled", "button-state-disabled", "import-draft-ready");
+                  String(baseClassName || "")
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .forEach(className => button.classList.add(className));
+                }
+
+                function setButtonDisabledState(button, disabled, title = "") {
+                  if (!button) return;
+                  button.disabled = !!disabled;
+                  setButtonVisualState(button, !disabled);
+                  if (disabled && title) button.title = title;
+                  else button.removeAttribute("title");
+                }
+
+                function resetPrototypeActionButtonsVisualState() {
+                  if ($("runPrototype")) {
+                    setButtonBaseClass($("runPrototype"), "secondary");
+                    $("runPrototype").style.removeProperty("background");
+                    $("runPrototype").style.removeProperty("border-color");
+                    $("runPrototype").style.removeProperty("color");
+                    $("runPrototype").style.removeProperty("box-shadow");
+                    $("runPrototype").removeAttribute("title");
+                    $("runPrototype").textContent = "运行原型骨架创建";
+                    setButtonVisualState($("runPrototype"), true);
+                  }
+                  if ($("importDraft")) {
+                    setButtonBaseClass($("importDraft"), "secondary import-draft-button");
+                    $("importDraft").style.removeProperty("background");
+                    $("importDraft").style.removeProperty("border-color");
+                    $("importDraft").style.removeProperty("color");
+                    $("importDraft").style.removeProperty("box-shadow");
+                    $("importDraft").removeAttribute("title");
+                    $("importDraft").textContent = "分析草稿并回填";
+                    setButtonVisualState($("importDraft"), true);
+                  }
+                  if ($("repairPrototype")) {
+                    $("repairPrototype").removeAttribute("title");
+                  }
+                }
+
+                function unlockPrototypeFormAfterCancel() {
+                  prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = false; });
+                  if ($("draftFile")) $("draftFile").disabled = false;
+                  resetPrototypeActionButtonsVisualState();
+                  setButtonDisabledState($("runPrototype"), false);
+                  setButtonDisabledState($("importDraft"), !($("draftFile")?.files?.[0]), "请选择一个 txt 文件后再分析草稿并回填。");
+                  if ($("repairPrototype")) $("repairPrototype").textContent = "生成修复计划";
+                  setButtonDisabledState($("repairPrototype"), false);
+                }
+
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
-                    button.disabled = busy;
-                    if (busy) button.title = message;
-                    else button.removeAttribute("title");
+                    setButtonDisabledState(button, busy, message);
                   });
                   document.querySelectorAll("[data-needs-fix-goal]").forEach(button => {
-                    button.disabled = busy;
-                    if (busy) button.title = message;
-                    else button.removeAttribute("title");
+                    setButtonDisabledState(button, busy, message);
                   });
                   if (!busy && state.packageList) {
                     renderProjectPackages(state.packageList);
                   }
                   if (!busy && state.assetInventory) {
                     renderAssetInventory(state.assetInventory, state.assetInventoryExpanded);
+                  }
+                  if (!busy && !state.draftAnalysisRunning) {
+                    resetPrototypeActionButtonsVisualState();
                   }
                   updateDraftImportButtonState();
                   if (busy) {
@@ -5639,8 +5853,7 @@ public sealed class BrowserUiRenderer
                     if (!state.pendingPrototypeSkeletonRun?.runId && !prototypeSkeletonBannerStoredRunId()) {
                       resetPrototypeSkeletonBannerState(true);
                     }
-                    $("activeRunBanner").classList.add("hidden");
-                    $("activeRunBanner").replaceChildren();
+                    hideActiveRunBanner();
                   }
                 }
 
@@ -5652,20 +5865,25 @@ public sealed class BrowserUiRenderer
                     await api(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST", body: "{}" });
                     state.cancelledActiveRunId = runId;
                     state.activeRun = null;
+                    state.localBusy = false;
+                    state.draftAnalysisRunning = false;
                     state.pendingPrototypeSkeletonRun = null;
+                    state.v2PrototypeCreationStatus = "idle";
+                    writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });
                     resetPrototypeSkeletonBannerState(true);
+                    unlockPrototypeFormAfterCancel();
                     out("当前 run 已取消。");
-                    $("activeRunBanner").classList.add("hidden");
-                    $("activeRunBanner").replaceChildren();
+                    hideActiveRunBanner();
                     applyGlobalBusyState();
+                    unlockPrototypeFormAfterCancel();
                     if (state.projectId) {
                       await Promise.allSettled([
                         loadRuns(),
-                        loadPrototypeProgress(),
                         refreshAssetInventoryAvailability(),
                         refreshGddOutlineStatus()
                       ]);
                     }
+                    unlockPrototypeFormAfterCancel();
                   } catch (error) {
                     showError(error);
                     await refreshActiveRun();
@@ -5677,6 +5895,14 @@ public sealed class BrowserUiRenderer
                   try {
                     const wasBusy = isGlobalBusy();
                     const activeRun = await api("/api/account/active-run");
+                    if (!activeRun?.runId) {
+                      state.activeRun = null;
+                      if (!hasPendingPrototypeSkeletonBannerRun()) {
+                        state.pendingPrototypeSkeletonRun = null;
+                      }
+                      applyGlobalBusyState();
+                      return;
+                    }
                     if (state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId) {
                       if (runIsBusy(activeRun)) {
                         state.activeRun = null;
@@ -5792,6 +6018,8 @@ public sealed class BrowserUiRenderer
                   setLocalBusy(true, "草稿分析中，请等待当前任务执行完毕。");
                   $("importDraft").textContent = "模型分析中...";
                   $("runPrototype").textContent = "草稿分析中..暂不可启动原型.";
+                  setButtonDisabledState($("importDraft"), true, "草稿分析中，请等待当前任务执行完毕。");
+                  setButtonDisabledState($("runPrototype"), true, "草稿分析中，请等待当前任务执行完毕。");
                   $("draftImportStatus").className = "card muted";
                   $("draftImportStatus").textContent = "后端正在调用模型分析 txt 草稿，完成前不能启动原型创建。";
                   $("draftImportStatus").classList.remove("hidden");
@@ -5813,10 +6041,13 @@ public sealed class BrowserUiRenderer
                     showError(error);
                   } finally {
                     setLocalBusy(false);
-                    $("importDraft").disabled = false;
-                    $("importDraft").textContent = "分析草稿并回填";
+                    resetPrototypeActionButtonsVisualState();
+                    setButtonDisabledState($("runPrototype"), isGlobalBusy());
+                    setButtonDisabledState($("importDraft"), false);
                     updateDraftImportButtonState();
                     await refreshActiveRun();
+                    resetPrototypeActionButtonsVisualState();
+                    setButtonDisabledState($("runPrototype"), isGlobalBusy());
                   }
                 }
 
@@ -5825,8 +6056,8 @@ public sealed class BrowserUiRenderer
                   const button = $("importDraft");
                   if (!button) return;
                   const canImport = !!state.projectId && !!file && !isGlobalBusy();
-                  button.disabled = !canImport;
-                  button.title = canImport ? "" : "请选择一个 txt 文件后再分析草稿并回填。";
+                  setButtonDisabledState(button, !canImport, "请选择一个 txt 文件后再分析草稿并回填。");
+                  button.classList.toggle("import-draft-ready", canImport);
                 }
 
                 async function createProjectPackage() {
@@ -6072,6 +6303,7 @@ public sealed class BrowserUiRenderer
 
                 async function refreshPrototypeSkeletonRun(runId) {
                   if (!runId) return;
+                  if (state.cancelledActiveRunId === runId) return;
                   try {
                     const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
                     const run = result?.run || null;
@@ -6204,6 +6436,18 @@ public sealed class BrowserUiRenderer
                   try {
                     $("validatePrototype").disabled = isGlobalBusy();
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
+                    if (state.cancelledActiveRunId) {
+                      const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
+                      if (["queued", "running"].includes(creationStatus)) {
+                        state.v2PrototypeCreationStatus = "idle";
+                        state.prototypeFailure = "";
+                        renderPrototypeProgress(cancelledPrototypeProgressSnapshot());
+                        setPrototypeFormLocked(false);
+                        if ($("draftFile")) $("draftFile").disabled = false;
+                        writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });
+                        return;
+                      }
+                    }
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
                     if (acceptanceStatus === "succeeded") {
@@ -6378,12 +6622,21 @@ public sealed class BrowserUiRenderer
 
                 function setPrototypeFormLocked(locked) {
                   prototypeInputIds.forEach(id => $(id).disabled = locked);
-                  $("runPrototype").disabled = locked || isGlobalBusy();
-                  $("runPrototype").textContent = locked ? "原型骨架创建中..刷新页面查阅创建进度." : "运行原型骨架创建";
+                  if (!locked) {
+                    resetPrototypeActionButtonsVisualState();
+                  }
+                  if ($("runPrototype")) {
+                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架创建中，请等待当前任务执行完毕。" : "");
+                    $("runPrototype").textContent = locked ? "原型骨架创建中..刷新页面查阅创建进度." : "运行原型骨架创建";
+                  }
+                  if ($("importDraft")) {
+                    $("importDraft").textContent = locked ? "模型分析中..." : "分析草稿并回填";
+                  }
                   if ($("repairPrototype")) {
-                    $("repairPrototype").disabled = locked || isGlobalBusy();
+                    setButtonDisabledState($("repairPrototype"), locked || isGlobalBusy(), locked ? "修复计划处理中，请等待当前任务执行完毕。" : "");
                     $("repairPrototype").textContent = locked ? "修复计划处理中..刷新页面查阅进度." : "生成修复计划";
                   }
+                  updateDraftImportButtonState();
                 }
 
                 async function runTdd(stage) {
@@ -6527,6 +6780,7 @@ public sealed class BrowserUiRenderer
                 });
                 renderChatHistory();
                 restorePrototypeSkeletonBannerFromStorage();
+                void refreshActiveRun();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
                 $("loadAssetInventory").onclick = loadAssetInventory;

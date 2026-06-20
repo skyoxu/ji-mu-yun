@@ -689,8 +689,7 @@ def _dotnet_build_hygiene(root: Path, targets: list[str]) -> dict[str, object]:
 
 def _build_gdunit_step(*, godot_bin: str, gdunit_paths: list[str], timeout_sec: int, report_dir: str) -> dict[str, object]:
     cmd = [
-        "py",
-        "-3",
+        sys.executable,
         "scripts/python/run_gdunit.py",
         "--prewarm",
         "--godot-bin",

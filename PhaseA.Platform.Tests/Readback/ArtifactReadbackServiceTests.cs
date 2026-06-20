@@ -84,6 +84,9 @@ public sealed class ArtifactReadbackServiceTests
         active.RunId.Should().Be(runId);
         active.RunType.Should().Be("prototype-draft-analysis");
         active.ProgressLabel.Should().Be("正在分析草稿。");
+        active.CreatedUtc.Should().NotBeNullOrWhiteSpace();
+        active.StartedUtc.Should().NotBeNullOrWhiteSpace();
+        active.ProgressUpdatedUtc.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

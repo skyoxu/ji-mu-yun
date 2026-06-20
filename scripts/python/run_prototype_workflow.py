@@ -2966,15 +2966,17 @@ def _extract_summary_path_from_output(output: str) -> str:
     return match.group(1).strip().replace("\\", "/")
 
 
-def _is_expected_red_tdd_capture(*, day: int, rc: int, output: str) -> bool:
+def _classify_expected_red_tdd_capture(*, day: int, rc: int, output: str) -> str:
     if day != 3 or rc == 0:
-        return False
+        return ""
     text = str(output or "")
-    return (
-        "PROTOTYPE_TDD status=ok" in text
-        and "stage=red" in text
-        and "expected=fail" in text
-    )
+    if "stage=red" not in text or "expected=fail" not in text:
+        return ""
+    if "PROTOTYPE_TDD status=ok" in text:
+        return "prototype_tdd_red_expected_fail_captured"
+    if "PROTOTYPE_TDD status=unexpected_green" in text:
+        return "prototype_tdd_red_unexpected_green_continued"
+    return ""
 
 
 def _split_csv(value: str) -> list[str]:
@@ -3323,12 +3325,13 @@ def main(argv: list[str] | None = None) -> int:
                 summary_path = _extract_summary_path_from_output(output)
                 if summary_path:
                     step_result["summary_path"] = summary_path
-            if _is_expected_red_tdd_capture(day=day, rc=rc, output=output):
+            red_capture_reason = _classify_expected_red_tdd_capture(day=day, rc=rc, output=output)
+            if red_capture_reason:
                 step_result["status"] = "ok"
-                step_result["reason"] = "prototype_tdd_red_expected_fail_captured"
+                step_result["reason"] = red_capture_reason
             steps_run.append(step_result)
             if rc != 0:
-                if _is_expected_red_tdd_capture(day=day, rc=rc, output=output):
+                if red_capture_reason:
                     continue
                 print(output, end="")
                 return rc

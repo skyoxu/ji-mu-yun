@@ -400,6 +400,33 @@ app.MapGet("/api/projects/{projectId}/runs", async (
     return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
+app.MapGet("/api/projects/{projectId}/ui-state", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    var snapshot = await store.GetProjectUiStateAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return snapshot is null ? Results.NotFound(new { error = "project_ui_state_not_found" }) : Results.Ok(new
+    {
+        snapshot.AccountId,
+        snapshot.ProjectId,
+        stateJson = snapshot.StateJson,
+        snapshot.UpdatedUtc
+    });
+});
+
+app.MapPost("/api/projects/{projectId}/ui-state", async (
+    string projectId,
+    JsonElement payload,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    await store.UpsertProjectUiStateAsync(CurrentAccountId(context), projectId, payload.GetRawText(), cancellationToken);
+    return Results.Ok(new { projectId, updated = true });
+});
+
 app.MapPost("/api/projects/{projectId}/packages", async (
     string projectId,
     HttpContext context,

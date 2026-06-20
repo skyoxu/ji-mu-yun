@@ -1663,7 +1663,7 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
         self.assertEqual("ok", day3["status"])
         self.assertTrue(any("create-prototype-scene" in call for call in run_calls))
 
-    def test_unexpected_green_red_stage_should_fail_during_confirmed_run(self) -> None:
+    def test_unexpected_green_red_stage_should_continue_with_recorded_reason(self) -> None:
         module = _load_module("prototype_workflow_router_rerun_fail_red", "scripts/python/run_prototype_workflow.py")
         template = """# 原型：rpgdemo1
 
@@ -1756,7 +1756,12 @@ class PrototypeWorkflowRouterTests(unittest.TestCase):
                         ]
                     )
 
-        self.assertEqual(1, rc)
+        self.assertEqual(0, rc)
+        active_path = root / "logs" / "ci" / "active-prototypes" / "rpgdemo1.active.json"
+        active_state = json.loads(active_path.read_text(encoding="utf-8"))
+        day3 = next(step for step in active_state["steps_run"] if step["day"] == 3)
+        self.assertEqual("ok", day3["status"])
+        self.assertEqual("prototype_tdd_red_unexpected_green_continued", day3["reason"])
 
     def test_expected_red_stage_capture_should_continue_workflow(self) -> None:
         module = _load_module("prototype_workflow_router_expected_red_continue", "scripts/python/run_prototype_workflow.py")

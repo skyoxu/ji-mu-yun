@@ -638,6 +638,28 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task HasRunnerLockAsync_ShouldIgnoreCancelledRunLocks()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Lock Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "prototype-iteration-goal");
+        await store.MarkRunStartedAsync(runId);
+        (await store.TryAcquireRunnerLockAsync(project.ProjectId, runId)).Should().BeTrue();
+        await store.CancelRunAsync(accountId, runId);
+
+        (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task MarkRunStartedAsync_ShouldNotReviveCancelledQueuedRun()
     {
         using var database = TempSqliteDatabase.Create();

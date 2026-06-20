@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import os
 import tempfile
+import sys
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -19,6 +20,20 @@ def _load_module(name: str, relative_path: str):
 
 
 class PrototypeTddTests(unittest.TestCase):
+    def test_build_gdunit_step_should_use_current_python_interpreter(self) -> None:
+        module = _load_module("run_prototype_tdd_gdunit_test_module", "scripts/python/run_prototype_tdd.py")
+
+        step = module._build_gdunit_step(
+            godot_bin=r"C:\Godot\Godot.exe",
+            gdunit_paths=["tests/Prototype/Demo"],
+            timeout_sec=120,
+            report_dir="logs/ci/test/gdunit-report",
+        )
+
+        self.assertEqual(Path(step["cmd"][0]), Path(sys.executable))
+        self.assertEqual(step["cmd"][1], "scripts/python/run_gdunit.py")
+        self.assertIn("--prewarm", step["cmd"])
+
     def test_resolve_dotnet_prefers_phasea_repository_root_bundle(self) -> None:
         module = _load_module("run_prototype_tdd_test_module", "scripts/python/run_prototype_tdd.py")
         with tempfile.TemporaryDirectory() as td:
@@ -99,6 +114,12 @@ class PrototypeTddTests(unittest.TestCase):
 
             self.assertEqual(rc, 0)
             self.assertTrue((repo_root / "logs" / "ci" / "demo-out" / "summary.json").is_file())
+
+    def test_evaluate_steps_should_report_unexpected_green_for_red_stage_when_all_checks_pass(self) -> None:
+        module = _load_module("run_prototype_tdd_unexpected_green_test_module", "scripts/python/run_prototype_tdd.py")
+        status, message = module._evaluate_steps(expected="fail", steps=[{"rc": 0}])
+        self.assertEqual(status, "unexpected_green")
+        self.assertIn("all checks passed", message)
 
 
 if __name__ == "__main__":
