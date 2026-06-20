@@ -791,7 +791,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ActiveTabId = \"chat\";");
         html.Should().Contain("v2SelectedStep = \"new-project\";");
         html.Should().Contain("v2RenderTabs();");
-        html.Should().Contain("if (state.cancelledActiveRunId) return false;");
+        html.Should().Contain("if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) return false;");
         html.Should().Contain("window.addEventListener(\"beforeunload\", () =>");
         html.Should().Contain("callV2(\"v2WriteProjectUiState\")");
         html.Should().NotContain("window.addEventListener(\"beforeunload\", v2WriteProjectUiState)");
@@ -895,7 +895,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ApplyPrototypeFormLock");
         html.Should().Contain("v2ShouldLockPrototypeForm");
         html.Should().Contain("v2-prototype-locked");
-        html.Should().Contain("$(\"draftFile\").disabled = locked");
+        html.Should().Contain("setPrototypeDraftFileLocked(locked);");
         html.Should().Contain("setButtonDisabledState($(\"importDraft\"), locked");
         html.Should().Contain("原型骨架已创建，不能重复创建");
         html.Should().Contain("setPrototypeFormLocked = function(locked)");
@@ -1016,6 +1016,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("button.button-state-disabled");
         html.Should().Contain("button[disabled]");
         html.Should().Contain("opacity: 0.45 !important");
+        html.Should().Contain("background-color: #9ca3af !important");
         html.Should().Contain("v2-skill-row");
         html.Should().Contain("skillDescription");
         html.Should().NotContain("v2CreateIterationPlanFromChat");
@@ -1460,6 +1461,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (!run.runId) return false;");
         html.Should().Contain("status === \"queued\" || status === \"running\"");
         html.Should().Contain("state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId");
+        html.Should().Contain("writeCancelledPrototypeMarker(runId);");
         html.Should().Contain("writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });");
         html.Should().Contain("state.v2PrototypeCreationStatus = \"idle\";");
         html.Should().Contain("if (!activeRun?.runId)");
@@ -1467,6 +1469,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function setButtonVisualState(button, enabled)");
         html.Should().Contain("function setButtonBaseClass(button, baseClassName)");
         html.Should().Contain("function cancelledPrototypeProgressSnapshot()");
+        html.Should().Contain("function cancelledPrototypeMarkerKey(projectId = state.projectId)");
+        html.Should().Contain("function writeCancelledPrototypeMarker(runId)");
+        html.Should().Contain("function readCancelledPrototypeMarker(projectId = state.projectId)");
+        html.Should().Contain("function setPrototypeDraftFileLocked(locked)");
         html.Should().Contain("function setButtonDisabledState(button, disabled, title = \"\")");
         html.Should().Contain("function resetPrototypeActionButtonsVisualState()");
         html.Should().Contain("function unlockPrototypeFormAfterCancel()");
@@ -1475,6 +1481,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setButtonBaseClass($(\"importDraft\"), \"secondary import-draft-button\");");
         html.Should().Contain("button.classList.remove(\"button-state-enabled\", \"button-state-disabled\", \"import-draft-ready\");");
         html.Should().Contain("if ([\"queued\", \"running\"].includes(creationStatus))");
+        html.Should().Contain("if (state.cancelledActiveRunId || readCancelledPrototypeMarker())");
         html.Should().Contain("if ($(\"draftFile\")) $(\"draftFile\").disabled = false;");
         html.Should().Contain("button.classList.toggle(\"button-state-enabled\", !!enabled);");
         html.Should().Contain("button.classList.toggle(\"button-state-disabled\", !enabled);");

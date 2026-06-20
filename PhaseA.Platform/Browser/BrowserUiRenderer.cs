@@ -1277,7 +1277,7 @@ public sealed class BrowserUiRenderer
                   return state.v2PrototypeStatus || "";
                 }
                 function v2ShouldLockPrototypeForm() {
-                  if (state.cancelledActiveRunId) return false;
+                  if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) return false;
                   const status = String(state?.v2PrototypeCreationStatus || v2PrototypeStatus() || "").trim().toLowerCase();
                   return !!state.projectId && status !== "" && !["idle", "failed"].includes(status);
                 }
@@ -1285,7 +1285,7 @@ public sealed class BrowserUiRenderer
                   const locked = v2ShouldLockPrototypeForm();
                   $("prototypeWorkflowPanel")?.classList.toggle("v2-prototype-locked", locked);
                   prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = locked; });
-                  if ($("draftFile")) $("draftFile").disabled = locked;
+                  setPrototypeDraftFileLocked(locked);
                   if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "原型骨架已创建，不能重复创建。");
                   if (!locked && typeof resetPrototypeActionButtonsVisualState === "function") {
                     resetPrototypeActionButtonsVisualState();
@@ -1737,6 +1737,9 @@ public sealed class BrowserUiRenderer
                   cursor: not-allowed;
                   opacity: 0.45 !important;
                   filter: grayscale(0.25);
+                  background-color: #9ca3af !important;
+                  border-color: #9ca3af !important;
+                  color: #f8fafc !important;
                 }
                 label.field-invalid input,
                 label.field-invalid textarea,
@@ -5719,6 +5722,40 @@ public sealed class BrowserUiRenderer
                   state.cancelledActiveRunId = "";
                 }
 
+                function cancelledPrototypeMarkerKey(projectId = state.projectId) {
+                  return `phaseA.cancelledPrototypeRun.${projectId || "none"}`;
+                }
+
+                function writeCancelledPrototypeMarker(runId) {
+                  if (!state.projectId || !runId) return;
+                  try {
+                    localStorage.setItem(cancelledPrototypeMarkerKey(), JSON.stringify({
+                      runId,
+                      updatedAt: new Date().toISOString()
+                    }));
+                  } catch {}
+                }
+
+                function readCancelledPrototypeMarker(projectId = state.projectId) {
+                  if (!projectId) return null;
+                  try {
+                    const marker = JSON.parse(localStorage.getItem(cancelledPrototypeMarkerKey(projectId)) || "null");
+                    return marker?.runId ? marker : null;
+                  } catch {
+                    return null;
+                  }
+                }
+
+                function clearCancelledPrototypeMarker(projectId = state.projectId) {
+                  if (!projectId) return;
+                  try { localStorage.removeItem(cancelledPrototypeMarkerKey(projectId)); } catch {}
+                }
+
+                function shouldSuppressPrototypeFormLockForProgress(progress) {
+                  const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
+                  return !!readCancelledPrototypeMarker() && ["queued", "running"].includes(creationStatus);
+                }
+
                 function cancelledPrototypeProgressSnapshot() {
                   return {
                     status: "idle",
@@ -5733,7 +5770,10 @@ public sealed class BrowserUiRenderer
 
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
                   if (busy) invalidateWorkflowRouteAction();
-                  if (busy) clearCancelledActiveRunState();
+                  if (busy) {
+                    clearCancelledActiveRunState();
+                    clearCancelledPrototypeMarker();
+                  }
                   state.localBusy = busy;
                   applyGlobalBusyState(message);
                 }
@@ -5822,6 +5862,11 @@ public sealed class BrowserUiRenderer
                   setButtonDisabledState($("repairPrototype"), false);
                 }
 
+                function setPrototypeDraftFileLocked(locked) {
+                  if (!$("draftFile")) return;
+                  $("draftFile").disabled = !!locked && !readCancelledPrototypeMarker();
+                }
+
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
@@ -5864,6 +5909,7 @@ public sealed class BrowserUiRenderer
                   try {
                     await api(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST", body: "{}" });
                     state.cancelledActiveRunId = runId;
+                    writeCancelledPrototypeMarker(runId);
                     state.activeRun = null;
                     state.localBusy = false;
                     state.draftAnalysisRunning = false;
@@ -6436,7 +6482,7 @@ public sealed class BrowserUiRenderer
                   try {
                     $("validatePrototype").disabled = isGlobalBusy();
                     const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
-                    if (state.cancelledActiveRunId) {
+                    if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) {
                       const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
                       if (["queued", "running"].includes(creationStatus)) {
                         state.v2PrototypeCreationStatus = "idle";
@@ -6447,6 +6493,7 @@ public sealed class BrowserUiRenderer
                         writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });
                         return;
                       }
+                      clearCancelledPrototypeMarker();
                     }
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
@@ -6622,6 +6669,7 @@ public sealed class BrowserUiRenderer
 
                 function setPrototypeFormLocked(locked) {
                   prototypeInputIds.forEach(id => $(id).disabled = locked);
+                  setPrototypeDraftFileLocked(locked);
                   if (!locked) {
                     resetPrototypeActionButtonsVisualState();
                   }
