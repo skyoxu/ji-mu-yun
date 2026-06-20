@@ -157,8 +157,8 @@ public sealed class ProjectCreationService
         }
 
         if (project.BootstrapStatus == "running" ||
-            await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
-            await _metadataStore.HasActiveRunAsync(projectId, cancellationToken))
+            await _metadataStore.HasActiveRunAsync(projectId, cancellationToken) ||
+            await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken))
         {
             return ProjectDeletionResult.Failure("project_busy");
         }
