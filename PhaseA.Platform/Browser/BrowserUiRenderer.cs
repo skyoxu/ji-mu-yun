@@ -5633,7 +5633,15 @@ public sealed class BrowserUiRenderer
                   try {
                     const wasBusy = isGlobalBusy();
                     const activeRun = await api("/api/account/active-run");
-                    if (state.cancelledActiveRunId && (!activeRun?.runId || activeRun.runId !== state.cancelledActiveRunId || !runIsBusy(activeRun))) {
+                    if (state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId) {
+                      if (runIsBusy(activeRun)) {
+                        state.activeRun = null;
+                        state.pendingPrototypeSkeletonRun = null;
+                        applyGlobalBusyState();
+                        return;
+                      }
+                      state.cancelledActiveRunId = "";
+                    } else if (state.cancelledActiveRunId && (!activeRun?.runId || activeRun.runId !== state.cancelledActiveRunId || !runIsBusy(activeRun))) {
                       state.cancelledActiveRunId = "";
                     }
                     if (activeRun?.runId && state.cancelledActiveRunId === activeRun.runId && runIsBusy(activeRun)) {

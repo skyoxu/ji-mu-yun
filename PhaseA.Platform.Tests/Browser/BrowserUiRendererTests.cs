@@ -1433,6 +1433,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function canCancelActiveRun(run)");
         html.Should().Contain("function runIsBusy(run)");
         html.Should().Contain("status === \"queued\" || status === \"running\"");
+        html.Should().Contain("state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId");
         html.Should().Contain("busy-banner-actions");
         html.Should().Contain("取消任务");
         html.Should().Contain("startedAtMs: Math.max(0, state.prototypeSkeletonBannerStartedAtMs || 0)");
