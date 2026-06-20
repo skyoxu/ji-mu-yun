@@ -1,4 +1,7 @@
 using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Text.Json;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
 
@@ -6,6 +9,8 @@ namespace PhaseA.Platform.Browser;
 
 public sealed class BrowserUiRenderer
 {
+    private static readonly string[] PrototypeSkeletonRunNotes = LoadPrototypeSkeletonRunNotes();
+
     public string RenderShellV2()
     {
         return RenderShell()
@@ -146,7 +151,7 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-left-project-button { width: 100%; display: grid; gap: 0.1rem; text-align: left; border: 1px solid transparent; background: transparent; color: var(--ink); border-radius: 0.65rem; padding: 0.5rem 0.55rem; }
                 body.v2-detail .v2-left-project-button.current { background: #f2d16b; border-color: #d7a924; font-weight: 800; }
                 body.v2-detail .v2-left-project-meta { color: var(--muted); font-size: 0.76rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                body.v2-detail .v2-tabs { position: sticky; top: 0; z-index: 5; display: flex; align-items: end; gap: 0.12rem; overflow-x: auto; padding: 0 0.45rem; margin-bottom: -1px; border-bottom: 0; background: transparent; }
+                body.v2-detail .v2-tabs { position: sticky; top: 0; z-index: 1301; display: flex; align-items: end; gap: 0.12rem; overflow-x: auto; padding: 0 0.45rem; margin-bottom: -1px; border-bottom: 0; background: transparent; }
                 body.v2-detail .v2-tab { width: auto; min-width: 6.5rem; max-width: 13rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border: 1px solid var(--line); border-bottom-color: transparent; background: #e2e0dc; color: var(--muted); border-radius: 0.65rem 0.65rem 0 0; padding: 0.52rem 0.72rem 0.58rem; white-space: nowrap; box-shadow: inset 0 -0.3rem 0.45rem rgba(57, 43, 24, 0.035); }
                 body.v2-detail .v2-tab.active { background: #fffdf8; color: var(--ink); border-color: var(--line); border-bottom-color: #fffdf8; box-shadow: none; position: relative; z-index: 2; font-weight: 800; }
                 body.v2-detail .v2-tab.active > span:first-child { font-weight: 800; }
@@ -261,9 +266,11 @@ public sealed class BrowserUiRenderer
 
     private static string RenderV2EnhancementScript()
     {
+        const string notesPlaceholder = "__PROTOTYPE_SKELETON_RUN_NOTES__";
         return """
               <script>
                 document.body.classList.add("v2-detail");
+                const PrototypeSkeletonRunNotes = __PROTOTYPE_SKELETON_RUN_NOTES__;
                 const v2Steps = [
                   ["new-project", "游戏项目概述", "panel"],
                   ["create-prototype", "原型骨架创建", "spark"],
@@ -1468,7 +1475,8 @@ public sealed class BrowserUiRenderer
                 setInterval(v2RenderProgress, 2000);
               </script>
             </body>
-            """;
+            """
+            .Replace(notesPlaceholder, JsonSerializer.Serialize(PrototypeSkeletonRunNotes), StringComparison.Ordinal);
     }
 
     public string RenderShell()
@@ -1731,31 +1739,115 @@ public sealed class BrowserUiRenderer
                   line-height: 1.15;
                 }
                 .busy-banner {
-                  position: fixed;
-                  top: 0.75rem;
-                  left: 50%;
                   z-index: 1200;
                   width: min(calc(100vw - 2rem), 72rem);
                   min-height: 2.75rem;
-                  transform: translateX(-50%);
                   display: flex;
                   align-items: center;
                   justify-content: space-between;
                   gap: 0.75rem;
                   border: 1px solid var(--accent-2);
                   background: #fff8e6;
-                  border-radius: 0.9rem;
+                  border-top: 0;
+                  border-radius: 0 0 0.9rem 0.9rem;
                   box-shadow: 0 0.85rem 2.5rem rgba(57, 43, 24, 0.2);
                   padding: 0.7rem 1rem;
                   color: var(--ink);
                   font-weight: 700;
                   line-height: 1.35;
                   text-align: center;
-                  max-height: min(7rem, calc(100vh - 1.5rem));
+                  max-height: 100px;
                   overflow-y: auto;
                   overflow-wrap: break-word;
                   word-break: normal;
+                  pointer-events: none;
+                }
+                .busy-banner.busy-banner-prototype-skeleton {
+                  display: grid;
+                  gap: 0.35rem;
+                  grid-template-columns: minmax(0, 1fr) auto;
+                  justify-items: stretch;
+                  align-items: start;
+                  text-align: left;
+                  height: 100px;
+                  min-height: 100px;
+                  max-height: 100px;
+                  overflow: hidden;
+                }
+                #activeRunBanner {
+                  position: absolute;
+                  top: 0;
+                  left: 50%;
+                  transform: translateX(-50%);
+                }
+                #activeRunBanner.busy-banner-prototype-skeleton {
+                  position: absolute;
+                }
+                .busy-banner > span,
+                .busy-banner .busy-banner-lines,
+                .busy-banner .busy-banner-actions,
+                .busy-banner .busy-banner-note-window,
+                .busy-banner .busy-banner-line {
                   pointer-events: auto;
+                  user-select: text;
+                }
+                .busy-banner.busy-banner-prototype-skeleton.is-expanded {
+                  height: min(27rem, calc(100vh - 6rem));
+                  min-height: min(27rem, calc(100vh - 6rem));
+                  max-height: calc(100vh - 6rem);
+                }
+                .busy-banner-prototype-skeleton .busy-banner-lines {
+                  display: grid;
+                  gap: 0.2rem;
+                  width: 100%;
+                  min-height: 0;
+                  overflow: hidden;
+                  grid-column: 1;
+                }
+                .busy-banner-prototype-skeleton .busy-banner-line {
+                  min-height: 1.35rem;
+                  line-height: 1.35;
+                  white-space: normal;
+                }
+                .busy-banner-prototype-skeleton .busy-banner-line.is-muted {
+                  color: var(--muted);
+                  font-weight: 600;
+                }
+                .busy-banner-prototype-skeleton .busy-banner-details {
+                  display: grid;
+                  align-content: start;
+                  gap: 0.2rem;
+                  width: 100%;
+                  min-height: 0;
+                  max-height: 15rem;
+                  overflow-y: auto;
+                  overscroll-behavior: contain;
+                  pointer-events: auto;
+                  padding-right: 0.15rem;
+                  grid-column: 1;
+                }
+                .busy-banner-prototype-skeleton .busy-banner-note-window {
+                  display: grid;
+                  align-content: start;
+                  gap: 0.2rem;
+                  min-height: 0;
+                  overflow: hidden;
+                }
+                .busy-banner-prototype-skeleton.is-expanded .busy-banner-note-window {
+                  max-height: 15rem;
+                  overflow-y: auto;
+                  overscroll-behavior: contain;
+                  pointer-events: auto;
+                  padding-right: 0.15rem;
+                }
+                .busy-banner-prototype-skeleton .busy-banner-actions {
+                  display: grid;
+                  gap: 0.35rem;
+                  align-content: start;
+                  justify-items: stretch;
+                  grid-column: 2;
+                  grid-row: 1 / span 2;
+                  min-width: 6rem;
                 }
                 .busy-banner > span { flex: 1 1 auto; min-width: 0; text-align: left; }
                 .busy-banner button {
@@ -1765,6 +1857,8 @@ public sealed class BrowserUiRenderer
                   max-width: 8rem;
                   padding: 0.45rem 0.8rem;
                   white-space: nowrap;
+                  pointer-events: auto;
+                  user-select: none;
                 }
                 .modal-backdrop {
                   position: fixed;
@@ -1799,6 +1893,10 @@ public sealed class BrowserUiRenderer
                   word-break: break-all;
                 }
                 .hidden { display: none !important; }
+                .header-low {
+                  position: relative;
+                  z-index: 30;
+                }
                 @media (max-width: 920px) {
                   .header-row, main, .grid, .health-grid { grid-template-columns: 1fr; }
                   .top-actions { justify-content: stretch; }
@@ -1807,8 +1905,9 @@ public sealed class BrowserUiRenderer
               </style>
             </head>
             <body>
+              <div id="activeRunBanner" class="busy-banner hidden" role="status" aria-live="polite"></div>
               <header>
-                <div class="header-row">
+                <div class="header-row header-low">
                   <div>
                     <h1>Game Ren</h1>
                   </div>
@@ -1821,7 +1920,6 @@ public sealed class BrowserUiRenderer
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
                 </div>
-                <div id="activeRunBanner" class="busy-banner hidden" role="status" aria-live="polite"></div>
               </header>
               <div id="oneTimeTokenModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="oneTimeTokenTitle">
                 <div class="modal-card">
@@ -2022,7 +2120,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
@@ -3318,6 +3416,9 @@ public sealed class BrowserUiRenderer
                   $("prototypeCommandPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
                   state.nextSuggestedFeedback = "";
+                  state.prototypeSkeletonBannerExpanded = false;
+                  state.prototypeSkeletonBannerIndex = 0;
+                  state.prototypeSkeletonBannerTick = 0;
                   applyGlobalBusyState();
                   $("sessionStatus").textContent = token()
                     ? "Token 已保留。连接失败或认证未通过时，请点击验证并进入重试。"
@@ -5168,7 +5269,16 @@ public sealed class BrowserUiRenderer
                 }
 
                 function isGlobalBusy() {
-                  return state.localBusy || (!!state.activeRun?.busy && !isInlineOnlyRun(state.activeRun));
+                  return state.localBusy ||
+                    (runIsBusy(state.activeRun) && !isInlineOnlyRun(state.activeRun)) ||
+                    hasPendingPrototypeSkeletonBannerRun();
+                }
+
+                function runIsBusy(run) {
+                  if (!run) return false;
+                  if (run.busy === true) return true;
+                  const status = String(run.status || "").trim().toLowerCase();
+                  return status === "queued" || status === "running";
                 }
 
                 function isInlineOnlyRun(run) {
@@ -5177,7 +5287,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function activeRunText(run) {
-                  if (!run?.busy) return "";
+                  if (!runIsBusy(run)) return "";
                   if (run.heavyRunnerQueuePosition) {
                     const waitSeconds = Math.max(0, run.heavyRunnerEstimatedWaitSeconds || 0);
                     const waitMinutes = Math.max(1, Math.ceil(waitSeconds / 60));
@@ -5185,6 +5295,236 @@ public sealed class BrowserUiRenderer
                   }
                   const label = run.progressLabel || run.progressStep || run.status || "";
                   return `当前任务执行中：${run.runType || "未知"} · ${publicStatusLabel(run.status || "running")} · ${run.runId || ""}${label ? " · " + label : ""}`;
+                }
+
+                function isPrototypeSkeletonRunType(run) {
+                  const runType = String(run?.runType || "").trim().toLowerCase();
+                  return runType === "prototype-7day-playable";
+                }
+
+                function isPrototypeSkeletonCreationRun(run) {
+                  if (!isPrototypeSkeletonRunType(run)) return false;
+                  const step = String(run?.progressStep || "").trim().toLowerCase();
+                  const label = String(run?.progressLabel || "").trim();
+                  return !step.includes("validation") && !label.includes("验收");
+                }
+
+                function hasPendingPrototypeSkeletonBannerRun() {
+                  return !!state.pendingPrototypeSkeletonRun?.runId && isPrototypeSkeletonCreationRun(state.pendingPrototypeSkeletonRun);
+                }
+
+                function skeletonBannerRun() {
+                  if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun)) return state.activeRun;
+                  return hasPendingPrototypeSkeletonBannerRun() ? state.pendingPrototypeSkeletonRun : null;
+                }
+
+                function prototypeSkeletonBannerLine1() {
+                  return "系统正在进行游戏原型骨架创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；";
+                }
+
+                function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId) {
+                  return `phaseA.prototypeSkeletonBanner.${runId || "none"}`;
+                }
+
+                function prototypeSkeletonBannerCurrentKey() {
+                  return "phaseA.prototypeSkeletonBanner.current";
+                }
+
+                function prototypeSkeletonNowMs() {
+                  return Date.now ? Date.now() : new Date().getTime();
+                }
+
+                function readPrototypeSkeletonBannerState(runId) {
+                  if (!runId) return null;
+                  try {
+                    const cached = JSON.parse(localStorage.getItem(prototypeSkeletonBannerStorageKey(runId)) || "null");
+                    return cached && cached.runId === runId ? cached : null;
+                  } catch {
+                    return null;
+                  }
+                }
+
+                function writePrototypeSkeletonBannerState() {
+                  if (!state.prototypeSkeletonBannerRunId) return;
+                  try {
+                    localStorage.setItem(prototypeSkeletonBannerCurrentKey(), state.prototypeSkeletonBannerRunId);
+                    localStorage.setItem(prototypeSkeletonBannerStorageKey(), JSON.stringify({
+                      runId: state.prototypeSkeletonBannerRunId,
+                      expanded: !!state.prototypeSkeletonBannerExpanded,
+                      displayedCount: Math.max(0, state.prototypeSkeletonBannerDisplayedCount || 0),
+                      startedAtMs: Math.max(0, state.prototypeSkeletonBannerStartedAtMs || 0),
+                      tick: Math.max(0, state.prototypeSkeletonBannerTick || 0),
+                      updatedAt: new Date().toISOString()
+                    }));
+                  } catch {}
+                }
+
+                function clearPrototypeSkeletonBannerState(runId = state.prototypeSkeletonBannerRunId) {
+                  if (!runId) return;
+                  try {
+                    localStorage.removeItem(prototypeSkeletonBannerStorageKey(runId));
+                    if (localStorage.getItem(prototypeSkeletonBannerCurrentKey()) === runId) {
+                      localStorage.removeItem(prototypeSkeletonBannerCurrentKey());
+                    }
+                  } catch {}
+                }
+
+                function resetPrototypeSkeletonBannerState(clearPersisted = false) {
+                  const runId = state.prototypeSkeletonBannerRunId;
+                  state.prototypeSkeletonBannerExpanded = false;
+                  state.prototypeSkeletonBannerIndex = 0;
+                  state.prototypeSkeletonBannerTick = 0;
+                  state.prototypeSkeletonBannerRunId = "";
+                  state.prototypeSkeletonBannerDisplayedCount = 0;
+                  state.prototypeSkeletonBannerStartedAtMs = 0;
+                  if (clearPersisted) clearPrototypeSkeletonBannerState(runId);
+                }
+
+                function prototypeSkeletonDisplayCountFromStartedAt(startedAtMs) {
+                  if (!PrototypeSkeletonRunNotes.length) return 0;
+                  const start = Math.max(0, startedAtMs || 0);
+                  if (!start) return 1;
+                  const elapsedMs = Math.max(0, prototypeSkeletonNowMs() - start);
+                  return Math.min(PrototypeSkeletonRunNotes.length, Math.max(1, Math.floor(elapsedMs / 20000) + 1));
+                }
+
+                function syncPrototypeSkeletonBannerDisplayedCount() {
+                  const targetCount = prototypeSkeletonDisplayCountFromStartedAt(state.prototypeSkeletonBannerStartedAtMs);
+                  if (targetCount > state.prototypeSkeletonBannerDisplayedCount) {
+                    state.prototypeSkeletonBannerDisplayedCount = targetCount;
+                    writePrototypeSkeletonBannerState();
+                    return true;
+                  }
+                  return false;
+                }
+
+                function restorePrototypeSkeletonBannerFromStorage() {
+                  if (state.prototypeSkeletonBannerRunId) return;
+                  try {
+                    const runId = localStorage.getItem(prototypeSkeletonBannerCurrentKey()) || "";
+                    const cached = readPrototypeSkeletonBannerState(runId);
+                    if (!cached?.runId) return;
+                    state.prototypeSkeletonBannerRunId = cached.runId;
+                    state.prototypeSkeletonBannerExpanded = !!cached.expanded;
+                    state.prototypeSkeletonBannerTick = Math.max(0, cached.tick || 0);
+                    state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached.startedAtMs || 0) || prototypeSkeletonNowMs();
+                    state.prototypeSkeletonBannerDisplayedCount = Math.min(
+                      PrototypeSkeletonRunNotes.length,
+                      Math.max(1, cached.displayedCount || 1)
+                    );
+                    syncPrototypeSkeletonBannerDisplayedCount();
+                    state.pendingPrototypeSkeletonRun = {
+                      runId: cached.runId,
+                      busy: true,
+                      runType: "prototype-7day-playable",
+                      status: "running",
+                      progressStep: "restored",
+                      progressLabel: "正在同步任务状态。",
+                      progressUpdatedUtc: cached.updatedAt || new Date().toISOString()
+                    };
+                    applyGlobalBusyState();
+                  } catch {}
+                }
+
+                function ensurePrototypeSkeletonBannerRun(run) {
+                  if (!run?.runId) return;
+                  if (state.prototypeSkeletonBannerRunId === run.runId) {
+                    if (!state.prototypeSkeletonBannerStartedAtMs) {
+                      const cached = readPrototypeSkeletonBannerState(run.runId);
+                      state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonNowMs();
+                    }
+                    syncPrototypeSkeletonBannerDisplayedCount();
+                    return;
+                  }
+                  const cached = readPrototypeSkeletonBannerState(run.runId);
+                  state.prototypeSkeletonBannerRunId = run.runId;
+                  state.prototypeSkeletonBannerExpanded = !!cached?.expanded;
+                  state.prototypeSkeletonBannerIndex = 0;
+                  state.prototypeSkeletonBannerTick = Math.max(0, cached?.tick || 0);
+                  state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonNowMs();
+                  state.prototypeSkeletonBannerDisplayedCount = Math.min(
+                    PrototypeSkeletonRunNotes.length,
+                    Math.max(1, cached?.displayedCount || 1)
+                  );
+                  syncPrototypeSkeletonBannerDisplayedCount();
+                  writePrototypeSkeletonBannerState();
+                }
+
+                function prototypeSkeletonVisibleNotes() {
+                  syncPrototypeSkeletonBannerDisplayedCount();
+                  const displayed = Math.max(0, state.prototypeSkeletonBannerDisplayedCount || 0);
+                  return PrototypeSkeletonRunNotes.slice(0, displayed);
+                }
+
+                function prototypeSkeletonBannerNotes() {
+                  const notes = prototypeSkeletonVisibleNotes();
+                  return state.prototypeSkeletonBannerExpanded ? notes : notes.slice(Math.max(0, notes.length - 2));
+                }
+
+                function scrollPrototypeSkeletonNotesToBottom(container) {
+                  if (!container) return;
+                  requestAnimationFrame(() => {
+                    container.scrollTop = container.scrollHeight;
+                  });
+                }
+
+                function prototypeSkeletonAdvanceTail() {
+                  if (!PrototypeSkeletonRunNotes.length) return;
+                  syncPrototypeSkeletonBannerDisplayedCount();
+                }
+
+                function renderPrototypeSkeletonBanner(run) {
+                  const banner = $("activeRunBanner");
+                  if (!run?.runId) {
+                    banner.classList.add("hidden");
+                    banner.replaceChildren();
+                    return;
+                  }
+                  banner.classList.add("busy-banner-prototype-skeleton");
+                  banner.classList.toggle("is-expanded", !!state.prototypeSkeletonBannerExpanded);
+                  banner.replaceChildren();
+                  ensurePrototypeSkeletonBannerRun(run);
+                  const lines = document.createElement("div");
+                  lines.className = "busy-banner-lines";
+                  const headline = document.createElement("div");
+                  headline.className = "busy-banner-line";
+                  headline.textContent = prototypeSkeletonBannerLine1();
+                  lines.appendChild(headline);
+                  const noteWindow = document.createElement("div");
+                  noteWindow.className = "busy-banner-note-window";
+                  for (const text of prototypeSkeletonBannerNotes()) {
+                    const line = document.createElement("div");
+                    line.className = "busy-banner-line is-muted";
+                    line.textContent = text;
+                    noteWindow.appendChild(line);
+                  }
+                  lines.appendChild(noteWindow);
+                  banner.appendChild(lines);
+                  if (state.prototypeSkeletonBannerExpanded) {
+                    noteWindow.classList.add("busy-banner-details");
+                    scrollPrototypeSkeletonNotesToBottom(noteWindow);
+                  }
+                  const actions = document.createElement("div");
+                  actions.className = "busy-banner-actions";
+                  const toggleButton = document.createElement("button");
+                  toggleButton.type = "button";
+                  toggleButton.className = "ghost";
+                  toggleButton.textContent = state.prototypeSkeletonBannerExpanded ? "关闭详细信息" : "展开详细信息";
+                  toggleButton.onclick = () => {
+                    state.prototypeSkeletonBannerExpanded = !state.prototypeSkeletonBannerExpanded;
+                    writePrototypeSkeletonBannerState();
+                    applyGlobalBusyState();
+                  };
+                  actions.appendChild(toggleButton);
+                  if (canCancelActiveRun(state.activeRun)) {
+                    const cancelButton = document.createElement("button");
+                    cancelButton.type = "button";
+                    cancelButton.className = "ghost danger";
+                    cancelButton.textContent = "取消任务";
+                    cancelButton.onclick = cancelActiveRun;
+                    actions.appendChild(cancelButton);
+                  }
+                  banner.appendChild(actions);
                 }
 
                 function canCancelActiveRun(run) {
@@ -5200,6 +5540,7 @@ public sealed class BrowserUiRenderer
 
                 function renderActiveRunBanner(message) {
                   const banner = $("activeRunBanner");
+                  banner.classList.remove("busy-banner-prototype-skeleton", "is-expanded");
                   banner.replaceChildren();
                   const text = document.createElement("span");
                   text.textContent = message;
@@ -5235,8 +5576,15 @@ public sealed class BrowserUiRenderer
                   updateDraftImportButtonState();
                   if (busy) {
                     $("activeRunBanner").classList.remove("hidden");
-                    renderActiveRunBanner(state.activeRun?.busy ? activeRunText(state.activeRun) : message);
+                    const skeletonRun = skeletonBannerRun();
+                    if (skeletonRun) {
+                      renderPrototypeSkeletonBanner(skeletonRun);
+                    } else {
+                      state.prototypeSkeletonBannerExpanded = false;
+                      renderActiveRunBanner(runIsBusy(state.activeRun) ? activeRunText(state.activeRun) : message);
+                    }
                   } else {
+                    resetPrototypeSkeletonBannerState(true);
                     $("activeRunBanner").classList.add("hidden");
                     $("activeRunBanner").replaceChildren();
                   }
@@ -5245,12 +5593,17 @@ public sealed class BrowserUiRenderer
                 async function cancelActiveRun() {
                   const runId = state.activeRun?.runId;
                   if (!runId) return;
-                  if (!confirm("\u786e\u5b9a\u8981\u53d6\u6d88\u5f53\u524d run \u5417\uff1f")) return;
+                  if (!confirm("确定要取消当前 run 吗？")) return;
                   try {
                     await api(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST", body: "{}" });
+                    state.cancelledActiveRunId = runId;
                     state.activeRun = null;
-                    out("\u5f53\u524d run \u5df2\u53d6\u6d88\u3002");
-                    await refreshActiveRun();
+                    state.pendingPrototypeSkeletonRun = null;
+                    resetPrototypeSkeletonBannerState(true);
+                    out("当前 run 已取消。");
+                    $("activeRunBanner").classList.add("hidden");
+                    $("activeRunBanner").replaceChildren();
+                    applyGlobalBusyState();
                     if (state.projectId) {
                       await Promise.allSettled([
                         loadRuns(),
@@ -5269,19 +5622,47 @@ public sealed class BrowserUiRenderer
                   if (!state.authenticated) return;
                   try {
                     const wasBusy = isGlobalBusy();
-                    state.activeRun = await api("/api/account/active-run");
+                    const activeRun = await api("/api/account/active-run");
+                    if (state.cancelledActiveRunId && (!activeRun?.runId || activeRun.runId !== state.cancelledActiveRunId || !runIsBusy(activeRun))) {
+                      state.cancelledActiveRunId = "";
+                    }
+                    if (activeRun?.runId && state.cancelledActiveRunId === activeRun.runId && runIsBusy(activeRun)) {
+                      state.activeRun = null;
+                    } else {
+                      state.activeRun = activeRun;
+                    }
+                    if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun)) {
+                      state.pendingPrototypeSkeletonRun = state.activeRun;
+                      ensurePrototypeSkeletonBannerRun(state.activeRun);
+                    } else if (hasPendingPrototypeSkeletonBannerRun()) {
+                      const pendingRunId = state.pendingPrototypeSkeletonRun?.runId || "";
+                      if (activeRun?.runId && pendingRunId && activeRun.runId === pendingRunId && !runIsBusy(activeRun)) {
+                        state.pendingPrototypeSkeletonRun = null;
+                        resetPrototypeSkeletonBannerState(true);
+                      } else {
+                        state.pendingPrototypeSkeletonRun.busy = true;
+                        state.pendingPrototypeSkeletonRun.status = state.pendingPrototypeSkeletonRun.status || "running";
+                        ensurePrototypeSkeletonBannerRun(state.pendingPrototypeSkeletonRun);
+                      }
+                    } else {
+                      state.pendingPrototypeSkeletonRun = null;
+                    }
                     applyGlobalBusyState();
-                    if (state.projectId && shouldAutoRefreshIterationPlan(state.activeRun)) {
+                    if (state.projectId && shouldAutoRefreshIterationPlan(activeRun)) {
                       await loadIterationPlan();
                       await loadRuns();
                     }
-                    if (wasBusy && !state.activeRun?.busy && state.projectId) {
+                    if (wasBusy && !runIsBusy(activeRun) && !hasPendingPrototypeSkeletonBannerRun() && state.projectId) {
                       await loadPrototypeProgress();
                       await loadProjectPackages();
                       await refreshAssetInventoryAvailability();
                     }
                   } catch {
                     state.activeRun = null;
+                    if (hasPendingPrototypeSkeletonBannerRun()) {
+                      state.pendingPrototypeSkeletonRun.busy = true;
+                      ensurePrototypeSkeletonBannerRun(state.pendingPrototypeSkeletonRun);
+                    }
                     applyGlobalBusyState();
                   }
                 }
@@ -5598,6 +5979,20 @@ public sealed class BrowserUiRenderer
                   try {
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable`, { method: "POST", body: JSON.stringify(payload) });
                     out(result);
+                    if (result?.runId) {
+                      state.pendingPrototypeSkeletonRun = {
+                        runId: result.runId,
+                        busy: true,
+                        runType: "prototype-7day-playable",
+                        progressStep: "queued",
+                        progressLabel: "已提交，等待 runner。",
+                        progressUpdatedUtc: new Date().toISOString()
+                      };
+                      ensurePrototypeSkeletonBannerRun(state.pendingPrototypeSkeletonRun);
+                      writePrototypeSkeletonBannerState();
+                      applyGlobalBusyState();
+                      await refreshPrototypeSkeletonRun(result.runId);
+                    }
                     showPrototypeNotice(`原型创建请求已提交，状态：${result.status || "queued"}。刷新页面可继续查看创建进度。`, "info");
                     await loadRuns();
                     await loadPrototypeProgress();
@@ -5607,8 +6002,36 @@ public sealed class BrowserUiRenderer
                   } catch (error) {
                     setLocalBusy(false);
                     setPrototypeFormLocked(false);
+                    state.pendingPrototypeSkeletonRun = null;
                     showPrototypeError(error);
                     showError(error);
+                  }
+                }
+
+                async function refreshPrototypeSkeletonRun(runId) {
+                  if (!runId) return;
+                  try {
+                    const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
+                    const run = result?.run || null;
+                    if (!run) return;
+                    state.pendingPrototypeSkeletonRun = {
+                      runId: run.runId,
+                      busy: runIsBusy(run),
+                      runType: run.runType,
+                      status: run.status,
+                      progressStep: run.progressStep,
+                      progressLabel: run.progressLabel,
+                      progressUpdatedUtc: run.progressUpdatedUtc
+                    };
+                    state.activeRun = run;
+                    applyGlobalBusyState();
+                    if (!runIsBusy(run)) {
+                      state.pendingPrototypeSkeletonRun = null;
+                      resetPrototypeSkeletonBannerState(true);
+                      applyGlobalBusyState();
+                    }
+                  } catch {
+                    // keep last visible banner state if the polling fails
                   }
                 }
 
@@ -6041,6 +6464,7 @@ public sealed class BrowserUiRenderer
                   refreshGddOutlineStatus();
                 });
                 renderChatHistory();
+                restorePrototypeSkeletonBannerFromStorage();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
                 $("loadAssetInventory").onclick = loadAssetInventory;
@@ -6066,6 +6490,20 @@ public sealed class BrowserUiRenderer
                   }
                 }, 250);
                 setInterval(refreshActiveRun, 5000);
+                setInterval(() => {
+                  const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;
+                  if (!skeletonRun?.runId) return;
+                  ensurePrototypeSkeletonBannerRun(skeletonRun);
+                  state.prototypeSkeletonBannerTick += 1;
+                  const changed = syncPrototypeSkeletonBannerDisplayedCount();
+                  writePrototypeSkeletonBannerState();
+                  if (changed) applyGlobalBusyState();
+                }, 5000);
+                setInterval(() => {
+                  const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;
+                  if (!skeletonRun?.runId) return;
+                  refreshPrototypeSkeletonRun(skeletonRun.runId);
+                }, 5000);
               </script>
             </body>
             </html>
@@ -7682,5 +8120,26 @@ public sealed class BrowserUiRenderer
     private static string Encode(string value)
     {
         return WebUtility.HtmlEncode(value);
+    }
+
+    private static string[] LoadPrototypeSkeletonRunNotes()
+    {
+        var assembly = typeof(BrowserUiRenderer).Assembly;
+        var resourceName = assembly.GetManifestResourceNames()
+            .FirstOrDefault(name => name.EndsWith("Browser.Assets.PrototypeSkeletonRunNotes.txt", StringComparison.OrdinalIgnoreCase));
+        if (resourceName is null)
+        {
+            return [];
+        }
+
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return [];
+        }
+
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return reader.ReadToEnd()
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 }

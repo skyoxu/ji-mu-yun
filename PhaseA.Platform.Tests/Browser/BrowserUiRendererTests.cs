@@ -1407,11 +1407,23 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("Game Ren");
         html.Should().NotContain("Phase A Prototype Console");
         html.Should().Contain("activeRunBanner");
+        html.Should().Contain("<div id=\"activeRunBanner\" class=\"busy-banner hidden\" role=\"status\" aria-live=\"polite\"></div>");
+        html.Should().Contain("#activeRunBanner");
         html.Should().Contain(".busy-banner");
-        html.Should().Contain("position: fixed");
-        html.Should().Contain("top: 0.75rem");
-        html.Should().Contain("pointer-events: auto");
-        html.Should().Contain("max-height: min(7rem, calc(100vh - 1.5rem))");
+        html.Should().Contain("position: absolute");
+        html.Should().Contain("top: 0;");
+        html.Should().Contain("left: 50%;");
+        html.Should().Contain("transform: translateX(-50%)");
+        html.Should().Contain("pointer-events: none;");
+        html.Should().Contain(".busy-banner > span,");
+        html.Should().Contain(".busy-banner .busy-banner-lines,");
+        html.Should().Contain(".busy-banner .busy-banner-actions,");
+        html.Should().Contain("user-select: text;");
+        html.Should().Contain(".busy-banner button");
+        html.Should().Contain("pointer-events: auto;");
+        html.Should().Contain("max-height: 100px");
+        html.Should().Contain("height: 100px");
+        html.Should().Contain("border-radius: 0 0 0.9rem 0.9rem");
         html.Should().Contain(".busy-banner button");
         html.Should().Contain("width: auto;");
         html.Should().Contain("white-space: nowrap;");
@@ -1419,9 +1431,40 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
+        html.Should().Contain("function runIsBusy(run)");
+        html.Should().Contain("status === \"queued\" || status === \"running\"");
+        html.Should().Contain("busy-banner-actions");
+        html.Should().Contain("取消任务");
+        html.Should().Contain("startedAtMs: Math.max(0, state.prototypeSkeletonBannerStartedAtMs || 0)");
+        html.Should().Contain("function prototypeSkeletonDisplayCountFromStartedAt(startedAtMs)");
+        html.Should().Contain("Math.floor(elapsedMs / 20000) + 1");
+        html.Should().Contain("const changed = syncPrototypeSkeletonBannerDisplayedCount();");
+        html.Should().Contain("function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId)");
+        html.Should().Contain("function prototypeSkeletonBannerCurrentKey()");
+        html.Should().Contain("restorePrototypeSkeletonBannerFromStorage();");
+        html.Should().Contain("state.pendingPrototypeSkeletonRun = {");
+        html.Should().Contain("const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;");
+        html.Should().Contain("hasPendingPrototypeSkeletonBannerRun()");
+        html.Should().Contain("state.pendingPrototypeSkeletonRun.status = state.pendingPrototypeSkeletonRun.status || \"running\";");
+        html.Should().Contain("busy: runIsBusy(run)");
+        html.Should().Contain("if (!runIsBusy(run))");
+        html.Should().Contain("localStorage.setItem(prototypeSkeletonBannerCurrentKey(), state.prototypeSkeletonBannerRunId);");
+        html.Should().Contain("readPrototypeSkeletonBannerState(run.runId)");
+        html.Should().Contain("writePrototypeSkeletonBannerState()");
+        html.Should().Contain("function prototypeSkeletonVisibleNotes()");
+        html.Should().Contain("function prototypeSkeletonBannerNotes()");
+        html.Should().Contain("state.prototypeSkeletonBannerExpanded ? notes : notes.slice(Math.max(0, notes.length - 2))");
+        html.Should().Contain("function scrollPrototypeSkeletonNotesToBottom(container)");
+        html.Should().Contain("container.scrollTop = container.scrollHeight");
+        html.Should().Contain("busy-banner-note-window");
+        html.Should().Contain("pointer-events: auto;");
+        html.Should().NotContain("prototypeSkeletonBannerLine2(run)");
+        html.Should().NotContain("??????ID?");
+        html.Should().Contain("state.pendingPrototypeSkeletonRun = state.activeRun;");
+        html.Should().NotContain("state.prototypeSkeletonBannerIndex + 22");
+        html.Should().NotContain("if (state.prototypeSkeletonBannerExpanded) return;");
         html.Should().Contain("\"chapter2-bootstrap\", \"project-creation\", \"project-asset-generation\", \"asset-generation\"");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}/cancel");
-        html.Should().Contain("\\u786e\\u5b9a\\u8981\\u53d6\\u6d88\\u5f53\\u524d run \\u5417");
         html.Should().Contain("当前任务执行中");
         html.Should().Contain("guardGlobalAction");
         html.Should().Contain("data-global-action");
@@ -1447,6 +1490,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
         html.Should().Contain("$(\"token\").addEventListener(\"change\", persistAccessTokenFromInput)");
         html.Should().Contain("Token 已保留");
+        html.Should().Contain("busy-banner-prototype-skeleton");
+        html.Should().Contain("展开详细信息");
+        html.Should().Contain("关闭详细信息");
+        html.Should().Contain("系统正在进行游戏原型骨架创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；");
         html.Should().Contain("projectName");
         html.Should().Contain("projectNameError");
         html.Should().Contain("gameNameError");
@@ -2161,4 +2208,13 @@ public sealed class BrowserUiRendererTests
             }
         }
     }
+
+    [Fact]
+    public void PrototypeSkeletonRunNotes_AreEmbeddedAsResource()
+    {
+        var assembly = typeof(BrowserUiRenderer).Assembly;
+        var names = assembly.GetManifestResourceNames();
+        names.Should().Contain(name => name.EndsWith("Browser.Assets.PrototypeSkeletonRunNotes.txt", StringComparison.OrdinalIgnoreCase));
+    }
+
 }
