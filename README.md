@@ -1,310 +1,321 @@
-[![Windows Export Slim](https://github.com/skyoxu/godotgame/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/godotgame/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/godotgame/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/godotgame/actions/workflows/windows-quality-gate.yml)
+[![Windows Export Slim](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-export-slim.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-export-slim.yml) [![Windows Release](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-release.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-release.yml) [![Windows Quality Gate](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-quality-gate.yml/badge.svg)](https://github.com/skyoxu/ji-mu-yun/actions/workflows/windows-quality-gate.yml)
 
-# Godot Windows-only Template (C#)
+# Ji Mu Yun（积木云）Phase A/B Cloud Prototype Platform
 
-即开即用，可复制的 Godot 4 + .NET（Windows-only）项目模板。
+本仓已经从单纯的 Godot Windows-only C# 游戏模板，演进为一个 Windows 单机云端 Godot 原型生成与托管平台。
+
+它的执行内核仍然是 Godot 4.5 + C#/.NET 8 游戏模板、仓库原生脚本、质量门禁、恢复 sidecar 和文档体系；云端层通过 `PhaseA.Platform` 把这些能力包装成浏览器可用的项目创建、原型生成、迭代、修复、GDD、资源、打包、聊天、审计和运行证据查看平台。
+
+## 当前阶段结论
+
+- Phase A 已成型：已具备单节点托管 runner、ASP.NET Core Web/API、SQLite 元数据、workspace 管理、项目创建、原型通道、浏览器 UI、Caddy 反代、运行证据和恢复链路。
+- Phase B 账号隔离 / 运营审计切片已完成（当前 prototype-hardening scope）：已具备账号级访问、管理员创建用户、禁用/启用用户、轮换 token、应用层项目隔离、LLM 绑定、LLM 用量统计、管理员审计、CSV 导出和 Phase B smoke 验证。
+- 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。
+
+最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。
+
+- `docs/workflows/phase-b-account-isolation.md`
+- `docs/workflows/cloud-platform-evolution-plan.cn.md`
+- `docs/workflows/phase-a-security-hardening-plan.cn.md`
+- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md`
+- `execution-plans/2026-05-11-phase-a-prototype-lane-implementation-backlog.md`
 
 ## Highest Encoding Rule
+
 - All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding="utf-8")` and `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
 - Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.
 - If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.
 - This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.
 - Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.
 
-## About This Template
+## 系统分层
 
-Production-ready Godot 4.5 + C# game template with enterprise-grade tooling.
+### 1. Godot 模板内核
 
-### Why This Template
-- **Historical lineage**: this repository was originally bootstrapped from a legacy stack and is now fully standardized on Godot 4.5 + C# .NET 8 (Windows-only).
-- **Purpose**: Eliminate setup overhead with pre-configured best practices
-- **For**: Windows desktop games (simulation, management, strategy)
+- `Game.Core/`：纯 C# 领域逻辑和契约相邻代码。
+- `Game.Godot/`：Godot 运行时项目、场景、Autoload、适配层和原型资源。
+- `Game.Core.Tests/`：xUnit 测试。
+- `Tests.Godot/`：GdUnit4、场景、适配层、安全和集成测试。
+- `docs/architecture/**`、`docs/adr/**`、`docs/testing-framework.md`：架构、ADR、测试和交付规则。
 
-### Key Features
-- **AI-Friendly**: Optimized for BMAD, SuperClaude, Claude Code workflows
-- **Quality Gates**: Coverage (≥90%), Performance (P95≤20ms), Security baseline
-- **Testable Architecture**: Ports & Adapters + 80% xUnit + 15% GdUnit4
-- **Complete Stack**: Godot 4.5, C# .NET 8, xUnit, GdUnit4, godot-sqlite, Sentry
+### 2. Phase A 云端平台层
 
-**Full technical details**: See `CLAUDE.md`
+- `PhaseA.Platform/`：ASP.NET Core 8 Web/API 服务。
+- `PhaseA.Platform.Tests/`：平台单元和集成测试。
+- `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置。
+- `logs/phase-a-innernet/`：本地运行时数据库、workspace、watchdog 和 runtime 证据；该目录是运行时生成证据，不是源码或稳定配置目录。
+- `scripts/python/phase_a_*.py`：Phase A ops、runtime、public、restore、prototype E2E 和 token drill 脚本。
 
----
+Phase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。
 
-## 3‑Minute From Zero to Export（3 分钟从 0 到导出）
+### 3. Phase B 账号和运营层
 
-1) 安装 Godot .NET（mono）并设置环境：
-   - `setx GODOT_BIN C:\Godot\Godot_v4.5.1-stable_mono_win64.exe`
-2) 运行最小测试与冒烟（可选示例）：
-   - `./scripts/test.ps1 -GodotBin "$env:GODOT_BIN"`（默认不含示例；`-IncludeDemo` 可启用）
-   - `./scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"`
-3) 在 Godot Editor 安装 Export Templates（Windows Desktop）。
-4) 导出与运行 EXE：
-   - `./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe`
-   - `./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe`
+Phase B B1/B2 把单管理员原型平台推进为账号作用域平台：
 
-One‑liner（已在 Editor 安装 Export Templates 后）：
-- PowerShell：`$env:GODOT_BIN='C:\\Godot\\Godot_v4.5.1-stable_mono_win64.exe'; ./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe; ./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe`
+- Bearer token 认证支持 host admin token 和数据库用户 token。
+- 用户 token 只返回一次，数据库中只保存 hash。
+- 管理员可创建用户、禁用/启用用户、轮换用户 access token。
+- 项目、run、artifact、package、asset、chat、workflow readback 按当前账号收敛。
+- 用户可配置自己的 LLM gateway binding，并查看账号级 LLM usage。
+- 管理员可查看跨账号 LLM usage、LLM run audit、账号操作审计，并导出 CSV。
+- Phase B smoke 脚本验证未授权拒绝、管理员授权、用户边界和审计输出不泄露 token material。
 
-## What You Get（模板内容）
-- 适配层 Autoload：EventBus/DataStore/Logger/Audio/Time/Input/SqlDb
-- 场景分层：ScreenRoot + Overlays；ScreenNavigator（淡入淡出 + Enter/Exit 钩子）
-- 安全基线：仅允许 `res://`/`user://` 读取，启动审计 JSONL，HTTP 验证示例
-- 可观测性：本地 JSONL（Security/Sentry 占位），性能指标（[PERF] + perf.json）
-- 测试体系：xUnit + GdUnit4（示例默认关闭），一键脚本
-- 导出与冒烟：Windows-only 脚本与文档
+Phase B 当前延期项：
+
+- 用户删除。
+- 完整 LLM audit export 的更细过滤和分页增强。
+- 用户名/密码登录、密码重置、OAuth、OIDC、自助注册。
+- 管理面板自动化浏览器 E2E。
+- OS 级 Windows runner 账户和 NTFS ACL 隔离。
+
+## 运行入口
+
+本地 Phase A 服务稳定绑定：
+
+- `http://127.0.0.1:18080`
+
+公网反代入口：
+
+- `http://47.86.160.138:8080`
+
+当前 `runtime/phase-a/Caddyfile` 监听 `http://:8080`；`runtime/phase-a/start-phasea.ps1` 中的 `PUBLIC_BASE_URL=https://47.86.160.138:8080` 保留为平台公共基址配置口径，与当前 Caddy 直连 HTTP 入口并存，后续若启用证书或上游 HTTPS 终止再统一。
+
+稳定运行配置：
+
+- `runtime/phase-a/start-phasea.ps1`
+- `runtime/phase-a/ensure-phasea.ps1`
+- `runtime/phase-a/watch-phasea.ps1`
+- `runtime/phase-a/Caddyfile`
+
+重要规则：
+
+- live server 不要用普通 `dotnet run` 写入仓库默认 `obj/bin`。
+- live server 使用 `runtime/phase-a/start-phasea.ps1`。
+- 启动脚本把 build output 放到仓库外的稳定目录。
+- `PHASEA_ADMIN_TOKEN_HASH` 必须来自 host secret store 或服务环境，不得写入 git 跟踪文件。
+
+常用检查：
+
+```powershell
+py -3 scripts/python/phase_a_ops_check.py
+py -3 scripts/python/phase_b_account_smoke.py --base-url http://127.0.0.1:18080
+py -3 scripts/python/phase_b_account_smoke.py --base-url http://47.86.160.138:8080
+```
+
+`phase_a_runtime_smoke.py` 是本地临时 smoke，会用临时端口和临时 workspace 启动测试服务；它不是 live server 启动或恢复入口。
+
+带管理员 token 的 Phase B 授权 smoke 应通过环境变量或命令行传入 token；不要把真实 token 写入日志、README 或 docs。
+
+## 托管项目路由恢复规则
+
+Phase A 前端触发的 hosted game-project route 必须先读项目级恢复源，而不是把 `AGENTS.md` 当作普通项目记忆。
+
+可修改 hosted game-project 文件的 route，至少需要按权威顺序消费：
+
+1. 已解析的 game-type route profile 和选中的 route skill prompt block。
+2. `meta/project-execution-guide.md`。
+3. `routes/prototype-contract/latest.json`。
+4. 当前 route 的 latest state，例如 `meta/routes/prototype/latest.json`、`meta/routes/iteration-plan/latest.json`、`meta/routes/execute-next-goal/latest.json`。
+5. 当前 goal、step、repair step 或 session state。
+6. repair route 还必须读取 repair ledger、失败 acceptance 或 Godot diagnostic evidence。
+7. 最新 live platform acceptance blocker 优先于旧 assistant summary、route state 和 repair ledger memory。
+
+硬规则：
+
+- 缺少必需恢复源时 fail closed，不假装恢复成功。
+- route state 和 repair ledger 是连续性记忆，不是当前验收权威。
+- 不允许只凭 assistant 文本标记 step complete。
+- 新 route 在接入前必须声明 recovery inputs、authority order、missing-source behavior 和 browser-safe output rules。
+
+## AI/LLM 调用协议
+
+新 Phase A route、service、script 和 workflow helper 必须使用共享入口：
+
+- C# structured/read-only LLM：`PhaseA.Platform/Llm/LlmRouteEngine.cs` via `ILlmRouteEngine`。
+- C# executable Codex workflow：`PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`。
+- Python LLM/Codex script：`scripts/sc/_llm_backend.py::run_llm_exec`。
+
+协议规则：
+
+- 不要在新 route 或 script 中手写 raw `codex exec` subprocess。
+- prompt 传输使用 stdin：`codex exec ... -`，不要把大 prompt 拼到命令行参数。
+- 分析或 JSON-only 决策保持 read-only。
+- 改文件的流程必须走明确 executable route、`workspace-write` 和现有 acceptance/smoke validation。
+- 如果共享入口缺少 model、reasoning、sandbox、output、billing、credential 或 retry 选项，先扩展共享入口及其测试。
+
+必需回归覆盖：
+
+- `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`
+- `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`
+- `scripts/sc/tests/test_llm_backend.py`
+- 调用方自己的 route-specific tests
+
+## Godot 模板能力
+
+模板内核仍然支持从 0 到导出 Windows 桌面游戏。下面示例使用与当前 Phase A runtime 一致的 Godot 4.5.1 .NET/mono console 路径：
+
+1. 安装 Godot .NET mono，并设置 `GODOT_BIN`。
+2. 运行最小测试和 headless smoke。
+3. 在 Godot Editor 安装 Windows Desktop Export Templates。
+4. 运行 Windows export 和 exe smoke。
+
+示例：
+
+```powershell
+$env:GODOT_BIN='C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
+./scripts/ci/smoke_headless.ps1 -GodotBin "$env:GODOT_BIN"
+./scripts/ci/export_windows.ps1 -GodotBin "$env:GODOT_BIN" -Output build\Game.exe
+./scripts/ci/smoke_exe.ps1 -ExePath build\Game.exe
+```
+
+模板内容包括：
+
+- Autoload 适配层：EventBus、DataStore、Logger、Audio、Time、Input、SqlDb。
+- 场景分层：ScreenRoot、Overlays、ScreenNavigator、HUD、SettingsPanel。
+- 安全基线：`res://` / `user://` 边界、HTTP 白名单、SQLite 路径校验、审计 JSONL。
+- 可观测性：本地 JSONL、性能指标、run/artifact evidence。
+- 测试体系：xUnit、GdUnit4、headless smoke、quality gates。
+- 导出与发布：Windows-only export、smoke、tag release workflow。
 
 ## Delivery Profiles
-- `DELIVERY_PROFILE=playable-ea`：最快的可玩性校验档位；覆盖率、语义审查、验收硬门尽量止损，安全默认派生到 `host-safe`。
-- `DELIVERY_PROFILE=fast-ship`：模板默认档位；保留基本主机安全、核心测试和发版前的必要约束，适合日常开发。
-- `DELIVERY_PROFILE=standard`：收口档位；ADR、验收、语义门禁更严格，安全默认派生到 `strict`。
-- 生效优先级：CLI `--delivery-profile` > 环境变量 `DELIVERY_PROFILE` > 仓库默认 `fast-ship`。
-- CI 工作流 `windows-quality-gate.yml` / `ci-windows.yml` 已接入 `delivery_profile` 输入，并会在 Step Summary 固化 `DeliveryProfile:` 与 `SecurityProfile:`。
-- `prototype lane` 是探索通道，不是新的 `DELIVERY_PROFILE`；它只决定工作是否进入正式任务流，不替代正式交付门禁。
 
-## Phase A Runtime And Isolation Boundary
+- `DELIVERY_PROFILE=playable-ea`：最快可玩性校验档位，安全默认派生到 `host-safe`。
+- `DELIVERY_PROFILE=fast-ship`：模板默认档位，保留基本主机安全、核心测试和必要发版约束。
+- `DELIVERY_PROFILE=standard`：收口档位，ADR、验收、语义门禁更严格，安全默认派生到 `strict`。
 
-Phase A is a single-node hosted runner productization layer for the existing repository workflow. It currently relies on application-level routing, project-level runner locks, account-level concurrency limits, and stable workspace paths; it is not yet a full OS-isolated multi-tenant runner model.
+生效优先级：CLI `--delivery-profile` > 环境变量 `DELIVERY_PROFILE` > 仓库默认 `fast-ship`。
 
-Current boundary:
+`prototype lane` 是探索通道，不是新的 `DELIVERY_PROFILE`。它决定工作是否进入正式任务流，不替代正式交付门禁。
 
-- Phase A keeps the live service, metadata DB, Caddy proxy, hosted workspaces, run queues, and browser-triggered routes on one Windows host.
-- Project runs should write only through the resolved hosted project workspace and shared route entrypoints.
-- Chat, project creation, asset generation, prototype skeleton creation, and other runs use separate concurrency pools and user/project locks where configured, but they still execute inside the Phase A host model.
+## 稳定公共入口
 
-Evolution boundary:
+本节列出的是仓库本地 / 自动化脚本入口；它们不表示 Phase A 浏览器 UI 已开放所有对应能力。尤其 Chapter 3-7 正式交付路由不属于当前 Phase A 浏览器范围。
 
-- Phase B adds multi-tenant workspace hosting with separate Windows accounts for platform and runner processes, project-level NTFS ACLs, and OS write-permission separation for platform binaries, metadata DB, Caddy config, and user workspaces.
-- Phase C evaluates stronger runner isolation such as containers, Windows Sandbox, or lightweight VMs, while preserving the Phase B workspace/ACL model.
-- The detailed roadmap and phase boundary are maintained in `docs/workflows/cloud-platform-evolution-plan.md` and `docs/workflows/cloud-platform-evolution-plan.cn.md`.
+### 仓库 bootstrap / 恢复
 
-## AI/LLM Engine And Invocation Protocol
+```powershell
+py -3 scripts/python/dev_cli.py run-local-hard-checks
+py -3 scripts/python/dev_cli.py project-health-scan
+py -3 scripts/python/dev_cli.py serve-project-health
+py -3 scripts/python/dev_cli.py resume-task --task-id <id>
+py -3 scripts/python/dev_cli.py inspect-run --kind <kind> [--task-id <id>]
+py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only
+```
 
-Use these shared entrypoints for all new LLM-backed routes or scripts:
+### 原型通道
 
-- C# structured/read-only LLM: `PhaseA.Platform/Llm/LlmRouteEngine.cs` via `ILlmRouteEngine`.
-- C# executable Codex workflows: `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`.
-- Python LLM/Codex scripts: `scripts/sc/_llm_backend.py::run_llm_exec`.
+```powershell
+py -3 scripts/python/dev_cli.py run-prototype-workflow --prototype-file docs/prototypes/<your-file>.md
+py -3 scripts/python/dev_cli.py run-prototype-tdd --slug <slug> --stage <red|green|refactor> ...
+```
 
-Protocol rules:
+### 任务交付主环
 
-- Do not build raw `codex exec` subprocess calls in new routes or scripts.
-- Do not pass prompts as command-line arguments. Use `codex exec ... -` with UTF-8 stdin through the shared entrypoint.
-- Use read-only mode for analysis/JSON decisions and `workspace-write` only for explicit file-changing workflows.
-- If the shared entrypoint is missing a needed option, extend that entrypoint and its tests before adding the route.
-- Keep regression coverage in `CodexHostedProcessCommandFactoryTests`, `LlmRouteEngineTests`, `scripts/sc/tests/test_llm_backend.py`, and the caller-specific test file.
+```powershell
+py -3 scripts/python/dev_cli.py run-single-task-chapter6 --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>
+py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>
+```
 
-## Quick Links
+### 架构 / 任务 / 契约一致性
 
-### Daily Ops
-- Daily Workflow: `workflow.md`
-- Bootstrap Workflow Example: `workflow.example.md`
-- Chapter 6 T56 Optimization Guide: `docs/workflows/chapter-6-t56-optimization-guide.md`
-- Chapter 7 UI Wiring GDD: `docs/gdd/ui-gdd-flow.md`
-- Chapter 7 Profile: `docs/workflows/chapter7-profile.json` (minimal seed: `docs/workflows/templates/chapter7-profile.minimal.example.json`)
-- Chapter 7 Profile Guide: `docs/workflows/chapter7-profile-guide.md`
-- Phase A Public Endpoint: `http://47.86.160.138:8080`
-- Stable Public Entrypoints: `docs/workflows/stable-public-entrypoints.md`
-- Delivery Profile 说明：`DELIVERY_PROFILE.md`
-- Session Recovery: `docs/agents/01-session-recovery.md`
-- Persistent Harness: `docs/agents/03-persistent-harness.md`
-- Local Hard Checks: `docs/workflows/local-hard-checks.md`
-- Project Health Dashboard: `docs/workflows/project-health-dashboard.md`
-- Unified Technical Debt Register: `docs/technical-debt.md`
+```powershell
+py -3 scripts/python/task_links_validate.py
+py -3 scripts/python/check_tasks_all_refs.py
+py -3 scripts/python/validate_task_master_triplet.py
+py -3 scripts/python/validate_contracts.py
+py -3 scripts/python/check_domain_contracts.py
+py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
+```
 
-### Migration / Template Upgrade
-- Template Bootstrap Checklist: `docs/workflows/template-bootstrap-checklist.md`
-- Template Upgrade Protocol: `docs/workflows/template-upgrade-protocol.md`
-- Workflow Rule Feedback Protocol: `docs/workflows/workflow-rule-feedback-protocol.md`
-- Workflow Rule Feedback Template: `docs/workflows/templates/workflow-rule-feedback-template.md`
-- Cloud Platform Evolution Plan: `docs/workflows/cloud-platform-evolution-plan.md`
-- Business Repo Upgrade Guide: `docs/workflows/business-repo-upgrade-guide.md`
-- Prototype Lane: `docs/workflows/prototype-lane.md`
-- Prototype Lane Playbook: `docs/workflows/prototype-lane-playbook.md`
-- Prototype TDD: `docs/workflows/prototype-tdd.md`
-- Overlay Generation Quickstart: `docs/workflows/overlay-generation-quickstart.md`
-- Overlay Generation SOP: `docs/workflows/overlay-generation-sop.md`
-- Overlay Authoring Guide: `docs/workflows/overlays-authoring-guide.md`
-- Godot+C# 快速开始（godotgame 项目）：`docs/TEMPLATE_GODOT_GETTING_STARTED.md`
-- Windows-only 快速指引：`docs/migration/Phase-17-Windows-Only-Quickstart.md`
-- FeatureFlags 快速指引：`docs/migration/Phase-18-Staged-Release-and-Canary-Strategy.md`
-- 导出清单：`docs/migration/Phase-17-Export-Checklist.md`
-- Headless 冒烟：`docs/migration/Phase-12-Headless-Smoke-Tests.md`
-- 场景设计：`docs/migration/Phase-8-Scene-Design.md`
-- 测试体系：`docs/migration/Phase-10-Unit-Tests.md`
-- 安全基线：`docs/migration/Phase-14-Godot-Security-Baseline.md`
-- 手动发布指引：`docs/release/WINDOWS_MANUAL_RELEASE.md`
-- Release/Sentry 软门禁与工作流说明：`docs/workflows/GM-NG-T2-playable-guide.md`
+完整入口索引：
+
+- `docs/workflows/stable-public-entrypoints.md`
+- `docs/workflows/script-entrypoints-index.md`
 
 ## Recovery First
 
-任务在 context reset、跨会话或隔天恢复时，先走恢复链，不要直接重开一轮完整 Chapter 6。
+任务在 context reset、跨会话或隔天恢复时，先走恢复链，不要直接重开完整 Chapter 6。
 
-1. 先读：`docs/agents/01-session-recovery.md`
-2. 先执行：`py -3 scripts/python/dev_cli.py resume-task --task-id <id>`
-3. 只有当 recovery summary 仍然不够时，再执行：`py -3 scripts/python/inspect_run.py --kind pipeline --task-id <id>`
+1. 读 `docs/agents/01-session-recovery.md`。
+2. 执行 `py -3 scripts/python/dev_cli.py resume-task --task-id <id>`。
+3. 如果 summary 仍然不够，再执行 `py -3 scripts/python/dev_cli.py inspect-run --kind pipeline --task-id <id>`。
+4. 在重开完整 `6.7` 前，先执行 `py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only`。
 
-在重开完整 `6.7` 前，至少先看这些信号：
+如果恢复链显示 `planned-only`、`artifact_integrity`、`rerun_guard`、`llm_retry_stop_loss`、`sc_test_retry_stop_loss` 或 `needs-fix-fast`，先按恢复建议做窄修复或回退。
 
-- `Latest reason`
-- `Latest run type`
-- `Latest reuse mode`
-- `Latest artifact integrity`
-- `Chapter6 blocked by`
-- `recommended_action_why`
+## 关键文档
 
-如果恢复链已经显示 `planned-only`、`artifact_integrity`、`rerun_guard`、`llm_retry_stop_loss`、`sc_test_retry_stop_loss` 或 `needs-fix-fast`，先按恢复建议做窄修复或回退，不要直接付出一次新的完整重跑成本。
+### 云端平台
 
+- `docs/workflows/phase-b-account-isolation.md`
+- `docs/workflows/cloud-platform-evolution-plan.cn.md`
+- `docs/workflows/cloud-user-telemetry-and-feedback-plan.cn.md`
+- `docs/workflows/phase-a-security-hardening-plan.cn.md`
+- `docs/workflows/phase-a-caddy-deployment.md`
+- `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/_index.md`
 
-## Phase A Hosted Route Recovery Protocol
+### 仓库和 Agent 导航
 
-This section governs Phase A frontend-triggered hosted game-project routes. It follows the recovery-first spirit of `workflow.md` Chapter 6 while keeping the prototype lane lightweight: no Taskmaster triplets, no formal acceptance files, no overlays, and no architecture contract files.
+- `AGENTS.md`
+- `docs/agents/00-index.md`
+- `docs/agents/01-session-recovery.md`
+- `docs/agents/13-rag-sources-and-session-ssot.md`
+- `docs/agents/16-directory-responsibilities.md`
+- `docs/PROJECT_DOCUMENTATION_INDEX.md`
 
-### AGENTS.md Boundary
+### Godot 模板和交付
 
-- `AGENTS.md` is the platform repository routing map for `C:\jimuyun`; it is for Phase A platform code, workflow scripts, docs, skills, and repository maintenance.
-- Hosted game-project routes must not use `AGENTS.md` as ordinary project recovery memory, and must not summarize or copy `AGENTS.md` before executing a normal game-project step.
-- When a route is maintaining Phase A platform code or skill definitions, it must still obey `AGENTS.md`. When a route is executing one hosted game-project goal, project memory comes only from the project-level recovery sources below.
+- `docs/testing-framework.md`
+- `DELIVERY_PROFILE.md`
+- `docs/architecture/ADR_INDEX_GODOT.md`
+- `docs/architecture/base/00-README.md`
+- `docs/workflows/prototype-lane.md`
+- `docs/workflows/prototype-lane-playbook.md`
+- `docs/workflows/prototype-tdd.md`
+- `docs/TEMPLATE_GODOT_GETTING_STARTED.md`
 
-### Mandatory Recovery Order
+## Feature Flags
 
-Every route that can modify hosted game-project files must consume these sources before implementation or repair. Missing mandatory sources must be recorded as an explicit risk or failure reason.
+- Autoload：`/root/FeatureFlags`
+- 文件：`Game.Godot/Scripts/Config/FeatureFlags.cs`
+- 单项环境变量：`setx FEATURE_demo_screens 1`
+- 多项环境变量：`setx GAME_FEATURES "demo_screens,perf_overlay"`
+- 文件配置：`user://config/features.json`
 
-1. Resolved game-type route profile and selected route skill prompt block.
-2. `meta/project-execution-guide.md`, the project-level lightweight `/new` recovery protocol.
-3. `routes/prototype-contract/latest.json`; form fields and `input_traceability` are the project requirement SSoT.
-4. Latest state for the current route, for example `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, `meta/routes/execute-next-goal/latest.json`, `meta/routes/prototype-repair/latest.json`, or `meta/routes/repair-plan/latest.json`.
-5. Current goal, current step, current repair step, or current session state from metadata.
-6. Repair routes must also read the current step `meta/routes/needs-fix/step-XX/repair-ledger.json`; prototype repair and repair-plan routes must also read the latest failed acceptance or Godot diagnostic evidence.
-7. The latest live platform acceptance blocker overrides older assistant summaries, route state, and repair ledger memory.
+代码示例：
 
-### Route Matrix
+```csharp
+if (FeatureFlags.IsEnabled("demo_screens"))
+{
+    // ...
+}
+```
 
-- Prototype skeleton creation: generate `README.md`, `meta/project-execution-guide.md`, `routes/prototype-contract/latest.json`, and `meta/routes/prototype/latest.json`, including the game-type profile and skill in the project-level recovery file.
-- Prototype acceptance: read the current prototype, project execution guide, prototype contract, and platform acceptance evidence; do not call Codex to modify project files.
-- Prototype acceptance repair: read the project execution guide, prototype contract, latest failed acceptance, Godot diagnostics, and `meta/routes/prototype-repair/latest.json`; repair only hosted game-project files.
-- Iteration plan completion: read the project execution guide, prototype contract, draft/form state, latest prototype state, latest iteration-plan state, and game-type design guidance; generate or evaluate lightweight goals only.
-- Iteration step execution: read project README, project execution guide, prototype contract, latest prototype state, latest iteration-plan state, and current goal; execute exactly one step.
-- Needs Fix: read project README, project execution guide, prototype contract, current goal, current step execution state, current step repair ledger, and latest platform rejection; repair only the current step.
-- Repair plan generation/execution: read the project execution guide, prototype contract, latest failed acceptance, current repair-plan state, and current repair step; repair only the current repair step.
-- Free chat: read-only auxiliary route using implicit chat context, explicit chat records, imported TXT files, and the selected skill; chat output is not project completion evidence.
-- GDD creation: uses implicit chat context, explicit chat records, imported TXT files, BMAD/GDS skill prompt, and project metadata to write GDD output; it does not change prototype execution status.
-- Asset inventory, package, and download: readback/artifact routes based on current project state and filesystem facts, not assistant text.
+## Godot 模板发版和应用元数据
 
-### Hard Rules
+本节是 Godot 游戏模板的导出和发版入口，不是 Phase A 平台服务的 live 部署流程。
 
-- Executable routes must fail closed: when a mandatory recovery source is missing, do not pretend context was restored; either recreate the project execution guide or return an explicit failure/risk.
-- Route state and repair ledger are continuity memory, not current acceptance authority.
-- Do not mark a step complete from assistant text alone; completion must come from platform validation, current goal acceptance, or explicit route-state update.
-- Every new route must declare recovery inputs, authority order, missing-source behavior, and browser-safe output rules before it is wired to frontend buttons or skills.
+创建版本标签触发发布：
 
-### Deep Reference
-- 文档索引：`docs/PROJECT_DOCUMENTATION_INDEX.md`
-- Script Entrypoints Index: `docs/workflows/script-entrypoints-index.md`
-- Harness Run Protocol: `docs/workflows/run-protocol.md`
-- Harness Boundary Matrix: `docs/workflows/harness-boundary-matrix.md`
-- Harness Marathon: `docs/agents/06-harness-marathon.md`
-- Directory Responsibilities: `docs/agents/16-directory-responsibilities.md`
-- AGENTS 构建原则：`docs/agents/11-agents-construction-principles.md`
-- Actions 快速链路验证（Dry Run）：`.github/workflows/windows-smoke-dry-run.yml`
-## Task / ADR / PRD 工具
+```powershell
+git status
+git push
+git tag v0.1.1 -m "v0.1.1 release"
+git push origin v0.1.1
+```
 
-README 只保留稳定公共入口摘要，不再在这里维护长脚本清单。
+Windows Release workflow 会导出并把 `build/Game.exe` 附加到 GitHub Release。
 
-- 日常推荐入口：`docs/workflows/stable-public-entrypoints.md`
-- 全量工作流入口、依赖、参数扫描：`docs/workflows/script-entrypoints-index.md`
+应用元数据在 `export_presets.cfg` 的 `[preset.0.options]` 段维护：
 
-稳定公共入口按用途分为 3 组：
+- `application/product_name`
+- `application/company_name`
+- `application/file_description`
+- `application/*_version`
+- `application/icon`
 
-1. 仓库 bootstrap / 恢复
-- `py -3 scripts/python/dev_cli.py run-local-hard-checks`
-- `py -3 scripts/python/dev_cli.py project-health-scan`
-- `py -3 scripts/python/dev_cli.py serve-project-health`
-- `py -3 scripts/python/dev_cli.py resume-task --task-id <id>`
-- `py -3 scripts/python/dev_cli.py run-prototype-tdd --slug <slug> --stage <red|green|refactor> ...`
-- `py -3 scripts/python/dev_cli.py run-prototype-workflow --prototype-file docs/prototypes/<your-file>.md`
-- `py -3 scripts/python/dev_cli.py inspect-run --kind <kind> [--task-id <id>]`
-- `py -3 scripts/python/dev_cli.py chapter6-route --task-id <id> --recommendation-only`
-- `py -3 scripts/python/dev_cli.py run-single-task-chapter6 --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>`
-- `py -3 scripts/python/dev_cli.py run-chapter7-ui-wiring --delivery-profile <profile>`
-
-2. 任务交付主环
-- `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile <profile>`
-- `py -3 scripts/sc/llm_generate_tests_from_acceptance_refs.py --task-id <id> --tdd-stage red-first --verify <mode>`
-- `py -3 scripts/sc/check_tdd_execution_plan.py --task-id <id> --tdd-stage red-first --verify auto --execution-plan-policy <mode>`
-- `py -3 scripts/sc/build.py tdd --stage <red|green|refactor>`
-
-3. 任务元数据 / 架构一致性
-- `py -3 scripts/python/task_links_validate.py`
-- `py -3 scripts/python/check_tasks_all_refs.py`
-- `py -3 scripts/python/validate_task_master_triplet.py`
-- `py -3 scripts/python/validate_contracts.py`
-- `py -3 scripts/python/check_domain_contracts.py`
-- `py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write`
-- `py -3 scripts/sc/llm_generate_overlays_batch.py ...`
-
-止损规则：
-- 不要再把一次性迁移、兄弟仓同步、编码修复、文档清洗脚本堆到 README 首页。
-- 如果某个脚本不在上面的稳定公共入口里，先去 `stable-public-entrypoints.md` 或 `script-entrypoints-index.md` 查，不要凭印象直接运行。
-
-## New project task-gate alignment
-
-When you copy this template to create a new project, enable task-scoped gates after real Taskmaster files are ready:
-
-1) Prepare triplet files:
-- `.taskmaster/tasks/tasks.json`
-- `.taskmaster/tasks/tasks_back.json`
-- `.taskmaster/tasks/tasks_gameplay.json`
-
-2) Pick one delivery profile and let scripts derive the default security posture:
-- Playable EA posture:
-  - `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile playable-ea --skip-llm-review`
-- Fast ship posture (template default):
-  - `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile fast-ship --skip-llm-review`
-- Standard posture (release tightening):
-  - `py -3 scripts/sc/run_review_pipeline.py --task-id <id> --godot-bin "$env:GODOT_BIN" --delivery-profile standard --skip-llm-review`
-- Remove `--skip-llm-review` only when you intentionally want the advisory LLM review stage as part of the unified pipeline.
-- Only pass `--security-profile` when you intentionally need to break the default mapping.
-- Optional per-task review hint: add `semantic_review_tier` to `tasks_back.json` / `tasks_gameplay.json` with `auto | minimal | targeted | full`; this only changes `sc-llm-review`, not deterministic gates.
-- Stop-loss escalation still applies: `P1` tasks escalate to at least `targeted`; `P0`, contract/security/workflow/CI/release/ADR/architecture/performance-heavy tasks escalate to `full`.
-- `P0/P1` review findings stay in the must-fix path; `P2/P3/P4` are synced into `docs/technical-debt.md` after a successful `sc-llm-review`.
-
-3) Keep profile observability in CI:
-- Step Summary should contain both `DeliveryProfile: <playable-ea|fast-ship|standard>` and `SecurityProfile: <host-safe|strict>`.
-- LLM scripts are diagnostic only and do not replace hard gates.
-
-4) Initialize `overlay_task_drift` only after real Taskmaster triplet files exist:
-- `py -3 scripts/python/remind_overlay_task_drift.py --write --overlay-index docs/architecture/overlays/PRD-Guild-Manager/08/_index.md`
-- Do not run `--write` in the bare template state; otherwise the baseline only records missing task files.
-
-<!-- END:NEW_PROJECT_SANGUO_ALIGNMENT -->
-
-## Notes
-- DB 后端：默认插件优先；`GODOT_DB_BACKEND=plugin|managed` 可控。
-- 示例 UI/测试：默认关闭；设置 `TEMPLATE_DEMO=1` 启用（Examples/**）。
-
-## Feature Flags（特性旗标）
-- Autoload：`/root/FeatureFlags`（文件：`Game.Godot/Scripts/Config/FeatureFlags.cs`）
-- 环境变量优先生效：
-  - 单项：`setx FEATURE_demo_screens 1`
-  - 多项：`setx GAME_FEATURES "demo_screens,perf_overlay"`
-- 文件配置：`user://config/features.json`（示例：`{"demo_screens": true}`）
-- 代码示例：`if (FeatureFlags.IsEnabled("demo_screens")) { /* ... */ }`
-
-## 如何发版（打 tag）
-- 确认主分支已包含所需变更：`git status && git push`
-- 创建版本标签：`git tag v0.1.1 -m "v0.1.1 release"`
-- 推送标签触发发布：`git push origin v0.1.1`
-- 工作流：`Windows Release (Tag)` 自动导出并将 `build/Game.exe` 附加到 GitHub Release。
-- 如需手动导出：运行 `Windows Release (Manual)` 或 `Windows Export Slim`。
-
-## 自定义应用元数据（图标/公司/描述）
-- 文件：`export_presets.cfg` → `[preset.0.options]` 段。
-- 关键字段：
-  - `application/product_name`（产品名），`application/company_name`（公司名）
-  - `application/file_description`（文件描述），`application/*_version`（版本）
-  - 图标：`application/icon`（推荐 ICO：`res://icon.ico`；当前为 `res://icon.svg`）
-- 修改后，运行 `Windows Export Slim` 或 `Windows Release (Manual)` 验证导出产物。
 ## Game Project Metadata
+
 - Game Name: TBD
 - Game Type: TBD
 - Game Type Source: TBD
