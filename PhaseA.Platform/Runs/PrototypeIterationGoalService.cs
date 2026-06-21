@@ -532,6 +532,11 @@ public sealed class PrototypeIterationGoalService
             - Prefer fast code-level validation only. If deeper runtime validation is needed, report it in VERIFY/REMAINING instead of starting a long-running process.
             - Platform route or recovery tests passing does not prove a gameplay task is complete.
             - Prefer the smallest working change that completes this task.
+            - Prototype component preference is soft and prototype-only: prefer PrototypeRoot for orchestration, State/Data for data, Systems for gameplay calculation, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView for UI/visual feedback.
+            - Treat Godot components as Node/scene responsibility boundaries, not ECS. Do not introduce ECS, EntityComponent, IComponent, or a new framework.
+            - Prefer exported NodePath fields or one local binding method for stable scene references instead of repeating long GetNode("CanvasLayer/...") strings across gameplay methods.
+            - Inside one prototype, prefer direct method calls, Godot signals, or C# events between local components. Use EventBus only for true cross-route/global notifications or future promotion candidates.
+            - When the current goal touches visuals, assets, HUD, maps, battle, rewards, or logs, map the work to component slots such as HudView, MapView, BattleView, RewardView, ActorView, LogView, or InventoryView.
             - If blocked, report the blocker directly instead of modifying unrelated infrastructure.
             - The final answer must be safe for browser users: no paths, command lines, script names, log names, or environment variable names.
             - If this task is too large, complete only the core part and explicitly mark what remains.

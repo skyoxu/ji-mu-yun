@@ -50,6 +50,23 @@
 - 地图场景需要哪些 UI：HP、任务提示、小地图、遇怪提示？ <player answer>
 - 失败后是直接 Game Over，还是允许 Retry？ <player answer>
 
+
+
+## 原型组件映射
+- 风格：使用 Godot 节点/场景组件，不使用 ECS。
+- 根节点：PrototypeRoot / <SlugPascalCase>Prototype 只负责编排生命周期、输入、场景切换和状态交接。
+- 状态/数据：<SlugPascalCase>State 或 Scripts/Data/* 保存临时状态和调参数据。
+- 玩法系统：Scripts/Systems/* 保存玩法计算，例如战斗、奖励、遭遇、移动或谜题规则。
+- 视图组件：
+  - HudView：<HUD / 状态反馈槽位>
+  - MapView：<地图 / 场景 / 世界表现槽位>
+  - BattleView：<战斗 / 挑战表现槽位>
+  - RewardView：<奖励 / 结算选择槽位>
+  - ActorView：<玩家 / 敌人 / NPC 表现槽位>
+  - LogView：<战斗日志 / 任务日志 / 状态文字槽位>
+- 绑定规则：优先使用 exported NodePath 字段或集中绑定方法，避免在多个玩法方法中重复长 GetNode 路径。
+- 通信规则：同一 prototype 内优先直接调用、Godot signal 或 C# event；EventBus 只保留给全局通知或未来 promote 候选。
+
 ## Prototype Spec Sidecar
 - Spec Path: docs/prototypes/<slug>.prototype.json
 - Consumer: project-health and prototype TDD

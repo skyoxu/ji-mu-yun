@@ -678,6 +678,10 @@ public sealed class PrototypeIterationPlanService
             - Keep evidence and missingReason short and browser-safe.
             - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not treat it as an executable route profile or a requirement to add every listed GDD section.
             - Player-visible text rule for planning: any future goal that creates or changes in-game Godot text should require Chinese player-visible text by default, while preserving English code identifiers, fixed node names, resource paths, tests, logs, and platform validation names.
+            - When suggesting implementation work, prefer a lightweight prototype split: PrototypeRoot orchestration, State/Data, gameplay Systems, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView.
+            - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not ask for ECS, EntityComponent, IComponent, or a new framework.
+            - Prefer exported NodePath bindings or one local binding pass for stable scene references instead of planning repeated long GetNode("CanvasLayer/...") strings.
+            - Prefer direct calls, Godot signals, or C# events inside one prototype; use EventBus only when a goal clearly needs global cross-route notification.
 
             Project:
             - Name: {project.Name}
@@ -771,6 +775,10 @@ public sealed class PrototypeIterationPlanService
             - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not turn the whole GDD template into iteration goals.
             - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
             - If a goal creates or changes any player-visible Godot text, its description or acceptanceHint must preserve this rule: Label, Button, RichTextLabel, HUD, menus, battle logs, quest prompts, result prompts, and win/fail/error prompts default to Chinese; code identifiers, fixed node names, resource paths, tests, logs, and platform validation names remain English.
+            - When refining implementation goals, prefer a lightweight prototype split: PrototypeRoot orchestration, State/Data, gameplay Systems, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView.
+            - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not ask for ECS, EntityComponent, IComponent, or a new framework.
+            - Prefer exported NodePath bindings or one local binding pass for stable scene references instead of repeated long GetNode("CanvasLayer/...") strings.
+            - Prefer direct calls, Godot signals, or C# events inside one prototype; reserve EventBus for true global notifications or future promotion candidates.
             - Final step must remain final first-loop acceptance.
             - If regeneration guidance is provided, treat it as a hard constraint from the previous plan evaluation.
             - When regeneration guidance says the current blocker is Start Adventure, visible MapScene, or stable movement, goal 1 must remain focused on that blocker.

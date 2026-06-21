@@ -430,6 +430,8 @@ public sealed class ProjectAssetLibraryService
 
             Choose map-making-master only for map, tilemap, terrain, level, room, field, overworld, background map, or spatial layout assets.
             Choose character-making-master for player, enemy, NPC, item, icon, projectile, effect, UI sprite, prop, or any sprite-like asset.
+            Treat HudView, MapView, BattleView, RewardView, ActorView, LogView, InventoryView, and PrototypeRoot child visuals as lightweight Godot prototype component slots, not ECS.
+            If IntendedUse names a component slot, preserve that slot in the reason and choose the skill that best fits the visual asset itself.
 
             Project:
             - GameName: {{project.GameName}}

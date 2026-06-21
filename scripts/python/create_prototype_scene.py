@@ -47,17 +47,30 @@ def slug_to_pascal(slug: str) -> str:
 
 
 def render_script(*, class_name: str, scene_root: str) -> str:
+    base_type = f"global::Godot.{scene_root}"
+    state_class_name = f"{class_name}State"
+    system_class_name = f"{class_name}System"
     return "\n".join(
         [
-            "using Godot;",
+            "using Game.Godot.Prototypes.Components;",
+            "using Game.Godot.Prototypes.Data;",
+            "using Game.Godot.Prototypes.Systems;",
             "",
             "namespace Game.Godot.Prototypes;",
             "",
-            f"public partial class {class_name} : {scene_root}",
+            f"public partial class {class_name} : {base_type}",
             "{",
+            f"    private readonly {system_class_name} _system = new();",
+            f"    private {state_class_name} _state = new(\"boot\", \"Booting\", \"Waiting for prototype setup.\");",
+            "",
             "    public override void _Ready()",
             "    {",
-            '        GD.Print("Prototype scaffold ready: replace this scene with the minimum playable loop.");',
+            "        _state = _system.CreateInitialState();",
+            "",
+            "        var hudView = GetNodeOrNull<HudView>(\"HudView\");",
+            "        hudView?.RenderStatus(_state.StatusText, _state.HintText);",
+            "",
+            '        global::Godot.GD.Print("Prototype scaffold ready: replace this scene with the minimum playable loop.");',
             "    }",
             "}",
             "",
@@ -65,11 +78,84 @@ def render_script(*, class_name: str, scene_root: str) -> str:
     )
 
 
-def render_scene(*, class_name: str, scene_root: str, script_res_path: str) -> str:
+def render_component_script(*, namespace_suffix: str, class_name: str, base_type: str, body_lines: list[str]) -> str:
     lines = [
-        "[gd_scene load_steps=2 format=3]",
+        f"namespace Game.Godot.Prototypes.{namespace_suffix};",
+        "",
+        f"public partial class {class_name} : {base_type}",
+        "{",
+    ]
+    lines.extend(f"    {line}" if line else "" for line in body_lines)
+    lines += [
+        "}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def render_state_script(*, class_name: str) -> str:
+    return "\n".join(
+        [
+            "namespace Game.Godot.Prototypes.Data;",
+            "",
+            f"public sealed record {class_name}(string Phase, string StatusText, string HintText);",
+            "",
+        ]
+    )
+
+
+def render_system_script(*, class_name: str, state_class_name: str) -> str:
+    return "\n".join(
+        [
+            "using Game.Godot.Prototypes.Data;",
+            "",
+            "namespace Game.Godot.Prototypes.Systems;",
+            "",
+            f"public sealed class {class_name}",
+            "{",
+            f"    public {state_class_name} CreateInitialState()",
+            "    {",
+            f'        return new {state_class_name}(\"ready\", \"Ready\", \"Replace this scaffold with the minimum playable loop.\");',
+            "    }",
+            "",
+            f"    public {state_class_name} Advance({state_class_name} state)",
+            "    {",
+            "        return state with { Phase = \"next-step\", StatusText = \"Advanced\", HintText = \"Implement the first readable player action here.\" };",
+            "    }",
+            "}",
+            "",
+        ]
+    )
+
+
+def render_view_script(*, class_name: str) -> str:
+    return render_component_script(
+        namespace_suffix="Components",
+        class_name=class_name,
+        base_type="global::Godot.Node",
+        body_lines=[
+            "private string _lastStatus = string.Empty;",
+            "",
+            "public override void _Ready()",
+            "{",
+            "}",
+            "",
+            "public void RenderStatus(string statusText, string hintText)",
+            "{",
+            "    _lastStatus = string.IsNullOrWhiteSpace(hintText) ? statusText : $\"{statusText} - {hintText}\";",
+            "}",
+            "",
+            "public string LastStatus => _lastStatus;",
+        ],
+    )
+
+
+def render_scene(*, class_name: str, scene_root: str, script_res_path: str, hud_view_res_path: str) -> str:
+    lines = [
+        "[gd_scene load_steps=3 format=3]",
         "",
         f'[ext_resource type="Script" path="{script_res_path}" id="1"]',
+        f'[ext_resource type="Script" path="{hud_view_res_path}" id="2"]',
         "",
         f'[node name="{class_name}" type="{scene_root}"]',
         'script = ExtResource("1")',
@@ -90,9 +176,15 @@ def render_scene(*, class_name: str, scene_root: str, script_res_path: str) -> s
             "offset_right = 640.0",
             "offset_bottom = 80.0",
             'text = "Replace this scaffold with your minimum playable loop."',
+            "",
+            '[node name="HudView" type="Node" parent="."]',
+            'script = ExtResource("2")',
         ]
     else:
         lines += [
+            "",
+            '[node name="HudView" type="Node" parent="."]',
+            "script = ExtResource(\"2\")",
             "",
             '[node name="PrototypeLoop" type="Node2D" parent="."]',
         ]
@@ -126,7 +218,8 @@ def render_dotnet_test(*, class_name: str) -> str:
     )
 
 
-def render_gdunit_test(*, scene_res_path: str) -> str:
+def render_gdunit_test(*, scene_res_path: str, scene_root: str) -> str:
+    expected_child = "PrototypeHint" if scene_root == "Control" else "PrototypeLoop"
     return "\n".join(
         [
             'extends "res://addons/gdUnit4/src/GdUnitTestSuite.gd"',
@@ -144,7 +237,7 @@ def render_gdunit_test(*, scene_res_path: str) -> str:
             "",
             "func test_prototype_scene_contains_prototype_loop_node() -> void:",
             "    var scene = await _spawn_scene()",
-            '    assert_object(scene.get_node_or_null("PrototypeLoop")).is_not_null()',
+            f'    assert_object(scene.get_node_or_null("{expected_child}")).is_not_null()',
             "",
         ]
     )
@@ -169,7 +262,17 @@ def main(argv: list[str] | None = None) -> int:
     prototype_dir = root / args.prototype_root / slug
     scene_path = prototype_dir / f"{class_name}.tscn"
     script_path = prototype_dir / "Scripts" / f"{class_name}.cs"
+    components_dir = prototype_dir / "Scripts" / "Components"
+    systems_dir = prototype_dir / "Scripts" / "Systems"
+    data_dir = prototype_dir / "Scripts" / "Data"
     assets_dir = prototype_dir / "Assets"
+    hud_view_path = components_dir / "HudView.cs"
+    map_view_path = components_dir / "MapView.cs"
+    battle_view_path = components_dir / "BattleView.cs"
+    reward_view_path = components_dir / "RewardView.cs"
+    log_view_path = components_dir / "LogView.cs"
+    state_path = data_dir / f"{class_name}State.cs"
+    system_path = systems_dir / f"{class_name}System.cs"
     dotnet_test_path = root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs"
     gdunit_test_path = root / "Tests.Godot" / "tests" / "Prototype" / class_name / f"test_{slug.replace('-', '_')}_prototype_scene.gd"
     scene_res_path = f"res://{args.prototype_root.strip('/').replace(chr(92), '/')}/{slug}/{class_name}.tscn"
@@ -177,7 +280,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if not scaffold_exists or args.force:
         ensure_dir(assets_dir)
+        ensure_dir(components_dir)
+        ensure_dir(systems_dir)
+        ensure_dir(data_dir)
         script_res_path = f"res://{args.prototype_root.strip('/').replace(chr(92), '/')}/{slug}/Scripts/{class_name}.cs"
+        hud_view_res_path = f"res://{args.prototype_root.strip('/').replace(chr(92), '/')}/{slug}/Scripts/Components/HudView.cs"
         write_text(script_path, render_script(class_name=class_name, scene_root=str(args.scene_root)))
         write_text(
             scene_path,
@@ -185,14 +292,22 @@ def main(argv: list[str] | None = None) -> int:
                 class_name=class_name,
                 scene_root=str(args.scene_root),
                 script_res_path=script_res_path,
+                hud_view_res_path=hud_view_res_path,
             ),
         )
+        write_text(hud_view_path, render_view_script(class_name="HudView"))
+        write_text(map_view_path, render_view_script(class_name="MapView"))
+        write_text(battle_view_path, render_view_script(class_name="BattleView"))
+        write_text(reward_view_path, render_view_script(class_name="RewardView"))
+        write_text(log_view_path, render_view_script(class_name="LogView"))
+        write_text(state_path, render_state_script(class_name=f"{class_name}State"))
+        write_text(system_path, render_system_script(class_name=f"{class_name}System", state_class_name=f"{class_name}State"))
 
     if args.force or not dotnet_test_path.exists():
         write_text(dotnet_test_path, render_dotnet_test(class_name=class_name))
     if args.force or not gdunit_test_path.exists():
         ensure_dir(gdunit_test_path.parent)
-        write_text(gdunit_test_path, render_gdunit_test(scene_res_path=scene_res_path))
+        write_text(gdunit_test_path, render_gdunit_test(scene_res_path=scene_res_path, scene_root=str(args.scene_root)))
 
     if scaffold_exists and not args.force:
         print(

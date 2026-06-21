@@ -1111,6 +1111,9 @@ public sealed class ArtifactReadbackServiceTests
             item.IntendedUse == "用于敌人在地图遭遇或战斗场景中的视觉表现。" &&
             item.Reason == "敌人需要独立视觉表现。");
         codex.LastPrompt.Should().Contain("Inventory payload");
+        codex.LastPrompt.Should().Contain("lightweight prototype component slots");
+        codex.LastPrompt.Should().Contain("HudView");
+        codex.LastPrompt.Should().Contain("not ECS");
         preview!.ContentType.Should().Be("image/png");
         preview.FileName.Should().Be("player.png");
     }
@@ -1359,6 +1362,8 @@ public sealed class ArtifactReadbackServiceTests
         generated.Entry.ArtifactPaths.Should().Contain(path => path.Contains("ProjectAssetLibrary", StringComparison.Ordinal));
         routeEngine.LastPrompt.Should().Contain("Decide the correct asset generation skill");
         routeEngine.LastPrompt.Should().Contain("RpgMapAsset");
+        routeEngine.LastPrompt.Should().Contain("HudView");
+        routeEngine.LastPrompt.Should().Contain("not ECS");
         generated.Library.Units.Should().ContainSingle(unit =>
             unit.InstanceName == "RpgMapAsset" &&
             unit.Entries.Count == 2);

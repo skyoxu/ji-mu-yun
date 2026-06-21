@@ -667,6 +667,8 @@ public sealed class GameDesignDocumentService
             - The draft file must preserve Chinese characters. Do not replace Chinese with question marks.
             - Prefer JSON unicode escapes for all Chinese text, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt the file.
             - Create 6 to 12 sections covering vision, target player, core loop, player progression, world/levels, combat/interaction, UI/HUD, content and asset needs, prototype acceptance criteria, and open questions.
+            - For prototype-oriented projects, include a lightweight component/scene responsibility section or make UI/HUD and content/asset sections explicitly name component slots such as PrototypeRoot, HudView, MapView, BattleView, RewardView, ActorView, LogView, InventoryView, Systems, and Data/State where relevant.
+            - Treat those component names as Godot Node/scene responsibility slots, not ECS. Do not propose ECS, EntityComponent, IComponent, or a new framework unless the user explicitly asks for it.
             - Every section.content must be an empty string. Section content is generated later by the section route.
             - section.id must be stable, lowercase, hyphenated, and unique.
             - Final assistant reply should be 2 to 4 short sentences only; do not print the whole JSON.

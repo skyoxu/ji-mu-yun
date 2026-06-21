@@ -161,6 +161,11 @@ public sealed record DemoPrototypeState;
         codexCommand.StandardInput.Should().Contain("Platform hard acceptance for JRPG field navigation");
         codexCommand.StandardInput.Should().Contain("visible playable field");
         codexCommand.StandardInput.Should().Contain("player marker or character");
+        codexCommand.StandardInput.Should().Contain("PrototypeRoot");
+        codexCommand.StandardInput.Should().Contain("HudView");
+        codexCommand.StandardInput.Should().Contain("not ECS");
+        codexCommand.StandardInput.Should().Contain("exported NodePath");
+        codexCommand.StandardInput.Should().Contain("Use EventBus only for true cross-route/global notifications");
         codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
         var godotBuildCommand = runner.Commands.Single(command =>

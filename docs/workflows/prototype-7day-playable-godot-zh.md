@@ -237,6 +237,10 @@ py -3 scripts/python/dev_cli.py run-prototype-workflow --prototype-file docs/pro
 Game.Godot/Prototypes/<slug>/
   <SlugPascalCase>Prototype.tscn
   Scripts/
+    <SlugPascalCase>Prototype.cs      # PrototypeRoot / 生命周期编排
+    Components/                       # HudView、MapView、BattleView、RewardView、ActorView、LogView
+    Systems/                          # CombatSystem、RewardSystem、EncounterSystem、MovementSystem、PuzzleSystem
+    Data/                             # PrototypeState、PrototypeTuning、小型数据记录
   Assets/
 Tests.Godot/tests/Prototype/<Slug>/
 docs/prototypes/
@@ -316,6 +320,9 @@ py -3 scripts/python/dev_cli.py create-prototype-scene --slug combat-loop --scen
 - 最简单的输入
 - 最简单的反馈
 - 一个可重复进入和重置的原型场景
+- 轻量组件槽位：PrototypeRoot 只负责编排生命周期和场景切换；HudView/MapView/BattleView/RewardView/ActorView/LogView 负责 Node/scene 显示；Systems 负责玩法计算；Data/State 保存临时状态和调参。
+- 绑定建议：优先使用 exported NodePath 字段或一个集中绑定方法，不要在多个 gameplay 方法里重复长 `GetNode("CanvasLayer/...")` 路径。
+- 通信建议：同一个 prototype 内优先直接调用、Godot signal 或 C# event；EventBus 只用于全局通知或未来准备 promote 的跨模块事件。
 
 建议当天必须回答的 4 个问题：
 

@@ -1358,6 +1358,7 @@ def _build_implementation_prompt(*, payload: dict[str, Any], record_file: str, d
         "- 优先保证：项目专属 red 测试可以转为 green，Godot 场景可实例化，默认场景路径有效。\n"
         "- 如果你新增了实现，请同步让项目专属测试不再依赖模板 DefaultRpgPrototype。\n"
         "- 必须保留并使用当前 slug 对应的项目专属路径，不得回退到模板场景或模板测试。\n"
+        f"{_prototype_component_guidance_as_prompt_bullets()}"
         "- 必须保证从 Game.Godot/Scenes/Main.tscn 进入后，主菜单里的“原型 / Prototype”按钮能够通过现有 MainMenu + PrototypeCatalog + ScreenNavigator 链路跳转到本次 prototype 的 default_scene。\n"
         "- 不允许只生成 prototype 场景文件而不接通 Main.tscn 的主菜单原型入口；如果入口无法跳到项目专属场景，这次实现视为不完整。\n"
         "- 如果当前原型是 RPG，不得仅通过加载 DefaultRpgTemplate 或复用 DefaultRpgPrototypeLoop 来包装出一个表面可运行的壳。\n"
@@ -1443,6 +1444,34 @@ def _prototype_reward_option_type_name(slug: str) -> str:
 
 def _prototype_battle_result_type_name(slug: str) -> str:
     return f"{_prototype_class_name(slug)}BattleResult"
+
+
+def _prototype_component_guidance() -> str:
+    return (
+        "Prototype lightweight component preference (soft, prototype-only):\n"
+        "- Prefer a small Godot scene/component shape for new prototype code: PrototypeRoot orchestrates lifecycle, "
+        "State holds data, Systems hold gameplay calculation, and View components update UI/visual feedback.\n"
+        "- Suggested paths are Game.Godot/Prototypes/<slug>/Scripts/Components/, "
+        "Game.Godot/Prototypes/<slug>/Scripts/Systems/, and Game.Godot/Prototypes/<slug>/Scripts/Data/. "
+        "Use them when they help, but do not block a playable prototype only because a directory is absent.\n"
+        "- A component means a Godot Node/scene responsibility such as HudView, MapView, BattleView, RewardView, "
+        "LogView, ActorView, or InputView. Do not introduce ECS, EntityComponent, IComponent, or a new framework.\n"
+        "- Keep PrototypeRoot thin: wire nodes, call systems, switch scenes, and pass state. Avoid putting all UI, "
+        "battle/reward/map rules, and tuning data into one large script when a small View/System/State split is cheaper.\n"
+        "- Prefer exported NodePath fields or one local binding method for stable scene references. Avoid repeating long "
+        "GetNode(\"CanvasLayer/...\") strings across gameplay methods.\n"
+        "- Inside one prototype, prefer direct method calls, Godot signals, or C# events between local components. "
+        "Use EventBus only for true cross-route/global notifications or future promotion candidates.\n"
+        "- When GDD notes, asset units, or UI requirements mention visuals, map them to a component slot such as "
+        "HudView, MapView, BattleView, RewardView, ActorView, LogView, or InventoryView.\n"
+    )
+
+
+def _prototype_component_guidance_as_prompt_bullets() -> str:
+    bullets: list[str] = []
+    for line in _prototype_component_guidance().strip().splitlines():
+        bullets.append(f"- {line[2:] if line.startswith('- ') else line}\n")
+    return "".join(bullets)
 
 
 def _normalize_godot_csharp_namespace_aliases(root: Path) -> list[str]:
@@ -2229,6 +2258,28 @@ def _validate_day4_implementation_outputs(*, root: Path, payload: dict[str, Any]
         script_text = read_text(script_path, errors="ignore")
         if "Prototype scaffold ready: replace this scene with the minimum playable loop." in script_text:
             issues.append(f"scaffold_script_not_replaced={_repo_relative_posix(root, script_path)}")
+        components_dir = root / "Game.Godot" / "Prototypes" / slug / "Scripts" / "Components"
+        systems_dir = root / "Game.Godot" / "Prototypes" / slug / "Scripts" / "Systems"
+        data_dir = root / "Game.Godot" / "Prototypes" / slug / "Scripts" / "Data"
+        hud_view_path = components_dir / "HudView.cs"
+        state_slot_path = data_dir / f"{_prototype_class_name(slug)}State.cs"
+        system_slot_path = systems_dir / f"{_prototype_class_name(slug)}System.cs"
+        if (
+            path_exists(components_dir) and
+            path_exists(systems_dir) and
+            path_exists(data_dir) and
+            path_exists(hud_view_path) and
+            path_exists(state_slot_path) and
+            path_exists(system_slot_path)
+        ):
+            component_slot_markers = (
+                f"private readonly {_prototype_class_name(slug)}System _system = new();",
+                f"private {_prototype_class_name(slug)}State _state =",
+                'GetNodeOrNull<HudView>("HudView")',
+                "RenderStatus(_state.StatusText, _state.HintText)",
+            )
+            if not all(marker in script_text for marker in component_slot_markers):
+                issues.append(f"component_slots_not_wired={_repo_relative_posix(root, script_path)}")
         if _is_rpg_payload(payload):
             if "DefaultRpgTemplate/DefaultRpgPrototype.tscn" in script_text or "DefaultPrototypeScenePath" in script_text:
                 issues.append(f"template_scene_dependency={_repo_relative_posix(root, script_path)}")

@@ -79,6 +79,16 @@ BattleScene rule:
 - `MapScene` must keep `Grid` when grid movement is used, and must satisfy one accepted marker set: legacy `Title` + `StatusLabel`, or current HUD `HeaderLabel` + `StatsLabel` + `ObjectiveLabel`. Do not introduce third near-equivalent naming schemes such as `MapTitle` or `PositionLabel`.
 - Foundation asset nodes such as `RpgMapAsset`, `RpgPlayerAsset`, and `RpgEnemyAsset` are required only when the selected capability uses those assets; battle enemy assets are conditional on conflict/battle capabilities.
 
+
+### Prototype Component Slots（原型组件槽位）
+
+- `PrototypeRoot` 只负责编排生命周期、输入、场景切换和状态交接。
+- `MapView`、`BattleView`、`HudView`、`RewardView`、`ActorView`、`LogView` 负责 Node/scene 级显示职责。
+- `CombatSystem`、`RewardSystem`、`EncounterSystem`、`MovementSystem` 在拆分比单脚本更便宜时负责玩法计算。
+- `PrototypeState` / `PrototypeTuning` 保存临时状态和调参数据。
+- 这些槽位是 Godot 节点/场景职责边界，不是 ECS；原型玩法探索不要引入 `IComponent`、`EntityComponent` 或新框架。
+- 优先使用 exported NodePath 或集中绑定方法。同一 prototype 内优先直接调用、Godot signal 或 C# event，不要用 EventBus 处理局部 UI 通信。
+
 ## Gameplay Flow / GDD Route
 
 ### 默认最小游玩动线

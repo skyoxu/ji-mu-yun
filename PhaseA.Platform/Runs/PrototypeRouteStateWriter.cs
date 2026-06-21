@@ -340,9 +340,15 @@ public sealed class PrototypeRouteStateWriter
                 - RPG map scene: Game.Godot/Prototypes/<slug>/MapScene.tscn
                 - RPG battle scene, only when battle/conflict capability is selected or named by latest failure: Game.Godot/Prototypes/<slug>/BattleScene.tscn
                 - RPG scripts: Game.Godot/Prototypes/<slug>/Scripts/
+                - RPG optional view components: Game.Godot/Prototypes/<slug>/Scripts/Components/
+                - RPG optional gameplay systems: Game.Godot/Prototypes/<slug>/Scripts/Systems/
+                - RPG optional state/tuning data: Game.Godot/Prototypes/<slug>/Scripts/Data/
                 - RPG core loop: Game.Core/Prototypes/
                 - RPG core tests: Game.Core.Tests/Prototypes/
                 - RPG Godot tests: Tests.Godot/tests/Prototype/
+                - Prefer PrototypeRoot for orchestration and small Node/scene components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView for UI/runtime responsibilities.
+                - Prefer exported NodePath bindings or one local binding method for stable scene references instead of scattering long GetNode("CanvasLayer/...") strings.
+                - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications.
                 """
             : """
                 ## Default Type Protocol
@@ -351,6 +357,10 @@ public sealed class PrototypeRouteStateWriter
                 - User form fields override templates and examples.
                 - Keep the smallest playable loop, user-visible UI feedback, and final acceptance aligned with the prototype contract.
                 - If platform validation names a concrete compile, scene, asset, or smoke blocker, repair that blocker before feature polish.
+                - Prefer PrototypeRoot for orchestration, small View components for UI/feedback, Systems for gameplay calculation, and Data/State classes for tuning or transient state when that split is cheaper than one large script.
+                - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not introduce ECS, EntityComponent, IComponent, or a new framework.
+                - Prefer exported NodePath bindings or one local binding method for stable scene references instead of repeating long GetNode("CanvasLayer/...") strings.
+                - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications or promotion candidates.
                 """;
 
         return $"""

@@ -55,6 +55,9 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("I want a cozy RPG loop.");
         runner.Commands[0].StandardInput.Should().Contain("Reference file says the village hub matters.");
         runner.Commands[0].StandardInput.Should().Contain("gdd-outline.generated.json");
+        runner.Commands[0].StandardInput.Should().Contain("PrototypeRoot");
+        runner.Commands[0].StandardInput.Should().Contain("HudView");
+        runner.Commands[0].StandardInput.Should().Contain("not ECS");
         var outlineJson = await File.ReadAllTextAsync(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json"));
         outlineJson.Should().NotContain("???");
         outline!.Title.Should().Be("演示策划大纲");

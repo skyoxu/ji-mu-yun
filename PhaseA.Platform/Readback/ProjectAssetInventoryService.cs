@@ -363,6 +363,9 @@ public sealed partial class ProjectAssetInventoryService
               ]
             }
             Use only the provided res:// scene paths. Do not mention absolute paths, command lines, scripts, logs, environment variables, or infrastructure.
+            Prefer inventory items that clearly map to lightweight prototype component slots such as HudView, MapView, BattleView, RewardView, ActorView, LogView, InventoryView, or PrototypeRoot child visuals.
+            Treat these slots as Godot Node/scene responsibility names, not ECS. Do not invent ECS terminology.
+            intendedUse should mention the most relevant gameplay/UI slot when possible, for example "MapView 地图底图", "HudView 血量图标", or "BattleView 敌人立绘".
 
             Inventory payload:
             {{payload}}
