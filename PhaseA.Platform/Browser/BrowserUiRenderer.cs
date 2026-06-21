@@ -6378,6 +6378,7 @@ public sealed class BrowserUiRenderer
                 function buildPrototypePayload() {
                   return {
                     slug: $("protoSlug").value.trim(),
+                    gameType: $("gameTypeSource").value.trim(),
                     hypothesis: $("hypothesis").value.trim(),
                     corePlayerFantasy: $("corePlayerFantasy").value.trim(),
                     minimumPlayableLoop: $("minimumPlayableLoop").value.trim(),
@@ -6388,84 +6389,6 @@ public sealed class BrowserUiRenderer
                     confirm: true,
                     scoreEngine: "deterministic",
                     model: $("globalModel").value
-                  };
-                }
-
-                function inferPrototypeEngineRecommendation(payload) {
-                  const textParts = [
-                    payload?.hypothesis,
-                    payload?.corePlayerFantasy,
-                    payload?.minimumPlayableLoop,
-                    payload?.gameFeature,
-                    payload?.coreGameplayLoop,
-                    payload?.winFailConditions
-                  ].filter(Boolean).map(value => String(value).trim());
-                  const haystack = textParts.join("\n").toLowerCase();
-                  const directPhysicsTerms = ["physics", "rigidbody", "collision", "撞", "碰撞", "弹跳", "gravity", "重力", "platform", "平台跳跃"];
-                  const strongPhysicsTerms = ["deterministic", "determinism", "replay", "rollback", "sync", "同步", "回放", "确定性", "复杂碰撞", "physics feel", "物理手感"];
-                  const threeDTerms = ["3d", "third person", "first person", "fps", "tps", "三维", "第三人称", "第一人称"];
-                  const stateFlowTerms = ["turn-based", "回合", "card", "deck", "ui", "菜单", "剧情", "visual novel", "rpg", "jrpg"];
-                  const hasDirectPhysics = directPhysicsTerms.some(term => haystack.includes(term));
-                  const hasStrongPhysics = strongPhysicsTerms.some(term => haystack.includes(term));
-                  const is3d = threeDTerms.some(term => haystack.includes(term));
-                  const isStateFlow = stateFlowTerms.some(term => haystack.includes(term));
-                  if (hasStrongPhysics && is3d) {
-                    return {
-                      engineBackend: "rapier_3d",
-                      engineApplyMode: "confirm_apply",
-                      engineConfidence: "medium",
-                      engineReason: "Prototype asks for deterministic or complex 3D physics feel.",
-                      engineRequiresPlugin: true,
-                      engineInstallTarget: "project_local_addon"
-                    };
-                  }
-                  if (hasStrongPhysics) {
-                    return {
-                      engineBackend: "rapier_2d",
-                      engineApplyMode: "confirm_apply",
-                      engineConfidence: "medium",
-                      engineReason: "Prototype asks for deterministic or complex 2D physics feel.",
-                      engineRequiresPlugin: true,
-                      engineInstallTarget: "project_local_addon"
-                    };
-                  }
-                  if (isStateFlow && !hasDirectPhysics) {
-                    return {
-                      engineBackend: "none",
-                      engineApplyMode: "recommend_only",
-                      engineConfidence: "medium",
-                      engineReason: "Prototype appears driven by UI, turn flow, or story state transitions.",
-                      engineRequiresPlugin: false,
-                      engineInstallTarget: "project_local_addon"
-                    };
-                  }
-                  if (hasDirectPhysics && is3d) {
-                    return {
-                      engineBackend: "jolt_3d",
-                      engineApplyMode: "recommend_only",
-                      engineConfidence: "medium",
-                      engineReason: "Prototype has 3D collision or gravity needs that fit built-in 3D physics first.",
-                      engineRequiresPlugin: false,
-                      engineInstallTarget: "project_local_addon"
-                    };
-                  }
-                  if (hasDirectPhysics) {
-                    return {
-                      engineBackend: "godot_physics_2d",
-                      engineApplyMode: "recommend_only",
-                      engineConfidence: "medium",
-                      engineReason: "Prototype has ordinary 2D collision or gravity needs; use built-in 2D physics first.",
-                      engineRequiresPlugin: false,
-                      engineInstallTarget: "project_local_addon"
-                    };
-                  }
-                  return {
-                    engineBackend: "none",
-                    engineApplyMode: "recommend_only",
-                    engineConfidence: "low",
-                    engineReason: "No clear physics-handling requirement was found in the current prototype intake.",
-                    engineRequiresPlugin: false,
-                    engineInstallTarget: "project_local_addon"
                   };
                 }
 
@@ -6795,11 +6718,16 @@ public sealed class BrowserUiRenderer
                   try {
                     const sceneSlug = $("tddSlug").value.trim() || $("protoSlug").value.trim();
                     const prototypePayload = { ...buildPrototypePayload(), slug: sceneSlug };
-                    const engineRecommendation = inferPrototypeEngineRecommendation(prototypePayload);
                     const payload = {
                       slug: sceneSlug,
                       sceneRoot: $("sceneRoot").value.trim() || "Node2D",
-                      ...engineRecommendation
+                      gameType: prototypePayload.gameType,
+                      hypothesis: prototypePayload.hypothesis,
+                      corePlayerFantasy: prototypePayload.corePlayerFantasy,
+                      minimumPlayableLoop: prototypePayload.minimumPlayableLoop,
+                      gameFeature: prototypePayload.gameFeature,
+                      coreGameplayLoop: prototypePayload.coreGameplayLoop,
+                      winFailConditions: prototypePayload.winFailConditions
                     };
                     const result = await api(`/api/projects/${state.projectId}/prototype-scene`, { method: "POST", body: JSON.stringify(payload) });
                     out(result);

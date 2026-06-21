@@ -80,6 +80,20 @@ def normalize_engine_recommendation(args: argparse.Namespace) -> dict[str, objec
     }
 
 
+def has_explicit_engine_recommendation(args: argparse.Namespace) -> bool:
+    return any(
+        str(getattr(args, key, "") or "").strip()
+        for key in (
+            "engine_backend",
+            "engine_apply_mode",
+            "engine_confidence",
+            "engine_reason",
+            "engine_requires_plugin",
+            "engine_install_target",
+        )
+    )
+
+
 def render_script(*, class_name: str, scene_root: str) -> str:
     base_type = f"global::Godot.{scene_root}"
     state_class_name = f"{class_name}State"
@@ -283,12 +297,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--slug", required=True)
     ap.add_argument("--prototype-root", default="Game.Godot/Prototypes")
     ap.add_argument("--scene-root", default="Control", choices=["Control", "Node2D"])
-    ap.add_argument("--engine-backend", default="none")
-    ap.add_argument("--engine-apply-mode", default="recommend_only")
-    ap.add_argument("--engine-confidence", default="low")
+    ap.add_argument("--engine-backend", default="")
+    ap.add_argument("--engine-apply-mode", default="")
+    ap.add_argument("--engine-confidence", default="")
     ap.add_argument("--engine-reason", default="")
-    ap.add_argument("--engine-requires-plugin", default="false")
-    ap.add_argument("--engine-install-target", default="project_local_addon")
+    ap.add_argument("--engine-requires-plugin", default="")
+    ap.add_argument("--engine-install-target", default="")
     ap.add_argument("--force", action="store_true", help="Overwrite the scaffold when files already exist.")
     return ap
 
@@ -352,7 +366,8 @@ def main(argv: list[str] | None = None) -> int:
         write_text(gdunit_test_path, render_gdunit_test(scene_res_path=scene_res_path, scene_root=str(args.scene_root)))
 
     if scaffold_exists and not args.force:
-        write_json(engine_recommendation_path, normalize_engine_recommendation(args))
+        if has_explicit_engine_recommendation(args) or not engine_recommendation_path.exists():
+            write_json(engine_recommendation_path, normalize_engine_recommendation(args))
         print(
             f"PROTOTYPE_SCENE ERROR: scaffold already exists for slug={slug}; pass --force to overwrite.",
             file=sys.stderr,

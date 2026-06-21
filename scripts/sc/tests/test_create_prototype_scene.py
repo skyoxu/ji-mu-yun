@@ -197,6 +197,36 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             self.assertEqual("godot_physics_2d", recommendation["recommended_backend"])
             self.assertEqual("medium", recommendation["confidence"])
 
+    def test_should_preserve_existing_engine_recommendation_when_rerun_has_no_engine_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prototype_dir = root / "Game.Godot" / "Prototypes" / "legacy-loop"
+            scripts_dir = prototype_dir / "Scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            (prototype_dir / "LegacyLoopPrototype.tscn").write_text("[gd_scene format=3]\n", encoding="utf-8")
+            (scripts_dir / "LegacyLoopPrototype.cs").write_text("namespace Game.Godot.Prototypes;\n", encoding="utf-8")
+            original = {
+                "recommended_backend": "rapier_2d",
+                "confidence": "medium",
+                "requires_plugin": True,
+                "scope": "prototype_only",
+            }
+            recommendation_path = prototype_dir / "engine-recommendation.json"
+            recommendation_path.write_text(json.dumps(original, ensure_ascii=False) + "\n", encoding="utf-8")
+
+            rc = prototype_scene.main(
+                [
+                    "--repo-root",
+                    str(root),
+                    "--slug",
+                    "legacy-loop",
+                ]
+            )
+
+            self.assertEqual(1, rc)
+            recommendation = json.loads(recommendation_path.read_text(encoding="utf-8"))
+            self.assertEqual(original, recommendation)
+
     def test_should_create_node2d_scaffold_with_prototype_loop_marker(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

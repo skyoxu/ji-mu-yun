@@ -122,8 +122,8 @@ public sealed class PrototypeCommandService
 
             var command = commandFactory(project);
             var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
-            var normalizedExitCode = NormalizeExitCode(runType, process);
-            var status = normalizedExitCode == 0 ? "succeeded" : "failed";
+            var normalizedProcess = NormalizeProcessResult(runType, process);
+            var status = normalizedProcess.ExitCode == 0 ? "succeeded" : "failed";
             var artifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug);
             foreach (var artifact in artifacts)
             {
@@ -136,9 +136,9 @@ public sealed class PrototypeCommandService
                 slug,
                 artifacts = artifacts.Select(a => a.RelativePath).ToArray()
             });
-            await _metadataStore.CompleteRunAsync(runId, status, normalizedExitCode, process.Stdout, process.Stderr, evidenceJson, cancellationToken);
+            await _metadataStore.CompleteRunAsync(runId, status, normalizedProcess.ExitCode, normalizedProcess.Stdout, normalizedProcess.Stderr, evidenceJson, cancellationToken);
             var storedArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
-            return new HostedCommandResult(runId, status, normalizedExitCode, process.Stdout, process.Stderr, storedArtifacts, []);
+            return new HostedCommandResult(runId, status, normalizedProcess.ExitCode, normalizedProcess.Stdout, normalizedProcess.Stderr, storedArtifacts, []);
         }
         finally
         {
@@ -146,16 +146,23 @@ public sealed class PrototypeCommandService
         }
     }
 
-    private static int NormalizeExitCode(string runType, HostedProcessResult process)
+    private static HostedProcessResult NormalizeProcessResult(string runType, HostedProcessResult process)
     {
         if (string.Equals(runType, "prototype-scene", StringComparison.OrdinalIgnoreCase) &&
             process.ExitCode != 0 &&
             ContainsExistingScaffoldMessage(process))
         {
-            return 0;
+            var stdout = string.Join(
+                Environment.NewLine,
+                new[]
+                {
+                    process.Stdout.Trim(),
+                    "PROTOTYPE_SCENE status=ok reason=prototype_scaffold_already_exists metadata=preserved_or_refreshed"
+                }.Where(part => !string.IsNullOrWhiteSpace(part))) + Environment.NewLine;
+            return new HostedProcessResult(0, stdout, "");
         }
 
-        return process.ExitCode;
+        return process;
     }
 
     private static bool ContainsExistingScaffoldMessage(HostedProcessResult process)

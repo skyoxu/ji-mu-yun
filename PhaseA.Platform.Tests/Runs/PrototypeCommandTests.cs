@@ -100,6 +100,124 @@ public sealed class PrototypeCommandTests
             "project_local_addon");
     }
 
+    [Fact]
+    public void BuildScene_InfersEngineRecommendationFromPrototypeIntake()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(
+            new PrototypeSceneRequest(
+                "physics-lab",
+                MinimumPlayableLoop: "2D platform movement with gravity, collision, replay, and deterministic physics feel.",
+                GameFeature: "Strong collision feel and rollback-friendly simulation."),
+            @"C:\project-repo");
+
+        command.Arguments.Should().ContainInOrder(
+            "--engine-backend",
+            "rapier_2d",
+            "--engine-apply-mode",
+            "confirm_apply",
+            "--engine-confidence",
+            "medium",
+            "--engine-requires-plugin",
+            "true",
+            "--engine-install-target",
+            "project_local_addon");
+    }
+
+    [Fact]
+    public void BuildScene_DoesNotSendEngineRecommendation_WhenIntakeIsEmpty()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(new PrototypeSceneRequest("physics-lab"), @"C:\project-repo");
+
+        command.Arguments.Should().NotContain("--engine-backend");
+        command.Arguments.Should().NotContain("--engine-requires-plugin");
+        command.Arguments.Should().NotContain("--engine-install-target");
+    }
+
+    [Fact]
+    public void BuildScene_DoesNotSendEngineRecommendation_WhenOnlyGameTypeIsPresent()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(
+            new PrototypeSceneRequest("rpg-loop", GameType: "rpg"),
+            @"C:\project-repo");
+
+        command.Arguments.Should().NotContain("--engine-backend");
+        command.Arguments.Should().NotContain("--engine-requires-plugin");
+        command.Arguments.Should().NotContain("--engine-install-target");
+    }
+
+    [Fact]
+    public void BuildScene_DoesNotTreatRpgMovementAsPhysicsBackendNeed()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(
+            new PrototypeSceneRequest(
+                "rpg-loop",
+                GameType: "rpg",
+                MinimumPlayableLoop: "Player movement through a village, dialogue, menu choice, and quest state feedback."),
+            @"C:\project-repo");
+
+        command.Arguments.Should().ContainInOrder(
+            "--engine-backend",
+            "none",
+            "--engine-apply-mode",
+            "recommend_only",
+            "--engine-confidence",
+            "medium");
+    }
+
+    [Fact]
+    public void BuildScene_DoesNotTreat3dMovementOnlyAsJoltNeed()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(
+            new PrototypeSceneRequest(
+                "walk-loop",
+                GameType: "adventure",
+                MinimumPlayableLoop: "3D movement through a small room with camera look and dialogue interaction."),
+            @"C:\project-repo");
+
+        command.Arguments.Should().ContainInOrder(
+            "--engine-backend",
+            "none",
+            "--engine-apply-mode",
+            "recommend_only",
+            "--engine-confidence",
+            "low");
+    }
+
     [Theory]
     [InlineData("red")]
     [InlineData("green")]
@@ -154,7 +272,10 @@ public sealed class PrototypeCommandTests
 
         result.Status.Should().Be("succeeded");
         result.ExitCode.Should().Be(0);
-        result.Stderr.Should().Contain("scaffold already exists for slug=demo");
+        result.Stdout.Should().Contain("reason=prototype_scaffold_already_exists");
+        result.Stdout.Should().Contain("metadata=preserved_or_refreshed");
+        result.Stdout.Should().NotContain("metadata=refreshed");
+        result.Stderr.Should().BeEmpty();
     }
 
     [Fact]
