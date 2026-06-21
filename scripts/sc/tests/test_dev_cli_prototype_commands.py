@@ -80,6 +80,18 @@ class DevCliPrototypeCommandsTests(unittest.TestCase):
                     "Node2D",
                     "--prototype-root",
                     "Game.Godot/Prototypes",
+                    "--engine-backend",
+                    "rapier_2d",
+                    "--engine-apply-mode",
+                    "confirm_apply",
+                    "--engine-confidence",
+                    "medium",
+                    "--engine-reason",
+                    "Prototype needs stronger 2D collision feel.",
+                    "--engine-requires-plugin",
+                    "true",
+                    "--engine-install-target",
+                    "project_local_addon",
                 ]
             )
 
@@ -92,6 +104,18 @@ class DevCliPrototypeCommandsTests(unittest.TestCase):
         self.assertIn("Node2D", cmd)
         self.assertIn("--prototype-root", cmd)
         self.assertIn("Game.Godot/Prototypes", cmd)
+        self.assertIn("--engine-backend", cmd)
+        self.assertIn("rapier_2d", cmd)
+        self.assertIn("--engine-apply-mode", cmd)
+        self.assertIn("confirm_apply", cmd)
+        self.assertIn("--engine-confidence", cmd)
+        self.assertIn("medium", cmd)
+        self.assertIn("--engine-reason", cmd)
+        self.assertIn("Prototype needs stronger 2D collision feel.", cmd)
+        self.assertIn("--engine-requires-plugin", cmd)
+        self.assertIn("true", cmd)
+        self.assertIn("--engine-install-target", cmd)
+        self.assertIn("project_local_addon", cmd)
 
     def test_run_prototype_workflow_should_forward_router_pause_arguments(self) -> None:
         with mock.patch.object(dev_cli, "run", return_value=0) as run_mock:

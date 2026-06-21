@@ -795,6 +795,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_proto_scene.add_argument("--slug", required=True)
     p_proto_scene.add_argument("--scene-root", default="Node2D")
     p_proto_scene.add_argument("--prototype-root", default="Game.Godot/Prototypes")
+    p_proto_scene.add_argument("--engine-backend", default="")
+    p_proto_scene.add_argument("--engine-apply-mode", default="")
+    p_proto_scene.add_argument("--engine-confidence", default="")
+    p_proto_scene.add_argument("--engine-reason", default="")
+    p_proto_scene.add_argument("--engine-requires-plugin", default="")
+    p_proto_scene.add_argument("--engine-install-target", default="")
     p_proto_scene.set_defaults(func=cmd_create_prototype_scene)
 
     # run-prototype-workflow

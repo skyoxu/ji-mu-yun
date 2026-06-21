@@ -479,6 +479,18 @@ def build_create_prototype_scene_cmd(args) -> list[str]:
         cmd += ["--scene-root", args.scene_root]
     if getattr(args, "prototype_root", ""):
         cmd += ["--prototype-root", args.prototype_root]
+    if getattr(args, "engine_backend", ""):
+        cmd += ["--engine-backend", args.engine_backend]
+    if getattr(args, "engine_apply_mode", ""):
+        cmd += ["--engine-apply-mode", args.engine_apply_mode]
+    if getattr(args, "engine_confidence", ""):
+        cmd += ["--engine-confidence", args.engine_confidence]
+    if getattr(args, "engine_reason", ""):
+        cmd += ["--engine-reason", args.engine_reason]
+    if getattr(args, "engine_requires_plugin", ""):
+        cmd += ["--engine-requires-plugin", args.engine_requires_plugin]
+    if getattr(args, "engine_install_target", ""):
+        cmd += ["--engine-install-target", args.engine_install_target]
     return cmd
 
 

@@ -429,6 +429,106 @@ def enrich_payload_with_prototype_manifest(*, root: Path, payload: dict[str, Any
     return updated
 
 
+def build_engine_recommendation(payload: dict[str, Any]) -> dict[str, Any]:
+    text_parts: list[str] = []
+    for key in (
+        "game_type",
+        "hypothesis",
+        "core_player_fantasy",
+        "minimum_playable_loop",
+        "game_feature",
+        "core_gameplay_loop",
+        "win_fail_conditions",
+    ):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            text_parts.append(value)
+        elif isinstance(value, list):
+            text_parts.extend(str(item) for item in value if str(item).strip())
+    for nested_key in ("game_type_specifics", "prototype_type_kit"):
+        value = payload.get(nested_key)
+        if isinstance(value, dict):
+            text_parts.append(json.dumps(value, ensure_ascii=False))
+    haystack = "\n".join(text_parts).lower()
+    game_type = sanitize_slug(str(payload.get("game_type") or ""))
+
+    def result(backend: str, confidence: str, reason: str, *, requires_plugin: bool = False, apply_mode: str = "recommend_only") -> dict[str, Any]:
+        return {
+            "domain": "physics",
+            "recommended_backend": backend,
+            "confidence": confidence,
+            "reason": reason,
+            "requires_plugin": bool(requires_plugin),
+            "apply_mode": apply_mode,
+            "scope": "prototype_only",
+            "install_target": "project_local_addon",
+        }
+
+    strong_physics_terms = (
+        "deterministic",
+        "determinism",
+        "replay",
+        "rollback",
+        "sync",
+        "同步",
+        "回放",
+        "确定性",
+        "复杂碰撞",
+        "physics feel",
+        "物理手感",
+    )
+    physics_terms = (
+        "physics",
+        "rigidbody",
+        "collision",
+        "撞",
+        "碰撞",
+        "弹跳",
+        "gravity",
+        "重力",
+        "platform",
+        "平台跳跃",
+        "movement",
+        "移动",
+    )
+    three_d_terms = ("3d", "third person", "first person", "fps", "tps", "三维", "第三人称", "第一人称")
+    two_d_terms = ("2d", "top-down", "side", "platformer", "横版", "俯视角", "平面")
+    state_flow_terms = ("turn-based", "回合", "card", "deck", "ui", "菜单", "剧情", "visual novel", "rpg", "jrpg")
+    direct_physics_terms = tuple(term for term in physics_terms if term not in {"movement", "移动"})
+    has_direct_physics = any(term in haystack for term in direct_physics_terms)
+    has_strong_physics = any(term in haystack for term in strong_physics_terms)
+    is_3d = any(term in haystack for term in three_d_terms)
+    is_2d = any(term in haystack for term in two_d_terms) or not is_3d
+
+    if has_strong_physics and is_3d:
+        return result("rapier_3d", "medium", "Prototype asks for deterministic or complex 3D physics feel; keep Rapier as a project-local addon recommendation until explicitly applied.", requires_plugin=True, apply_mode="confirm_apply")
+    if has_strong_physics and is_2d:
+        return result("rapier_2d", "medium", "Prototype asks for deterministic or complex 2D physics feel; keep Rapier as a project-local addon recommendation until explicitly applied.", requires_plugin=True, apply_mode="confirm_apply")
+    if (game_type in {"rpg", "jrpg"} or any(term in haystack for term in state_flow_terms)) and not has_direct_physics:
+        return result("none", "medium", "Prototype appears driven by UI, turn flow, story, or simple state transitions; no physics backend should be introduced yet.")
+    if has_direct_physics and is_3d:
+        return result("jolt_3d", "medium", "Prototype has 3D movement or collision needs that fit Godot's Jolt-backed 3D physics before adding external plugins.")
+    if has_direct_physics:
+        return result("godot_physics_2d", "medium", "Prototype has ordinary 2D movement or collision needs; use Godot built-in 2D physics first for fast feel iteration.")
+    return result("none", "low", "No clear physics-handling requirement was found in the current prototype intake.")
+
+
+def enrich_payload_with_engine_recommendation(payload: dict[str, Any]) -> dict[str, Any]:
+    updated = dict(payload)
+    existing = updated.get("engine_recommendation") if isinstance(updated.get("engine_recommendation"), dict) else {}
+    recommendation = build_engine_recommendation(updated)
+    if existing:
+        recommendation.update({key: value for key, value in dict(existing).items() if value not in (None, "")})
+        recommendation["scope"] = "prototype_only"
+        recommendation["install_target"] = recommendation.get("install_target") or "project_local_addon"
+        if recommendation.get("recommended_backend") in {"rapier_2d", "rapier_3d"}:
+            recommendation["requires_plugin"] = True
+            if recommendation.get("apply_mode") == "auto_apply_prototype_only":
+                recommendation["apply_mode"] = "confirm_apply"
+    updated["engine_recommendation"] = recommendation
+    return updated
+
+
 def parse_prototype_type_kit(content: str, *, game_type: str, path: str) -> dict[str, Any]:
     gameplay_questions: list[dict[str, str]] = []
     ui_questions: list[dict[str, str]] = []
@@ -587,6 +687,7 @@ def build_prototype_spec_sidecar(*, root: Path, payload: dict[str, Any], prototy
     type_kit = payload.get("prototype_type_kit") if isinstance(payload.get("prototype_type_kit"), dict) else {}
     specifics = payload.get("game_type_specifics") if isinstance(payload.get("game_type_specifics"), dict) else {}
     implementation_skill = payload.get("implementation_skill") if isinstance(payload.get("implementation_skill"), dict) else {}
+    engine_recommendation = payload.get("engine_recommendation") if isinstance(payload.get("engine_recommendation"), dict) else {}
     spec_path = prototype_spec_path(root=root, slug=str(payload.get("slug") or "prototype"))
     existing_tdd: dict[str, Any] = {"red": "pending", "green": "pending", "refactor": "pending"}
     if spec_path.exists():
@@ -613,6 +714,7 @@ def build_prototype_spec_sidecar(*, root: Path, payload: dict[str, Any], prototy
         "prototype_spec": str(spec_path.relative_to(root)).replace("\\", "/") if spec_path.is_relative_to(root) else str(spec_path),
         "prototype_type_kit": type_kit,
         "implementation_skill": implementation_skill,
+        "engine_recommendation": engine_recommendation,
         "prototype_core": {
             "hypothesis": str(payload.get("hypothesis") or ""),
             "core_player_fantasy": str(payload.get("core_player_fantasy") or ""),
@@ -1213,6 +1315,20 @@ def _build_confirmation_message(
     if implementation_skill:
         lines.append(f"Prototype implementation skill: {implementation_skill.get('name') or 'unknown'}")
         lines.append(f"Prototype implementation skill path: {implementation_skill.get('path') or 'missing'}")
+    engine_recommendation = payload.get("engine_recommendation") if isinstance(payload.get("engine_recommendation"), dict) else {}
+    if engine_recommendation:
+        lines.append(
+            "物理引擎建议："
+            f"{engine_recommendation.get('recommended_backend') or 'none'} "
+            f"({engine_recommendation.get('confidence') or 'low'}, "
+            f"{engine_recommendation.get('apply_mode') or 'recommend_only'}, "
+            f"scope={engine_recommendation.get('scope') or 'prototype_only'})"
+        )
+        if engine_recommendation.get("requires_plugin"):
+            lines.append(f"插件安装目标：{engine_recommendation.get('install_target') or 'project_local_addon'}（需确认后再应用）")
+        reason = str(engine_recommendation.get("reason") or "").strip()
+        if reason:
+            lines.append(f"引擎建议理由：{reason}")
     for item in intake_score["dimensions"]:
         lines.append(f"{item['label']}: {item['score']}/{item['max_score']}")
     if llm_review and llm_review.get("status") == "ok":
@@ -2424,6 +2540,15 @@ def _day_steps(payload: dict[str, Any], *, root: Path, record_file: str) -> list
     default_scene = _resolve_runtime_default_scene(root=root, payload=payload)
     filter_expr = str(payload.get("test_filter") or "").strip() or _prototype_loop_test_filter(slug)
     gdunit_path = str(payload.get("gdunit_path") or "").strip() or _prototype_gdunit_dir(slug)
+    engine_recommendation = payload.get("engine_recommendation") if isinstance(payload.get("engine_recommendation"), dict) else {}
+    scene_cmd = ["py", "-3", "scripts/python/dev_cli.py", "create-prototype-scene", "--slug", slug]
+    if engine_recommendation:
+        scene_cmd += ["--engine-backend", str(engine_recommendation.get("recommended_backend") or "none")]
+        scene_cmd += ["--engine-apply-mode", str(engine_recommendation.get("apply_mode") or "recommend_only")]
+        scene_cmd += ["--engine-confidence", str(engine_recommendation.get("confidence") or "low")]
+        scene_cmd += ["--engine-reason", str(engine_recommendation.get("reason") or "")]
+        scene_cmd += ["--engine-requires-plugin", "true" if bool(engine_recommendation.get("requires_plugin")) else "false"]
+        scene_cmd += ["--engine-install-target", str(engine_recommendation.get("install_target") or "project_local_addon")]
     return [
         {
             "day": 1,
@@ -2433,7 +2558,7 @@ def _day_steps(payload: dict[str, Any], *, root: Path, record_file: str) -> list
         {
             "day": 2,
             "title": "创建最小原型场景脚手架",
-            "cmd": ["py", "-3", "scripts/python/dev_cli.py", "create-prototype-scene", "--slug", slug],
+            "cmd": scene_cmd,
         },
         {
             "day": 3,
@@ -3149,12 +3274,14 @@ def main(argv: list[str] | None = None) -> int:
     payload = enrich_payload_with_prototype_type_kit(root=root, payload=payload)
     payload = enrich_payload_with_prototype_manifest(root=root, payload=payload)
     payload = enrich_payload_with_repo_local_skill(root=root, payload=payload)
+    payload = enrich_payload_with_engine_recommendation(payload)
     if answers:
         payload = normalize_prototype_payload(_apply_answers(payload, answers))
         payload = enrich_payload_with_game_type_guide(root=root, payload=payload)
         payload = enrich_payload_with_prototype_type_kit(root=root, payload=payload)
         payload = enrich_payload_with_prototype_manifest(root=root, payload=payload)
         payload = enrich_payload_with_repo_local_skill(root=root, payload=payload)
+        payload = enrich_payload_with_engine_recommendation(payload)
 
     core_missing = required_field_names(payload)
     missing = core_missing + ([] if core_missing else missing_game_type_specific_question_names(payload))

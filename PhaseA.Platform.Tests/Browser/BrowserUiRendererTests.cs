@@ -1699,6 +1699,14 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("stopAfterDay");
         html.Should().Contain(@"data-stage=""red""");
         html.Should().Contain("createScene");
+        html.Should().Contain("inferPrototypeEngineRecommendation");
+        html.Should().Contain("const prototypePayload = buildPrototypePayload();");
+        html.Should().Contain("const engineRecommendation = inferPrototypeEngineRecommendation(prototypePayload);");
+        html.Should().Contain("...engineRecommendation");
+        html.Should().Contain("engineBackend: \"rapier_2d\"");
+        html.Should().Contain("engineBackend: \"jolt_3d\"");
+        html.Should().Contain("engineBackend: \"godot_physics_2d\"");
+        html.Should().Contain("engineBackend: \"none\"");
         html.Should().Contain("chatPanel");
         html.Should().Contain("chat-scroll");
         html.Should().Contain("phaseAChatHistory");

@@ -102,6 +102,42 @@ public sealed class PrototypeCommandBuilder
             arguments.Add(request.PrototypeRoot);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.EngineBackend))
+        {
+            arguments.Add("--engine-backend");
+            arguments.Add(request.EngineBackend);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.EngineApplyMode))
+        {
+            arguments.Add("--engine-apply-mode");
+            arguments.Add(request.EngineApplyMode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.EngineConfidence))
+        {
+            arguments.Add("--engine-confidence");
+            arguments.Add(request.EngineConfidence);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.EngineReason))
+        {
+            arguments.Add("--engine-reason");
+            arguments.Add(request.EngineReason);
+        }
+
+        if (request.EngineRequiresPlugin.HasValue)
+        {
+            arguments.Add("--engine-requires-plugin");
+            arguments.Add(request.EngineRequiresPlugin.Value ? "true" : "false");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.EngineInstallTarget))
+        {
+            arguments.Add("--engine-install-target");
+            arguments.Add(request.EngineInstallTarget);
+        }
+
         return Build(arguments, repositoryRoot);
     }
 

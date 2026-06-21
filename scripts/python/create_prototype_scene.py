@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -35,6 +36,10 @@ def write_text(path: Path, content: str) -> None:
         handle.write(content)
 
 
+def write_json(path: Path, payload: dict[str, object]) -> None:
+    write_text(path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+
+
 def sanitize_slug(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_-]+", "-", str(value or "").strip())
     cleaned = re.sub(r"-{2,}", "-", cleaned).strip("-_")
@@ -44,6 +49,35 @@ def sanitize_slug(value: str) -> str:
 def slug_to_pascal(slug: str) -> str:
     parts = [part for part in re.split(r"[-_]+", slug) if part]
     return "".join(part[:1].upper() + part[1:] for part in parts) or "Prototype"
+
+
+def _bool_arg(value: str) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def normalize_engine_recommendation(args: argparse.Namespace) -> dict[str, object]:
+    backend = str(getattr(args, "engine_backend", "") or "none").strip() or "none"
+    apply_mode = str(getattr(args, "engine_apply_mode", "") or "recommend_only").strip() or "recommend_only"
+    confidence = str(getattr(args, "engine_confidence", "") or "low").strip() or "low"
+    install_target = str(getattr(args, "engine_install_target", "") or "project_local_addon").strip() or "project_local_addon"
+    reason = str(getattr(args, "engine_reason", "") or "").strip()
+    if not reason:
+        reason = "No engine-specific physics backend was recommended for this prototype scaffold."
+    requires_plugin = _bool_arg(str(getattr(args, "engine_requires_plugin", "") or "false"))
+    if backend in {"rapier_2d", "rapier_3d"}:
+        requires_plugin = True
+        if apply_mode == "auto_apply_prototype_only":
+            apply_mode = "confirm_apply"
+    return {
+        "domain": "physics",
+        "recommended_backend": backend,
+        "confidence": confidence,
+        "reason": reason,
+        "requires_plugin": requires_plugin,
+        "apply_mode": apply_mode,
+        "scope": "prototype_only",
+        "install_target": install_target,
+    }
 
 
 def render_script(*, class_name: str, scene_root: str) -> str:
@@ -249,6 +283,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--slug", required=True)
     ap.add_argument("--prototype-root", default="Game.Godot/Prototypes")
     ap.add_argument("--scene-root", default="Control", choices=["Control", "Node2D"])
+    ap.add_argument("--engine-backend", default="none")
+    ap.add_argument("--engine-apply-mode", default="recommend_only")
+    ap.add_argument("--engine-confidence", default="low")
+    ap.add_argument("--engine-reason", default="")
+    ap.add_argument("--engine-requires-plugin", default="false")
+    ap.add_argument("--engine-install-target", default="project_local_addon")
     ap.add_argument("--force", action="store_true", help="Overwrite the scaffold when files already exist.")
     return ap
 
@@ -273,6 +313,7 @@ def main(argv: list[str] | None = None) -> int:
     log_view_path = components_dir / "LogView.cs"
     state_path = data_dir / f"{class_name}State.cs"
     system_path = systems_dir / f"{class_name}System.cs"
+    engine_recommendation_path = prototype_dir / "engine-recommendation.json"
     dotnet_test_path = root / "Game.Core.Tests" / "Prototypes" / f"{class_name}LoopTests.cs"
     gdunit_test_path = root / "Tests.Godot" / "tests" / "Prototype" / class_name / f"test_{slug.replace('-', '_')}_prototype_scene.gd"
     scene_res_path = f"res://{args.prototype_root.strip('/').replace(chr(92), '/')}/{slug}/{class_name}.tscn"
@@ -302,6 +343,7 @@ def main(argv: list[str] | None = None) -> int:
         write_text(log_view_path, render_view_script(class_name="LogView"))
         write_text(state_path, render_state_script(class_name=f"{class_name}State"))
         write_text(system_path, render_system_script(class_name=f"{class_name}System", state_class_name=f"{class_name}State"))
+        write_json(engine_recommendation_path, normalize_engine_recommendation(args))
 
     if args.force or not dotnet_test_path.exists():
         write_text(dotnet_test_path, render_dotnet_test(class_name=class_name))
@@ -310,6 +352,7 @@ def main(argv: list[str] | None = None) -> int:
         write_text(gdunit_test_path, render_gdunit_test(scene_res_path=scene_res_path, scene_root=str(args.scene_root)))
 
     if scaffold_exists and not args.force:
+        write_json(engine_recommendation_path, normalize_engine_recommendation(args))
         print(
             f"PROTOTYPE_SCENE ERROR: scaffold already exists for slug={slug}; pass --force to overwrite.",
             file=sys.stderr,

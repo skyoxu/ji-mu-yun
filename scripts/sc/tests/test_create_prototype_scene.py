@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import shutil
 import sys
@@ -56,6 +57,7 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             log_view_path = components_dir / "LogView.cs"
             state_path = data_dir / "CombatLoopPrototypeState.cs"
             system_path = systems_dir / "CombatLoopPrototypeSystem.cs"
+            engine_recommendation_path = root / "Game.Godot" / "Prototypes" / "combat-loop" / "engine-recommendation.json"
             assets_dir = root / "Game.Godot" / "Prototypes" / "combat-loop" / "Assets"
             dotnet_test_path = root / "Game.Core.Tests" / "Prototypes" / "CombatLoopPrototypeLoopTests.cs"
             gdunit_test_path = root / "Tests.Godot" / "tests" / "Prototype" / "CombatLoopPrototype" / "test_combat_loop_prototype_scene.gd"
@@ -72,6 +74,7 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             self.assertTrue(log_view_path.exists())
             self.assertTrue(state_path.exists())
             self.assertTrue(system_path.exists())
+            self.assertTrue(engine_recommendation_path.exists())
             self.assertTrue(assets_dir.is_dir())
             self.assertTrue(dotnet_test_path.exists())
             self.assertTrue(gdunit_test_path.exists())
@@ -82,6 +85,7 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             system_text = system_path.read_text(encoding="utf-8")
             dotnet_test_text = dotnet_test_path.read_text(encoding="utf-8")
             gdunit_test_text = gdunit_test_path.read_text(encoding="utf-8")
+            engine_recommendation = json.loads(engine_recommendation_path.read_text(encoding="utf-8"))
             self.assertIn('type="Control"', scene_text)
             self.assertIn('res://Game.Godot/Prototypes/combat-loop/Scripts/CombatLoopPrototype.cs', scene_text)
             self.assertIn('res://Game.Godot/Prototypes/combat-loop/Scripts/Components/HudView.cs', scene_text)
@@ -103,6 +107,8 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             self.assertIn("CombatLoopPrototypeLoop", dotnet_test_text)
             self.assertIn('preload("res://Game.Godot/Prototypes/combat-loop/CombatLoopPrototype.tscn")', gdunit_test_text)
             self.assertIn('scene.get_node_or_null("PrototypeHint")', gdunit_test_text)
+            self.assertEqual("prototype_only", engine_recommendation["scope"])
+            self.assertEqual("none", engine_recommendation["recommended_backend"])
             self.assertTrue(gdunit_test_path.parent.is_dir())
 
     def test_should_fail_when_scene_exists_without_force(self) -> None:
@@ -127,6 +133,69 @@ class CreatePrototypeSceneTests(unittest.TestCase):
 
             self.assertEqual(0, first)
             self.assertEqual(1, second)
+
+    def test_should_backfill_engine_recommendation_when_existing_scaffold_lacks_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prototype_dir = root / "Game.Godot" / "Prototypes" / "legacy-loop"
+            scripts_dir = prototype_dir / "Scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            (prototype_dir / "LegacyLoopPrototype.tscn").write_text("[gd_scene format=3]\n", encoding="utf-8")
+            (scripts_dir / "LegacyLoopPrototype.cs").write_text("namespace Game.Godot.Prototypes;\n", encoding="utf-8")
+
+            rc = prototype_scene.main(
+                [
+                    "--repo-root",
+                    str(root),
+                    "--slug",
+                    "legacy-loop",
+                    "--engine-backend",
+                    "rapier_2d",
+                    "--engine-apply-mode",
+                    "confirm_apply",
+                    "--engine-requires-plugin",
+                    "true",
+                ]
+            )
+
+            self.assertEqual(1, rc)
+            recommendation = json.loads((prototype_dir / "engine-recommendation.json").read_text(encoding="utf-8"))
+            self.assertEqual("rapier_2d", recommendation["recommended_backend"])
+            self.assertEqual("prototype_only", recommendation["scope"])
+            self.assertTrue(recommendation["requires_plugin"])
+
+    def test_should_refresh_engine_recommendation_when_existing_metadata_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prototype_dir = root / "Game.Godot" / "Prototypes" / "legacy-loop"
+            scripts_dir = prototype_dir / "Scripts"
+            scripts_dir.mkdir(parents=True, exist_ok=True)
+            (prototype_dir / "LegacyLoopPrototype.tscn").write_text("[gd_scene format=3]\n", encoding="utf-8")
+            (scripts_dir / "LegacyLoopPrototype.cs").write_text("namespace Game.Godot.Prototypes;\n", encoding="utf-8")
+            (prototype_dir / "engine-recommendation.json").write_text(
+                json.dumps({"recommended_backend": "none", "scope": "prototype_only"}) + "\n",
+                encoding="utf-8",
+            )
+
+            rc = prototype_scene.main(
+                [
+                    "--repo-root",
+                    str(root),
+                    "--slug",
+                    "legacy-loop",
+                    "--engine-backend",
+                    "godot_physics_2d",
+                    "--engine-apply-mode",
+                    "recommend_only",
+                    "--engine-confidence",
+                    "medium",
+                ]
+            )
+
+            self.assertEqual(1, rc)
+            recommendation = json.loads((prototype_dir / "engine-recommendation.json").read_text(encoding="utf-8"))
+            self.assertEqual("godot_physics_2d", recommendation["recommended_backend"])
+            self.assertEqual("medium", recommendation["confidence"])
 
     def test_should_create_node2d_scaffold_with_prototype_loop_marker(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -161,6 +230,39 @@ class CreatePrototypeSceneTests(unittest.TestCase):
             self.assertIn('var hudView = GetNodeOrNull<HudView>("HudView");', script_text)
             self.assertIn("public void RenderStatus(string statusText, string hintText)", hud_view_text)
             self.assertIn('scene.get_node_or_null("PrototypeLoop")', gdunit_test_text)
+
+    def test_should_write_engine_recommendation_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rc = prototype_scene.main(
+                [
+                    "--repo-root",
+                    str(root),
+                    "--slug",
+                    "physics-lab",
+                    "--engine-backend",
+                    "rapier_2d",
+                    "--engine-apply-mode",
+                    "confirm_apply",
+                    "--engine-confidence",
+                    "medium",
+                    "--engine-reason",
+                    "Prototype needs stronger 2D collision feel.",
+                    "--engine-requires-plugin",
+                    "true",
+                    "--engine-install-target",
+                    "project_local_addon",
+                ]
+            )
+
+            self.assertEqual(0, rc)
+            recommendation = json.loads(
+                (root / "Game.Godot" / "Prototypes" / "physics-lab" / "engine-recommendation.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual("rapier_2d", recommendation["recommended_backend"])
+            self.assertEqual("confirm_apply", recommendation["apply_mode"])
+            self.assertTrue(recommendation["requires_plugin"])
+            self.assertEqual("project_local_addon", recommendation["install_target"])
 
     @unittest.skipUnless(os.name == "nt", "Windows long-path regression only")
     def test_should_write_gdunit_test_under_long_workspace_path(self) -> None:

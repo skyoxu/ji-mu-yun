@@ -148,6 +148,16 @@ py -3 scripts/python/dev_cli.py run-prototype-workflow --resume-active <slug> --
 
 它不会替你进入 Day 6 的试玩判断和 Day 7 的 promote / archive / discard 决策。那两天仍然需要你基于证据做人工判断。
 
+### 0.5.1 Prototype-only 物理引擎建议
+
+顶层路由会根据 prototype intake 生成 `engine_recommendation`，并把它写入 active state、`docs/prototypes/<slug>.prototype.json`，以及 Day 2 生成的 `Game.Godot/Prototypes/<slug>/engine-recommendation.json`。
+
+- 作用域固定为 `prototype_only`，不进入 Chapter 3-7 正式路由。
+- 插件安装目标固定为当前项目内 addon：`project_local_addon`；不是服务器全局安装，也不是用户本机全局安装。
+- 默认只推荐和记录；`rapier_2d` / `rapier_3d` 只能进入 `confirm_apply`，不能在骨架创建时自动下载安装或启用。
+- 本系统不考虑 Web/WASM，因此引擎建议不需要为了 Web 导出做取舍。
+- 普通 2D 碰撞优先 `godot_physics_2d`，普通 3D 碰撞优先 `jolt_3d`；只有明确需要确定性、回放、同步、复杂物理手感时才建议 Rapier。
+
 ### 0.6 进入 TDD 前的原型信息评分
 
 当必填信息已经齐全后，路由器不会立刻进入 TDD，而是先生成一份面向“小工作室独立游戏原型验证”的 intake score，并暂停等待用户确认。

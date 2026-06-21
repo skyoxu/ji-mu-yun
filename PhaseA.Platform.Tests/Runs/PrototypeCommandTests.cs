@@ -53,6 +53,53 @@ public sealed class PrototypeCommandTests
         command.Environment["GODOT_BIN"].Should().Be(@"C:\Godot\Godot.exe");
     }
 
+    [Fact]
+    public void BuildScene_IncludesPrototypeOnlyEngineRecommendationArgs()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
+        });
+        var builder = new PrototypeCommandBuilder(options);
+
+        var command = builder.BuildScene(
+            new PrototypeSceneRequest(
+                "physics-lab",
+                SceneRoot: "Node2D",
+                PrototypeRoot: "Game.Godot/Prototypes",
+                EngineBackend: "rapier_2d",
+                EngineApplyMode: "confirm_apply",
+                EngineConfidence: "medium",
+                EngineReason: "Prototype needs stronger 2D collision feel.",
+                EngineRequiresPlugin: true,
+                EngineInstallTarget: "project_local_addon"),
+            @"C:\project-repo");
+
+        command.Arguments.Should().ContainInOrder(
+            "-3",
+            "scripts/python/dev_cli.py",
+            "create-prototype-scene",
+            "--slug",
+            "physics-lab",
+            "--scene-root",
+            "Node2D",
+            "--prototype-root",
+            "Game.Godot/Prototypes",
+            "--engine-backend",
+            "rapier_2d",
+            "--engine-apply-mode",
+            "confirm_apply",
+            "--engine-confidence",
+            "medium",
+            "--engine-reason",
+            "Prototype needs stronger 2D collision feel.",
+            "--engine-requires-plugin",
+            "true",
+            "--engine-install-target",
+            "project_local_addon");
+    }
+
     [Theory]
     [InlineData("red")]
     [InlineData("green")]

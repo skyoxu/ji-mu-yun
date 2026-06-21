@@ -182,6 +182,14 @@ Do not treat Prototype Type Kit answers as formal Chapter 6 evidence. They are p
 - When writing Chinese content into `docs/prototypes/*.md`, `docs/prototype-type-kits/*.md`, or related skills/workflow docs, use Python and explicit UTF-8 encoding.
 - Avoid relying on PowerShell default encoding for Chinese writes.
 
+## Prototype-only Engine Recommendation
+
+- The top-level router may attach `engine_recommendation` to the prototype payload, active state, prototype spec sidecar, and Day 2 scaffold command.
+- Scope must remain `prototype_only`; do not route this into Chapter 3 through Chapter 7.
+- Plugin install target must be `project_local_addon`. Do not treat Rapier or any physics backend as a server-global install or user-global install.
+- `rapier_2d` and `rapier_3d` are recommendation/confirmation signals only in skeleton creation. Do not auto-download, auto-enable, or mutate project settings unless a later explicit prototype apply route is added.
+- Ignore Web/WASM concerns for this repository.
+
 ## Completion Boundary
 
 Run only through Day 5 unless the user explicitly asks for manual Day 6/Day 7 planning. Day 6 playtest judgment and Day 7 `discard | archive | promote` remain human decision points.

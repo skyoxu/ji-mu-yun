@@ -54,6 +54,85 @@ class PrototypeWorkflowRouterStateAndRoutingTests(unittest.TestCase):
         self.assertIn("market_potential: 18/25", message)
         self.assertIn("Commercialization cost: 12/25", message)
 
+    def test_engine_recommendation_should_prefer_rapier_for_strong_2d_physics_feel(self) -> None:
+        module = load_module("prototype_workflow_router_engine_recommendation", "scripts/python/run_prototype_workflow.py")
+        payload = module.enrich_payload_with_engine_recommendation(
+            {
+                "slug": "physics-lab",
+                "game_type": "platformer",
+                "minimum_playable_loop": "2D platform movement with gravity, collision, replay, and deterministic physics feel.",
+                "game_feature": "Strong collision feel and rollback-friendly simulation.",
+            }
+        )
+
+        recommendation = payload["engine_recommendation"]
+        self.assertEqual("rapier_2d", recommendation["recommended_backend"])
+        self.assertEqual("confirm_apply", recommendation["apply_mode"])
+        self.assertTrue(recommendation["requires_plugin"])
+        self.assertEqual("prototype_only", recommendation["scope"])
+        self.assertEqual("project_local_addon", recommendation["install_target"])
+
+    def test_engine_recommendation_should_not_treat_rpg_movement_as_physics_backend_need(self) -> None:
+        module = load_module("prototype_workflow_router_engine_rpg_movement", "scripts/python/run_prototype_workflow.py")
+        payload = module.enrich_payload_with_engine_recommendation(
+            {
+                "slug": "rpg-map",
+                "game_type": "rpg",
+                "minimum_playable_loop": "玩家移动到 NPC，打开菜单，选择回合制指令并看到剧情反馈。",
+                "game_feature": "地图移动、菜单和回合战斗。",
+                "core_gameplay_loop": "移动，交互，回合选择，阅读反馈。",
+            }
+        )
+
+        recommendation = payload["engine_recommendation"]
+        self.assertEqual("none", recommendation["recommended_backend"])
+        self.assertFalse(recommendation["requires_plugin"])
+        self.assertEqual("prototype_only", recommendation["scope"])
+
+    def test_engine_recommendation_should_not_treat_3d_movement_only_as_jolt_need(self) -> None:
+        module = load_module("prototype_workflow_router_engine_3d_movement_only", "scripts/python/run_prototype_workflow.py")
+        payload = module.enrich_payload_with_engine_recommendation(
+            {
+                "slug": "third-person-town",
+                "minimum_playable_loop": "3D third person movement through a small town, talk to NPC, open menu, and read quest feedback.",
+                "game_feature": "Third person exploration and NPC interaction.",
+                "core_gameplay_loop": "Move, interact, read feedback, choose next objective.",
+            }
+        )
+
+        recommendation = payload["engine_recommendation"]
+        self.assertEqual("none", recommendation["recommended_backend"])
+        self.assertFalse(recommendation["requires_plugin"])
+        self.assertEqual("prototype_only", recommendation["scope"])
+
+    def test_confirmation_and_sidecar_should_include_engine_recommendation(self) -> None:
+        module = load_module("prototype_workflow_router_engine_sidecar", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            payload = module.enrich_payload_with_engine_recommendation(
+                module.normalize_prototype_payload(
+                    {
+                        "slug": "physics-lab",
+                        "hypothesis": "test",
+                        "core_player_fantasy": "test",
+                        "minimum_playable_loop": "2D gravity collision with deterministic replay feel.",
+                        "game_feature": "physics feel",
+                        "core_gameplay_loop": "move, collide, retry",
+                        "win_fail_conditions": "reach exit or hit hazard",
+                        "success_criteria": ["test"],
+                    },
+                    today="2026-05-05",
+                )
+            )
+            score = module.build_prototype_intake_score(payload)
+            message = module._build_confirmation_message(payload, file_path="docs/prototypes/physics-lab.md", intake_score=score)
+            spec_path = module.write_prototype_spec_sidecar(root=root, payload=payload, prototype_file="docs/prototypes/physics-lab.md")
+            spec = json.loads((root / spec_path).read_text(encoding="utf-8"))
+
+        self.assertIn("物理引擎建议：rapier_2d", message)
+        self.assertEqual("rapier_2d", spec["engine_recommendation"]["recommended_backend"])
+        self.assertEqual("prototype_only", spec["engine_recommendation"]["scope"])
+
     def test_dev_cli_should_forward_optional_score_engine_args(self) -> None:
         builders = load_module("dev_cli_builders_module_for_proto_score", "scripts/python/dev_cli_builders.py")
         dev_cli = load_module("dev_cli_module_for_proto_score", "scripts/python/dev_cli.py")
@@ -309,6 +388,33 @@ class PrototypeWorkflowRouterStateAndRoutingTests(unittest.TestCase):
         self.assertIn("DqRpgPrototypeLoopTests", green_step["cmd"])
         self.assertIn("tests/Prototype/DqRpgPrototype", green_step["cmd"])
         self.assertEqual("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", green_step["default_scene"])
+
+    def test_day_steps_should_forward_engine_recommendation_to_scene_scaffold(self) -> None:
+        module = load_module("prototype_workflow_router_day_steps_engine", "scripts/python/run_prototype_workflow.py")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            payload = {
+                "slug": "physics-lab",
+                "engine_recommendation": {
+                    "recommended_backend": "rapier_2d",
+                    "apply_mode": "confirm_apply",
+                    "confidence": "medium",
+                    "reason": "Prototype needs stronger 2D collision feel.",
+                    "requires_plugin": True,
+                    "install_target": "project_local_addon",
+                    "scope": "prototype_only",
+                },
+            }
+
+            steps = module._day_steps(payload, root=root, record_file="docs/prototypes/physics-lab.md")
+
+        scene_step = next(step for step in steps if step["day"] == 2)
+        self.assertIn("--engine-backend", scene_step["cmd"])
+        self.assertIn("rapier_2d", scene_step["cmd"])
+        self.assertIn("--engine-apply-mode", scene_step["cmd"])
+        self.assertIn("confirm_apply", scene_step["cmd"])
+        self.assertIn("--engine-requires-plugin", scene_step["cmd"])
+        self.assertIn("true", scene_step["cmd"])
 
     def test_implementation_prompt_should_require_main_menu_navigation_to_default_scene(self) -> None:
         module = load_module("prototype_workflow_router_prompt_main_menu_navigation", "scripts/python/run_prototype_workflow.py")
