@@ -122,7 +122,8 @@ public sealed class PrototypeCommandService
 
             var command = commandFactory(project);
             var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
-            var status = process.ExitCode == 0 ? "succeeded" : "failed";
+            var normalizedExitCode = NormalizeExitCode(runType, process);
+            var status = normalizedExitCode == 0 ? "succeeded" : "failed";
             var artifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug);
             foreach (var artifact in artifacts)
             {
@@ -135,13 +136,31 @@ public sealed class PrototypeCommandService
                 slug,
                 artifacts = artifacts.Select(a => a.RelativePath).ToArray()
             });
-            await _metadataStore.CompleteRunAsync(runId, status, process.ExitCode, process.Stdout, process.Stderr, evidenceJson, cancellationToken);
+            await _metadataStore.CompleteRunAsync(runId, status, normalizedExitCode, process.Stdout, process.Stderr, evidenceJson, cancellationToken);
             var storedArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
-            return new HostedCommandResult(runId, status, process.ExitCode, process.Stdout, process.Stderr, storedArtifacts, []);
+            return new HostedCommandResult(runId, status, normalizedExitCode, process.Stdout, process.Stderr, storedArtifacts, []);
         }
         finally
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         }
+    }
+
+    private static int NormalizeExitCode(string runType, HostedProcessResult process)
+    {
+        if (string.Equals(runType, "prototype-scene", StringComparison.OrdinalIgnoreCase) &&
+            process.ExitCode != 0 &&
+            ContainsExistingScaffoldMessage(process))
+        {
+            return 0;
+        }
+
+        return process.ExitCode;
+    }
+
+    private static bool ContainsExistingScaffoldMessage(HostedProcessResult process)
+    {
+        return (process.Stdout.Contains("scaffold already exists for slug=", StringComparison.OrdinalIgnoreCase) ||
+                process.Stderr.Contains("scaffold already exists for slug=", StringComparison.OrdinalIgnoreCase));
     }
 }

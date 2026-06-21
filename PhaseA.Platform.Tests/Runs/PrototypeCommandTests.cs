@@ -133,6 +133,31 @@ public sealed class PrototypeCommandTests
     }
 
     [Fact]
+    public async Task CreateSceneAsync_TreatsExistingScaffoldRefreshAsSucceeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new StaticHostedProcessRunner(new HostedProcessResult(
+            1,
+            "",
+            "PROTOTYPE_SCENE ERROR: scaffold already exists for slug=demo; pass --force to overwrite.\n"));
+        var service = Service(store, options, runner);
+
+        var result = await service.CreateSceneAsync(accountId, projectId, new PrototypeSceneRequest(
+            "demo",
+            EngineBackend: "godot_physics_2d",
+            EngineApplyMode: "recommend_only"));
+
+        result.Status.Should().Be("succeeded");
+        result.ExitCode.Should().Be(0);
+        result.Stderr.Should().Contain("scaffold already exists for slug=demo");
+    }
+
+    [Fact]
     public async Task RunTddAsync_ReturnsBlocked_WhenProjectRunnerLockIsHeld()
     {
         using var database = TempSqliteDatabase.Create();
@@ -216,6 +241,21 @@ public sealed class PrototypeCommandTests
             Directory.CreateDirectory(Path.GetDirectoryName(sidecar)!);
             File.WriteAllText(sidecar, "{}");
             return Task.FromResult(new HostedProcessResult(0, "command ok\n", ""));
+        }
+    }
+
+    private sealed class StaticHostedProcessRunner : IHostedProcessRunner
+    {
+        private readonly HostedProcessResult _result;
+
+        public StaticHostedProcessRunner(HostedProcessResult result)
+        {
+            _result = result;
+        }
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_result);
         }
     }
 

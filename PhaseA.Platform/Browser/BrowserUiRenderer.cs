@@ -6793,10 +6793,11 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   setLocalBusy(true, "原型场景创建中，请等待当前任务执行完毕。");
                   try {
-                    const prototypePayload = buildPrototypePayload();
+                    const sceneSlug = $("tddSlug").value.trim() || $("protoSlug").value.trim();
+                    const prototypePayload = { ...buildPrototypePayload(), slug: sceneSlug };
                     const engineRecommendation = inferPrototypeEngineRecommendation(prototypePayload);
                     const payload = {
-                      slug: $("tddSlug").value.trim(),
+                      slug: sceneSlug,
                       sceneRoot: $("sceneRoot").value.trim() || "Node2D",
                       ...engineRecommendation
                     };

@@ -1700,8 +1700,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain(@"data-stage=""red""");
         html.Should().Contain("createScene");
         html.Should().Contain("inferPrototypeEngineRecommendation");
-        html.Should().Contain("const prototypePayload = buildPrototypePayload();");
+        html.Should().Contain("const sceneSlug = $(\"tddSlug\").value.trim() || $(\"protoSlug\").value.trim();");
+        html.Should().Contain("const prototypePayload = { ...buildPrototypePayload(), slug: sceneSlug };");
         html.Should().Contain("const engineRecommendation = inferPrototypeEngineRecommendation(prototypePayload);");
+        html.Should().Contain("slug: sceneSlug");
         html.Should().Contain("...engineRecommendation");
         html.Should().Contain("engineBackend: \"rapier_2d\"");
         html.Should().Contain("engineBackend: \"jolt_3d\"");
