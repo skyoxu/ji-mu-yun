@@ -58,14 +58,25 @@ public sealed class GddMilestoneStepServiceTests
 
         result.Should().NotBeNull();
         result!.Status.Should().Be("ready");
+        result.Summary.Should().Be("已根据当前策划大纲生成游戏模块步骤规格。");
         result.CurrentStepId.Should().Be("M1");
         result.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M10-1");
         result.Steps[0].Locked.Should().BeFalse();
         result.Steps[0].CanExecute.Should().BeTrue();
         result.Steps[0].CanConfirm.Should().BeFalse();
+        result.Steps[0].ScopeIn.Should().Contain("当前 step");
+        result.Steps[0].ScopeOut.Should().Contain("不提前实现后续锁定 step");
+        result.Steps[0].GodotSlice.Should().Contain("Godot 4.5.1 + C#");
+        result.Steps[0].PackagingValidation.Should().Contain("打包下载");
+        result.Steps[0].FeedbackGuidance.Should().Contain("反馈改进任务");
+        result.Steps[0].NextStepReview.Should().Contain("解锁下一 step");
         result.Steps[1].Locked.Should().BeTrue();
+        result.Steps.Single(step => step.StepId == "M10-1").ScopeIn.Should().Contain("碰撞");
+        result.Steps.Single(step => step.StepId == "M10-1").Acceptance.Should().Contain("穿模");
         File.Exists(Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json")).Should().BeTrue();
         File.Exists(Path.Combine(project.RepoPath, "meta", "routes", "gdd-milestones", "latest.json")).Should().BeTrue();
+        File.ReadAllText(Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json"))
+            .Should().Contain("phase-a.gdd-milestone-steps.v2");
     }
 
     [Fact]
@@ -166,6 +177,12 @@ public sealed class GddMilestoneStepServiceTests
           "title": "M2：Core loop with slower first wave",
           "description": "Adjust M2 around player feedback that the first wave was too fast.",
           "acceptance": "Player can validate a slower first wave before package confirmation.",
+          "scopeIn": "Only adjust the first wave tempo and visible telegraph.",
+          "scopeOut": "Do not add later boss rooms.",
+          "godotSlice": "Tune the wave spawner and HUD progress state.",
+          "packagingValidation": "Package and ask the player to validate the slower first wave.",
+          "feedbackGuidance": "Submit feedback only for first wave pacing.",
+          "nextStepReview": "Re-check whether the following reward step still fits.",
           "summary": "已根据 M1 反馈调整 M2 的首波节奏。"
         }
         """;
@@ -179,6 +196,12 @@ public sealed class GddMilestoneStepServiceTests
         next.Title.Should().Contain("slower first wave");
         next.Description.Should().Contain("first wave was too fast");
         next.Acceptance.Should().Contain("slower first wave");
+        next.ScopeIn.Should().Contain("first wave tempo");
+        next.ScopeOut.Should().Contain("boss rooms");
+        next.GodotSlice.Should().Contain("wave spawner");
+        next.PackagingValidation.Should().Contain("Package");
+        next.FeedbackGuidance.Should().Contain("first wave pacing");
+        next.NextStepReview.Should().Contain("following reward step");
         next.ReviewSummary.Should().Contain("调整 M2");
     }
 

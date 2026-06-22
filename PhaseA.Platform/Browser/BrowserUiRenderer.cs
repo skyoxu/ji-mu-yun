@@ -2180,7 +2180,7 @@ public sealed class BrowserUiRenderer
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                     <div id="assetInventoryStatus" class="card muted">原型素材库会在项目可检查时显示。</div>
-                    <div id="gddMilestoneStepStatus" class="card muted">创建 GDD 后显示游戏模块 step。</div>
+                    <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块 step。</div>
                     <div class="split-actions">
                       <button id="createCurrentMilestoneIterationPlan" class="secondary" data-global-action="true" disabled>生成当前 Step 实施计划</button>
                       <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>下载验证后确认完成</button>
@@ -6223,7 +6223,7 @@ public sealed class BrowserUiRenderer
                     state.gddMilestoneSteps = result;
                     writeProjectStateCache({ gddMilestoneSteps: result });
                   } catch (error) {
-                    state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建 GDD 后显示游戏模块 step。", steps: [] };
+                    state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块 step。", steps: [] };
                   }
                   renderGddMilestoneSteps();
                 }
@@ -6246,13 +6246,13 @@ public sealed class BrowserUiRenderer
 
                   if (!steps.length) {
                     panel.className = "card muted";
-                    panel.textContent = plan?.summary || "创建 GDD 后显示游戏模块 step。";
+                    panel.textContent = plan?.summary || "创建策划大纲后显示游戏模块 step。";
                     return;
                   }
 
                   panel.className = "card";
                   panel.innerHTML = `
-                    <strong>GDD 游戏模块 Step</strong>
+                    <strong>游戏模块步骤规格</strong>
                     <p class="muted">${escapeHtml(plan.summary || "")}</p>
                     ${current ? `<p class="muted">当前：${escapeHtml(current.stepId)} · ${escapeHtml(current.title || "")}</p>` : "<p class='muted'>所有 step 已确认完成，可以创建新一轮游戏模块。</p>"}
                     <div class="card-list">
@@ -6268,10 +6268,21 @@ public sealed class BrowserUiRenderer
                       <strong>${escapeHtml(step.stepId)} · ${escapeHtml(step.title || "")}</strong>
                       <p class="muted">状态：${escapeHtml(statusLabel(status))}</p>
                       <p>${escapeHtml(step.description || "")}</p>
-                      <p class="muted">${escapeHtml(step.acceptance || "")}</p>
-                      ${step.reviewSummary ? `<p class="muted">解锁前 review：${escapeHtml(step.reviewSummary)}</p>` : ""}
+                      ${renderStepSpecLine("本步范围", step.scopeIn)}
+                      ${renderStepSpecLine("暂不包含", step.scopeOut)}
+                      ${renderStepSpecLine("Godot/C# 实现切片", step.godotSlice)}
+                      ${renderStepSpecLine("验收", step.acceptance)}
+                      ${renderStepSpecLine("打包验证", step.packagingValidation)}
+                      ${renderStepSpecLine("反馈改进", step.feedbackGuidance)}
+                      ${renderStepSpecLine("下一步调整检查", step.nextStepReview)}
+                      ${step.reviewSummary ? `<p class="muted">解锁前检查：${escapeHtml(step.reviewSummary)}</p>` : ""}
                     </div>
                   `;
+                }
+
+                function renderStepSpecLine(label, value) {
+                  if (!value) return "";
+                  return `<p class="muted"><strong>${escapeHtml(label)}：</strong>${escapeHtml(value)}</p>`;
                 }
 
                 function currentGddMilestoneStep() {
@@ -6284,8 +6295,8 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const step = currentGddMilestoneStep();
-                  if (!step) return out("当前没有可执行的 GDD step。");
-                  setLocalBusy(true, "正在为当前 GDD step 生成实施计划。");
+                  if (!step) return out("当前没有可执行的游戏模块 step。");
+                  setLocalBusy(true, "正在为当前游戏模块 step 生成实施计划。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/current/iteration-plan`, {
                       method: "POST",
@@ -6308,9 +6319,9 @@ public sealed class BrowserUiRenderer
                 async function confirmCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
-                  if (!state.projectId || !step) return out("当前没有可确认的 GDD step。");
-                  if (!confirm(`请确认已经打包下载并试玩验证 ${step.stepId}。确认完成后会解锁下一个 step，并触发下一 step 解锁前 review。`)) return;
-                  setLocalBusy(true, "正在确认当前 step 并执行下一步解锁 review。");
+                  if (!state.projectId || !step) return out("当前没有可确认的游戏模块 step。");
+                  if (!confirm(`请确认已经打包下载并试玩验证 ${step.stepId}。确认完成后会解锁下一个 step，并触发下一 step 解锁前检查。`)) return;
+                  setLocalBusy(true, "正在确认当前 step 并执行下一步解锁前检查。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
                       method: "POST",
@@ -6331,10 +6342,10 @@ public sealed class BrowserUiRenderer
                 async function submitCurrentMilestoneFeedback() {
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
-                  if (!state.projectId || !step) return out("当前没有可反馈的 GDD step。");
+                  if (!state.projectId || !step) return out("当前没有可反馈的游戏模块 step。");
                   const feedback = prompt(`请输入 ${step.stepId} 的试玩反馈或修改意见：`);
                   if (!feedback?.trim()) return;
-                  setLocalBusy(true, "正在提交当前 step 的反馈改进 run。");
+                  setLocalBusy(true, "正在提交当前 step 的反馈改进任务。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",

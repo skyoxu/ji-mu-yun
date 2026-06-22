@@ -55,6 +55,7 @@ public sealed class GddMilestoneStepService
                 FailureCode: "gdd_not_found");
         }
 
+        NormalizeState(state);
         await WriteStateAsync(project, state, cancellationToken);
         return ToResult(project.ProjectId, state);
     }
@@ -79,6 +80,7 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, stepId, "gdd_not_found", "请先创建策划大纲。", FailureCode: "gdd_not_found");
         }
 
+        NormalizeState(state);
         var index = state.Steps.FindIndex(step => string.Equals(step.StepId, stepId, StringComparison.OrdinalIgnoreCase));
         if (index < 0)
         {
@@ -93,7 +95,7 @@ public sealed class GddMilestoneStepService
 
         if (step.Status is not ("iteration_ready" or "feedback_submitted"))
         {
-            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_not_ready_to_confirm", "请先生成并完成当前 step 的实施计划或反馈改进 run，再确认完成。", ToResult(project.ProjectId, state), FailureCode: "step_not_ready_to_confirm");
+            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_not_ready_to_confirm", "请先生成并完成当前 step 的实施计划或反馈改进任务，再确认完成。", ToResult(project.ProjectId, state), FailureCode: "step_not_ready_to_confirm");
         }
 
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -115,16 +117,22 @@ public sealed class GddMilestoneStepService
                 Title = review.Title ?? next.Title,
                 Description = review.Description ?? next.Description,
                 Acceptance = review.Acceptance ?? next.Acceptance,
+                ScopeIn = review.ScopeIn ?? next.ScopeIn,
+                ScopeOut = review.ScopeOut ?? next.ScopeOut,
+                GodotSlice = review.GodotSlice ?? next.GodotSlice,
+                PackagingValidation = review.PackagingValidation ?? next.PackagingValidation,
+                FeedbackGuidance = review.FeedbackGuidance ?? next.FeedbackGuidance,
+                NextStepReview = review.NextStepReview ?? next.NextStepReview,
                 ReviewSummary = review.Summary
             };
             state.CurrentStepId = state.Steps[index + 1].StepId;
-            state.Summary = $"已确认 {step.StepId}，并完成下一 step 解锁前 review。";
+            state.Summary = $"已确认 {step.StepId}，并完成下一 step 解锁前检查。";
         }
         else
         {
             state.CurrentStepId = null;
             state.Status = "completed";
-            state.Summary = "所有 GDD milestone step 已确认完成，可以创建新一轮游戏模块。";
+            state.Summary = "所有游戏模块 step 已确认完成，可以创建新一轮游戏模块。";
         }
 
         await WriteStateAsync(project, state, cancellationToken);
@@ -151,6 +159,7 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, stepId, "gdd_not_found", "请先创建策划大纲。", FailureCode: "gdd_not_found");
         }
 
+        NormalizeState(state);
         var index = state.Steps.FindIndex(step => string.Equals(step.StepId, stepId, StringComparison.OrdinalIgnoreCase));
         if (index < 0)
         {
@@ -170,11 +179,15 @@ public sealed class GddMilestoneStepService
         }
 
         var scopedFeedback = $"""
-            GDD milestone step feedback.
+            Game module step feedback.
 
             Current step: {step.StepId} - {step.Title}
             Step goal: {step.Description}
+            Scope in: {step.ScopeIn}
+            Scope out: {step.ScopeOut}
+            Godot slice: {step.GodotSlice}
             Step acceptance: {step.Acceptance}
+            Package validation: {step.PackagingValidation}
 
             Player feedback:
             {feedback}
@@ -192,8 +205,8 @@ public sealed class GddMilestoneStepService
             FeedbackRunId = string.IsNullOrWhiteSpace(result.RunId) ? step.FeedbackRunId : result.RunId
         };
         state.Summary = result.Status == "completed"
-            ? $"{step.StepId} 的反馈改进 run 已提交完成。"
-            : $"{step.StepId} 的反馈改进 run 未完成：{result.Status}";
+            ? $"{step.StepId} 的反馈改进任务已提交完成。"
+            : $"{step.StepId} 的反馈改进任务未完成：{result.Status}";
         await WriteStateAsync(project, state, CancellationToken.None);
 
         return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), FeedbackRun: result);
@@ -218,6 +231,7 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, "", "gdd_not_found", "请先创建策划大纲。", FailureCode: "gdd_not_found");
         }
 
+        NormalizeState(state);
         var step = ResolveCurrentStep(state);
         if (step is null)
         {
@@ -230,11 +244,32 @@ public sealed class GddMilestoneStepService
         }
 
         var message = $"""
-            Create the game module implementation plan for this GDD milestone step only.
+            Create the game module implementation plan for this step only. Treat this as a diablolike-style step spec derived from the current planning outline.
 
             Step: {step.StepId} - {step.Title}
-            Description: {step.Description}
-            Acceptance: {step.Acceptance}
+            Goal:
+            {step.Description}
+
+            Scope In:
+            {step.ScopeIn}
+
+            Scope Out:
+            {step.ScopeOut}
+
+            Godot/C# Slice:
+            {step.GodotSlice}
+
+            Acceptance:
+            {step.Acceptance}
+
+            Package / Player Validation:
+            {step.PackagingValidation}
+
+            Feedback Improvement Run:
+            {step.FeedbackGuidance}
+
+            Next Step Adjustment Check:
+            {step.NextStepReview}
 
             Keep the plan scoped to this step. Do not advance later locked steps. After implementation, package the project for player validation.
             """;
@@ -282,12 +317,11 @@ public sealed class GddMilestoneStepService
 
         if (steps.Count == 0)
         {
-            steps.Add(new GddMilestoneStepState(
+            steps.Add(CreateStepState(
                 "M1",
                 1,
                 "M1：首个可玩闭环",
                 "根据当前 GDD 创建第一个可打包、可验证的最小可玩闭环。",
-                "玩家可以下载包并验证基础场景、键鼠操作和核心玩法反馈。",
                 "ready",
                 false));
         }
@@ -302,12 +336,14 @@ public sealed class GddMilestoneStepService
             };
         }
 
-        return new GddMilestoneState(
-            "phase-a.gdd-milestone-steps.v1",
+        var state = new GddMilestoneState(
+            "phase-a.gdd-milestone-steps.v2",
             "ready",
-            "已根据当前 GDD 生成 milestone step。",
+            "已根据当前策划大纲生成游戏模块步骤规格。",
             steps[0].StepId,
             steps);
+        NormalizeState(state);
+        return state;
     }
 
     private static List<GddMilestoneStepState> ExtractSteps(string gddText)
@@ -325,12 +361,11 @@ public sealed class GddMilestoneStepService
                 continue;
             }
 
-            result.Add(new GddMilestoneStepState(
+            result.Add(CreateStepState(
                 id,
                 result.Count + 1,
                 $"{id}：{Trim(titleBody, 80)}",
                 Trim(titleBody, 420),
-                $"完成并验证：{Trim(titleBody, 260)}",
                 "locked",
                 true));
         }
@@ -374,7 +409,75 @@ public sealed class GddMilestoneStepService
 
     private static GddMilestoneStepState BuildDefaultStep(string id, int index, string title, string description)
     {
-        return new GddMilestoneStepState(id, index, $"{id}：{title}", description, $"完成并验证：{description}", "locked", true);
+        return CreateStepState(id, index, $"{id}：{title}", description, "locked", true);
+    }
+
+    private static GddMilestoneStepState CreateStepState(
+        string id,
+        int index,
+        string title,
+        string description,
+        string status,
+        bool locked)
+    {
+        var spec = BuildStepSpec(id, title, description);
+        return new GddMilestoneStepState(
+            id,
+            index,
+            title,
+            description,
+            spec.Acceptance,
+            spec.ScopeIn,
+            spec.ScopeOut,
+            spec.GodotSlice,
+            spec.PackagingValidation,
+            spec.FeedbackGuidance,
+            spec.NextStepReview,
+            status,
+            locked);
+    }
+
+    private static GddMilestoneStepSpec BuildStepSpec(string id, string title, string description)
+    {
+        var body = Trim(description, 420);
+        var lower = $"{title} {description}";
+        var isAssetStep = ContainsAny(lower, "素材", "资产", "Asset", "KayKit", "碰撞", "collision", "Animation", "动画");
+        var isUiStep = ContainsAny(lower, "UI", "HUD", "界面", "反馈", "screen", "本地化", "accessibility");
+        var isFinalStep = ContainsAny(lower, "验收", "打包", "readiness", "polish", "final", "summary");
+
+        var scopeIn = $"只实现 {id} 当前 step 所需的可玩功能：{body} 保持 scene path、screen id、input action、state name 稳定，并把玩家可见文本放到集中配置或本地化入口。";
+        var scopeOut = "不提前实现后续锁定 step；不做最终视觉精装修；不引入 GDD 之外的新核心系统；不因为当前 step 未完成而跳到下一 step。";
+        var godotSlice = "在 Godot 4.5.1 + C# 项目中完成可运行切片，优先覆盖场景、组件、输入、HUD/状态反馈和最小测试或 smoke 验证。";
+        var acceptance = $"完成并验证：{body} 玩家能通过打包版本直接试玩当前 step，看到明确开始、操作、反馈和结果。";
+        var packaging = "当前 step 完成后提示玩家打包下载并试玩验证；确认按钮只在实施计划或反馈改进任务完成后可用。";
+
+        if (isAssetStep)
+        {
+            scopeIn += " 素材替换必须同时验证阻挡、碰撞、导航/移动边界、动画或朝向状态，以及场景加载 smoke。";
+            godotSlice += " 对替换后的角色、敌人、道具或阻挡物补充碰撞层、碰撞形状和最小运行检查。";
+            acceptance += " 替换素材不能让玩家穿模、卡死、无法命中或无法完成当前房间目标。";
+        }
+
+        if (isUiStep)
+        {
+            scopeIn += " UI 可用 placeholder，但 HUD 信息优先级、输入提示、冷却/生命/目标状态和文本来源必须稳定。";
+            godotSlice += " UI screen contract 至少记录 screen id、scene path、关键状态和输入动作。";
+            acceptance += " HUD 不遮挡核心战斗读图，关键状态不能只依赖颜色表达。";
+        }
+
+        if (isFinalStep)
+        {
+            acceptance += " 最后一轮还要覆盖核心循环回归、项目包生成、下载验证和下一轮游戏模块创建准备。";
+        }
+
+        return new GddMilestoneStepSpec(
+            scopeIn,
+            scopeOut,
+            godotSlice,
+            acceptance,
+            packaging,
+            "如果玩家反馈当前 step 未达预期，提交反馈改进任务，只修改当前已解锁 step 的问题，不自动推进后续 step。",
+            "玩家确认当前 step 后，解锁下一 step 前执行一次检查；只有完成结果或反馈显示必要时，才微调下一 step 的标题、范围或验收。");
     }
 
     private static GddMilestoneStepState? ResolveCurrentStep(GddMilestoneState state)
@@ -393,7 +496,7 @@ public sealed class GddMilestoneStepService
 
     private static string BuildNextStepReviewSummary(GddMilestoneStepState completed, GddMilestoneStepState next)
     {
-        return $"解锁前 review：{completed.StepId} 已由玩家确认。{next.StepId} 暂按原 GDD step 继续；如玩家反馈显示方向变化，请先提交反馈改进 run 后再执行。";
+        return $"解锁前检查：{completed.StepId} 已由玩家确认。{next.StepId} 暂按原策划 step 继续；如玩家反馈显示方向变化，请先提交反馈改进任务后再执行。";
     }
 
     private async Task<GddMilestoneNextStepReview> ReviewNextStepAsync(
@@ -407,12 +510,18 @@ public sealed class GddMilestoneStepService
             null,
             null,
             null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
             BuildNextStepReviewSummary(completed, next));
         if (_llmRouteEngine is null)
         {
             return fallback with
             {
-                Summary = fallback.Summary + " Review source: deterministic fallback."
+                Summary = fallback.Summary
             };
         }
 
@@ -421,7 +530,7 @@ public sealed class GddMilestoneStepService
             ? await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken)
             : "";
         var prompt = $$"""
-            Review whether the next GDD milestone step should be adjusted before it is unlocked.
+            Review whether the next game module step should be adjusted before it is unlocked.
 
             Return exactly one JSON object:
             {
@@ -429,6 +538,12 @@ public sealed class GddMilestoneStepService
               "title": "optional revised next step title",
               "description": "optional revised next step description",
               "acceptance": "optional revised next step acceptance",
+              "scopeIn": "optional revised scope in",
+              "scopeOut": "optional revised scope out",
+              "godotSlice": "optional revised Godot/C# slice",
+              "packagingValidation": "optional revised package validation",
+              "feedbackGuidance": "optional revised feedback guidance",
+              "nextStepReview": "optional revised next-step adjustment check",
               "summary": "short Chinese review summary"
             }
 
@@ -442,7 +557,11 @@ public sealed class GddMilestoneStepService
             - Id: {{completed.StepId}}
             - Title: {{completed.Title}}
             - Description: {{completed.Description}}
+            - Scope in: {{completed.ScopeIn}}
+            - Scope out: {{completed.ScopeOut}}
+            - Godot slice: {{completed.GodotSlice}}
             - Acceptance: {{completed.Acceptance}}
+            - Package validation: {{completed.PackagingValidation}}
             - Confirmation notes: {{completed.ConfirmationNotes}}
             - Feedback summary: {{completed.FeedbackSummary}}
 
@@ -450,9 +569,13 @@ public sealed class GddMilestoneStepService
             - Id: {{next.StepId}}
             - Title: {{next.Title}}
             - Description: {{next.Description}}
+            - Scope in: {{next.ScopeIn}}
+            - Scope out: {{next.ScopeOut}}
+            - Godot slice: {{next.GodotSlice}}
             - Acceptance: {{next.Acceptance}}
+            - Package validation: {{next.PackagingValidation}}
 
-            GDD excerpt:
+            Planning outline excerpt:
             {{Trim(gddText, 4000)}}
             """;
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -467,7 +590,7 @@ public sealed class GddMilestoneStepService
         {
             return fallback with
             {
-                Summary = fallback.Summary + $" Review source: llm unavailable ({completion.FailureCode ?? "unknown"})."
+                Summary = fallback.Summary + " 本次未获得额外调整建议，按原策划继续。"
             };
         }
 
@@ -491,13 +614,19 @@ public sealed class GddMilestoneStepService
                 NonEmptyOrNull(ReadString(root, "title")),
                 NonEmptyOrNull(ReadString(root, "description")),
                 NonEmptyOrNull(ReadString(root, "acceptance")),
+                NonEmptyOrNull(ReadString(root, "scopeIn")),
+                NonEmptyOrNull(ReadString(root, "scopeOut")),
+                NonEmptyOrNull(ReadString(root, "godotSlice")),
+                NonEmptyOrNull(ReadString(root, "packagingValidation")),
+                NonEmptyOrNull(ReadString(root, "feedbackGuidance")),
+                NonEmptyOrNull(ReadString(root, "nextStepReview")),
                 summary);
         }
         catch (JsonException)
         {
             return fallback with
             {
-                Summary = fallback.Summary + " Review source: llm_json_parse_failed."
+                Summary = fallback.Summary + " 本次调整建议无法解析，按原策划继续。"
             };
         }
     }
@@ -531,6 +660,12 @@ public sealed class GddMilestoneStepService
                 step.Title,
                 step.Description,
                 step.Acceptance,
+                step.ScopeIn,
+                step.ScopeOut,
+                step.GodotSlice,
+                step.PackagingValidation,
+                step.FeedbackGuidance,
+                step.NextStepReview,
                 step.Status,
                 step.Locked,
                 !step.Locked && step.Status is "ready" or "feedback_submitted" or "iteration_plan_failed",
@@ -559,6 +694,7 @@ public sealed class GddMilestoneStepService
 
     private static async Task WriteStateAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
     {
+        NormalizeState(state);
         var serialized = JsonSerializer.Serialize(state, JsonOptions);
         var metaPath = Path.Combine(project.MetaPath, StateRelativePath.Replace('/', Path.DirectorySeparatorChar));
         var mirrorPath = Path.Combine(project.RepoPath, "meta", StateRelativePath.Replace('/', Path.DirectorySeparatorChar));
@@ -566,6 +702,26 @@ public sealed class GddMilestoneStepService
         Directory.CreateDirectory(Path.GetDirectoryName(mirrorPath)!);
         await File.WriteAllTextAsync(metaPath, serialized, Encoding.UTF8, cancellationToken);
         await File.WriteAllTextAsync(mirrorPath, serialized, Encoding.UTF8, cancellationToken);
+    }
+
+    private static void NormalizeState(GddMilestoneState state)
+    {
+        for (var index = 0; index < state.Steps.Count; index++)
+        {
+            var step = state.Steps[index];
+            var spec = BuildStepSpec(step.StepId, step.Title, step.Description);
+            state.Steps[index] = step with
+            {
+                StepIndex = step.StepIndex <= 0 ? index + 1 : step.StepIndex,
+                Acceptance = FirstNonEmpty(step.Acceptance, spec.Acceptance),
+                ScopeIn = FirstNonEmpty(step.ScopeIn, spec.ScopeIn),
+                ScopeOut = FirstNonEmpty(step.ScopeOut, spec.ScopeOut),
+                GodotSlice = FirstNonEmpty(step.GodotSlice, spec.GodotSlice),
+                PackagingValidation = FirstNonEmpty(step.PackagingValidation, spec.PackagingValidation),
+                FeedbackGuidance = FirstNonEmpty(step.FeedbackGuidance, spec.FeedbackGuidance),
+                NextStepReview = FirstNonEmpty(step.NextStepReview, spec.NextStepReview)
+            };
+        }
     }
 
     private static bool ContainsAny(string value, params string[] needles)
@@ -622,6 +778,12 @@ public sealed class GddMilestoneStepService
         string Title,
         string Description,
         string Acceptance,
+        string ScopeIn,
+        string ScopeOut,
+        string GodotSlice,
+        string PackagingValidation,
+        string FeedbackGuidance,
+        string NextStepReview,
         string Status,
         bool Locked,
         string? IterationSessionId = null,
@@ -635,5 +797,20 @@ public sealed class GddMilestoneStepService
         string? Title,
         string? Description,
         string? Acceptance,
+        string? ScopeIn,
+        string? ScopeOut,
+        string? GodotSlice,
+        string? PackagingValidation,
+        string? FeedbackGuidance,
+        string? NextStepReview,
         string Summary);
+
+    private sealed record GddMilestoneStepSpec(
+        string ScopeIn,
+        string ScopeOut,
+        string GodotSlice,
+        string Acceptance,
+        string PackagingValidation,
+        string FeedbackGuidance,
+        string NextStepReview);
 }
