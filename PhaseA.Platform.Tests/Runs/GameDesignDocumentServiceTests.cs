@@ -60,6 +60,10 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("reference game");
         runner.Commands[0].StandardInput.Should().Contain("scene creation content");
         runner.Commands[0].StandardInput.Should().Contain("keyboard and mouse basics");
+        runner.Commands[0].StandardInput.Should().Contain("raw JSON draft file must be ASCII-only");
+        runner.Commands[0].StandardInput.Should().Contain("json.dumps(..., ensure_ascii=True, indent=2)");
+        runner.Commands[0].StandardInput.Should().Contain("Do not use PowerShell Set-Content");
+        runner.Commands[0].StandardInput.Should().Contain("does not contain consecutive question marks");
         runner.Commands[0].StandardInput.Should().Contain("UI/UX/HUD and player feedback");
         runner.Commands[0].StandardInput.Should().Contain("screen inventory");
         runner.Commands[0].StandardInput.Should().Contain("core player flow map");
@@ -776,6 +780,10 @@ public sealed class GameDesignDocumentServiceTests
 
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].StandardInput.Should().Contain("lightweight UI/UX pre-design");
+        runner.Commands[0].StandardInput.Should().Contain("raw JSON draft file must be ASCII-only");
+        runner.Commands[0].StandardInput.Should().Contain("json.dumps(..., ensure_ascii=True, indent=2)");
+        runner.Commands[0].StandardInput.Should().Contain("Do not use PowerShell Set-Content");
+        runner.Commands[0].StandardInput.Should().Contain("does not contain consecutive question marks");
         runner.Commands[0].StandardInput.Should().Contain("screen inventory");
         runner.Commands[0].StandardInput.Should().Contain("core player flow map");
         runner.Commands[0].StandardInput.Should().Contain("HUD information priority");

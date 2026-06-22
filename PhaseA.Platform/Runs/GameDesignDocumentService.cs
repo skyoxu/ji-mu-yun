@@ -933,7 +933,9 @@ public sealed class GameDesignDocumentService
             Outline requirements:
             - Write user-facing fields in Chinese.
             - The draft file must preserve Chinese characters. Do not replace Chinese with question marks.
-            - Prefer JSON unicode escapes for all Chinese text, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt the file.
+            - The raw JSON draft file must be ASCII-only. All Chinese text must be written as JSON unicode escapes in the file, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt it.
+            - Use Python with UTF-8 and json.dumps(..., ensure_ascii=True, indent=2) or an equivalent structured JSON writer. Do not use PowerShell Set-Content, Out-File, echo, shell redirection, or console-default encoding to write Chinese text.
+            - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
             - Create 6 to 12 sections covering vision, target player, core loop, player progression, world/levels, combat/interaction, UI/UX/HUD and player feedback, content and asset needs, prototype acceptance criteria, and open questions.
             - The outline must explicitly include the user's reference game or reference genre and explain what design signals are being borrowed.
             - Before using any game-type template signal, verify the reference game's likely public genre/tag signals from the provided context and your BMAD game design knowledge. Do not infer genre from title words alone. For example, a game named with "Tower" is not tower defense unless the gameplay/tag evidence says tower defense.
@@ -1051,7 +1053,9 @@ public sealed class GameDesignDocumentService
             Requirements:
             - Write section.content in Chinese.
             - The draft file must preserve Chinese characters. Do not replace Chinese with question marks.
-            - Prefer JSON unicode escapes for all Chinese text, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt the file.
+            - The raw JSON draft file must be ASCII-only. All Chinese text must be written as JSON unicode escapes in the file, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt it.
+            - Use Python with UTF-8 and json.dumps(..., ensure_ascii=True, indent=2) or an equivalent structured JSON writer. Do not use PowerShell Set-Content, Out-File, echo, shell redirection, or console-default encoding to write Chinese text.
+            - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
             - Stay inside this section's scope.
             - If this section concerns reference, scenes, controls, UI/UX/HUD, player feedback, core loop, prototype acceptance, or milestones, preserve the hard GDD requirements: reference game/design signal, scene creation content, keyboard/mouse basics, basic gameplay loop, lightweight UI/UX pre-design, and dynamic milestone steps based on actual scope rather than fixed M1-M10.
             - For UI/UX/HUD content, include only development-guiding pre-design before features are built: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
