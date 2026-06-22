@@ -33,4 +33,5 @@ public sealed record PhaseAPlatformOptions(
     string AiCodeMirrorBaseUrl,
     string? AiCodeMirrorCookie,
     string? AiCodeMirrorApiKeyName,
-    string AiCodeMirrorCodexHomeRoot);
+    string AiCodeMirrorCodexHomeRoot,
+    IReadOnlyList<string> AssetAllowedUrlPrefixes);

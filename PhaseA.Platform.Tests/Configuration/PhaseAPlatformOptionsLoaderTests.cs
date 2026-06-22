@@ -35,6 +35,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentPrototypeCreations.Should().Be(2);
         options.MaxConcurrentAssetGenerations.Should().Be(2);
         options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
+        options.AssetAllowedUrlPrefixes.Should().BeEmpty();
     }
 
     [Fact]
@@ -68,7 +69,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
             ["PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS"] = "6",
             ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS"] = "5",
-            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT"] = "1"
+            ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT"] = "1",
+            ["PHASEA_ASSET_ALLOWED_URLS"] = "https://assets.example.com/kaykit/; https://cdn.example.com/free/"
         };
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(values);
@@ -96,6 +98,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentPrototypeCreations.Should().Be(6);
         options.MaxConcurrentAssetGenerations.Should().Be(5);
         options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
+        options.AssetAllowedUrlPrefixes.Should().Equal("https://assets.example.com/kaykit", "https://cdn.example.com/free");
     }
 
     [Theory]
@@ -115,6 +118,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", "0")]
+    [InlineData("PHASEA_ASSET_ALLOWED_URLS", "http://assets.example.com/free/")]
     public void FromDictionary_FailsClosed_ForInvalidValues(string key, string value)
     {
         var values = new Dictionary<string, string?> { [key] = value };

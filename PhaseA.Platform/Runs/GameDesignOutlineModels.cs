@@ -19,6 +19,27 @@ public sealed record GameDesignOutlineSectionRequest(
     string? Message,
     string? Model = null);
 
+public sealed record GameDesignOutlineCompleteAllRequest(
+    string? Message,
+    string? Model = null);
+
+public sealed record GameDesignOutlineCompleteAllSectionResult(
+    string SectionId,
+    string Title,
+    string Status,
+    string? RunId,
+    string? FailureCode,
+    string? Summary);
+
+public sealed record GameDesignOutlineCompleteAllResult(
+    string ProjectId,
+    string Status,
+    int RequestedCount,
+    int CompletedCount,
+    IReadOnlyList<GameDesignOutlineCompleteAllSectionResult> Sections,
+    string Summary,
+    string? RunId = null);
+
 public sealed record GameDesignOutlineDeleteResult(
     string ProjectId,
     string Status,

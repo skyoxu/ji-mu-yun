@@ -45,7 +45,6 @@ public sealed class PrototypeIterationPlanService
     private readonly PrototypeContractService _contractService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
-    private readonly BmadGameTypeDesignCatalog? _bmadGameTypeDesignCatalog;
 
     public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
         : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService(), null, null)
@@ -58,15 +57,13 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
         ILlmRouteEngine? llmRouteEngine = null,
-        GameTypeTemplateCatalog? templateCatalog = null,
-        BmadGameTypeDesignCatalog? bmadGameTypeDesignCatalog = null)
+        GameTypeTemplateCatalog? templateCatalog = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
-        _bmadGameTypeDesignCatalog = bmadGameTypeDesignCatalog;
     }
 
     public async Task<PrototypeIterationPlanResult> CreateAsync(
@@ -400,8 +397,7 @@ public sealed class PrototypeIterationPlanService
             return fallback;
         }
 
-        var designTemplateGuidance = BuildCompactDesignTemplateGuidance(project, routeProfile);
-        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
+        var modelPrompt = BuildPlanningAnalysisPrompt(project, routeProfile, projectExecutionGuide, prototypeContract, fallback, draft, latestPrototypeRun, latestSuccessfulPrototypeRun);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -469,8 +465,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
-        var designTemplateGuidance = BuildCompactDesignTemplateGuidance(project, routeProfile);
-        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, designTemplateGuidance, planningContext, message, scaffold, regenerationGuidance);
+        var prompt = BuildRpgGoalRefinementPrompt(project, routeProfile, projectExecutionGuide, planningContext, message, scaffold, regenerationGuidance);
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var completion = await _llmRouteEngine.CompleteAsync(
@@ -571,52 +566,10 @@ public sealed class PrototypeIterationPlanService
             : $"{summary} 模型分析降级为本地规则，原因：{failureCode}。";
     }
 
-    private string BuildDesignTemplateGuidance(ProjectSnapshot project, GameTypeRouteProfile routeProfile)
-    {
-        var entry = _bmadGameTypeDesignCatalog?.Find(routeProfile.GameTypeId)
-            ?? _bmadGameTypeDesignCatalog?.Find(project.GameTypeSource);
-        if (entry is null)
-        {
-            return "No BMAD/GDS game-type design template was loaded. Use only route profile, project execution guide, prototype contract, and user request.";
-        }
-
-        return $"""
-            BMAD/GDS game-type design template:
-            - Id: {entry.Id}
-            - Name: {entry.Name}
-            - Description: {entry.Description}
-            - GenreTags: {entry.GenreTags}
-            - Source: {entry.FragmentRelativePath}
-
-            Template excerpt:
-            {TrimForPrompt(entry.GuideExcerpt)}
-            """;
-    }
-
-    private string BuildCompactDesignTemplateGuidance(ProjectSnapshot project, GameTypeRouteProfile routeProfile)
-    {
-        var entry = _bmadGameTypeDesignCatalog?.Find(routeProfile.GameTypeId)
-            ?? _bmadGameTypeDesignCatalog?.Find(project.GameTypeSource);
-        if (entry is null)
-        {
-            return "No BMAD/GDS game-type design template was loaded.";
-        }
-
-        return $"""
-            BMAD/GDS game-type design template summary:
-            - Id: {entry.Id}
-            - Name: {entry.Name}
-            - Description: {CompactForPrompt(entry.Description, 360)}
-            - GenreTags: {entry.GenreTags}
-            - Source: {entry.FragmentRelativePath}
-            """;
-    }
-
     private static string BuildPlanningAnalysisPrompt(
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         string projectExecutionGuide,
-        string designTemplateGuidance,
         PrototypeContractSnapshot prototypeContract,
         IterationPlanningContext fallback,
         ProjectPrototypeDraftSnapshot? draft,
@@ -676,7 +629,6 @@ public sealed class PrototypeIterationPlanService
             - Judge completion against the current prototype result, not only the form text.
             - Focus on prototype-form fields and the current route profile. For RPG/JRPG, judge only the JRPG first-loop capabilities implied by the project semantics instead of forcing every map/battle/reward template section.
             - Keep evidence and missingReason short and browser-safe.
-            - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not treat it as an executable route profile or a requirement to add every listed GDD section.
             - Player-visible text rule for planning: any future goal that creates or changes in-game Godot text should require Chinese player-visible text by default, while preserving English code identifiers, fixed node names, resource paths, tests, logs, and platform validation names.
             - When suggesting implementation work, prefer a lightweight prototype split: PrototypeRoot orchestration, State/Data, gameplay Systems, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView.
             - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not ask for ECS, EntityComponent, IComponent, or a new framework.
@@ -700,9 +652,6 @@ public sealed class PrototypeIterationPlanService
             Project execution guide:
             {CompactForPrompt(projectExecutionGuide, 1200)}
 
-            Design template guidance:
-            {designTemplateGuidance}
-
             Prototype contract:
             {contractSummary}
 
@@ -721,7 +670,6 @@ public sealed class PrototypeIterationPlanService
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         string projectExecutionGuide,
-        string designTemplateGuidance,
         IterationPlanningContext planningContext,
         string message,
         IReadOnlyList<PrototypeIterationPlanGoalResult> scaffold,
@@ -772,7 +720,6 @@ public sealed class PrototypeIterationPlanService
             - Treat RPG as a JRPG first-loop capability profile, not a fixed DQ-like script.
             - If the prototype contract or user fields mention encounter, enemy, monster, boss, combat, battle, fight, challenge, reward, item, experience, level, loot, or return-to-map, preserve the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
             - Only omit BattleScene, enemy asset, reward, or return-loop capability when the project contract explicitly negates combat/conflict/reward, such as non-combat, no battle, no encounter, no enemy, or without reward choices.
-            - Treat BMAD/GDS game-type design template guidance as taxonomy and semantic hints only; do not turn the whole GDD template into iteration goals.
             - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
             - If a goal creates or changes any player-visible Godot text, its description or acceptanceHint must preserve this rule: Label, Button, RichTextLabel, HUD, menus, battle logs, quest prompts, result prompts, and win/fail/error prompts default to Chinese; code identifiers, fixed node names, resource paths, tests, logs, and platform validation names remain English.
             - When refining implementation goals, prefer a lightweight prototype split: PrototypeRoot orchestration, State/Data, gameplay Systems, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView.
@@ -801,9 +748,6 @@ public sealed class PrototypeIterationPlanService
 
             Project execution guide:
             {CompactForPrompt(projectExecutionGuide, 1800)}
-
-            Design template guidance:
-            {designTemplateGuidance}
 
             Planning analysis:
             {analysisJson}

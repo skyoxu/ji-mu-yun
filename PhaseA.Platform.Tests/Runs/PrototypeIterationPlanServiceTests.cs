@@ -83,6 +83,8 @@ public sealed class PrototypeIterationPlanServiceTests
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().NotBeNullOrWhiteSpace();
         codex.LastGoalPlanPrompt.Should().Contain("default to Chinese");
+        codex.LastGoalPlanPrompt.Should().NotContain("BMAD/GDS game-type design template");
+        codex.LastGoalPlanPrompt.Should().NotContain("RPG Specific Elements");
 
         var latest = await service.GetLatestAsync(accountId, projectId);
         latest.Should().NotBeNull();
@@ -540,42 +542,6 @@ public sealed class PrototypeIterationPlanServiceTests
         latest.Should().NotBeNull();
         latest!.Session.SourceMessage.Should().Be("Plan the next RPG loop improvement.");
         latest.Session.SourceMessage.Should().NotContain("Important boss design reference.");
-    }
-
-    [Fact]
-    public async Task CreateAsync_ShouldInjectBmadRpgDesignTemplateAsSemanticGuidance()
-    {
-        using var database = TempSqliteDatabase.Create();
-        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
-        using var repoRoot = TempDirectory.Create("phase-a-repo");
-        var options = Options(workspaceRoot.Path, repoRoot.Path);
-        WriteBmadRpgDesignTemplate(repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
-        var store = new PhaseAMetadataStore(database.ConnectionString, options);
-        var accountId = await store.EnsureSingleAdminAsync();
-        var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var codex = new SuccessfulRpgPlanCodexClient();
-        var service = new PrototypeIterationPlanService(
-            store,
-            new PrototypeRouteStateWriter(),
-            null,
-            codex,
-            null,
-            null,
-            new BmadGameTypeDesignCatalog(options));
-
-        var result = await service.CreateAsync(
-            accountId,
-            projectId,
-            new PrototypeIterationPlanRequest(
-                "Plan the next JRPG first loop improvement.",
-                "manual_feedback"));
-
-        result.Status.Should().Be("ready");
-        codex.LastPlanningAnalysisPrompt.Should().BeNull();
-        codex.LastGoalPlanPrompt.Should().Contain("BMAD/GDS game-type design template summary");
-        codex.LastGoalPlanPrompt.Should().Contain("semantic hints only");
-        codex.LastGoalPlanPrompt.Should().Contain("do not turn the whole GDD template into iteration goals");
     }
 
     [Fact]
@@ -2622,31 +2588,6 @@ public sealed class PrototypeIterationPlanServiceTests
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repoRoot
         });
-    }
-
-    private static void WriteBmadRpgDesignTemplate(string repoRoot)
-    {
-        var skillRoot = Path.Combine(repoRoot, ".agents", "skills", "gds-create-gdd");
-        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
-        Directory.CreateDirectory(gameTypesRoot);
-        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
-        id,name,description,genre_tags,fragment_file
-        rpg,RPG,"Character progression, stats, inventory, quests","rpg,stats,inventory,quests,narrative",rpg.md
-        """, System.Text.Encoding.UTF8);
-        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), """
-        ## RPG Specific Elements
-
-        ### Character System
-
-        - Character progression
-        - Stats
-        - Leveling system
-
-        ### Quest System
-
-        - Main story quests
-        - Side quests
-        """, System.Text.Encoding.UTF8);
     }
 
     private sealed class TempDirectory : IDisposable

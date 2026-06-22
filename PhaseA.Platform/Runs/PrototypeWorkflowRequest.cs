@@ -15,4 +15,6 @@ public sealed record PrototypeWorkflowRequest(
     bool Confirm = false,
     int? StopAfterDay = null,
     string? ScoreEngine = null,
-    string? Model = null);
+    string? Model = null,
+    string? SourceDocumentPath = null,
+    string? SourceDocumentSummary = null);

@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -74,17 +75,20 @@ public sealed class ProjectPackageService
     private readonly PhaseAPlatformOptions _options;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
+    private readonly IHostedProcessRunner _processRunner;
 
     public ProjectPackageService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
-        RunCancellationService? runCancellation = null)
+        RunCancellationService? runCancellation = null,
+        IHostedProcessRunner? processRunner = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _runCancellation = runCancellation ?? new RunCancellationService();
+        _processRunner = processRunner ?? new HostedProcessRunner();
     }
 
     public async Task<ProjectPackageResult> CreatePackageAsync(
@@ -146,7 +150,23 @@ public sealed class ProjectPackageService
                 File.Delete(packagePath);
             }
 
-            var appliedAssetSelectionCount = ApplySelectedAssetLibraryEntries(projectRoot, runToken);
+            var assetSelectionResult = ApplySelectedAssetLibraryEntries(projectRoot, runToken);
+            var assetSmoke = await RunAssetReplacementSmokeAsync(projectRoot, assetSelectionResult.ScenePaths, runToken);
+            if (assetSmoke.Ran && assetSmoke.ExitCode != 0)
+            {
+                var failureEvidenceJson = JsonSerializer.Serialize(new
+                {
+                    run_type = RunType,
+                    asset_replacement = new
+                    {
+                        applied_asset_selection_count = assetSelectionResult.AppliedCount,
+                        scene_paths = assetSelectionResult.ScenePaths,
+                        smoke = assetSmoke
+                    }
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", assetSmoke.ExitCode, assetSmoke.Stdout, assetSmoke.Stderr, failureEvidenceJson, runToken);
+                return new ProjectPackageResult(projectId, runId, "failed", "", "", "", "", 0, 0, [], "asset_replacement_smoke_failed");
+            }
             var includedFileCount = CreateZip(projectRoot, packagePath, project, version, runToken);
             var sizeBytes = new FileInfo(packagePath).Length;
             var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
@@ -168,7 +188,8 @@ public sealed class ProjectPackageService
                 relative_path = relativePath,
                 size_bytes = sizeBytes,
                 included_file_count = includedFileCount,
-                applied_asset_selection_count = appliedAssetSelectionCount,
+                applied_asset_selection_count = assetSelectionResult.AppliedCount,
+                asset_replacement_smoke = assetSmoke,
                 included_roots = IncludedRoots,
                 included_root_files = IncludedRootFiles
             });
@@ -315,56 +336,7 @@ public sealed class ProjectPackageService
             return new PackageGate(false, "prototype_not_created");
         }
 
-        var iteration = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
-        if (iteration is null || iteration.Goals.Count == 0 || !iteration.Goals.All(goal => IsDone(goal.Status)))
-        {
-            return new PackageGate(false, "iteration_plan_not_completed");
-        }
-
-        var latestValidation = runs
-            .Where(run => run.RunType == "prototype-7day-playable" && IsValidationOnlyRun(run))
-            .OrderByDescending(RunSortTimeUtc)
-            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
-            .FirstOrDefault();
-        var latestIterationCompletionUtc = LatestIterationCompletionUtc(iteration);
-        var latestValidationUtc = RunSortTimeUtc(latestValidation);
-        if (latestValidation is null ||
-            !IsDone(latestValidation.Status) ||
-            (latestIterationCompletionUtc.HasValue && latestValidationUtc < latestIterationCompletionUtc.Value))
-        {
-            return new PackageGate(false, "prototype_acceptance_not_passed");
-        }
-
         return new PackageGate(true, null);
-    }
-
-    private static DateTimeOffset? LatestIterationCompletionUtc(ProjectIterationSessionDetails iteration)
-    {
-        var times = iteration.Goals
-            .Select(goal => ParseUtc(goal.CompletedUtc ?? goal.UpdatedUtc ?? goal.CreatedUtc))
-            .Where(time => time.HasValue)
-            .Select(time => time!.Value)
-            .ToArray();
-        return times.Length == 0 ? null : times.Max();
-    }
-
-    private static DateTimeOffset RunSortTimeUtc(RunSnapshot? run)
-    {
-        if (run is null)
-        {
-            return DateTimeOffset.MinValue;
-        }
-
-        return ParseUtc(run.FinishedUtc) ??
-               ParseUtc(run.ProgressUpdatedUtc) ??
-               ParseUtc(run.StartedUtc) ??
-               ParseUtc(run.CreatedUtc) ??
-               DateTimeOffset.MinValue;
-    }
-
-    private static DateTimeOffset? ParseUtc(string? value)
-    {
-        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
     }
 
     private static bool IsDone(string? status)
@@ -372,25 +344,6 @@ public sealed class ProjectPackageService
         return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(status, "done", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsValidationOnlyRun(RunSnapshot run)
-    {
-        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(run.EvidenceJson);
-            return document.RootElement.TryGetProperty("validation_only", out var value) &&
-                   value.ValueKind == JsonValueKind.True;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
     }
 
     private sealed record PackageGate(bool CanCreate, string? DisabledReason);
@@ -441,13 +394,13 @@ public sealed class ProjectPackageService
         return included;
     }
 
-    private static int ApplySelectedAssetLibraryEntries(string projectRoot, CancellationToken cancellationToken)
+    private static AssetSelectionApplyResult ApplySelectedAssetLibraryEntries(string projectRoot, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var libraryPath = ResolveUnderProject(projectRoot, "meta/assets/library.json");
         if (!File.Exists(libraryPath))
         {
-            return 0;
+            return new AssetSelectionApplyResult(0, []);
         }
 
         ProjectAssetLibraryResult? library;
@@ -459,15 +412,16 @@ public sealed class ProjectPackageService
         }
         catch (JsonException)
         {
-            return 0;
+            return new AssetSelectionApplyResult(0, []);
         }
 
         if (library is null)
         {
-            return 0;
+            return new AssetSelectionApplyResult(0, []);
         }
 
         var applied = 0;
+        var scenePaths = new HashSet<string>(StringComparer.Ordinal);
         foreach (var unit in library.Units)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -493,10 +447,18 @@ public sealed class ProjectPackageService
             }
 
             var sceneText = File.ReadAllText(scenePath, Encoding.UTF8);
+            var alreadyUsesSelectedResource = sceneText.Contains($"path=\"{selectedPreviewResourcePath}\"", StringComparison.Ordinal);
             if (IsResPath(unit.ResourcePath))
             {
                 var oldToken = $"path=\"{unit.ResourcePath}\"";
                 var newToken = $"path=\"{selectedPreviewResourcePath}\"";
+                if (alreadyUsesSelectedResource)
+                {
+                    applied++;
+                    scenePaths.Add(unit.ScenePath);
+                    continue;
+                }
+
                 if (!sceneText.Contains(oldToken, StringComparison.Ordinal))
                 {
                     continue;
@@ -504,6 +466,7 @@ public sealed class ProjectPackageService
 
                 File.WriteAllText(scenePath, sceneText.Replace(oldToken, newToken, StringComparison.Ordinal), Encoding.UTF8);
                 applied++;
+                scenePaths.Add(unit.ScenePath);
                 continue;
             }
 
@@ -520,9 +483,58 @@ public sealed class ProjectPackageService
 
             File.WriteAllText(scenePath, updatedSceneText, Encoding.UTF8);
             applied++;
+            scenePaths.Add(unit.ScenePath);
         }
 
-        return applied;
+        return new AssetSelectionApplyResult(applied, scenePaths.OrderBy(path => path, StringComparer.Ordinal).ToArray());
+    }
+
+    private async Task<AssetReplacementSmokeResult> RunAssetReplacementSmokeAsync(
+        string projectRoot,
+        IReadOnlyList<string> scenePaths,
+        CancellationToken cancellationToken)
+    {
+        if (scenePaths.Count == 0)
+        {
+            return AssetReplacementSmokeResult.NotRequired("no_asset_replacements_applied");
+        }
+
+        if (string.IsNullOrWhiteSpace(_options.GodotBin))
+        {
+            return AssetReplacementSmokeResult.Skipped("godot_bin_not_configured", scenePaths);
+        }
+
+        foreach (var scenePath in scenePaths)
+        {
+            var command = new HostedProcessCommand(
+                _options.PythonCommand,
+                [
+                    "-3",
+                    ResolveRepositoryScriptPath("scripts/python/smoke_headless.py"),
+                    "--godot-bin",
+                    _options.GodotBin,
+                    "--project-path",
+                    projectRoot,
+                    "--scene",
+                    scenePath,
+                    "--timeout-sec",
+                    "10",
+                    "--strict"
+                ],
+                projectRoot,
+                PrototypeValidationProcessEnvironment.Create(projectRoot, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["GODOT_BIN"] = _options.GodotBin
+                }));
+            var result = await _processRunner.RunAsync(command, cancellationToken);
+            var exitCode = ResolveSmokeExitCode(result);
+            if (exitCode != 0)
+            {
+                return new AssetReplacementSmokeResult(true, exitCode, "asset_replacement_scene_smoke_failed", scenePath, scenePaths, result.Stdout, result.Stderr);
+            }
+        }
+
+        return new AssetReplacementSmokeResult(true, 0, "asset_replacement_scene_smoke_passed", scenePaths[^1], scenePaths, "", "");
     }
 
     private async Task<bool> IsRunCancelledAsync(string runId, CancellationToken cancellationToken)
@@ -631,8 +643,8 @@ public sealed class ProjectPackageService
 
     private static string StableShortId(string unitKey, string previewResourcePath)
     {
-        var hash = unchecked((uint)HashCode.Combine(unitKey, previewResourcePath));
-        return hash.ToString("x8");
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{unitKey}\n{previewResourcePath}"));
+        return Convert.ToHexString(bytes, 0, 6).ToLowerInvariant();
     }
 
     private static string ResolveResPath(string projectRoot, string resourcePath)
@@ -650,6 +662,25 @@ public sealed class ProjectPackageService
         }
 
         return fullPath;
+    }
+
+    private string ResolveRepositoryScriptPath(string relativePath)
+    {
+        return Path.GetFullPath(Path.Combine(_options.RepositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+    }
+
+    private static int ResolveSmokeExitCode(HostedProcessResult result)
+    {
+        var combined = $"{result.Stdout}\n{result.Stderr}";
+        return ContainsGodotFailureMarker(combined) ? 1 : result.ExitCode;
+    }
+
+    private static bool ContainsGodotFailureMarker(string output)
+    {
+        return output.Contains("SCRIPT ERROR:", StringComparison.OrdinalIgnoreCase) ||
+               output.Contains("ERROR:", StringComparison.OrdinalIgnoreCase) ||
+               output.Contains("Parse Error", StringComparison.OrdinalIgnoreCase) ||
+               output.Contains("Cannot instantiate C# script", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddManifest(ZipArchive archive, ProjectSnapshot project, string version)
@@ -752,5 +783,29 @@ public sealed class ProjectPackageService
     private static ProjectPackageResult Failure(string projectId, string failureCode, string runId)
     {
         return new ProjectPackageResult(projectId, runId, failureCode, "", "", "", "", 0, 0, [], failureCode);
+    }
+
+    private sealed record AssetSelectionApplyResult(
+        int AppliedCount,
+        IReadOnlyList<string> ScenePaths);
+
+    private sealed record AssetReplacementSmokeResult(
+        bool Ran,
+        int ExitCode,
+        string Reason,
+        string? ScenePath,
+        IReadOnlyList<string> ScenePaths,
+        string Stdout,
+        string Stderr)
+    {
+        public static AssetReplacementSmokeResult NotRequired(string reason)
+        {
+            return new AssetReplacementSmokeResult(false, 0, reason, null, [], "", "");
+        }
+
+        public static AssetReplacementSmokeResult Skipped(string reason, IReadOnlyList<string> scenePaths)
+        {
+            return new AssetReplacementSmokeResult(false, 0, reason, scenePaths.FirstOrDefault(), scenePaths, "", "");
+        }
     }
 }

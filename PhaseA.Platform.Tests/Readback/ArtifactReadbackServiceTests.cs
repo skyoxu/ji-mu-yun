@@ -1,5 +1,6 @@
 using FluentAssertions;
 using System.IO.Compression;
+using System.Net;
 using System.Text;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -789,6 +790,8 @@ public sealed class ArtifactReadbackServiceTests
             [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player-old.png" id="1"]
             [node name="PlayerSprite" type="Sprite2D"]
             texture = ExtResource("1")
+            [node name="PlayerBody" type="CharacterBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerBody"]
             """);
         Write(project.RepoPath, "meta/assets/library.json", """
             {
@@ -902,6 +905,78 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ProjectPackage_RunsAssetReplacementSmoke_WhenGodotBinConfigured()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
+        WriteBytes(project!.RepoPath, "Game.Godot/Assets/player-old.png", MinimalPng(16, 16));
+        WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png", MinimalPng(16, 16));
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player-old.png" id="1"]
+            [node name="PlayerSprite" type="Sprite2D"]
+            texture = ExtResource("1")
+            [node name="PlayerBody" type="CharacterBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerBody"]
+            """);
+        Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
+        var runner = new FakeHostedProcessRunner("SMOKE PASS\n");
+        var service = new ProjectPackageService(store, options, processRunner: runner);
+
+        var result = await service.CreatePackageAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().ContainSingle(command => command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)));
+        run!.EvidenceJson.Should().Contain("asset_replacement_scene_smoke_passed");
+    }
+
+    [Fact]
+    public async Task ProjectPackage_Fails_WhenAssetReplacementSmokeFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
+        WriteBytes(project!.RepoPath, "Game.Godot/Assets/player-old.png", MinimalPng(16, 16));
+        WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png", MinimalPng(16, 16));
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player-old.png" id="1"]
+            [node name="PlayerSprite" type="Sprite2D"]
+            texture = ExtResource("1")
+            [node name="PlayerBody" type="CharacterBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerBody"]
+            """);
+        Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
+        var runner = new FakeHostedProcessRunner("ERROR: missing imported texture", exitCode: 0);
+        var service = new ProjectPackageService(store, options, processRunner: runner);
+
+        var result = await service.CreatePackageAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("asset_replacement_smoke_failed");
+        runner.Commands.Should().ContainSingle(command => command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)));
+        run!.EvidenceJson.Should().Contain("asset_replacement_scene_smoke_failed");
+        Directory.EnumerateFiles(Path.Combine(project.RepoPath, "exports"), "*.zip").Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task ProjectPackage_BlocksBeforePrototypeSucceeded()
     {
         using var database = TempSqliteDatabase.Create();
@@ -923,7 +998,7 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
-    public async Task ProjectPackage_BlocksUntilIterationPlanCompleted()
+    public async Task ProjectPackage_AllowsPackageAfterPrototypeSkeletonSucceedsWithoutIterationPlan()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -934,19 +1009,20 @@ public sealed class ArtifactReadbackServiceTests
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         await SeedPrototypeCreationRunAsync(store, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
         var service = new ProjectPackageService(store, options);
 
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         var created = await service.CreatePackageAsync(accountId, projectId);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
-        created.Status.Should().Be("iteration_plan_not_completed");
-        created.FailureCode.Should().Be("iteration_plan_not_completed");
-        packages!.CanCreatePackage.Should().BeFalse();
-        packages.DisabledReason.Should().Be("iteration_plan_not_completed");
+        created.Status.Should().Be("succeeded");
+        packages!.CanCreatePackage.Should().BeTrue();
+        packages.DisabledReason.Should().BeNull();
     }
 
     [Fact]
-    public async Task ProjectPackage_BlocksUntilPostIterationPrototypeAcceptancePasses()
+    public async Task ProjectPackage_DoesNotRequirePrototypeAcceptanceAfterSkeletonSucceeds()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -958,19 +1034,20 @@ public sealed class ArtifactReadbackServiceTests
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         await SeedPrototypeCreationRunAsync(store, projectId);
         await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
         var service = new ProjectPackageService(store, options);
 
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         var created = await service.CreatePackageAsync(accountId, projectId);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
-        created.Status.Should().Be("prototype_acceptance_not_passed");
-        created.FailureCode.Should().Be("prototype_acceptance_not_passed");
-        packages!.CanCreatePackage.Should().BeFalse();
-        packages.DisabledReason.Should().Be("prototype_acceptance_not_passed");
+        created.Status.Should().Be("succeeded");
+        packages!.CanCreatePackage.Should().BeTrue();
+        packages.DisabledReason.Should().BeNull();
     }
 
     [Fact]
-    public async Task ProjectPackage_BlocksWhenValidationOnlyRunPredatesCompletedIteration()
+    public async Task ProjectPackage_IgnoresStaleValidationOnlyRunWhenSkeletonSucceeded()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -984,13 +1061,16 @@ public sealed class ArtifactReadbackServiceTests
         await SeedPrototypeAcceptanceRunAsync(store, projectId);
         await Task.Delay(20);
         await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
         var service = new ProjectPackageService(store, options);
 
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         var created = await service.CreatePackageAsync(accountId, projectId);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
-        created.Status.Should().Be("prototype_acceptance_not_passed");
-        packages!.DisabledReason.Should().Be("prototype_acceptance_not_passed");
+        created.Status.Should().Be("succeeded");
+        packages!.CanCreatePackage.Should().BeTrue();
+        packages.DisabledReason.Should().BeNull();
     }
 
     [Fact]
@@ -1386,6 +1466,7 @@ public sealed class ArtifactReadbackServiceTests
         selected!.Units.Single().SelectedEntryId.Should().Be(generated.Entry.EntryId);
         selected.Units.Single().Entries.Should().ContainSingle(entry => entry.Selected);
         selected.Units.Single().Entries.Single(entry => entry.Selected).EntryId.Should().Be(generated.Entry.EntryId);
+        selected.Units.Single().Entries.Single(entry => entry.Selected).SelectionValidation.Should().NotBeNull();
     }
 
     [Fact]
@@ -1533,6 +1614,220 @@ public sealed class ArtifactReadbackServiceTests
         runner.Commands.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task ProjectAssetLibrary_ImportsOnlyWhitelistedUrls_AndKeepsOtherUrlsAsKeywords()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        Write(project!.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/old-crate.png" id="1"]
+            [node name="Crate" type="Sprite2D"]
+            texture = ExtResource("1")
+            [node name="CrateBody" type="StaticBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="CrateBody"]
+            """);
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-unit",
+            "Crate",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "res://Game.Godot/Assets/old-crate.png",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace visual and preserve collision");
+
+        var imported = await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate.png", unit));
+        var keywordOnly = await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://evil.example.com/crate.png", unit));
+        var adjacentPrefix = await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit-evil/crate.png", unit));
+        var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("crate-unit", imported!.Entry.EntryId));
+
+        imported.Status.Should().Be("imported");
+        imported.SourceUrlAllowed.Should().BeTrue();
+        imported.Entry.PreviewResourcePath.Should().StartWith("res://Game.Godot/Prototypes/ProjectAssetLibrary/crate-unit/");
+        File.Exists(Path.Combine(project.RepoPath, imported.Entry.ArtifactPaths.Single().Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        keywordOnly!.Status.Should().Be("keyword_only");
+        keywordOnly.SourceUrlAllowed.Should().BeFalse();
+        keywordOnly.Entry.PreviewResourcePath.Should().BeNull();
+        keywordOnly.Entry.SourceKeyword.Should().Contain("evil.example.com");
+        adjacentPrefix!.Status.Should().Be("keyword_only");
+        adjacentPrefix.SourceUrlAllowed.Should().BeFalse();
+        adjacentPrefix.Entry.SourceKeyword.Should().Contain("kaykit evil");
+        var selectedEntry = selected!.Units.Single().Entries.Single(entry => entry.EntryId == imported.Entry.EntryId);
+        selectedEntry.Selected.Should().BeTrue();
+        selectedEntry.SelectionValidation.Should().NotBeNull();
+        selectedEntry.SelectionValidation!.Status.Should().Be("ready_for_package_smoke");
+        selectedEntry.SelectionValidation.SmokeRequired.Should().BeTrue();
+        selectedEntry.SelectionValidation.Checks.Select(check => check.Name).Should().Contain([
+            "replacement_resource_exists",
+            "scene_patchable",
+            "collision_preserved",
+            "post_replace_smoke_required"
+        ]);
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_WhitelistedModelImport_CanBeUsedAsReplacementResource()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        Write(project!.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="PackedScene" path="res://Game.Godot/Assets/old-crate.glb" id="1"]
+            [node name="Crate" instance=ExtResource("1")]
+            [node name="CrateBody" type="StaticBody3D"]
+            [node name="CollisionShape3D" type="CollisionShape3D" parent="CrateBody"]
+            """);
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FakeAssetHttpHandler(Encoding.UTF8.GetBytes("glTF placeholder"), "model/gltf-binary")));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-model",
+            "Crate",
+            "Node3D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "res://Game.Godot/Assets/old-crate.glb",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace KayKit model and preserve collision");
+
+        var imported = await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate.glb", unit));
+        var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("crate-model", imported!.Entry.EntryId));
+
+        imported.Status.Should().Be("imported");
+        imported.Entry.PreviewResourcePath.Should().EndWith("/crate.glb");
+        var sceneText = File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "Main.tscn"));
+        sceneText.Should().Contain(imported.Entry.PreviewResourcePath);
+        var selectedEntry = selected!.Units.Single().Entries.Single(entry => entry.Selected);
+        selectedEntry.SelectionValidation!.ReplacementResourceExists.Should().BeTrue();
+        selectedEntry.SelectionValidation.ScenePatch!.Applied.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_RejectsWhitelistedUrlRedirects()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new RedirectAssetHttpHandler("https://evil.example.com/crate.png")));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-unit",
+            "Crate",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "res://Game.Godot/Assets/old-crate.png",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace visual and preserve collision");
+
+        var act = async () => await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate.png", unit));
+
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage("*redirects are not allowed*");
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_RejectsFinalUriChangedByRedirectingClient()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FinalUriChangedAssetHttpHandler(MinimalPng(16, 16), "https://evil.example.com/crate.png")));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-unit",
+            "Crate",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "res://Game.Godot/Assets/old-crate.png",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace visual and preserve collision");
+
+        var act = async () => await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate.png", unit));
+
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage("*redirects are not allowed*");
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_SelectAsync_PatchesSceneImmediately_AndCanRunSmoke()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteBytes(project!.RepoPath, "Game.Godot/Assets/player-old.png", MinimalPng(16, 16));
+        WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png", MinimalPng(16, 16));
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player-old.png" id="1"]
+            [node name="PlayerSprite" type="Sprite2D"]
+            texture = ExtResource("1")
+            [node name="PlayerBody" type="CharacterBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerBody"]
+            """);
+        Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
+        var runner = new FakeHostedProcessRunner("SMOKE PASS\n");
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, runner),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            processRunner: runner);
+
+        var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("player-unit", "entry-1", ValidateWithSmoke: true));
+
+        var sceneText = File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "Main.tscn"));
+        sceneText.Should().Contain("res://Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png");
+        sceneText.Should().NotContain("res://Game.Godot/Assets/player-old.png");
+        var selectedEntry = selected!.Units.Single().Entries.Single(entry => entry.Selected);
+        selectedEntry.SelectionValidation!.Status.Should().Be("smoke_passed");
+        selectedEntry.SelectionValidation.ScenePatch!.Applied.Should().BeTrue();
+        selectedEntry.SelectionValidation.SelectionSmoke!.Ran.Should().BeTrue();
+        runner.Commands.Should().ContainSingle(command => command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)));
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -1612,14 +1907,63 @@ public sealed class ArtifactReadbackServiceTests
         return result.ProjectId!;
     }
 
-    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
+    private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? assetAllowedUrls = null, string? godotBin = null)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var values = new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repoRoot
-        });
+        };
+        if (!string.IsNullOrWhiteSpace(assetAllowedUrls))
+        {
+            values["PHASEA_ASSET_ALLOWED_URLS"] = assetAllowedUrls;
+        }
+        if (!string.IsNullOrWhiteSpace(godotBin))
+        {
+            values["GODOT_BIN"] = godotBin;
+        }
+
+        return PhaseAPlatformOptionsLoader.FromDictionary(values);
+    }
+
+    private static string AssetLibraryJson(string projectId)
+    {
+        return """
+            {
+              "projectId": "PROJECT_ID",
+              "units": [
+                {
+                  "key": "player-unit",
+                  "instanceName": "PlayerSprite",
+                  "nodeType": "Sprite2D",
+                  "scenePath": "res://Game.Godot/Scenes/Main.tscn",
+                  "resourcePath": "res://Game.Godot/Assets/player-old.png",
+                  "kind": "player_sprite",
+                  "intendedUse": "player",
+                  "reason": "selected replacement",
+                  "selectedEntryId": "entry-1",
+                  "entries": [
+                    {
+                      "entryId": "entry-1",
+                      "createdUtc": "2026-06-06T00:00:00Z",
+                      "runId": "run-1",
+                      "actionId": "character-making-master",
+                      "skillName": "generate2dsprite",
+                      "prompt": "new player",
+                      "status": "succeeded",
+                      "assistantMessage": "",
+                      "artifactPaths": [
+                        "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png"
+                      ],
+                      "previewResourcePath": "res://Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png",
+                      "selected": true
+                    }
+                  ]
+                }
+              ]
+            }
+            """.Replace("PROJECT_ID", projectId, StringComparison.Ordinal);
     }
 
     private static void Write(string root, string relativePath, string content)
@@ -1817,6 +2161,11 @@ public sealed class ArtifactReadbackServiceTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)))
+            {
+                return Task.FromResult(new HostedProcessResult(_exitCode, _output, _exitCode == 0 ? "" : "smoke failed"));
+            }
+
             if (command.Arguments.Contains("--out", StringComparer.Ordinal))
             {
                 var outputPath = ReadArgument(command.Arguments, "--out")!;
@@ -1900,6 +2249,69 @@ public sealed class ArtifactReadbackServiceTests
             }
 
             return null;
+        }
+    }
+
+    private sealed class FakeAssetHttpHandler : HttpMessageHandler
+    {
+        private readonly byte[] _content;
+        private readonly string _mediaType;
+
+        public FakeAssetHttpHandler(byte[] content, string mediaType = "image/png")
+        {
+            _content = content;
+            _mediaType = mediaType;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(_content)
+            };
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(_mediaType);
+            return Task.FromResult(response);
+        }
+    }
+
+    private sealed class RedirectAssetHttpHandler : HttpMessageHandler
+    {
+        private readonly string _location;
+
+        public RedirectAssetHttpHandler(string location)
+        {
+            _location = location;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            response.Headers.Location = new Uri(_location);
+            return Task.FromResult(response);
+        }
+    }
+
+    private sealed class FinalUriChangedAssetHttpHandler : HttpMessageHandler
+    {
+        private readonly byte[] _content;
+        private readonly string _finalUri;
+
+        public FinalUriChangedAssetHttpHandler(byte[] content, string finalUri)
+        {
+            _content = content;
+            _finalUri = finalUri;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.RequestUri = new Uri(_finalUri);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new ByteArrayContent(_content)
+            };
+            response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+            return Task.FromResult(response);
         }
     }
 

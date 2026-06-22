@@ -1,4 +1,4 @@
-﻿using PhaseA.Platform.Browser;
+using PhaseA.Platform.Browser;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -34,7 +34,6 @@ builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<GameTypeTemplateCatalog>();
-builder.Services.AddSingleton<BmadGameTypeDesignCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
 builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
@@ -76,6 +75,7 @@ builder.Services.AddSingleton<PrototypeIterationPlanService>();
 builder.Services.AddSingleton<PrototypeIterationGoalService>();
 builder.Services.AddSingleton<PrototypeRepairPlanService>();
 builder.Services.AddSingleton<PrototypeUiOptimizationService>();
+builder.Services.AddSingleton<GddMilestoneStepService>();
 builder.Services.AddSingleton<GameDesignDocumentService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
@@ -86,7 +86,11 @@ builder.Services.AddSingleton<ArtifactReadbackService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
 builder.Services.AddSingleton<ProjectAssetImageGenerator>();
-builder.Services.AddSingleton<ProjectAssetLibraryService>();
+builder.Services.AddHttpClient<ProjectAssetLibraryService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
 builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
 builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
 builder.Services.AddSingleton<LlmBindingService>();
@@ -123,7 +127,7 @@ if (interruptedRunCount > 0)
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "PhaseA.Platform", "wwwroot")),
+    FileProvider = new PhysicalFileProvider(ResolveStaticWebRoot(builder.Environment.ContentRootPath)),
     RequestPath = ""
 });
 
@@ -563,6 +567,34 @@ app.MapDelete("/api/projects/{projectId}/gdd/outline", async (
         : Results.Ok(result);
 });
 
+app.MapPost("/api/projects/{projectId}/gdd/outline/sections/complete-missing", async (
+    string projectId,
+    GameDesignOutlineCompleteAllRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await gdd.CompleteMissingSectionsAsync(
+            CurrentAccountId(context),
+            projectId,
+            request,
+            cancellationToken);
+        return result.Status is "queued" ? Results.Accepted($"/runs?projectId={Uri.EscapeDataString(projectId)}", result)
+            : result.Status is "succeeded" or "already_complete" ? Results.Ok(result)
+            : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async (
     string projectId,
     string sectionId,
@@ -730,6 +762,34 @@ app.MapPost("/api/projects/{projectId}/asset-library/generate", async (
     catch (AssetGenerationConcurrencyLimitException ex)
     {
         return Results.Json(new { error = ex.FailureCode }, statusCode: StatusCodes.Status429TooManyRequests);
+    }
+});
+
+app.MapPost("/api/projects/{projectId}/asset-library/import", async (
+    string projectId,
+    ProjectAssetImportRequest request,
+    HttpContext context,
+    [FromServices] ProjectAssetLibraryService library,
+    CancellationToken cancellationToken) =>
+{
+    if (request.Unit is null)
+    {
+        return Results.BadRequest(new { error = "asset_unit_required" });
+    }
+
+    if (string.IsNullOrWhiteSpace(request.QueryOrUrl))
+    {
+        return Results.BadRequest(new { error = "asset_keyword_or_url_required" });
+    }
+
+    try
+    {
+        var result = await library.ImportAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+        return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
     }
 });
 
@@ -1448,6 +1508,92 @@ app.MapDelete("/api/projects/{projectId}/iteration-plans/{sessionId}", async (
     }
 });
 
+app.MapGet("/api/projects/{projectId}/gdd-milestone-steps/latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    var result = await milestoneSteps.GetOrCreateLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "project_not_found" })
+        : result.Status == "gdd_not_found"
+            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+            : Results.Ok(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/iteration-plan", async (
+    string projectId,
+    JsonElement request,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    var model = request.TryGetProperty("model", out var modelElement) && modelElement.ValueKind == JsonValueKind.String
+        ? modelElement.GetString()
+        : null;
+    var result = await milestoneSteps.CreateIterationPlanForCurrentStepAsync(CurrentAccountId(context), projectId, model, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked"
+        ? Results.Ok(result)
+        : result.Status == "gdd_not_found"
+            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+            : Results.BadRequest(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/confirm", async (
+    string projectId,
+    string stepId,
+    GddMilestoneStepConfirmRequest request,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    var result = await milestoneSteps.ConfirmAsync(CurrentAccountId(context), projectId, stepId, request, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return result.Status == "confirmed"
+        ? Results.Ok(result)
+        : result.Status == "gdd_not_found"
+            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+            : Results.BadRequest(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/feedback-run", async (
+    string projectId,
+    string stepId,
+    GddMilestoneStepFeedbackRequest request,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await milestoneSteps.SubmitFeedbackAsync(CurrentAccountId(context), projectId, stepId, request, cancellationToken);
+        if (result is null)
+        {
+            return Results.NotFound(new { error = "project_not_found" });
+        }
+
+        return result.Status is "completed" or "missing_feedback" or "prototype_not_ready"
+            ? Results.Ok(result)
+            : result.Status == "gdd_not_found"
+                ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+                : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/iteration-plan/evaluate", async (
     string projectId,
     PrototypeIterationPlanEvaluationRequest request,
@@ -1835,6 +1981,30 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
     }
 });
 
+app.MapPost("/api/projects/{projectId}/prototype-7day-playable/from-gdd", async (
+    string projectId,
+    PrototypeFromGddRequest request,
+    HttpContext context,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeWorkflow.QueueFromGddAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+        return result.Status switch
+        {
+            "queued" => Results.Json(result, statusCode: StatusCodes.Status202Accepted),
+            "gdd_not_found" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
+            "gdd_empty" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            _ => Results.BadRequest(result)
+        };
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapGet("/api/projects/{projectId}/prototype-7day-playable/progress", async (
     string projectId,
     HttpContext context,
@@ -2020,6 +2190,23 @@ static IResult CancelledRunResult()
     return Results.Json(
         new { status = "cancel", error = "run_cancelled" },
         statusCode: 499);
+}
+
+static string ResolveStaticWebRoot(string contentRootPath)
+{
+    var contentRootWwwroot = Path.Combine(contentRootPath, "wwwroot");
+    if (Directory.Exists(contentRootWwwroot))
+    {
+        return contentRootWwwroot;
+    }
+
+    var repositoryWwwroot = Path.Combine(contentRootPath, "PhaseA.Platform", "wwwroot");
+    if (Directory.Exists(repositoryWwwroot))
+    {
+        return repositoryWwwroot;
+    }
+
+    return contentRootWwwroot;
 }
 
 static bool TryReadApiProjectId(PathString path, out string projectId)

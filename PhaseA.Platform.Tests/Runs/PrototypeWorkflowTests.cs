@@ -324,6 +324,67 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueFromGddAsync_BlocksUntilGddExists()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+
+        var result = await service.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest());
+
+        result.Status.Should().Be("gdd_not_found");
+        result.ExitCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task QueueFromGddAsync_UsesCurrentProjectGddAsPrototypeSource()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "Phantom Tower Like", "Phantom Tower");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
+        # Phantom Tower Like
+
+        ## Reference Game
+        Reference game: Phantom Tower. Borrow third-person action roguelike pacing.
+
+        ## Controls
+        WASD movement, mouse facing, left click combo, space dodge, right/Q/E skills.
+
+        ## Core Loop
+        Enter a random dungeon room, fight waves, choose upgrades, preserve souls after death.
+
+        ## Scenes
+        Create a first dungeon room with player, enemy wave spawners, upgrade reward, HUD, and retry flow.
+
+        ## Milestones
+        M1 core combat, M2 active skills, M3 waves and upgrades. Adjust later steps after each playable validation.
+        """);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest(Model: "gpt-5.5"));
+        await WaitForAtLeastCommandsAsync(runner, 1);
+        var run = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        run.Status.Should().Be("succeeded");
+        var record = File.ReadAllText(Path.Combine(project.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar)));
+        record.Should().Contain("docs/gdd/GDD.md");
+        record.Should().Contain("Source Document");
+        record.Should().Contain("WASD movement");
+        record.Should().Contain("M1 core combat");
+    }
+
+    [Fact]
     public async Task QueueAsync_TimesOutInactivePrototypeCreationCodexAndReleasesProjectLock()
     {
         using var database = TempSqliteDatabase.Create();

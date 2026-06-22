@@ -13,6 +13,7 @@ namespace PhaseA.Platform.Runs;
 public sealed class PrototypeWorkflowService
 {
     private const string RunType = "prototype-7day-playable";
+    private const string GddRelativePath = "docs/gdd/GDD.md";
     private const int CurrentWorkflowMaxDay = 7;
     private const string RepairReasoningEffort = "high";
     private static readonly TimeSpan DefaultCreationTotalTimeout = TimeSpan.FromHours(1);
@@ -103,7 +104,10 @@ public sealed class PrototypeWorkflowService
             throw new InvalidOperationException("Project not found.");
         }
 
-        request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.SourceDocumentPath))
+        {
+            request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
+        }
         request = EnrichRequestFromProject(project, request);
         EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
@@ -259,7 +263,10 @@ public sealed class PrototypeWorkflowService
             throw new InvalidOperationException("Project not found.");
         }
 
-        request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.SourceDocumentPath))
+        {
+            request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
+        }
         request = EnrichRequestFromProject(project, request);
         EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
@@ -330,6 +337,38 @@ public sealed class PrototypeWorkflowService
             [],
             [],
             await GetProgressForProjectAsync(project, cancellationToken));
+    }
+
+    public async Task<PrototypeWorkflowResult> QueueFromGddAsync(
+        string accountId,
+        string projectId,
+        PrototypeFromGddRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Project not found.");
+        }
+
+        var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(gddPath))
+        {
+            return new PrototypeWorkflowResult("", "gdd_not_found", 404, "", "", "Create the GDD before creating the prototype skeleton.", [], []);
+        }
+
+        var gddText = await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken);
+        if (string.IsNullOrWhiteSpace(gddText))
+        {
+            return new PrototypeWorkflowResult("", "gdd_empty", 409, "", "", "The current GDD is empty.", [], []);
+        }
+
+        var workflowRequest = BuildPrototypeRequestFromGdd(project, gddText, request);
+        return await QueueAsync(accountId, projectId, workflowRequest, cancellationToken);
     }
 
     public async Task<PrototypeWorkflowResult> RepairAsync(string accountId, string projectId, PrototypeRepairRequest request, CancellationToken cancellationToken = default)
@@ -2506,7 +2545,9 @@ public sealed class PrototypeWorkflowService
             Confirm: request.Confirm,
             StopAfterDay: request.StopAfterDay,
             ScoreEngine: request.ScoreEngine,
-            Model: request.Model);
+            Model: request.Model,
+            SourceDocumentPath: request.SourceDocumentPath,
+            SourceDocumentSummary: request.SourceDocumentSummary);
     }
 
     private static PrototypeWorkflowRequest EnrichRequestFromProject(ProjectSnapshot project, PrototypeWorkflowRequest request)
@@ -2567,6 +2608,171 @@ public sealed class PrototypeWorkflowService
         return normalizedCurrent.Length == 0 || normalizedCurrent.All(LooksCorruptedText)
             ? draft.ToArray()
             : normalizedCurrent;
+    }
+
+    private static PrototypeWorkflowRequest BuildPrototypeRequestFromGdd(
+        ProjectSnapshot project,
+        string gddText,
+        PrototypeFromGddRequest request)
+    {
+        var title = FirstMarkdownHeading(gddText) ?? FirstNonEmpty(project.GameName, project.Name, "prototype");
+        var compact = CompactText(RemoveMarkdownNoise(gddText));
+        var summary = TrimText(compact, 1800);
+        var slug = PrototypeRecordWriter.SanitizeSlug(FirstNonEmpty(project.GameName, project.Name, title, "prototype"));
+        var loop = ExtractSection(gddText, "核心玩法", "核心循环", "玩法循环", "Core Loop", "Gameplay Loop", "Minimum Playable Loop");
+        var controls = ExtractSection(gddText, "键盘", "鼠标", "操作", "Controls", "Input");
+        var scenes = ExtractSection(gddText, "场景", "关卡", "地城", "地图", "World", "Level", "Scene");
+        var milestones = ExtractSection(gddText, "里程碑", "Milestone", "Prototype", "验收", "Acceptance");
+        var successCriteria = BuildGddSuccessCriteria(gddText, controls, scenes, loop, milestones);
+
+        return new PrototypeWorkflowRequest(
+            Slug: slug,
+            GameName: FirstNonEmpty(project.GameName, title),
+            GameType: NormalizeGameType(project.GameTypeSource),
+            GameTypeSource: project.GameTypeSource,
+            Hypothesis: $"以当前项目 GDD 为唯一设计来源，创建可运行的 Godot 原型骨架，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的核心方向。",
+            CorePlayerFantasy: TrimText(FirstNonEmpty(ExtractSection(gddText, "玩家幻想", "体验", "风格", "参考游戏", "Player Fantasy"), summary), 700),
+            MinimumPlayableLoop: TrimText(FirstNonEmpty(loop, summary), 900),
+            SuccessCriteria: successCriteria,
+            GameFeature: TrimText(FirstNonEmpty(scenes, loop, summary), 900),
+            CoreGameplayLoop: TrimText(FirstNonEmpty(loop, controls, summary), 900),
+            WinFailConditions: TrimText(FirstNonEmpty(ExtractSection(gddText, "胜利", "失败", "目标", "Win", "Fail", "Goal"), milestones, summary), 700),
+            Confirm: request.Confirm,
+            StopAfterDay: request.StopAfterDay,
+            ScoreEngine: string.IsNullOrWhiteSpace(request.ScoreEngine) ? "deterministic" : request.ScoreEngine,
+            Model: request.Model,
+            SourceDocumentPath: GddRelativePath,
+            SourceDocumentSummary: summary);
+    }
+
+    private static IReadOnlyList<string> BuildGddSuccessCriteria(
+        string gddText,
+        string? controls,
+        string? scenes,
+        string? loop,
+        string? milestones)
+    {
+        var criteria = new List<string>();
+        AddCriterion(criteria, "原型骨架必须直接反映当前 GDD，不再使用骨架页面表单或导入文件作为设计来源。");
+        AddCriterion(criteria, FirstNonEmpty(controls, "键盘鼠标基础操作必须在首个可玩场景中有明确映射。"));
+        AddCriterion(criteria, FirstNonEmpty(scenes, "必须创建能表达参考游戏方向的首个可玩场景或场景占位。"));
+        AddCriterion(criteria, FirstNonEmpty(loop, "必须具备可进入、可操作、可反馈的基础玩法循环。"));
+        AddCriterion(criteria, FirstNonEmpty(milestones, "后续游戏模块 step 必须能从 GDD 的里程碑或验收内容继续拆分。"));
+
+        foreach (var bullet in ExtractAcceptanceBullets(gddText).Take(3))
+        {
+            AddCriterion(criteria, bullet);
+        }
+
+        return criteria;
+    }
+
+    private static IEnumerable<string> ExtractAcceptanceBullets(string text)
+    {
+        var capture = false;
+        foreach (var rawLine in text.Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.StartsWith("##", StringComparison.Ordinal))
+            {
+                capture = ContainsAny(line, "验收", "验证", "Acceptance", "Verification", "里程碑", "Milestone");
+                continue;
+            }
+
+            if (!capture || line.Length < 4)
+            {
+                continue;
+            }
+
+            if (line.StartsWith("-", StringComparison.Ordinal) ||
+                line.StartsWith("*", StringComparison.Ordinal) ||
+                Regex.IsMatch(line, @"^\d+[\.)]\s+"))
+            {
+                yield return TrimText(Regex.Replace(line, @"^[-*]\s+|^\d+[\.)]\s+", ""), 220);
+            }
+        }
+    }
+
+    private static void AddCriterion(List<string> criteria, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        var normalized = TrimText(CompactText(value), 260);
+        if (!criteria.Any(item => string.Equals(item, normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            criteria.Add(normalized);
+        }
+    }
+
+    private static string? FirstMarkdownHeading(string text)
+    {
+        foreach (var line in text.Split('\n'))
+        {
+            var trimmed = line.Trim();
+            if (trimmed.StartsWith("# ", StringComparison.Ordinal))
+            {
+                return trimmed[2..].Trim();
+            }
+        }
+
+        return null;
+    }
+
+    private static string? ExtractSection(string text, params string[] headingKeywords)
+    {
+        var lines = text.Split('\n');
+        var capture = false;
+        var captured = new List<string>();
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.TrimEnd();
+            if (line.TrimStart().StartsWith("#", StringComparison.Ordinal))
+            {
+                if (capture && captured.Count > 0)
+                {
+                    break;
+                }
+
+                capture = headingKeywords.Any(keyword => line.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+                continue;
+            }
+
+            if (capture)
+            {
+                captured.Add(line);
+                if (captured.Count >= 18)
+                {
+                    break;
+                }
+            }
+        }
+
+        var value = CompactText(string.Join(" ", captured));
+        return string.IsNullOrWhiteSpace(value) ? null : TrimText(value, 900);
+    }
+
+    private static string RemoveMarkdownNoise(string text)
+    {
+        var lines = text.Split('\n')
+            .Select(line => Regex.Replace(line, @"^\s{0,3}#{1,6}\s*", ""))
+            .Select(line => Regex.Replace(line, @"^\s*[-*]\s*", ""))
+            .Select(line => Regex.Replace(line, @"\*\*|__|`", ""))
+            .Where(line => !string.IsNullOrWhiteSpace(line));
+        return string.Join(" ", lines);
+    }
+
+    private static string CompactText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "" : Regex.Replace(value.Trim(), @"\s+", " ");
+    }
+
+    private static string TrimText(string? value, int maxLength)
+    {
+        var compact = CompactText(value);
+        return compact.Length <= maxLength ? compact : compact[..maxLength].TrimEnd() + "...";
     }
 
     private static bool LooksCorruptedText(string? value)

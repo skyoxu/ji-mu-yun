@@ -58,6 +58,7 @@ public static class PhaseAPlatformOptionsLoader
                 "AICODEMIRROR_CODEX_HOME_ROOT",
                 Path.Combine(Path.GetDirectoryName(metadataDatabasePath) ?? AppContext.BaseDirectory, "aicodemirror-codex-homes")),
             "AICODEMIRROR_CODEX_HOME_ROOT");
+        var assetAllowedUrlPrefixes = ParseHttpsUrlPrefixes(get, "PHASEA_ASSET_ALLOWED_URLS");
 
         return new PhaseAPlatformOptions(
             workspaceRoot,
@@ -92,7 +93,8 @@ public static class PhaseAPlatformOptionsLoader
             aiCodeMirrorBaseUrl,
             aiCodeMirrorCookie,
             aiCodeMirrorApiKeyName,
-            aiCodeMirrorCodexHomeRoot);
+            aiCodeMirrorCodexHomeRoot,
+            assetAllowedUrlPrefixes);
     }
 
     private static string GetString(Func<string, string?> get, string name, string defaultValue)
@@ -204,6 +206,22 @@ public static class PhaseAPlatformOptionsLoader
         }
 
         return uri.ToString().TrimEnd('/');
+    }
+
+    private static IReadOnlyList<string> ParseHttpsUrlPrefixes(Func<string, string?> get, string name)
+    {
+        var raw = get(name);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [];
+        }
+
+        var prefixes = raw
+            .Split([';', ',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => ValidateHttpsUrl(value, name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return prefixes;
     }
 
     private static string NormalizeWorkspaceRoot(string value)
