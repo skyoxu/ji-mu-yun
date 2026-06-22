@@ -19,6 +19,17 @@ public sealed record GameDesignOutlineSectionRequest(
     string? Message,
     string? Model = null);
 
+public sealed record GameDesignOutlineSectionSaveRequest(
+    string? SectionId,
+    string? Skeleton,
+    string? Content);
+
+public sealed record GameDesignOutlineSectionSaveResult(
+    string ProjectId,
+    string Status,
+    string SectionId,
+    string Summary);
+
 public sealed record GameDesignOutlineCompleteAllRequest(
     string? Message,
     string? Model = null);

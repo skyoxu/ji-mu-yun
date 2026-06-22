@@ -147,7 +147,7 @@ public sealed class GameDesignDocumentService
             var model = PrototypeModelPolicy.Normalize(request.Model);
             var runtimeOutputPath = CreateShortRuntimeOutputPath(runId);
             var generatedNotBeforeUtc = DateTimeOffset.UtcNow.AddSeconds(-2);
-            await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", "\u6b63\u5728\u4f7f\u7528 BMAD \u6e38\u620f\u7b56\u5212\u5927\u5e08\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u3002", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "running", "generation", "\u6b63\u5728\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u3002", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
@@ -173,7 +173,7 @@ public sealed class GameDesignDocumentService
                     expected_file = OutlineRelativePath
                 });
                 await _metadataStore.CompleteRunAsync(runId, "failed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceFailed, CancellationToken.None);
-                await _metadataStore.UpdateRunProgressAsync(runId, "failed", "codex_failed", "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff0cBMAD \u8fd0\u884c\u672a\u6210\u529f\u5b8c\u6210\u3002", CancellationToken.None);
+                await _metadataStore.UpdateRunProgressAsync(runId, "failed", "codex_failed", "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff0c\u751f\u6210\u6d41\u7a0b\u672a\u6210\u529f\u5b8c\u6210\u3002", CancellationToken.None);
                 await RecordCodexAuditAsync(runId, RunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
                 return Failure(project.ProjectId, "codex_failed", "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff0c\u8bf7\u67e5\u770b\u8fd0\u884c\u8bb0\u5f55\u540e\u91cd\u8bd5\u3002", runId);
             }
@@ -204,7 +204,7 @@ public sealed class GameDesignDocumentService
             }
 
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-prompt", promptRelativePath, "Game design GDD generation prompt"), CancellationToken.None);
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-codex-output", codexOutputRelativePath, "Game design GDD Codex output"), CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-codex-output", codexOutputRelativePath, "Game design GDD generation output"), CancellationToken.None);
             await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, generatedOutline.Document, CancellationToken.None);
             if (File.Exists(outlineDraftAbsolutePath))
             {
@@ -492,7 +492,7 @@ public sealed class GameDesignDocumentService
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, "game-design-gdd-section", CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
-        await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", "BMAD \u6e38\u620f\u7b56\u5212\u6b63\u5728\u586b\u5145\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u3002", CancellationToken.None);
+        await _metadataStore.UpdateRunProgressAsync(runId, "running", "generation", "\u6b63\u5728\u586b\u5145\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u3002", CancellationToken.None);
 
         try
         {
@@ -543,7 +543,7 @@ public sealed class GameDesignDocumentService
                     expected_file = OutlineRelativePath
                 });
                 await _metadataStore.CompleteRunAsync(runId, "failed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceFailed, CancellationToken.None);
-                await _metadataStore.UpdateRunProgressAsync(runId, "failed", "codex_failed", "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff0cBMAD \u8fd0\u884c\u672a\u6210\u529f\u5b8c\u6210\u3002", CancellationToken.None);
+                await _metadataStore.UpdateRunProgressAsync(runId, "failed", "codex_failed", "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff0c\u751f\u6210\u6d41\u7a0b\u672a\u6210\u529f\u5b8c\u6210\u3002", CancellationToken.None);
                 await RecordCodexAuditAsync(runId, "game-design-gdd-section", model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
                 return Failure(project.ProjectId, "codex_failed", "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff0c\u8bf7\u67e5\u770b\u8fd0\u884c\u8bb0\u5f55\u540e\u91cd\u8bd5\u3002", runId);
             }
@@ -579,8 +579,8 @@ public sealed class GameDesignDocumentService
             {
                 var failureCode = updatedSection is null ? "gdd_outline_section_missing" : "gdd_outline_section_content_missing";
                 var failureSummary = updatedSection is null
-                    ? "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u4e2d\u7f3a\u5c11\u5f53\u524d\u6761\u76ee\u3002"
-                    : "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff1aBMAD \u672a\u5199\u5165\u5177\u4f53\u5185\u5bb9\u3002";
+                    ? "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u4e2d\u7f3a\u5c11\u5f53\u524d\u6761\u76ee\u3002"
+                    : "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u751f\u6210\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u672a\u5199\u5165\u5177\u4f53\u5185\u5bb9\u3002";
                 await _metadataStore.CompleteRunAsync(runId, "failed", 424, codexResult.Stdout, codexResult.Stderr, JsonSerializer.Serialize(new
                 {
                     run_type = "game-design-gdd-section",
@@ -599,7 +599,7 @@ public sealed class GameDesignDocumentService
             var mergedOutline = MergeSectionContent(outline, updatedSection);
             await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, mergedOutline, CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-prompt", promptRelativePath, "Game design outline section prompt"), CancellationToken.None);
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-output", codexOutputRelativePath, "Game design outline section Codex output"), CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-output", codexOutputRelativePath, "Game design outline section generation output"), CancellationToken.None);
             if (File.Exists(outlineDraftAbsolutePath))
             {
                 await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline-draft", outlineDraftRelativePath, "Game design outline draft"), CancellationToken.None);
@@ -647,6 +647,76 @@ public sealed class GameDesignDocumentService
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
+    }
+
+    public async Task<GameDesignOutlineSectionSaveResult?> SaveSectionAsync(
+        string accountId,
+        string projectId,
+        GameDesignOutlineSectionSaveRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Project not found.");
+        }
+
+        var sectionId = (request.SectionId ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(sectionId))
+        {
+            return null;
+        }
+
+        var projectRoot = Path.GetFullPath(project.RepoPath);
+        if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
+        {
+            throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
+        }
+
+        var outlineAbsolutePath = ResolveUnderProject(projectRoot, OutlineRelativePath);
+        var gddAbsolutePath = ResolveUnderProject(projectRoot, OutputRelativePath);
+        if (!File.Exists(outlineAbsolutePath))
+        {
+            return null;
+        }
+
+        var outline = await ReadOutlineDocumentAsync(outlineAbsolutePath, cancellationToken);
+        var found = false;
+        var sections = outline.Sections
+            .Select(section =>
+            {
+                if (!string.Equals(section.Id, sectionId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return section;
+                }
+
+                found = true;
+                return section with
+                {
+                    Skeleton = string.IsNullOrWhiteSpace(request.Skeleton)
+                        ? "\u5f85\u8865\u5145\u9aa8\u67b6\u3002"
+                        : request.Skeleton.Trim(),
+                    Content = request.Content?.Trim() ?? ""
+                };
+            })
+            .ToArray();
+
+        if (!found)
+        {
+            return null;
+        }
+
+        var updated = new GameDesignOutlineDocument(outline.Title, outline.Summary, sections);
+        await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, updated, cancellationToken);
+        return new GameDesignOutlineSectionSaveResult(
+            project.ProjectId,
+            "succeeded",
+            sectionId,
+            "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u5df2\u4fdd\u5b58\u3002");
     }
 
     public async Task<GameDesignOutlineCompleteAllResult> CompleteMissingSectionsAsync(
@@ -775,6 +845,22 @@ public sealed class GameDesignDocumentService
         var memory = await _metadataStore.GetProjectChatMemoryAsync(project.AccountId, project.ProjectId, CancellationToken.None);
         var historicalAttachments = LoadHistoricalAttachments(projectRoot, []);
 
+        if (pendingSectionIds.Count >= 3)
+        {
+            await RunCompleteMissingSectionsInSingleCodexAsync(
+                project,
+                request,
+                runId,
+                pendingSectionIds,
+                projectRoot,
+                outlineAbsolutePath,
+                gddAbsolutePath,
+                model,
+                memory?.MemorySummary,
+                historicalAttachments);
+            return;
+        }
+
         for (var index = 0; index < pendingSectionIds.Count; index++)
         {
             var outline = await ReadOutlineDocumentAsync(outlineAbsolutePath, CancellationToken.None);
@@ -817,7 +903,7 @@ public sealed class GameDesignDocumentService
             }
 
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-prompt", promptRelativePath, "Game design outline section prompt"), CancellationToken.None);
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-output", codexOutputRelativePath, "Game design outline section Codex output"), CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-output", codexOutputRelativePath, "Game design outline section generation output"), CancellationToken.None);
 
             if (codexResult.ExitCode != 0)
             {
@@ -859,6 +945,134 @@ public sealed class GameDesignDocumentService
         await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline", OutlineRelativePath, "Game design outline"), CancellationToken.None);
         await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, ArtifactType, OutputRelativePath, "Game design document"), CancellationToken.None);
         await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, sectionResults, "succeeded", 0, "", "");
+    }
+
+    private async Task RunCompleteMissingSectionsInSingleCodexAsync(
+        ProjectSnapshot project,
+        GameDesignOutlineCompleteAllRequest request,
+        string runId,
+        IReadOnlyList<string> pendingSectionIds,
+        string projectRoot,
+        string outlineAbsolutePath,
+        string gddAbsolutePath,
+        string model,
+        string? memorySummary,
+        IReadOnlyList<TextAttachment> historicalAttachments)
+    {
+        await _metadataStore.UpdateRunProgressAsync(runId, "running", "batch-single-run", $"\u6b63\u5728\u4e00\u6b21\u6027\u8865\u5168 {pendingSectionIds.Count} \u4e2a\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u3002", CancellationToken.None);
+
+        var outline = await ReadOutlineDocumentAsync(outlineAbsolutePath, CancellationToken.None);
+        var pendingSections = outline.Sections
+            .Where(section => pendingSectionIds.Any(id => string.Equals(id, section.Id, StringComparison.OrdinalIgnoreCase)))
+            .Where(section => string.IsNullOrWhiteSpace(section.Content))
+            .ToArray();
+        if (pendingSections.Length == 0)
+        {
+            await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, [], "succeeded", 0, "", "");
+            return;
+        }
+
+        var relativeDir = ToSlash(Path.Combine("logs", "phase-a-gdd", project.ProjectId, runId, "batch"));
+        var promptRelativePath = ToSlash(Path.Combine(relativeDir, "gdd-sections-batch-prompt.md"));
+        var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
+        var outlineDraftRelativePath = ToSlash(Path.Combine(relativeDir, "gdd-outline.generated.json"));
+        var promptAbsolutePath = ResolveUnderProject(projectRoot, promptRelativePath);
+        var codexOutputAbsolutePath = ResolveUnderProject(projectRoot, codexOutputRelativePath);
+        var outlineDraftAbsolutePath = ResolveUnderProject(projectRoot, outlineDraftRelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(promptAbsolutePath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(outlineDraftAbsolutePath)!);
+        File.Delete(outlineDraftAbsolutePath);
+
+        var prompt = BuildBatchSectionsPrompt(
+            project,
+            outline,
+            pendingSections,
+            request.Message ?? "",
+            memorySummary,
+            historicalAttachments,
+            DateTimeOffset.UtcNow.ToString("O"),
+            outlineDraftRelativePath);
+        await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
+
+        using var timeout = new CancellationTokenSource();
+        timeout.CancelAfter(_executionTimeout);
+        var runtimeOutputPath = CreateShortRuntimeOutputPath(runId);
+        var generatedNotBeforeUtc = DateTimeOffset.UtcNow.AddSeconds(-2);
+        var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
+        var billingKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
+        var billingBefore = await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None);
+        var codexResult = await _processRunner.RunAsync(
+            CodexHostedProcessCommandFactory.ApplyRuntime(BuildCodexCommand(prompt, runtimeOutputPath, model, project.RepoPath), runtimeCredential).WithRunId(runId),
+            timeout.Token);
+        var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingKeyName, CancellationToken.None));
+        if (File.Exists(runtimeOutputPath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
+            File.Copy(runtimeOutputPath, codexOutputAbsolutePath, overwrite: true);
+        }
+
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-prompt", promptRelativePath, "Game design outline batch prompt"), CancellationToken.None);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-section-output", codexOutputRelativePath, "Game design outline batch generation output"), CancellationToken.None);
+
+        if (codexResult.ExitCode != 0)
+        {
+            var failedResults = pendingSections
+                .Select(section => new GameDesignOutlineCompleteAllSectionResult(section.Id, section.Title, "codex_failed", runId, "codex_failed", "\u7b56\u5212\u5927\u7eb2\u6279\u91cf\u751f\u6210\u5931\u8d25\u3002"))
+                .ToArray();
+            await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, failedResults, "partial_failed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr);
+            await RecordCodexAuditAsync(runId, SectionBatchRunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
+            return;
+        }
+
+        var generatedOutline = await LoadGeneratedOutlineAsync(
+            generatedNotBeforeUtc,
+            minimumSectionCount: 1,
+            rejectPlaceholderFields: false,
+            requireUiUxSection: false,
+            CancellationToken.None,
+            new OutlineCandidate(outlineDraftAbsolutePath, outlineDraftRelativePath),
+            new OutlineCandidate(outlineAbsolutePath, OutlineRelativePath));
+        if (generatedOutline.Document is null)
+        {
+            var failedResults = pendingSections
+                .Select(section => new GameDesignOutlineCompleteAllSectionResult(section.Id, section.Title, generatedOutline.FailureCode, runId, generatedOutline.FailureCode, generatedOutline.FailureSummary))
+                .ToArray();
+            await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, failedResults, "partial_failed", 424, codexResult.Stdout, codexResult.Stderr);
+            await RecordCodexAuditAsync(runId, SectionBatchRunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
+            return;
+        }
+
+        var updatedById = generatedOutline.Document.Sections
+            .Where(section => pendingSections.Any(pending => string.Equals(pending.Id, section.Id, StringComparison.OrdinalIgnoreCase)))
+            .GroupBy(section => section.Id, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        var sectionResults = new List<GameDesignOutlineCompleteAllSectionResult>();
+        foreach (var pendingSection in pendingSections)
+        {
+            if (!updatedById.TryGetValue(pendingSection.Id, out var updatedSection) || string.IsNullOrWhiteSpace(updatedSection.Content))
+            {
+                var failureCode = updatedSection is null ? "gdd_outline_section_missing" : "gdd_outline_section_content_missing";
+                sectionResults.Add(new GameDesignOutlineCompleteAllSectionResult(pendingSection.Id, pendingSection.Title, failureCode, runId, failureCode, "\u7b56\u5212\u5927\u7eb2\u6279\u91cf\u751f\u6210\u672a\u5199\u5165\u6240\u6709\u7f3a\u5931\u6761\u76ee\u3002"));
+                await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, sectionResults, "partial_failed", 424, codexResult.Stdout, codexResult.Stderr);
+                await RecordCodexAuditAsync(runId, SectionBatchRunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
+                return;
+            }
+
+            sectionResults.Add(new GameDesignOutlineCompleteAllSectionResult(pendingSection.Id, pendingSection.Title, "succeeded", runId, null, "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u5185\u5bb9\u5df2\u66f4\u65b0\u3002"));
+        }
+
+        var latestOutline = await ReadOutlineDocumentAsync(outlineAbsolutePath, CancellationToken.None);
+        var mergedOutline = MergeSectionContents(latestOutline, updatedById.Values);
+        await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, mergedOutline, CancellationToken.None);
+        if (File.Exists(outlineDraftAbsolutePath))
+        {
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline-draft", outlineDraftRelativePath, "Game design outline draft"), CancellationToken.None);
+        }
+
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline", OutlineRelativePath, "Game design outline"), CancellationToken.None);
+        await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, ArtifactType, OutputRelativePath, "Game design document"), CancellationToken.None);
+        await CompleteBatchRunAsync(project.ProjectId, runId, model, pendingSectionIds.Count, sectionResults, "succeeded", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr);
+        await RecordCodexAuditAsync(runId, SectionBatchRunType, model, project.ProjectId, codexResult, providerBilling, CancellationToken.None);
     }
 
     private async Task CompleteBatchRunAsync(
@@ -1058,6 +1272,66 @@ public sealed class GameDesignDocumentService
             - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
             - Stay inside this section's scope.
             - If this section concerns reference, scenes, controls, UI/UX/HUD, player feedback, core loop, prototype acceptance, or milestones, preserve the hard GDD requirements: reference game/design signal, scene creation content, keyboard/mouse basics, basic gameplay loop, lightweight UI/UX pre-design, and dynamic milestone steps based on actual scope rather than fixed M1-M10.
+            - For UI/UX/HUD content, include only development-guiding pre-design before features are built: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
+            - For implementation-facing UI/UX notes, keep structure stable: screen id, scene path, input action, and state names should be reusable across milestones; placeholder UI is acceptable; player-visible text should be localized or centralized instead of hardcoded in isolated gameplay code; repeated buttons and panels should share a style/component approach.
+            - For post-feature UI/UX retrofit notes, describe when to add theme tokens, component kit, screen contracts, screenshot acceptance, focus checks, localization checks, and overflow checks.
+            - content may contain compact headings, bullet points, rules, and acceptance notes.
+            - Final assistant reply should be 1 to 3 short sentences only; do not print the whole JSON.
+            """;
+    }
+
+    private static string BuildBatchSectionsPrompt(
+        ProjectSnapshot project,
+        GameDesignOutlineDocument outline,
+        IReadOnlyList<GameDesignOutlineSection> sections,
+        string message,
+        string? memorySummary,
+        IReadOnlyList<TextAttachment> historicalAttachments,
+        string now,
+        string outlineDraftRelativePath)
+    {
+        return $$"""
+            Use the $bmad-agent-game-designer BMAD game design skill. This run fills multiple planning outline sections in one pass for speed and consistency.
+
+            Source file: docs/gdd/gdd-outline.json
+            Draft output file: {{outlineDraftRelativePath}}
+            Read the source file, update only the section.content fields listed below, and write the full updated JSON document to the draft output file. Do not change title, summary, section ids, section titles, skeletons, or existing non-empty content.
+            The host service will validate the draft and then write docs/gdd/gdd-outline.json itself. Do not write docs/gdd/gdd-outline.json directly.
+
+            Priority and conflict rules:
+            1. The editor input below has the highest priority.
+            2. The existing outline skeleton is the authoritative section boundary.
+            3. Historical uploaded TXT references have medium priority.
+            4. Project memory and implicit LLM context have low priority.
+            If sources conflict, keep the higher-priority source and discard or ignore conflicting lower-priority details.
+
+            Scope:
+            - Project: {{project.GameName}} / {{project.GameTypeSource}}
+            - Outline title: {{outline.Title}}
+            - Missing section count: {{sections.Count}}
+            - Missing sections:
+            {{FormatBatchSections(sections)}}
+            - Time: {{now}}
+
+            Editor input, highest priority:
+            {{EmptyAsNone(message)}}
+
+            Historical uploaded TXT references, medium priority:
+            {{FormatAttachments(historicalAttachments)}}
+
+            Project chat memory, low priority:
+            {{EmptyAsNone(memorySummary)}}
+
+            Requirements:
+            - Write every listed section.content in Chinese.
+            - Fill all listed missing sections in this single run.
+            - Keep each section inside its own scope and avoid duplicating the same prose across sections.
+            - Preserve all non-empty content already present in the source file.
+            - The draft file must preserve Chinese characters. Do not replace Chinese with question marks.
+            - The raw JSON draft file must be ASCII-only. All Chinese text must be written as JSON unicode escapes in the file, for example "\u6838\u5fc3\u5faa\u73af", so Windows console encoding cannot corrupt it.
+            - Use Python with UTF-8 and json.dumps(..., ensure_ascii=True, indent=2) or an equivalent structured JSON writer. Do not use PowerShell Set-Content, Out-File, echo, shell redirection, or console-default encoding to write Chinese text.
+            - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
+            - If sections concern reference, scenes, controls, UI/UX/HUD, player feedback, core loop, prototype acceptance, or milestones, preserve the hard GDD requirements: reference game/design signal, scene creation content, keyboard/mouse basics, basic gameplay loop, lightweight UI/UX pre-design, and dynamic milestone steps based on actual scope rather than fixed M1-M10.
             - For UI/UX/HUD content, include only development-guiding pre-design before features are built: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
             - For implementation-facing UI/UX notes, keep structure stable: screen id, scene path, input action, and state names should be reusable across milestones; placeholder UI is acceptable; player-visible text should be localized or centralized instead of hardcoded in isolated gameplay code; repeated buttons and panels should share a style/component approach.
             - For post-feature UI/UX retrofit notes, describe when to add theme tokens, component kit, screen contracts, screenshot acceptance, focus checks, localization checks, and overflow checks.
@@ -1321,6 +1595,20 @@ public sealed class GameDesignDocumentService
         return builder.ToString().Trim();
     }
 
+    private static string FormatBatchSections(IReadOnlyList<GameDesignOutlineSection> sections)
+    {
+        var builder = new StringBuilder();
+        foreach (var section in sections)
+        {
+            builder.AppendLine($"- Section id: {section.Id}");
+            builder.AppendLine($"  Title: {section.Title}");
+            builder.AppendLine($"  Skeleton: {section.Skeleton}");
+            builder.AppendLine($"  Existing content: {EmptyAsNone(section.Content)}");
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
     private static string FormatDesignTemplate(SelectedGameTypeDesignTemplate? selected)
     {
         if (selected is null)
@@ -1401,7 +1689,7 @@ public sealed class GameDesignDocumentService
 
     private static async Task<GameDesignOutlineDocument> ReadOutlineDocumentAsync(string outlinePath, CancellationToken cancellationToken)
     {
-        await using var stream = File.OpenRead(outlinePath);
+        await using var stream = new FileStream(outlinePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         var document = await JsonSerializer.DeserializeAsync<GameDesignOutlineDocument>(stream, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -1425,11 +1713,34 @@ public sealed class GameDesignDocumentService
         CancellationToken cancellationToken)
     {
         ThrowIfGarbled(document);
-        await File.WriteAllTextAsync(outlinePath, JsonSerializer.Serialize(document, new JsonSerializerOptions
+        await WriteUtf8AtomicallyAsync(outlinePath, JsonSerializer.Serialize(document, new JsonSerializerOptions
         {
             WriteIndented = true
-        }), Encoding.UTF8, cancellationToken);
-        await File.WriteAllTextAsync(gddPath, RenderOutlineMarkdown(document), Encoding.UTF8, cancellationToken);
+        }), cancellationToken);
+        await WriteUtf8AtomicallyAsync(gddPath, RenderOutlineMarkdown(document), cancellationToken);
+    }
+
+    private static async Task WriteUtf8AtomicallyAsync(string path, string content, CancellationToken cancellationToken)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var tempPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(tempPath, content, Encoding.UTF8, cancellationToken);
+            File.Move(tempPath, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+        }
     }
 
     private static GameDesignOutlineDocument NormalizeOutlineDocument(GameDesignOutlineDocument? document)
@@ -1483,35 +1794,35 @@ public sealed class GameDesignDocumentService
             {
                 return GeneratedOutlineResult.Failed(
                     "gdd_outline_invalid_json",
-                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u7684 JSON \u65e0\u6cd5\u89e3\u6790\u3002");
+                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u7684 JSON \u65e0\u6cd5\u89e3\u6790\u3002");
             }
 
             if (ContainsGarbledText(document))
             {
                 return GeneratedOutlineResult.Failed(
                     "gdd_outline_garbled_text",
-                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u7684\u4e2d\u6587\u53d8\u6210\u4e86\u8fde\u7eed\u95ee\u53f7\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
+                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u7684\u4e2d\u6587\u53d8\u6210\u4e86\u8fde\u7eed\u95ee\u53f7\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
             }
 
             if (document.Sections.Count < minimumSectionCount)
             {
                 return GeneratedOutlineResult.Failed(
                     "gdd_outline_too_thin",
-                    $"\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u7684\u5927\u7eb2\u7ed3\u6784\u8fc7\u8584\uff0c\u81f3\u5c11\u9700\u8981 {minimumSectionCount} \u4e2a\u6761\u76ee\u3002");
+                    $"\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u7684\u5927\u7eb2\u7ed3\u6784\u8fc7\u8584\uff0c\u81f3\u5c11\u9700\u8981 {minimumSectionCount} \u4e2a\u6761\u76ee\u3002");
             }
 
             if (rejectPlaceholderFields && ContainsPlaceholderOutline(document))
             {
                 return GeneratedOutlineResult.Failed(
                     "gdd_outline_placeholder",
-                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u7684\u5927\u7eb2\u4ecd\u5305\u542b\u5360\u4f4d\u6807\u9898\u6216\u5360\u4f4d\u9aa8\u67b6\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
+                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u7684\u5927\u7eb2\u4ecd\u5305\u542b\u5360\u4f4d\u6807\u9898\u6216\u5360\u4f4d\u9aa8\u67b6\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
             }
 
             if (requireUiUxSection && !ContainsUiUxSection(document))
             {
                 return GeneratedOutlineResult.Failed(
                     "gdd_outline_missing_ui_ux",
-                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1aBMAD \u8f93\u51fa\u7684\u5927\u7eb2\u7f3a\u5c11 UI/UX/HUD \u6216\u73a9\u5bb6\u53cd\u9988\u76f8\u5173\u6761\u76ee\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
+                    "\u7b56\u5212\u5927\u7eb2\u521b\u5efa\u5931\u8d25\uff1a\u751f\u6210\u7ed3\u679c\u7684\u5927\u7eb2\u7f3a\u5c11 UI/UX/HUD \u6216\u73a9\u5bb6\u53cd\u9988\u76f8\u5173\u6761\u76ee\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002");
             }
 
             return GeneratedOutlineResult.Success(document);
@@ -1519,7 +1830,7 @@ public sealed class GameDesignDocumentService
 
         return GeneratedOutlineResult.Failed(
             "gdd_outline_not_created",
-            "BMAD \u5df2\u8fd0\u884c\uff0c\u4f46\u6ca1\u6709\u751f\u6210\u7b56\u5212\u5927\u7eb2\u6587\u4ef6\u3002");
+            "\u751f\u6210\u6d41\u7a0b\u5df2\u8fd0\u884c\uff0c\u4f46\u6ca1\u6709\u751f\u6210\u7b56\u5212\u5927\u7eb2\u6587\u4ef6\u3002");
     }
 
     private static GameDesignOutlineDocument MergeSectionContent(GameDesignOutlineDocument current, GameDesignOutlineSection updatedSection)
@@ -1527,6 +1838,19 @@ public sealed class GameDesignDocumentService
         var sections = current.Sections
             .Select(section => string.Equals(section.Id, updatedSection.Id, StringComparison.OrdinalIgnoreCase)
                 ? section with { Content = updatedSection.Content }
+                : section)
+            .ToArray();
+        return new GameDesignOutlineDocument(current.Title, current.Summary, sections);
+    }
+
+    private static GameDesignOutlineDocument MergeSectionContents(GameDesignOutlineDocument current, IEnumerable<GameDesignOutlineSection> updatedSections)
+    {
+        var updatedById = updatedSections
+            .GroupBy(section => section.Id, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        var sections = current.Sections
+            .Select(section => updatedById.TryGetValue(section.Id, out var updated)
+                ? section with { Content = updated.Content }
                 : section)
             .ToArray();
         return new GameDesignOutlineDocument(current.Title, current.Summary, sections);

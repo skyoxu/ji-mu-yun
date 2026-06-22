@@ -121,7 +121,7 @@ public sealed class PrototypeUiOptimizationService
                 Json: true));
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, cancellationToken);
             using var timeout = new CancellationTokenSource(_executionTimeout);
-            await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", "Codex \u6b63\u5728\u8fd0\u884c UI \u4f18\u5316\u8def\u7531\u3002", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "running", "generation", "\u6b63\u5728\u8fd0\u884c UI \u4f18\u5316\u8def\u7531\u3002", CancellationToken.None);
             codexStartedUtc = DateTimeOffset.UtcNow;
             var process = await _processRunner.RunAsync(
                 CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential).WithRunId(runId),
@@ -181,7 +181,7 @@ public sealed class PrototypeUiOptimizationService
                 new ArtifactCreationCommand(runId, project.ProjectId, "prototype-ui-optimization-prompt", promptRelativePath.Replace('\\', '/'), "UI optimization prompt"),
                 CancellationToken.None);
             await _metadataStore.AddArtifactAsync(
-                new ArtifactCreationCommand(runId, project.ProjectId, "prototype-ui-optimization-output", outputRelativePath.Replace('\\', '/'), "UI optimization Codex output"),
+                new ArtifactCreationCommand(runId, project.ProjectId, "prototype-ui-optimization-output", outputRelativePath.Replace('\\', '/'), "UI optimization generation output"),
                 CancellationToken.None);
             await _metadataStore.UpdateRunProgressAsync(
                 runId,
@@ -424,7 +424,7 @@ public sealed class PrototypeUiOptimizationService
             new ArtifactCreationCommand(runId, projectId, "prototype-ui-optimization-prompt", promptRelativePath.Replace('\\', '/'), "UI optimization prompt"),
             cancellationToken);
         await _metadataStore.AddArtifactAsync(
-            new ArtifactCreationCommand(runId, projectId, "prototype-ui-optimization-output", outputRelativePath.Replace('\\', '/'), "UI optimization Codex output"),
+            new ArtifactCreationCommand(runId, projectId, "prototype-ui-optimization-output", outputRelativePath.Replace('\\', '/'), "UI optimization generation output"),
             cancellationToken);
     }
 
@@ -629,7 +629,7 @@ public sealed class PrototypeUiOptimizationService
             Validation:
             - Keep the Godot project loadable.
             - Preserve existing scenes/scripts unless directly needed for UI alignment.
-            - Do not run long Godot/headless validation commands from this route; the platform runs a short Godot smoke after Codex exits.
+            - Do not run long Godot/headless validation commands from this route; the platform runs a short Godot smoke after generation exits.
             - If you validate locally, keep checks short and deterministic, such as a C# build or static scene/script inspection.
             - Leave full Godot prototype acceptance to the dedicated prototype acceptance route.
             - Report changed files and remaining gaps.

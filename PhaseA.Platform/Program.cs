@@ -622,6 +622,29 @@ app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async 
     }
 });
 
+app.MapPatch("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async (
+    string projectId,
+    string sectionId,
+    GameDesignOutlineSectionSaveRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await gdd.SaveSectionAsync(
+            CurrentAccountId(context),
+            projectId,
+            request with { SectionId = sectionId },
+            cancellationToken);
+        return result is null ? Results.NotFound(new { error = "gdd_outline_section_not_found" }) : Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapGet("/api/projects/{projectId}/gdd/download", async (
     string projectId,
     HttpContext context,

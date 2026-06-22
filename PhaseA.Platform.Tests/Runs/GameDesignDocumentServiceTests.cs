@@ -796,6 +796,122 @@ public sealed class GameDesignDocumentServiceTests
         outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content == "Already done.");
     }
 
+    [Fact]
+    public async Task CompleteMissingSectionsAsync_WhenThreeOrMoreMissing_ShouldUseSingleBatchCodexRun()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                { "id": "m1", "title": "M1", "skeleton": "First step.", "content": "" },
+                { "id": "m2", "title": "M2", "skeleton": "Second step.", "content": "" },
+                { "id": "m3", "title": "M3", "skeleton": "Third step.", "content": "" },
+                { "id": "m4", "title": "M4", "skeleton": "Keep step.", "content": "Already done." }
+              ]
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CompleteMissingSectionsAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineCompleteAllRequest(null, "gpt-5.4"));
+
+        result.Status.Should().Be("queued");
+        result.RequestedCount.Should().Be(3);
+        GameDesignOutlineReadResult? outline = null;
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            outline = await service.ReadOutlineAsync(accountId, projectId);
+            if (outline!.Sections.Any(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal)))
+            {
+                break;
+            }
+
+            await Task.Delay(100);
+        }
+
+        runner.Commands.Should().ContainSingle();
+        var prompt = runner.Commands[0].StandardInput;
+        prompt.Should().Contain("This run fills multiple planning outline sections");
+        prompt.Should().Contain("Fill all listed missing sections in this single run");
+        prompt.Should().Contain("- Section id: m1");
+        prompt.Should().Contain("- Section id: m2");
+        prompt.Should().Contain("- Section id: m3");
+        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated batch content for m1", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content.Contains("Generated batch content for m2", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m4" && item.Content == "Already done.");
+    }
+
+    [Fact]
+    public async Task SaveSectionAsync_ShouldUpdateSkeletonAndContentWithoutRunningCodex()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                { "id": "m1", "title": "M1", "skeleton": "Old skeleton.", "content": "Old content." },
+                { "id": "m2", "title": "M2", "skeleton": "Keep skeleton.", "content": "Keep content." }
+              ]
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.SaveSectionAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineSectionSaveRequest(
+                "m1",
+                "New skeleton.",
+                "New content."));
+
+        result!.Status.Should().Be("succeeded");
+        runner.Commands.Should().BeEmpty();
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Skeleton == "New skeleton." && item.Content == "New content.");
+        outline.Sections.Should().Contain(item => item.Id == "m2" && item.Skeleton == "Keep skeleton." && item.Content == "Keep content.");
+        var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
+        markdown.Should().Contain("**骨架**: New skeleton.");
+        markdown.Should().Contain("New content.");
+    }
+
     private static Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
         return CreateProjectAsync(store, options, accountId, "RPG");
@@ -879,7 +995,7 @@ public sealed class GameDesignDocumentServiceTests
                 var draftRelativePath = ExtractDraftRelativePath(command.StandardInput ?? "");
                 var outlinePath = Path.Combine(command.WorkingDirectory, draftRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(outlinePath)!);
-                File.WriteAllText(outlinePath, TryCreateSectionDraft(command.StandardInput ?? "") ?? (OutlineMode switch
+                File.WriteAllText(outlinePath, TryCreateBatchSectionsDraft(command.StandardInput ?? "") ?? TryCreateSectionDraft(command.StandardInput ?? "") ?? (OutlineMode switch
                 {
                     FakeOutlineMode.GarbledDraft => """
                         {
@@ -996,6 +1112,41 @@ public sealed class GameDesignDocumentServiceTests
                   "summary": "Summary",
                   "sections": [
                     { "id": "{{sectionId}}", "title": "{{sectionId}}", "skeleton": "Skeleton", "content": "Generated content for {{sectionId}}" }
+                  ]
+                }
+                """;
+        }
+
+        private static string? TryCreateBatchSectionsDraft(string prompt)
+        {
+            if (!prompt.Contains("This run fills multiple planning outline sections", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            var ids = prompt
+                .Split(["\r\n", "\n"], StringSplitOptions.None)
+                .Select(line => line.Trim())
+                .Where(line => line.StartsWith("- Section id: ", StringComparison.Ordinal))
+                .Select(line => line["- Section id: ".Length..].Trim())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (ids.Length == 0)
+            {
+                return null;
+            }
+
+            var sections = string.Join(
+                ",\n",
+                ids.Select(id => $@"    {{ ""id"": ""{id}"", ""title"": ""{id}"", ""skeleton"": ""Skeleton"", ""content"": ""Generated batch content for {id}"" }}"));
+            return """
+                {
+                  "title": "Outline",
+                  "summary": "Summary",
+                  "sections": [
+                """ + sections + """
+
                   ]
                 }
                 """;

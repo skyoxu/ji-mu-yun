@@ -276,10 +276,10 @@ public sealed class BrowserUiRendererTests
             function v2RenderTabs() { renderedTabs += 1; }
             function v2RenderProgress() { renderedProgress += 1; }
             function v2RefreshAcceptanceActionState() { refreshedAcceptance += 1; }
-            function v2LoadEmbeddedFrame(frameId, url) {
+            function v2LoadEmbeddedFrame(frameId, url, forceReload = false) {
               const frame = $(frameId);
               if (!frame) return;
-              if (frame.dataset.src !== url) {
+              if (forceReload || frame.dataset.src !== url) {
                 frame.dataset.src = url;
                 frame.src = url;
               }
@@ -313,10 +313,10 @@ public sealed class BrowserUiRendererTests
               }
             }
             function v2OpenEmbeddedTab(tabId, label, panelId, frameId, url) {
-              v2OpenTabs.set(tabId, { id: tabId, label, panelId, closable: true });
+              v2OpenTabs.set(tabId, { id: tabId, label, panelId, frameId, url, closable: true });
               v2ActiveTabId = tabId;
               v2ApplySelectedStepVisibility();
-              v2LoadEmbeddedFrame(frameId, url);
+              v2LoadEmbeddedFrame(frameId, url, true);
               v2RenderTabs();
               v2RenderProgress();
             }
@@ -370,12 +370,15 @@ public sealed class BrowserUiRendererTests
             assert(v2OpenTabs.get("gdd-outline").label === "查阅策划大纲", "GDD outline tab should use readable label");
             assert(visible("v2GddOutlineFramePanel"), "GDD outline panel should be visible");
             assert($("v2GddOutlineFrame").dataset.src === "/gdd-outline?projectId=project%201&embedded=1", "GDD iframe should cache embedded URL");
+            $("v2GddOutlineFrame").src = "about:blank";
+            v2OpenEmbeddedTab("gdd-outline", "查阅策划大纲", "v2GddOutlineFramePanel", "v2GddOutlineFrame", "/gdd-outline?projectId=project%201&embedded=1");
+            assert($("v2GddOutlineFrame").src === "/gdd-outline?projectId=project%201&embedded=1", "GDD iframe should force reload when reopening the same URL");
 
             v2CloseTab("gdd-outline");
             assert(v2ActiveTabId === "chat", "closing active embedded tab should return to chat");
             assert(visible("chatPanel"), "chat should be visible again");
             assert(!visible("v2GddOutlineFramePanel"), "GDD panel should be hidden after closing tab");
-            assert(renderedTabs === 4 && renderedProgress === 3 && refreshedAcceptance === 2, "render hooks should match tab operations");
+            assert(renderedTabs === 5 && renderedProgress === 4 && refreshedAcceptance === 2, "render hooks should match tab operations");
             """;
 
         RunNodeScript(node, script);
@@ -797,6 +800,8 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("window.addEventListener(\"beforeunload\", v2WriteProjectUiState)");
         html.Should().Contain("function v2EmbeddedTabUrl(tab)");
         html.Should().Contain("function v2EmbeddedFrameId(tab)");
+        html.Should().Contain("v2LoadEmbeddedFrame(frameId, url, true)");
+        html.Should().Contain("function v2LoadEmbeddedFrame(frameId, url, forceReload = false)");
         html.Should().Contain("if (tab.id === \"step:asset-inventory\") return \"v2AssetInventoryFrame\"");
         html.Should().Contain("if (tab.id === \"step:download-project\") return \"v2DownloadsFrame\"");
         html.Should().Contain("url: v2EmbeddedTabUrl({ id, frameId })");
@@ -1215,6 +1220,44 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
         html.Should().NotContain("detail-step done\" href=\"/assets?projectId=project-1\"");
         html.Should().NotContain("detail-step done\" href=\"/#createProjectPackage\"");
+    }
+
+    [Fact]
+    public void RenderRun_HidesInternalGeneratorBranding()
+    {
+        var run = new RunSnapshot(
+            "run-1",
+            "project-1",
+            "workspace-1",
+            "game-design-gdd",
+            "failed",
+            "2026-06-22T00:00:00Z",
+            null,
+            null,
+            null,
+            1,
+            "BMAD created output through Codex CLI and CODEX.",
+            "codex_failed: Codex stderr via codex_cli.",
+            "{\"gateway\":\"codex-cli\",\"fallback\":\"codex cli\",\"skill\":\"BMAD\"}");
+        var artifact = new ArtifactSnapshot(
+            "artifact-1",
+            "run-1",
+            "project-1",
+            "game-design-gdd-codex-output",
+            "logs/phase-a-gdd/run-1/codex-output.txt",
+            "BMAD Codex output");
+
+        var html = new BrowserUiRenderer().RenderRun(run, [artifact]);
+
+        html.Should().NotContain("BMAD");
+        html.Should().NotContain("Codex");
+        html.Should().NotContain("CODEX");
+        html.Should().NotContain("codex");
+        html.Should().NotContain("generation-cli");
+        html.Should().NotContain("generation_cli");
+        html.Should().Contain("generation");
+        html.Should().Contain("Generation result");
+        html.Should().NotContain("game-design-gdd-generation-output");
     }
 
     [Fact]
@@ -1723,7 +1766,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("Chat persistence is best-effort");
         html.Should().Contain("chatThinkingPrompts");
         html.Should().Contain("startChatThinkingMessage");
-        html.Should().Contain("Codex CLI 正在生成回复");
+        html.Should().Contain("正在生成回复");
         html.Should().Contain("setInterval");
         html.Should().Contain("shouldAutoRefreshIterationPlan");
         html.Should().Contain(@"activeRun?.runType === ""prototype-iteration-goal""");
@@ -1734,7 +1777,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("formatNextStepEvaluation");
         html.Should().Contain("下一步建议来源：");
         html.Should().Contain("继续优化评估：");
-        html.Should().Contain("Codex 输出");
+        html.Should().Contain("生成结果");
         html.Should().Contain("原型记录");
         html.Should().Contain("系统生成");
         html.Should().Contain("建议继续");
@@ -1955,7 +1998,8 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("iteration-plan-request");
         html.Should().NotContain("iteration-plan-result");
         html.Should().Contain("await loadServerChatHistoryForProject(state.projectId);");
-        html.Should().Contain("Codex");
+        html.Should().Contain("sanitizePublicRunContent");
+        html.Should().Contain("publicArtifactLabel");
         html.Should().Contain("/chat");
         html.Should().Contain("/api/projects");
         html.Should().Contain("prototype-7day-playable");
@@ -2111,12 +2155,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/projects/${projectId}/gdd/outline");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(sectionId)}");
         html.Should().Contain("generateSection");
+        html.Should().Contain("saveSection");
         html.Should().Contain("completeAllSections");
         html.Should().Contain("quickCompleteSection");
         html.Should().Contain("generateSectionContent");
         html.Should().Contain("waitForBatchOutlineRun");
         html.Should().Contain("formatBatchRunProgress");
-        html.Should().Contain("attempt < 600");
+        html.Should().Contain("attempt < 1800");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/sections/complete-missing");
         html.Should().Contain("data-quick-complete-section");
@@ -2124,6 +2169,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("editorSkeleton");
         html.Should().Contain("editorContent");
         html.Should().Contain("editorMessage");
+        html.Should().Contain("id=\"saveSection\"");
+        html.Should().Contain("method:\"PATCH\"");
+        html.Should().Contain("skeleton: $(\"editorSkeleton\").value");
+        html.Should().Contain("content: $(\"editorContent\").value");
+        html.Should().Contain(@"$(""meta"").textContent = ""\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u5df2\u4fdd\u5b58\u3002""");
+        html.Should().NotContain("editorSkeleton\" readonly");
+        html.Should().NotContain("editorContent\" readonly");
         html.Should().Contain("showModal");
         html.Should().Contain("exportGddMarkdown");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/export");

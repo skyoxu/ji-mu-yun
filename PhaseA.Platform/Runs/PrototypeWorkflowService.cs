@@ -499,7 +499,7 @@ public sealed class PrototypeWorkflowService
         var slug = ReadSlugFromPrototypeRecord(project.RepoPath, prototypeRecordPath)
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
-        await SetProgressAsync(runId, "validating", "completion_state", "Validating the current prototype without running Codex.", cancellationToken);
+        await SetProgressAsync(runId, "validating", "completion_state", "Validating the current prototype without triggering generation.", cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
         {
@@ -1100,7 +1100,7 @@ public sealed class PrototypeWorkflowService
     {
         try
         {
-            await SetProgressAsync(runId, "running_step07_review", "codex", "Codex is running prototype skeleton creation.", CancellationToken.None);
+            await SetProgressAsync(runId, "running_step07_review", "generation", "Prototype skeleton creation is running.", CancellationToken.None);
             return await _processRunner.RunAsync(
                 CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential)
                     .WithRunId(runId)

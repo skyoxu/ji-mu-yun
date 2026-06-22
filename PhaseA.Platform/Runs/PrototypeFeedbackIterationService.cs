@@ -105,7 +105,7 @@ public sealed class PrototypeFeedbackIterationService
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
-        await SetProgressAsync(runId, "running", "prepare", "正在整理正式反馈并准备启动 Codex。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "prepare", "正在整理正式反馈并准备启动生成流程。", CancellationToken.None);
 
         try
         {
@@ -132,7 +132,7 @@ public sealed class PrototypeFeedbackIterationService
             var codexOutputRelativePath = ToSlash(Path.Combine(relativeDir, "codex-output.txt"));
             var codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction);
-            await SetProgressAsync(runId, "running", "codex", "Codex 正在继续优化当前原型。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "generation", "正在继续优化当前原型。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
@@ -142,7 +142,7 @@ public sealed class PrototypeFeedbackIterationService
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, CancellationToken.None)
                 : "";
             var assistantMessage = BuildAssistantMessage(project, runId, model, feedback, codexResult, codexOutput, skillAction);
-            await SetProgressAsync(runId, "running", "finalize", "Codex 已返回结果，正在整理反馈日志。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "finalize", "生成流程已返回结果，正在整理反馈日志。", CancellationToken.None);
             await File.WriteAllTextAsync(
                 resultAbsolutePath,
                 BuildResultLog(project, runId, feedback, assistantMessage, model, codexResult, codexOutput, now, skillAction),
@@ -166,7 +166,7 @@ public sealed class PrototypeFeedbackIterationService
                 project.ProjectId,
                 "prototype-feedback-codex-output",
                 codexOutputRelativePath,
-                "Formal prototype feedback Codex output"), CancellationToken.None);
+                "Formal prototype feedback generation output"), CancellationToken.None);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {

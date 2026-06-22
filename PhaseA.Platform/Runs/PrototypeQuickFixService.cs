@@ -225,7 +225,7 @@ public sealed partial class PrototypeQuickFixService
                 ? PrototypeGoalAcceptanceValidationResult.NotRun()
                 : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
             var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
-            await SetProgressAsync(runId, "running", "codex", goalRepairMode ? $"Codex 正在修复任务 {targetGoal!.GoalIndex}。" : "Codex 正在执行快速修复。", CancellationToken.None);
+            await SetProgressAsync(runId, "running", "generation", goalRepairMode ? $"正在修复任务 {targetGoal!.GoalIndex}。" : "正在执行快速修复。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
@@ -333,7 +333,7 @@ public sealed partial class PrototypeQuickFixService
                 project.ProjectId,
                 "prototype-quick-fix-codex-output",
                 codexOutputRelativePath,
-                "Prototype quick fix Codex output"), CancellationToken.None);
+                "Prototype quick fix generation output"), CancellationToken.None);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -584,7 +584,7 @@ public sealed partial class PrototypeQuickFixService
             平台验收：
             任务 {targetGoal.GoalIndex} 已通过平台验收。当前任务可以进入下一步。
             """;
-        var codexOutput = "Preflight validation passed before running Codex.";
+        var codexOutput = "Preflight validation passed before running generation.";
         var godotSmokeValidation = PrototypeGoalGodotSmokeValidationResult.NotRequired();
         var rpgGdUnitValidation = PrototypeRpgGdUnitValidationResult.NotRequired("not_final_rpg_acceptance_goal");
         godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal, cancellationToken);
@@ -649,7 +649,7 @@ public sealed partial class PrototypeQuickFixService
             project.ProjectId,
             "prototype-quick-fix-codex-output",
             codexOutputRelativePath,
-            "Prototype quick fix Codex output"), cancellationToken);
+            "Prototype quick fix generation output"), cancellationToken);
 
         var evidenceJson = JsonSerializer.Serialize(new
         {
@@ -843,7 +843,7 @@ public sealed partial class PrototypeQuickFixService
 
             var codexOutput = File.Exists(codexOutputAbsolutePath)
                 ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
-                : "Codex repair timed out after writing changes, but platform validation passed afterward.";
+                : "Repair timed out after writing changes, but platform validation passed afterward.";
             if (!File.Exists(codexOutputAbsolutePath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
@@ -888,7 +888,7 @@ public sealed partial class PrototypeQuickFixService
                 project.ProjectId,
                 "prototype-quick-fix-codex-output",
                 codexOutputRelativePath,
-                "Prototype quick fix Codex output"), cancellationToken);
+                "Prototype quick fix generation output"), cancellationToken);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -966,7 +966,7 @@ public sealed partial class PrototypeQuickFixService
     {
         var codexOutput = File.Exists(codexOutputAbsolutePath)
             ? await File.ReadAllTextAsync(codexOutputAbsolutePath, Encoding.UTF8, cancellationToken)
-            : "Codex repair timed out after writing changes, and platform validation still needs repair.";
+            : "Repair timed out after writing changes, and platform validation still needs repair.";
         if (!File.Exists(codexOutputAbsolutePath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(codexOutputAbsolutePath)!);
@@ -1027,7 +1027,7 @@ public sealed partial class PrototypeQuickFixService
             project.ProjectId,
             "prototype-quick-fix-codex-output",
             codexOutputRelativePath,
-            "Prototype quick fix Codex output"), cancellationToken);
+            "Prototype quick fix generation output"), cancellationToken);
 
         var evidenceJson = JsonSerializer.Serialize(new
         {
@@ -1937,7 +1937,7 @@ public sealed partial class PrototypeQuickFixService
             RunId: {runId}
             Model: {model}
             SkillMode: {SkillModeLabel(skillAction)}
-            CodexExitCode: {codexResult.ExitCode}
+            GeneratorExitCode: {codexResult.ExitCode}
             CompletedAtUtc: {completedAt}
             GoalRepairMode: {(goal is null ? "false" : "true")}
             GoalRepairStatus: {goalRepairOutcome?.GoalStatus}
@@ -1960,15 +1960,15 @@ public sealed partial class PrototypeQuickFixService
 
             {assistantMessage}
 
-            ## Codex Stdout
+            ## Generator Stdout
 
             {codexResult.Stdout}
 
-            ## Codex Stderr
+            ## Generator Stderr
 
             {codexResult.Stderr}
 
-            ## Codex Output
+            ## Generator Output
 
             {codexOutput}
             """;

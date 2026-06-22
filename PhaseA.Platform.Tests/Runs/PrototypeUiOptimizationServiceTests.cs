@@ -78,7 +78,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         runner.Commands[0].StandardInput.Should().Contain("$prototype-rpg-ui-optimizer-zh");
         runner.Commands[0].StandardInput.Should().Contain("meta/routes/prototype-contract/latest.json");
         runner.Commands[0].StandardInput.Should().Contain("legacy fallback");
-        runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after Codex exits");
+        runner.Commands[0].StandardInput.Should().Contain("the platform runs a short Godot smoke after generation exits");
         runner.Commands[0].StandardInput.Should().Contain("project.godot -> main scene -> Start Adventure");
         runner.Commands[0].StandardInput.Should().Contain("Do not leave UI optimization in an unreferenced side scene");
         runner.Commands[0].StandardInput.Should().Contain("A thin wrapper scene or a standalone visual mock");

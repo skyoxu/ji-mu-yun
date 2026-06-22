@@ -553,7 +553,7 @@ public sealed class BrowserUiRenderer
                   v2OpenTabs.set(tabId, { id: tabId, label, panelId, frameId, url, closable: true });
                   v2ActiveTabId = tabId;
                   v2ApplySelectedStepVisibility();
-                  v2LoadEmbeddedFrame(frameId, url);
+                  v2LoadEmbeddedFrame(frameId, url, true);
                   v2RenderTabs();
                   v2RenderProgress();
                   v2WriteProjectUiState();
@@ -829,10 +829,10 @@ public sealed class BrowserUiRenderer
                     v2LoadEmbeddedFrame("v2GddOutlineFrame", `/gdd-outline?projectId=${encodeURIComponent(state.projectId)}&embedded=1`);
                   }
                 }
-                function v2LoadEmbeddedFrame(frameId, url) {
+                function v2LoadEmbeddedFrame(frameId, url, forceReload = false) {
                   const frame = $(frameId);
                   if (!frame) return;
-                  if (frame.dataset.src !== url) {
+                  if (forceReload || frame.dataset.src !== url) {
                     frame.dataset.src = url;
                     frame.src = url;
                   }
@@ -1492,7 +1492,7 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 function workflowRouteFailureMessage(error) {
-                  const code = error?.payload?.failureCode || error?.payload?.error || error?.payload?.status || error?.status || "unknown_error";
+                  const code = publicErrorCode(error?.payload?.failureCode || error?.payload?.error || error?.payload?.status || error?.status || "unknown_error");
                   if (code === "authentication_required" || error?.status === 401) {
                     return "项目状态扫描失败：登录状态无效，请重新输入登录 token。";
                   }
@@ -2131,7 +2131,7 @@ public sealed class BrowserUiRenderer
                     <button id="createUserAccount" class="secondary" data-global-action="true">Create user token</button>
                     <hr>
                     <h3>AiCodeMirror API Key Pool</h3>
-                    <p class="muted">CSV columns: key_name, api_key, description, valid_days. The api_key column is required for real per-user Codex execution.</p>
+                    <p class="muted">CSV columns: key_name, api_key, description, valid_days. The api_key column is required for real per-user execution.</p>
                     <input id="aicodemirrorKeyCsv" type="file" accept=".csv,text/csv">
                     <button id="downloadAiCodeMirrorKeyTemplate" class="ghost">Download key CSV template</button>
                     <button id="importAiCodeMirrorKeyCsv" class="secondary" data-global-action="true">Import key CSV</button>
@@ -2224,7 +2224,7 @@ public sealed class BrowserUiRenderer
                   </section>
                   <section id="chatPanel" class="stack hidden chat-frame">
                     <h2>自由对话</h2>
-                    <p class="muted">选择项目后即可聊天。后端会映射到服务器本机 Codex CLI 配置；需要执行工作流时仍使用上方固定按钮。</p>
+                    <p class="muted">选择项目后即可聊天。后端会映射到服务器本机运行配置；需要执行工作流时仍使用上方固定按钮。</p>
                     <label>能力模式 <select id="chatSkillMode"><option value="normal">普通模式</option></select></label>
                     <div id="chatSkillDescription" class="card muted">普通模式：不激活 skills。</div>
                     <h2>主流程：游戏模块</h2>
@@ -2278,7 +2278,7 @@ public sealed class BrowserUiRenderer
                 const chatThinkingPrompts = [
                   "正在理解你的问题...",
                   "正在结合当前项目上下文...",
-                  "Codex CLI 正在生成回复...",
+                  "正在生成回复...",
                   "正在整理可读答案...",
                   "还在处理中，请稍等..."
                 ];
@@ -3482,6 +3482,10 @@ public sealed class BrowserUiRenderer
                     .replace(/(?<![\w])(?:[A-Za-z0-9_.-]+[\\/]){1,}[A-Za-z0-9_.-]+/g, "[路径已隐藏]")
                     .replace(/(?<![\w.-])[\w.-]+\.(?:ps1|cmd|bat|sh|py|cs|csproj|sln|json|toml|yaml|yml|md|log|txt|tscn|tres|res|gd|png|jpg|jpeg|webp|svg|ogg|wav|mp3|ttf|otf|import|dll|exe|pdb|cache|sqlite|sqlite3|db|zip)(?::\d+(?::\d+)?)?(?![\w.-])/gi, "[文件已隐藏]")
                     .replace(/^\s*(?:&\s*)?(?:(?:dotnet\s+(?:test|run|build|publish|restore))|(?:py(?:thon)?\s+[-\w.\/\\])|(?:powershell(?:\.exe)?\s+[-/]\w+)|(?:cmd(?:\.exe)?\s+\/[ck])|(?:codex(?:\.cmd)?\s+(?:exec|run|review|--|-))|(?:caddy(?:\.exe)?\s+(?:run|reload|fmt|--|-))|(?:git\s+\w+)|(?:rg\s+.+)|(?:node\s+.+)|(?:npm\s+\w+))[^\r\n]*/gim, "")
+                    .replace(/\bBMAD\b/gi, "")
+                    .replace(/\bCodex(?:[\s_-]+CLI)?\b/gi, "生成流程")
+                    .replace(/\bcodex[\s_-]*cli\b/gi, "generation")
+                    .replace(/\bcodex\b/gi, "generation")
                     .replace(/\b(?:logs\/ci|logs\\ci|active-prototypes|workspaces|GODOT_BIN|PHASEA_[A-Z0-9_]+)\b[^\r\n，。；]*/gi, "")
                     .replace(/\b(?:Game\.Godot|Tests\.Godot|Game\.Core(?:\.Tests)?|PhaseA\.Platform(?:\.Tests)?|GodotGame)\b/gi, "[模块已隐藏]")
                     .replace(/__PHASEA_GDD_LINK_(\d+)__/g, (_, index) => gddLinks[Number(index)] || "")
@@ -3502,6 +3506,24 @@ public sealed class BrowserUiRenderer
 
                 function sanitizePublicIterationPlanText(value) {
                   return sanitizePublicChatContent(value || "");
+                }
+
+                function sanitizePublicRunContent(value) {
+                  return sanitizePublicChatContent(value || "");
+                }
+
+                function publicArtifactLabel(value) {
+                  const raw = String(value || "");
+                  if (raw.includes("prompt")) return "输入记录";
+                  if (raw.includes("result") || raw.includes("output") || raw.includes("codex")) return "生成结果";
+                  if (raw.includes("gdd") || raw.includes("outline")) return "策划文档";
+                  if (raw.includes("package") || raw.includes("zip")) return "项目文件包";
+                  return sanitizePublicRunContent(raw) || "产物";
+                }
+
+                function publicErrorCode(value) {
+                  const sanitized = sanitizePublicChatContent(value || "");
+                  return sanitized || "unknown_error";
                 }
 
                 function publicIterationPlanFailureMessage(value) {
@@ -3809,7 +3831,7 @@ public sealed class BrowserUiRenderer
                     out(result);
                     await loadRuns();
                   } catch (error) {
-                    const message = error?.payload?.failureCode || error?.payload?.error || "unknown_error";
+                    const message = publicErrorCode(error?.payload?.failureCode || error?.payload?.error || "unknown_error");
                     const pending = state.chatHistory.find(item => item.pending);
                     if (pending) {
                       pending.content = `本次回复失败：${message}。可以稍后重试。`;
@@ -4126,7 +4148,7 @@ public sealed class BrowserUiRenderer
                     await loadLlmBinding();
                   } catch (error) {
                     $("llmBindingStatus").className = "card danger";
-                    $("llmBindingStatus").textContent = error?.payload?.failureCode || error?.payload?.error || "llm_binding_failed";
+                    $("llmBindingStatus").textContent = publicErrorCode(error?.payload?.failureCode || error?.payload?.error || "llm_binding_failed");
                     showError(error);
                   } finally {
                     setLocalBusy(false);
@@ -5114,7 +5136,7 @@ public sealed class BrowserUiRenderer
 
                 function projectCreationErrorMessage(error) {
                   const payload = error?.payload || {};
-                  const code = payload.failureCode || payload.error || error?.status || "unknown_error";
+                  const code = publicErrorCode(payload.failureCode || payload.error || error?.status || "unknown_error");
                   if (code === "project_initialization_in_progress") {
                     return "已有项目仍在初始化中，暂时不能创建新项目。系统会自动清理中断的初始化；如果页面一直停留在这里，请刷新后重试。";
                   }
@@ -5211,7 +5233,7 @@ public sealed class BrowserUiRenderer
                       const isCurrent = markers.currentGoalId === record.goal.goalId;
                       const isNext = markers.nextGoalId === record.goal.goalId;
                       const cardClass = isCurrent ? "card goal-card-current" : isNext ? "card goal-card-next" : "card";
-                      const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
+                      const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(publicArtifactLabel(a.artifactType))}</a>`).join(" · ");
                       return `
                         <div class="${cardClass}">
                           <strong>任务 ${escapeHtml(String(record.goal.goalIndex))} · ${escapeHtml(record.goal.title || "")}</strong>
@@ -5233,7 +5255,7 @@ public sealed class BrowserUiRenderer
                   const feedbackRuns = state.runs.filter(r => r.runType === "prototype-feedback-iteration");
                   renderFeedbackSummary(feedbackRuns);
                   $("feedbackRecords").innerHTML = feedbackRuns.map((run, index) => {
-                    const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(a.artifactType)}</a>`).join(" · ");
+                    const downloads = feedbackArtifacts(run).map(a => `<a href="/artifacts/${escapeHtml(a.artifactId)}" target="_blank" rel="noreferrer">${escapeHtml(publicArtifactLabel(a.artifactType))}</a>`).join(" · ");
                     return `
                       <div class="card">
                         <strong>第 ${feedbackRuns.length - index} 次正式反馈 · ${escapeHtml(publicStatusLabel(run.status))}</strong>
@@ -5434,8 +5456,8 @@ public sealed class BrowserUiRenderer
                 async function loadRun(runId) {
                   try {
                     const result = await api(`/api/runs/${runId}`);
-                    const links = (result.artifacts || []).map(a => `产物: ${a.artifactType} ${location.origin}/artifacts/${a.artifactId}`).join("\n");
-                    out(`${JSON.stringify(result.run, null, 2)}\n\n${links}`);
+                    const links = (result.artifacts || []).map(a => `产物: ${publicArtifactLabel(a.artifactType)} ${location.origin}/artifacts/${a.artifactId}`).join("\n");
+                    out(`${sanitizePublicRunContent(JSON.stringify(result.run, null, 2))}\n\n${links}`);
                   } catch (error) { showError(error); }
                 }
 
@@ -6044,7 +6066,7 @@ public sealed class BrowserUiRenderer
                 function renderDraftImportStatus(draft) {
                   if (!draft || draft.status === "failed") {
                     $("draftImportStatus").className = "card muted";
-                    $("draftImportStatus").textContent = draft?.failureCode ? `草稿分析失败：${draft.failureCode}` : "";
+                    $("draftImportStatus").textContent = draft?.failureCode ? `草稿分析失败：${publicErrorCode(draft.failureCode)}` : "";
                     $("draftImportStatus").classList.toggle("hidden", !draft?.failureCode);
                     return;
                   }
@@ -6095,7 +6117,7 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                   } catch (error) {
                     $("draftImportStatus").className = "card muted";
-                    $("draftImportStatus").textContent = `草稿分析失败：${error?.error || error?.failureCode || "unknown_error"}`;
+                    $("draftImportStatus").textContent = `草稿分析失败：${publicErrorCode(error?.error || error?.failureCode || "unknown_error")}`;
                     $("draftImportStatus").classList.remove("hidden");
                     showError(error);
                   } finally {
@@ -6133,7 +6155,7 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                     await loadProjectPackages();
                   } catch (error) {
-                    const reason = error?.payload?.failureCode || error?.payload?.disabledReason || error?.payload?.error || error?.payload?.status || error?.message || "unknown_error";
+                    const reason = publicErrorCode(error?.payload?.failureCode || error?.payload?.disabledReason || error?.payload?.error || error?.payload?.status || error?.message || "unknown_error");
                     $("projectPackageStatus").className = "card";
                     $("projectPackageStatus").textContent = `打包失败：${projectPackageDisabledText(reason)} (${reason})`;
                     showError(error);
@@ -6612,7 +6634,7 @@ public sealed class BrowserUiRenderer
                       ? "请先创建策划大纲，确认 GDD 后再创建原型骨架。"
                     : payload.failureCode === "prototype_valid_godot_scene_missing"
                       ? "没有创建有效的godot场景文件"
-                      : `原型创建请求失败：${payload.status || payload.error || payload.failureCode || error?.status || "unknown_error"}`;
+                      : `原型创建请求失败：${publicErrorCode(payload.status || payload.error || payload.failureCode || error?.status || "unknown_error")}`;
                   showPrototypeNotice(message, "warn");
                 }
 
@@ -6626,7 +6648,7 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   setLocalBusy(true, "原型重新验收中，请等待当前任务执行完毕。");
                   $("validatePrototype").textContent = "验收中...";
-                  showPrototypeNotice("正在重新验收当前原型；该操作会运行平台验收、Godot smoke 和项目专属行为验收，不会调用 Codex。", "info");
+                  showPrototypeNotice("正在重新验收当前原型；该操作会运行平台验收、Godot smoke 和项目专属行为验收，不会触发生成流程。", "info");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate`, { method: "POST" });
                     out(result);
@@ -6798,7 +6820,7 @@ public sealed class BrowserUiRenderer
 
                 function formatNextStepSource(value) {
                   const normalized = String(value || "").trim().toLowerCase();
-                  if (normalized === "codex") return "Codex 输出";
+                  if (normalized === "codex") return "生成结果";
                   if (normalized === "record") return "原型记录";
                   return "系统生成";
                 }
@@ -7259,18 +7281,60 @@ public sealed class BrowserUiRenderer
     public string RenderRun(RunSnapshot run, IReadOnlyList<ArtifactSnapshot> artifacts)
     {
         var artifactLinks = string.Join("", artifacts.Select(artifact =>
-            $"<li><a href=\"/artifacts/{Encode(artifact.ArtifactId)}\">{Encode(artifact.ArtifactType)}</a> - {Encode(artifact.RelativePath)}</li>"));
+            $"<li><a href=\"/artifacts/{Encode(artifact.ArtifactId)}\">{Encode(PublicArtifactLabel(artifact.ArtifactType))}</a> - {Encode(SanitizePublicRunContent(artifact.RelativePath))}</li>"));
         var body = $"""
             <h1>Run {Encode(run.RunId)}</h1>
             <p>Status: {Encode(run.Status)}</p>
             <p>Type: {Encode(run.RunType)}</p>
             <h2>Stdout</h2>
-            <pre>{Encode(run.StdoutText ?? "")}</pre>
+            <pre>{Encode(SanitizePublicRunContent(run.StdoutText ?? ""))}</pre>
             <h2>Stderr</h2>
-            <pre>{Encode(run.StderrText ?? "")}</pre>
+            <pre>{Encode(SanitizePublicRunContent(run.StderrText ?? ""))}</pre>
             <ul>{artifactLinks}</ul>
             """;
         return WrapSimplePage($"Run {Encode(run.RunId)}", body);
+    }
+
+    private static string SanitizePublicRunContent(string value)
+    {
+        return value
+            .Replace("BMAD", "", StringComparison.OrdinalIgnoreCase)
+            .Replace("codex-cli", "generation", StringComparison.OrdinalIgnoreCase)
+            .Replace("codex_cli", "generation", StringComparison.OrdinalIgnoreCase)
+            .Replace("codex cli", "generation", StringComparison.OrdinalIgnoreCase)
+            .Replace("Codex CLI", "generation", StringComparison.OrdinalIgnoreCase)
+            .Replace("Codex", "generation", StringComparison.OrdinalIgnoreCase)
+            .Replace("codex", "generation", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string PublicArtifactLabel(string value)
+    {
+        if (value.Contains("prompt", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Input record";
+        }
+
+        if (value.Contains("result", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("output", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("codex", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Generation result";
+        }
+
+        if (value.Contains("gdd", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("outline", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Design document";
+        }
+
+        if (value.Contains("package", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("zip", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Project package";
+        }
+
+        var sanitized = SanitizePublicRunContent(value);
+        return string.IsNullOrWhiteSpace(sanitized) ? "Artifact" : sanitized;
     }
 
     public string RenderGddOutline()
@@ -7339,10 +7403,11 @@ public sealed class BrowserUiRenderer
               </main>
               <dialog id="editor">
                 <h2 id="editorTitle"></h2>
-                <label><strong>&#39592;&#26550;&#20449;&#24687;</strong><textarea id="editorSkeleton" readonly></textarea></label>
-                <label><strong>&#20855;&#20307;&#20869;&#23481;</strong><textarea id="editorContent" readonly></textarea></label>
+                <label><strong>&#39592;&#26550;&#20449;&#24687;</strong><textarea id="editorSkeleton"></textarea></label>
+                <label><strong>&#20855;&#20307;&#20869;&#23481;</strong><textarea id="editorContent"></textarea></label>
                 <label><strong>&#36755;&#20837;&#20449;&#24687;</strong><textarea id="editorMessage" placeholder="&#36755;&#20837;&#26412;&#26465;&#30446;&#30340;&#34917;&#20805;&#35201;&#27714;"></textarea></label>
                 <div class="row">
+                  <button id="saveSection" type="button">&#20445;&#23384;&#20462;&#25913;</button>
                   <button id="generateSection" class="secondary">&#29983;&#25104;&#20855;&#20307;&#20869;&#23481;</button>
                   <button id="closeEditor" class="ghost">&#20851;&#38381;</button>
                 </div>
@@ -7379,7 +7444,7 @@ public sealed class BrowserUiRenderer
                     outline = await api(`/api/projects/${projectId}/gdd/outline`);
                     renderOutline();
                   } catch (error) {
-                    $("meta").innerHTML = `<span class="danger">&#35835;&#21462;&#22833;&#36133;&#65306;${escapeHtml(error?.payload?.error || "gdd_outline_not_found")}</span>`;
+                    $("meta").innerHTML = `<span class="danger">&#35835;&#21462;&#22833;&#36133;&#65306;${escapeHtml(publicErrorCode(error?.payload?.error || "gdd_outline_not_found"))}</span>`;
                   }
                 }
                 function renderOutline() {
@@ -7428,7 +7493,7 @@ public sealed class BrowserUiRenderer
                     $("editorContent").value = selectedSection?.content || "";
                     renderOutline();
                   } catch (error) {
-                    alert(error?.payload?.summary || error?.payload?.error || "generate_failed");
+                    alert(error?.payload?.summary || publicErrorCode(error?.payload?.error || "generate_failed"));
                   } finally {
                     button.disabled = false;
                     button.textContent = "\u751f\u6210\u5177\u4f53\u5185\u5bb9";
@@ -7437,6 +7502,34 @@ public sealed class BrowserUiRenderer
                 async function generateSectionContent(sectionId, message = "") {
                   await api(`/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(sectionId)}`, { method:"POST", body: JSON.stringify({ message, model: localStorage.getItem("phaseASelectedModel") || null }) });
                   outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                }
+                async function saveSection() {
+                  if (!selectedSection) return;
+                  const button = $("saveSection");
+                  button.disabled = true;
+                  button.textContent = "\u4fdd\u5b58\u4e2d...";
+                  try {
+                    await api(`/api/projects/${projectId}/gdd/outline/sections/${encodeURIComponent(selectedSection.id)}`, {
+                      method:"PATCH",
+                      body: JSON.stringify({
+                        skeleton: $("editorSkeleton").value,
+                        content: $("editorContent").value
+                      })
+                    });
+                    outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                    selectedSection = (outline.sections || []).find(item => item.id === selectedSection.id);
+                    if (selectedSection) {
+                      $("editorSkeleton").value = selectedSection.skeleton || "";
+                      $("editorContent").value = selectedSection.content || "";
+                    }
+                    renderOutline();
+                    $("meta").textContent = "\u7b56\u5212\u5927\u7eb2\u6761\u76ee\u5df2\u4fdd\u5b58\u3002";
+                  } catch (error) {
+                    alert(error?.payload?.summary || publicErrorCode(error?.payload?.error || "save_failed"));
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "\u4fdd\u5b58\u4fee\u6539";
+                  }
                 }
                 function isTerminalRunStatus(status) {
                   return ["succeeded", "failed", "blocked", "cancel", "cancelled", "timeout"].includes(String(status || "").toLowerCase());
@@ -7449,7 +7542,7 @@ public sealed class BrowserUiRenderer
                 }
                 async function waitForBatchOutlineRun(runId, fallbackCount) {
                   if (!runId) return null;
-                  for (let attempt = 0; attempt < 600; attempt++) {
+                  for (let attempt = 0; attempt < 1800; attempt++) {
                     await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 800 : 2000));
                     const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
                     const run = result.run || {};
@@ -7471,7 +7564,7 @@ public sealed class BrowserUiRenderer
                     }
                     renderOutline();
                   } catch (error) {
-                    alert(error?.payload?.summary || error?.payload?.error || "generate_failed");
+                    alert(error?.payload?.summary || publicErrorCode(error?.payload?.error || "generate_failed"));
                     button.disabled = false;
                   } finally {
                     button.textContent = "快速补全";
@@ -7515,7 +7608,7 @@ public sealed class BrowserUiRenderer
                     renderOutline();
                     alert(result.summary || `\u5df2\u8865\u5168 ${result.completedCount || 0} \u4e2a\u5927\u7eb2\u6761\u76ee\u3002`);
                   } catch (error) {
-                    alert(error?.payload?.summary || error?.payload?.error || "complete_all_failed");
+                    alert(error?.payload?.summary || publicErrorCode(error?.payload?.error || "complete_all_failed"));
                     try { outline = await api(`/api/projects/${projectId}/gdd/outline`); renderOutline(); } catch {}
                   } finally {
                     button.disabled = false;
@@ -7534,7 +7627,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/gdd/outline/export`, { method:"POST", body:"{}" });
                     window.open(result.downloadPageUrl || `/downloads?projectId=${encodeURIComponent(projectId)}`, "_blank", "noreferrer");
                   } catch (error) {
-                    alert(error?.payload?.error || "export_failed");
+                    alert(publicErrorCode(error?.payload?.error || "export_failed"));
                   } finally {
                     button.disabled = false;
                     button.textContent = "\u5bfc\u51fa\u4e3a GDD.md";
@@ -7563,13 +7656,14 @@ public sealed class BrowserUiRenderer
                     $("exportGddMarkdown").disabled = true;
                     notifyOutlineDeleted();
                   } catch (error) {
-                    alert(error?.payload?.error || "delete_failed");
+                    alert(publicErrorCode(error?.payload?.error || "delete_failed"));
                     button.disabled = false;
                   } finally {
                     button.textContent = "\u5220\u9664\u7b56\u5212\u5927\u7eb2";
                   }
                 }
                 $("closeEditor").onclick = () => $("editor").close();
+                $("saveSection").onclick = saveSection;
                 $("generateSection").onclick = generateSection;
                 $("completeAllSections").onclick = completeAllSections;
                 $("exportGddMarkdown").onclick = exportGddMarkdown;
@@ -7647,7 +7741,7 @@ public sealed class BrowserUiRenderer
                   const response = await fetch(`/api/projects/${projectId}/packages`, { headers: { "Authorization": `Bearer ${token()}` } });
                   const payload = await response.json();
                   if (!response.ok) {
-                    $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(payload.error || "unknown_error")}</span>`;
+                    $("status").innerHTML = `<span class="danger">读取失败：${escapeHtml(publicErrorCode(payload.error || "unknown_error"))}</span>`;
                     return;
                   }
                   renderCreatePackageAction(payload);
@@ -7685,7 +7779,7 @@ public sealed class BrowserUiRenderer
                     let payload = {};
                     try { payload = await response.json(); } catch {}
                     if (!response.ok) {
-                      const reason = payload.failureCode || payload.disabledReason || payload.error || payload.status || "unknown_error";
+                      const reason = publicErrorCode(payload.failureCode || payload.disabledReason || payload.error || payload.status || "unknown_error");
                       $("status").innerHTML = `<span class="danger">打包失败：${escapeHtml(disabledText(reason))} (${escapeHtml(reason)})</span>`;
                       return;
                     }
@@ -7731,7 +7825,7 @@ public sealed class BrowserUiRenderer
                       let detail = "unknown_error";
                       try {
                         const payload = await response.json();
-                        detail = payload.error || payload.status || detail;
+                        detail = publicErrorCode(payload.error || payload.status || detail);
                       } catch {}
                       $("status").innerHTML = `<span class="danger">下载失败：${escapeHtml(detail)}</span>`;
                       return;
@@ -8026,7 +8120,7 @@ public sealed class BrowserUiRenderer
                     state.library = libraryResponse.ok ? await libraryResponse.json() : { units: [] };
                     await hydrateLibraryPreviewUrls();
                     if (!inventoryResponse.ok || !payload.canReadInventory) {
-                      const reason = payload.disabledReason || payload.error || "unknown_error";
+                      const reason = publicErrorCode(payload.disabledReason || payload.error || "unknown_error");
                       $("status").className = "card muted";
                       $("status").textContent = assetInventoryDisabledText(reason);
                       return;
@@ -8359,7 +8453,7 @@ public sealed class BrowserUiRenderer
                       cache: "no-store"
                     });
                     const payload = await response.json();
-                    if (!response.ok) throw new Error(payload.error || payload.failureCode || "import_failed");
+                    if (!response.ok) throw new Error(publicErrorCode(payload.error || payload.failureCode || "import_failed"));
                     state.library = payload.library || state.library;
                     await hydrateLibraryPreviewUrls();
                     writeAssetCache();
@@ -8398,7 +8492,7 @@ public sealed class BrowserUiRenderer
                       cache: "no-store"
                     });
                     const payload = await response.json();
-                    if (!response.ok) throw new Error(payload.error || payload.failureCode || "generate_failed");
+                    if (!response.ok) throw new Error(publicErrorCode(payload.error || payload.failureCode || "generate_failed"));
                     state.library = payload.library || state.library;
                     await hydrateLibraryPreviewUrls();
                     writeAssetCache();
@@ -8429,7 +8523,7 @@ public sealed class BrowserUiRenderer
                     if (!applied) throw new Error("entry_not_found");
                     const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/asset-library/select`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, body: JSON.stringify({ unitKey, entryId, validateWithSmoke: true }), cache: "no-store" });
                     const payload = await response.json();
-                    if (!response.ok) throw new Error(payload.error || "select_failed");
+                    if (!response.ok) throw new Error(publicErrorCode(payload.error || "select_failed"));
                     const currentUnits = state.library?.units || [];
                     state.library = payload;
                     for (const unit of state.library?.units || []) {

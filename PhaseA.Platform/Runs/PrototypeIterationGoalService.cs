@@ -183,7 +183,7 @@ public sealed class PrototypeIterationGoalService
             timeout.CancelAfter(_executionTimeout);
             var model = PrototypeModelPolicy.Normalize("gpt-5.4");
             var prompt = BuildPrompt(project, routeProfile, details.Session, nextGoal, projectReadme, projectExecutionGuide, prototypeContract, prototypeState, iterationPlanState);
-            await _metadataStore.UpdateRunProgressAsync(runId, "running", "codex", $"Codex 正在执行任务 {nextGoal.GoalIndex}。", CancellationToken.None);
+            await _metadataStore.UpdateRunProgressAsync(runId, "running", "generation", $"正在执行任务 {nextGoal.GoalIndex}。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
@@ -234,7 +234,7 @@ public sealed class PrototypeIterationGoalService
 
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "prototype-iteration-goal-input", goalRelativePath, "Prototype iteration goal input"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "prototype-iteration-goal-result", resultRelativePath, "Prototype iteration goal result"), CancellationToken.None);
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "prototype-iteration-goal-codex-output", codexOutputRelativePath, "Prototype iteration goal Codex output"), CancellationToken.None);
+            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "prototype-iteration-goal-codex-output", codexOutputRelativePath, "Prototype iteration goal generation output"), CancellationToken.None);
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
