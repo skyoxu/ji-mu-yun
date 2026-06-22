@@ -2090,6 +2090,33 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate", async 
     }
 });
 
+app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate-skeleton", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeWorkflowService prototypeWorkflow,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await prototypeWorkflow.ValidateSkeletonAsync(CurrentAccountId(context), projectId, cancellationToken);
+        return result.Status switch
+        {
+            "succeeded" or "failed" => Results.Ok(result),
+            "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
+            "prototype_validation_not_available" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
+            _ => Results.BadRequest(result)
+        };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/prototype-tdd", async (
     string projectId,
     PrototypeTddRequest request,

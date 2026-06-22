@@ -657,7 +657,11 @@ public sealed class BrowserUiRenderer
                 }
                 function v2IsValidationOnlyRun(run) {
                   const evidence = v2RunEvidence(run);
-                  return evidence?.validation_only === true;
+                  return evidence?.validation_only === true && evidence?.skeleton_validation_only !== true;
+                }
+                function v2IsSkeletonValidationRun(run) {
+                  const evidence = v2RunEvidence(run);
+                  return evidence?.validation_only === true && evidence?.skeleton_validation_only === true;
                 }
                 function v2LatestRunByType(runType) {
                   return (state.runs || [])
@@ -1049,6 +1053,37 @@ public sealed class BrowserUiRenderer
                   status.className = reason ? "card muted" : "card";
                   status.textContent = reason || "当前已满足原型项目验收条件，点击按钮会创建一条原型项目验收 run。";
                 }
+                async function validatePrototypeSkeleton(autoTriggered = false) {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  setLocalBusy(true, autoTriggered ? "骨架创建完成，正在自动执行骨架验收。" : "骨架验收中，请等待当前任务执行完毕。");
+                  const skeletonButton = $("v2SkeletonAcceptance");
+                  if (skeletonButton) skeletonButton.textContent = autoTriggered ? "骨架验收中..." : "验收中...";
+                  if (autoTriggered) {
+                    showPrototypeNotice("原型骨架创建完成，正在自动执行一次骨架验收；该操作只验证骨架可运行，不等同于最终原型项目验收。", "info");
+                  } else {
+                    showPrototypeNotice("正在执行骨架验收；该操作只验证骨架可运行，不要求游戏模块已完成。", "info");
+                  }
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate-skeleton`, { method: "POST" });
+                    out(result);
+                    await loadRuns();
+                    await loadPrototypeProgress();
+                    if (result.status === "failed") {
+                      const label = result.progress?.label || result.stderr || "骨架验收失败，请查看运行记录并生成修复计划。";
+                      showPrototypeNotice(label, "warn");
+                    }
+                    return result;
+                  } catch (error) {
+                    if (!autoTriggered) showError(error);
+                    await loadPrototypeProgress();
+                    return null;
+                  } finally {
+                    setLocalBusy(false);
+                    if (skeletonButton) skeletonButton.textContent = "骨架验收";
+                    await refreshActiveRun();
+                  }
+                }
                 async function v2ValidatePrototypeIfAllowed() {
                   const reason = v2PrototypeAcceptanceBlockReason();
                   if (reason) {
@@ -1061,6 +1096,9 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   await validatePrototype();
+                }
+                async function v2ValidateSkeletonIfAllowed() {
+                  await validatePrototypeSkeleton(false);
                 }
                 function v2ArrangeIterationPanel() {
                   const panel = $("v2IterationPanel");
@@ -1098,7 +1136,7 @@ public sealed class BrowserUiRenderer
                   skeletonAcceptance.className = "secondary";
                   skeletonAcceptance.type = "button";
                   skeletonAcceptance.textContent = "骨架验收";
-                  skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed;
+                  skeletonAcceptance.onclick = v2ValidateSkeletonIfAllowed;
                   [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
                   ["repairPlanStatus", "repairPlanGoals"].map($).filter(Boolean).forEach(element => panel.appendChild(element));
                 }
@@ -6580,6 +6618,9 @@ public sealed class BrowserUiRenderer
                       state.pendingPrototypeSkeletonRun = null;
                       resetPrototypeSkeletonBannerState(true);
                       applyGlobalBusyState();
+                      if (String(run.status || "").toLowerCase() === "succeeded") {
+                        await validatePrototypeSkeleton(true);
+                      }
                     }
                   } catch {
                     // keep last visible banner state if the polling fails
@@ -7166,14 +7207,25 @@ public sealed class BrowserUiRenderer
 
     private static IReadOnlyList<ProjectDetailStep> BuildProjectDetailSteps(ProjectSnapshot project, IReadOnlyList<RunReadbackItem> runs)
     {
-        var latestPrototype = LatestRun(runs, "prototype-7day-playable");
+        var latestPrototype = runs
+            .Where(run => string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+                          !IsAnyValidationOnlyRun(run))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
+        var latestSkeletonValidation = runs
+            .Where(run => string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+                          IsSkeletonValidationOnlyRun(run))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
         var latestRepair = LatestRun(runs, "prototype-repair-step", "prototype-quick-fix");
         var latestIteration = LatestRun(runs, "prototype-iteration-goal", "prototype-feedback-iteration");
         var latestUiOptimization = LatestRun(runs, "prototype-ui-optimization");
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
-        var prototypeFailed = latestPrototype?.Status == "failed";
-        var prototypeSucceeded = latestPrototype?.Status == "succeeded";
+        var prototypeFailed = latestSkeletonValidation?.Status == "failed" || latestPrototype?.Status == "failed";
+        var prototypeSucceeded = latestSkeletonValidation?.Status == "succeeded" || latestPrototype?.Status == "succeeded";
 
         return
         [
@@ -7270,6 +7322,11 @@ public sealed class BrowserUiRenderer
 
     private static bool IsValidationOnlyRun(RunReadbackItem run)
     {
+        if (IsSkeletonValidationOnlyRun(run))
+        {
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(run.EvidenceJson))
         {
             return false;
@@ -7279,6 +7336,44 @@ public sealed class BrowserUiRenderer
         {
             using var document = System.Text.Json.JsonDocument.Parse(run.EvidenceJson);
             return document.RootElement.TryGetProperty("validation_only", out var value) &&
+                   value.ValueKind == System.Text.Json.JsonValueKind.True;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsAnyValidationOnlyRun(RunReadbackItem run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("validation_only", out var value) &&
+                   value.ValueKind == System.Text.Json.JsonValueKind.True;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsSkeletonValidationOnlyRun(RunReadbackItem run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("skeleton_validation_only", out var value) &&
                    value.ValueKind == System.Text.Json.JsonValueKind.True;
         }
         catch (System.Text.Json.JsonException)

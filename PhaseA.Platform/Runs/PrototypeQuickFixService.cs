@@ -13,6 +13,7 @@ public sealed partial class PrototypeQuickFixService
 {
     private const string RunType = "prototype-quick-fix";
     private const string ReasoningEffort = "low";
+    private const int RecoveredWorkflowMaxDay = 7;
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(300);
     private static readonly TimeSpan DefaultGoalRepairExecutionTimeout = TimeSpan.FromMinutes(12);
     private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(45);
@@ -247,6 +248,20 @@ public sealed partial class PrototypeQuickFixService
                 : "";
             var publicCodexReport = BuildPublicCodexReport(codexResult, codexOutput);
             var assistantMessage = BuildAssistantMessage(publicCodexReport, targetGoal);
+            var recoveredCompletionSummary = "";
+            var recoveredCompletionEvidence = "";
+            var recoveredProtectedCompletionState = targetGoal is not null &&
+                                                   TryRecoverProtectedPrototypeCompletionState(
+                                                       project,
+                                                       runId,
+                                                       targetGoal,
+                                                       out recoveredCompletionSummary,
+                                                       out recoveredCompletionEvidence);
+            if (recoveredProtectedCompletionState)
+            {
+                assistantMessage = recoveredCompletionSummary;
+                codexOutput = AppendCompletionRecoveryEvidence(codexOutput, recoveredCompletionEvidence);
+            }
             var acceptanceValidation = targetGoal is null
                 ? PrototypeGoalAcceptanceValidationResult.NotRun()
                 : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
@@ -300,6 +315,8 @@ public sealed partial class PrototypeQuickFixService
 
             var goalRepairOutcome = targetGoal is null
                 ? null
+                : recoveredProtectedCompletionState
+                    ? new GoalRepairOutcome("succeeded", true)
                 : !mutationGuardValidation.AllowsProgress
                     ? new GoalRepairOutcome("needs_fix", false)
                 : acceptanceValidation.Passed
@@ -395,7 +412,7 @@ public sealed partial class PrototypeQuickFixService
                     CancellationToken.None);
                 await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair", CancellationToken.None);
 
-                var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, CancellationToken.None);
+                var refreshed = await RefreshIterationSessionAsync(project.ProjectId, iterationDetails, CancellationToken.None);
                 var hasNeedsFix = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal)) == true;
                 var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
                 var currentGoalIndex = goalRepairOutcome.GoalStatus == "succeeded"
@@ -686,7 +703,7 @@ public sealed partial class PrototypeQuickFixService
             cancellationToken);
         await _metadataStore.LinkProjectIterationGoalRunAsync(iterationDetails.Session.SessionId, targetGoal.GoalId, runId, "prototype-iteration-goal-repair-preflight", cancellationToken);
 
-        var refreshed = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+        var refreshed = await RefreshIterationSessionAsync(project.ProjectId, iterationDetails, cancellationToken);
         var hasNeedsFix = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "needs_fix", StringComparison.Ordinal)) == true;
         var hasMoreGoals = refreshed?.Goals.Any(goal => string.Equals(goal.Status, "pending", StringComparison.Ordinal)) == true;
         var sessionStatus = goalRepairOutcome.GoalStatus == "succeeded"
@@ -1310,6 +1327,19 @@ public sealed partial class PrototypeQuickFixService
         };
     }
 
+    private async Task<ProjectIterationSessionDetails?> RefreshIterationSessionAsync(
+        string projectId,
+        ProjectIterationSessionDetails iterationDetails,
+        CancellationToken cancellationToken)
+    {
+        var sourceKind = string.Equals(iterationDetails.Session.SourceKind, "repair_plan", StringComparison.OrdinalIgnoreCase)
+            ? "repair_plan"
+            : null;
+        return sourceKind is null
+            ? await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken)
+            : await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, sourceKind, cancellationToken);
+    }
+
     private async Task<ProjectIterationSessionDetails?> ResolveGoalRepairSessionAsync(
         string projectId,
         PrototypeGoalRepairContext goalRepair,
@@ -1510,6 +1540,221 @@ public sealed partial class PrototypeQuickFixService
         return null;
     }
 
+    private bool TryRecoverProtectedPrototypeCompletionState(
+        ProjectSnapshot project,
+        string runId,
+        ProjectIterationGoalSnapshot goal,
+        out string assistantMessage,
+        out string recoveryEvidence)
+    {
+        assistantMessage = "";
+        recoveryEvidence = "";
+        if (!IsCompletionEvidenceRecoveryGoal(goal))
+        {
+            return false;
+        }
+
+        var repairState = _stateWriter.ReadLatestPrototypeRepairState(project);
+        if (string.IsNullOrWhiteSpace(repairState))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(repairState);
+            var root = document.RootElement;
+            var repairStatus = TryReadString(root, "status");
+            if (!string.Equals(repairStatus, "completed_with_protected_latest_blocker", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!JsonArrayContains(root, "fixed_intent", "prototype_completion_state_missing"))
+            {
+                return false;
+            }
+
+            if (!root.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object ||
+                !TryReadBool(completion, "succeeded") ||
+                !string.IsNullOrWhiteSpace(TryReadString(completion, "error")))
+            {
+                return false;
+            }
+
+            var smokeScene = TryReadString(root, "smoke_scene");
+            if (string.IsNullOrWhiteSpace(smokeScene))
+            {
+                smokeScene = TryReadString(completion, "smoke_scene");
+            }
+
+            var prototypeRecord = TryReadString(root, "prototype_record");
+            var prototypeContract = TryReadString(root, "prototype_contract");
+            var slug = ResolveRecoverySlug(project, root, prototypeRecord, smokeScene);
+            if (string.IsNullOrWhiteSpace(slug) ||
+                string.IsNullOrWhiteSpace(prototypeRecord) ||
+                string.IsNullOrWhiteSpace(smokeScene))
+            {
+                return false;
+            }
+
+            var prototypeSpec = ResolveRecoveryPrototypeSpec(project.RepoPath, root, slug);
+            if (string.IsNullOrWhiteSpace(prototypeSpec))
+            {
+                return false;
+            }
+
+            var normalizedSlug = PrototypeRecordWriter.SanitizeSlug(slug);
+            if (!TryResolveRecoveredCompletionEvidence(
+                    project.RepoPath,
+                    normalizedSlug,
+                    prototypeRecord,
+                    prototypeSpec,
+                    smokeScene,
+                    root,
+                    completion,
+                    out var completedThroughDay,
+                    out var recoveredWorkflowSteps))
+            {
+                return false;
+            }
+
+            var prototypeRecordPath = Path.Combine(project.RepoPath, prototypeRecord.Replace('/', Path.DirectorySeparatorChar));
+            var prototypeSpecPath = Path.Combine(project.RepoPath, prototypeSpec.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(prototypeRecordPath) ||
+                !File.Exists(prototypeSpecPath) ||
+                !PrototypeSceneExists(project.RepoPath, smokeScene))
+            {
+                return false;
+            }
+
+            var activeRoot = Path.Combine(project.RepoPath, "logs", "ci", "active-prototypes");
+            Directory.CreateDirectory(activeRoot);
+            var packagingRelativePath = ToSlash(Path.Combine("logs", "ci", "active-prototypes", $"{normalizedSlug}.packaging.json"));
+            var completionRelativePath = ToSlash(Path.Combine("logs", "ci", "active-prototypes", $"{normalizedSlug}.completion.md"));
+            var completionSummary = FirstNonEmpty(
+                TryReadString(completion, "completion_summary"),
+                TryReadString(root, "completion_summary"),
+                $"Prototype completion state for {normalizedSlug} was recovered from prototype-repair evidence.");
+            var nextStepSource = TryReadString(completion, "next_step_source");
+            var nextStepEvaluation = TryReadString(completion, "next_step_evaluation");
+            var nextStepEvaluationReason = TryReadString(completion, "next_step_evaluation_reason");
+
+            var activeStatePath = Path.Combine(activeRoot, $"{normalizedSlug}.active.json");
+            File.WriteAllText(
+                activeStatePath,
+                JsonSerializer.Serialize(new
+                {
+                    status = "completed-through-day",
+                    prototype_file = prototypeRecord,
+                    prototype_spec = prototypeSpec,
+                    completed_through_day = completedThroughDay,
+                    missing_required_fields = Array.Empty<string>(),
+                    steps_run = recoveredWorkflowSteps,
+                    packaging_summary = packagingRelativePath,
+                    completion_summary = completionSummary,
+                    completion_report = completionRelativePath,
+                    next_step_source = nextStepSource,
+                    next_step_evaluation = nextStepEvaluation,
+                    next_step_evaluation_reason = nextStepEvaluationReason
+                }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+            var packagingPath = Path.Combine(project.RepoPath, packagingRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(packagingPath)!);
+            File.WriteAllText(
+                packagingPath,
+                JsonSerializer.Serialize(new
+                {
+                    schema_version = 1,
+                    kind = "prototype-packaging-summary",
+                    generated_at_utc = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                    slug = normalizedSlug,
+                    prototype_record = prototypeRecord,
+                    prototype_spec = prototypeSpec,
+                    default_scene = smokeScene,
+                    default_scene_label = Path.GetFileNameWithoutExtension(smokeScene),
+                    tdd_summary_paths = Array.Empty<string>(),
+                    tdd_summaries = Array.Empty<object>(),
+                    tdd_stage_counts = new { red = 0, green = 0, refactor = 0, total = 0 },
+                    prototype_artifacts = new[] { prototypeRecord, prototypeSpec, packagingRelativePath, completionRelativePath },
+                    playtest_focus_points = Array.Empty<string>(),
+                    steps_completed = recoveredWorkflowSteps
+                }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+            var completionPath = Path.Combine(project.RepoPath, completionRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(completionPath)!);
+            File.WriteAllText(
+                completionPath,
+                string.Join(
+                    "\n",
+                    [
+                        "# Prototype Completion Recovery",
+                        "",
+                        completionSummary,
+                        "",
+                        $"Recovered from repair evidence during run `{runId}`.",
+                        $"Default scene: `{smokeScene}`"
+                    ]),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+            _stateWriter.WritePrototypeState(project, new
+            {
+                route = "prototype-7day-playable",
+                route_skill = PrototypeRouteSkillPolicy.Resolve(project),
+                game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+                run_id = runId,
+                status = "succeeded",
+                exit_code = 0,
+                prototype_record = prototypeRecord,
+                prototype_contract = prototypeContract,
+                slug = normalizedSlug,
+                prototype_completion = new
+                {
+                    succeeded = true,
+                    status = "completed-through-day",
+                    completed_through_day = completedThroughDay,
+                    error = (string?)null,
+                    smoke_scene = smokeScene,
+                    completion_summary = completionSummary,
+                    next_step_source = nextStepSource,
+                    next_step_evaluation = nextStepEvaluation,
+                    next_step_evaluation_reason = nextStepEvaluationReason
+                },
+                godot_smoke = new
+                {
+                    ran = false,
+                    exit_code = 0,
+                    reason = "recovered_from_prototype_repair_state",
+                    scene = smokeScene,
+                    diagnostic_excerpt = "",
+                    resource_diagnostics = Array.Empty<string>()
+                },
+                updated_utc = DateTimeOffset.UtcNow.ToString("O")
+            });
+
+            assistantMessage =
+                $"当前任务已完成。系统已根据原型修复旁证恢复 canonical 原型完成状态，任务 {goal.GoalIndex} 可以进入下一步。";
+            recoveryEvidence =
+                $"Recovered protected prototype completion state for slug {normalizedSlug}; active prototype state, packaging summary, completion report, and canonical route state were rewritten by the platform.";
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     private static PrototypeContractSnapshot MissingPrototypeContract()
     {
         return new PrototypeContractSnapshot("routes/prototype-contract/latest.json", "");
@@ -1567,6 +1812,8 @@ public sealed partial class PrototypeQuickFixService
             - 结构化运行记忆和历史摘要只用于理解上次到哪里了，不是本轮修复任务。
             - 不要把“路由状态、恢复逻辑、平台测试、文档整理、脚本调整”当作当前任务的完成内容，除非当前任务标题和验收提示明确要求。
             - 如果当前任务是玩法/Godot/RPG 任务，完成标准必须来自 Title、Description、AcceptanceHint 中的玩法验收。
+            - 如果当前任务是“恢复运行证据/完成证据”，且因为受保护文件无法直接覆写 canonical completion state，则必须把已验证的 completion evidence 完整写入当前 repair 输出：至少包含 completed_through_day，以及 day 1-7 的 steps_run/steps_completed。
+            - 对这类 completion evidence 恢复，不要只写“已恢复”摘要；要保留真实 step status、reason、record、prototype_spec 等结构化字段，便于平台补写 canonical state。
             - Main.tscn SOP：原型相关修复必须保持根级 VBox、Overlays、ScreenRoot 默认 visible = false；final/full-playable 目标必须修到这一点通过。
             - Godot stderr 属于当前任务验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
             - `This control can't grab focus` 也属于当前任务验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
@@ -2610,6 +2857,449 @@ public sealed partial class PrototypeQuickFixService
         }
 
         return null;
+    }
+
+    private static bool IsCompletionEvidenceRecoveryGoal(ProjectIterationGoalSnapshot goal)
+    {
+        var combined = string.Join(
+            "\n",
+            new[] { goal.Title, goal.Description, goal.AcceptanceHint }
+                .Where(static value => !string.IsNullOrWhiteSpace(value)))
+            .ToLowerInvariant();
+        return combined.Contains("运行证据", StringComparison.Ordinal) ||
+               combined.Contains("完成证据", StringComparison.Ordinal) ||
+               combined.Contains("completion evidence", StringComparison.Ordinal) ||
+               combined.Contains("completion artifacts", StringComparison.Ordinal) ||
+               combined.Contains("prototype route can generate completion evidence", StringComparison.Ordinal);
+    }
+
+    private static string ResolveRecoveryPrototypeSpec(string repositoryRoot, JsonElement root, string slug)
+    {
+        var stateSpec = TryReadString(root, "prototype_spec");
+        if (!string.IsNullOrWhiteSpace(stateSpec) &&
+            File.Exists(Path.Combine(repositoryRoot, stateSpec.Replace('/', Path.DirectorySeparatorChar))))
+        {
+            return stateSpec;
+        }
+
+        var candidate = ToSlash(Path.Combine("docs", "prototypes", $"{PrototypeRecordWriter.SanitizeSlug(slug)}.prototype.json"));
+        return File.Exists(Path.Combine(repositoryRoot, candidate.Replace('/', Path.DirectorySeparatorChar)))
+            ? candidate
+            : "";
+    }
+
+    private static string ResolveRecoverySlug(ProjectSnapshot project, JsonElement root, string? prototypeRecord, string? smokeScene)
+    {
+        var stateSlug = TryReadString(root, "slug");
+        if (!string.IsNullOrWhiteSpace(stateSlug))
+        {
+            return PrototypeRecordWriter.SanitizeSlug(stateSlug);
+        }
+
+        if (!string.IsNullOrWhiteSpace(smokeScene))
+        {
+            var marker = "res://Game.Godot/Prototypes/";
+            if (smokeScene.StartsWith(marker, StringComparison.OrdinalIgnoreCase))
+            {
+                var remainder = smokeScene[marker.Length..];
+                var segment = remainder.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(segment))
+                {
+                    return PrototypeRecordWriter.SanitizeSlug(segment);
+                }
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(prototypeRecord))
+        {
+            var fileName = Path.GetFileNameWithoutExtension(prototypeRecord);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                var parts = fileName.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 4)
+                {
+                    return PrototypeRecordWriter.SanitizeSlug(string.Join('-', parts.Skip(3)));
+                }
+
+                return PrototypeRecordWriter.SanitizeSlug(fileName);
+            }
+        }
+
+        return PrototypeRecordWriter.SanitizeSlug(FirstNonEmpty(project.GameName, project.Name, "prototype"));
+    }
+
+    private static bool TryResolveRecoveredCompletionEvidence(
+        string repositoryRoot,
+        string normalizedSlug,
+        string expectedPrototypeRecord,
+        string expectedPrototypeSpec,
+        string expectedSmokeScene,
+        JsonElement root,
+        JsonElement completion,
+        out int completedThroughDay,
+        out object[] steps)
+    {
+        completedThroughDay = TryReadInt(completion, "completed_through_day");
+        if (completedThroughDay < RecoveredWorkflowMaxDay)
+        {
+            steps = [];
+            return false;
+        }
+
+        if (TryReadRecoveredWorkflowSteps(root, completion, out steps))
+        {
+            return true;
+        }
+
+        return TryReadRecoveredWorkflowStepsFromActiveState(
+            repositoryRoot,
+            normalizedSlug,
+            expectedPrototypeRecord,
+            expectedPrototypeSpec,
+            expectedSmokeScene,
+            out steps);
+    }
+
+    private static bool TryReadRecoveredWorkflowSteps(JsonElement root, JsonElement completion, out object[] steps)
+    {
+        steps = [];
+        if (!TryGetWorkflowStepsArray(completion, out var stepsElement) &&
+            !TryGetWorkflowStepsArray(root, out stepsElement))
+        {
+            return false;
+        }
+
+        return TryNormalizeRecoveredWorkflowSteps(stepsElement, out steps);
+    }
+
+    private static bool TryReadRecoveredWorkflowStepsFromActiveState(
+        string repositoryRoot,
+        string normalizedSlug,
+        string expectedPrototypeRecord,
+        string expectedPrototypeSpec,
+        string expectedSmokeScene,
+        out object[] steps)
+    {
+        steps = [];
+        var activeStatePath = Path.Combine(repositoryRoot, "logs", "ci", "active-prototypes", $"{normalizedSlug}.active.json");
+        if (!File.Exists(activeStatePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(activeStatePath, Encoding.UTF8));
+            var root = document.RootElement;
+            var status = TryReadString(root, "status");
+            var completedThroughDay = TryReadInt(root, "completed_through_day");
+            if (!string.Equals(status, "completed-through-day", StringComparison.OrdinalIgnoreCase) ||
+                completedThroughDay < RecoveredWorkflowMaxDay)
+            {
+                return false;
+            }
+
+            if (!ActiveStateMatchesRecoveryEvidence(repositoryRoot, root, expectedPrototypeRecord, expectedPrototypeSpec, expectedSmokeScene))
+            {
+                return false;
+            }
+
+            return TryGetWorkflowStepsArray(root, out var stepsElement) &&
+                   TryNormalizeRecoveredWorkflowSteps(stepsElement, out steps);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
+    private static bool ActiveStateMatchesRecoveryEvidence(
+        string repositoryRoot,
+        JsonElement activeRoot,
+        string expectedPrototypeRecord,
+        string expectedPrototypeSpec,
+        string expectedSmokeScene)
+    {
+        var activePrototypeRecord = TryReadString(activeRoot, "prototype_file");
+        var activePrototypeSpec = TryReadString(activeRoot, "prototype_spec");
+        if (!SameSlashPath(activePrototypeRecord, expectedPrototypeRecord) ||
+            !SameSlashPath(activePrototypeSpec, expectedPrototypeSpec))
+        {
+            return false;
+        }
+
+        return TryResolveActiveStateSmokeScene(repositoryRoot, activeRoot, activePrototypeSpec!, out var activeSmokeScene) &&
+               SameSlashPath(activeSmokeScene, expectedSmokeScene);
+    }
+
+    private static bool TryResolveActiveStateSmokeScene(string repositoryRoot, JsonElement activeRoot, string activePrototypeSpec, out string smokeScene)
+    {
+        smokeScene = FirstNonEmpty(TryReadString(activeRoot, "smoke_scene"), TryReadString(activeRoot, "default_scene"));
+        if (!string.IsNullOrWhiteSpace(smokeScene))
+        {
+            return true;
+        }
+
+        var packagingSummary = TryReadString(activeRoot, "packaging_summary");
+        if (!string.IsNullOrWhiteSpace(packagingSummary))
+        {
+            var packagingPath = Path.Combine(repositoryRoot, packagingSummary.Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(packagingPath))
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(File.ReadAllText(packagingPath, Encoding.UTF8));
+                    smokeScene = TryReadString(document.RootElement, "default_scene") ?? "";
+                    if (!string.IsNullOrWhiteSpace(smokeScene))
+                    {
+                        return true;
+                    }
+                }
+                catch (JsonException)
+                {
+                    smokeScene = "";
+                }
+                catch (IOException)
+                {
+                    smokeScene = "";
+                }
+            }
+        }
+
+        return TryResolvePrototypeSpecSmokeScene(repositoryRoot, activePrototypeSpec, out smokeScene);
+    }
+
+    private static bool TryResolvePrototypeSpecSmokeScene(string repositoryRoot, string prototypeSpec, out string smokeScene)
+    {
+        smokeScene = "";
+        var prototypeSpecPath = Path.Combine(repositoryRoot, prototypeSpec.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(prototypeSpecPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(prototypeSpecPath, Encoding.UTF8));
+            var root = document.RootElement;
+            if (!root.TryGetProperty("prototype_type_kit", out var typeKit) || typeKit.ValueKind != JsonValueKind.Object ||
+                !typeKit.TryGetProperty("manifest", out var manifest) || manifest.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            smokeScene = TryReadString(manifest, "default_scene") ?? "";
+            if (string.IsNullOrWhiteSpace(smokeScene) &&
+                manifest.TryGetProperty("paths", out var paths) &&
+                paths.ValueKind == JsonValueKind.Object)
+            {
+                smokeScene = TryReadString(paths, "default_scene") ?? "";
+            }
+
+            return !string.IsNullOrWhiteSpace(smokeScene);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
+    private static bool SameSlashPath(string? left, string? right)
+    {
+        return !string.IsNullOrWhiteSpace(left) &&
+               !string.IsNullOrWhiteSpace(right) &&
+               string.Equals(ToSlash(left.Trim()), ToSlash(right.Trim()), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryNormalizeRecoveredWorkflowSteps(JsonElement stepsElement, out object[] steps)
+    {
+        steps = [];
+        var stepsByDay = new Dictionary<int, JsonElement>();
+        foreach (var step in stepsElement.EnumerateArray())
+        {
+            if (!step.TryGetProperty("day", out var dayElement) ||
+                dayElement.ValueKind != JsonValueKind.Number ||
+                !dayElement.TryGetInt32(out var day) ||
+                day < 1 ||
+                day > RecoveredWorkflowMaxDay)
+            {
+                continue;
+            }
+
+            stepsByDay[day] = step.Clone();
+        }
+
+        var recoveredSteps = new List<object>();
+        for (var day = 1; day <= RecoveredWorkflowMaxDay; day++)
+        {
+            if (!stepsByDay.TryGetValue(day, out var step))
+            {
+                return false;
+            }
+
+            var status = TryReadString(step, "status") ?? "";
+            if (!IsAcceptableRecoveredWorkflowStep(day, status, step))
+            {
+                return false;
+            }
+
+            recoveredSteps.Add(new
+            {
+                day,
+                title = FirstNonEmpty(TryReadString(step, "title"), $"Recovered workflow step {day:00}"),
+                status,
+                reason = TryReadString(step, "reason"),
+                record = TryReadString(step, "record"),
+                prototype_spec = TryReadString(step, "prototype_spec")
+            });
+        }
+
+        steps = recoveredSteps.ToArray();
+        return true;
+    }
+
+    private static bool TryGetWorkflowStepsArray(JsonElement root, out JsonElement stepsElement)
+    {
+        if (root.TryGetProperty("steps_run", out stepsElement) && stepsElement.ValueKind == JsonValueKind.Array)
+        {
+            return true;
+        }
+
+        if (root.TryGetProperty("steps_completed", out stepsElement) && stepsElement.ValueKind == JsonValueKind.Array)
+        {
+            return true;
+        }
+
+        stepsElement = default;
+        return false;
+    }
+
+    private static bool IsAcceptableRecoveredWorkflowStep(int day, string status, JsonElement step)
+    {
+        if (string.Equals(status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (day == 2 && string.Equals(status, "skipped", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Equals(TryReadString(step, "reason"), "prototype_scaffold_already_exists", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if ((day == 3 || day == 4) && string.Equals(status, "skipped", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Equals(TryReadString(step, "reason"), "existing_project_specific_prototype_ready_for_green", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
+    }
+
+    private static bool PrototypeSceneExists(string repositoryRoot, string scene)
+    {
+        return TryResolvePrototypeScenePath(repositoryRoot, scene, out _, out var fullPath) && IsValidGodotSceneFile(fullPath);
+    }
+
+    private static bool TryResolvePrototypeScenePath(string repositoryRoot, string scene, out string relativePath, out string fullPath)
+    {
+        relativePath = "";
+        fullPath = "";
+        if (string.IsNullOrWhiteSpace(scene) || !scene.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        relativePath = scene["res://".Length..].Replace('/', Path.DirectorySeparatorChar);
+        fullPath = Path.Combine(repositoryRoot, relativePath);
+        return true;
+    }
+
+    private static bool IsValidGodotSceneFile(string fullPath)
+    {
+        if (!File.Exists(fullPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var reader = new StreamReader(fullPath, Encoding.UTF8, true);
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                return line.TrimStart().StartsWith("[gd_scene", StringComparison.Ordinal);
+            }
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static string AppendCompletionRecoveryEvidence(string codexOutput, string recoveryEvidence)
+    {
+        if (string.IsNullOrWhiteSpace(recoveryEvidence))
+        {
+            return codexOutput;
+        }
+
+        return string.IsNullOrWhiteSpace(codexOutput)
+            ? recoveryEvidence
+            : $"{codexOutput}{Environment.NewLine}{recoveryEvidence}";
+    }
+
+    private static string? TryReadString(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) && element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : null;
+    }
+
+    private static int TryReadInt(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) && element.ValueKind == JsonValueKind.Number
+            ? element.GetInt32()
+            : 0;
+    }
+
+    private static bool TryReadBool(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) &&
+               (element.ValueKind == JsonValueKind.True || element.ValueKind == JsonValueKind.False) &&
+               element.GetBoolean();
+    }
+
+    private static bool JsonArrayContains(JsonElement root, string propertyName, string expectedValue)
+    {
+        if (!root.TryGetProperty(propertyName, out var element) || element.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (var item in element.EnumerateArray())
+        {
+            if (item.ValueKind == JsonValueKind.String &&
+                string.Equals(item.GetString(), expectedValue, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string? ParseStructuredStatus(string? value)

@@ -820,7 +820,7 @@ public sealed class PrototypeWorkflowTests
         idle.Status.Should().Be("idle");
         finished.Status.Should().Be("succeeded");
         finished.PrototypeCreationStatus.Should().Be("succeeded");
-        finished.AcceptanceStatus.Should().Be("succeeded");
+        finished.AcceptanceStatus.Should().BeNull();
         finished.Step.Should().Be("succeeded");
         finished.RunId.Should().Be(result.RunId);
         finished.CompletionSummary.Should().Contain("下一步建议");
@@ -963,7 +963,46 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
-    public async Task ValidateAsync_RevalidatesExistingPrototypeWithoutRunningCodex()
+    public async Task ValidateSkeletonAsync_RevalidatesExistingPrototypeWithoutRequiringIterationPlan()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        runner.Commands.Should().HaveCount(3);
+
+        var result = await service.ValidateSkeletonAsync(accountId, projectId);
+        var progress = await service.GetProgressAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        result.ExitCode.Should().Be(0);
+        result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
+        runner.Commands.Should().HaveCount(6);
+        runner.Commands.Skip(3).SelectMany(command => command.Arguments).Should().NotContain("run-prototype-workflow");
+        runner.Commands[3].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands[4].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
+        runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
+        runner.Commands[5].Arguments.Should().Contain("--prewarm");
+        run!.EvidenceJson.Should().Contain("\"validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"skeleton_validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
+        run.EvidenceJson.Should().Contain("\"passed\":true");
+        run.Status.Should().Be("succeeded");
+        progress.Status.Should().Be("succeeded");
+        progress.RunId.Should().Be(result.RunId);
+        progress.AcceptanceStatus.Should().BeNull();
+        progress.AcceptanceRunId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ValidateAsync_BlocksWhenIterationPlanIsMissing()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -978,24 +1017,10 @@ public sealed class PrototypeWorkflowTests
         runner.Commands.Should().HaveCount(3);
 
         var result = await service.ValidateAsync(accountId, projectId);
-        var progress = await service.GetProgressAsync(accountId, projectId);
-        var run = await store.GetRunSnapshotAsync(result.RunId);
 
-        result.Status.Should().Be("succeeded");
-        result.ExitCode.Should().Be(0);
-        result.PrototypeRecordPath.Should().StartWith("docs/prototypes/");
-        runner.Commands.Should().HaveCount(6);
-        runner.Commands.Skip(3).SelectMany(command => command.Arguments).Should().NotContain("run-prototype-workflow");
-        runner.Commands[3].Arguments.Should().Contain("scripts/python/smoke_headless.py");
-        runner.Commands[4].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
-        runner.Commands[5].Arguments.Should().Contain(["scripts/python/run_gdunit.py", "--add", "tests/Prototype/DemoPrototype"]);
-        runner.Commands[5].Arguments.Should().Contain("--prewarm");
-        run!.EvidenceJson.Should().Contain("\"validation_only\":true");
-        run.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
-        run.EvidenceJson.Should().Contain("\"passed\":true");
-        run.Status.Should().Be("succeeded");
-        progress.Status.Should().Be("succeeded");
-        progress.RunId.Should().Be(result.RunId);
+        result.Status.Should().Be("iteration_plan_not_complete");
+        result.ExitCode.Should().Be(409);
+        runner.Commands.Should().HaveCount(3);
     }
 
     [Fact]
@@ -1034,6 +1059,7 @@ public sealed class PrototypeWorkflowTests
         var setupRunner = new FakeHostedProcessRunner();
         var setupService = Service(store, options, setupRunner);
         _ = await setupService.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
         var service = Service(store, options, new ThrowingHostedProcessRunner());
 
         var result = await service.ValidateAsync(accountId, projectId);
@@ -1110,6 +1136,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, runner);
 
         _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
         runner.Commands.Should().HaveCount(3);
 
         var result = await service.ValidateAsync(accountId, projectId);
@@ -1148,6 +1175,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, runner);
 
         _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
 
         var result = await service.ValidateAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -1170,6 +1198,7 @@ public sealed class PrototypeWorkflowTests
         var service = Service(store, options, runner);
 
         _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
 
         var result = await service.ValidateAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);

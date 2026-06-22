@@ -487,8 +487,7 @@ public sealed class ProjectWorkflowRouteService
             ProjectPackageListResult? packageList,
             ProjectAssetInventoryResult? inventory)
         {
-            var creationStatus = Normalize(progress.PrototypeCreationStatus ?? (IsValidationOnly(progress) ? "missing" : progress.Status));
-            var acceptanceStatusRaw = Normalize(progress.AcceptanceStatus ?? progress.Status);
+            var creationStatus = Normalize(progress.PrototypeCreationStatus ?? progress.Status);
             var hasPrototype = creationStatus == "succeeded" || runs.Any(run => run.RunType == "prototype-7day-playable" && run.Status == "succeeded");
 
             var goals = iteration?.Goals ?? [];
@@ -497,18 +496,22 @@ public sealed class ProjectWorkflowRouteService
             var hasPending = goals.Any(goal => IsPending(goal.Status));
             var iterationCompleted = hasPlan && goals.All(goal => IsDone(goal.Status));
 
-            var latestAcceptanceRun = LatestRun(runs, run => run.RunType == "prototype-7day-playable" && IsValidationOnly(run));
+            var latestAcceptanceRun = LatestRun(runs, run => run.RunType == "prototype-7day-playable" && IsFinalValidationOnly(run));
+            var latestSkeletonAcceptanceRun = LatestRun(runs, run => run.RunType == "prototype-7day-playable" && IsSkeletonValidationOnly(run));
+            var acceptanceStatusRaw = Normalize(latestAcceptanceRun?.Status ?? progress.AcceptanceStatus ?? "pending");
+            var skeletonAcceptanceStatusRaw = Normalize(latestSkeletonAcceptanceRun?.Status ?? (creationStatus == "succeeded" ? "succeeded" : "pending"));
             var latestIterationCompletionUtc = LatestIterationCompletionUtc(iteration);
             var latestAcceptanceUtc = latestAcceptanceRun is null
                 ? null
                 : ParseUtc(latestAcceptanceRun.FinishedUtc ?? latestAcceptanceRun.ProgressUpdatedUtc ?? latestAcceptanceRun.StartedUtc ?? latestAcceptanceRun.CreatedUtc);
             var acceptancePassed = acceptanceStatusRaw == "succeeded";
+            var skeletonAcceptancePassed = skeletonAcceptanceStatusRaw == "succeeded";
             var finalAcceptancePassed = acceptancePassed &&
                                         iterationCompleted &&
                                         latestAcceptanceRun is not null &&
                                         (!latestIterationCompletionUtc.HasValue ||
                                          latestAcceptanceUtc >= latestIterationCompletionUtc.Value);
-            var failedAcceptance = acceptanceStatusRaw == "failed";
+            var failedAcceptance = acceptanceStatusRaw == "failed" || skeletonAcceptanceStatusRaw == "failed";
 
             var repairGoals = repair?.Goals ?? [];
             var hasRunnableRepair = repairGoals.Any(goal => IsRunnable(goal.Status));
@@ -553,7 +556,7 @@ public sealed class ProjectWorkflowRouteService
             return new ProjectWorkflowState(
                 project,
                 hasPrototype,
-                acceptancePassed,
+                skeletonAcceptancePassed,
                 finalAcceptancePassed,
                 failedAcceptance,
                 hasRunnableRepair,
@@ -622,14 +625,31 @@ public sealed class ProjectWorkflowRouteService
                    DateTimeOffset.MinValue;
         }
 
-        private static bool IsValidationOnly(PrototypeWorkflowProgress progress)
+        private static bool IsFinalValidationOnly(RunSnapshot run)
         {
-            return string.Equals(progress.PrototypeCreationStatus, "missing", StringComparison.OrdinalIgnoreCase) ||
-                   (string.IsNullOrWhiteSpace(progress.PrototypeCreationRunId) &&
-                    !string.IsNullOrWhiteSpace(progress.AcceptanceRunId));
+            return IsAnyValidationOnly(run) && !IsSkeletonValidationOnly(run);
         }
 
-        private static bool IsValidationOnly(RunSnapshot run)
+        private static bool IsSkeletonValidationOnly(RunSnapshot run)
+        {
+            if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+            {
+                return false;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(run.EvidenceJson);
+                return document.RootElement.TryGetProperty("skeleton_validation_only", out var value) &&
+                       value.ValueKind == JsonValueKind.True;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
+
+        private static bool IsAnyValidationOnly(RunSnapshot run)
         {
             if (string.IsNullOrWhiteSpace(run.EvidenceJson))
             {

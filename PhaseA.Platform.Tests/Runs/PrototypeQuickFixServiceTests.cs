@@ -893,6 +893,181 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRecoverProtectedPrototypeCompletionState()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: true,
+            includeActiveState: false,
+            includeSecondGoal: true);
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        result.IterationSessionStatus.Should().Be("paused_for_review");
+        refreshed!.Goals[0].Status.Should().Be("succeeded");
+        refreshed.Goals[1].Status.Should().Be("pending");
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.active.json")).Should().BeTrue();
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.packaging.json")).Should().BeTrue();
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.completion.md")).Should().BeTrue();
+        recoveredPrototypeState.Should().Contain("\"status\": \"succeeded\"");
+        recoveredPrototypeState.Should().Contain("recovered_from_prototype_repair_state");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenCompletionDayIsIncomplete()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 6,
+            includeRepairSteps: true,
+            includeActiveState: false);
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.active.json")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenWorkflowStepsAreMissing()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: false);
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.active.json")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRecoverProtectedPrototypeCompletionState_FromExistingActiveStateSteps()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: true);
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("succeeded");
+        refreshed!.Goals[0].Status.Should().Be("succeeded");
+        recoveredPrototypeState.Should().Contain("\"status\": \"succeeded\"");
+        recoveredPrototypeState.Should().Contain("recovered_from_prototype_repair_state");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenActiveStateEvidenceDoesNotMatch()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: true,
+            activeStatePrototypeRecord: "docs/prototypes/2026-06-22-AnotherTowerdemo.md");
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenActiveStatePrototypeSpecDoesNotMatch()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: true,
+            activeStatePrototypeSpec: "docs/prototypes/AnotherTowerdemo.prototype.json");
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenActiveStateSmokeSceneDoesNotMatch()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: true,
+            activeStateSmokeScene: "res://Game.Godot/Prototypes/Towerdemo/AnotherTowerdemoPrototype.tscn");
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldReturnSpecificStepOneContractGaps()
     {
         using var database = TempSqliteDatabase.Create();
@@ -2529,6 +2704,176 @@ public static class PrototypeCatalog
         File.WriteAllText(mapScript, scriptText);
     }
 
+    private static void SeedRecoveredPrototypeFiles(string repoPath, string slug)
+    {
+        var prototypeDir = Path.Combine(repoPath, "Game.Godot", "Prototypes", slug);
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, $"{slug}Prototype.tscn"), "[gd_scene format=3]\n\n[node name=\"Prototype\" type=\"Node\"]\n");
+
+        var docsDir = Path.Combine(repoPath, "docs", "prototypes");
+        Directory.CreateDirectory(docsDir);
+        File.WriteAllText(Path.Combine(docsDir, $"2026-06-22-{slug}.md"), $"# Prototype: {slug}\n");
+        File.WriteAllText(Path.Combine(docsDir, $"{slug}.prototype.json"), $$"""
+{
+  "schema_version": 1,
+  "kind": "prototype-spec",
+  "slug": "{{slug}}",
+  "prototype_type_kit": {
+    "manifest": {
+      "default_scene": "res://Game.Godot/Prototypes/{{slug}}/{{slug}}Prototype.tscn"
+    }
+  }
+}
+""");
+
+        var contractDir = Path.Combine(repoPath, "routes", "prototype-contract");
+        Directory.CreateDirectory(contractDir);
+        File.WriteAllText(Path.Combine(contractDir, "latest.json"), "{}");
+    }
+
+    private static object[] BuildRecoveredRepairSteps()
+    {
+        return
+        [
+            new { day = 1, title = "Recovered workflow step 01", status = "ok", record = "docs/prototypes/2026-06-22-Towerdemo.md" },
+            new { day = 2, title = "Recovered workflow step 02", status = "ok", prototype_spec = "docs/prototypes/Towerdemo.prototype.json" },
+            new { day = 3, title = "Recovered workflow step 03", status = "ok" },
+            new { day = 4, title = "Recovered workflow step 04", status = "ok" },
+            new { day = 5, title = "Recovered workflow step 05", status = "ok" },
+            new { day = 6, title = "Recovered workflow step 06", status = "ok" },
+            new { day = 7, title = "Recovered workflow step 07", status = "ok" }
+        ];
+    }
+
+    private static async Task<ProtectedCompletionRecoveryScenario> CreateProtectedCompletionRecoveryScenarioAsync(
+        int completedThroughDay,
+        bool includeRepairSteps,
+        bool includeActiveState,
+        string? activeStatePrototypeRecord = null,
+        string? activeStatePrototypeSpec = null,
+        string? activeStateSmokeScene = null,
+        bool includeSecondGoal = false)
+    {
+        var database = TempSqliteDatabase.Create();
+        var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "Phantom Tower");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        SeedRecoveredPrototypeFiles(project!.RepoPath, "Towerdemo");
+        if (includeActiveState)
+        {
+            WriteRecoveredActivePrototypeState(
+                project.RepoPath,
+                "Towerdemo",
+                activeStatePrototypeRecord,
+                activeStatePrototypeSpec,
+                activeStateSmokeScene);
+        }
+
+        var writer = new PrototypeRouteStateWriter();
+        writer.WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            run_id = "failed-run",
+            status = "failed",
+            prototype_completion = new
+            {
+                succeeded = false,
+                error = "prototype_completion_state_missing"
+            }
+        });
+        writer.WritePrototypeRepairState(project, new
+        {
+            route = "prototype-repair",
+            status = "completed_with_protected_latest_blocker",
+            fixed_intent = new[] { "prototype_completion_state_missing" },
+            remaining = new[] { "prototype latest state file is protected from overwrite in the current focused workspace" },
+            prototype_record = "docs/prototypes/2026-06-22-Towerdemo.md",
+            prototype_contract = "routes/prototype-contract/latest.json",
+            smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn",
+            prototype_completion = new
+            {
+                succeeded = true,
+                status = "completed",
+                completed_through_day = completedThroughDay,
+                error = (string?)null,
+                smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn",
+                completion_summary = completedThroughDay >= 7 ? "Towerdemo prototype route has recovered completion evidence." : "Only partially recovered.",
+                steps_run = includeRepairSteps ? BuildRecoveredRepairSteps() : null
+            },
+            steps_run = includeRepairSteps ? BuildRecoveredRepairSteps() : null
+        });
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "repair_plan",
+            "prototype_completion_state_missing",
+            "Repair prototype completion evidence.",
+            includeSecondGoal
+                ? [
+                    new ProjectIterationGoalCreateCommand(
+                        1,
+                        "恢复原型运行证据",
+                        "恢复路由完成证据，并消除 prototype_completion_state_missing。",
+                        "最新失败原因已经消除，并且原型路由可以生成完成证据。"),
+                    new ProjectIterationGoalCreateCommand(
+                        2,
+                        "修复通用原型合同缺口",
+                        "Continue only after completion evidence is recovered.",
+                        "Contract gaps are fixed.")
+                ]
+                : [
+                    new ProjectIterationGoalCreateCommand(
+                        1,
+                        "恢复原型运行证据",
+                        "恢复路由完成证据，并消除 prototype_completion_state_missing。",
+                        "最新失败原因已经消除，并且原型路由可以生成完成证据。")
+                ]);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs repair.");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var targetGoal = details!.Goals[0];
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "prototype_completion_state_missing", null);
+        return new ProtectedCompletionRecoveryScenario(database, workspaceRoot, repoRoot, options, store, accountId, projectId, project, writer, details, targetGoal);
+    }
+
+    private static void WriteRecoveredActivePrototypeState(
+        string repoPath,
+        string slug,
+        string? prototypeRecordOverride = null,
+        string? prototypeSpecOverride = null,
+        string? smokeSceneOverride = null)
+    {
+        var activeDir = Path.Combine(repoPath, "logs", "ci", "active-prototypes");
+        Directory.CreateDirectory(activeDir);
+        var prototypeRecord = prototypeRecordOverride ?? $"docs/prototypes/2026-06-22-{slug}.md";
+        var prototypeSpec = prototypeSpecOverride ?? $"docs/prototypes/{slug}.prototype.json";
+        var smokeScene = smokeSceneOverride ?? $"res://Game.Godot/Prototypes/{slug}/{slug}Prototype.tscn";
+        File.WriteAllText(Path.Combine(activeDir, $"{slug}.active.json"), $$"""
+{
+  "status": "completed-through-day",
+  "prototype_file": "{{prototypeRecord}}",
+  "prototype_spec": "{{prototypeSpec}}",
+  "smoke_scene": "{{smokeScene}}",
+  "completed_through_day": 7,
+  "missing_required_fields": [],
+  "completion_summary": "Recovered from existing active state.",
+  "steps_run": [
+    { "day": 1, "title": "Recovered workflow step 01", "status": "ok", "record": "{{prototypeRecord}}" },
+    { "day": 2, "title": "Recovered workflow step 02", "status": "ok", "prototype_spec": "{{prototypeSpec}}" },
+    { "day": 3, "title": "Recovered workflow step 03", "status": "ok" },
+    { "day": 4, "title": "Recovered workflow step 04", "status": "ok" },
+    { "day": 5, "title": "Recovered workflow step 05", "status": "ok" },
+    { "day": 6, "title": "Recovered workflow step 06", "status": "ok" },
+    { "day": 7, "title": "Recovered workflow step 07", "status": "ok" }
+  ]
+}
+""");
+    }
+
     private static void WriteMainScene(string repoPath, bool hidePrototypeHostUi)
     {
         var mainScenePath = Path.Combine(repoPath, "Game.Godot", "Scenes");
@@ -3172,6 +3517,44 @@ REMAINING: none
 ready to continue
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class CompletionRecoveryNeedsFixRunner : IHostedProcessRunner
+    {
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: needs_fix
+SUMMARY: The completion state still needs platform recovery.
+CHANGED: Wrote prototype-repair recovery evidence.
+VERIFY: Platform should promote the trusted repair evidence.
+REMAINING: canonical active prototype state is protected from overwrite.
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed record ProtectedCompletionRecoveryScenario(
+        TempSqliteDatabase Database,
+        TempDirectory WorkspaceRoot,
+        TempDirectory RepoRoot,
+        PhaseAPlatformOptions Options,
+        PhaseAMetadataStore Store,
+        string AccountId,
+        string ProjectId,
+        ProjectSnapshot Project,
+        PrototypeRouteStateWriter Writer,
+        ProjectIterationSessionDetails Details,
+        ProjectIterationGoalSnapshot TargetGoal) : IDisposable
+    {
+        public void Dispose()
+        {
+            RepoRoot.Dispose();
+            WorkspaceRoot.Dispose();
+            Database.Dispose();
         }
     }
 

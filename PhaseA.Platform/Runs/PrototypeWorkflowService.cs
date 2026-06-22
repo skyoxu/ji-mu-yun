@@ -461,6 +461,21 @@ public sealed class PrototypeWorkflowService
 
     public async Task<PrototypeWorkflowResult> ValidateAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
     {
+        return await ValidateExistingPrototypeAsync(accountId, projectId, RequireCompletedIterationPlan: true, SkeletonValidationOnly: false, cancellationToken);
+    }
+
+    public async Task<PrototypeWorkflowResult> ValidateSkeletonAsync(string accountId, string projectId, CancellationToken cancellationToken = default)
+    {
+        return await ValidateExistingPrototypeAsync(accountId, projectId, RequireCompletedIterationPlan: false, SkeletonValidationOnly: true, cancellationToken);
+    }
+
+    private async Task<PrototypeWorkflowResult> ValidateExistingPrototypeAsync(
+        string accountId,
+        string projectId,
+        bool RequireCompletedIterationPlan,
+        bool SkeletonValidationOnly,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
@@ -483,10 +498,13 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "prototype_validation_not_available", 404, "", "", "No prototype workflow record is available for validation.", [], []);
         }
 
-        var iterationReadiness = await ValidateIterationReadinessAsync(project.ProjectId, cancellationToken);
-        if (iterationReadiness is not null)
+        if (RequireCompletedIterationPlan)
         {
-            return iterationReadiness;
+            var iterationReadiness = await ValidateIterationReadinessAsync(project.ProjectId, cancellationToken);
+            if (iterationReadiness is not null)
+            {
+                return iterationReadiness;
+            }
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
@@ -499,7 +517,10 @@ public sealed class PrototypeWorkflowService
         var slug = ReadSlugFromPrototypeRecord(project.RepoPath, prototypeRecordPath)
             ?? ExtractSlugFromPrototypeRecordPath(prototypeRecordPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
-        await SetProgressAsync(runId, "validating", "completion_state", "Validating the current prototype without triggering generation.", cancellationToken);
+        var validationLabel = SkeletonValidationOnly
+            ? "Validating the prototype skeleton without requiring a completed game module."
+            : "Validating the current prototype without triggering generation.";
+        await SetProgressAsync(runId, "validating", "completion_state", validationLabel, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         if (!locked)
         {
@@ -541,6 +562,7 @@ public sealed class PrototypeWorkflowService
         {
             run_type = RunType,
             validation_only = true,
+            skeleton_validation_only = SkeletonValidationOnly,
             prototype_record = prototypeRecordPath,
             prototype_contract = contract.RelativePath,
             slug,
@@ -554,12 +576,12 @@ public sealed class PrototypeWorkflowService
         await SetProgressAsync(
             runId,
             status,
-            "validation",
+            SkeletonValidationOnly ? "skeleton_validation" : "validation",
             status == "succeeded"
-                ? "Prototype validation passed."
+                ? SkeletonValidationOnly ? "Prototype skeleton validation passed." : "Prototype validation passed."
                 : rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed
                     ? "RPG behavior validation failed. Generate or continue a repair plan before packaging."
-                    : "Prototype validation failed. Generate or continue a repair plan before packaging.",
+                    : SkeletonValidationOnly ? "Prototype skeleton validation failed. Generate or continue a repair plan before creating game modules." : "Prototype validation failed. Generate or continue a repair plan before packaging.",
             cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
@@ -568,7 +590,14 @@ public sealed class PrototypeWorkflowService
         catch (Exception ex)
         {
             await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
-            await SetProgressAsync(runId, "failed", "validation", "Prototype validation failed. Generate or continue a repair plan before packaging.", CancellationToken.None);
+            await SetProgressAsync(
+                runId,
+                "failed",
+                SkeletonValidationOnly ? "skeleton_validation" : "validation",
+                SkeletonValidationOnly
+                    ? "Prototype skeleton validation failed. Generate or continue a repair plan before creating game modules."
+                    : "Prototype validation failed. Generate or continue a repair plan before packaging.",
+                CancellationToken.None);
             return new PrototypeWorkflowResult(runId, "failed", 500, prototypeRecordPath, "", ex.ToString(), [], [], await GetProgressForProjectAsync(project, CancellationToken.None));
         }
         finally
@@ -584,7 +613,7 @@ public sealed class PrototypeWorkflowService
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         if (details is null || details.Goals.Count == 0)
         {
-            return null;
+            return new PrototypeWorkflowResult("", "iteration_plan_not_complete", 409, "", "", "Create and complete the game module before prototype acceptance.", [], []);
         }
 
         if (details.Goals.Any(goal => !IsCompletedIterationGoalStatus(goal.Status)))
@@ -618,37 +647,44 @@ public sealed class PrototypeWorkflowService
     private async Task<PrototypeWorkflowProgress> GetProgressForProjectAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
-        var run = runs.FirstOrDefault(item => item.RunType == RunType);
-        if (run is null)
+        var latestRun = runs.FirstOrDefault(item => item.RunType == RunType);
+        if (latestRun is null)
         {
             return new PrototypeWorkflowProgress("idle", "", "", "尚未开始原型骨架创建。", null, null, null, null, null, null, null);
         }
 
-        run = await RecoverCompletedPrototypeRunIfNeededAsync(project, run, cancellationToken);
-        var creationRun = ResolvePrototypeCreationRun(runs, run);
-        var readbackRun = creationRun ?? run;
-        var step = string.IsNullOrWhiteSpace(run.ProgressStep) ? run.Status : run.ProgressStep;
-        var label = string.IsNullOrWhiteSpace(run.ProgressLabel) ? DefaultLabel(run.Status) : run.ProgressLabel;
-        var completionSummary = ReadCompletionSummaryFromRun(run);
-        var nextStepSource = ReadNextStepSourceFromRun(run);
-        var nextStepEvaluation = ReadNextStepEvaluationFromRun(run);
-        var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(run);
+        latestRun = await RecoverCompletedPrototypeRunIfNeededAsync(project, latestRun, cancellationToken);
+        var effectiveRuns = latestRun == runs.FirstOrDefault(item => item.RunType == RunType)
+            ? runs
+            : runs.Select(item => item.RunId == latestRun.RunId ? latestRun : item).ToArray();
+        var creationRun = ResolvePrototypeCreationRun(effectiveRuns, latestRun);
+        var finalValidationRun = ResolveFinalValidationRun(effectiveRuns);
+        var readbackRun = creationRun ?? latestRun;
+        var step = string.IsNullOrWhiteSpace(latestRun.ProgressStep) ? latestRun.Status : latestRun.ProgressStep;
+        var label = string.IsNullOrWhiteSpace(latestRun.ProgressLabel) ? DefaultLabel(latestRun.Status) : latestRun.ProgressLabel;
+        var completionSummary = ReadCompletionSummaryFromRun(latestRun);
+        var nextStepSource = ReadNextStepSourceFromRun(latestRun);
+        var nextStepEvaluation = ReadNextStepEvaluationFromRun(latestRun);
+        var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(latestRun);
         var packaging = ReadPackagingSummaryFromRun(project.RepoPath, readbackRun);
-        var prototypeCreationStatus = creationRun?.Status ?? (IsValidationOnlyRun(run) ? "missing" : run.Status);
+        var prototypeCreationStatus = creationRun?.Status ?? (IsAnyValidationOnlyRun(latestRun) ? "missing" : latestRun.Status);
         var prototypeCreationFailure = string.Equals(prototypeCreationStatus, "failed", StringComparison.OrdinalIgnoreCase)
-            ? ResolveUserFacingFailure(creationRun ?? run)
+            ? ResolveUserFacingFailure(creationRun ?? latestRun)
             : null;
-        var acceptanceFailure = string.Equals(run.Status, "failed", StringComparison.OrdinalIgnoreCase)
-            ? ResolveUserFacingFailure(run)
+        var acceptanceFailure = finalValidationRun is not null &&
+                                string.Equals(finalValidationRun.Status, "failed", StringComparison.OrdinalIgnoreCase)
+            ? ResolveUserFacingFailure(finalValidationRun)
             : null;
         return new PrototypeWorkflowProgress(
-            run.Status,
+            latestRun.Status,
             step,
-            run.ProgressSubstep,
+            latestRun.ProgressSubstep,
             label,
-            run.ProgressUpdatedUtc,
-            run.RunId,
-            acceptanceFailure,
+            latestRun.ProgressUpdatedUtc,
+            latestRun.RunId,
+            string.Equals(latestRun.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                ? ResolveUserFacingFailure(latestRun)
+                : null,
             completionSummary,
             nextStepSource,
             nextStepEvaluation,
@@ -664,9 +700,9 @@ public sealed class PrototypeWorkflowService
             prototypeCreationStatus,
             prototypeCreationFailure,
             creationRun?.RunId,
-            run.Status,
+            finalValidationRun?.Status,
             acceptanceFailure,
-            run.RunId);
+            finalValidationRun?.RunId);
     }
 
     private static RunSnapshot? ResolvePrototypeCreationRun(IReadOnlyList<RunSnapshot> runs, RunSnapshot latestRun)
@@ -674,12 +710,41 @@ public sealed class PrototypeWorkflowService
         return runs.FirstOrDefault(item =>
                    item.RunType == RunType &&
                    string.Equals(item.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
-                   !IsValidationOnlyRun(item) &&
+                   !IsAnyValidationOnlyRun(item) &&
                    LatestPrototypeCompletionSucceeded(item.EvidenceJson)) ??
-               (!IsValidationOnlyRun(latestRun) ? latestRun : null);
+               (!IsAnyValidationOnlyRun(latestRun) ? latestRun : null);
     }
 
-    private static bool IsValidationOnlyRun(RunSnapshot run)
+    private static RunSnapshot? ResolveFinalValidationRun(IReadOnlyList<RunSnapshot> runs)
+    {
+        return runs.FirstOrDefault(item => item.RunType == RunType && IsFinalValidationOnlyRun(item));
+    }
+
+    private static bool IsFinalValidationOnlyRun(RunSnapshot run)
+    {
+        return IsAnyValidationOnlyRun(run) && !IsSkeletonValidationOnlyRun(run);
+    }
+
+    private static bool IsSkeletonValidationOnlyRun(RunSnapshot run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("skeleton_validation_only", out var value) &&
+                   value.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsAnyValidationOnlyRun(RunSnapshot run)
     {
         if (string.IsNullOrWhiteSpace(run.EvidenceJson))
         {

@@ -510,7 +510,7 @@ public sealed class BrowserUiRendererTests
             }
             function v2IsValidationOnlyRun(run) {
               const evidence = v2RunEvidence(run);
-              return evidence?.validation_only === true;
+              return evidence?.validation_only === true && evidence?.skeleton_validation_only !== true;
             }
             function v2LatestValidationOnlyAcceptanceRun() {
               return (state.runs || [])
@@ -677,6 +677,7 @@ public sealed class BrowserUiRendererTests
               v2CreateRepairPanel();
             }
             function v2ValidatePrototypeIfAllowed() {}
+            function v2ValidateSkeletonIfAllowed() {}
             function v2CreateIterationPanel() {
               if ($("v2IterationPanel")) return;
               const chatPanel = $("chatPanel");
@@ -717,7 +718,7 @@ public sealed class BrowserUiRendererTests
               skeletonAcceptance.className = "secondary";
               skeletonAcceptance.type = "button";
               skeletonAcceptance.textContent = "骨架验收";
-              skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed;
+              skeletonAcceptance.onclick = v2ValidateSkeletonIfAllowed;
               [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
               ["repairPlanStatus", "repairPlanGoals"].map($).filter(Boolean).forEach(element => panel.appendChild(element));
             }
@@ -875,7 +876,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("原型项目验收结果");
         html.Should().Contain("重新触发原型项目验收");
         html.Should().Contain("rerun.onclick = v2ValidatePrototypeIfAllowed");
-        html.Should().Contain("skeletonAcceptance.onclick = v2ValidatePrototypeIfAllowed");
+        html.Should().Contain("skeletonAcceptance.onclick = v2ValidateSkeletonIfAllowed");
+        html.Should().Contain("async function validatePrototypeSkeleton(autoTriggered = false)");
+        html.Should().Contain("await validatePrototypeSkeleton(true);");
+        html.Should().Contain("/prototype-7day-playable/validate-skeleton");
         html.Should().Contain("v2PrototypeAcceptanceBlockReason");
         html.Should().Contain("v2AcceptanceActionStatus");
         html.Should().Contain("await validatePrototype();");
