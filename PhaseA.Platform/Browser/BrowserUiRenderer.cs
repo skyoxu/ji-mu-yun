@@ -216,6 +216,21 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #iterationPlanGoals,
                 body.v2-detail #iterationPlanGoals .card { position: relative; z-index: 2; pointer-events: auto; }
                 body.v2-detail [data-needs-fix-goal] { position: relative; z-index: 5; pointer-events: auto; cursor: pointer; }
+                body.v2-detail .legacy-iteration-plan-ui { display: none !important; }
+                body.v2-detail .milestone-progress-shell { display: grid; gap: 0.65rem; }
+                body.v2-detail .milestone-progress-header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+                body.v2-detail .milestone-progress-track { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.8rem, 1fr)); gap: 0.45rem; }
+                body.v2-detail .milestone-progress-button { min-height: 4.2rem; display: grid; grid-template-rows: auto 1fr auto; gap: 0.32rem; align-items: center; justify-items: center; border: 1px solid var(--line); border-radius: 0.55rem; background: #fffdf8; color: var(--ink); padding: 0.48rem; }
+                body.v2-detail .milestone-progress-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
+                body.v2-detail .milestone-progress-button .milestone-progress-label { font-size: 0.83rem; font-weight: 800; white-space: nowrap; }
+                body.v2-detail .milestone-progress-button .milestone-progress-title { max-width: 100%; color: var(--muted); font-size: 0.74rem; line-height: 1.15; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                body.v2-detail .milestone-status-square { width: 1rem; height: 1rem; border-radius: 0.2rem; background: #a8afad; }
+                body.v2-detail .milestone-progress-button.done .milestone-status-square { background: #15905f; }
+                body.v2-detail .milestone-progress-button.running .milestone-status-square { background: #d7a924; }
+                body.v2-detail .milestone-progress-button.pending .milestone-status-square,
+                body.v2-detail .milestone-progress-button.locked .milestone-status-square { background: #a8afad; }
+                body.v2-detail .milestone-detail-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
+                body.v2-detail .milestone-detail-nav button { width: auto; }
                 @media (max-width: 1000px) {
                   body.v2-detail,
                   body.v2-detail main {
@@ -275,7 +290,7 @@ public sealed class BrowserUiRenderer
                   ["new-project", "游戏项目概述", "panel"],
                   ["create-prototype", "原型骨架创建", "spark"],
                   ["execute-or-repair", "骨架验收修复", "wrench"],
-                  ["iteration-plan", "创建游戏模块", "list"],
+                  ["iteration-plan", "完成游戏模块", "list"],
                   ["ui-optimization", "游戏界面优化", "layout"],
                   ["prototype-acceptance", "原型项目验收", "check"],
                   ["asset-inventory", "项目素材库", "image"],
@@ -724,6 +739,12 @@ public sealed class BrowserUiRenderer
                     return failed && v2IterationPlanDone() ? "fix" : "pending";
                   }
                   if (stepId === "iteration-plan") {
+                    const milestoneSteps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+                    if (milestoneSteps.length) {
+                      if (milestoneSteps.every(step => String(step.status || "").trim().toLowerCase() === "confirmed")) return "done";
+                      if (milestoneSteps.some(step => !step.locked && ["needs_fix", "execution_failed", "feedback_failed"].includes(String(step.status || "").trim().toLowerCase()))) return "fix";
+                      if (milestoneSteps.some(step => !step.locked && String(step.status || "").trim().toLowerCase() !== "confirmed")) return "continue";
+                    }
                     const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                     if (!goals.length) return "pending";
                     if (goals.some(goal => ["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()))) return "fix";
@@ -1115,7 +1136,7 @@ public sealed class BrowserUiRenderer
                   if (!panel || $("v2IterationMainActions")) return;
                   const mainActions = document.createElement("div");
                   mainActions.id = "v2IterationMainActions";
-                  mainActions.className = "v2-action-row";
+                  mainActions.className = "v2-action-row legacy-iteration-plan-ui";
                   const createPlan = $("createIterationPlan");
                   const evaluatePlan = $("evaluateIterationPlan");
                   const executeGoal = $("executeIterationGoal");
@@ -1123,9 +1144,17 @@ public sealed class BrowserUiRenderer
                   createPlan?.insertAdjacentElement("beforebegin", mainActions);
                   const roundTabs = document.createElement("div");
                   roundTabs.id = "v2IterationRoundTabs";
-                  roundTabs.className = "v2-round-tabs hidden";
+                  roundTabs.className = "v2-round-tabs hidden legacy-iteration-plan-ui";
                   mainActions.insertAdjacentElement("beforebegin", roundTabs);
                   [createPlan, evaluatePlan, executeGoal, deletePlan].filter(Boolean).forEach(button => mainActions.appendChild(button));
+                  [
+                    "v2IterationSummary",
+                    "iterationAutoRefreshHint",
+                    "iterationPlanStatus",
+                    "iterationPlanEvaluation",
+                    "iterationNeedsFixStatus",
+                    "iterationPlanGoals"
+                  ].map($).filter(Boolean).forEach(element => element.classList.add("legacy-iteration-plan-ui"));
 
                   v2CreateRepairPanel();
                 }
@@ -2279,11 +2308,11 @@ public sealed class BrowserUiRenderer
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前游戏模块。</div>
                     <div id="iterationNeedsFixStatus" class="card muted">任务进入“需要修复”后，可在对应任务卡片里启动需要修复路由。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
-                    <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块 step。</div>
+                    <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块。</div>
                     <div id="gddMilestoneStepActions" class="split-actions">
-                      <button id="executeCurrentMilestoneStep" class="secondary" data-global-action="true" disabled>执行当前 Step</button>
-                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>下载验证后确认完成</button>
-                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交当前 Step 反馈</button>
+                      <button id="executeCurrentMilestoneStep" class="secondary" data-global-action="true" disabled>执行当前模块</button>
+                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>点击下载试玩后确认完成</button>
+                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交当前模块反馈</button>
                     </div>
                     <h2>异常修复计划</h2>
                     <button id="createRepairPlan" class="ghost" data-global-action="true">生成修复计划</button>
@@ -2318,7 +2347,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
@@ -3785,6 +3814,12 @@ public sealed class BrowserUiRenderer
                     state.repairPlan = cached.repairPlan;
                     renderRepairPlan();
                   }
+                  if (cached.gddMilestoneSteps !== undefined) {
+                    state.gddMilestoneSteps = cached.gddMilestoneSteps;
+                    state.selectedGddMilestoneStepId = cached.selectedGddMilestoneStepId || "";
+                    state.gddMilestoneManualSelection = !!cached.gddMilestoneManualSelection;
+                    renderGddMilestoneSteps();
+                  }
                   if (cached.gddOutlineReady !== undefined && $("createGddDocument")) {
                     state.gddOutlineReady = !!cached.gddOutlineReady;
                     $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
@@ -4960,6 +4995,8 @@ public sealed class BrowserUiRenderer
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
                   state.gddMilestoneSteps = null;
+                  state.selectedGddMilestoneStepId = "";
+                  state.gddMilestoneManualSelection = false;
                   state.packageList = null;
                   state.runs = [];
                   state.prototypeFailure = "";
@@ -6269,9 +6306,13 @@ public sealed class BrowserUiRenderer
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/latest`);
                     state.gddMilestoneSteps = result;
-                    writeProjectStateCache({ gddMilestoneSteps: result });
+                    const active = activeGddMilestoneStep(Array.isArray(result?.steps) ? result.steps : [], result);
+                    if (!state.gddMilestoneManualSelection && active) {
+                      state.selectedGddMilestoneStepId = active.stepId || "";
+                    }
+                    writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection });
                   } catch (error) {
-                    state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块 step。", steps: [] };
+                    state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块。", steps: [] };
                   }
                   renderGddMilestoneSteps();
                 }
@@ -6281,51 +6322,135 @@ public sealed class BrowserUiRenderer
                   if (!panel) return;
                   const plan = state.gddMilestoneSteps;
                   const steps = Array.isArray(plan?.steps) ? plan.steps : [];
-                  const current = steps.find(step => step.stepId === plan?.currentStepId) || steps.find(step => !step.locked && step.status !== "confirmed");
-                  const canUse = !!state.projectId && !!current && !current.locked && !isGlobalBusy();
-                  setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && current.canExecute), current ? "当前 Step 暂不可执行。" : "没有可执行的当前 Step。");
-                  setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && current.canConfirm), current ? "当前 step 暂不可确认。" : "没有可确认的当前 step。");
-                  setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && current.canSubmitFeedback), current ? "当前 step 暂不可提交反馈。" : "没有可反馈的当前 step。");
+                  const active = activeGddMilestoneStep(steps, plan);
+                  const selected = selectedGddMilestoneStep(steps, active);
+                  applyGddMilestoneActionState(selected, active);
                   if (!state.projectId) {
                     panel.className = "card muted";
-                    panel.textContent = "选择项目后显示游戏模块 step。";
+                    panel.textContent = "选择项目后显示游戏模块。";
                     return;
                   }
 
                   if (!steps.length) {
                     panel.className = "card muted";
-                    panel.textContent = plan?.summary || "创建策划大纲后显示游戏模块 step。";
+                    panel.textContent = plan?.summary || "创建策划大纲后显示游戏模块。";
                     return;
                   }
 
                   panel.className = "card";
+                  const completedCount = steps.filter(step => gddMilestoneVisualState(step, active) === "done").length;
+                  const activeIndex = active ? Math.max(0, steps.findIndex(step => step.stepId === active.stepId)) : steps.length;
+                  const selectedIndex = selected ? Math.max(0, steps.findIndex(step => step.stepId === selected.stepId)) : -1;
                   panel.innerHTML = `
-                    <strong>游戏模块步骤规格</strong>
-                    <p class="muted">${escapeHtml(plan.summary || "")}</p>
-                    ${current ? `<p class="muted">当前：${escapeHtml(current.stepId)} · ${escapeHtml(current.title || "")}</p>` : "<p class='muted'>所有 step 已确认完成，可以创建新一轮游戏模块。</p>"}
-                    <div class="card-list">
-                      ${steps.map(renderGddMilestoneStepItem).join("")}
+                    <div class="milestone-progress-shell">
+                      <div class="milestone-progress-header">
+                        <strong>当前模块执行进度</strong>
+                        <span class="muted">共 ${escapeHtml(String(steps.length))} 个模块 · 完成 ${escapeHtml(String(completedCount))} 个 · 当前 ${escapeHtml(active ? `模块 ${activeIndex + 1}` : "全部完成")}</span>
+                      </div>
+                      <div class="milestone-progress-track">
+                        ${steps.map((step, index) => renderGddMilestoneProgressButton(step, index, selected, active)).join("")}
+                      </div>
                     </div>
+                    ${selected ? renderGddMilestoneStepItem(selected, selectedIndex, active) : "<p class='muted'>所有模块已确认完成，可以创建新一轮游戏模块。</p>"}
+                  `;
+                  panel.querySelectorAll("[data-gdd-milestone-step-id]").forEach(button => {
+                    button.onclick = () => selectGddMilestoneStep(button.dataset.gddMilestoneStepId || "", true);
+                  });
+                  panel.querySelector("[data-gdd-milestone-nav='previous']")?.addEventListener("click", () => selectGddMilestoneByOffset(-1));
+                  panel.querySelector("[data-gdd-milestone-nav='next']")?.addEventListener("click", () => selectGddMilestoneByOffset(1));
+                }
+
+                function activeGddMilestoneStep(steps, plan) {
+                  return steps.find(step => step.stepId === plan?.currentStepId)
+                    || steps.find(step => ["running", "queued", "executing", "feedback_running"].includes(String(step.status || "").trim().toLowerCase()))
+                    || steps.find(step => !step.locked && step.status !== "confirmed")
+                    || null;
+                }
+
+                function selectedGddMilestoneStep(steps, active) {
+                  if (!steps.length) return null;
+                  const selected = state.selectedGddMilestoneStepId
+                    ? steps.find(step => step.stepId === state.selectedGddMilestoneStepId)
+                    : null;
+                  const next = selected || active || steps[0];
+                  state.selectedGddMilestoneStepId = next?.stepId || "";
+                  return next || null;
+                }
+
+                function selectGddMilestoneStep(stepId, manual = false) {
+                  state.selectedGddMilestoneStepId = stepId;
+                  state.gddMilestoneManualSelection = !!manual;
+                  writeProjectStateCache({ selectedGddMilestoneStepId: stepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection });
+                  renderGddMilestoneSteps();
+                }
+
+                function selectGddMilestoneByOffset(offset) {
+                  const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+                  if (!steps.length) return;
+                  const currentIndex = Math.max(0, steps.findIndex(step => step.stepId === state.selectedGddMilestoneStepId));
+                  const nextIndex = Math.min(steps.length - 1, Math.max(0, currentIndex + offset));
+                  selectGddMilestoneStep(steps[nextIndex]?.stepId || "", true);
+                }
+
+                function gddMilestoneVisualState(step, active) {
+                  const status = String(step?.status || "ready").trim().toLowerCase();
+                  if (status === "confirmed") return "done";
+                  if (active && step?.stepId === active.stepId && (status === "executed" || status === "feedback_submitted" || status === "running" || status === "queued" || status === "executing" || status === "feedback_running")) return "running";
+                  if (step?.locked) return "locked";
+                  return "pending";
+                }
+
+                function renderGddMilestoneProgressButton(step, index, selected, active) {
+                  const visualState = gddMilestoneVisualState(step, active);
+                  const activeClass = selected?.stepId === step.stepId ? "active" : "";
+                  return `
+                    <button type="button" class="milestone-progress-button ${visualState} ${activeClass}" data-gdd-milestone-step-id="${escapeHtml(step.stepId)}">
+                      <span class="milestone-progress-label">模块 ${escapeHtml(String(index + 1))}</span>
+                      <span class="milestone-progress-title">${escapeHtml(step.title || step.stepId || "")}</span>
+                      <span class="milestone-status-square" aria-hidden="true"></span>
+                    </button>
                   `;
                 }
 
-                function renderGddMilestoneStepItem(step) {
+                function renderGddMilestoneStepItem(step, index, active) {
                   const status = step.locked ? "locked" : step.status || "ready";
+                  const isActive = !!active && active.stepId === step.stepId;
+                  const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
                   return `
-                    <div class="card ${step.locked ? "muted" : ""}">
-                      <strong>${escapeHtml(step.stepId)} · ${escapeHtml(step.title || "")}</strong>
-                      <p class="muted">状态：${escapeHtml(statusLabel(status))}</p>
+                    <div class="milestone-detail ${step.locked || !isActive ? "muted" : ""}">
+                      <strong>模块 ${escapeHtml(String(index + 1))} · ${escapeHtml(step.title || step.stepId || "")}</strong>
+                      <p class="muted">状态：${escapeHtml(gddMilestoneStatusLabel(status, isActive))}</p>
                       <p>${escapeHtml(step.description || "")}</p>
-                      ${renderStepSpecLine("本步范围", step.scopeIn)}
+                      ${renderStepSpecLine("本模块范围", step.scopeIn)}
                       ${renderStepSpecLine("暂不包含", step.scopeOut)}
                       ${renderStepSpecLine("Godot/C# 实现切片", step.godotSlice)}
                       ${renderStepSpecLine("验收", step.acceptance)}
                       ${renderStepSpecLine("打包验证", step.packagingValidation)}
                       ${renderStepSpecLine("反馈改进", step.feedbackGuidance)}
-                      ${renderStepSpecLine("下一步调整检查", step.nextStepReview)}
+                      ${renderStepSpecLine("下一模块调整检查", step.nextStepReview)}
                       ${step.reviewSummary ? `<p class="muted">解锁前检查：${escapeHtml(step.reviewSummary)}</p>` : ""}
+                      <div class="milestone-detail-nav">
+                        <button type="button" class="ghost" data-gdd-milestone-nav="previous" ${index <= 0 ? "disabled" : ""}>上一个模块</button>
+                        <span class="muted">${isActive ? "当前激活模块" : "非激活模块，仅可查看"}</span>
+                        <button type="button" class="ghost" data-gdd-milestone-nav="next" ${index >= steps.length - 1 ? "disabled" : ""}>下一个模块</button>
+                      </div>
                     </div>
                   `;
+                }
+
+                function gddMilestoneStatusLabel(status, isActive) {
+                  const normalized = String(status || "").trim().toLowerCase();
+                  if (normalized === "confirmed") return "完成";
+                  if (isActive) return normalized === "executed" || normalized === "feedback_submitted" ? "等待下载试玩确认" : "执行中";
+                  if (normalized === "locked") return "待执行";
+                  return statusLabel(status);
+                }
+
+                function applyGddMilestoneActionState(selected, active) {
+                  const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
+                  setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
+                  setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");
+                  setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && selected.canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
                 }
 
                 function renderStepSpecLine(label, value) {
@@ -6336,15 +6461,15 @@ public sealed class BrowserUiRenderer
                 function currentGddMilestoneStep() {
                   const plan = state.gddMilestoneSteps;
                   const steps = Array.isArray(plan?.steps) ? plan.steps : [];
-                  return steps.find(step => step.stepId === plan?.currentStepId) || steps.find(step => !step.locked && step.status !== "confirmed") || null;
+                  return activeGddMilestoneStep(steps, plan);
                 }
 
                 async function executeCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const step = currentGddMilestoneStep();
-                  if (!step) return out("当前没有可执行的游戏模块 step。");
-                  setLocalBusy(true, "正在执行当前游戏模块 Step。");
+                  if (!step) return out("当前没有可执行的游戏模块。");
+                  setLocalBusy(true, "正在执行当前游戏模块。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/current/execute`, {
                       method: "POST",
@@ -6367,9 +6492,9 @@ public sealed class BrowserUiRenderer
                 async function confirmCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
-                  if (!state.projectId || !step) return out("当前没有可确认的游戏模块 step。");
-                  if (!confirm(`请确认已经打包下载并试玩验证 ${step.stepId}。确认完成后会解锁下一个 step，并触发下一 step 解锁前检查。`)) return;
-                  setLocalBusy(true, "正在确认当前 step 并执行下一步解锁前检查。");
+                  if (!state.projectId || !step) return out("当前没有可确认的游戏模块。");
+                  if (!confirm(`请确认已经点击下载试玩并验证 ${step.stepId}。确认完成后会解锁下一个模块，并触发下一模块解锁前检查。`)) return;
+                  setLocalBusy(true, "正在确认当前模块并执行下一模块解锁前检查。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
                       method: "POST",
@@ -6377,6 +6502,8 @@ public sealed class BrowserUiRenderer
                     });
                     out(result);
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
+                    state.selectedGddMilestoneStepId = result.plan?.currentStepId || "";
+                    state.gddMilestoneManualSelection = false;
                     renderGddMilestoneSteps();
                     await loadGddMilestoneSteps();
                   } catch (error) {
@@ -6390,10 +6517,10 @@ public sealed class BrowserUiRenderer
                 async function submitCurrentMilestoneFeedback() {
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
-                  if (!state.projectId || !step) return out("当前没有可反馈的游戏模块 step。");
+                  if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
                   const feedback = prompt(`请输入 ${step.stepId} 的试玩反馈或修改意见：`);
                   if (!feedback?.trim()) return;
-                  setLocalBusy(true, "正在提交当前 Step 的反馈修复。");
+                  setLocalBusy(true, "正在提交当前模块的反馈修复。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
@@ -7248,7 +7375,7 @@ public sealed class BrowserUiRenderer
                     : prototypeSucceeded
                         ? new ProjectDetailStep(3, "骨架验收修复", "done", "/#v2RepairPanel", "✓")
                         : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(4, "创建游戏模块", latestIteration, "/#v2IterationPanel"),
+            CreateRunStep(4, "完成游戏模块", latestIteration, "/#v2IterationPanel"),
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
             CreateAcceptanceStep(6, runs, latestIteration, "/#v2AcceptancePanel"),
             CreateRunStep(7, "项目素材库", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
