@@ -1232,6 +1232,29 @@ public sealed class PrototypeWorkflowTests
     }
 
     [Fact]
+    public async Task QueueAsync_BlocksWhenPrototypeSkeletonAlreadySucceeded()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        runner.Commands.Clear();
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+
+        result.Status.Should().Be("prototype_skeleton_locked");
+        result.ExitCode.Should().Be(409);
+        result.Progress.Should().NotBeNull();
+        result.Progress!.PrototypeCreationStatus.Should().Be("succeeded");
+        runner.Commands.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task QueueAsync_UsesLatestDraftToRepairMissingOrCorruptedFields()
     {
         using var database = TempSqliteDatabase.Create();

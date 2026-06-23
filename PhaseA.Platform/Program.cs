@@ -68,6 +68,7 @@ builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeRouteStateWriter>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
+builder.Services.AddSingleton<IPrototypeLightweightValidationService, PrototypeLightweightValidationService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
 builder.Services.AddSingleton<PrototypeQuickFixService>();
 builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
@@ -2017,6 +2018,11 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
             return Results.BadRequest(result);
         }
 
+        if (result.Status == "prototype_skeleton_locked")
+        {
+            return Results.Json(result, statusCode: StatusCodes.Status409Conflict);
+        }
+
         return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -2040,6 +2046,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/from-gdd", async 
             "queued" => Results.Json(result, statusCode: StatusCodes.Status202Accepted),
             "gdd_not_found" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
             "gdd_empty" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            "prototype_skeleton_locked" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             _ => Results.BadRequest(result)
         };
     }

@@ -206,6 +206,7 @@ public sealed class GameDesignDocumentService
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-prompt", promptRelativePath, "Game design GDD generation prompt"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-codex-output", codexOutputRelativePath, "Game design GDD generation output"), CancellationToken.None);
             await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, generatedOutline.Document, CancellationToken.None);
+            var specRelativePaths = await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, await File.ReadAllTextAsync(gddAbsolutePath, Encoding.UTF8, CancellationToken.None), CancellationToken.None);
             if (File.Exists(outlineDraftAbsolutePath))
             {
                 await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline-draft", outlineDraftRelativePath, "Game design outline draft"), CancellationToken.None);
@@ -213,6 +214,10 @@ public sealed class GameDesignDocumentService
 
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, ArtifactType, OutputRelativePath, "Game design document"), CancellationToken.None);
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline", OutlineRelativePath, "Game design outline"), CancellationToken.None);
+            foreach (var specRelativePath in specRelativePaths)
+            {
+                await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-milestone-spec", specRelativePath, "Game design milestone spec"), CancellationToken.None);
+            }
 
             var evidenceJson = JsonSerializer.Serialize(new
             {
@@ -222,6 +227,7 @@ public sealed class GameDesignDocumentService
                 canonical_skill_name = "gds-agent-game-designer",
                 output_file = OutputRelativePath,
                 outline_file = OutlineRelativePath,
+                spec_files = specRelativePaths,
                 prompt = promptRelativePath,
                 codex_output = codexOutputRelativePath,
                 attachment_count = persistedAttachments.Count,
@@ -1160,6 +1166,9 @@ public sealed class GameDesignDocumentService
             - The outline must include lightweight UI/UX pre-design sufficient to guide feature development, not polished visual design: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
             - The outline must state feature-development UI structure rules: placeholder UI is allowed, but screen id, scene path, input action, and state naming must stay stable; player-visible text must not be hardcoded in isolated logic; repeated buttons and panels should share one style/component approach instead of each screen inventing its own.
             - Include a milestone or step-plan section whose steps are derived from the actual GDD scope; do not hardcode M1-M10. The plan may be shorter, longer, or include post-polish steps such as M10-1 when justified.
+            - Each milestone item must be implementation-facing enough to become a SPEC: include goal, scope in, scope out, Godot/C# scene or system slice, player-verifiable acceptance, and package/playtest validation expectation.
+            - M1 must be the first playable skeleton module, not an empty shell: it must specify first playable scene, keyboard/mouse basics, core operation feedback, and the player feel that must be verified after completion.
+            - If the reference game, genre/tags, or GDD content imply action movement, collision, hit detection, traversal, enemy pressure, aiming, dodge/roll/dash, platforming, shooter, racing, sports, or 3D embodied play, the milestone section must explicitly require matching Godot physics nodes and collision validation instead of UI-only simulation.
             - The milestone or step-plan section should reserve formal UI/UX retrofit work after functional completion when relevant: theme tokens, component kit, screen contracts, screenshot acceptance, focus checks, localization checks, and overflow checks.
             - For prototype-oriented projects, include a lightweight component/scene responsibility section or make UI/UX/HUD and content/asset sections explicitly name component slots such as PrototypeRoot, HudView, MapView, BattleView, RewardView, ActorView, LogView, InventoryView, Systems, and Data/State where relevant.
             - Treat those component names as Godot Node/scene responsibility slots, not ECS. Do not propose ECS, EntityComponent, IComponent, or a new framework unless the user explicitly asks for it.

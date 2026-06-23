@@ -1243,6 +1243,36 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ProjectAssetInventory_RecordsRefreshRun_WhenJudgementHasNoCandidates()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await CreateSucceededIterationPlanAsync(store, accountId, projectId);
+        Write(project!.RepoPath, "Game.Godot/Scenes/MapScene.tscn", """
+            [gd_scene format=3]
+            [node name="MapScene" type="Node2D"]
+            """);
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder());
+
+        var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5", forceRefresh: true);
+        var second = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5", forceRefresh: true);
+
+        result!.CanReadInventory.Should().BeTrue();
+        second!.CanReadInventory.Should().BeTrue();
+        result.GenerationCandidates.Should().BeEmpty();
+        var runs = await store.ListRunsForProjectAsync(projectId);
+        var run = runs.Single(item => item.RunType == "project-asset-inventory");
+        run.Status.Should().Be("succeeded");
+        run.EvidenceJson.Should().Contain("judgement_skipped");
+    }
+
+    [Fact]
     public async Task ProjectAssetInventory_ScansPrototypeScenesAndKeepsCandidatesWhenLlmDoesNotReturnJson()
     {
         using var database = TempSqliteDatabase.Create();

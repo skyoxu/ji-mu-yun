@@ -445,7 +445,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void GodotSmokePolicy_ShouldNotValidateDefaultNonSpecializedGoals()
+    public void GodotSmokePolicy_ShouldValidateDefaultNonSpecializedGoals()
     {
         var project = Project(
             name: "action-demo",
@@ -454,7 +454,7 @@ public sealed class PrototypeRouteSkillPolicyTests
             repoPath: Path.GetTempPath());
         var goal = Goal(10, "最终任务：完整可玩原型验收");
 
-        PrototypeGodotSmokeService.ShouldValidateGoal(project, goal).Should().BeFalse();
+        PrototypeGodotSmokeService.ShouldValidateGoal(project, goal).Should().BeTrue();
     }
 
     [Fact]

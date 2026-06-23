@@ -90,14 +90,21 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("RPG Specific Elements");
         runner.Commands[0].StandardInput.Should().Contain("Current user input and uploaded references override this baseline");
         runner.Commands[0].StandardInput.Should().Contain("This template must not affect prototype skeleton creation");
+        runner.Commands[0].StandardInput.Should().Contain("Each milestone item must be implementation-facing enough to become a SPEC");
+        runner.Commands[0].StandardInput.Should().Contain("M1 must be the first playable skeleton module");
+        runner.Commands[0].StandardInput.Should().Contain("matching Godot physics nodes and collision validation");
         var outlineJson = await File.ReadAllTextAsync(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json"));
         outlineJson.Should().NotContain("???");
         outline!.Title.Should().Be("演示策划大纲");
         outline.Sections.Should().ContainSingle(item => item.Id == "core-loop" && item.Title == "核心循环");
+        File.Exists(Path.Combine(project!.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
+        Directory.GetFiles(Path.Combine(project!.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
         var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd" && item.RelativePath == "docs/gdd/GDD.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline" && item.RelativePath == "docs/gdd/gdd-outline.json");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline-draft" && item.RelativePath.EndsWith("gdd-outline.generated.json", StringComparison.Ordinal));
+        artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath == "docs/prototype-v1-plan.md");
+        artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath.StartsWith("docs/m1-", StringComparison.Ordinal));
     }
 
     [Fact]

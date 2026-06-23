@@ -247,6 +247,39 @@ def _stop_dotnet_build_server(project_root: Path) -> None:
         pass
 
 
+def _compact_build_failure_excerpt(stdout: str, stderr: str, max_chars: int = 6000) -> str:
+    combined = f"{stdout}\n{stderr}".replace("\r", "")
+    lines = [line.strip() for line in combined.split("\n") if line.strip()]
+    if not lines:
+        return ""
+
+    failure_tokens = (
+        "error ",
+        "error:",
+        "cs",
+        "parse error:",
+        "build failed",
+        "is not compiling",
+        "build callback failed",
+        "cannot instantiate c# script",
+        "failed to create an autoload",
+        "failed to instantiate an autoload",
+    )
+    selected: list[str] = []
+    for line in lines:
+        lowered = line.lower()
+        if any(token in lowered for token in failure_tokens):
+            selected.append(line)
+
+    if not selected:
+        selected = lines[-40:]
+
+    excerpt = "\n".join(selected[-80:])
+    if len(excerpt) > max_chars:
+        return excerpt[-max_chars:]
+    return excerpt
+
+
 def _prewarm_csharp(godot_bin: str, project_root: Path, timeout_sec: int = PREWARM_TIMEOUT_SEC) -> tuple[bool, str, str, str]:
     prewarm_timeout = max(1, PREWARM_TIMEOUT_SEC)
     dotnet_returncode, dotnet_stdout, dotnet_stderr = _run_captured_process(
@@ -336,6 +369,10 @@ def _run_smoke(
     prewarm_err_path.write_text(prewarm_stderr, encoding="utf-8", errors="ignore")
     if not prewarm_ok:
         print("[smoke_headless] failed to prewarm C# build", file=sys.stderr)
+        prewarm_excerpt = _compact_build_failure_excerpt(prewarm_stdout, prewarm_stderr)
+        if prewarm_excerpt:
+            print("[smoke_headless] C# build failure excerpt:", file=sys.stderr)
+            print(prewarm_excerpt, file=sys.stderr)
         summary = {
             "runId": f"smoke-{ts}",
             "date": day,

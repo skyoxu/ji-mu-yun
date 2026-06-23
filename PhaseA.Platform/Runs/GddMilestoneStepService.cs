@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -18,17 +19,20 @@ public sealed class GddMilestoneStepService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeIterationGoalService _iterationGoalService;
     private readonly PrototypeNeedsFixRouteService _needsFixRouteService;
+    private readonly IPrototypeLightweightValidationService? _lightweightValidationService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
 
     public GddMilestoneStepService(
         PhaseAMetadataStore metadataStore,
         PrototypeIterationGoalService iterationGoalService,
         PrototypeNeedsFixRouteService needsFixRouteService,
-        ILlmRouteEngine? llmRouteEngine = null)
+        ILlmRouteEngine? llmRouteEngine = null,
+        IPrototypeLightweightValidationService? lightweightValidationService = null)
     {
         _metadataStore = metadataStore;
         _iterationGoalService = iterationGoalService;
         _needsFixRouteService = needsFixRouteService;
+        _lightweightValidationService = lightweightValidationService;
         _llmRouteEngine = llmRouteEngine;
     }
 
@@ -56,7 +60,10 @@ public sealed class GddMilestoneStepService
         }
 
         NormalizeState(state);
+        await ReconcilePrototypeSkeletonM1Async(project, state, cancellationToken);
+        await ReconcileCompletedMilestoneExecutionsAsync(project, state, cancellationToken);
         await WriteStateAsync(project, state, cancellationToken);
+        await WriteSpecFilesAsync(project, state, cancellationToken);
         return ToResult(project.ProjectId, state);
     }
 
@@ -136,6 +143,7 @@ public sealed class GddMilestoneStepService
         }
 
         await WriteStateAsync(project, state, cancellationToken);
+        await WriteSpecFilesAsync(project, state, cancellationToken);
         return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "confirmed", state.Summary, ToResult(project.ProjectId, state));
     }
 
@@ -210,19 +218,28 @@ public sealed class GddMilestoneStepService
 
         var completed = result.Status is "completed" or "succeeded";
         var needsFix = string.Equals(result.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
+        var outcome = new GddMilestoneStepValidationOutcome(
+            completed ? "feedback_submitted" : needsFix ? "needs_fix" : "feedback_failed",
+            feedback,
+            null);
+        if (completed)
+        {
+            var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, request.Model, cancellationToken);
+            outcome = BuildStepValidationOutcome("feedback_submitted", feedback, validation);
+        }
+
         state.Steps[index] = step with
         {
-            Status = completed ? "feedback_submitted" : needsFix ? "needs_fix" : "feedback_failed",
+            Status = outcome.Status,
             IterationSessionId = session.Session.SessionId,
-            FeedbackSummary = feedback,
-            FeedbackRunId = string.IsNullOrWhiteSpace(result.RunId) ? step.FeedbackRunId : result.RunId
+            FeedbackSummary = outcome.Summary,
+            FeedbackRunId = FirstNonEmpty(outcome.LastRepairRun?.RunId, result.RunId, step.FeedbackRunId)
         };
-        state.Summary = completed
-            ? $"{step.StepId} 的反馈修复已完成。请打包下载试玩验证；确认通过后点击完成当前 Step。"
-            : $"{step.StepId} 的反馈修复未完成：{result.Status}";
+        state.Summary = BuildStepActionSummary(step, "feedback", completed, outcome.Status, result.Status);
         await WriteStateAsync(project, state, CancellationToken.None);
+        await WriteSpecFilesAsync(project, state, CancellationToken.None);
 
-        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), NeedsFixRun: result);
+        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), NeedsFixRun: outcome.LastRepairRun ?? result);
     }
 
     public Task<GddMilestoneStepActionResult?> CreateIterationPlanForCurrentStepAsync(
@@ -272,26 +289,42 @@ public sealed class GddMilestoneStepService
 
         var session = await CreateStepSessionAsync(project, state, step, index, cancellationToken);
         await WriteStateAsync(project, state, CancellationToken.None);
+        await WriteSpecFilesAsync(project, state, CancellationToken.None);
 
         var execution = await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken);
-        var succeeded = (execution.Status is "completed" or "succeeded") && string.Equals(execution.SessionStatus, "completed", StringComparison.OrdinalIgnoreCase);
-        var needsFix = execution.Status is "needs_fix" or "failed" or "project_busy" or "prototype_required";
-        if (index >= 0)
+        var succeeded = await IsMilestoneStepExecutionCompleteAsync(project, execution, cancellationToken);
+        if (succeeded)
         {
-            state.Steps[index] = state.Steps[index] with
-            {
-                Status = succeeded ? "executed" : needsFix ? "needs_fix" : "execution_failed",
-                IterationSessionId = string.IsNullOrWhiteSpace(execution.SessionId) ? session.Session.SessionId : execution.SessionId,
-                ExecutionRunId = string.IsNullOrWhiteSpace(execution.RunId) ? state.Steps[index].ExecutionRunId : execution.RunId,
-                ExecutionSummary = execution.Summary
-            };
-            state.Summary = succeeded
-                ? $"{step.StepId} 已执行完成。请打包下载试玩验证；如果有问题，提交当前 Step 反馈。"
-                : $"{step.StepId} 执行未完成：{execution.Summary}";
-            await WriteStateAsync(project, state, CancellationToken.None);
+            await MarkMilestoneExecutionCompletedAsync(project.ProjectId, execution, state, step, cancellationToken);
         }
 
-        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, execution.Status, state.Summary, ToResult(project.ProjectId, state), StepExecution: execution);
+        var needsFix = execution.Status is "needs_fix" or "failed" or "project_busy" or "prototype_required";
+        var outcome = new GddMilestoneStepValidationOutcome(
+            succeeded ? "executed" : needsFix ? "needs_fix" : "execution_failed",
+            execution.Summary,
+            null);
+        if (index >= 0)
+        {
+            if (succeeded)
+            {
+                var validation = await ValidateAndAutoRepairStepAsync(accountId, project, step, session, requestModel: null, cancellationToken);
+                outcome = BuildStepValidationOutcome("executed", execution.Summary, validation);
+            }
+
+            state.Steps[index] = state.Steps[index] with
+            {
+                Status = outcome.Status,
+                IterationSessionId = string.IsNullOrWhiteSpace(execution.SessionId) ? session.Session.SessionId : execution.SessionId,
+                ExecutionRunId = string.IsNullOrWhiteSpace(execution.RunId) ? state.Steps[index].ExecutionRunId : execution.RunId,
+                ExecutionSummary = outcome.Summary,
+                FeedbackRunId = string.IsNullOrWhiteSpace(outcome.LastRepairRun?.RunId) ? state.Steps[index].FeedbackRunId : outcome.LastRepairRun.RunId
+            };
+            state.Summary = BuildStepActionSummary(step, "execution", succeeded, outcome.Status, execution.Summary);
+            await WriteStateAsync(project, state, CancellationToken.None);
+            await WriteSpecFilesAsync(project, state, CancellationToken.None);
+        }
+
+        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, execution.Status, state.Summary, ToResult(project.ProjectId, state), StepExecution: execution, NeedsFixRun: outcome.LastRepairRun);
     }
 
     private async Task<ProjectIterationSessionDetails> CreateStepSessionAsync(
@@ -327,8 +360,12 @@ public sealed class GddMilestoneStepService
 
     private static string BuildStepSourceMessage(GddMilestoneStepState step)
     {
+        var specPath = StepSpecRelativePath(step);
         return $"""
             GDD milestone step execution.
+
+            Current milestone spec file:
+            {specPath}
 
             Step: {step.StepId} - {step.Title}
             Description:
@@ -355,14 +392,24 @@ public sealed class GddMilestoneStepService
             Next Step Adjustment Check:
             {step.NextStepReview}
 
-            Implement only this current milestone step. Do not split it into multiple player-visible tasks and do not advance later locked steps.
+            Required context:
+            - Read docs/gdd/GDD.md.
+            - Read docs/prototype-v1-plan.md when it exists.
+            - Read {specPath} as the current step's implementation contract.
+            - Read docs/prototypes/ records for earlier completed milestone notes when relevant.
+
+            Implement only this current milestone step as one playable milestone. Do not split it into multiple player-visible tasks and do not advance later locked steps.
             """;
     }
 
     private static string BuildStepGoalDescription(GddMilestoneStepState step)
     {
+        var specPath = StepSpecRelativePath(step);
         return $"""
             Implement {step.StepId} as one diablolike-style playable milestone.
+
+            Current milestone spec:
+            {specPath}
 
             Goal:
             {step.Description}
@@ -375,6 +422,8 @@ public sealed class GddMilestoneStepService
 
             Runtime slice:
             {step.GodotSlice}
+
+            Before editing, read the current milestone spec file and treat it as authoritative over generic prototype-route defaults.
             """;
     }
 
@@ -387,8 +436,308 @@ public sealed class GddMilestoneStepService
             Player package validation:
             {step.PackagingValidation}
 
-            After implementation, the browser should prompt the player to package, download, and validate this Step before confirming completion.
+            After implementation, the browser should recommend that the player package, download, and validate this module before confirming completion. Do not require package download as a completion gate.
             """;
+    }
+
+    private async Task<bool> IsMilestoneStepExecutionCompleteAsync(
+        ProjectSnapshot project,
+        PrototypeIterationGoalExecutionResult execution,
+        CancellationToken cancellationToken)
+    {
+        if (execution.Status is "completed" or "succeeded")
+        {
+            return true;
+        }
+
+        if (!string.Equals(execution.Status, "needs_fix", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var run = string.IsNullOrWhiteSpace(execution.RunId)
+            ? null
+            : await _metadataStore.GetRunSnapshotAsync(execution.RunId, cancellationToken);
+        if (run is null)
+        {
+            return false;
+        }
+
+        if (!string.Equals(run.Status, "completed", StringComparison.OrdinalIgnoreCase) ||
+            run.ExitCode is not 0)
+        {
+            return false;
+        }
+
+        var output = string.Join("\n", run.StdoutText, ReadRunEvidenceText(project, run, "codex_output"));
+        return ContainsStructuredValue(output, "STATUS", "completed") &&
+               ContainsStructuredValue(output, "REMAINING", "none");
+    }
+
+    private async Task<GddMilestoneLightweightValidationResult> ValidateAndAutoRepairStepAsync(
+        string accountId,
+        ProjectSnapshot project,
+        GddMilestoneStepState step,
+        ProjectIterationSessionDetails session,
+        string? requestModel,
+        CancellationToken cancellationToken)
+    {
+        if (_lightweightValidationService is null)
+        {
+            return new GddMilestoneLightweightValidationResult(true, "未配置轻量验收服务，已保留模块执行结果。", null);
+        }
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromMinutes(20));
+        var loopToken = timeout.Token;
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var validation = await _lightweightValidationService.ValidateAsync(accountId, project.ProjectId, loopToken);
+            if (IsLightweightValidationPassed(validation))
+            {
+                return new GddMilestoneLightweightValidationResult(true, $"{step.StepId} 轻量验收已通过。", null);
+            }
+
+            var goal = session.Goals.FirstOrDefault(goal => goal.GoalIndex == step.StepIndex) ?? session.Goals.FirstOrDefault();
+            if (goal is null)
+            {
+                return new GddMilestoneLightweightValidationResult(false, $"{step.StepId} 轻量验收失败，且当前模块缺少可修复目标。请提交反馈并修正模块。", null);
+            }
+
+            PrototypeNeedsFixRouteResult? lastRepair = null;
+            var failures = new List<string> { BuildValidationFailureSummary(validation) };
+            for (var attempt = 1; attempt <= 3; attempt++)
+            {
+                if (stopwatch.Elapsed >= TimeSpan.FromMinutes(20))
+                {
+                    break;
+                }
+
+                var feedback = BuildAutomaticValidationRepairFeedback(step, validation, attempt);
+                await _metadataStore.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "needs_fix", feedback, null, loopToken);
+                await _metadataStore.UpdateProjectIterationSessionStatusAsync(session.Session.SessionId, "needs_fix", goal.GoalIndex, feedback, session.Session.LatestEvaluationJson, null, loopToken);
+
+                lastRepair = await _needsFixRouteService.RunAsync(
+                    accountId,
+                    project.ProjectId,
+                    new PrototypeNeedsFixRouteRequest(feedback, requestModel, null, goal.GoalId, goal.GoalIndex),
+                    loopToken);
+
+                if (stopwatch.Elapsed >= TimeSpan.FromMinutes(20))
+                {
+                    break;
+                }
+
+                validation = await _lightweightValidationService.ValidateAsync(accountId, project.ProjectId, loopToken);
+                if (IsLightweightValidationPassed(validation))
+                {
+                    return new GddMilestoneLightweightValidationResult(true, $"{step.StepId} 轻量验收在自动修复第 {attempt} 次后通过。", lastRepair);
+                }
+
+                failures.Add(BuildValidationFailureSummary(validation));
+            }
+
+            var summary = $"{step.StepId} 轻量验收未通过；已自动修复 {CountRepairAttempts(lastRepair, failures)} 次或达到 20 分钟上限。请使用“提交反馈并修正模块”继续修复。最近失败：{Trim(string.Join(" | ", failures.TakeLast(2)), 900)}";
+            return new GddMilestoneLightweightValidationResult(false, summary, lastRepair);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
+        {
+            return new GddMilestoneLightweightValidationResult(false, $"{step.StepId} 轻量验收自动修复已达到 20 分钟上限。请使用“提交反馈并修正模块”继续修复。", null);
+        }
+    }
+
+    private static bool IsLightweightValidationPassed(PrototypeWorkflowResult validation)
+    {
+        return (validation.Status is "succeeded" or "completed") && validation.ExitCode == 0;
+    }
+
+    private static GddMilestoneStepValidationOutcome BuildStepValidationOutcome(
+        string passedStatus,
+        string? baseSummary,
+        GddMilestoneLightweightValidationResult validation)
+    {
+        var summary = string.IsNullOrWhiteSpace(baseSummary)
+            ? validation.Summary
+            : $"{baseSummary}\n{validation.Summary}";
+        return new GddMilestoneStepValidationOutcome(
+            validation.Passed ? passedStatus : "needs_fix",
+            summary,
+            validation.LastRepairRun);
+    }
+
+    private static string BuildStepActionSummary(
+        GddMilestoneStepState step,
+        string action,
+        bool actionCompleted,
+        string finalStatus,
+        string fallbackDetail)
+    {
+        if (string.Equals(action, "feedback", StringComparison.Ordinal))
+        {
+            return actionCompleted && string.Equals(finalStatus, "feedback_submitted", StringComparison.Ordinal)
+                ? $"{step.StepId} 的反馈修复已完成，轻量验收已通过。请打包下载试玩验证；确认通过后点击完成当前模块。"
+                : actionCompleted
+                    ? $"{step.StepId} 的反馈修复已完成，但轻量验收自动修复后仍未通过。请继续提交反馈并修正模块。"
+                    : $"{step.StepId} 的反馈修复未完成：{fallbackDetail}";
+        }
+
+        return actionCompleted && string.Equals(finalStatus, "executed", StringComparison.Ordinal)
+            ? $"{step.StepId} 已执行完成，轻量验收已通过。建议打包下载试玩验证；如果有问题，提交反馈并修正模块，也可以直接确认完成。"
+            : actionCompleted
+                ? $"{step.StepId} 已执行，但轻量验收自动修复后仍未通过。请使用“提交反馈并修正模块”继续修复。"
+                : $"{step.StepId} 执行未完成：{fallbackDetail}";
+    }
+
+    private static int CountRepairAttempts(PrototypeNeedsFixRouteResult? lastRepair, IReadOnlyList<string> failures)
+    {
+        return lastRepair is null ? 0 : Math.Min(3, Math.Max(1, failures.Count - 1));
+    }
+
+    private static string BuildAutomaticValidationRepairFeedback(
+        GddMilestoneStepState step,
+        PrototypeWorkflowResult validation,
+        int attempt)
+    {
+        return $"""
+            Automatic lightweight validation failed after executing the current game module.
+
+            Current module: {step.StepId} - {step.Title}
+            Repair attempt: {attempt} of 3
+
+            Module scope:
+            {step.ScopeIn}
+
+            Acceptance:
+            {step.Acceptance}
+
+            Lightweight validation result:
+            - RunId: {validation.RunId}
+            - Status: {validation.Status}
+            - ExitCode: {validation.ExitCode}
+            - Stderr: {Trim(validation.Stderr, 1600)}
+            - Stdout: {Trim(validation.Stdout, 800)}
+
+            Repair only the current module. Do not unlock, implement, or alter later modules.
+            Re-run and satisfy the lightweight validation before reporting completion.
+            """;
+    }
+
+    private static string BuildValidationFailureSummary(PrototypeWorkflowResult validation)
+    {
+        return $"run={validation.RunId}; status={validation.Status}; exitCode={validation.ExitCode}; stderr={Trim(validation.Stderr, 240)}";
+    }
+
+    private static string ReadRunEvidenceText(ProjectSnapshot project, RunSnapshot run, string evidenceKey)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return "";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            if (!document.RootElement.TryGetProperty(evidenceKey, out var element))
+            {
+                return "";
+            }
+
+            var relativePath = element.GetString();
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return "";
+            }
+
+            var fullPath = Path.Combine(project.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            return File.Exists(fullPath) ? File.ReadAllText(fullPath, Encoding.UTF8) : "";
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
+        catch (IOException)
+        {
+            return "";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return "";
+        }
+    }
+
+    private static bool ContainsStructuredValue(string text, string fieldName, string expectedValue)
+    {
+        var value = ExtractStructuredField(text, fieldName);
+        return string.Equals(value?.Trim(), expectedValue, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ExtractStructuredField(string value, string fieldName)
+    {
+        var prefix = fieldName + ":";
+        var lines = value.Replace("\r", "").Split('\n');
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var line = lines[index].Trim();
+            if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var result = line[prefix.Length..].Trim();
+            for (var next = index + 1; next < lines.Length; next++)
+            {
+                var nextLine = lines[next].Trim();
+                if (nextLine.Contains(':', StringComparison.Ordinal) &&
+                    nextLine.Split(':', 2)[0].All(ch => char.IsLetter(ch) || ch == '_'))
+                {
+                    break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(nextLine))
+                {
+                    result = string.IsNullOrWhiteSpace(result) ? nextLine : $"{result}\n{nextLine}";
+                }
+            }
+
+            return result;
+        }
+
+        return null;
+    }
+
+    private async Task MarkMilestoneExecutionCompletedAsync(
+        string projectId,
+        PrototypeIterationGoalExecutionResult execution,
+        GddMilestoneState state,
+        GddMilestoneStepState step,
+        CancellationToken cancellationToken)
+    {
+        var summary = $"{step.StepId} 已执行完成。建议打包下载试玩验证；如果有问题，提交反馈并修正模块，也可以直接确认完成。";
+        if (!string.IsNullOrWhiteSpace(execution.RunId))
+        {
+            await _metadataStore.UpdateRunProgressAsync(execution.RunId, "completed", "completed", $"{step.StepId} 已执行完成。", cancellationToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(execution.GoalId))
+        {
+            await _metadataStore.UpdateProjectIterationGoalStatusAsync(execution.GoalId, "succeeded", summary, DateTimeOffset.UtcNow.ToString("O"), cancellationToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(execution.SessionId))
+        {
+            var details = await _metadataStore.GetProjectIterationSessionAsync(projectId, execution.SessionId, cancellationToken);
+            await _metadataStore.UpdateProjectIterationSessionStatusAsync(
+                execution.SessionId,
+                "paused_for_review",
+                step.StepIndex,
+                summary,
+                details?.Session.LatestEvaluationJson,
+                null,
+                cancellationToken);
+        }
+
+        state.Summary = summary;
     }
 
     private async Task<ProjectSnapshot?> GetProjectAsync(string accountId, string projectId, CancellationToken cancellationToken)
@@ -487,20 +836,25 @@ public sealed class GddMilestoneStepService
             BuildDefaultStep("M1", 1, "首个可玩场景与基础操作", hasScene || hasControls
                 ? "创建首个可玩场景，接入 GDD 要求的键盘鼠标基础操作和可见反馈。"
                 : "创建首个可玩场景，并提供基础操作入口和可见反馈。"),
-            BuildDefaultStep("M2", 2, "核心玩法闭环", "实现 GDD 中最小核心玩法循环，让玩家能完成一次明确的开始、操作、反馈、结果闭环。")
+            BuildDefaultStep("M2", 2, "核心玩法闭环", "实现 GDD 中最小核心玩法循环，让玩家能完成一次明确的开始、操作、反馈、结果闭环。"),
+            BuildDefaultStep("M3", 3, "主要交互与能力扩展", "补齐 GDD 中玩家最常使用的第二层交互、技能、道具、卡牌或操作变体，并提供冷却、消耗或状态反馈。"),
+            BuildDefaultStep("M4", 4, "关卡流程与目标推进", "实现关卡、房间、波次、遭遇、回合或流程推进，让玩家能从入口推进到明确目标。"),
+            BuildDefaultStep("M5", 5, "敌人、障碍或挑战变化", "加入至少一种新的挑战变化，并验证它与核心操作、失败条件和反馈表现协同工作。")
         };
 
         if (hasProgression)
         {
-            steps.Add(BuildDefaultStep("M3", 3, "奖励与成长反馈", "实现奖励、升级、永久成长或其他 GDD 指定的进度反馈。"));
+            steps.Add(BuildDefaultStep("M6", 6, "奖励与成长反馈", "实现奖励、升级、永久成长或其他 GDD 指定的进度反馈。"));
         }
-
-        if (hasPolish)
+        else
         {
-            steps.Add(BuildDefaultStep($"M{steps.Count + 1}", steps.Count + 1, "素材替换与表现验证", "替换关键占位素材，并验证碰撞、场景加载、基础交互和运行 smoke。"));
+            steps.Add(BuildDefaultStep("M6", 6, "结果结算与重开循环", "实现胜负、结算、重开或继续游玩的结果反馈，让一次试玩有清晰收束。"));
         }
 
-        steps.Add(BuildDefaultStep($"M{steps.Count + 1}", steps.Count + 1, "原型可玩性验证与打包", "补齐首轮可玩验证、打包下载提示和下一轮模块创建准备。"));
+        steps.Add(BuildDefaultStep("M7", 7, "HUD 与关键 UI 状态", "补齐核心屏幕、HUD 信息优先级、输入提示、关键状态、本地化入口和基础 accessibility 表现。"));
+        steps.Add(BuildDefaultStep("M8", 8, "反馈表现与手感调整", "补齐命中、受击、交互、奖励、失败、转场等关键反馈，可先使用 placeholder 但保持命名和状态稳定。"));
+        steps.Add(BuildDefaultStep("M9", 9, hasPolish ? "素材替换与碰撞验证" : "占位素材整理与碰撞验证", "替换或整理关键占位素材，并验证碰撞、阻挡、移动边界、命中、场景加载和基础交互 smoke。"));
+        steps.Add(BuildDefaultStep("M10", 10, "原型可玩性验证与打包", "补齐首轮可玩验证、打包下载提示、截图或 smoke 证据，以及下一轮游戏模块创建准备。"));
         return steps;
     }
 
@@ -589,6 +943,129 @@ public sealed class GddMilestoneStepService
         }
 
         return state.Steps.FirstOrDefault(step => !step.Locked && !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task ReconcileCompletedMilestoneExecutionsAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        var changed = false;
+        for (var index = 0; index < state.Steps.Count; index++)
+        {
+            var step = state.Steps[index];
+            if (!string.Equals(step.Status, "needs_fix", StringComparison.OrdinalIgnoreCase) ||
+                string.IsNullOrWhiteSpace(step.ExecutionRunId))
+            {
+                continue;
+            }
+
+            var execution = new PrototypeIterationGoalExecutionResult(
+                step.IterationSessionId ?? "",
+                "",
+                step.ExecutionRunId,
+                "needs_fix",
+                step.ExecutionSummary ?? "",
+                step.StepIndex,
+                false,
+                "needs_fix");
+            if (!await IsMilestoneStepExecutionCompleteAsync(project, execution, cancellationToken))
+            {
+                continue;
+            }
+
+            var details = string.IsNullOrWhiteSpace(step.IterationSessionId)
+                ? null
+                : await _metadataStore.GetProjectIterationSessionAsync(project.ProjectId, step.IterationSessionId, cancellationToken);
+            var goalId = details?.Goals.FirstOrDefault(goal => goal.GoalIndex == step.StepIndex)?.GoalId ?? "";
+            execution = execution with
+            {
+                SessionId = step.IterationSessionId ?? "",
+                GoalId = goalId
+            };
+            await MarkMilestoneExecutionCompletedAsync(project.ProjectId, execution, state, step, cancellationToken);
+            state.Steps[index] = step with
+            {
+                Status = "executed",
+                ExecutionSummary = FirstNonEmpty(
+                    step.ExecutionSummary,
+                    $"{step.StepId} 已执行完成。建议打包下载试玩验证；如果有问题，提交反馈并修正模块，也可以直接确认完成。")
+            };
+            state.Summary = $"{step.StepId} 已执行完成。建议打包下载试玩验证；如果有问题，提交反馈并修正模块，也可以直接确认完成。";
+            changed = true;
+        }
+
+        if (changed && state.Status == "completed")
+        {
+            state.Status = "ready";
+        }
+    }
+
+    private async Task ReconcilePrototypeSkeletonM1Async(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        if (state.Steps.Count == 0)
+        {
+            return;
+        }
+
+        var first = state.Steps[0];
+        if (!string.Equals(first.StepId, "M1", StringComparison.OrdinalIgnoreCase) ||
+            first.Locked ||
+            first.Status is "executed" or "feedback_submitted" or "confirmed" ||
+            !string.IsNullOrWhiteSpace(first.IterationSessionId) ||
+            !string.IsNullOrWhiteSpace(first.ExecutionRunId) ||
+            !string.IsNullOrWhiteSpace(first.FeedbackRunId))
+        {
+            return;
+        }
+
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        var skeletonRun = runs.FirstOrDefault(run =>
+            string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+            PrototypeCompletionSucceeded(run.EvidenceJson));
+        if (skeletonRun is null)
+        {
+            return;
+        }
+
+        var summary = "M1 已通过原型骨架创建完成。建议打包下载试玩验证基本操作、首个场景和首轮手感；如果有问题，提交反馈并修正模块，也可以直接确认完成。";
+        state.Steps[0] = first with
+        {
+            Status = "executed",
+            ExecutionRunId = FirstNonEmpty(first.ExecutionRunId, skeletonRun.RunId),
+            ExecutionSummary = FirstNonEmpty(first.ExecutionSummary, summary)
+        };
+        state.CurrentStepId = first.StepId;
+        state.Summary = summary;
+    }
+
+    private static bool PrototypeCompletionSucceeded(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            return completion.TryGetProperty("succeeded", out var succeeded) &&
+                   succeeded.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static string BuildNextStepReviewSummary(GddMilestoneStepState completed, GddMilestoneStepState next)
@@ -768,9 +1245,24 @@ public sealed class GddMilestoneStepService
                 !step.Locked && step.Status is "ready" or "needs_fix" or "execution_failed" or "feedback_failed",
                 !step.Locked && step.Status is "executed" or "feedback_submitted",
                 !step.Locked && step.Status is "executed" or "needs_fix" or "execution_failed" or "feedback_failed",
-                step.ReviewSummary)).ToArray(),
+                step.ReviewSummary,
+                StepSpecRelativePath(step))).ToArray(),
             state.CurrentStepId);
     }
+
+    private static async Task WriteSpecFilesAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
+    {
+        NormalizeState(state);
+        var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (File.Exists(gddPath))
+        {
+            var gddText = await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken);
+            await GddMilestoneSpecDocumentWriter.WriteFromMilestoneStateAsync(project, ToResult(project.ProjectId, state).Steps, gddText, cancellationToken);
+        }
+    }
+
+    private static string StepSpecRelativePath(GddMilestoneStepState step)
+        => GddMilestoneSpecDocumentWriter.StepSpecRelativePath(step.StepId, step.Title);
 
     private static async Task<GddMilestoneState?> ReadStateAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
@@ -925,4 +1417,14 @@ public sealed class GddMilestoneStepService
         string PackagingValidation,
         string FeedbackGuidance,
         string NextStepReview);
+
+    private sealed record GddMilestoneLightweightValidationResult(
+        bool Passed,
+        string Summary,
+        PrototypeNeedsFixRouteResult? LastRepairRun);
+
+    private sealed record GddMilestoneStepValidationOutcome(
+        string Status,
+        string Summary,
+        PrototypeNeedsFixRouteResult? LastRepairRun);
 }

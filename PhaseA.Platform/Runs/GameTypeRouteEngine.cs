@@ -72,6 +72,8 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
             - Rule: recover hosted project memory from project guide, contract, route state, ledger, and latest validation; do not use AGENTS.md as hosted project memory.
             - Rule: read-only JSON routes must use ILlmRouteEngine; executable Codex routes must use CodexHostedProcessCommandFactory with stdin prompt transport.
             - {PrototypePlayerVisibleTextPolicy.PromptRule}
+
+            {PrototypePhysicsRequirementPolicy.BuildPromptBlock(project)}
             """;
     }
 

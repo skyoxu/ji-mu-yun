@@ -104,6 +104,12 @@ public sealed class PrototypeWorkflowService
             throw new InvalidOperationException("Project not found.");
         }
 
+        var lockedPrototype = await RejectPrototypeCreationIfLockedAsync(project, cancellationToken);
+        if (lockedPrototype is not null)
+        {
+            return lockedPrototype;
+        }
+
         if (string.IsNullOrWhiteSpace(request.SourceDocumentPath))
         {
             request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
@@ -263,6 +269,12 @@ public sealed class PrototypeWorkflowService
             throw new InvalidOperationException("Project not found.");
         }
 
+        var lockedPrototype = await RejectPrototypeCreationIfLockedAsync(project, cancellationToken);
+        if (lockedPrototype is not null)
+        {
+            return lockedPrototype;
+        }
+
         if (string.IsNullOrWhiteSpace(request.SourceDocumentPath))
         {
             request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
@@ -367,8 +379,32 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "gdd_empty", 409, "", "", "The current GDD is empty.", [], []);
         }
 
+        await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, gddText, cancellationToken);
         var workflowRequest = BuildPrototypeRequestFromGdd(project, gddText, request);
         return await QueueAsync(accountId, projectId, workflowRequest, cancellationToken);
+    }
+
+    private async Task<PrototypeWorkflowResult?> RejectPrototypeCreationIfLockedAsync(ProjectSnapshot project, CancellationToken cancellationToken)
+    {
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        if (!runs.Any(run =>
+                run.RunType == RunType &&
+                string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+                LatestPrototypeCompletionSucceeded(run.EvidenceJson)))
+        {
+            return null;
+        }
+
+        return new PrototypeWorkflowResult(
+            "",
+            "prototype_skeleton_locked",
+            409,
+            "",
+            "",
+            "Prototype skeleton has already been created and validated.",
+            [],
+            [],
+            await GetProgressForProjectAsync(project, cancellationToken));
     }
 
     public async Task<PrototypeWorkflowResult> RepairAsync(string accountId, string projectId, PrototypeRepairRequest request, CancellationToken cancellationToken = default)
@@ -2689,25 +2725,42 @@ public sealed class PrototypeWorkflowService
         var scenes = ExtractSection(gddText, "场景", "关卡", "地城", "地图", "World", "Level", "Scene");
         var milestones = ExtractSection(gddText, "里程碑", "Milestone", "Prototype", "验收", "Acceptance");
         var successCriteria = BuildGddSuccessCriteria(gddText, controls, scenes, loop, milestones);
+        var physicsPolicy = PrototypePhysicsRequirementPolicy.BuildPromptBlock(project, gddText);
+        var m1Title = ExtractFirstMilestoneTitle(gddText) ?? "M1：首个可玩场景与基础操作";
+        var m1SpecPath = GddMilestoneSpecDocumentWriter.StepSpecRelativePath("M1", m1Title);
 
         return new PrototypeWorkflowRequest(
             Slug: slug,
             GameName: FirstNonEmpty(project.GameName, title),
             GameType: NormalizeGameType(project.GameTypeSource),
             GameTypeSource: project.GameTypeSource,
-            Hypothesis: $"以当前项目 GDD 为唯一设计来源，创建可运行的 Godot 原型骨架，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的核心方向。",
+            Hypothesis: $"以当前项目 GDD 和 M1 spec 为设计来源，完成 M1 首个可玩模块；这一步同时承担原型骨架创建，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的基本操作、场景和首轮手感。",
             CorePlayerFantasy: TrimText(FirstNonEmpty(ExtractSection(gddText, "玩家幻想", "体验", "风格", "参考游戏", "Player Fantasy"), summary), 700),
             MinimumPlayableLoop: TrimText(FirstNonEmpty(loop, summary), 900),
             SuccessCriteria: successCriteria,
-            GameFeature: TrimText(FirstNonEmpty(scenes, loop, summary), 900),
-            CoreGameplayLoop: TrimText(FirstNonEmpty(loop, controls, summary), 900),
+            GameFeature: TrimText(FirstNonEmpty(scenes, loop, summary) + $"\n\nM1 spec: {m1SpecPath}\nPrototype plan: docs/prototype-v1-plan.md\n\n" + physicsPolicy, 1200),
+            CoreGameplayLoop: TrimText(FirstNonEmpty(loop, controls, summary) + $"\n\n原型骨架创建必须按 M1 首个可玩模块执行，而不是创建空壳。执行前必须读取 docs/gdd/GDD.md、docs/prototype-v1-plan.md 和 {m1SpecPath}。", 1100),
             WinFailConditions: TrimText(FirstNonEmpty(ExtractSection(gddText, "胜利", "失败", "目标", "Win", "Fail", "Goal"), milestones, summary), 700),
             Confirm: request.Confirm,
             StopAfterDay: request.StopAfterDay,
             ScoreEngine: string.IsNullOrWhiteSpace(request.ScoreEngine) ? "deterministic" : request.ScoreEngine,
             Model: request.Model,
             SourceDocumentPath: GddRelativePath,
-            SourceDocumentSummary: summary);
+            SourceDocumentSummary: TrimText($"{summary}\n\nRequired module spec for skeleton/M1: {m1SpecPath}\nThe skeleton route completes M1 first playable module: basic scene, controls, and first feel validation.", 2200));
+    }
+
+    private static string? ExtractFirstMilestoneTitle(string gddText)
+    {
+        foreach (Match match in Regex.Matches(gddText, @"(?im)^\s*(?:[-*]\s*)?(M1)\s*[:：\-]\s*(.+)$"))
+        {
+            var title = CompactText(match.Groups[2].Value);
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                return $"M1：{TrimText(title, 80)}";
+            }
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<string> BuildGddSuccessCriteria(

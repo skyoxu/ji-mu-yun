@@ -216,14 +216,17 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #iterationPlanGoals,
                 body.v2-detail #iterationPlanGoals .card { position: relative; z-index: 2; pointer-events: auto; }
                 body.v2-detail [data-needs-fix-goal] { position: relative; z-index: 5; pointer-events: auto; cursor: pointer; }
-                body.v2-detail .legacy-iteration-plan-ui { display: none !important; }
+                body.v2-detail .legacy-iteration-plan-ui,
+                body.v2-detail #iterationPlanEvaluation,
+                body.v2-detail #v2IterationSummary,
+                body.v2-detail #iterationNeedsFixStatus,
+                body.v2-detail #iterationPlanStatus { display: none !important; }
                 body.v2-detail .milestone-progress-shell { display: grid; gap: 0.65rem; }
                 body.v2-detail .milestone-progress-header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
                 body.v2-detail .milestone-progress-track { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.8rem, 1fr)); gap: 0.45rem; }
-                body.v2-detail .milestone-progress-button { min-height: 4.2rem; display: grid; grid-template-rows: auto 1fr auto; gap: 0.32rem; align-items: center; justify-items: center; border: 1px solid var(--line); border-radius: 0.55rem; background: #fffdf8; color: var(--ink); padding: 0.48rem; }
+                body.v2-detail .milestone-progress-button { min-height: 3.25rem; display: grid; grid-template-rows: auto auto; gap: 0.32rem; align-items: center; justify-items: center; border: 1px solid var(--line); border-radius: 0.55rem; background: #fffdf8; color: var(--ink); padding: 0.48rem; }
                 body.v2-detail .milestone-progress-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
                 body.v2-detail .milestone-progress-button .milestone-progress-label { font-size: 0.83rem; font-weight: 800; white-space: nowrap; }
-                body.v2-detail .milestone-progress-button .milestone-progress-title { max-width: 100%; color: var(--muted); font-size: 0.74rem; line-height: 1.15; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                 body.v2-detail .milestone-status-square { width: 1rem; height: 1rem; border-radius: 0.2rem; background: #a8afad; }
                 body.v2-detail .milestone-progress-button.done .milestone-status-square { background: #15905f; }
                 body.v2-detail .milestone-progress-button.running .milestone-status-square { background: #d7a924; }
@@ -728,6 +731,10 @@ public sealed class BrowserUiRenderer
                   const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
                   if (stepId === "new-project") return state.projectId ? "done" : "pending";
                   if (stepId === "create-prototype") {
+                    const skeletonValidation = v2LatestSkeletonValidationRun();
+                    const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
+                    if (skeletonValidationStatus === "succeeded") return "done";
+                    if (skeletonValidationStatus === "failed") return "fix";
                     if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
                     return creationStatus === "failed" ? "fix" : creationStatus === "succeeded" ? "done" : "pending";
                   }
@@ -781,10 +788,21 @@ public sealed class BrowserUiRenderer
                 function v2RenderUiOptimizationStatus() {
                   const status = $("uiOptimizationStatus");
                   if (!status) return;
+                  if ($("runUiOptimization")) {
+                    setButtonDisabledState($("runUiOptimization"), true, "游戏界面优化暂未开放。");
+                  }
+                  status.className = "card muted";
+                  status.textContent = "游戏界面优化暂未开放。";
+                  return;
+                }
+
+                function v2RenderUiOptimizationStatusLegacy() {
+                  const status = $("uiOptimizationStatus");
+                  if (!status) return;
                   const run = v2LatestRunByType("prototype-ui-optimization");
                   if (!run) {
                     status.className = "card muted";
-                    status.textContent = "创建游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
+                    status.textContent = "完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
                     return;
                   }
                   const runStatus = String(run.status || "").toLowerCase();
@@ -1054,8 +1072,8 @@ public sealed class BrowserUiRenderer
                   panel.innerHTML = `
                     <h2>游戏界面优化</h2>
                     <p class="muted">按照当前游戏类型模板重新对齐原型 UI。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。</p>
-                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true">运行游戏界面优化</button>
-                    <div id="uiOptimizationStatus" class="card muted">创建游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。</div>
+                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true" disabled>运行游戏界面优化</button>
+                    <div id="uiOptimizationStatus" class="card muted">游戏界面优化暂未开放。</div>
                   `;
                   $("v2AcceptancePanel")?.insertAdjacentElement("beforebegin", panel);
                   $("runUiOptimization").onclick = runUiOptimization;
@@ -1327,6 +1345,10 @@ public sealed class BrowserUiRenderer
                 function v2PrototypeValidationPassedForPlanning() {
                   return state.prototypeReadyForFeedback && !state.v2PrototypeValidationInvalidatedByIteration;
                 }
+                function v2SkeletonValidationSucceeded() {
+                  const skeletonValidation = v2LatestSkeletonValidationRun();
+                  return String(skeletonValidation?.status || "").trim().toLowerCase() === "succeeded";
+                }
                 function v2PrototypeValidationInvalidationKey() {
                   return `phaseA:v2PrototypeValidationInvalidated:${state.projectId || "none"}`;
                 }
@@ -1355,23 +1377,25 @@ public sealed class BrowserUiRenderer
                 }
                 function v2ShouldLockPrototypeForm() {
                   if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) return false;
+                  const acceptanceStatus = String(state.prototypeReadyForFeedback ? "succeeded" : state?.v2PrototypeAcceptanceStatus || "").trim().toLowerCase();
                   const status = String(state?.v2PrototypeCreationStatus || v2PrototypeStatus() || "").trim().toLowerCase();
-                  return !!state.projectId && status !== "" && !["idle", "failed"].includes(status);
+                  return !!state.projectId && (acceptanceStatus === "succeeded" || v2HasPrototypeSkeleton() || v2SkeletonValidationSucceeded() || (status !== "" && !["idle", "failed"].includes(status)));
                 }
                 function v2ApplyPrototypeFormLock() {
                   const locked = v2ShouldLockPrototypeForm();
                   $("prototypeWorkflowPanel")?.classList.toggle("v2-prototype-locked", locked);
                   prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = locked; });
                   setPrototypeDraftFileLocked(locked);
-                  if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "原型骨架已创建，不能重复创建。");
+                  if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "原型骨架已验收通过，不能重复创建。");
                   if (!locked && typeof resetPrototypeActionButtonsVisualState === "function") {
                     resetPrototypeActionButtonsVisualState();
                     updateDraftImportButtonState();
                   }
                   if ($("runPrototype")) {
-                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架已创建，不能重复创建。" : "");
-                    $("runPrototype").textContent = locked ? "原型骨架已创建，不能重复创建" : "确认 GDD 无误，创建原型骨架";
+                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架已验收通过，不能重复创建。" : "");
+                    $("runPrototype").textContent = locked ? "M1 原型骨架已完成" : "确认 GDD 无误，执行 M1 原型骨架";
                   }
+                  if (typeof updatePrototypeSkeletonPackageButton === "function") updatePrototypeSkeletonPackageButton();
                 }
                 function v2ApplyPrototypeFormSnapshot(progress) {
                   const form = progress?.form;
@@ -1637,6 +1661,7 @@ public sealed class BrowserUiRenderer
                 const v2OriginalUpdateChatPanelVisibility = updateChatPanelVisibility;
                 updateChatPanelVisibility = function(progress) {
                   state.v2PrototypeStatus = progress?.acceptanceStatus || progress?.status || "";
+                  state.v2PrototypeAcceptanceStatus = progress?.acceptanceStatus || "";
                   state.v2PrototypeCreationStatus = progress?.prototypeCreationStatus || progress?.status || "";
                   v2CreateIterationPanel();
                   v2ArrangeChatPanel();
@@ -2181,6 +2206,22 @@ public sealed class BrowserUiRenderer
                   </section>
                 </div>
               </div>
+              <div id="milestoneFeedbackModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="milestoneFeedbackTitle">
+                <div class="modal-card modal-card-large">
+                  <section class="stack">
+                    <h2 id="milestoneFeedbackTitle">提交反馈并修正模块</h2>
+                    <div id="milestoneFeedbackMeta" class="card muted">请选择当前激活模块。</div>
+                    <label>试玩反馈或修改意见
+                      <textarea id="milestoneFeedbackInput" rows="6" placeholder="描述你在当前模块试玩中发现的问题、希望调整的玩法、UI、手感或验证结果。"></textarea>
+                    </label>
+                    <div class="split-actions">
+                      <button id="confirmMilestoneFeedback" class="secondary" data-global-action="true">提交反馈并修正模块</button>
+                      <button id="closeMilestoneFeedbackModal" class="ghost" type="button">关闭</button>
+                    </div>
+                    <p id="milestoneFeedbackHint" class="muted"></p>
+                  </section>
+                </div>
+              </div>
               <main>
                 <section id="sessionPanel" class="stack login-shell">
                   <h2>会话</h2>
@@ -2266,6 +2307,7 @@ public sealed class BrowserUiRenderer
                       <button id="importDraft" class="secondary import-draft-button" data-global-action="true" disabled></button>
                     </div>
                     <div id="draftImportStatus" class="card muted hidden"></div>
+                    <div id="prototypeM1SpecStatus" class="card muted">创建策划大纲后显示 M1 原型骨架目标。</div>
                     <div class="hidden">
                       <label>游戏原型ID <input id="protoSlug" placeholder="demo-prototype"></label>
                       <label>原型假设 <textarea id="hypothesis" placeholder="这个原型要验证什么？"></textarea></label>
@@ -2276,7 +2318,10 @@ public sealed class BrowserUiRenderer
                       <label>核心玩法循环 <textarea id="coreGameplayLoop" placeholder="输入、反馈、奖励、升级或失败的循环"></textarea></label>
                       <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
                     </div>
-                    <button id="runPrototype" class="secondary" data-global-action="true" disabled>确认 GDD 无误，创建原型骨架</button>
+                    <div class="split-actions">
+                      <button id="runPrototype" class="secondary" data-global-action="true" disabled>确认 GDD 无误，执行 M1 原型骨架</button>
+                      <button id="packagePrototypeSkeleton" class="ghost" data-global-action="true" disabled>打包下载项目</button>
+                    </div>
                   </section>
                   <section id="prototypeCommandPanel" class="stack hidden">
                     <h2>原型命令</h2>
@@ -2311,8 +2356,8 @@ public sealed class BrowserUiRenderer
                     <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块。</div>
                     <div id="gddMilestoneStepActions" class="split-actions">
                       <button id="executeCurrentMilestoneStep" class="secondary" data-global-action="true" disabled>执行当前模块</button>
-                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>点击下载试玩后确认完成</button>
-                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交当前模块反馈</button>
+                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>完成当前模块并激活下一模块</button>
+                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交反馈并修正模块</button>
                     </div>
                     <h2>异常修复计划</h2>
                     <button id="createRepairPlan" class="ghost" data-global-action="true">生成修复计划</button>
@@ -2347,7 +2392,9 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
+                let clientErrorRecoveryInstalled = false;
+                let clientErrorRecoveryRefreshing = false;
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
@@ -2407,6 +2454,78 @@ public sealed class BrowserUiRenderer
                   $("projectDetailPanel").classList.add("hidden");
                   $("chatPanel").classList.add("hidden");
                   $("createProjectPanel").classList.remove("hidden");
+                }
+
+                function showUserLoadingFallback(message = "正在读取项目列表...") {
+                  $("sessionPanel").classList.add("hidden");
+                  hideCreateProjectPage();
+                  $("adminPanel").classList.remove("hidden");
+                  $("accountAdminPanel").classList.add("hidden");
+                  $("prototypeCommandPanel").classList.add("hidden");
+                  $("runsPanel").classList.add("hidden");
+                  $("outputPanel").classList.add("hidden");
+                  $("projectDetailPanel").classList.add("hidden");
+                  $("chatPanel").classList.add("hidden");
+                  $("initStatusPanel").classList.remove("hidden");
+                  $("initStatusText").textContent = message;
+                }
+
+                function recoverVisiblePageFromClientError(error) {
+                  try {
+                    console.error("Phase A UI error", error);
+                  } catch {}
+                  try {
+                    const authenticated = !!state.authenticated || !!token();
+                    if (!authenticated) {
+                      showLoggedOut();
+                      return;
+                    }
+
+                    const visibleProjects = listableProjects(Array.isArray(state.projects) ? state.projects : []);
+                    const hasVisibleMainPanel = ["sessionPanel", "createProjectPanel", "adminPanel", "projectDetailPanel", "chatPanel"]
+                      .some(id => {
+                        const element = $(id);
+                        return element && !element.classList.contains("hidden");
+                      });
+                    if (!hasVisibleMainPanel) {
+                      if (visibleProjects.length > 0) {
+                        showUserLoadingFallback("页面状态恢复中，请稍候...");
+                        ensureProjectPageFallback(visibleProjects, false);
+                      } else if (!clientErrorRecoveryRefreshing) {
+                        clientErrorRecoveryRefreshing = true;
+                        showUserLoadingFallback("页面状态恢复中，正在重新读取项目列表...");
+                        void refreshProjects({ autoSelect: true })
+                          .catch(() => showCreateProjectPage())
+                          .finally(() => { clientErrorRecoveryRefreshing = false; });
+                      } else {
+                        showCreateProjectPage();
+                      }
+                    }
+                  } catch {}
+                }
+
+                function installClientErrorRecovery() {
+                  if (clientErrorRecoveryInstalled) return;
+                  clientErrorRecoveryInstalled = true;
+                  window.addEventListener("error", event => {
+                    recoverVisiblePageFromClientError(event.error || event.message);
+                  });
+                  window.addEventListener("unhandledrejection", event => {
+                    recoverVisiblePageFromClientError(event.reason);
+                  });
+                }
+
+                installClientErrorRecovery();
+
+                function ensureProjectPageFallback(projects, preferRemembered = true) {
+                  const visibleProjects = listableProjects(Array.isArray(projects) ? projects : []);
+                  if (visibleProjects.length > 0) {
+                    selectDefaultProject(visibleProjects, preferRemembered);
+                    return;
+                  }
+                  state.projectId = "";
+                  writeSelectedProjectId("");
+                  showCreateProjectPage();
                 }
 
                 function hideCreateProjectPage() {
@@ -3299,11 +3418,14 @@ public sealed class BrowserUiRenderer
 
                 async function runUiOptimization() {
                   if (!guardGlobalAction()) return;
+                  out("游戏界面优化暂未开放。");
+                  if ($("uiOptimizationStatus")) $("uiOptimizationStatus").textContent = "游戏界面优化暂未开放。";
+                  return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行游戏界面优化。");
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
-                    return out("请先创建游戏模块，再运行游戏界面优化。");
+                    return out("请先完成游戏模块，再运行游戏界面优化。");
                   }
                   $("uiOptimizationStatus").textContent = "正在运行游戏界面优化，请等待后台任务完成。";
                   setLocalBusy(true, "正在运行游戏界面优化，请等待当前任务执行完毕。");
@@ -3766,59 +3888,72 @@ public sealed class BrowserUiRenderer
                 }
 
                 function applyProjectStateCache(projectId) {
-                  const cached = readProjectStateCache(projectId);
+                  let cached = null;
+                  try {
+                    cached = readProjectStateCache(projectId);
+                  } catch {
+                    cached = null;
+                  }
                   if (!cached) return;
                   if (Array.isArray(cached.runs)) {
-                    state.runs = cached.runs;
-                    renderRunsListFromState(cached.projectHealth || null);
-                    renderFeedbackRecords();
+                    try {
+                      state.runs = cached.runs;
+                      renderRunsListFromState(cached.projectHealth || null);
+                      renderFeedbackRecords();
+                    } catch {}
                   }
                   if (cached.latestPrototypeDraft) {
-                    applyDraftToForm(cached.latestPrototypeDraft);
-                    renderDraftImportStatus(cached.latestPrototypeDraft);
+                    try {
+                      applyDraftToForm(cached.latestPrototypeDraft);
+                      renderDraftImportStatus(cached.latestPrototypeDraft);
+                    } catch {}
                   }
                   if (cached.prototypeProgress) {
-                    const progress = cached.prototypeProgress;
-                    const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
-                    state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
-                    renderPrototypeProgress(progress);
-                    renderPrototypeAcceptanceSummary(progress);
-                    const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
-                    const suppressLockedState = !!state.cancelledActiveRunId && ["queued", "running"].includes(creationStatus);
-                    setPrototypeFormLocked(suppressLockedState ? false : isPrototypeCreationLocked(progress));
-                    if (creationStatus === "idle" && progress?.step === "cancelled" && $("draftFile")) {
-                      $("draftFile").disabled = true;
-                    }
-                    updateChatPanelVisibility(progress);
+                    try {
+                      const progress = cached.prototypeProgress;
+                      const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
+                      state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
+                      renderPrototypeProgress(progress);
+                      renderPrototypeAcceptanceSummary(progress);
+                      const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
+                      const suppressLockedState = !!state.cancelledActiveRunId && ["queued", "running"].includes(creationStatus);
+                      setPrototypeFormLocked(suppressLockedState ? false : isPrototypeCreationLocked(progress));
+                      if (creationStatus === "idle" && progress?.step === "cancelled" && $("draftFile")) {
+                        $("draftFile").disabled = true;
+                      }
+                      updateChatPanelVisibility(progress);
+                    } catch {}
                   }
                   if (cached.packageList) {
-                    state.packageList = cached.packageList;
-                    renderProjectPackages(cached.packageList);
+                    try {
+                      state.packageList = cached.packageList;
+                      renderProjectPackages(cached.packageList);
+                    } catch {}
                   }
                   if (cached.assetInventory) {
-                    state.assetInventory = cached.assetInventory;
-                    renderAssetInventory(cached.assetInventory, state.assetInventoryExpanded);
+                    try {
+                      state.assetInventory = cached.assetInventory;
+                      renderAssetInventory(cached.assetInventory, state.assetInventoryExpanded);
+                    } catch {}
                   }
                   if (cached.iterationPlan !== undefined) {
-                    state.iterationPlans = normalizeIterationPlanRounds(Array.isArray(cached.iterationPlans) ? cached.iterationPlans : []);
-                    state.selectedIterationSessionId = cached.selectedIterationSessionId || "";
-                    state.iterationPlan = cached.iterationPlan;
-                    if (state.iterationPlans.length) {
-                      state.iterationPlan = selectIterationPlanForDisplay(state.iterationPlans);
-                    }
-                    state.iterationPlanEvaluation = cached.iterationPlan?.latestEvaluation || cached.iterationPlanEvaluation || null;
-                    state.iterationPlanFailure = cached.iterationPlanFailure || "";
-                    renderIterationPlan();
+                    try {
+                      state.iterationPlans = normalizeIterationPlanRounds(Array.isArray(cached.iterationPlans) ? cached.iterationPlans : []);
+                      state.selectedIterationSessionId = cached.selectedIterationSessionId || "";
+                      state.iterationPlan = cached.iterationPlan;
+                      if (state.iterationPlans.length) {
+                        state.iterationPlan = selectIterationPlanForDisplay(state.iterationPlans);
+                      }
+                      state.iterationPlanEvaluation = cached.iterationPlan?.latestEvaluation || cached.iterationPlanEvaluation || null;
+                      state.iterationPlanFailure = cached.iterationPlanFailure || "";
+                      renderIterationPlan();
+                    } catch {}
                   }
                   if (cached.repairPlan !== undefined) {
-                    state.repairPlan = cached.repairPlan;
-                    renderRepairPlan();
-                  }
-                  if (cached.gddMilestoneSteps !== undefined) {
-                    state.gddMilestoneSteps = cached.gddMilestoneSteps;
-                    state.selectedGddMilestoneStepId = cached.selectedGddMilestoneStepId || "";
-                    state.gddMilestoneManualSelection = !!cached.gddMilestoneManualSelection;
-                    renderGddMilestoneSteps();
+                    try {
+                      state.repairPlan = cached.repairPlan;
+                      renderRepairPlan();
+                    } catch {}
                   }
                   if (cached.gddOutlineReady !== undefined && $("createGddDocument")) {
                     state.gddOutlineReady = !!cached.gddOutlineReady;
@@ -4191,6 +4326,7 @@ public sealed class BrowserUiRenderer
 
                 async function loadLlmBinding() {
                   if (!state.authenticated) return;
+                  if (!$("llmGatewayBaseUrl") || !$("llmExternalAccountRef") || !$("llmTokenRef")) return;
                   try {
                     const binding = await api("/api/account/llm-binding");
                     $("llmGatewayBaseUrl").value = binding.gatewayBaseUrl || "";
@@ -4212,6 +4348,7 @@ public sealed class BrowserUiRenderer
 
                 async function saveLlmBinding() {
                   if (!guardGlobalAction()) return;
+                  if (!$("llmGatewayBaseUrl") || !$("llmExternalAccountRef") || !$("llmTokenRef") || !$("saveLlmBinding")) return;
                   setLocalBusy(true);
                   $("saveLlmBinding").disabled = true;
                   $("saveLlmBinding").textContent = "Saving...";
@@ -4856,6 +4993,7 @@ public sealed class BrowserUiRenderer
                       out("Admin project creation and project list are disabled. Use Account Admin on the right.");
                       return;
                     }
+                    showUserLoadingFallback();
 
                     const projects = await api("/api/projects");
                     state.projects = projects;
@@ -4916,19 +5054,20 @@ public sealed class BrowserUiRenderer
                       showLoggedOut();
                     } else {
                       $("sessionStatus").textContent = "Token 已验证。项目状态刷新失败，请稍后重试。";
+                      ensureProjectPageFallback(state.projects, false);
                     }
                     showError(error);
                   }
                 }
 
-                function selectDefaultProject(projects) {
+                function selectDefaultProject(projects, preferRemembered = true) {
                   if (!Array.isArray(projects) || projects.length === 0) return;
                   const current = state.projectId ? projects.find(project => project.projectId === state.projectId) : null;
                   if (current?.projectId) {
                     void selectProject(current.projectId);
                     return;
                   }
-                  const remembered = readSelectedProjectId();
+                  const remembered = preferRemembered ? readSelectedProjectId() : "";
                   if (remembered && projects.some(project => project.projectId === remembered)) {
                     void selectProject(remembered);
                     return;
@@ -4987,7 +5126,7 @@ public sealed class BrowserUiRenderer
 
                 async function selectProject(projectId) {
                   if (state.projectId && state.projectId !== projectId) {
-                    await v2WriteProjectUiState();
+                    try { await v2WriteProjectUiState(); } catch {}
                   }
                   state.projectId = projectId;
                   v2RestoredProjectUiStateId = "";
@@ -5016,31 +5155,34 @@ public sealed class BrowserUiRenderer
                   v2UserSelectedStep = false;
                   setModalVisible("projectListModal", false);
                   hideCreateProjectPage();
-                  loadChatHistoryForProject(projectId);
                   const project = state.projects.find(p => p.projectId === projectId);
                   $("selectedProject").textContent = project ? `${project.name} (${project.projectId})` : projectId;
                   showProjectDetail();
-                  callV2("v2RenderLeftProjectList");
-                  v2RenderTabs();
-                  v2ApplySelectedStepVisibility();
-                  v2RenderProgress();
-                  applyProjectStateCache(projectId);
-                  await v2RestoreProjectUiState();
-                  loadProjectRuntimeState();
-                  loadServerChatHistoryForProject(projectId);
-                  loadIterationPlan();
-                  loadRepairPlan();
-                  refreshGddOutlineStatus();
-                  refreshPrototypeGddStatus();
+                  try { loadChatHistoryForProject(projectId); } catch {}
+                  try { callV2("v2RenderLeftProjectList"); } catch {}
+                  try { v2RenderTabs(); } catch {}
+                  try { v2ApplySelectedStepVisibility(); } catch {}
+                  try { v2RenderProgress(); } catch {}
+                  try { applyProjectStateCache(projectId); } catch {}
+                  void v2RestoreProjectUiState().catch(recoverVisiblePageFromClientError);
+                  void loadProjectRuntimeState().catch(recoverVisiblePageFromClientError);
+                  void loadServerChatHistoryForProject(projectId).catch(() => {});
+                  void loadIterationPlan().catch(() => {});
+                  void loadRepairPlan().catch(() => {});
+                  void refreshGddOutlineStatus().catch(() => {});
+                  void refreshPrototypeGddStatus().catch(() => {});
                 }
 
                 async function loadProjectRuntimeState() {
-                  await loadRuns();
-                  await loadPrototypeProgress();
-                  await loadProjectPackages();
-                  await refreshAssetInventoryAvailability();
-                  await refreshPrototypeGddStatus();
-                  await loadGddMilestoneSteps();
+                  await Promise.allSettled([
+                    loadRuns(),
+                    loadPrototypeProgress(),
+                    loadProjectPackages(),
+                    refreshAssetInventoryAvailability(),
+                    refreshPrototypeGddStatus(),
+                    loadGddMilestoneSteps()
+                  ]);
+                  try { v2RenderProgress(); } catch {}
                 }
 
                 async function loadLatestPrototypeDraft(forceVisibleNotice = false) {
@@ -5885,6 +6027,63 @@ public sealed class BrowserUiRenderer
                   };
                 }
 
+                function prototypeSkeletonLocked() {
+                  return state.prototypeReadyForFeedback ||
+                    String(state.v2PrototypeAcceptanceStatus || "").trim().toLowerCase() === "succeeded" ||
+                    v2HasPrototypeSkeleton() ||
+                    v2SkeletonValidationSucceeded();
+                }
+
+                function firstGddMilestoneStep() {
+                  const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+                  return steps.find(step => String(step.stepId || "").trim().toUpperCase() === "M1") || steps[0] || null;
+                }
+
+                function prototypeSkeletonM1Completed() {
+                  const m1 = firstGddMilestoneStep();
+                  const status = String(m1?.status || "").trim().toLowerCase();
+                  return prototypeSkeletonLocked() || ["executed", "feedback_submitted", "confirmed"].includes(status);
+                }
+
+                function updatePrototypeSkeletonPackageButton() {
+                  const button = $("packagePrototypeSkeleton");
+                  if (!button) return;
+                  const enabled = !!state.projectId && prototypeSkeletonM1Completed() && !isGlobalBusy();
+                  setButtonDisabledState(
+                    button,
+                    !enabled,
+                    enabled ? "" : "M1 原型骨架完成后才可以在这里打包下载项目。");
+                }
+
+                function renderPrototypeM1SpecStatus() {
+                  const panel = $("prototypeM1SpecStatus");
+                  if (!panel) return;
+                  const m1 = firstGddMilestoneStep();
+                  if (!state.projectId) {
+                    panel.className = "card muted";
+                    panel.textContent = "选择项目后显示 M1 原型骨架目标。";
+                    updatePrototypeSkeletonPackageButton();
+                    return;
+                  }
+
+                  if (!m1) {
+                    panel.className = "card muted";
+                    panel.textContent = "创建策划大纲后显示 M1 原型骨架目标。";
+                    updatePrototypeSkeletonPackageButton();
+                    return;
+                  }
+
+                  panel.className = "card";
+                  panel.innerHTML = `
+                    <strong>M1 原型骨架目标：${escapeHtml(m1.title || "首个可玩模块")}</strong>
+                    <p>${escapeHtml(m1.description || "完成首个可进入、可操作、可验证的可玩模块。")}</p>
+                    ${renderStepSpecLine("验收", m1.acceptance)}
+                    ${renderStepSpecLine("完成后试玩验证", m1.packagingValidation)}
+                    ${m1.specRelativePath ? `<p class="muted"><strong>规格文件：</strong>${escapeHtml(m1.specRelativePath)}</p>` : ""}
+                  `;
+                  updatePrototypeSkeletonPackageButton();
+                }
+
                 function setLocalBusy(busy, message = "有任务正在执行，请等待当前任务执行完毕。") {
                   if (busy) invalidateWorkflowRouteAction();
                   if (busy) {
@@ -5945,14 +6144,18 @@ public sealed class BrowserUiRenderer
 
                 function resetPrototypeActionButtonsVisualState() {
                   if ($("runPrototype")) {
+                    const skeletonLocked = prototypeSkeletonLocked();
                     setButtonBaseClass($("runPrototype"), "secondary");
                     $("runPrototype").style.removeProperty("background");
                     $("runPrototype").style.removeProperty("border-color");
                     $("runPrototype").style.removeProperty("color");
                     $("runPrototype").style.removeProperty("box-shadow");
                     $("runPrototype").removeAttribute("title");
-                    $("runPrototype").textContent = "确认 GDD 无误，创建原型骨架";
-                    setButtonVisualState($("runPrototype"), true);
+                    $("runPrototype").textContent = skeletonLocked ? "M1 原型骨架已完成" : "确认 GDD 无误，执行 M1 原型骨架";
+                    setButtonDisabledState(
+                      $("runPrototype"),
+                      skeletonLocked,
+                      skeletonLocked ? "原型骨架已验收通过，不能重复创建。" : "");
                   }
                   if ($("importDraft")) {
                     setButtonBaseClass($("importDraft"), "secondary import-draft-button");
@@ -5987,6 +6190,23 @@ public sealed class BrowserUiRenderer
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
+                    if (button.id === "runUiOptimization") {
+                      setButtonDisabledState(button, true, "游戏界面优化暂未开放。");
+                      return;
+                    }
+                    if (button.id === "runPrototype" && prototypeSkeletonLocked()) {
+                      setButtonDisabledState(button, true, "原型骨架已验收通过，不能重复创建。");
+                      button.textContent = "M1 原型骨架已完成";
+                      return;
+                    }
+                    if (button.id === "packagePrototypeSkeleton") {
+                      updatePrototypeSkeletonPackageButton();
+                      return;
+                    }
+                    if (button.id === "importDraft" && prototypeSkeletonLocked()) {
+                      setButtonDisabledState(button, true, "原型骨架已验收通过，不能重新导入。");
+                      return;
+                    }
                     setButtonDisabledState(button, busy, message);
                   });
                   document.querySelectorAll("[data-needs-fix-goal]").forEach(button => {
@@ -6000,11 +6220,13 @@ public sealed class BrowserUiRenderer
                   }
                   if (!busy) {
                     renderGddMilestoneSteps();
+                    renderPrototypeM1SpecStatus();
                   }
                   if (!busy && !state.draftAnalysisRunning) {
                     resetPrototypeActionButtonsVisualState();
                   }
                   updateDraftImportButtonState();
+                  updatePrototypeSkeletonPackageButton();
                   if (busy) {
                     $("activeRunBanner").classList.remove("hidden");
                     const skeletonRun = skeletonBannerRun();
@@ -6183,7 +6405,7 @@ public sealed class BrowserUiRenderer
                   if (!file) return out("请先选择一个 txt 文件。");
                   setLocalBusy(true, "草稿分析中，请等待当前任务执行完毕。");
                   $("importDraft").textContent = "模型分析中...";
-                  $("runPrototype").textContent = "草稿分析中..暂不可启动原型.";
+                  $("runPrototype").textContent = "草稿分析中..暂不可启动 M1.";
                   setButtonDisabledState($("importDraft"), true, "草稿分析中，请等待当前任务执行完毕。");
                   setButtonDisabledState($("runPrototype"), true, "草稿分析中，请等待当前任务执行完毕。");
                   $("draftImportStatus").className = "card muted";
@@ -6214,6 +6436,7 @@ public sealed class BrowserUiRenderer
                     await refreshActiveRun();
                     resetPrototypeActionButtonsVisualState();
                     setButtonDisabledState($("runPrototype"), isGlobalBusy());
+                    updatePrototypeSkeletonPackageButton();
                   }
                 }
 
@@ -6286,12 +6509,18 @@ public sealed class BrowserUiRenderer
                       <p class="muted">${escapeHtml(result.relativePath || "docs/gdd/GDD.md")} · ${escapeHtml(result.lastUpdatedUtc || "")} · ${escapeHtml(String(result.sizeBytes || 0))} bytes</p>
                       <p class="muted">原型骨架将只根据当前 GDD 创建；如需补充设计，请先回到“创建策划大纲”更新 GDD。</p>
                     `;
-                    setButtonDisabledState($("runPrototype"), isGlobalBusy(), isGlobalBusy() ? "项目有后台任务正在执行。" : "");
+                    setButtonDisabledState(
+                      $("runPrototype"),
+                      prototypeSkeletonLocked() || isGlobalBusy(),
+                      prototypeSkeletonLocked() ? "原型骨架已验收通过，不能重复创建。" : isGlobalBusy() ? "项目有后台任务正在执行。" : "");
+                    if (prototypeSkeletonLocked() && $("runPrototype")) $("runPrototype").textContent = "M1 原型骨架已完成";
+                    renderPrototypeM1SpecStatus();
                     return true;
                   } catch (error) {
                     $("prototypeGddStatus").className = "card muted";
                     $("prototypeGddStatus").textContent = "当前项目还没有 GDD。请先创建策划大纲；创建策划大纲时仍可导入参考文件，并会优先参考导入内容。";
                     setButtonDisabledState($("runPrototype"), true, "请先创建策划大纲。");
+                    renderPrototypeM1SpecStatus();
                     return false;
                   }
                 }
@@ -6315,6 +6544,7 @@ public sealed class BrowserUiRenderer
                     state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块。", steps: [] };
                   }
                   renderGddMilestoneSteps();
+                  renderPrototypeM1SpecStatus();
                 }
 
                 function renderGddMilestoneSteps() {
@@ -6395,7 +6625,7 @@ public sealed class BrowserUiRenderer
                 function gddMilestoneVisualState(step, active) {
                   const status = String(step?.status || "ready").trim().toLowerCase();
                   if (status === "confirmed") return "done";
-                  if (active && step?.stepId === active.stepId && (status === "executed" || status === "feedback_submitted" || status === "running" || status === "queued" || status === "executing" || status === "feedback_running")) return "running";
+                  if (active && step?.stepId === active.stepId) return "running";
                   if (step?.locked) return "locked";
                   return "pending";
                 }
@@ -6403,10 +6633,10 @@ public sealed class BrowserUiRenderer
                 function renderGddMilestoneProgressButton(step, index, selected, active) {
                   const visualState = gddMilestoneVisualState(step, active);
                   const activeClass = selected?.stepId === step.stepId ? "active" : "";
+                  const tooltip = step.title || `${step.stepId || `M${index + 1}`}：${step.description || ""}`.trim();
                   return `
-                    <button type="button" class="milestone-progress-button ${visualState} ${activeClass}" data-gdd-milestone-step-id="${escapeHtml(step.stepId)}">
+                    <button type="button" class="milestone-progress-button ${visualState} ${activeClass}" data-gdd-milestone-step-id="${escapeHtml(step.stepId)}" title="${escapeHtml(tooltip)}" data-v2-tooltip="${escapeHtml(tooltip)}">
                       <span class="milestone-progress-label">模块 ${escapeHtml(String(index + 1))}</span>
-                      <span class="milestone-progress-title">${escapeHtml(step.title || step.stepId || "")}</span>
                       <span class="milestone-status-square" aria-hidden="true"></span>
                     </button>
                   `;
@@ -6441,7 +6671,7 @@ public sealed class BrowserUiRenderer
                 function gddMilestoneStatusLabel(status, isActive) {
                   const normalized = String(status || "").trim().toLowerCase();
                   if (normalized === "confirmed") return "完成";
-                  if (isActive) return normalized === "executed" || normalized === "feedback_submitted" ? "等待下载试玩确认" : "执行中";
+                  if (isActive) return normalized === "executed" || normalized === "feedback_submitted" ? "等待确认完成" : "当前激活模块";
                   if (normalized === "locked") return "待执行";
                   return statusLabel(status);
                 }
@@ -6493,7 +6723,7 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
                   if (!state.projectId || !step) return out("当前没有可确认的游戏模块。");
-                  if (!confirm(`请确认已经点击下载试玩并验证 ${step.stepId}。确认完成后会解锁下一个模块，并触发下一模块解锁前检查。`)) return;
+                  if (!confirm(`建议先打包下载试玩验证 ${step.stepId}，但不是必需。确认完成后会解锁下一个模块，并触发下一模块解锁前检查。`)) return;
                   setLocalBusy(true, "正在确认当前模块并执行下一模块解锁前检查。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
@@ -6514,13 +6744,31 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                function openCurrentMilestoneFeedbackModal() {
+                  if (!guardGlobalAction()) return;
+                  const step = currentGddMilestoneStep();
+                  if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
+                  $("milestoneFeedbackMeta").className = "card muted";
+                  $("milestoneFeedbackMeta").innerHTML = `
+                    <strong>${escapeHtml(step.stepId || "当前模块")} · ${escapeHtml(step.title || "")}</strong>
+                    <p class="muted">${escapeHtml(step.description || "")}</p>
+                  `;
+                  $("milestoneFeedbackInput").value = "";
+                  $("milestoneFeedbackHint").textContent = "";
+                  setModalVisible("milestoneFeedbackModal", true);
+                  $("milestoneFeedbackInput").focus();
+                }
+
                 async function submitCurrentMilestoneFeedback() {
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
                   if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
-                  const feedback = prompt(`请输入 ${step.stepId} 的试玩反馈或修改意见：`);
+                  const feedback = $("milestoneFeedbackInput").value || "";
                   if (!feedback?.trim()) return;
                   setLocalBusy(true, "正在提交当前模块的反馈修复。");
+                  $("confirmMilestoneFeedback").disabled = true;
+                  $("confirmMilestoneFeedback").textContent = "提交中...";
+                  $("milestoneFeedbackHint").textContent = "正在根据当前模块反馈启动修复。";
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
@@ -6529,12 +6777,16 @@ public sealed class BrowserUiRenderer
                     });
                     out(result);
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
+                    setModalVisible("milestoneFeedbackModal", false);
                     renderGddMilestoneSteps();
                     await loadGddMilestoneSteps();
                     await loadRuns();
                   } catch (error) {
+                    $("milestoneFeedbackHint").textContent = "提交失败，请检查反馈内容或稍后重试。";
                     showError(error);
                   } finally {
+                    $("confirmMilestoneFeedback").disabled = false;
+                    $("confirmMilestoneFeedback").textContent = "提交反馈并修正模块";
                     setLocalBusy(false);
                     await refreshActiveRun();
                   }
@@ -6545,6 +6797,7 @@ public sealed class BrowserUiRenderer
                   const canCreate = !!result?.canCreatePackage && !isGlobalBusy();
                   $("createProjectPackage").disabled = !canCreate;
                   $("createProjectPackage").title = canCreate ? "" : projectPackageDisabledText(result?.disabledReason);
+                  updatePrototypeSkeletonPackageButton();
                   $("openProjectDownloads").disabled = !state.projectId;
                   $("openProjectDownloads").onclick = () => {
                     if (!state.projectId) return;
@@ -6687,6 +6940,11 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) {
                     showPrototypeNotice("请先选择一个项目。", "warn");
                     return out("请先选择一个项目。");
+                  }
+                  if (prototypeSkeletonLocked()) {
+                    showPrototypeNotice("原型骨架已验收通过，不能重复创建。", "info");
+                    setPrototypeFormLocked(true);
+                    return out("原型骨架已验收通过，不能重复创建。");
                   }
                   const hasGdd = await refreshPrototypeGddStatus();
                   if (!hasGdd) {
@@ -6888,6 +7146,9 @@ public sealed class BrowserUiRenderer
                       clearCancelledPrototypeMarker();
                     }
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
+                    state.v2PrototypeStatus = progress?.status || "";
+                    state.v2PrototypeCreationStatus = progress?.prototypeCreationStatus || progress?.status || "";
+                    state.v2PrototypeAcceptanceStatus = progress?.acceptanceStatus || "";
                     state.prototypeFailure = acceptanceStatus === "failed" ? (progress.acceptanceFailure || progress.failure || "") : "";
                     if (acceptanceStatus === "succeeded") {
                       callV2("v2SetPrototypeValidationInvalidated", false);
@@ -6895,6 +7156,7 @@ public sealed class BrowserUiRenderer
                     renderPrototypeProgress(progress);
                     renderPrototypeAcceptanceSummary(progress);
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
+                    renderPrototypeM1SpecStatus();
                     updateChatPanelVisibility(progress);
                     writeProjectStateCache({ prototypeProgress: progress });
                   } catch (error) { showError(error); }
@@ -6971,6 +7233,7 @@ public sealed class BrowserUiRenderer
                     : routeGoal
                       ? `提交到需要修复路由任务 ${String(routeGoal.goalIndex || "")}`
                       : "提交反馈到需要修复路由";
+                  if (typeof updatePrototypeSkeletonPackageButton === "function") updatePrototypeSkeletonPackageButton();
                   renderChatHistory();
                 }
 
@@ -7055,6 +7318,8 @@ public sealed class BrowserUiRenderer
                 }
 
                 function isPrototypeCreationLocked(progress) {
+                  const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
+                  if (acceptanceStatus === "succeeded" || prototypeSkeletonLocked()) return true;
                   const status = String(progress?.prototypeCreationStatus || progress?.status || "idle").trim().toLowerCase();
                   return !["idle", "failed", "cancel"].includes(status);
                 }
@@ -7066,9 +7331,13 @@ public sealed class BrowserUiRenderer
                     resetPrototypeActionButtonsVisualState();
                   }
                   if ($("runPrototype")) {
-                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架创建中，请等待当前任务执行完毕。" : "");
-                    $("runPrototype").textContent = locked ? "原型骨架创建中..刷新页面查阅创建进度." : "确认 GDD 无误，创建原型骨架";
+                    const lockedReason = state.prototypeReadyForFeedback ? "原型骨架已验收通过，不能重复创建。" : "原型骨架创建中，请等待当前任务执行完毕。";
+                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? lockedReason : "");
+                    $("runPrototype").textContent = locked
+                      ? state.prototypeReadyForFeedback ? "M1 原型骨架已完成" : "M1 原型骨架执行中..刷新页面查阅进度."
+                      : "确认 GDD 无误，执行 M1 原型骨架";
                   }
+                  updatePrototypeSkeletonPackageButton();
                   if ($("importDraft")) {
                     $("importDraft").textContent = locked ? "模型分析中..." : "分析草稿并回填";
                   }
@@ -7213,11 +7482,14 @@ public sealed class BrowserUiRenderer
                 $("confirmIterationPlanUpdate").onclick = confirmIterationPlanUpdate;
                 $("closeIterationPlanUpdateModal").onclick = () => setModalVisible("iterationPlanUpdateModal", false);
                 $("iterationPlanUpdateInput").addEventListener("input", event => autoGrowTextarea(event.target));
+                $("confirmMilestoneFeedback").onclick = submitCurrentMilestoneFeedback;
+                $("closeMilestoneFeedbackModal").onclick = () => setModalVisible("milestoneFeedbackModal", false);
+                $("milestoneFeedbackInput").addEventListener("input", event => autoGrowTextarea(event.target));
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
                 $("executeCurrentMilestoneStep").onclick = executeCurrentMilestoneStep;
                 $("confirmCurrentMilestoneStep").onclick = confirmCurrentMilestoneStep;
-                $("submitCurrentMilestoneFeedback").onclick = submitCurrentMilestoneFeedback;
+                $("submitCurrentMilestoneFeedback").onclick = openCurrentMilestoneFeedbackModal;
                 $("chatSkillMode").onchange = () => {
                   renderSelectedSkillAction();
                   callV2("v2WriteProjectUiState");
@@ -7225,6 +7497,7 @@ public sealed class BrowserUiRenderer
                 window.addEventListener("beforeunload", () => {
                   callV2("v2WriteProjectUiState");
                 });
+                installClientErrorRecovery();
                 window.addEventListener("message", event => {
                   if (event.origin !== location.origin) return;
                   if (event.data?.type !== "phasea:gdd-outline-deleted") return;
@@ -7238,6 +7511,7 @@ public sealed class BrowserUiRenderer
                 void refreshActiveRun();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
+                $("packagePrototypeSkeleton").onclick = createProjectPackage;
                 $("loadAssetInventory").onclick = loadAssetInventory;
                 $("runPrototype").onclick = runPrototype;
                 if ($("repairPrototype")) $("repairPrototype").onclick = repairPrototype;
@@ -7361,13 +7635,20 @@ public sealed class BrowserUiRenderer
         var latestUiOptimization = LatestRun(runs, "prototype-ui-optimization");
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
-        var prototypeFailed = latestSkeletonValidation?.Status == "failed" || latestPrototype?.Status == "failed";
-        var prototypeSucceeded = latestSkeletonValidation?.Status == "succeeded" || latestPrototype?.Status == "succeeded";
+        var skeletonValidationSucceeded = string.Equals(latestSkeletonValidation?.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
+        var prototypeFailed = !skeletonValidationSucceeded &&
+                              (string.Equals(latestSkeletonValidation?.Status, "failed", StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(latestPrototype?.Status, "failed", StringComparison.OrdinalIgnoreCase));
+        var prototypeSucceeded = skeletonValidationSucceeded ||
+                                 string.Equals(latestPrototype?.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
+        var prototypeStepRun = skeletonValidationSucceeded
+            ? latestSkeletonValidation
+            : latestPrototype;
 
         return
         [
             new ProjectDetailStep(1, "游戏项目概述", "done", "/", "✓"),
-            CreateRunStep(2, "原型骨架创建", latestPrototype, "/#prototypeWorkflowPanel"),
+            CreateRunStep(2, "原型骨架创建", prototypeStepRun, "/#prototypeWorkflowPanel"),
             prototypeFailed && latestRepair is null
                 ? new ProjectDetailStep(3, "骨架验收修复", "fix", "/#v2RepairPanel", "×")
                 : latestRepair is not null
@@ -8371,7 +8652,14 @@ public sealed class BrowserUiRenderer
                     state.usedAssets = payload.usedAssets || [];
                     state.candidates = payload.generationCandidates || [];
                     writeAssetCache();
-                    await renderAssetData(`已刷新素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。`);
+                    const judgedCandidates = state.candidates.filter(item => item.llmJudgementStatus || item.llmJudgementReason).length;
+                    const suffix = state.candidates.length && !judgedCandidates
+                      ? " 本次没有启动素材判定 run，可能是没有需要判定的候选或已使用缓存。"
+                      : "";
+                    await renderAssetData(`已刷新素材库：已使用 ${state.usedAssets.length} 个，可生成候选 ${state.candidates.length} 个。${suffix}`);
+                  } catch (error) {
+                    $("status").className = "card muted";
+                    $("status").textContent = `素材库刷新失败：${publicErrorCode(error?.message || error || "unknown_error")}。`;
                   } finally {
                     if (refreshButton) {
                       refreshButton.disabled = false;

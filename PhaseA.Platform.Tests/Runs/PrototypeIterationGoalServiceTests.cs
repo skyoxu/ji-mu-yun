@@ -124,7 +124,7 @@ public sealed record DemoPrototypeState;
         stateWriter.WriteProjectReadme(project);
         var contract = new PrototypeContractService().WriteFromRequest(project!, ContractRequest(), "docs/prototypes/2026-05-20-contract.md", "contract");
         stateWriter.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
-        stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        stateWriter.WritePrototypeState(project!, PrototypeBaselineState());
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
@@ -2666,7 +2666,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         WriteCurrentRpgMapEntryShape(project.RepoPath);
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WriteProjectReadme(project);
-        stateWriter.WritePrototypeState(project, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        stateWriter.WritePrototypeState(project, PrototypeBaselineState());
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
 
@@ -2726,8 +2726,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
         refreshed!.Goals.Single(goal => goal.GoalIndex == targetGoal.GoalIndex).Status.Should().Be("succeeded");
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("test"));
         runner.Commands.Should().Contain(command => command.FileName == "dotnet" && command.Arguments.Contains("build"));
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
     }
 
     [Fact]
@@ -3029,15 +3029,29 @@ public sealed class SurvivorsLikePrototypeLoopTests
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-            ["PHASEA_REPOSITORY_ROOT"] = repoRoot
+            ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
+            ["GODOT_BIN"] = string.IsNullOrWhiteSpace(godotBin) ? @"C:\Godot\Godot.exe" : godotBin
         };
 
-        if (!string.IsNullOrWhiteSpace(godotBin))
-        {
-            values["GODOT_BIN"] = godotBin;
-        }
-
         return PhaseAPlatformOptionsLoader.FromDictionary(values);
+    }
+
+    private static object PrototypeBaselineState()
+    {
+        return new
+        {
+            route = "prototype-7day-playable",
+            marker = "prototype-baseline",
+            prototype_completion = new
+            {
+                succeeded = true,
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        };
     }
 
     private static void EnsureRpgAcceptanceMarkers(string repoPath)
@@ -3562,6 +3576,13 @@ public sealed class MapScene
 """);
     }
 
+    private static bool HasScriptArgument(HostedProcessCommand command, string scriptFileName)
+    {
+        return command.Arguments.Any(argument =>
+            string.Equals(Path.GetFileName(argument), scriptFileName, StringComparison.OrdinalIgnoreCase) ||
+            argument.Replace('\\', '/').EndsWith("/" + scriptFileName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
         public List<HostedProcessCommand> Commands { get; } = [];
@@ -3574,12 +3595,12 @@ public sealed class MapScene
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
@@ -3638,8 +3659,8 @@ REMAINING: none
 C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\PlayerTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]"));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
-                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "smoke_headless.py") ||
+                HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
@@ -3693,12 +3714,12 @@ REMAINING: Fix RPG map, player, and enemy asset instance binding.
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }

@@ -190,22 +190,15 @@ internal static class PrototypeGodotSmokeService
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(processRunner);
 
-        if (!ShouldValidateGoal(project, goal))
+        if (string.IsNullOrWhiteSpace(options.GodotBin))
         {
-            return PrototypeGoalGodotSmokeValidationResult.NotRequired();
-        }
-
-        if (goal.GoalIndex is >= 1 and <= 4 && string.IsNullOrWhiteSpace(options.GodotBin))
-        {
-            return PrototypeGoalGodotSmokeValidationResult.NotRequired();
+            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("godot_bin_not_configured"));
         }
 
         var scenePath = ResolveSmokeScene(prototypeStateJson);
         if (string.IsNullOrWhiteSpace(scenePath))
         {
-            return RequiresSmokeScene(project, goal)
-                ? PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"))
-                : PrototypeGoalGodotSmokeValidationResult.NotRequired();
+            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"));
         }
 
         var smoke = await RunAsync(options, processRunner, project.RepoPath, scenePath, cancellationToken);
@@ -297,42 +290,7 @@ internal static class PrototypeGodotSmokeService
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(goal);
 
-        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
-        {
-            return goal.GoalIndex is >= 1 and <= 7;
-        }
-
-        if (PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
-        {
-            return goal.GoalIndex is >= 1 and <= 10;
-        }
-
-        if (PrototypeRouteSkillPolicy.IsDeckbuilderProject(project))
-        {
-            return goal.GoalIndex is >= 1 and <= 11;
-        }
-
-        return false;
-    }
-
-    private static bool RequiresSmokeScene(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
-    {
-        if (PrototypeRouteSkillPolicy.IsRpgProject(project))
-        {
-            return goal.GoalIndex is 5 or 6 or 7;
-        }
-
-        if (PrototypeRouteSkillPolicy.IsSurvivorsLikeProject(project))
-        {
-            return goal.GoalIndex is >= 5 and <= 10;
-        }
-
-        if (PrototypeRouteSkillPolicy.IsDeckbuilderProject(project))
-        {
-            return goal.GoalIndex is >= 5 and <= 11;
-        }
-
-        return false;
+        return goal.GoalIndex > 0;
     }
 
     private static string? ResolveRpgGdUnitRelativePath(string projectRepoPath, string slug)

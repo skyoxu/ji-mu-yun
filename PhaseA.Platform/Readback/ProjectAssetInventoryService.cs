@@ -165,6 +165,10 @@ public sealed partial class ProjectAssetInventoryService
         {
             distinctCandidates = await JudgeCandidatesWithCodexAsync(project, projectRoot, distinctUsedAssets, distinctCandidates, model, cancellationToken);
         }
+        else if (includeLlmJudgement)
+        {
+            await RecordInventoryRefreshRunAsync(project, distinctUsedAssets.Length, distinctCandidates.Length, cancellationToken);
+        }
 
         var result = new ProjectAssetInventoryResult(
             project.ProjectId,
@@ -178,6 +182,59 @@ public sealed partial class ProjectAssetInventoryService
         }
 
         return result;
+    }
+
+    private async Task RecordInventoryRefreshRunAsync(
+        ProjectSnapshot project,
+        int usedAssetCount,
+        int candidateCount,
+        CancellationToken cancellationToken)
+    {
+        if (await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken))
+        {
+            return;
+        }
+
+        var recentRuns = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        if (recentRuns.Any(IsRecentNoCandidateInventoryRefresh))
+        {
+            return;
+        }
+
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
+        await _metadataStore.MarkRunStartedAsync(runId, 0, cancellationToken);
+        var evidenceJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            run_type = RunType,
+            judgement_skipped = true,
+            reason = "no_generation_candidates",
+            used_asset_count = usedAssetCount,
+            candidate_count = candidateCount
+        });
+        await _metadataStore.CompleteRunAsync(
+            runId,
+            "succeeded",
+            0,
+            "Asset inventory refreshed without LLM judgement because no generation candidates were found.",
+            "",
+            evidenceJson,
+            cancellationToken);
+    }
+
+    private static bool IsRecentNoCandidateInventoryRefresh(RunSnapshot run)
+    {
+        if (!string.Equals(run.RunType, RunType, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(run.EvidenceJson) ||
+            !run.EvidenceJson.Contains("\"reason\":\"no_generation_candidates\"", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var createdUtc = DateTimeOffset.TryParse(run.CreatedUtc, out var parsed)
+            ? parsed
+            : DateTimeOffset.MinValue;
+        return createdUtc >= DateTimeOffset.UtcNow.AddMinutes(-10);
     }
 
     public async Task<ProjectAssetPreviewReadResult?> ReadPreviewAsync(

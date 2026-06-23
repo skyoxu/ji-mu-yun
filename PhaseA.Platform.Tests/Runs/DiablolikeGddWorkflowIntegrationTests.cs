@@ -73,7 +73,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
             new FakeLlmRouteEngine(reviewJson));
         var plan = await steps.GetOrCreateLatestAsync(accountId, projectId);
         plan!.Steps.Select(step => step.StepId).Should().ContainInOrder("M1", "M2", "M10-1", "M10-2", "M10-3");
-        plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeFalse();
+        plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
 
         var firstStepPlan = await steps.ExecuteCurrentStepAsync(accountId, projectId);
         firstStepPlan!.Plan!.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();

@@ -106,6 +106,20 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderShellV2_PrototypeSkeletonPageShowsM1AndPackageShortcut()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("prototypeM1SpecStatus");
+        html.Should().Contain("M1 原型骨架目标");
+        html.Should().Contain("packagePrototypeSkeleton");
+        html.Should().Contain("确认 GDD 无误，执行 M1 原型骨架");
+        html.Should().Contain("$(\"packagePrototypeSkeleton\").onclick = createProjectPackage");
+        html.Should().Contain("prototypeSkeletonM1Completed()");
+        html.Should().Contain("M1 原型骨架完成后才可以在这里打包下载项目");
+    }
+
+    [Fact]
     public void RenderShellV2_TabWorkspaceBehaviorSmoke()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
@@ -385,6 +399,419 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderShellV2_GddMilestoneModulePanelBehaviorSmoke()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            class Button {
+              constructor(dataset = {}, className = "") {
+                this.dataset = dataset;
+                this.className = className;
+                this.disabled = false;
+                this.title = "";
+                this.onclick = null;
+                this.listeners = {};
+              }
+              addEventListener(name, handler) { this.listeners[name] = handler; }
+              click() {
+                if (this.disabled) return;
+                if (this.onclick) this.onclick();
+                if (this.listeners.click) this.listeners.click();
+              }
+            }
+            class Panel {
+              constructor() {
+                this.className = "";
+                this.textContent = "";
+                this._innerHTML = "";
+                this.stepButtons = [];
+                this.navButtons = new Map();
+              }
+              set innerHTML(value) {
+                this._innerHTML = String(value || "");
+                this.stepButtons = [];
+                this.navButtons = new Map();
+                const stepRegex = /<button[^>]*class="([^"]*)"[^>]*data-gdd-milestone-step-id="([^"]*)"/g;
+                let match;
+                while ((match = stepRegex.exec(this._innerHTML)) !== null) {
+                  this.stepButtons.push(new Button({ gddMilestoneStepId: unescapeHtml(match[2]) }, match[1]));
+                }
+                for (const nav of ["previous", "next"]) {
+                  const navRegex = new RegExp(`<button[^>]*data-gdd-milestone-nav="${nav}"([^>]*)>`);
+                  const navMatch = navRegex.exec(this._innerHTML);
+                  if (navMatch) {
+                    const button = new Button({ gddMilestoneNav: nav }, "ghost");
+                    button.disabled = navMatch[1].includes("disabled");
+                    this.navButtons.set(nav, button);
+                  }
+                }
+              }
+              get innerHTML() { return this._innerHTML; }
+              querySelectorAll(selector) {
+                return selector === "[data-gdd-milestone-step-id]" ? this.stepButtons : [];
+              }
+              querySelector(selector) {
+                if (selector === "[data-gdd-milestone-nav='previous']") return this.navButtons.get("previous") || null;
+                if (selector === "[data-gdd-milestone-nav='next']") return this.navButtons.get("next") || null;
+                return null;
+              }
+            }
+            function unescapeHtml(value) {
+              return String(value || "")
+                .replace(/&quot;/g, "\"")
+                .replace(/&#039;/g, "'")
+                .replace(/&gt;/g, ">")
+                .replace(/&lt;/g, "<")
+                .replace(/&amp;/g, "&");
+            }
+            const panel = new Panel();
+            const elements = new Map([
+              ["gddMilestoneStepStatus", panel],
+              ["executeCurrentMilestoneStep", new Button()],
+              ["confirmCurrentMilestoneStep", new Button()],
+              ["submitCurrentMilestoneFeedback", new Button()]
+            ]);
+            const $ = id => elements.get(id) || null;
+            const state = {
+              projectId: "project-1",
+              gddMilestoneSteps: null,
+              selectedGddMilestoneStepId: "",
+              gddMilestoneManualSelection: false
+            };
+            let cachedPayload = null;
+            let cacheWrites = [];
+            function readProjectStateCache() { return cachedPayload; }
+            function writeProjectStateCache(patch = {}) { cacheWrites.push(patch); }
+            function renderIterationPlan() {}
+            function renderRunsListFromState() {}
+            function renderFeedbackRecords() {}
+            function applyDraftToForm() {}
+            function renderDraftImportStatus() {}
+            function renderPrototypeProgress() {}
+            function renderPrototypeAcceptanceSummary() {}
+            function setPrototypeFormLocked() {}
+            function updateChatPanelVisibility() {}
+            function renderProjectPackages() {}
+            function renderAssetInventory() {}
+            function renderRepairPlan() {}
+            function callV2() {}
+            function isGlobalBusy() { return false; }
+            function setButtonDisabledState(button, disabled, reason) {
+              button.disabled = !!disabled;
+              button.title = disabled ? reason : "";
+            }
+            function escapeHtml(value) {
+              return String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+            }
+            function statusLabel(value) { return String(value || ""); }
+            function applyProjectStateCache(projectId) {
+              const cached = readProjectStateCache(projectId);
+              if (!cached) return;
+            }
+            function activeGddMilestoneStep(steps, plan) {
+              return steps.find(step => step.stepId === plan?.currentStepId)
+                || steps.find(step => ["running", "queued", "executing", "feedback_running"].includes(String(step.status || "").trim().toLowerCase()))
+                || steps.find(step => !step.locked && step.status !== "confirmed")
+                || null;
+            }
+            function selectedGddMilestoneStep(steps, active) {
+              if (!steps.length) return null;
+              const selected = state.selectedGddMilestoneStepId
+                ? steps.find(step => step.stepId === state.selectedGddMilestoneStepId)
+                : null;
+              const next = selected || active || steps[0];
+              state.selectedGddMilestoneStepId = next?.stepId || "";
+              return next || null;
+            }
+            function selectGddMilestoneStep(stepId, manual = false) {
+              state.selectedGddMilestoneStepId = stepId;
+              state.gddMilestoneManualSelection = !!manual;
+              writeProjectStateCache({ selectedGddMilestoneStepId: stepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection });
+              renderGddMilestoneSteps();
+            }
+            function selectGddMilestoneByOffset(offset) {
+              const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+              if (!steps.length) return;
+              const currentIndex = Math.max(0, steps.findIndex(step => step.stepId === state.selectedGddMilestoneStepId));
+              const nextIndex = Math.min(steps.length - 1, Math.max(0, currentIndex + offset));
+              selectGddMilestoneStep(steps[nextIndex]?.stepId || "", true);
+            }
+            function gddMilestoneVisualState(step, active) {
+              const status = String(step?.status || "ready").trim().toLowerCase();
+              if (status === "confirmed") return "done";
+              if (active && step?.stepId === active.stepId) return "running";
+              if (step?.locked) return "locked";
+              return "pending";
+            }
+            function renderGddMilestoneProgressButton(step, index, selected, active) {
+              const visualState = gddMilestoneVisualState(step, active);
+              const activeClass = selected?.stepId === step.stepId ? "active" : "";
+              const tooltip = step.title || `${step.stepId || `M${index + 1}`}：${step.description || ""}`.trim();
+              return `
+                <button type="button" class="milestone-progress-button ${visualState} ${activeClass}" data-gdd-milestone-step-id="${escapeHtml(step.stepId)}" title="${escapeHtml(tooltip)}" data-v2-tooltip="${escapeHtml(tooltip)}">
+                  <span>模块 ${escapeHtml(String(index + 1))}</span>
+                  <span class="milestone-status-square" aria-hidden="true"></span>
+                </button>`;
+            }
+            function renderGddMilestoneStepItem(step, index, active) {
+              const isActive = !!active && active.stepId === step.stepId;
+              const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+              return `
+                <div class="milestone-detail ${step.locked || !isActive ? "muted" : ""}">
+                  <strong>模块 ${escapeHtml(String(index + 1))} · ${escapeHtml(step.title || step.stepId || "")}</strong>
+                  <span>${isActive ? "当前激活模块" : "非激活模块，仅可查看"}</span>
+                  <div class="milestone-detail-nav">
+                    <button type="button" class="ghost" data-gdd-milestone-nav="previous" ${index <= 0 ? "disabled" : ""}>上一个模块</button>
+                    <button type="button" class="ghost" data-gdd-milestone-nav="next" ${index >= steps.length - 1 ? "disabled" : ""}>下一个模块</button>
+                  </div>
+                </div>`;
+            }
+            function applyGddMilestoneActionState(selected, active) {
+              const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
+              setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
+              setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");
+              setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && selected.canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
+            }
+            function renderGddMilestoneSteps() {
+              const plan = state.gddMilestoneSteps;
+              const steps = Array.isArray(plan?.steps) ? plan.steps : [];
+              const active = activeGddMilestoneStep(steps, plan);
+              const selected = selectedGddMilestoneStep(steps, active);
+              applyGddMilestoneActionState(selected, active);
+              const completedCount = steps.filter(step => gddMilestoneVisualState(step, active) === "done").length;
+              const activeIndex = active ? Math.max(0, steps.findIndex(step => step.stepId === active.stepId)) : steps.length;
+              const selectedIndex = selected ? Math.max(0, steps.findIndex(step => step.stepId === selected.stepId)) : -1;
+              panel.innerHTML = `
+                <div class="milestone-progress-shell">
+                  <span>共 ${escapeHtml(String(steps.length))} 个模块 · 完成 ${escapeHtml(String(completedCount))} 个 · 当前 ${escapeHtml(active ? `模块 ${activeIndex + 1}` : "全部完成")}</span>
+                  <div class="milestone-progress-track">${steps.map((step, index) => renderGddMilestoneProgressButton(step, index, selected, active)).join("")}</div>
+                </div>
+                ${selected ? renderGddMilestoneStepItem(selected, selectedIndex, active) : ""}`;
+              panel.querySelectorAll("[data-gdd-milestone-step-id]").forEach(button => {
+                button.onclick = () => selectGddMilestoneStep(button.dataset.gddMilestoneStepId || "", true);
+              });
+              panel.querySelector("[data-gdd-milestone-nav='previous']")?.addEventListener("click", () => selectGddMilestoneByOffset(-1));
+              panel.querySelector("[data-gdd-milestone-nav='next']")?.addEventListener("click", () => selectGddMilestoneByOffset(1));
+            }
+            function makeSteps(count) {
+              return Array.from({ length: count }, (_, index) => ({
+                stepId: `M${index + 1}`,
+                title: `M${index + 1}`,
+                status: index === 0 ? "ready" : "locked",
+                locked: index !== 0,
+                canExecute: index === 0,
+                canConfirm: false,
+                canSubmitFeedback: false
+              }));
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+
+            cachedPayload = { gddMilestoneSteps: { currentStepId: "M1", steps: makeSteps(5) }, selectedGddMilestoneStepId: "M5", gddMilestoneManualSelection: true };
+            applyProjectStateCache("project-1");
+            assert(state.gddMilestoneSteps === null, "cached module list must not render before server refresh");
+            assert(state.selectedGddMilestoneStepId === "", "cached selected module must not override server-active module");
+
+            state.gddMilestoneSteps = { currentStepId: "M1", steps: makeSteps(10) };
+            renderGddMilestoneSteps();
+            assert(panel.innerHTML.includes("共 10 个模块"), "module panel should render ten modules");
+            const m1 = panel.stepButtons.find(button => button.dataset.gddMilestoneStepId === "M1");
+            const m2 = panel.stepButtons.find(button => button.dataset.gddMilestoneStepId === "M2");
+            assert(m1.className.includes("running") && m1.className.includes("active"), "ready active module should show yellow/running and selected");
+            assert(panel.innerHTML.includes('title="M1"'), "module button should expose title as hover tooltip");
+            assert(!panel.innerHTML.includes("<span>M1</span>"), "module button should not show milestone title inline");
+            assert(m2.className.includes("locked"), "locked module should show grey/locked");
+            assert(!$("executeCurrentMilestoneStep").disabled, "active ready module can execute");
+            assert($("confirmCurrentMilestoneStep").disabled, "ready module cannot confirm before execution");
+
+            m2.click();
+            assert(state.selectedGddMilestoneStepId === "M2", "clicking a module selects it");
+            assert(state.gddMilestoneManualSelection === true, "clicking a module records manual selection");
+            assert($("executeCurrentMilestoneStep").disabled, "non-active module actions are disabled");
+            assert(panel.innerHTML.includes("非激活模块，仅可查看"), "non-active module is read-only");
+
+            panel.querySelector("[data-gdd-milestone-nav='next']").click();
+            assert(state.selectedGddMilestoneStepId === "M3", "next button switches displayed module");
+            assert($("executeCurrentMilestoneStep").disabled, "next locked module remains disabled");
+
+            panel.stepButtons.find(button => button.dataset.gddMilestoneStepId === "M1").click();
+            state.gddMilestoneSteps.steps[0] = { ...state.gddMilestoneSteps.steps[0], status: "executed", canExecute: false, canConfirm: true, canSubmitFeedback: true };
+            renderGddMilestoneSteps();
+            assert($("executeCurrentMilestoneStep").disabled, "executed module no longer executes again");
+            assert(!$("confirmCurrentMilestoneStep").disabled, "executed active module can be confirmed");
+            assert(!$("submitCurrentMilestoneFeedback").disabled, "executed active module can submit feedback");
+            assert(cacheWrites.some(write => write.selectedGddMilestoneStepId === "M3"), "nav selection should be cached");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
+    public void RenderShellV2_MilestoneFeedbackModalBehaviorSmoke()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            class ClassList {
+              constructor() { this.items = new Set(["hidden"]); }
+              add(value) { this.items.add(value); }
+              remove(value) { this.items.delete(value); }
+              contains(value) { return this.items.has(value); }
+            }
+            class Element {
+              constructor(id) {
+                this.id = id;
+                this.className = "";
+                this.classList = new ClassList();
+                this.innerHTML = "";
+                this.textContent = "";
+                this.value = "";
+                this.disabled = false;
+                this.focused = false;
+              }
+              focus() { this.focused = true; }
+            }
+            const elements = new Map([
+              ["milestoneFeedbackModal", new Element("milestoneFeedbackModal")],
+              ["milestoneFeedbackMeta", new Element("milestoneFeedbackMeta")],
+              ["milestoneFeedbackInput", new Element("milestoneFeedbackInput")],
+              ["milestoneFeedbackHint", new Element("milestoneFeedbackHint")],
+              ["confirmMilestoneFeedback", new Element("confirmMilestoneFeedback")],
+              ["globalModel", new Element("globalModel")]
+            ]);
+            elements.get("globalModel").value = "gpt-5.5";
+            const $ = id => elements.get(id) || null;
+            const state = {
+              projectId: "project-1",
+              gddMilestoneSteps: {
+                currentStepId: "M1",
+                steps: [{
+                  stepId: "M1",
+                  title: "M1：首个可玩场景",
+                  description: "基础操作和 HUD 反馈。",
+                  status: "executed",
+                  locked: false,
+                  canSubmitFeedback: true
+                }]
+              }
+            };
+            const apiCalls = [];
+            let rendered = 0;
+            let loadedSteps = 0;
+            let loadedRuns = 0;
+            let busyMessage = "";
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            function guardGlobalAction() { return true; }
+            function escapeHtml(value) {
+              return String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[ch]));
+            }
+            function setModalVisible(id, visible) {
+              const modal = $(id);
+              if (!modal) return;
+              if (visible) modal.classList.remove("hidden");
+              else modal.classList.add("hidden");
+            }
+            function currentGddMilestoneStep() {
+              const steps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+              return steps.find(step => step.stepId === state.gddMilestoneSteps?.currentStepId) || null;
+            }
+            function setLocalBusy(value, message = "") { busyMessage = value ? message : ""; }
+            async function refreshActiveRun() {}
+            function renderGddMilestoneSteps() { rendered += 1; }
+            async function loadGddMilestoneSteps() { loadedSteps += 1; }
+            async function loadRuns() { loadedRuns += 1; }
+            function out() {}
+            function showError(error) { throw error; }
+            async function api(url, options) {
+              apiCalls.push({ url, options });
+              return { plan: { currentStepId: "M1", steps: state.gddMilestoneSteps.steps } };
+            }
+            function openCurrentMilestoneFeedbackModal() {
+              if (!guardGlobalAction()) return;
+              const step = currentGddMilestoneStep();
+              if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
+              $("milestoneFeedbackMeta").className = "card muted";
+              $("milestoneFeedbackMeta").innerHTML = `
+                <strong>${escapeHtml(step.stepId || "当前模块")} · ${escapeHtml(step.title || "")}</strong>
+                <p class="muted">${escapeHtml(step.description || "")}</p>
+              `;
+              $("milestoneFeedbackInput").value = "";
+              $("milestoneFeedbackHint").textContent = "";
+              setModalVisible("milestoneFeedbackModal", true);
+              $("milestoneFeedbackInput").focus();
+            }
+            async function submitCurrentMilestoneFeedback() {
+              if (!guardGlobalAction()) return;
+              const step = currentGddMilestoneStep();
+              if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
+              const feedback = $("milestoneFeedbackInput").value || "";
+              if (!feedback?.trim()) return;
+              setLocalBusy(true, "正在提交当前模块的反馈修复。");
+              $("confirmMilestoneFeedback").disabled = true;
+              $("confirmMilestoneFeedback").textContent = "提交中...";
+              $("milestoneFeedbackHint").textContent = "正在根据当前模块反馈启动修复。";
+              try {
+                const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
+                  method: "POST",
+                  timeoutMs: 3600000,
+                  body: JSON.stringify({ feedback, model: $("globalModel").value || "gpt-5.5" })
+                });
+                out(result);
+                state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
+                setModalVisible("milestoneFeedbackModal", false);
+                renderGddMilestoneSteps();
+                await loadGddMilestoneSteps();
+                await loadRuns();
+              } catch (error) {
+                $("milestoneFeedbackHint").textContent = "提交失败，请检查反馈内容或稍后重试。";
+                showError(error);
+              } finally {
+                $("confirmMilestoneFeedback").disabled = false;
+                $("confirmMilestoneFeedback").textContent = "提交反馈并修正模块";
+                setLocalBusy(false);
+                await refreshActiveRun();
+              }
+            }
+
+            (async () => {
+              openCurrentMilestoneFeedbackModal();
+              assert(!$("milestoneFeedbackModal").classList.contains("hidden"), "feedback modal should open");
+              assert($("milestoneFeedbackInput").focused, "feedback textarea should receive focus");
+              assert($("milestoneFeedbackMeta").innerHTML.includes("M1：首个可玩场景"), "modal should show current module context");
+              $("milestoneFeedbackInput").value = "首个房间敌人出现太快，请延迟 1 秒。";
+              await submitCurrentMilestoneFeedback();
+              assert(apiCalls.length === 1, "feedback submit should call api once");
+              assert(apiCalls[0].url === "/api/projects/project-1/gdd-milestone-steps/M1/feedback-run", "feedback API URL should target current module");
+              const payload = JSON.parse(apiCalls[0].options.body);
+              assert(payload.feedback.includes("敌人出现太快"), "feedback payload should contain player feedback");
+              assert(payload.model === "gpt-5.5", "feedback payload should include selected model");
+              assert($("milestoneFeedbackModal").classList.contains("hidden"), "feedback modal should close after success");
+              assert($("confirmMilestoneFeedback").disabled === false, "submit button should be re-enabled");
+              assert($("confirmMilestoneFeedback").textContent === "提交反馈并修正模块", "submit button label should reset");
+              assert(rendered === 1 && loadedSteps === 1 && loadedRuns === 1, "success should refresh module state and runs");
+              assert(busyMessage === "", "local busy state should clear");
+            })().catch(error => {
+              console.error(error);
+              process.exit(1);
+            });
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
     public void RenderShellV2_PublicChatSanitizerRemovesPlatformRoutes()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
@@ -570,6 +997,10 @@ public sealed class BrowserUiRendererTests
               const creationStatus = String(state?.v2PrototypeCreationStatus || prototypeStatus || "").trim().toLowerCase();
               const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
               if (stepId === "create-prototype") {
+                const skeletonValidation = v2LatestSkeletonValidationRun();
+                const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
+                if (skeletonValidationStatus === "succeeded") return "done";
+                if (skeletonValidationStatus === "failed") return "fix";
                 if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
                 return creationStatus === "failed" ? "fix" : creationStatus === "succeeded" ? "done" : "pending";
               }
@@ -612,7 +1043,18 @@ public sealed class BrowserUiRendererTests
             assert(v2StepStatus("prototype-acceptance") === "pending", "skeleton validation alone should not complete final acceptance");
             state.prototypeFailure = "older final acceptance failed";
             state.v2PrototypeStatus = "failed";
+            state.v2PrototypeCreationStatus = "failed";
+            assert(v2StepStatus("create-prototype") === "done", "skeleton validation keeps creation step done even if later prototype status failed");
             assert(v2StepStatus("execute-or-repair") === "done", "older final acceptance failure should not reopen skeleton repair after skeleton validation succeeded");
+            state.runs = state.runs.filter(run => run.runId !== "skeleton-validation-new");
+            state.runs.push({
+              runId: "skeleton-validation-failed",
+              runType: "prototype-skeleton-validation",
+              status: "failed",
+              createdUtc: "2026-06-23T00:06:00Z",
+              progressUpdatedUtc: "2026-06-23T00:06:30Z"
+            });
+            assert(v2StepStatus("create-prototype") === "fix", "failed skeleton validation should mark creation step as fix");
             state.v2PrototypeValidationInvalidatedByIteration = true;
             assert(v2StepStatus("prototype-acceptance") === "pending", "local invalidation should still block until server progress clears it");
             """;
@@ -946,7 +1388,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2-prototype-locked");
         html.Should().Contain("setPrototypeDraftFileLocked(locked);");
         html.Should().Contain("setButtonDisabledState($(\"importDraft\"), locked");
-        html.Should().Contain("原型骨架已创建，不能重复创建");
+        html.Should().Contain("原型骨架已验收通过，不能重复创建");
+        html.Should().Contain("prototypeSkeletonLocked()");
+        html.Should().Contain("M1 原型骨架已完成");
         html.Should().Contain("setPrototypeFormLocked = function(locked)");
         html.Should().Contain("v2ApplyPrototypeFormSnapshot");
         html.Should().Contain("progress?.form");
@@ -997,12 +1441,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (!run) return \"pending\";");
         html.Should().NotContain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
         html.Should().Contain("function v2LatestSkeletonValidationRun()");
+        html.Should().Contain("function v2SkeletonValidationSucceeded()");
+        html.Should().Contain("acceptanceStatus === \"succeeded\" || v2HasPrototypeSkeleton() || v2SkeletonValidationSucceeded()");
+        html.Should().Contain("String(state.v2PrototypeAcceptanceStatus || \"\").trim().toLowerCase() === \"succeeded\" ||");
         html.Should().Contain("const skeletonValidation = v2LatestSkeletonValidationRun();");
         html.Should().Contain("if (skeletonValidationStatus === \"succeeded\") return \"done\";");
         html.Should().Contain("if (skeletonValidationStatus === \"failed\") return \"fix\";");
         html.Should().Contain("if (substep === \"validation_skipped\") return \"pending\";");
         html.Should().Contain("if (substep === \"validation_failed\") return \"fix\";");
-        html.Should().Contain("请先完成原型骨架创建，再运行游戏界面优化。");
+        html.Should().Contain("游戏界面优化暂未开放。");
+        html.Should().Contain("setButtonDisabledState($(\"runUiOptimization\"), true");
+        html.Should().Contain("out(\"游戏界面优化暂未开放。\")");
         html.Should().Contain("v2RepairPanel");
         html.Should().Contain("v2CreateRepairPanel");
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
@@ -1153,7 +1602,20 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("第 ${Number(plan?.roundIndex || index + 1)} 轮");
         html.Should().Contain("v2IterationMainActions");
         html.Should().Contain("legacy-iteration-plan-ui");
+        html.Should().Contain("body.v2-detail #iterationPlanEvaluation");
+        html.Should().Contain("body.v2-detail #v2IterationSummary");
+        html.Should().Contain("body.v2-detail #iterationNeedsFixStatus");
         html.Should().Contain("gddMilestoneManualSelection");
+        html.Should().Contain("ensureProjectPageFallback(state.projects, false)");
+        html.Should().Contain("showUserLoadingFallback();");
+        html.Should().Contain("function recoverVisiblePageFromClientError(error)");
+        html.Should().Contain("window.addEventListener(\"error\"");
+        html.Should().Contain("window.addEventListener(\"unhandledrejection\"");
+        html.Should().Contain("void loadProjectRuntimeState().catch(recoverVisiblePageFromClientError)");
+        html.IndexOf("showProjectDetail();", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("void loadProjectRuntimeState().catch(recoverVisiblePageFromClientError)", StringComparison.Ordinal));
+        html.Should().Contain("await Promise.allSettled([");
+        html.Should().Contain("正在读取项目列表");
+        html.Should().NotContain("state.gddMilestoneSteps = cached.gddMilestoneSteps");
         html.Should().Contain("writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection })");
         html.Should().Contain("v2RepairActions");
         html.Should().Contain("margin-left: auto");
@@ -1243,22 +1705,7 @@ public sealed class BrowserUiRendererTests
     [Fact]
     public void RenderProject_IncludesDefaultDetailProgressWithPendingUnrunSteps()
     {
-        var project = new ProjectSnapshot(
-            "project-1",
-            "account-1",
-            "Demo Project",
-            "Demo Game",
-            "rpg",
-            "godot-prototype-default",
-            false,
-            "[]",
-            "succeeded",
-            null,
-            "workspace-1",
-            "C:\\workspaces",
-            "C:\\workspaces\\project-1",
-            "C:\\workspaces\\project-1\\runtime",
-            "C:\\workspaces\\project-1\\.phasea");
+        var project = CreateProjectSnapshot();
 
         var html = new BrowserUiRenderer().RenderProject(project, []);
 
@@ -1314,22 +1761,7 @@ public sealed class BrowserUiRendererTests
     [Fact]
     public void RenderProject_MarksSkeletonRepairDone_WhenPrototypeCreationSucceededWithoutRepair()
     {
-        var project = new ProjectSnapshot(
-            "project-1",
-            "account-1",
-            "Demo Project",
-            "Demo Game",
-            "rpg",
-            "godot-prototype-default",
-            false,
-            "[]",
-            "succeeded",
-            null,
-            "workspace-1",
-            "C:\\workspaces",
-            "C:\\workspaces\\project-1",
-            "C:\\workspaces\\project-1\\runtime",
-            "C:\\workspaces\\project-1\\.phasea");
+        var project = CreateProjectSnapshot();
         var prototypeRun = new RunReadbackItem(
             "run-prototype",
             "project-1",
@@ -1360,24 +1792,60 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderProject_KeepsSkeletonCreationDone_WhenLaterPrototypeRunFailsAfterSkeletonValidationPassed()
+    {
+        var project = CreateProjectSnapshot();
+        var skeletonValidationRun = new RunReadbackItem(
+            "run-skeleton-validation",
+            "project-1",
+            "workspace-1",
+            "prototype-7day-playable",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{\"validation_only\":true,\"skeleton_validation_only\":true}",
+            "succeeded",
+            "skeleton_validation",
+            "Prototype skeleton validation passed.",
+            "2026-06-22T18:43:59.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+        var laterFailedPrototypeRun = new RunReadbackItem(
+            "run-later-failed-prototype",
+            "project-1",
+            "workspace-1",
+            "prototype-7day-playable",
+            "failed",
+            1,
+            "",
+            "",
+            "{\"prototype_completion\":{\"succeeded\":false}}",
+            "failed",
+            "",
+            "Prototype workflow failed.",
+            "2026-06-23T08:31:29.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [laterFailedPrototypeRun, skeletonValidationRun]);
+
+        html.Should().Contain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
+        html.Should().Contain("detail-step done\" href=\"/#v2RepairPanel\"");
+        html.Should().NotContain("detail-step fix\" href=\"/#prototypeWorkflowPanel\"");
+        html.Should().NotContain("detail-step fix\" href=\"/#v2RepairPanel\"");
+    }
+
+    [Fact]
     public void RenderProject_MarksFinalAcceptanceDone_OnlyAfterValidationOnlyRunFollowsIteration()
     {
-        var project = new ProjectSnapshot(
-            "project-1",
-            "account-1",
-            "Demo Project",
-            "Demo Game",
-            "rpg",
-            "godot-prototype-default",
-            false,
-            "[]",
-            "succeeded",
-            null,
-            "workspace-1",
-            "C:\\workspaces",
-            "C:\\workspaces\\project-1",
-            "C:\\workspaces\\project-1\\runtime",
-            "C:\\workspaces\\project-1\\.phasea");
+        var project = CreateProjectSnapshot();
         var iterationRun = new RunReadbackItem(
             "run-iteration",
             "project-1",
@@ -1433,22 +1901,7 @@ public sealed class BrowserUiRendererTests
     [Fact]
     public void RenderProject_MarksDownloadDone_WhenPackageExists()
     {
-        var project = new ProjectSnapshot(
-            "project-1",
-            "account-1",
-            "Demo Project",
-            "Demo Game",
-            "rpg",
-            "godot-prototype-default",
-            false,
-            "[]",
-            "succeeded",
-            null,
-            "workspace-1",
-            "C:\\workspaces",
-            "C:\\workspaces\\project-1",
-            "C:\\workspaces\\project-1\\runtime",
-            "C:\\workspaces\\project-1\\.phasea");
+        var project = CreateProjectSnapshot();
         var packageRun = new RunReadbackItem(
             "run-package",
             "project-1",
@@ -1477,22 +1930,7 @@ public sealed class BrowserUiRendererTests
     [Fact]
     public void RenderProject_ShouldNotMarkUiOptimizationDone_WhenShortValidationWasSkipped()
     {
-        var project = new ProjectSnapshot(
-            "project-1",
-            "account-1",
-            "Demo Project",
-            "Demo Game",
-            "rpg",
-            "godot-prototype-default",
-            false,
-            "[]",
-            "succeeded",
-            null,
-            "workspace-1",
-            "C:\\workspaces",
-            "C:\\workspaces\\project-1",
-            "C:\\workspaces\\project-1\\runtime",
-            "C:\\workspaces\\project-1\\.phasea");
+        var project = CreateProjectSnapshot();
         var run = new RunReadbackItem(
             "run-ui",
             "project-1",
@@ -1638,7 +2076,9 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("sessionDiagnostics");
         html.Should().NotContain("function updateSessionDiagnostics(reason = \"\")");
         html.Should().NotContain("登录诊断：${location.origin}");
-        html.Should().NotContain("window.addEventListener(\"error\"");
+        html.Should().Contain("function recoverVisiblePageFromClientError(error)");
+        html.Should().Contain("window.addEventListener(\"error\"");
+        html.Should().Contain("window.addEventListener(\"unhandledrejection\"");
         html.Should().Contain("setTimeout(() =>");
         html.Should().NotContain("autofill_empty");
         html.Should().Contain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
@@ -1701,20 +2141,27 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain(@"$(""chapter2"")");
         html.Should().Contain("runPrototype");
         html.Should().Contain("prototypeGddStatus");
-        html.Should().Contain("确认 GDD 无误，创建原型骨架");
+        html.Should().Contain("确认 GDD 无误，执行 M1 原型骨架");
         html.Should().Contain("prototype-7day-playable/from-gdd");
         html.Should().Contain("refreshPrototypeGddStatus");
         html.Should().Contain("gddMilestoneStepStatus");
         html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("主流程：游戏模块", StringComparison.Ordinal));
         html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("异常修复计划", StringComparison.Ordinal));
         html.Should().Contain("执行当前模块");
-        html.Should().Contain("点击下载试玩后确认完成");
-        html.Should().Contain("提交当前模块反馈");
+        html.Should().Contain("完成当前模块并激活下一模块");
+        html.Should().Contain("建议先打包下载试玩验证");
+        html.Should().Contain("提交反馈并修正模块");
+        html.Should().Contain("milestoneFeedbackModal");
+        html.Should().Contain("openCurrentMilestoneFeedbackModal");
+        html.Should().Contain("提交反馈并修正模块");
+        html.Should().NotContain("prompt(`请输入 ${step.stepId} 的试玩反馈或修改意见：`)");
         html.Should().Contain("当前模块执行进度");
         html.Should().Contain("milestone-progress-button");
         html.Should().Contain("selectGddMilestoneStep(button.dataset.gddMilestoneStepId || \"\", true)");
-        html.Should().Contain("status === \"executed\" || status === \"feedback_submitted\"");
-        html.Should().NotContain("status === \"executed\" || status === \"feedback_submitted\" || status === \"ready\"");
+        html.Should().Contain("data-v2-tooltip=\"${escapeHtml(tooltip)}\"");
+        html.Should().NotContain("milestone-progress-title");
+        html.Should().Contain("if (active && step?.stepId === active.stepId) return \"running\"");
+        html.Should().Contain("当前激活模块");
         html.Should().Contain("上一个模块");
         html.Should().Contain("下一个模块");
         html.Should().Contain("gdd-milestone-steps/latest");
@@ -1764,8 +2211,9 @@ public sealed class BrowserUiRendererTests
         html.IndexOf("id=\"globalModel\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openCreateProjectPage\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal));
         html.IndexOf("id=\"openProjectListModal\"", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("id=\"logout\"", StringComparison.Ordinal));
-        html.IndexOf("if (isProjectReady(createdProject))", StringComparison.Ordinal)
-            .Should().BeLessThan(html.IndexOf("if (visibleProjects.length > 0)", StringComparison.Ordinal));
+        var pollIndex = html.IndexOf("async function pollProjectInitializationResult", StringComparison.Ordinal);
+        html.IndexOf("if (isProjectReady(createdProject))", pollIndex, StringComparison.Ordinal)
+            .Should().BeLessThan(html.IndexOf("if (visibleProjects.length > 0)", pollIndex, StringComparison.Ordinal));
         html.Should().NotContain("项目初始化超时，请稍后重试。");
         html.Should().Contain("<h1>Game Ren</h1>");
         html.Should().Contain("<title>Game Ren</title>");
@@ -1794,7 +2242,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setPrototypeFormLocked");
         html.Should().Contain("isPrototypeCreationLocked");
         html.Should().Contain("![\"idle\", \"failed\", \"cancel\"].includes(status)");
-        html.Should().Contain("原型骨架创建中..刷新页面查阅创建进度.");
+        html.Should().Contain("M1 原型骨架执行中..刷新页面查阅进度.");
         html.Should().Contain("prototypeCommandPanel");
         html.Should().Contain(@"role !== ""admin""");
         html.Should().Contain("id=\"loadRuns\" class=\"ghost hidden\"");
@@ -2164,6 +2612,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("phaseA.assetLibrary");
         html.Should().Contain("已载入缓存素材库");
         html.Should().Contain("已刷新素材库");
+        html.Should().Contain("素材库刷新失败");
+        html.Should().Contain("本次没有启动素材判定 run");
         html.Should().Contain("loadAssets();");
         html.Should().Contain("loadAssets(true)");
         html.Should().Contain("assetPixelSize");
@@ -2355,6 +2805,26 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("URL.createObjectURL");
         html.Should().Contain("下载失败：");
         html.Should().Contain("下载已提交给浏览器");
+    }
+
+    private static ProjectSnapshot CreateProjectSnapshot()
+    {
+        return new ProjectSnapshot(
+            "project-1",
+            "account-1",
+            "Demo Project",
+            "Demo Game",
+            "rpg",
+            "godot-prototype-default",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\project-1",
+            "C:\\workspaces\\project-1\\runtime",
+            "C:\\workspaces\\project-1\\.phasea");
     }
 
     private static string? FindExecutableOnPath(string name)

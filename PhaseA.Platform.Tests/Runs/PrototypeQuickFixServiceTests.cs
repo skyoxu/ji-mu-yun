@@ -405,8 +405,8 @@ REMAINING: none
         run.ProgressStep.Should().Be("failed");
         run.ProgressSubstep.Should().Be("validation");
         run.EvidenceJson.Should().Contain("project_smoke_validation");
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
     }
 
     [Fact]
@@ -477,7 +477,7 @@ REMAINING: none
         run.ExitCode.Should().Be(0);
         run.EvidenceJson.Should().Contain("prototype_quick_fix_timeout_validated_after_cancel");
         runner.Commands.Should().Contain(command => command.Arguments.Contains("exec"));
-        runner.Commands.Should().Contain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
     }
 
     [Fact]
@@ -529,7 +529,7 @@ REMAINING: none
         run.EvidenceJson.Should().Contain("\"post_acceptance_validation_status\":\"failed\"");
         run.EvidenceJson.Should().Contain("prototype_main_menu_navigation_failed");
         runner.Commands.Should().Contain(command => command.Arguments.Contains("exec"));
-        runner.Commands.Should().Contain(command => command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
     }
 
     [Fact]
@@ -792,8 +792,8 @@ namespace Xunit
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("needs_fix");
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/prototype_main_menu_navigation_smoke.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
         var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
         codexCommand.StandardInput.Should().Contain("Latest Godot smoke validation failed after platform static acceptance");
         codexCommand.StandardInput.Should().Contain("prototype_main_menu_navigation_failed");
@@ -843,7 +843,7 @@ namespace Xunit
 
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("needs_fix");
-        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "scripts/python/smoke_headless.py", StringComparison.Ordinal)));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
         runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "exec", StringComparison.Ordinal)));
         var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
         codexCommand.StandardInput.Should().Contain("godot_smoke_validation_timeout");
@@ -1537,6 +1537,17 @@ public sealed class BattleScene
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Create the RPG reward loop step."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -1760,7 +1771,7 @@ public sealed class MapScene
         result.Status.Should().Be("completed");
         result.IterationGoalStatus.Should().Be("succeeded");
         result.AssistantMessage.Should().Contain("Godot");
-        var smokeCommand = runner.Commands.Single(command => command.Arguments.Contains("scripts/python/smoke_headless.py"));
+        var smokeCommand = runner.Commands.Single(command => HasScriptArgument(command, "smoke_headless.py"));
         smokeCommand.Environment["GODOT_BIN"].Should().Be(@"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
         smokeCommand.Environment["UseSharedCompilation"].Should().Be("false");
         smokeCommand.Environment["MSBUILDDISABLENODEREUSE"].Should().Be("1");
@@ -2144,7 +2155,7 @@ public sealed class DqRpgPrototype
             new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
 
         var localDateAfter = DateTimeOffset.Now.ToString("yyyy-MM-dd");
-        var gdUnitCommand = runner.Commands.Single(command => command.Arguments.Contains("scripts/python/run_gdunit.py"));
+        var gdUnitCommand = runner.Commands.Single(command => HasScriptArgument(command, "run_gdunit.py"));
         gdUnitCommand.Arguments.Should().Contain("--prewarm");
         var reportDir = gdUnitCommand.Arguments.SkipWhile(arg => arg != "--rd").Skip(1).First();
         reportDir.Should().BeOneOf(
@@ -2166,6 +2177,17 @@ public sealed class DqRpgPrototype
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Stabilize map movement and first encounter trigger."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2371,7 +2393,13 @@ public sealed class DqRpgPrototype
         {
             var runId = await store.CreateRunAsync(result.ProjectId!, null, "prototype-7day-playable");
             await store.MarkRunStartedAsync(runId);
-            await store.CompleteRunAsync(runId, "succeeded", 0, "prototype ok", "", "{}");
+            await store.CompleteRunAsync(
+                runId,
+                "succeeded",
+                0,
+                "prototype ok",
+                "",
+                """{"prototype_completion":{"succeeded":true,"smoke_scene":"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"},"godot_smoke":{"scene":"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn","exit_code":0}}""");
         }
 
         return result.ProjectId!;
@@ -2469,13 +2497,9 @@ Exit code: 100
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-            ["PHASEA_REPOSITORY_ROOT"] = repoRoot
+            ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
+            ["GODOT_BIN"] = string.IsNullOrWhiteSpace(godotBin) ? @"C:\Godot\Godot.exe" : godotBin
         };
-
-        if (!string.IsNullOrWhiteSpace(godotBin))
-        {
-            values["GODOT_BIN"] = godotBin;
-        }
 
         return PhaseAPlatformOptionsLoader.FromDictionary(values);
     }
@@ -2895,6 +2919,13 @@ public static class PrototypeCatalog
 """);
     }
 
+    private static bool HasScriptArgument(HostedProcessCommand command, string scriptFileName)
+    {
+        return command.Arguments.Any(argument =>
+            string.Equals(Path.GetFileName(argument), scriptFileName, StringComparison.OrdinalIgnoreCase) ||
+            argument.Replace('\\', '/').EndsWith("/" + scriptFileName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private sealed class FakeHostedProcessRunner : IHostedProcessRunner
     {
         public List<HostedProcessCommand> Commands { get; } = [];
@@ -2921,12 +2952,12 @@ public static class PrototypeCatalog
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(14, "", "MAIN_MENU_PROTOTYPE_NAV FAIL\nERROR: rpg_map_visible_markers_missing_after_start"));
             }
@@ -2957,7 +2988,7 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 if (!_codexStarted)
                 {
@@ -2967,7 +2998,7 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(14, "", "MAIN_MENU_PROTOTYPE_NAV FAIL\nERROR: rpg_map_visible_markers_missing_after_start"));
             }
@@ -2995,6 +3026,16 @@ REMAINING: Continue fixing the current Godot smoke timeout.
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
+            if (HasScriptArgument(command, "smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, """
@@ -3019,17 +3060,17 @@ ready to continue
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "GDUNIT_DONE rc=0", ""));
             }
@@ -3056,17 +3097,17 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(100, """
                     Expecting:
@@ -3098,17 +3139,17 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(1, """
                     ERROR: Failed loading resource: res://Game.Godot/Prototypes/dq-rpg/Assets/Map/showcase_map_overworld.png.
@@ -3142,17 +3183,17 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "run_gdunit.py"))
             {
                 SeedRpgGdUnitFailureReportForCommand(command);
                 return Task.FromResult(new HostedProcessResult(0, "GDUNIT_DONE rc=1", ""));
@@ -3183,12 +3224,12 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return _codexStarted
                     ? Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", ""))
@@ -3216,6 +3257,16 @@ REMAINING: Current step still needs repair because Godot failed to open 'user://
             if (command.FileName == "dotnet")
             {
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (HasScriptArgument(command, "smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
             }
 
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
@@ -3279,9 +3330,9 @@ not ready
                     "Game.Core.Tests/Domain/PackageReferenceFailureTests.cs(1,7): error CS0246: The type or namespace name 'FluentAssertions' could not be found. Game.Core.Tests/Domain/PackageReferenceFailureTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found."));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
-                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
-                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "smoke_headless.py") ||
+                HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py") ||
+                HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
             }
@@ -3313,9 +3364,9 @@ REMAINING: repair Game.Core.Tests.csproj package references
 C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Domain\PlayerTests.cs(2,7): error CS0246: The type or namespace name 'Xunit' could not be found [C:\jimuyun\logs\phase-a-innernet\workspaces\account\project\repo\Game.Core.Tests\Game.Core.Tests.csproj]"));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
-                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
-                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "smoke_headless.py") ||
+                HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py") ||
+                HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
             }
@@ -3347,9 +3398,9 @@ REMAINING: none
                     "Game.Core/Prototypes/DqRpgPrototypeLoop.cs(202,99): error CS1061: 'DqRpgPrototypeState' does not contain a definition for 'PlayerX'. Game.Core/Prototypes/DqRpgPrototypeLoop.cs(202,116): error CS1061: 'DqRpgPrototypeState' does not contain a definition for 'PlayerY'."));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
-                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
-                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "smoke_headless.py") ||
+                HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py") ||
+                HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
             }
@@ -3382,9 +3433,9 @@ REMAINING: repair DqRpgPrototypeLoop.cs PlayerX/PlayerY compile errors
                     "Microsoft.Common.CurrentVersion.targets(873,5): error MSB3540: The value of the property \"MSBuildProjectExtensionsPath\" was modified after it was used by MSBuild which can lead to unexpected build results."));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py") ||
-                command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py") ||
-                command.Arguments.Contains("scripts/python/run_gdunit.py"))
+            if (HasScriptArgument(command, "smoke_headless.py") ||
+                HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py") ||
+                HasScriptArgument(command, "run_gdunit.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "validation pass", ""));
             }
@@ -3425,12 +3476,12 @@ REMAINING: remove late MSBuildProjectExtensionsPath properties
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 if (!_codexStarted)
                 {
@@ -3467,12 +3518,12 @@ REMAINING: none
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (HasScriptArgument(command, "smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(14, "", _codexStarted
                     ? "MAIN_MENU_PROTOTYPE_NAV FAIL\nERROR: rpg_map_visible_markers_missing_after_timeout"
