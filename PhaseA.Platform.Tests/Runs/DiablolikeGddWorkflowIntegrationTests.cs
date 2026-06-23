@@ -68,14 +68,14 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         """;
         var steps = new GddMilestoneStepService(
             store,
-            new PrototypeIterationPlanService(store),
-            new PrototypeFeedbackIterationService(store, options, runner),
+            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), routeStateWriter),
+            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), routeStateWriter),
             new FakeLlmRouteEngine(reviewJson));
         var plan = await steps.GetOrCreateLatestAsync(accountId, projectId);
         plan!.Steps.Select(step => step.StepId).Should().ContainInOrder("M1", "M2", "M10-1", "M10-2", "M10-3");
         plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeFalse();
 
-        var firstStepPlan = await steps.CreateIterationPlanForCurrentStepAsync(accountId, projectId, "gpt-5.5");
+        var firstStepPlan = await steps.ExecuteCurrentStepAsync(accountId, projectId);
         firstStepPlan!.Plan!.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
         var confirmed = await steps.ConfirmAsync(accountId, projectId, "M1", new GddMilestoneStepConfirmRequest("M1 first room validated; skill pacing should be gentler.", "gpt-5.5"));
         var next = confirmed!.Plan!.Steps.Single(step => step.StepId == "M2");
@@ -275,6 +275,28 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
                 [node name="PrototypeRoot" type="Node2D"]
                 [node name="PlayerSprite" type="Sprite2D" parent="."]
                 """);
+            Write(root, "Game.Core/Prototypes/DiablolikePrototypeLoop.cs", """
+public sealed class DiablolikePrototypeLoop
+{
+    public DiablolikePrototypeState ContinueFirstLoop(DiablolikePrototypeState state)
+    {
+        return state with
+        {
+            Objective = "Loop objective updated.",
+            Feedback = "Combat loop feedback is visible.",
+            Result = "State result changed."
+        };
+    }
+}
+
+public sealed record DiablolikePrototypeState(string Objective, string Feedback, string Result);
+""");
+            Write(root, "Game.Core.Tests/Prototypes/DiablolikePrototypeLoopTests.cs", """
+public sealed class DiablolikePrototypeLoopTests
+{
+    public void ShouldContinueFirstLoop_WithStateFeedbackAndResult() { }
+}
+""");
             Write(root, $"docs/prototypes/{slug}.prototype.json", $$"""
                 {
                   "prototype_type_kit": {

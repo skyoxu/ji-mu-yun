@@ -473,6 +473,20 @@ public sealed class BrowserUiRendererTests
                   evidenceJson: "{\"validation_only\":true}",
                   progressUpdatedUtc: "2026-06-09T07:06:39.4240706+00:00",
                   runId: "acceptance-new"
+                },
+                {
+                  runType: "prototype-7day-playable",
+                  status: "failed",
+                  evidenceJson: "{\"validation_only\":true}",
+                  progressUpdatedUtc: "2026-06-09T07:07:39.4240706+00:00",
+                  runId: "acceptance-failed-after-module"
+                },
+                {
+                  runType: "prototype-7day-playable",
+                  status: "succeeded",
+                  evidenceJson: "{\"validation_only\":true,\"skeleton_validation_only\":true}",
+                  progressUpdatedUtc: "2026-06-09T07:08:39.4240706+00:00",
+                  runId: "skeleton-validation-new"
                 }
               ],
               prototypeFailure: "",
@@ -512,9 +526,18 @@ public sealed class BrowserUiRendererTests
               const evidence = v2RunEvidence(run);
               return evidence?.validation_only === true && evidence?.skeleton_validation_only !== true;
             }
+            function v2IsSkeletonValidationRun(run) {
+              const evidence = v2RunEvidence(run);
+              return evidence?.validation_only === true && evidence?.skeleton_validation_only === true;
+            }
             function v2LatestValidationOnlyAcceptanceRun() {
               return (state.runs || [])
                 .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsValidationOnlyRun(run))
+                .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
+            }
+            function v2LatestSkeletonValidationRun() {
+              return (state.runs || [])
+                .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsSkeletonValidationRun(run))
                 .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
             }
             function v2IterationSessionTimestamp() {
@@ -545,7 +568,6 @@ public sealed class BrowserUiRendererTests
               const progressText = $("prototypeProgress")?.textContent || "";
               const prototypeStatus = String(state?.v2PrototypeStatus || "").trim().toLowerCase();
               const creationStatus = String(state?.v2PrototypeCreationStatus || prototypeStatus || "").trim().toLowerCase();
-              const succeeded = prototypeStatus === "succeeded";
               const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
               if (stepId === "create-prototype") {
                 if (!state.projectId || progressText.includes("idle") || !creationStatus) return "pending";
@@ -557,6 +579,14 @@ public sealed class BrowserUiRendererTests
                 const validationRun = v2LatestValidationOnlyAcceptanceRun();
                 if (validationRun && v2RunIsCurrentForIteration(validationRun) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
                 return failed && v2IterationPlanDone() ? "fix" : "pending";
+              }
+              if (stepId === "execute-or-repair") {
+                const skeletonValidation = v2LatestSkeletonValidationRun();
+                const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
+                if (skeletonValidationStatus === "succeeded") return "done";
+                if (skeletonValidationStatus === "failed") return "fix";
+                if (failed && creationStatus !== "succeeded") return "fix";
+                return creationStatus === "succeeded" ? "done" : "pending";
               }
               if (stepId === "ui-optimization") {
                 const run = v2LatestRunByType("prototype-ui-optimization");
@@ -574,9 +604,15 @@ public sealed class BrowserUiRendererTests
               if (!condition) throw new Error(message);
             }
             assert(v2StepStatus("ui-optimization") === "done", "successful UI optimization should be done");
+            assert(v2StepStatus("execute-or-repair") === "done", "successful skeleton validation should mark repair step done");
+            assert(v2StepStatus("prototype-acceptance") === "fix", "newer final acceptance failure should be shown only on final acceptance");
+            state.runs = state.runs.filter(run => run.runId !== "acceptance-failed-after-module");
             assert(v2StepStatus("prototype-acceptance") === "done", "successful server acceptance should be done");
             state.runs = state.runs.filter(run => run.runId !== "acceptance-new");
-            assert(v2StepStatus("prototype-acceptance") === "pending", "prototype creation acceptance alone should not complete final acceptance");
+            assert(v2StepStatus("prototype-acceptance") === "pending", "skeleton validation alone should not complete final acceptance");
+            state.prototypeFailure = "older final acceptance failed";
+            state.v2PrototypeStatus = "failed";
+            assert(v2StepStatus("execute-or-repair") === "done", "older final acceptance failure should not reopen skeleton repair after skeleton validation succeeded");
             state.v2PrototypeValidationInvalidatedByIteration = true;
             assert(v2StepStatus("prototype-acceptance") === "pending", "local invalidation should still block until server progress clears it");
             """;
@@ -665,7 +701,7 @@ public sealed class BrowserUiRendererTests
             }
             add("h2", "chatTitle", "自由对话");
             add("h2", "iterationHeading", "主流程：游戏模块");
-            ["createIterationPlan", "evaluateIterationPlan", "deleteIterationPlan", "executeIterationGoal", "iterationAutoRefreshHint", "iterationPlanStatus", "iterationPlanEvaluation", "iterationNeedsFixStatus", "iterationPlanGoals"].forEach(id => add(id === "iterationAutoRefreshHint" ? "p" : "div", id));
+            ["createIterationPlan", "evaluateIterationPlan", "deleteIterationPlan", "executeIterationGoal", "iterationAutoRefreshHint", "iterationPlanStatus", "iterationPlanEvaluation", "iterationNeedsFixStatus", "iterationPlanGoals", "gddMilestoneStepStatus", "gddMilestoneStepActions"].forEach(id => add(id === "iterationAutoRefreshHint" ? "p" : "div", id));
             add("h2", "repairHeading", "异常修复计划");
             ["createRepairPlan", "executeRepairStep", "repairPlanStatus", "repairPlanGoals"].forEach(id => add("div", id));
             add("h2", "chatRecordHeading", "聊天记录");
@@ -697,7 +733,9 @@ public sealed class BrowserUiRendererTests
                 "iterationPlanStatus",
                 "iterationPlanEvaluation",
                 "iterationNeedsFixStatus",
-                "iterationPlanGoals"
+                "iterationPlanGoals",
+                "gddMilestoneStepStatus",
+                "gddMilestoneStepActions"
               ].map($).filter(Boolean).forEach(element => panel.appendChild(element));
               v2ArrangeIterationPanel();
             }
@@ -729,6 +767,8 @@ public sealed class BrowserUiRendererTests
             assert($("chatHistory").parentElement === chatPanel, "chat history must stay in chat panel");
             assert($("sendChat").parentElement === chatPanel, "send button must stay in chat panel until composer arranges it");
             assert($("createIterationPlan").parentElement.id === "v2IterationPanel", "iteration controls move to iteration panel");
+            assert($("gddMilestoneStepStatus").parentElement.id === "v2IterationPanel", "GDD milestone step status moves to iteration panel");
+            assert($("gddMilestoneStepActions").parentElement.id === "v2IterationPanel", "GDD milestone step actions move to iteration panel");
             assert($("repairPlanGoals").parentElement.id === "v2RepairPanel", "repair goals move to repair panel");
             assert($("createRepairPlan").parentElement.id === "v2RepairActions", "repair action moves to repair actions");
             """;
@@ -956,13 +996,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || \"\")));");
         html.Should().Contain("if (!run) return \"pending\";");
         html.Should().NotContain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
+        html.Should().Contain("function v2LatestSkeletonValidationRun()");
+        html.Should().Contain("const skeletonValidation = v2LatestSkeletonValidationRun();");
+        html.Should().Contain("if (skeletonValidationStatus === \"succeeded\") return \"done\";");
+        html.Should().Contain("if (skeletonValidationStatus === \"failed\") return \"fix\";");
         html.Should().Contain("if (substep === \"validation_skipped\") return \"pending\";");
         html.Should().Contain("if (substep === \"validation_failed\") return \"fix\";");
         html.Should().Contain("请先完成原型骨架创建，再运行游戏界面优化。");
         html.Should().Contain("v2RepairPanel");
         html.Should().Contain("v2CreateRepairPanel");
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
-        html.Should().Contain("if (failed) return \"fix\";");
+        html.Should().Contain("if (failed && !v2HasPrototypeSkeleton()) return \"fix\";");
         html.Should().Contain("if (!goals.length && v2HasPrototypeSkeleton()) return \"done\";");
         html.Should().Contain("项目素材库");
         html.Should().Contain("打包项目文件");
@@ -1658,11 +1702,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("prototype-7day-playable/from-gdd");
         html.Should().Contain("refreshPrototypeGddStatus");
         html.Should().Contain("gddMilestoneStepStatus");
-        html.Should().Contain("生成当前 Step 实施计划");
+        html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("主流程：游戏模块", StringComparison.Ordinal));
+        html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("异常修复计划", StringComparison.Ordinal));
+        html.Should().Contain("执行当前 Step");
         html.Should().Contain("下载验证后确认完成");
         html.Should().Contain("提交当前 Step 反馈");
         html.Should().Contain("gdd-milestone-steps/latest");
-        html.Should().Contain("gdd-milestone-steps/current/iteration-plan");
+        html.Should().Contain("gdd-milestone-steps/current/execute");
         html.Should().Contain("loadGddMilestoneSteps");
         html.Should().Contain("请先创建策划大纲");
         html.Should().Contain("draftFile");

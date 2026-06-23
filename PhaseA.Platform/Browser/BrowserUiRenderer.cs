@@ -673,6 +673,11 @@ public sealed class BrowserUiRenderer
                     .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsValidationOnlyRun(run))
                     .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
                 }
+                function v2LatestSkeletonValidationRun() {
+                  return (state.runs || [])
+                    .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsSkeletonValidationRun(run))
+                    .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
+                }
                 function v2IsoTime(value) {
                   const time = Date.parse(value || "");
                   return Number.isFinite(time) ? time : 0;
@@ -705,7 +710,6 @@ public sealed class BrowserUiRenderer
                   const progressText = $("prototypeProgress")?.textContent || "";
                   const prototypeStatus = String(state?.v2PrototypeStatus || "").trim().toLowerCase();
                   const creationStatus = String(state?.v2PrototypeCreationStatus || prototypeStatus || "").trim().toLowerCase();
-                  const succeeded = prototypeStatus === "succeeded";
                   const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
                   if (stepId === "new-project") return state.projectId ? "done" : "pending";
                   if (stepId === "create-prototype") {
@@ -729,7 +733,11 @@ public sealed class BrowserUiRenderer
                   }
                   if (stepId === "execute-or-repair") {
                     const goals = state.repairPlan?.goals || [];
-                    if (failed) return "fix";
+                    const skeletonValidation = v2LatestSkeletonValidationRun();
+                    const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
+                    if (skeletonValidationStatus === "succeeded") return "done";
+                    if (skeletonValidationStatus === "failed") return "fix";
+                    if (failed && !v2HasPrototypeSkeleton()) return "fix";
                     if (goals.some(goal => goal.status === "needs_fix" || goal.status === "failed")) return "fix";
                     if (goals.length && goals.every(goal => goal.status === "succeeded" || goal.status === "completed")) return "done";
                     if (!goals.length && v2HasPrototypeSkeleton()) return "done";
@@ -918,7 +926,9 @@ public sealed class BrowserUiRenderer
                     "iterationPlanStatus",
                     "iterationPlanEvaluation",
                     "iterationNeedsFixStatus",
-                    "iterationPlanGoals"
+                    "iterationPlanGoals",
+                    "gddMilestoneStepStatus",
+                    "gddMilestoneStepActions"
                   ].map($).filter(Boolean).forEach(element => panel.appendChild(element));
                   v2ArrangeIterationPanel();
                 }
@@ -2218,12 +2228,6 @@ public sealed class BrowserUiRenderer
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                     <div id="assetInventoryStatus" class="card muted">原型素材库会在项目可检查时显示。</div>
-                    <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块 step。</div>
-                    <div class="split-actions">
-                      <button id="createCurrentMilestoneIterationPlan" class="secondary" data-global-action="true" disabled>生成当前 Step 实施计划</button>
-                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>下载验证后确认完成</button>
-                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交当前 Step 反馈</button>
-                    </div>
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
                     <h2>原型骨架创建</h2>
@@ -2275,6 +2279,12 @@ public sealed class BrowserUiRenderer
                     <div id="iterationPlanEvaluation" class="card muted">尚未评估当前游戏模块。</div>
                     <div id="iterationNeedsFixStatus" class="card muted">任务进入“需要修复”后，可在对应任务卡片里启动需要修复路由。</div>
                     <div id="iterationPlanGoals" class="card-list"></div>
+                    <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块 step。</div>
+                    <div id="gddMilestoneStepActions" class="split-actions">
+                      <button id="executeCurrentMilestoneStep" class="secondary" data-global-action="true" disabled>执行当前 Step</button>
+                      <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>下载验证后确认完成</button>
+                      <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交当前 Step 反馈</button>
+                    </div>
                     <h2>异常修复计划</h2>
                     <button id="createRepairPlan" class="ghost" data-global-action="true">生成修复计划</button>
                     <button id="executeRepairStep" class="secondary" data-global-action="true">执行下一项修复</button>
@@ -6273,7 +6283,7 @@ public sealed class BrowserUiRenderer
                   const steps = Array.isArray(plan?.steps) ? plan.steps : [];
                   const current = steps.find(step => step.stepId === plan?.currentStepId) || steps.find(step => !step.locked && step.status !== "confirmed");
                   const canUse = !!state.projectId && !!current && !current.locked && !isGlobalBusy();
-                  setButtonDisabledState($("createCurrentMilestoneIterationPlan"), !(canUse && current.canExecute), current ? "当前 step 暂不可创建游戏模块。" : "没有可执行的当前 step。");
+                  setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && current.canExecute), current ? "当前 Step 暂不可执行。" : "没有可执行的当前 Step。");
                   setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && current.canConfirm), current ? "当前 step 暂不可确认。" : "没有可确认的当前 step。");
                   setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && current.canSubmitFeedback), current ? "当前 step 暂不可提交反馈。" : "没有可反馈的当前 step。");
                   if (!state.projectId) {
@@ -6329,20 +6339,20 @@ public sealed class BrowserUiRenderer
                   return steps.find(step => step.stepId === plan?.currentStepId) || steps.find(step => !step.locked && step.status !== "confirmed") || null;
                 }
 
-                async function createCurrentMilestoneIterationPlan() {
+                async function executeCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const step = currentGddMilestoneStep();
                   if (!step) return out("当前没有可执行的游戏模块 step。");
-                  setLocalBusy(true, "正在为当前游戏模块 step 生成实施计划。");
+                  setLocalBusy(true, "正在执行当前游戏模块 Step。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/current/iteration-plan`, {
+                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/current/execute`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
-                      body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
+                      body: JSON.stringify({})
                     });
                     out(result);
-                    if (result.iterationPlan) {
+                    if (result.stepExecution) {
                       await loadIterationPlan();
                     }
                     await loadGddMilestoneSteps();
@@ -6383,7 +6393,7 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId || !step) return out("当前没有可反馈的游戏模块 step。");
                   const feedback = prompt(`请输入 ${step.stepId} 的试玩反馈或修改意见：`);
                   if (!feedback?.trim()) return;
-                  setLocalBusy(true, "正在提交当前 step 的反馈改进任务。");
+                  setLocalBusy(true, "正在提交当前 Step 的反馈修复。");
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
@@ -7078,7 +7088,7 @@ public sealed class BrowserUiRenderer
                 $("iterationPlanUpdateInput").addEventListener("input", event => autoGrowTextarea(event.target));
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
-                $("createCurrentMilestoneIterationPlan").onclick = createCurrentMilestoneIterationPlan;
+                $("executeCurrentMilestoneStep").onclick = executeCurrentMilestoneStep;
                 $("confirmCurrentMilestoneStep").onclick = confirmCurrentMilestoneStep;
                 $("submitCurrentMilestoneFeedback").onclick = submitCurrentMilestoneFeedback;
                 $("chatSkillMode").onchange = () => {

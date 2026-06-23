@@ -43,4 +43,6 @@ public sealed record GddMilestoneStepActionResult(
     GddMilestoneStepPlanResult? Plan = null,
     PrototypeIterationPlanResult? IterationPlan = null,
     PrototypeFeedbackResult? FeedbackRun = null,
+    PrototypeIterationGoalExecutionResult? StepExecution = null,
+    PrototypeNeedsFixRouteResult? NeedsFixRun = null,
     string? FailureCode = null);

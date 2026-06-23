@@ -1545,6 +1545,7 @@ app.MapGet("/api/projects/{projectId}/gdd-milestone-steps/latest", async (
             : Results.Ok(result);
 });
 
+// Legacy compatibility: the browser now uses /current/execute, but older clients may still call this route.
 app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/iteration-plan", async (
     string projectId,
     JsonElement request,
@@ -1552,16 +1553,36 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/iteration-pla
     [FromServices] GddMilestoneStepService milestoneSteps,
     CancellationToken cancellationToken) =>
 {
-    var model = request.TryGetProperty("model", out var modelElement) && modelElement.ValueKind == JsonValueKind.String
-        ? modelElement.GetString()
-        : null;
-    var result = await milestoneSteps.CreateIterationPlanForCurrentStepAsync(CurrentAccountId(context), projectId, model, cancellationToken);
+    _ = request;
+    var result = await milestoneSteps.ExecuteCurrentStepAsync(CurrentAccountId(context), projectId, cancellationToken);
     if (result is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
     }
 
     return result.Status is "ready" or "llm_failed" or "custom_route_required" or "prototype_recreation_required" or "iteration_plan_update_blocked"
+        or "completed" or "succeeded" or "needs_fix" or "failed" or "project_busy" or "prototype_required"
+        ? Results.Ok(result)
+        : result.Status == "gdd_not_found"
+            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+            : Results.BadRequest(result);
+});
+
+app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/execute", async (
+    string projectId,
+    JsonElement request,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    _ = request;
+    var result = await milestoneSteps.ExecuteCurrentStepAsync(CurrentAccountId(context), projectId, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return result.Status is "completed" or "succeeded" or "needs_fix" or "failed" or "project_busy" or "prototype_required"
         ? Results.Ok(result)
         : result.Status == "gdd_not_found"
             ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
@@ -1605,7 +1626,7 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/feedback-run
             return Results.NotFound(new { error = "project_not_found" });
         }
 
-        return result.Status is "completed" or "missing_feedback" or "prototype_not_ready"
+        return result.Status is "completed" or "succeeded" or "needs_fix" or "failed" or "missing_feedback" or "prototype_not_ready" or "prototype_required"
             ? Results.Ok(result)
             : result.Status == "gdd_not_found"
                 ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)

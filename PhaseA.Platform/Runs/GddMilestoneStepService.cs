@@ -16,19 +16,19 @@ public sealed class GddMilestoneStepService
     };
 
     private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PrototypeIterationPlanService _iterationPlanService;
-    private readonly PrototypeFeedbackIterationService _feedbackIterationService;
+    private readonly PrototypeIterationGoalService _iterationGoalService;
+    private readonly PrototypeNeedsFixRouteService _needsFixRouteService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
 
     public GddMilestoneStepService(
         PhaseAMetadataStore metadataStore,
-        PrototypeIterationPlanService iterationPlanService,
-        PrototypeFeedbackIterationService feedbackIterationService,
+        PrototypeIterationGoalService iterationGoalService,
+        PrototypeNeedsFixRouteService needsFixRouteService,
         ILlmRouteEngine? llmRouteEngine = null)
     {
         _metadataStore = metadataStore;
-        _iterationPlanService = iterationPlanService;
-        _feedbackIterationService = feedbackIterationService;
+        _iterationGoalService = iterationGoalService;
+        _needsFixRouteService = needsFixRouteService;
         _llmRouteEngine = llmRouteEngine;
     }
 
@@ -93,9 +93,9 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_locked", "当前 step 尚未解锁。", ToResult(project.ProjectId, state), FailureCode: "step_locked");
         }
 
-        if (step.Status is not ("iteration_ready" or "feedback_submitted"))
+        if (step.Status is not ("executed" or "feedback_submitted"))
         {
-            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_not_ready_to_confirm", "请先生成并完成当前 step 的实施计划或反馈改进任务，再确认完成。", ToResult(project.ProjectId, state), FailureCode: "step_not_ready_to_confirm");
+            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_not_ready_to_confirm", "请先执行当前 Step，或完成当前 Step 的反馈修复后再确认完成。", ToResult(project.ProjectId, state), FailureCode: "step_not_ready_to_confirm");
         }
 
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -178,6 +178,16 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "missing_feedback", "请输入这个 step 的反馈。", ToResult(project.ProjectId, state), FailureCode: "missing_feedback");
         }
 
+        var session = await CreateStepSessionAsync(project, state, step, index, cancellationToken);
+        var goal = session.Goals.FirstOrDefault();
+        if (goal is null)
+        {
+            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_session_invalid", "当前 Step 执行会话缺少目标，请重新执行当前 Step。", ToResult(project.ProjectId, state), FailureCode: "step_session_invalid");
+        }
+
+        await _metadataStore.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "needs_fix", feedback, null, cancellationToken);
+        await _metadataStore.UpdateProjectIterationSessionStatusAsync(session.Session.SessionId, "needs_fix", goal.GoalIndex, feedback, session.Session.LatestEvaluationJson, null, cancellationToken);
+
         var scopedFeedback = $"""
             Game module step feedback.
 
@@ -192,30 +202,41 @@ public sealed class GddMilestoneStepService
             Player feedback:
             {feedback}
             """;
-        var result = await _feedbackIterationService.SubmitAsync(
+        var result = await _needsFixRouteService.RunAsync(
             accountId,
             projectId,
-            new PrototypeFeedbackRequest(scopedFeedback, request.Model),
+            new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex),
             cancellationToken);
 
+        var completed = result.Status is "completed" or "succeeded";
+        var needsFix = string.Equals(result.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
         state.Steps[index] = step with
         {
-            Status = result.Status == "completed" ? "feedback_submitted" : "feedback_failed",
+            Status = completed ? "feedback_submitted" : needsFix ? "needs_fix" : "feedback_failed",
+            IterationSessionId = session.Session.SessionId,
             FeedbackSummary = feedback,
             FeedbackRunId = string.IsNullOrWhiteSpace(result.RunId) ? step.FeedbackRunId : result.RunId
         };
-        state.Summary = result.Status == "completed"
-            ? $"{step.StepId} 的反馈改进任务已提交完成。"
-            : $"{step.StepId} 的反馈改进任务未完成：{result.Status}";
+        state.Summary = completed
+            ? $"{step.StepId} 的反馈修复已完成。请打包下载试玩验证；确认通过后点击完成当前 Step。"
+            : $"{step.StepId} 的反馈修复未完成：{result.Status}";
         await WriteStateAsync(project, state, CancellationToken.None);
 
-        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), FeedbackRun: result);
+        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), NeedsFixRun: result);
     }
 
-    public async Task<GddMilestoneStepActionResult?> CreateIterationPlanForCurrentStepAsync(
+    public Task<GddMilestoneStepActionResult?> CreateIterationPlanForCurrentStepAsync(
         string accountId,
         string projectId,
         string? model = null,
+        CancellationToken cancellationToken = default)
+    {
+        return ExecuteCurrentStepAsync(accountId, projectId, cancellationToken);
+    }
+
+    public async Task<GddMilestoneStepActionResult?> ExecuteCurrentStepAsync(
+        string accountId,
+        string projectId,
         CancellationToken cancellationToken = default)
     {
         var project = await GetProjectAsync(accountId, projectId, cancellationToken);
@@ -243,11 +264,74 @@ public sealed class GddMilestoneStepService
             return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_locked", "当前 step 尚未解锁。", ToResult(project.ProjectId, state), FailureCode: "step_locked");
         }
 
-        var message = $"""
-            Create the game module implementation plan for this step only. Treat this as a diablolike-style step spec derived from the current planning outline.
+        var index = state.Steps.FindIndex(item => string.Equals(item.StepId, step.StepId, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, "step_not_found", "没有找到当前 Step。", ToResult(project.ProjectId, state), FailureCode: "step_not_found");
+        }
+
+        var session = await CreateStepSessionAsync(project, state, step, index, cancellationToken);
+        await WriteStateAsync(project, state, CancellationToken.None);
+
+        var execution = await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken);
+        var succeeded = (execution.Status is "completed" or "succeeded") && string.Equals(execution.SessionStatus, "completed", StringComparison.OrdinalIgnoreCase);
+        var needsFix = execution.Status is "needs_fix" or "failed" or "project_busy" or "prototype_required";
+        if (index >= 0)
+        {
+            state.Steps[index] = state.Steps[index] with
+            {
+                Status = succeeded ? "executed" : needsFix ? "needs_fix" : "execution_failed",
+                IterationSessionId = string.IsNullOrWhiteSpace(execution.SessionId) ? session.Session.SessionId : execution.SessionId,
+                ExecutionRunId = string.IsNullOrWhiteSpace(execution.RunId) ? state.Steps[index].ExecutionRunId : execution.RunId,
+                ExecutionSummary = execution.Summary
+            };
+            state.Summary = succeeded
+                ? $"{step.StepId} 已执行完成。请打包下载试玩验证；如果有问题，提交当前 Step 反馈。"
+                : $"{step.StepId} 执行未完成：{execution.Summary}";
+            await WriteStateAsync(project, state, CancellationToken.None);
+        }
+
+        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, execution.Status, state.Summary, ToResult(project.ProjectId, state), StepExecution: execution);
+    }
+
+    private async Task<ProjectIterationSessionDetails> CreateStepSessionAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        GddMilestoneStepState step,
+        int stepIndex,
+        CancellationToken cancellationToken)
+    {
+        var created = await _metadataStore.CreateProjectIterationSessionAsync(
+            project.AccountId,
+            project.ProjectId,
+            "gdd_milestone_step",
+            BuildStepSourceMessage(step),
+            $"{step.StepId} - {step.Title}",
+            [
+                new ProjectIterationGoalCreateCommand(
+                    step.StepIndex <= 0 ? stepIndex + 1 : step.StepIndex,
+                    step.Title,
+                    BuildStepGoalDescription(step),
+                    BuildStepAcceptanceHint(step))
+            ],
+            cancellationToken);
+
+        state.Steps[stepIndex] = step with
+        {
+            IterationSessionId = created.SessionId
+        };
+
+        return await _metadataStore.GetProjectIterationSessionAsync(project.ProjectId, created.SessionId, cancellationToken)
+               ?? throw new InvalidOperationException("Created GDD milestone step session could not be loaded.");
+    }
+
+    private static string BuildStepSourceMessage(GddMilestoneStepState step)
+    {
+        return $"""
+            GDD milestone step execution.
 
             Step: {step.StepId} - {step.Title}
-            Goal:
+            Description:
             {step.Description}
 
             Scope In:
@@ -271,27 +355,40 @@ public sealed class GddMilestoneStepService
             Next Step Adjustment Check:
             {step.NextStepReview}
 
-            Keep the plan scoped to this step. Do not advance later locked steps. After implementation, package the project for player validation.
+            Implement only this current milestone step. Do not split it into multiple player-visible tasks and do not advance later locked steps.
             """;
-        var iteration = await _iterationPlanService.CreateAsync(
-            accountId,
-            project.ProjectId,
-            new PrototypeIterationPlanRequest(message, "gdd_milestone_step", null, model),
-            cancellationToken);
+    }
 
-        var index = state.Steps.FindIndex(item => string.Equals(item.StepId, step.StepId, StringComparison.OrdinalIgnoreCase));
-        if (index >= 0)
-        {
-            state.Steps[index] = state.Steps[index] with
-            {
-                Status = iteration.Status == "ready" ? "iteration_ready" : "iteration_plan_failed",
-                IterationSessionId = string.IsNullOrWhiteSpace(iteration.SessionId) ? state.Steps[index].IterationSessionId : iteration.SessionId
-            };
-            state.Summary = iteration.Summary;
-            await WriteStateAsync(project, state, CancellationToken.None);
-        }
+    private static string BuildStepGoalDescription(GddMilestoneStepState step)
+    {
+        return $"""
+            Implement {step.StepId} as one diablolike-style playable milestone.
 
-        return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, iteration.Status, iteration.Summary, ToResult(project.ProjectId, state), IterationPlan: iteration);
+            Goal:
+            {step.Description}
+
+            Scope in:
+            {step.ScopeIn}
+
+            Scope out:
+            {step.ScopeOut}
+
+            Runtime slice:
+            {step.GodotSlice}
+            """;
+    }
+
+    private static string BuildStepAcceptanceHint(GddMilestoneStepState step)
+    {
+        return $"""
+            Acceptance:
+            {step.Acceptance}
+
+            Player package validation:
+            {step.PackagingValidation}
+
+            After implementation, the browser should prompt the player to package, download, and validate this Step before confirming completion.
+            """;
     }
 
     private async Task<ProjectSnapshot?> GetProjectAsync(string accountId, string projectId, CancellationToken cancellationToken)
@@ -449,7 +546,7 @@ public sealed class GddMilestoneStepService
         var scopeOut = "不提前实现后续锁定 step；不做最终视觉精装修；不引入 GDD 之外的新核心系统；不因为当前 step 未完成而跳到下一 step。";
         var godotSlice = "在 Godot 4.5.1 + C# 项目中完成可运行切片，优先覆盖场景、组件、输入、HUD/状态反馈和最小测试或 smoke 验证。";
         var acceptance = $"完成并验证：{body} 玩家能通过打包版本直接试玩当前 step，看到明确开始、操作、反馈和结果。";
-        var packaging = "当前 step 完成后提示玩家打包下载并试玩验证；确认按钮只在实施计划或反馈改进任务完成后可用。";
+        var packaging = "当前 step 完成后提示玩家打包下载并试玩验证；确认按钮只在当前 Step 执行完成或反馈修复完成后可用。";
 
         if (isAssetStep)
         {
@@ -476,7 +573,7 @@ public sealed class GddMilestoneStepService
             godotSlice,
             acceptance,
             packaging,
-            "如果玩家反馈当前 step 未达预期，提交反馈改进任务，只修改当前已解锁 step 的问题，不自动推进后续 step。",
+            "如果玩家反馈当前 step 未达预期，提交当前 Step 反馈并进入 needs-fix 修复，只修改当前已解锁 step 的问题，不自动推进后续 step。",
             "玩家确认当前 step 后，解锁下一 step 前执行一次检查；只有完成结果或反馈显示必要时，才微调下一 step 的标题、范围或验收。");
     }
 
@@ -496,7 +593,7 @@ public sealed class GddMilestoneStepService
 
     private static string BuildNextStepReviewSummary(GddMilestoneStepState completed, GddMilestoneStepState next)
     {
-        return $"解锁前检查：{completed.StepId} 已由玩家确认。{next.StepId} 暂按原策划 step 继续；如玩家反馈显示方向变化，请先提交反馈改进任务后再执行。";
+        return $"解锁前检查：{completed.StepId} 已由玩家确认。{next.StepId} 暂按原策划 step 继续；如玩家反馈显示方向变化，请先提交当前 Step 反馈修复后再执行。";
     }
 
     private async Task<GddMilestoneNextStepReview> ReviewNextStepAsync(
@@ -668,9 +765,9 @@ public sealed class GddMilestoneStepService
                 step.NextStepReview,
                 step.Status,
                 step.Locked,
-                !step.Locked && step.Status is "ready" or "feedback_submitted" or "iteration_plan_failed",
-                !step.Locked && step.Status is "iteration_ready" or "feedback_submitted",
-                !step.Locked && step.Status is not "confirmed" and not "locked",
+                !step.Locked && step.Status is "ready" or "needs_fix" or "execution_failed" or "feedback_failed",
+                !step.Locked && step.Status is "executed" or "feedback_submitted",
+                !step.Locked && step.Status is "executed" or "needs_fix" or "execution_failed" or "feedback_failed",
                 step.ReviewSummary)).ToArray(),
             state.CurrentStepId);
     }
@@ -787,6 +884,8 @@ public sealed class GddMilestoneStepService
         string Status,
         bool Locked,
         string? IterationSessionId = null,
+        string? ExecutionRunId = null,
+        string? ExecutionSummary = null,
         string? FeedbackRunId = null,
         string? FeedbackSummary = null,
         string? ConfirmedUtc = null,

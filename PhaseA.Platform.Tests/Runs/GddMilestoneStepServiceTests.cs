@@ -5,6 +5,7 @@ using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -68,7 +69,7 @@ public sealed class GddMilestoneStepServiceTests
         result.Steps[0].ScopeOut.Should().Contain("不提前实现后续锁定 step");
         result.Steps[0].GodotSlice.Should().Contain("Godot 4.5.1 + C#");
         result.Steps[0].PackagingValidation.Should().Contain("打包下载");
-        result.Steps[0].FeedbackGuidance.Should().Contain("反馈改进任务");
+        result.Steps[0].FeedbackGuidance.Should().Contain("needs-fix 修复");
         result.Steps[0].NextStepReview.Should().Contain("解锁下一 step");
         result.Steps[1].Locked.Should().BeTrue();
         result.Steps.Single(step => step.StepId == "M10-1").ScopeIn.Should().Contain("碰撞");
@@ -132,21 +133,22 @@ public sealed class GddMilestoneStepServiceTests
         var service = Service(store, options);
 
         var blocked = await service.ConfirmAsync(accountId, projectId, "M1", new GddMilestoneStepConfirmRequest("too early"));
-        var firstPlan = await service.CreateIterationPlanForCurrentStepAsync(accountId, projectId);
+        var firstPlan = await service.ExecuteCurrentStepAsync(accountId, projectId);
         var first = await service.ConfirmAsync(accountId, projectId, "M1", new GddMilestoneStepConfirmRequest("player validated M1"));
-        var secondPlan = await service.CreateIterationPlanForCurrentStepAsync(accountId, projectId);
+        var secondPlan = await service.ExecuteCurrentStepAsync(accountId, projectId);
         var second = await service.ConfirmAsync(accountId, projectId, "M2", new GddMilestoneStepConfirmRequest("player validated M2"));
 
         blocked.Should().NotBeNull();
         blocked!.Status.Should().Be("step_not_ready_to_confirm");
         blocked.FailureCode.Should().Be("step_not_ready_to_confirm");
-        firstPlan!.Status.Should().Be("ready");
+        firstPlan!.Status.Should().Be("completed");
+        firstPlan.StepExecution.Should().NotBeNull();
         first.Should().NotBeNull();
         first!.Status.Should().Be("confirmed");
         first.Plan!.CurrentStepId.Should().Be("M2");
         first.Plan.Steps.Single(step => step.StepId == "M2").Locked.Should().BeFalse();
         first.Plan.Steps.Single(step => step.StepId == "M2").CanConfirm.Should().BeFalse();
-        secondPlan!.Status.Should().Be("ready");
+        secondPlan!.Status.Should().Be("completed");
         second.Should().NotBeNull();
         second!.Plan!.Status.Should().Be("completed");
         second.Plan.CurrentStepId.Should().BeNull();
@@ -188,7 +190,7 @@ public sealed class GddMilestoneStepServiceTests
         """;
         var service = Service(store, options, new FakeLlmRouteEngine(reviewJson));
 
-        var plan = await service.CreateIterationPlanForCurrentStepAsync(accountId, projectId);
+        var plan = await service.ExecuteCurrentStepAsync(accountId, projectId);
         plan!.Plan!.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
         var result = await service.ConfirmAsync(accountId, projectId, "M1", new GddMilestoneStepConfirmRequest("first wave too fast"));
 
@@ -205,15 +207,53 @@ public sealed class GddMilestoneStepServiceTests
         next.ReviewSummary.Should().Contain("调整 M2");
     }
 
+    [Fact]
+    public async Task SubmitFeedbackAsync_RoutesCurrentStepFeedbackThroughNeedsFix()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Feedback Step GDD
+
+        M1: First playable loop with visible state feedback.
+        M2: Follow-up tuning.
+        """);
+        var service = Service(store, options);
+        var executed = await service.ExecuteCurrentStepAsync(accountId, projectId);
+
+        var result = await service.SubmitFeedbackAsync(
+            accountId,
+            projectId,
+            "M1",
+            new GddMilestoneStepFeedbackRequest("Please repair M1 and keep it scoped to the current milestone."));
+
+        executed!.StepExecution.Should().NotBeNull();
+        result.Should().NotBeNull();
+        result!.NeedsFixRun.Should().NotBeNull();
+        result.FeedbackRun.Should().BeNull();
+        result.Plan!.CurrentStepId.Should().Be("M1");
+        result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
+        result.Plan.Steps.Single(step => step.StepId == "M2").Locked.Should().BeTrue();
+        result.NeedsFixRun!.GoalIndex.Should().Be(1);
+    }
+
     private static GddMilestoneStepService Service(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
         ILlmRouteEngine? llmRouteEngine = null)
     {
+        var runner = new FakeHostedProcessRunner();
         return new GddMilestoneStepService(
             store,
-            new PrototypeIterationPlanService(store),
-            new PrototypeFeedbackIterationService(store, options, new FakeHostedProcessRunner()),
+            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter()),
+            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter()),
             llmRouteEngine);
     }
 
@@ -222,6 +262,8 @@ public sealed class GddMilestoneStepServiceTests
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "Action Roguelike", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
+        SeedPrototypeBaseline(project!);
         return result.ProjectId!;
     }
 
@@ -231,13 +273,50 @@ public sealed class GddMilestoneStepServiceTests
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-            ["PHASEA_REPOSITORY_ROOT"] = repoRoot
+            ["PHASEA_REPOSITORY_ROOT"] = repoRoot,
+            ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
         });
     }
 
     private static void WriteGdd(string repoPath, string text)
     {
         var path = Path.Combine(repoPath, "docs", "gdd", "GDD.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text);
+    }
+
+    private static void SeedPrototypeBaseline(ProjectSnapshot project)
+    {
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
+        WriteText(project.RepoPath, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "# skill\n");
+        WriteText(project.RepoPath, "Game.Core/Prototypes/DemoPrototypeLoop.cs", """
+public sealed class DemoPrototypeLoop
+{
+    public DemoPrototypeState CraftBurger(DemoPrototypeState state)
+    {
+        return state with { LastMessage = "Craft result feedback is visible.", CraftFeedback = "Result state changed." };
+    }
+}
+
+public sealed record DemoPrototypeState(string LastMessage, string CraftFeedback);
+""");
+        WriteText(project.RepoPath, "Game.Core.Tests/Prototypes/DemoPrototypeLoopTests.cs", """
+public sealed class DemoPrototypeLoopTests
+{
+    public void ShouldShowCraftFeedback_WhenPlayerMakesItem() { }
+}
+""");
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/Scripts/DemoPrototype.cs", """
+public sealed class DemoPrototype
+{
+    private string _craftFeedbackLabel = "Feedback Label";
+}
+""");
+    }
+
+    private static void WriteText(string repoPath, string relativePath, string text)
+    {
+        var path = Path.Combine(repoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, text);
     }
