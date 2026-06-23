@@ -807,9 +807,11 @@ public sealed class GddMilestoneStepService
         {
             var step = state.Steps[index];
             var spec = BuildStepSpec(step.StepId, step.Title, step.Description);
+            var normalizedStatus = NormalizeLegacyStepStatus(step.Status);
             state.Steps[index] = step with
             {
                 StepIndex = step.StepIndex <= 0 ? index + 1 : step.StepIndex,
+                Status = normalizedStatus,
                 Acceptance = FirstNonEmpty(step.Acceptance, spec.Acceptance),
                 ScopeIn = FirstNonEmpty(step.ScopeIn, spec.ScopeIn),
                 ScopeOut = FirstNonEmpty(step.ScopeOut, spec.ScopeOut),
@@ -819,6 +821,17 @@ public sealed class GddMilestoneStepService
                 NextStepReview = FirstNonEmpty(step.NextStepReview, spec.NextStepReview)
             };
         }
+    }
+
+    private static string NormalizeLegacyStepStatus(string? status)
+    {
+        var normalized = string.IsNullOrWhiteSpace(status) ? "ready" : status.Trim();
+        return normalized switch
+        {
+            "iteration_ready" => "ready",
+            "iteration_plan_failed" => "execution_failed",
+            _ => normalized
+        };
     }
 
     private static bool ContainsAny(string value, params string[] needles)

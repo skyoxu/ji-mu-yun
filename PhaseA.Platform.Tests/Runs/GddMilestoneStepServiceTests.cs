@@ -113,6 +113,35 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task GetOrCreateLatestAsync_NormalizesLegacyIterationReadyStatus_ToExecutableReady()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Legacy State GDD
+
+        M1: First playable scene and controls.
+        M2: Core loop validation and package prompt.
+        """);
+        WriteLegacyStepState(project.MetaPath, project.RepoPath);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.CurrentStepId.Should().Be("M1");
+        result.Steps.Single(step => step.StepId == "M1").Status.Should().Be("ready");
+        result.Steps.Single(step => step.StepId == "M1").CanExecute.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task ConfirmAsync_UnlocksNextStep_AndCompletesAfterFinalStep()
     {
         using var database = TempSqliteDatabase.Create();
@@ -283,6 +312,57 @@ public sealed class GddMilestoneStepServiceTests
         var path = Path.Combine(repoPath, "docs", "gdd", "GDD.md");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, text);
+    }
+
+    private static void WriteLegacyStepState(string metaPath, string repoPath)
+    {
+        const string payload = """
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "ready",
+  "summary": "legacy state",
+  "currentStepId": "M1",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable scene and controls.",
+      "description": "First playable scene and controls.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "iteration_ready",
+      "locked": false,
+      "iterationSessionId": "legacy-session-1"
+    },
+    {
+      "stepId": "M2",
+      "stepIndex": 2,
+      "title": "M2: Core loop validation and package prompt.",
+      "description": "Core loop validation and package prompt.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "locked",
+      "locked": true
+    }
+  ]
+}
+""";
+        foreach (var root in new[] { metaPath, Path.Combine(repoPath, "meta") })
+        {
+            var path = Path.Combine(root, "routes", "gdd-milestones", "latest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, payload);
+        }
     }
 
     private static void SeedPrototypeBaseline(ProjectSnapshot project)
