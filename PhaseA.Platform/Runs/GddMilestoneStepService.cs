@@ -59,6 +59,7 @@ public sealed class GddMilestoneStepService
                 FailureCode: "gdd_not_found");
         }
 
+        await ReconcileUnstartedStateWithGddAsync(project, state, cancellationToken);
         NormalizeState(state);
         await ReconcilePrototypeSkeletonM1Async(project, state, cancellationToken);
         await ReconcileCompletedMilestoneExecutionsAsync(project, state, cancellationToken);
@@ -794,32 +795,8 @@ public sealed class GddMilestoneStepService
 
     private static List<GddMilestoneStepState> ExtractSteps(string gddText)
     {
-        var result = new List<GddMilestoneStepState>();
-        var matches = Regex.Matches(
-            gddText,
-            @"(?im)^\s*(?:[-*]\s*)?(M\d+(?:[-.]\d+)?)\s*[:：\-]\s*(.+)$");
-        foreach (Match match in matches)
-        {
-            var id = NormalizeStepId(match.Groups[1].Value);
-            var titleBody = Compact(match.Groups[2].Value);
-            if (string.IsNullOrWhiteSpace(titleBody))
-            {
-                continue;
-            }
-
-            result.Add(CreateStepState(
-                id,
-                result.Count + 1,
-                $"{id}：{Trim(titleBody, 80)}",
-                Trim(titleBody, 420),
-                "locked",
-                true));
-        }
-
-        return result
-            .GroupBy(step => step.StepId, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First())
-            .Take(20)
+        return GddMilestoneTextParser.ExtractExplicitSteps(gddText)
+            .Select(step => CreateStepState(step.StepId, step.StepIndex, step.Title, step.Description, "locked", true))
             .ToList();
     }
 
@@ -943,6 +920,76 @@ public sealed class GddMilestoneStepService
         }
 
         return state.Steps.FirstOrDefault(step => !step.Locked && !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static async Task ReconcileUnstartedStateWithGddAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        if (!StateCanBeReplacedFromGdd(state))
+        {
+            return;
+        }
+
+        var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(gddPath))
+        {
+            return;
+        }
+
+        var gddText = await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken);
+        var explicitSteps = ExtractSteps(gddText);
+        if (explicitSteps.Count == 0 || SameStepShape(state.Steps, explicitSteps))
+        {
+            return;
+        }
+
+        for (var index = 0; index < explicitSteps.Count; index++)
+        {
+            explicitSteps[index] = explicitSteps[index] with
+            {
+                StepIndex = index + 1,
+                Locked = index != 0,
+                Status = index == 0 ? "ready" : "locked"
+            };
+        }
+
+        state.Steps.Clear();
+        state.Steps.AddRange(explicitSteps);
+        state.CurrentStepId = state.Steps[0].StepId;
+        state.Status = "ready";
+        state.Summary = "已根据最新策划大纲里程碑刷新游戏模块步骤规格。";
+    }
+
+    private static bool StateCanBeReplacedFromGdd(GddMilestoneState state)
+    {
+        return state.Steps.Count > 0 &&
+               state.Steps.All(step =>
+                   string.IsNullOrWhiteSpace(step.IterationSessionId) &&
+                   string.IsNullOrWhiteSpace(step.ExecutionRunId) &&
+                   string.IsNullOrWhiteSpace(step.FeedbackRunId) &&
+                   string.IsNullOrWhiteSpace(step.ConfirmedUtc) &&
+                   step.Status is "ready" or "locked");
+    }
+
+    private static bool SameStepShape(IReadOnlyList<GddMilestoneStepState> current, IReadOnlyList<GddMilestoneStepState> incoming)
+    {
+        if (current.Count != incoming.Count)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < current.Count; index++)
+        {
+            if (!string.Equals(current[index].StepId, incoming[index].StepId, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(current[index].Title, incoming[index].Title, StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task ReconcileCompletedMilestoneExecutionsAsync(

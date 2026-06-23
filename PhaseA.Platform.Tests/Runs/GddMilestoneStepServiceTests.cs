@@ -84,6 +84,156 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task GetOrCreateLatestAsync_ExtractsChineseHeadingMilestones_AndReplacesUnstartedFallbackState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Tower Demo GDD
+
+        Reference game: Phantom Tower.
+        Scene: a dark tower dungeon.
+        Controls: WASD movement, mouse facing, left click combo, space dodge.
+        Progression: wave rewards and persistent souls.
+        """);
+        var service = Service(store, options);
+        var fallback = await service.GetOrCreateLatestAsync(accountId, projectId);
+        fallback!.Steps.Should().HaveCount(10);
+        File.Exists(Path.Combine(project.RepoPath, "docs", "m10-原型可玩性验证与打包-spec.md")).Should().BeTrue();
+
+        WriteGdd(project.RepoPath, """
+        # Tower Demo GDD
+
+        ## Prototype V1 Milestones
+
+        M1 第一可玩骨架：
+        建立第三人称场景、WASD 移动、鼠标朝向、左键连击、空格翻滚，以及第一房间手感验证。
+
+        M2 波次战斗与升级：
+        加入波次刷怪、击杀经验、升级选项和 HUD 反馈。
+
+        M3 随机房间与地城连接：
+        加入随机房间、门、奖励房和地城推进目标。
+
+        M4 死亡、灵魂货币与永久升级：
+        加入死亡结算、灵魂保留和永久升级入口。
+
+        M5 内容替换与体验扩展：
+        替换关键素材并验证碰撞、阻挡和命中。
+
+        M6 UI/UX 正式回收与截图验收：
+        统一 HUD、状态反馈、截图验收和打包验证。
+        """);
+
+        var refreshed = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        refreshed.Should().NotBeNull();
+        refreshed!.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M3", "M4", "M5", "M6");
+        refreshed.Summary.Should().Be("已根据最新策划大纲里程碑刷新游戏模块步骤规格。");
+        refreshed.Steps[0].Title.Should().Be("M1：第一可玩骨架");
+        refreshed.Steps[0].Description.Should().Contain("第三人称场景");
+        refreshed.Steps[1].Title.Should().Be("M2：波次战斗与升级");
+        refreshed.Steps[1].Description.Should().Contain("波次刷怪");
+        refreshed.Steps[5].Title.Should().Be("M6：UI/UX 正式回收与截图验收");
+        refreshed.CurrentStepId.Should().Be("M1");
+        refreshed.Steps[0].Locked.Should().BeFalse();
+        refreshed.Steps[1].Locked.Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "m10-原型可玩性验证与打包-spec.md")).Should().BeFalse();
+        File.Exists(Path.Combine(project.RepoPath, refreshed.Steps[0].SpecRelativePath!.Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        File.ReadAllText(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().Contain("M6：UI/UX 正式回收与截图验收");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_ExtractsMilestonesOnlyFromAuthoritativeSection_AndCleansTitles()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Route GDD
+
+        ## UI/UX、HUD 与玩家反馈
+
+        - M6 再集中补入 theme tokens、screen contracts、截图验收、键盘焦点检查、本地化检查和文案溢出检查。
+
+        ## 里程碑与实现步骤
+
+        **骨架**: M1 首个可玩战斗房：目标是交付真正可玩的第一战；Scope In 包括 StartScreen/调试入口进入 PrototypeRoot、前厅到首战房的进入流程、WASD 移动、鼠标朝向、左键连击、空格翻滚、右键/Q/E 基础技能槽位与最小反馈、生命值/HUD/受击反馈、1 类训练敌人；Scope Out 为随机地城、多房间串联、永久成长；Godot/C# 切片应至少覆盖 PrototypeRoot.tscn、Player CharacterBody3D、CameraRig、Enemy Actor、HUD、Input Actions、HitBox/HurtBox、碰撞层与受击事件；玩家验收是 3 分钟内能完成进场、绕怪、翻滚、打出一套连击并清掉第一波；验证要求包括 Windows 包启动、键鼠输入正常、碰撞与击中反馈可复现。
+        M2 敌人压力与波次循环：目标是让战斗从演示变成有失败风险的循环；Scope In 包括 2 到 3 类敌人原型、基础 AI、寻路/包夹、波次刷怪、房间清理判定、掉血与死亡；Scope Out 为复杂 Boss 机制与大地图探索；Godot/C# 切片应覆盖 EnemySpawner、NavigationRegion3D/NavigationAgent3D、BattleView、伤害/死亡结算；玩家验收是玩家需要主动走位与翻滚，不再能站桩过关；验证要求包括碰撞、卡位、刷怪点与波次结束条件检查。
+        M3 局内升级与奖励：目标是把杀怪升级与成长决策接入基础循环；Scope In 包括经验值、升级触发、RewardView、三选一强化、至少 6 个可感知升级项、战后奖励节点；Scope Out 为局外永久成长与复杂装备系统；Godot/C# 切片应覆盖 ProgressionSystem、RewardView、Data/State run state、LogView；玩家验收是升级选择能立刻改变下一波战斗策略；验证要求包括升级 UI 可操作、升级效果可见、日志与 HUD 同步。
+        M4 随机房间串联与精英校验：目标是形成短局 run 结构；Scope In 包括战斗房/奖励房/恢复房的最小随机串联、房间重置、1 场精英或小 Boss 校验战、出入口与战后过渡；Scope Out 为完整章节、剧情、复杂程序地形；Godot/C# 切片应覆盖 MapView、房间图生成、场景切换或同场景分区切换、Elite Encounter；玩家验收是单局能完成至少 3 到 5 个节点并感到难度抬升；验证要求包括房间切换稳定、随机结果可复现或可记录 seed、精英战不会因碰撞/相机失效。
+        M5 死亡结算与局外永久成长：目标是闭合 Roguelike 的失败后推进循环；Scope In 包括死亡结算页、灵魂货币累计、meta upgrade 页面、1 到 2 条永久成长线、保存与下次开局继承；Scope Out 为庞大天赋树与长期数值平衡；Godot/C# 切片应覆盖 death_summary、meta_upgrade、Save/Load、MetaProgressionSystem；玩家验收是死亡不等于白打，并且下一局能感到小幅永久提升；验证要求包括重启游戏后数据仍在、异常中断不会损坏核心存档。
+        M6 UI/UX 回补、组件统一与试玩打包：目标是把功能原型整理成可交付试玩包；Scope In 包括 theme tokens、按钮/卡片/面板组件统一、screen contract 固化、截图验收、键盘焦点检查、本地化键值接入、文案溢出检查、可访问性开关与 Windows 打包；Scope Out 为最终美术精修；Godot/C# 切片应覆盖 shared UI components、SettingsScreen、HUD/Reward/Death 页面合同、翻译表与打包脚本；玩家验收是新玩家无需口头说明也能完成一局并理解主要反馈；验证要求包括 720p/1080p 截图检查、焦点流正确、文本不过界、打包后试玩日志可回收。
+        """);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M3", "M4", "M5", "M6");
+        result.Steps[0].Title.Should().Be("M1：首个可玩战斗房");
+        result.Steps[0].Description.Should().Contain("PrototypeRoot.tscn");
+        result.Steps[1].Title.Should().Be("M2：敌人压力与波次循环");
+        result.Steps[5].Title.Should().Be("M6：UI/UX 回补、组件统一与试玩打包");
+        result.Steps[5].Description.Should().Contain("screen contract");
+        result.Steps.Should().OnlyContain(step => !step.Title.Contains("Scope In", StringComparison.OrdinalIgnoreCase));
+        result.Steps[0].SpecRelativePath.Should().Be("docs/m1-首个可玩战斗房-spec.md");
+        result.Steps[1].SpecRelativePath.Should().Be("docs/m2-敌人压力与波次循环-spec.md");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_PrefersMilestoneSectionOverEarlierPrototypeAcceptanceSection()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Route GDD
+
+        ## 原型验收标准
+
+        - M6 再集中补入 theme tokens、screen contracts、截图验收、键盘焦点检查、本地化检查和文案溢出检查。
+        1. M1 到 M3 必备资产
+
+        ## 里程碑与实现步骤
+
+        M1 首个可玩战斗房：目标是交付真正可玩的第一战；Scope In 包括 WASD、鼠标朝向、左键连击、空格翻滚和首个训练敌人；Scope Out 为随机地城。
+        M2 敌人压力与波次循环：目标是让战斗从演示变成有失败风险的循环；Scope In 包括敌人 AI、波次刷怪和房间清理判定。
+        M3 局内升级与奖励：目标是把杀怪升级与成长决策接入基础循环；Scope In 包括经验值、升级触发和三选一强化。
+        """);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M3");
+        result.Steps[0].Title.Should().Be("M1：首个可玩战斗房");
+        result.Steps[1].Title.Should().Be("M2：敌人压力与波次循环");
+        result.Steps[2].Title.Should().Be("M3：局内升级与奖励");
+        result.Steps.Should().NotContain(step => step.Title.Contains("theme tokens", StringComparison.OrdinalIgnoreCase));
+        result.Steps.Should().NotContain(step => step.Title.Contains("必备资产", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task GetOrCreateLatestAsync_MarksM1Executed_WhenSkeletonCreationAlreadySucceeded()
     {
         using var database = TempSqliteDatabase.Create();

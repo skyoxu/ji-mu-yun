@@ -63,6 +63,7 @@ public static class GddMilestoneSpecDocumentWriter
         await File.WriteAllTextAsync(planPath, BuildPlan(project, steps, physicsPolicy), Encoding.UTF8, cancellationToken);
         written.Add(PrototypePlanRelativePath);
 
+        DeleteObsoleteSpecFiles(project, steps);
         foreach (var step in steps)
         {
             var spec = BuildSpec(step, physicsPolicy);
@@ -78,27 +79,37 @@ public static class GddMilestoneSpecDocumentWriter
 
     private static List<SpecStep> ExtractSteps(string gddText)
     {
-        var result = new List<SpecStep>();
-        var matches = Regex.Matches(
-            gddText,
-            @"(?im)^\s*(?:[-*]\s*)?(M\d+(?:[-.]\d+)?)\s*[:：\-]\s*(.+)$");
-        foreach (Match match in matches)
-        {
-            var id = NormalizeStepId(match.Groups[1].Value);
-            var titleBody = Compact(match.Groups[2].Value);
-            if (string.IsNullOrWhiteSpace(titleBody))
-            {
-                continue;
-            }
+        return GddMilestoneTextParser.ExtractExplicitSteps(gddText)
+            .Select(step => new SpecStep(step.StepId, step.StepIndex, step.Title, step.Description))
+            .ToList();
+    }
 
-            result.Add(new SpecStep(id, result.Count + 1, $"{id}：{Trim(titleBody, 80)}", Trim(titleBody, 420)));
+    private static void DeleteObsoleteSpecFiles(ProjectSnapshot project, IReadOnlyList<SpecStep> steps)
+    {
+        var docsPath = Path.Combine(project.RepoPath, "docs");
+        if (!Directory.Exists(docsPath))
+        {
+            return;
         }
 
-        return result
-            .GroupBy(step => step.StepId, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group.First())
-            .Take(20)
-            .ToList();
+        var expected = steps
+            .Select(step => Path.GetFullPath(Path.Combine(project.RepoPath, StepSpecRelativePath(step).Replace('/', Path.DirectorySeparatorChar))))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in Directory.EnumerateFiles(docsPath, "m*-spec.md", SearchOption.TopDirectoryOnly))
+        {
+            var fullPath = Path.GetFullPath(path);
+            if (!expected.Contains(fullPath) && IsGeneratedMilestoneSpec(path))
+            {
+                File.Delete(fullPath);
+            }
+        }
+    }
+
+    private static bool IsGeneratedMilestoneSpec(string path)
+    {
+        var text = File.ReadAllText(path, Encoding.UTF8);
+        return text.Contains("Source:\n- GDD: docs/gdd/GDD.md\n- Prototype plan: docs/prototype-v1-plan.md", StringComparison.Ordinal) ||
+               text.Contains("Source:\r\n- GDD: docs/gdd/GDD.md\r\n- Prototype plan: docs/prototype-v1-plan.md", StringComparison.Ordinal);
     }
 
     private static List<SpecStep> BuildDefaultSteps(string gddText)

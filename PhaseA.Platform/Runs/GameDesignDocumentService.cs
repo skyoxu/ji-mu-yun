@@ -347,6 +347,7 @@ public sealed class GameDesignDocumentService
         }
 
         var document = await ReadOutlineDocumentAsync(outlinePath, cancellationToken);
+        var displayDocument = NormalizeMilestoneListsForDisplay(document);
         if (ContainsGarbledText(document))
         {
             return new GameDesignOutlineReadResult(
@@ -361,11 +362,11 @@ public sealed class GameDesignDocumentService
         var info = new FileInfo(outlinePath);
         return new GameDesignOutlineReadResult(
             project.ProjectId,
-            document.Title,
-            document.Summary,
+            displayDocument.Title,
+            displayDocument.Summary,
             OutlineRelativePath,
             info.LastWriteTimeUtc.ToString("O"),
-            document.Sections);
+            displayDocument.Sections);
     }
 
     public async Task<GameDesignDocumentReadResult?> ExportOutlineMarkdownAsync(
@@ -940,6 +941,7 @@ public sealed class GameDesignDocumentService
             var latestOutline = await ReadOutlineDocumentAsync(outlineAbsolutePath, CancellationToken.None);
             var mergedOutline = MergeSectionContent(latestOutline, updatedSection);
             await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, mergedOutline, CancellationToken.None);
+            await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, await File.ReadAllTextAsync(gddAbsolutePath, Encoding.UTF8, CancellationToken.None), CancellationToken.None);
             if (File.Exists(outlineDraftAbsolutePath))
             {
                 await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline-draft", outlineDraftRelativePath, "Game design outline draft"), CancellationToken.None);
@@ -1070,6 +1072,7 @@ public sealed class GameDesignDocumentService
         var latestOutline = await ReadOutlineDocumentAsync(outlineAbsolutePath, CancellationToken.None);
         var mergedOutline = MergeSectionContents(latestOutline, updatedById.Values);
         await WriteOutlineFilesAsync(outlineAbsolutePath, gddAbsolutePath, mergedOutline, CancellationToken.None);
+        await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, await File.ReadAllTextAsync(gddAbsolutePath, Encoding.UTF8, CancellationToken.None), CancellationToken.None);
         if (File.Exists(outlineDraftAbsolutePath))
         {
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "game-design-gdd-outline-draft", outlineDraftRelativePath, "Game design outline draft"), CancellationToken.None);
@@ -1166,6 +1169,9 @@ public sealed class GameDesignDocumentService
             - The outline must include lightweight UI/UX pre-design sufficient to guide feature development, not polished visual design: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
             - The outline must state feature-development UI structure rules: placeholder UI is allowed, but screen id, scene path, input action, and state naming must stay stable; player-visible text must not be hardcoded in isolated logic; repeated buttons and panels should share one style/component approach instead of each screen inventing its own.
             - Include a milestone or step-plan section whose steps are derived from the actual GDD scope; do not hardcode M1-M10. The plan may be shorter, longer, or include post-polish steps such as M10-1 when justified.
+            - The milestone or step-plan section must contain parseable milestone lines. Each milestone line must start at the beginning of its own line with `M<number> <short title>：`, for example `M1 首个可玩战斗房：目标是...；Scope In...；Scope Out...；Godot/C# 切片...；玩家验收...；验证要求...`. Do not prefix milestone lines with bullets, numbering, bold labels, or prose such as `阶段 1`.
+            - Keep each milestone short title before the first Chinese colon under 24 Chinese characters when possible. Put details after that colon; do not put `Scope In` inside the title itself.
+            - Write exactly one authoritative milestone list in the whole GDD. Do not add a second simplified summary, duplicate numbering, or alternative M1-Mn list later in the same or another section.
             - Each milestone item must be implementation-facing enough to become a SPEC: include goal, scope in, scope out, Godot/C# scene or system slice, player-verifiable acceptance, and package/playtest validation expectation.
             - M1 must be the first playable skeleton module, not an empty shell: it must specify first playable scene, keyboard/mouse basics, core operation feedback, and the player feel that must be verified after completion.
             - If the reference game, genre/tags, or GDD content imply action movement, collision, hit detection, traversal, enemy pressure, aiming, dodge/roll/dash, platforming, shooter, racing, sports, or 3D embodied play, the milestone section must explicitly require matching Godot physics nodes and collision validation instead of UI-only simulation.
@@ -1281,6 +1287,9 @@ public sealed class GameDesignDocumentService
             - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
             - Stay inside this section's scope.
             - If this section concerns reference, scenes, controls, UI/UX/HUD, player feedback, core loop, prototype acceptance, or milestones, preserve the hard GDD requirements: reference game/design signal, scene creation content, keyboard/mouse basics, basic gameplay loop, lightweight UI/UX pre-design, and dynamic milestone steps based on actual scope rather than fixed M1-M10.
+            - If this section contains milestone or implementation-step content, write parseable milestone lines. Each milestone line must start at the beginning of its own line with `M<number> <short title>：`, for example `M1 首个可玩战斗房：目标是...；Scope In...；Scope Out...；Godot/C# 切片...；玩家验收...；验证要求...`. Do not prefix milestone lines with bullets, numbering, bold labels, or prose such as `阶段 1`.
+            - Keep each milestone short title before the first Chinese colon under 24 Chinese characters when possible. Put details after that colon; do not put `Scope In` inside the title itself.
+            - Write exactly one authoritative milestone list in the whole GDD. If a milestone list already exists elsewhere in the outline, update or reference that list instead of adding a second simplified summary, duplicate numbering, or alternative M1-Mn list.
             - For UI/UX/HUD content, include only development-guiding pre-design before features are built: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
             - For implementation-facing UI/UX notes, keep structure stable: screen id, scene path, input action, and state names should be reusable across milestones; placeholder UI is acceptable; player-visible text should be localized or centralized instead of hardcoded in isolated gameplay code; repeated buttons and panels should share a style/component approach.
             - For post-feature UI/UX retrofit notes, describe when to add theme tokens, component kit, screen contracts, screenshot acceptance, focus checks, localization checks, and overflow checks.
@@ -1341,6 +1350,9 @@ public sealed class GameDesignDocumentService
             - Use Python with UTF-8 and json.dumps(..., ensure_ascii=True, indent=2) or an equivalent structured JSON writer. Do not use PowerShell Set-Content, Out-File, echo, shell redirection, or console-default encoding to write Chinese text.
             - Before finishing, read the raw draft file as UTF-8 text and verify it does not contain consecutive question marks such as "???".
             - If sections concern reference, scenes, controls, UI/UX/HUD, player feedback, core loop, prototype acceptance, or milestones, preserve the hard GDD requirements: reference game/design signal, scene creation content, keyboard/mouse basics, basic gameplay loop, lightweight UI/UX pre-design, and dynamic milestone steps based on actual scope rather than fixed M1-M10.
+            - If any listed section contains milestone or implementation-step content, write parseable milestone lines. Each milestone line must start at the beginning of its own line with `M<number> <short title>：`, for example `M1 首个可玩战斗房：目标是...；Scope In...；Scope Out...；Godot/C# 切片...；玩家验收...；验证要求...`. Do not prefix milestone lines with bullets, numbering, bold labels, or prose such as `阶段 1`.
+            - Keep each milestone short title before the first Chinese colon under 24 Chinese characters when possible. Put details after that colon; do not put `Scope In` inside the title itself.
+            - Write exactly one authoritative milestone list in the whole GDD. If a milestone list already exists elsewhere in the outline, update or reference that list instead of adding a second simplified summary, duplicate numbering, or alternative M1-Mn list.
             - For UI/UX/HUD content, include only development-guiding pre-design before features are built: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
             - For implementation-facing UI/UX notes, keep structure stable: screen id, scene path, input action, and state names should be reusable across milestones; placeholder UI is acceptable; player-visible text should be localized or centralized instead of hardcoded in isolated gameplay code; repeated buttons and panels should share a style/component approach.
             - For post-feature UI/UX retrofit notes, describe when to add theme tokens, component kit, screen contracts, screenshot acceptance, focus checks, localization checks, and overflow checks.
@@ -1946,6 +1958,7 @@ public sealed class GameDesignDocumentService
 
     private static string RenderOutlineMarkdown(GameDesignOutlineDocument document)
     {
+        document = NormalizeMilestoneListsForDisplay(document);
         var builder = new StringBuilder();
         builder.AppendLine($"# {document.Title}");
         builder.AppendLine();
@@ -1957,11 +1970,66 @@ public sealed class GameDesignDocumentService
             builder.AppendLine();
             builder.AppendLine($"**\u9aa8\u67b6**: {section.Skeleton}");
             builder.AppendLine();
-            builder.AppendLine(string.IsNullOrWhiteSpace(section.Content) ? "_\u5f85\u751f\u6210\u5177\u4f53\u5185\u5bb9\u3002_" : section.Content);
+            var content = string.IsNullOrWhiteSpace(section.Content)
+                ? "_\u5f85\u751f\u6210\u5177\u4f53\u5185\u5bb9\u3002_"
+                : section.Content;
+            builder.AppendLine(content);
             builder.AppendLine();
         }
 
         return builder.ToString().TrimEnd() + "\n";
+    }
+
+    private static GameDesignOutlineDocument NormalizeMilestoneListsForDisplay(GameDesignOutlineDocument document)
+    {
+        var sectionsWithMilestoneGroups = document.Sections
+            .Select((section, index) => new { Section = section, Index = index })
+            .Where(item => !string.IsNullOrWhiteSpace(item.Section.Content) &&
+                           GddMilestoneTextParser.ContainsMilestoneGroup(item.Section.Content))
+            .ToArray();
+        if (sectionsWithMilestoneGroups.Length <= 1)
+        {
+            return document;
+        }
+
+        var authoritativeIndex = sectionsWithMilestoneGroups
+            .FirstOrDefault(item => IsAuthoritativeMilestoneSection(item.Section))?.Index ??
+            sectionsWithMilestoneGroups[0].Index;
+
+        var sections = document.Sections.Select((section, index) =>
+        {
+            if (index == authoritativeIndex ||
+                string.IsNullOrWhiteSpace(section.Content) ||
+                !GddMilestoneTextParser.ContainsMilestoneGroup(section.Content))
+            {
+                return section;
+            }
+
+            var content = GddMilestoneTextParser.RemoveMilestoneListLines(section.Content);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                content = "\u672c\u6761\u76ee\u7684\u6a21\u5757\u6e05\u5355\u5df2\u5408\u5e76\u5230\u9996\u4e2a\u6743\u5a01\u91cc\u7a0b\u7891\u6e05\u5355\u4e2d\uff0c\u907f\u514d\u91cd\u590d\u7f16\u53f7\u3002";
+            }
+
+            return section with { Content = content };
+        }).ToArray();
+
+        return new GameDesignOutlineDocument(document.Title, document.Summary, sections);
+    }
+
+    private static bool IsAuthoritativeMilestoneSection(GameDesignOutlineSection section)
+    {
+        var text = $"{section.Id} {section.Title} {section.Skeleton}";
+        return ContainsAnyOrdinalIgnoreCase(
+            text,
+            "\u91cc\u7a0b\u7891",
+            "\u5b9e\u73b0\u6b65\u9aa4",
+            "\u5b9e\u65bd\u6b65\u9aa4",
+            "\u6a21\u5757\u6b65\u9aa4",
+            "\u5f00\u53d1\u6b65\u9aa4",
+            "Milestone",
+            "Step Plan",
+            "Implementation Steps");
     }
 
     private static string SafeFileName(string value)

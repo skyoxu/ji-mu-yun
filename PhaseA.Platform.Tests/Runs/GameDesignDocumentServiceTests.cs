@@ -93,6 +93,8 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("Each milestone item must be implementation-facing enough to become a SPEC");
         runner.Commands[0].StandardInput.Should().Contain("M1 must be the first playable skeleton module");
         runner.Commands[0].StandardInput.Should().Contain("matching Godot physics nodes and collision validation");
+        runner.Commands[0].StandardInput.Should().Contain("exactly one authoritative milestone list");
+        runner.Commands[0].StandardInput.Should().Contain("Do not add a second simplified summary");
         var outlineJson = await File.ReadAllTextAsync(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json"));
         outlineJson.Should().NotContain("???");
         outline!.Title.Should().Be("演示策划大纲");
@@ -777,7 +779,9 @@ public sealed class GameDesignDocumentServiceTests
         for (var attempt = 0; attempt < 30; attempt++)
         {
             outline = await service.ReadOutlineAsync(accountId, projectId);
-            if (outline!.Sections.Any(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal)))
+            if (outline!.Sections.Any(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal)) &&
+                File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")) &&
+                Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Length > 0)
             {
                 break;
             }
@@ -799,8 +803,12 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("input action");
         runner.Commands[0].StandardInput.Should().Contain("theme tokens");
         runner.Commands[0].StandardInput.Should().Contain("screenshot acceptance");
+        runner.Commands[0].StandardInput.Should().Contain("exactly one authoritative milestone list");
+        runner.Commands[0].StandardInput.Should().Contain("instead of adding a second simplified summary");
         outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal));
         outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content == "Already done.");
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
+        Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -848,7 +856,9 @@ public sealed class GameDesignDocumentServiceTests
         for (var attempt = 0; attempt < 30; attempt++)
         {
             outline = await service.ReadOutlineAsync(accountId, projectId);
-            if (outline!.Sections.Any(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal)))
+            if (outline!.Sections.Any(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal)) &&
+                File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")) &&
+                Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Length > 0)
             {
                 break;
             }
@@ -863,10 +873,14 @@ public sealed class GameDesignDocumentServiceTests
         prompt.Should().Contain("- Section id: m1");
         prompt.Should().Contain("- Section id: m2");
         prompt.Should().Contain("- Section id: m3");
+        prompt.Should().Contain("exactly one authoritative milestone list");
+        prompt.Should().Contain("instead of adding a second simplified summary");
         outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated batch content for m1", StringComparison.Ordinal));
         outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content.Contains("Generated batch content for m2", StringComparison.Ordinal));
         outline.Sections.Should().Contain(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal));
         outline.Sections.Should().Contain(item => item.Id == "m4" && item.Content == "Already done.");
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
+        Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -917,6 +931,125 @@ public sealed class GameDesignDocumentServiceTests
         var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
         markdown.Should().Contain("**骨架**: New skeleton.");
         markdown.Should().Contain("New content.");
+    }
+
+    [Fact]
+    public async Task SaveSectionAsync_ShouldRenderOnlyOneAuthoritativeMilestoneList()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                {
+                  "id": "milestones",
+                  "title": "Milestones",
+                  "skeleton": "Authoritative list.",
+                  "content": "M1 First playable room: create controls and first combat room.\nM2 Wave loop: add enemy waves and rewards."
+                },
+                {
+                  "id": "summary",
+                  "title": "Duplicate Summary",
+                  "skeleton": "Should not repeat milestone numbering.",
+                  "content": "M1 Short summary: duplicate list.\nM2 Short summary: duplicate list.\n\nKeep this non-milestone note."
+                }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.SaveSectionAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineSectionSaveRequest(
+                "summary",
+                "Should not repeat milestone numbering.",
+                "M1 Short summary: duplicate list.\nM2 Short summary: duplicate list.\n\nKeep this non-milestone note."));
+
+        result!.Status.Should().Be("succeeded");
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        var summarySection = outline!.Sections.Single(section => section.Id == "summary");
+        summarySection.Content.Should().NotContain("M1 Short summary: duplicate list.");
+        summarySection.Content.Should().NotContain("M2 Short summary: duplicate list.");
+        summarySection.Content.Should().Contain("Keep this non-milestone note.");
+        var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
+        markdown.Should().Contain("M1 First playable room: create controls and first combat room.");
+        markdown.Should().Contain("M2 Wave loop: add enemy waves and rewards.");
+        markdown.Should().NotContain("M1 Short summary: duplicate list.");
+        markdown.Should().NotContain("M2 Short summary: duplicate list.");
+        markdown.Should().Contain("Keep this non-milestone note.");
+    }
+
+    [Fact]
+    public async Task ReadOutlineAsync_ShouldPreferMilestoneSectionOverEarlierAcceptanceMilestoneReferences()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                {
+                  "id": "acceptance",
+                  "title": "Prototype Acceptance",
+                  "skeleton": "Validation notes before implementation.",
+                  "content": "M1 Acceptance note: package must launch.\nGoal details should be removed.\nAcceptance details should be removed.\n\nM2 Acceptance note: rewards must be visible.\nReward details should be removed.\nThis is a general retained note without milestone keywords."
+                },
+                {
+                  "id": "implementation-milestones",
+                  "title": "Milestones and Implementation Steps",
+                  "skeleton": "Authoritative playable module list.",
+                  "content": "M1 First playable room: create controls and first combat room.\nM2 Wave loop: add enemy waves and rewards."
+                }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+
+        outline.Should().NotBeNull();
+        var acceptance = outline!.Sections.Single(section => section.Id == "acceptance");
+        var milestones = outline.Sections.Single(section => section.Id == "implementation-milestones");
+        acceptance.Content.Should().NotContain("M1 Acceptance note");
+        acceptance.Content.Should().NotContain("M2 Acceptance note");
+        acceptance.Content.Should().NotContain("Goal details should be removed.");
+        acceptance.Content.Should().NotContain("Acceptance details should be removed.");
+        acceptance.Content.Should().NotContain("Reward details should be removed.");
+        acceptance.Content.Should().Contain("This is a general retained note without milestone keywords.");
+        milestones.Content.Should().Contain("M1 First playable room");
+        milestones.Content.Should().Contain("M2 Wave loop");
     }
 
     private static Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
