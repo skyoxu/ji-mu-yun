@@ -92,7 +92,7 @@ public sealed class PrototypeFeedbackIterationService
 
         if (!await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
-            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。", []);
+            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先运行并完成游戏场景创建，再提交正式反馈。自由对话仍可使用。", []);
         }
 
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);

@@ -80,6 +80,9 @@ public static class GddMilestoneSpecDocumentWriter
     private static List<SpecStep> ExtractSteps(string gddText)
     {
         return GddMilestoneTextParser.ExtractExplicitSteps(gddText)
+            .GroupBy(step => step.StepId, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderBy(step => step.StepIndex)
             .Select(step => new SpecStep(step.StepId, step.StepIndex, step.Title, step.Description))
             .ToList();
     }
@@ -146,6 +149,7 @@ public static class GddMilestoneSpecDocumentWriter
 
     private static StepSpec BuildSpec(SpecStep step, PrototypePhysicsRequirementResult physicsPolicy)
     {
+        var parsed = ParseStructuredMilestoneDescription(step.Description);
         var body = Trim(step.Description, 420);
         var combined = $"{step.Title} {step.Description}";
         var isAssetStep = ContainsAny(combined, "素材", "资产", "Asset", "KayKit", "碰撞", "collision", "Animation", "动画");
@@ -159,6 +163,12 @@ public static class GddMilestoneSpecDocumentWriter
         var acceptance = $"完成并验证：{body} 玩家能通过打包版本直接试玩当前模块，看到明确开始、操作、反馈和结果。";
         var packaging = "当前模块完成后提示玩家打包下载并试玩验证；确认按钮只在当前模块执行完成或反馈修复完成后可用。";
 
+        scopeIn = FirstNonEmpty(parsed.ScopeIn, scopeIn);
+        scopeOut = FirstNonEmpty(parsed.ScopeOut, scopeOut);
+        godotSlice = FirstNonEmpty(parsed.GodotSlice, godotSlice);
+        acceptance = FirstNonEmpty(parsed.Acceptance, acceptance);
+        packaging = FirstNonEmpty(parsed.Validation, packaging);
+
         scopeIn = FirstNonEmpty(step.ScopeInOverride, scopeIn);
         scopeOut = FirstNonEmpty(step.ScopeOutOverride, scopeOut);
         godotSlice = FirstNonEmpty(step.GodotSliceOverride, godotSlice);
@@ -167,8 +177,8 @@ public static class GddMilestoneSpecDocumentWriter
 
         if (isFirstStep)
         {
-            scopeIn += " M1 同时承担原型骨架创建，必须落地首个可进入场景、基础操作映射和首轮手感验证。";
-            acceptance += " 原型骨架不能是空壳，必须能让玩家实际操作并判断基本手感。";
+            scopeIn += " M1 同时承担游戏场景创建，必须落地首个可进入场景、基础操作映射和首轮手感验证。";
+            acceptance += " 游戏场景不能是空壳，必须能让玩家实际操作并判断基本手感。";
         }
 
         if (physicsPolicy.RequiresPhysics)
@@ -238,6 +248,8 @@ public static class GddMilestoneSpecDocumentWriter
 
     private static string BuildStepMarkdown(ProjectSnapshot project, SpecStep step, StepSpec spec, PrototypePhysicsRequirementResult physicsPolicy)
     {
+        var parsed = ParseStructuredMilestoneDescription(step.Description);
+        var goal = FirstNonEmpty(parsed.Goal, Trim(step.Description, 420));
         var physicsNotes = physicsPolicy.RequiresPhysics
             ? $"""
                 - Physics required: yes
@@ -256,7 +268,7 @@ public static class GddMilestoneSpecDocumentWriter
 
             ## Goal
 
-            {step.Description}
+            {goal}
 
             ## Scope In
 
@@ -306,6 +318,85 @@ public static class GddMilestoneSpecDocumentWriter
     private static bool ContainsAny(string value, params string[] needles)
         => needles.Any(needle => value.Contains(needle, StringComparison.OrdinalIgnoreCase));
 
+    private static ParsedMilestoneDescription ParseStructuredMilestoneDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return new ParsedMilestoneDescription();
+        }
+
+        var normalized = description
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Replace('\n', ' ');
+        normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+        string[] scopeInMarkers = ["Scope In", "Scope-In", "范围内", "范围包括", "范围包含"];
+        string[] scopeOutMarkers = ["Scope Out", "Scope-Out", "范围外"];
+        string[] godotSliceMarkers = ["Godot/C# 切片", "Godot/C#切片", "Godot/C# slice", "Godot Slice", "Godot 切片", "C# 切片", "技术切片"];
+        string[] acceptanceMarkers = ["玩家验收", "验收标准", "验收", "Player Acceptance", "Acceptance"];
+        string[] validationMarkers = ["验证要求", "验证标准", "验证", "Validation Requirements", "Validation", "Verification"];
+
+        var goal = ExtractBetween(normalized, ["目标是", "目标为", "目标：", "目标:", "Goal is", "Goal：", "Goal:"], [.. scopeInMarkers, .. scopeOutMarkers, .. godotSliceMarkers, .. acceptanceMarkers, .. validationMarkers]);
+        var scopeIn = ExtractBetween(normalized, scopeInMarkers, [.. scopeOutMarkers, .. godotSliceMarkers, .. acceptanceMarkers, .. validationMarkers]);
+        var scopeOut = ExtractBetween(normalized, scopeOutMarkers, [.. godotSliceMarkers, .. acceptanceMarkers, .. validationMarkers]);
+        var godotSlice = ExtractBetween(normalized, godotSliceMarkers, [.. acceptanceMarkers, .. validationMarkers]);
+        var acceptance = ExtractBetween(normalized, acceptanceMarkers, validationMarkers);
+        var validation = ExtractBetween(normalized, validationMarkers, []);
+
+        return new ParsedMilestoneDescription(
+            CleanStructuredValue(goal),
+            CleanStructuredValue(scopeIn),
+            CleanStructuredValue(scopeOut),
+            CleanStructuredValue(godotSlice),
+            CleanStructuredValue(acceptance),
+            CleanStructuredValue(validation));
+    }
+
+    private static string ExtractBetween(string text, IReadOnlyList<string> startMarkers, IReadOnlyList<string> endMarkers)
+    {
+        var bestStart = -1;
+        var bestMarker = "";
+        foreach (var marker in startMarkers)
+        {
+            var index = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (index >= 0 && (bestStart < 0 || index < bestStart))
+            {
+                bestStart = index;
+                bestMarker = marker;
+            }
+        }
+
+        if (bestStart < 0)
+        {
+            return "";
+        }
+
+        var valueStart = bestStart + bestMarker.Length;
+        while (valueStart < text.Length && (char.IsWhiteSpace(text[valueStart]) || text[valueStart] is ':' or '：'))
+        {
+            valueStart++;
+        }
+
+        var bestEnd = text.Length;
+        foreach (var marker in endMarkers)
+        {
+            var index = text.IndexOf(marker, valueStart, StringComparison.OrdinalIgnoreCase);
+            if (index >= valueStart && index < bestEnd)
+            {
+                bestEnd = index;
+            }
+        }
+
+        return text[valueStart..bestEnd];
+    }
+
+    private static string CleanStructuredValue(string value)
+    {
+        var text = Compact(value).Trim('；', ';', '。', '.', ' ', ':', '：');
+        text = Regex.Replace(text, @"^(?:是|为|包含|包括|含|covers?|includes?)\s*", "", RegexOptions.IgnoreCase).Trim();
+        return text.Trim('；', ';', '。', '.', ' ', ':', '：');
+    }
+
     private static string NormalizeStepId(string value)
         => value.Trim().ToUpperInvariant().Replace('.', '-');
 
@@ -338,4 +429,12 @@ public static class GddMilestoneSpecDocumentWriter
         string GodotSlice,
         string Acceptance,
         string PackagingValidation);
+
+    private sealed record ParsedMilestoneDescription(
+        string Goal = "",
+        string ScopeIn = "",
+        string ScopeOut = "",
+        string GodotSlice = "",
+        string Acceptance = "",
+        string Validation = "");
 }

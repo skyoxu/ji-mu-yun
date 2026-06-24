@@ -108,7 +108,7 @@ public sealed partial class PrototypeQuickFixService
 
         if (requireSucceededPrototypeRun && !await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
-            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先完成原型骨架创建，再使用快速修复。", []);
+            return new PrototypeFeedbackResult("", "prototype_not_ready", "请先完成游戏场景创建，再使用快速修复。", []);
         }
 
         ProjectIterationSessionDetails? iterationDetails = null;
@@ -620,11 +620,8 @@ public sealed partial class PrototypeQuickFixService
         else if (godotSmokeValidation.Required)
         {
             assistantMessage = AppendGodotSmokeValidationFailure(assistantMessage, godotSmokeValidation);
-            if (godotSmokeValidation.Smoke.Ran)
-            {
-                onGodotSmokeFailure?.Invoke(godotSmokeValidation);
-                return null;
-            }
+            onGodotSmokeFailure?.Invoke(godotSmokeValidation);
+            return null;
         }
 
         var goalRepairOutcome = godotSmokeValidation.Passed
@@ -1469,6 +1466,8 @@ public sealed partial class PrototypeQuickFixService
             - 如果问题超出小修范围，不要展开大工程，只输出简短结论，说明应改走正式反馈。
             - 输出必须面向浏览器用户，不要包含路径、命令、脚本名、日志名、环境变量。
 
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
             目标项目：
             - ProjectId: {project.ProjectId}
             - Name: {project.Name}
@@ -1824,6 +1823,8 @@ public sealed partial class PrototypeQuickFixService
             - 优先用最小改动完成任务。
             - 如果被阻塞，直接报告阻塞原因，不要改无关基础设施。
             - 完成后输出面向浏览器用户的简明中文结果，不要包含路径、命令、脚本名、日志名、环境变量。
+
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             项目：
             - ProjectId: {project.ProjectId}

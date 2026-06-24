@@ -1022,6 +1022,74 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ProjectPackage_AllowsPackageWhenM1IsConfirmedWithoutPrototypeRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new ProjectPackageService(store, options);
+
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        Write(project.MetaPath, "routes/gdd-milestones/latest.json", """
+        {
+          "status": "ready",
+          "currentStepId": "M2",
+          "steps": [
+            { "stepId": "M1", "stepIndex": 1, "title": "M1", "status": "confirmed", "locked": false, "confirmedUtc": "2026-06-24T00:00:00Z" },
+            { "stepId": "M2", "stepIndex": 2, "title": "M2", "status": "ready", "locked": false }
+          ]
+        }
+        """);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("succeeded");
+        packages!.CanCreatePackage.Should().BeTrue();
+        packages.DisabledReason.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ProjectPackage_BlocksWhenM1StateExistsButIsNotCompleted()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        await SeedPrototypeCreationRunAsync(store, projectId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new ProjectPackageService(store, options);
+
+        Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        Write(project.MetaPath, "routes/gdd-milestones/latest.json", """
+        {
+          "status": "ready",
+          "currentStepId": "M1",
+          "steps": [
+            { "stepId": "M1", "stepIndex": 1, "title": "M1", "status": "ready", "locked": false }
+          ]
+        }
+        """);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var packages = await service.ListPackagesAsync(accountId, projectId);
+
+        created.Status.Should().Be("m1_not_completed");
+        packages!.CanCreatePackage.Should().BeFalse();
+        packages.DisabledReason.Should().Be("m1_not_completed");
+    }
+
+    [Fact]
     public async Task ProjectPackage_DoesNotRequirePrototypeAcceptanceAfterSkeletonSucceeds()
     {
         using var database = TempSqliteDatabase.Create();

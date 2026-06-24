@@ -183,9 +183,25 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
 
 public static class GameTypeRouteProfiles
 {
+    private static readonly AsyncLocal<bool?> GenericPrototypeRouteOnlyOverride = new();
+
+    public static bool UseGenericPrototypeRouteOnly => GenericPrototypeRouteOnlyOverride.Value ?? true;
+
+    public static IDisposable UseGenericPrototypeRouteOnlyForTesting(bool value)
+    {
+        var previous = GenericPrototypeRouteOnlyOverride.Value;
+        GenericPrototypeRouteOnlyOverride.Value = value;
+        return new GenericPrototypeRouteOnlyOverrideScope(previous);
+    }
+
     public static GameTypeRouteProfile Resolve(ProjectSnapshot project)
     {
         ArgumentNullException.ThrowIfNull(project);
+        if (UseGenericPrototypeRouteOnly)
+        {
+            return Default;
+        }
+
         if (IsSurvivorsLikeProject(project))
         {
             return SurvivorsLike;
@@ -373,16 +389,24 @@ public static class GameTypeRouteProfiles
         "default-prompt-protocol-v1",
         new PrototypeRouteSkillContext(
             "prototype-7day-playable-godot-zh",
-            "原型骨架创建 skill",
+            "游戏场景创建 skill",
             "默认原型路由技能",
             "用来统一约束 prototype / iteration-plan / execute-next-goal / needs-fix 四条流水线。",
-            "原型骨架创建通用验收",
+            "游戏场景创建通用验收",
             null),
         "default-iteration-planner-v1",
         "default-plan-evaluator-v1",
         "default-goal-executor-v1",
         "default-needs-fix-v1",
         "default-final-acceptance-v1");
+
+    private sealed class GenericPrototypeRouteOnlyOverrideScope(bool? previous) : IDisposable
+    {
+        public void Dispose()
+        {
+            GenericPrototypeRouteOnlyOverride.Value = previous;
+        }
+    }
 }
 
 public sealed record GameTypeRouteProfile(

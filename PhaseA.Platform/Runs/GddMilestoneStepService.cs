@@ -10,6 +10,7 @@ namespace PhaseA.Platform.Runs;
 public sealed class GddMilestoneStepService
 {
     private const string GddRelativePath = "docs/gdd/GDD.md";
+    private const string OutlineRelativePath = "docs/gdd/gdd-outline.json";
     private const string StateRelativePath = "routes/gdd-milestones/latest.json";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -64,8 +65,11 @@ public sealed class GddMilestoneStepService
 
         _engineeringClosure.EnsureProjectFiles(project);
         await ReconcileUnstartedStateWithGddAsync(project, state, cancellationToken);
+        await ReconcileAdditionalStepsFromGddAsync(project, state, cancellationToken);
+        await RefreshOutlineCompletionAsync(project, state, cancellationToken);
         NormalizeState(state);
         await ReconcilePrototypeSkeletonM1Async(project, state, cancellationToken);
+        await ReconcileLatestGddMilestoneSessionAsync(project, state, cancellationToken);
         await ReconcileCompletedMilestoneExecutionsAsync(project, state, cancellationToken);
         await WriteStateAsync(project, state, cancellationToken);
         await WriteSpecFilesAsync(project, state, cancellationToken);
@@ -212,6 +216,8 @@ public sealed class GddMilestoneStepService
             Step acceptance: {step.Acceptance}
             Package validation: {step.PackagingValidation}
 
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
             Player feedback:
             {feedback}
             """;
@@ -223,9 +229,10 @@ public sealed class GddMilestoneStepService
 
         var completed = result.Status is "completed" or "succeeded";
         var needsFix = string.Equals(result.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
+        var routeSummary = FirstNonEmpty(result.Summary, feedback);
         var outcome = new GddMilestoneStepValidationOutcome(
             completed ? "feedback_submitted" : needsFix ? "needs_fix" : "feedback_failed",
-            feedback,
+            routeSummary,
             null,
             null);
         if (completed)
@@ -239,12 +246,15 @@ public sealed class GddMilestoneStepService
             : (await WriteStepEvidenceAsync(project, result.RunId, "feedback-repair", outcome.Status, step.StepId, outcome.LastRepairRun is null ? 0 : 1, outcome.LightweightValidationRun, cancellationToken)).RelativePath;
         await _engineeringClosure.TouchMemoryAsync(project, "feedback-repair", FirstNonEmpty(result.RunId, outcome.LastRepairRun?.RunId, "unknown"), outcome.Status, step.StepId, cancellationToken);
 
+        var latestRepairRunId = FirstNonEmpty(outcome.LastRepairRun?.RunId, result.RunId, step.FeedbackRunId);
         state.Steps[index] = step with
         {
             Status = outcome.Status,
             IterationSessionId = session.Session.SessionId,
+            ExecutionSummary = outcome.Summary,
+            ExecutionRunId = FirstNonEmpty(latestRepairRunId, step.ExecutionRunId),
             FeedbackSummary = outcome.Summary,
-            FeedbackRunId = FirstNonEmpty(outcome.LastRepairRun?.RunId, result.RunId, step.FeedbackRunId),
+            FeedbackRunId = latestRepairRunId,
             LatestEvidenceRelativePath = feedbackEvidencePath
         };
         state.Summary = BuildStepActionSummary(step, "feedback", completed, outcome.Status, result.Status);
@@ -282,6 +292,20 @@ public sealed class GddMilestoneStepService
         }
 
         NormalizeState(state);
+        await ReconcileAdditionalStepsFromGddAsync(project, state, cancellationToken);
+        await RefreshOutlineCompletionAsync(project, state, cancellationToken);
+        if (state.IncompleteOutlineSections.Count > 0)
+        {
+            await WriteStateAsync(project, state, CancellationToken.None);
+            return new GddMilestoneStepActionResult(
+                project.ProjectId,
+                state.CurrentStepId ?? "",
+                "outline_incomplete",
+                $"请先补全所有策划大纲章节后再执行当前模块。未补全：{string.Join("、", state.IncompleteOutlineSections.Take(5))}",
+                ToResult(project.ProjectId, state),
+                FailureCode: "outline_incomplete");
+        }
+
         var step = ResolveCurrentStep(state);
         if (step is null)
         {
@@ -404,6 +428,8 @@ public sealed class GddMilestoneStepService
 
             Package / Player Validation:
             {step.PackagingValidation}
+
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             Feedback Improvement Run:
             {step.FeedbackGuidance}
@@ -582,7 +608,14 @@ public sealed class GddMilestoneStepService
         string? baseSummary,
         GddMilestoneLightweightValidationResult validation)
     {
-        var summary = string.IsNullOrWhiteSpace(baseSummary)
+        var safeBaseSummary = !string.IsNullOrWhiteSpace(baseSummary) && !TextIndicatesNeedsFix(baseSummary)
+            ? baseSummary.Trim()
+            : "";
+        var summary = validation.Passed
+            ? string.IsNullOrWhiteSpace(safeBaseSummary)
+                ? validation.Summary
+                : $"{safeBaseSummary}\n{validation.Summary}"
+            : string.IsNullOrWhiteSpace(baseSummary)
             ? validation.Summary
             : $"{baseSummary}\n{validation.Summary}";
         return new GddMilestoneStepValidationOutcome(
@@ -636,6 +669,8 @@ public sealed class GddMilestoneStepService
 
             Acceptance:
             {step.Acceptance}
+
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             Lightweight validation result:
             - RunId: {validation.RunId}
@@ -1017,6 +1052,94 @@ public sealed class GddMilestoneStepService
         return true;
     }
 
+    private static async Task ReconcileAdditionalStepsFromGddAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(gddPath))
+        {
+            return;
+        }
+
+        var gddText = await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken);
+        var incoming = ExtractSteps(gddText);
+        if (incoming.Count == 0)
+        {
+            return;
+        }
+
+        var existingIds = state.Steps.Select(step => step.StepId).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var additions = incoming
+            .Where(step => !existingIds.Contains(step.StepId))
+            .OrderBy(step => step.StepIndex)
+            .ToArray();
+        if (additions.Length == 0)
+        {
+            return;
+        }
+
+        var hasActive = state.Steps.Any(step => !step.Locked && !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+        var unlockFirstAddition = !hasActive && state.Steps.All(step => string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+        foreach (var addition in additions)
+        {
+            state.Steps.Add(addition with
+            {
+                StepIndex = state.Steps.Count + 1,
+                Locked = !unlockFirstAddition || state.Steps.Any(step => !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase)),
+                Status = unlockFirstAddition && state.Steps.All(step => string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase)) ? "ready" : "locked"
+            });
+        }
+
+        if (unlockFirstAddition)
+        {
+            var firstNew = state.Steps.FirstOrDefault(step => !step.Locked && !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+            state.CurrentStepId = firstNew?.StepId;
+            state.Status = "ready";
+        }
+
+        state.Summary = $"已从最新策划大纲同步新增 {additions.Length} 个游戏模块。";
+    }
+
+    private static async Task RefreshOutlineCompletionAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        var outlinePath = Path.Combine(project.RepoPath, OutlineRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        state.IncompleteOutlineSections.Clear();
+        if (!File.Exists(outlinePath))
+        {
+            return;
+        }
+
+        GameDesignOutlineDocument? outline;
+        try
+        {
+            await using var stream = File.OpenRead(outlinePath);
+            outline = await JsonSerializer.DeserializeAsync<GameDesignOutlineDocument>(stream, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            }, cancellationToken);
+        }
+        catch (JsonException)
+        {
+            state.IncompleteOutlineSections.Add("策划大纲文件无法解析");
+            return;
+        }
+
+        foreach (var section in outline?.Sections ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(section.Content))
+            {
+                state.IncompleteOutlineSections.Add(string.IsNullOrWhiteSpace(section.Title) ? section.Id : section.Title);
+            }
+        }
+    }
+
     private async Task ReconcileCompletedMilestoneExecutionsAsync(
         ProjectSnapshot project,
         GddMilestoneState state,
@@ -1027,7 +1150,8 @@ public sealed class GddMilestoneStepService
         {
             var step = state.Steps[index];
             if (!string.Equals(step.Status, "needs_fix", StringComparison.OrdinalIgnoreCase) ||
-                string.IsNullOrWhiteSpace(step.ExecutionRunId))
+                string.IsNullOrWhiteSpace(step.ExecutionRunId) ||
+                StepResultIndicatesNeedsFix(step))
             {
                 continue;
             }
@@ -1073,6 +1197,118 @@ public sealed class GddMilestoneStepService
         }
     }
 
+    private async Task ReconcileLatestGddMilestoneSessionAsync(
+        ProjectSnapshot project,
+        GddMilestoneState state,
+        CancellationToken cancellationToken)
+    {
+        var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, "gdd_milestone_step", cancellationToken);
+        if (details is null || details.Goals.Count == 0)
+        {
+            return;
+        }
+
+        var goal = details.Goals.FirstOrDefault(candidate => candidate.GoalIndex == details.Session.CurrentGoalIndex) ??
+                   details.Goals.OrderByDescending(candidate => candidate.UpdatedUtc, StringComparer.Ordinal).FirstOrDefault();
+        if (goal is null)
+        {
+            return;
+        }
+
+        var stepIndex = state.Steps.FindIndex(step =>
+            step.StepIndex == goal.GoalIndex ||
+            string.Equals(step.StepId, $"M{goal.GoalIndex}", StringComparison.OrdinalIgnoreCase));
+        if (stepIndex < 0)
+        {
+            return;
+        }
+
+        var step = state.Steps[stepIndex];
+        if (string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var executionRun = details.GoalRuns
+            .Where(run => string.Equals(run.GoalId, goal.GoalId, StringComparison.OrdinalIgnoreCase) &&
+                          string.Equals(run.RunType, "prototype-iteration-goal", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(run => run.CreatedUtc, StringComparer.Ordinal)
+            .FirstOrDefault();
+        var repairRun = details.GoalRuns
+            .Where(run => string.Equals(run.GoalId, goal.GoalId, StringComparison.OrdinalIgnoreCase) &&
+                          !string.Equals(run.RunType, "prototype-iteration-goal", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(run => run.CreatedUtc, StringComparer.Ordinal)
+            .FirstOrDefault();
+        if (executionRun is null && repairRun is null)
+        {
+            return;
+        }
+
+        var latestRunId = FirstNonEmpty(repairRun?.RunId, executionRun?.RunId);
+        var runNeedsFix = await RunEvidenceIndicatesNeedsFixAsync(latestRunId, cancellationToken);
+        var summaryNeedsFix = TextIndicatesNeedsFix(goal.ResultSummary) ||
+                              TextIndicatesNeedsFix(details.Session.LatestSummary);
+        var status = runNeedsFix || summaryNeedsFix
+            ? "needs_fix"
+            : goal.Status switch
+        {
+            "succeeded" or "completed" => repairRun is null ? "executed" : "feedback_submitted",
+            "needs_fix" or "failed" => "needs_fix",
+            _ => step.Status
+        };
+        if (string.IsNullOrWhiteSpace(status) || status is "ready" or "locked")
+        {
+            status = details.Session.Status is "needs_fix" or "failed"
+                ? "needs_fix"
+                : details.Session.Status is "paused_for_review" or "completed" or "succeeded"
+                    ? (repairRun is null ? "executed" : "feedback_submitted")
+                    : step.Status;
+        }
+
+        var evidence = string.IsNullOrWhiteSpace(latestRunId)
+            ? null
+            : await WriteStepEvidenceAsync(
+                project,
+                latestRunId,
+                "module-session-sync",
+                status,
+                step.StepId,
+                repairRun is null ? 0 : 1,
+                null,
+                cancellationToken);
+
+        state.Steps[stepIndex] = step with
+        {
+            Locked = false,
+            Status = status,
+            IterationSessionId = details.Session.SessionId,
+            ExecutionRunId = FirstNonEmpty(step.ExecutionRunId, executionRun?.RunId),
+            ExecutionSummary = FirstNonEmpty(step.ExecutionSummary, goal.ResultSummary, details.Session.LatestSummary),
+            FeedbackRunId = FirstNonEmpty(step.FeedbackRunId, repairRun?.RunId),
+            FeedbackSummary = FirstNonEmpty(step.FeedbackSummary, repairRun is null ? null : goal.ResultSummary),
+            LatestEvidenceRelativePath = FirstNonEmpty(step.LatestEvidenceRelativePath, evidence?.RelativePath)
+        };
+        state.CurrentStepId = status == "executed"
+            ? step.StepId
+            : state.Steps[stepIndex].StepId;
+        state.Status = status == "needs_fix" ? "needs_fix" : state.Status;
+        state.Summary = FirstNonEmpty(goal.ResultSummary, details.Session.LatestSummary, state.Summary);
+    }
+
+    private async Task<bool> RunEvidenceIndicatesNeedsFixAsync(string? runId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(runId))
+        {
+            return false;
+        }
+
+        var run = await _metadataStore.GetRunSnapshotAsync(runId, cancellationToken);
+        return TextIndicatesNeedsFix(run?.EvidenceJson) ||
+               TextIndicatesNeedsFix(run?.StdoutText) ||
+               TextIndicatesNeedsFix(run?.StderrText) ||
+               TextIndicatesNeedsFix(run?.ProgressLabel);
+    }
+
     private async Task ReconcilePrototypeSkeletonM1Async(
         ProjectSnapshot project,
         GddMilestoneState state,
@@ -1088,31 +1324,63 @@ public sealed class GddMilestoneStepService
             first.Locked ||
             first.Status is "executed" or "feedback_submitted" or "confirmed" ||
             !string.IsNullOrWhiteSpace(first.IterationSessionId) ||
-            !string.IsNullOrWhiteSpace(first.ExecutionRunId) ||
             !string.IsNullOrWhiteSpace(first.FeedbackRunId))
         {
             return;
         }
 
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
-        var skeletonRun = runs.FirstOrDefault(run =>
+        var successfulSkeletonRun = runs.FirstOrDefault(run =>
             string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+            !PrototypeRunIsValidationOnly(run.EvidenceJson) &&
             string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
             PrototypeCompletionSucceeded(run.EvidenceJson));
-        if (skeletonRun is null)
+        if (successfulSkeletonRun is not null)
+        {
+            var summary = "M1 已通过游戏场景创建完成。建议打包下载试玩验证基本操作、首个场景和首轮手感；如果有问题，提交反馈并修正模块，也可以直接确认完成。";
+            var evidence = await WriteStepEvidenceAsync(project, successfulSkeletonRun.RunId, "scene-create", "executed", first.StepId, 0, null, cancellationToken);
+            state.Steps[0] = first with
+            {
+                Status = "executed",
+                ExecutionRunId = successfulSkeletonRun.RunId,
+                ExecutionSummary = summary,
+                LatestEvidenceRelativePath = evidence.RelativePath
+            };
+            state.CurrentStepId = first.StepId;
+            state.Summary = summary;
+            return;
+        }
+
+        var failedSkeletonRun = runs.FirstOrDefault(run =>
+            string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+            !PrototypeRunIsValidationOnly(run.EvidenceJson) &&
+            string.Equals(run.Status, "failed", StringComparison.OrdinalIgnoreCase) &&
+            PrototypeCompletionFailed(run.EvidenceJson));
+        if (failedSkeletonRun is null)
         {
             return;
         }
 
-        var summary = "M1 已通过原型骨架创建完成。建议打包下载试玩验证基本操作、首个场景和首轮手感；如果有问题，提交反馈并修正模块，也可以直接确认完成。";
+        var failureSummary = BuildPrototypeSkeletonFailureSummary(failedSkeletonRun);
+        var alreadySyncedFailure = string.Equals(first.ExecutionRunId, failedSkeletonRun.RunId, StringComparison.OrdinalIgnoreCase) &&
+                                   string.Equals(first.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
+        var evidencePath = first.LatestEvidenceRelativePath;
+        if (!alreadySyncedFailure || string.IsNullOrWhiteSpace(evidencePath))
+        {
+            var evidence = await WriteStepEvidenceAsync(project, failedSkeletonRun.RunId, "scene-create", "needs_fix", first.StepId, 0, null, cancellationToken);
+            evidencePath = evidence.RelativePath;
+        }
+
+        var failedSummary = $"M1 游戏场景创建未通过，需要修复。{failureSummary}";
         state.Steps[0] = first with
         {
-            Status = "executed",
-            ExecutionRunId = FirstNonEmpty(first.ExecutionRunId, skeletonRun.RunId),
-            ExecutionSummary = FirstNonEmpty(first.ExecutionSummary, summary)
+            Status = "needs_fix",
+            ExecutionRunId = failedSkeletonRun.RunId,
+            ExecutionSummary = failedSummary,
+            LatestEvidenceRelativePath = evidencePath
         };
         state.CurrentStepId = first.StepId;
-        state.Summary = summary;
+        state.Summary = failedSummary;
     }
 
     private static bool PrototypeCompletionSucceeded(string? evidenceJson)
@@ -1138,6 +1406,121 @@ public sealed class GddMilestoneStepService
         {
             return false;
         }
+    }
+
+    private static bool PrototypeRunIsValidationOnly(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            return IsTrue(document.RootElement, "validation_only") ||
+                   IsTrue(document.RootElement, "skeleton_validation_only");
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsTrue(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.True;
+    }
+
+    private static bool PrototypeCompletionFailed(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return true;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object)
+            {
+                return true;
+            }
+
+            return completion.TryGetProperty("succeeded", out var succeeded) &&
+                   succeeded.ValueKind == JsonValueKind.False;
+        }
+        catch (JsonException)
+        {
+            return true;
+        }
+    }
+
+    private static string BuildPrototypeSkeletonFailureSummary(RunSnapshot run)
+    {
+        var evidenceError = ReadPrototypeCompletionError(run.EvidenceJson);
+        var diagnostic = FirstNonEmpty(
+            MostRelevantFailureLine(run.StdoutText),
+            LastNonEmptyLine(run.StderrText),
+            evidenceError,
+            run.ProgressLabel,
+            "请查看运行记录错误输出。");
+        return Trim(diagnostic, 260);
+    }
+
+    private static string ReadPrototypeCompletionError(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return "";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(evidenceJson);
+            if (!document.RootElement.TryGetProperty("prototype_completion", out var completion) ||
+                completion.ValueKind != JsonValueKind.Object)
+            {
+                return "";
+            }
+
+            return ReadString(completion, "error");
+        }
+        catch (JsonException)
+        {
+            return "";
+        }
+    }
+
+    private static string LastNonEmptyLine(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return "";
+        }
+
+        return text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .LastOrDefault(line => !string.IsNullOrWhiteSpace(line)) ?? "";
+    }
+
+    private static string MostRelevantFailureLine(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return "";
+        }
+
+        var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
+        return lines.FirstOrDefault(line => line.Contains("DAY4_IMPLEMENTATION_VALIDATION", StringComparison.OrdinalIgnoreCase)) ??
+               lines.FirstOrDefault(line => line.Contains("failed", StringComparison.OrdinalIgnoreCase)) ??
+               lines.LastOrDefault() ??
+               "";
     }
 
     private static string BuildNextStepReviewSummary(GddMilestoneStepState completed, GddMilestoneStepState next)
@@ -1296,6 +1679,7 @@ public sealed class GddMilestoneStepService
 
     private static GddMilestoneStepPlanResult ToResult(string projectId, GddMilestoneState state)
     {
+        var outlineComplete = state.IncompleteOutlineSections.Count == 0;
         return new GddMilestoneStepPlanResult(
             projectId,
             state.Status,
@@ -1314,13 +1698,20 @@ public sealed class GddMilestoneStepService
                 step.NextStepReview,
                 step.Status,
                 step.Locked,
-                !step.Locked && step.Status is "ready" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out",
-                !step.Locked && step.Status is "executed" or "feedback_submitted",
-                !step.Locked && step.Status is "executed" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out",
+                outlineComplete && !step.Locked && (step.Status is "ready" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out"),
+                !step.Locked && (step.Status is "executed" or "feedback_submitted"),
+                !step.Locked && (step.Status is "executed" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out"),
                 step.ReviewSummary,
                 StepSpecRelativePath(step),
-                step.LatestEvidenceRelativePath)).ToArray(),
-            state.CurrentStepId);
+                step.LatestEvidenceRelativePath,
+                step.ExecutionRunId,
+                step.ExecutionSummary,
+                step.FeedbackRunId,
+                step.FeedbackSummary,
+                step.ConfirmedUtc)).ToArray(),
+            state.CurrentStepId,
+            OutlineComplete: outlineComplete,
+            IncompleteOutlineSections: state.IncompleteOutlineSections.ToArray());
     }
 
     private Task<PrototypeEngineeringEvidenceWriteResult> WriteStepEvidenceAsync(
@@ -1423,11 +1814,20 @@ public sealed class GddMilestoneStepService
 
     private static void NormalizeState(GddMilestoneState state)
     {
+        state.IncompleteOutlineSections ??= [];
         for (var index = 0; index < state.Steps.Count; index++)
         {
             var step = state.Steps[index];
             var spec = BuildStepSpec(step.StepId, step.Title, step.Description);
             var normalizedStatus = NormalizeRecoverableStepStatus(step);
+            if (!string.IsNullOrWhiteSpace(step.ConfirmedUtc))
+            {
+                normalizedStatus = "confirmed";
+            }
+            else if (!IsSuccessfulStepStatus(normalizedStatus) && StepResultIndicatesNeedsFix(step))
+            {
+                normalizedStatus = "needs_fix";
+            }
             state.Steps[index] = step with
             {
                 StepIndex = step.StepIndex <= 0 ? index + 1 : step.StepIndex,
@@ -1440,6 +1840,24 @@ public sealed class GddMilestoneStepService
                 FeedbackGuidance = FirstNonEmpty(step.FeedbackGuidance, spec.FeedbackGuidance),
                 NextStepReview = FirstNonEmpty(step.NextStepReview, spec.NextStepReview)
             };
+        }
+
+        if (state.Steps.Count > 0)
+        {
+            var hasNeedsFix = state.Steps.Any(step => step.Status is "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out");
+            var allConfirmed = state.Steps.All(step => string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase));
+            if (hasNeedsFix)
+            {
+                state.Status = "needs_fix";
+            }
+            else if (allConfirmed)
+            {
+                state.Status = "completed";
+            }
+            else if (string.Equals(state.Status, "needs_fix", StringComparison.OrdinalIgnoreCase))
+            {
+                state.Status = "ready";
+            }
         }
     }
 
@@ -1456,6 +1874,40 @@ public sealed class GddMilestoneStepService
                !string.IsNullOrWhiteSpace(step.IterationSessionId)
             ? "timed_out"
             : "ready";
+    }
+
+    private static bool StepResultIndicatesNeedsFix(GddMilestoneStepState step)
+    {
+        return TextIndicatesNeedsFix(step.ExecutionSummary) ||
+               TextIndicatesNeedsFix(step.FeedbackSummary) ||
+               TextIndicatesNeedsFix(step.ReviewSummary);
+    }
+
+    private static bool IsSuccessfulStepStatus(string? status)
+    {
+        return string.Equals(status, "executed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "feedback_submitted", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "confirmed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TextIndicatesNeedsFix(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        return text.Contains("STATUS: needs_fix", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("\"goal_repair_status\":\"needs_fix\"", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("\"goalRepairStatus\":\"needs_fix\"", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("\"status\":\"needs_fix\"", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("prototype_smoke_scene_missing", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("prototype_completion_state_missing", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("仍需修复", StringComparison.Ordinal) ||
+               text.Contains("需要修复", StringComparison.Ordinal) ||
+               text.Contains("未通过", StringComparison.Ordinal);
     }
 
     private static string NormalizeLegacyStepStatus(string? status)
@@ -1520,6 +1972,8 @@ public sealed class GddMilestoneStepService
         public string? CurrentStepId { get; set; }
 
         public List<GddMilestoneStepState> Steps { get; init; }
+
+        public List<string> IncompleteOutlineSections { get; set; } = [];
     }
 
     private sealed record GddMilestoneStepState(

@@ -18,16 +18,31 @@ public static class PrototypeRouteSkillPolicy
 
     public static bool IsRpgProject(ProjectSnapshot project)
     {
+        if (GameTypeRouteProfiles.UseGenericPrototypeRouteOnly)
+        {
+            return false;
+        }
+
         return GameTypeRouteProfiles.IsRpgProject(project);
     }
 
     public static bool IsSurvivorsLikeProject(ProjectSnapshot project)
     {
+        if (GameTypeRouteProfiles.UseGenericPrototypeRouteOnly)
+        {
+            return false;
+        }
+
         return GameTypeRouteProfiles.IsSurvivorsLikeProject(project);
     }
 
     public static bool IsDeckbuilderProject(ProjectSnapshot project)
     {
+        if (GameTypeRouteProfiles.UseGenericPrototypeRouteOnly)
+        {
+            return false;
+        }
+
         return GameTypeRouteProfiles.IsDeckbuilderProject(project);
     }
 

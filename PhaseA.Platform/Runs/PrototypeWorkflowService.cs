@@ -14,6 +14,7 @@ public sealed class PrototypeWorkflowService
 {
     private const string RunType = "prototype-7day-playable";
     private const string GddRelativePath = "docs/gdd/GDD.md";
+    private const string OutlineRelativePath = "docs/gdd/gdd-outline.json";
     private const int CurrentWorkflowMaxDay = 7;
     private const string RepairReasoningEffort = "high";
     private static readonly TimeSpan DefaultCreationTotalTimeout = TimeSpan.FromHours(1);
@@ -216,7 +217,7 @@ public sealed class PrototypeWorkflowService
             runId,
             status,
             "",
-            status == "succeeded" ? "原型骨架创建已完成。" : "原型骨架创建失败，请查看运行记录错误输出。",
+            status == "succeeded" ? "游戏场景创建已完成。" : "游戏场景创建失败，请查看运行记录错误输出。",
             cancellationToken);
         if (usesLlm && llmEstimate is not null && stopLoss is not null)
         {
@@ -335,7 +336,7 @@ public sealed class PrototypeWorkflowService
             catch (Exception ex)
             {
                 await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), FailureEvidenceJson(prototypeRecordPath), CancellationToken.None);
-                await SetProgressAsync(runId, "failed", "", "原型骨架创建失败，请查看运行记录错误输出。", CancellationToken.None);
+                await SetProgressAsync(runId, "failed", "", "游戏场景创建失败，请查看运行记录错误输出。", CancellationToken.None);
             }
             finally
             {
@@ -383,6 +384,20 @@ public sealed class PrototypeWorkflowService
             return new PrototypeWorkflowResult("", "gdd_empty", 409, "", "", "The current GDD is empty.", [], []);
         }
 
+        var incompleteOutlineSections = await ReadIncompleteGddOutlineSectionsAsync(project, cancellationToken);
+        if (incompleteOutlineSections.Count > 0)
+        {
+            return new PrototypeWorkflowResult(
+                "",
+                "gdd_outline_incomplete",
+                409,
+                "",
+                "",
+                $"请先补全所有策划大纲章节后再创建游戏场景。未补全：{string.Join("、", incompleteOutlineSections.Take(5))}",
+                [],
+                []);
+        }
+
         await GddMilestoneSpecDocumentWriter.WriteFromGddAsync(project, gddText, cancellationToken);
         var workflowRequest = BuildPrototypeRequestFromGdd(project, gddText, request);
         return await QueueAsync(accountId, projectId, workflowRequest, cancellationToken);
@@ -409,6 +424,35 @@ public sealed class PrototypeWorkflowService
             [],
             [],
             await GetProgressForProjectAsync(project, cancellationToken));
+    }
+
+    private static async Task<IReadOnlyList<string>> ReadIncompleteGddOutlineSectionsAsync(ProjectSnapshot project, CancellationToken cancellationToken)
+    {
+        var outlinePath = Path.Combine(project.RepoPath, OutlineRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(outlinePath))
+        {
+            return [];
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(outlinePath);
+            var outline = await JsonSerializer.DeserializeAsync<GameDesignOutlineDocument>(stream, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            }, cancellationToken);
+            return (outline?.Sections ?? [])
+                .Where(section => string.IsNullOrWhiteSpace(section.Content))
+                .Select(section => string.IsNullOrWhiteSpace(section.Title) ? section.Id : section.Title)
+                .Where(section => !string.IsNullOrWhiteSpace(section))
+                .ToArray();
+        }
+        catch (JsonException)
+        {
+            return ["策划大纲文件无法解析"];
+        }
     }
 
     public async Task<PrototypeWorkflowResult> RepairAsync(string accountId, string projectId, PrototypeRepairRequest request, CancellationToken cancellationToken = default)
@@ -573,23 +617,28 @@ public sealed class PrototypeWorkflowService
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, cancellationToken);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
 
-        var validation = ValidateCompletedPrototypeState(project.RepoPath, slug);
-        var smoke = validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
+        var dotnetBuild = await RunPrototypeDotnetBuildValidationAsync(project, cancellationToken);
+        var validation = dotnetBuild.Passed
+            ? ValidateCompletedPrototypeState(project.RepoPath, slug)
+            : PrototypeCompletionValidation.Failure("prototype_dotnet_build_failed");
+        var smoke = dotnetBuild.Passed && validation.Succeeded && !string.IsNullOrWhiteSpace(validation.SmokeScene)
             ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, cancellationToken)
-            : PrototypeGodotSmokeResult.NotRun("prototype_completion_validation_failed");
-        var rpgGdUnitValidation = validation.Succeeded && smoke.ExitCode == 0
+            : PrototypeGodotSmokeResult.NotRun(dotnetBuild.Passed ? "prototype_completion_validation_failed" : "prototype_dotnet_build_failed");
+        var rpgGdUnitValidation = dotnetBuild.Passed && validation.Succeeded && smoke.ExitCode == 0
             ? await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(_options, _processRunner, project, slug, cancellationToken)
-            : PrototypeRpgGdUnitValidationResult.NotRequired("prototype_smoke_validation_failed");
-        var status = validation.Succeeded && smoke.ExitCode == 0 && rpgGdUnitValidation.Passed ? "succeeded" : "failed";
+            : PrototypeRpgGdUnitValidationResult.NotRequired(dotnetBuild.Passed ? "prototype_smoke_validation_failed" : "prototype_dotnet_build_failed");
+        var status = dotnetBuild.Passed && validation.Succeeded && smoke.ExitCode == 0 && rpgGdUnitValidation.Passed ? "succeeded" : "failed";
         var validationExitCode = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed && rpgGdUnitValidation.ExitCode == 0
             ? 1
-            : Math.Max(smoke.ExitCode, rpgGdUnitValidation.ExitCode);
-        var exitCode = ResolveRunExitCode(0, validationExitCode, validation.Succeeded && rpgGdUnitValidation.Passed);
-        var stdout = CombineProcessText(CombineProcessText("Prototype validation-only acceptance executed.", smoke.Stdout), rpgGdUnitValidation.Stdout);
+            : Math.Max(dotnetBuild.ExitCode, Math.Max(smoke.ExitCode, rpgGdUnitValidation.ExitCode));
+        var exitCode = ResolveRunExitCode(0, validationExitCode, dotnetBuild.Passed && validation.Succeeded && rpgGdUnitValidation.Passed);
+        var stdout = CombineProcessText(CombineProcessText(CombineProcessText("Prototype validation-only acceptance executed.", dotnetBuild.Stdout), smoke.Stdout), rpgGdUnitValidation.Stdout);
         var rpgValidationFailure = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed
             ? BuildRpgGdUnitValidationFailure(project, rpgGdUnitValidation)
             : "";
-        var stderr = CombineProcessText(CombineProcessText(validation.Error ?? "", smoke.Stderr), CombineProcessText(rpgValidationFailure, rpgGdUnitValidation.Stderr));
+        var stderr = CombineProcessText(
+            CombineProcessText(dotnetBuild.Passed ? "" : dotnetBuild.FailureSummary ?? "", validation.Error ?? ""),
+            CombineProcessText(CombineProcessText(smoke.Stderr, rpgValidationFailure), rpgGdUnitValidation.Stderr));
         var discoveredArtifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug, prototypeRecordPath);
 
         foreach (var artifact in discoveredArtifacts)
@@ -607,6 +656,7 @@ public sealed class PrototypeWorkflowService
             prototype_contract = contract.RelativePath,
             slug,
             prototype_artifacts = discoveredArtifacts.Select(a => a.RelativePath).ToArray(),
+            dotnet_build = dotnetBuild.ToEvidence(),
             prototype_completion = validation.ToEvidence(),
             godot_smoke = smoke.ToEvidence(),
             rpg_gdunit_validation = rpgGdUnitValidation.ToEvidence()
@@ -664,6 +714,67 @@ public sealed class PrototypeWorkflowService
         return null;
     }
 
+    private async Task<PrototypeDotnetBuildValidation> RunPrototypeDotnetBuildValidationAsync(
+        ProjectSnapshot project,
+        CancellationToken cancellationToken)
+    {
+        var projectPath = ResolvePrototypeBuildProjectPath(project.RepoPath);
+        if (string.IsNullOrWhiteSpace(projectPath))
+        {
+            return PrototypeDotnetBuildValidation.NotRequired("No C# project file was found for prototype build validation.");
+        }
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+        try
+        {
+            var validationEnvironment = PrototypeValidationProcessEnvironment.Create(project.RepoPath);
+            var buildArguments = IsGodotBuildProject(project.RepoPath, projectPath)
+                ? PrototypeValidationProcessEnvironment.CreateMsBuildStabilityArguments()
+                : PrototypeValidationProcessEnvironment.CreateMsBuildIsolationArguments(validationEnvironment, "prototype-lightweight-build");
+            var result = await _processRunner.RunAsync(
+                new HostedProcessCommand(
+                    "dotnet",
+                    [
+                        "build",
+                        projectPath,
+                        "-c",
+                        "Debug",
+                        "-v",
+                        "minimal",
+                        .. buildArguments
+                    ],
+                    project.RepoPath,
+                    validationEnvironment),
+                linked.Token);
+
+            return PrototypeDotnetBuildValidation.FromResult(project.RepoPath, projectPath, result);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
+        {
+            return PrototypeDotnetBuildValidation.Timeout(project.RepoPath, projectPath);
+        }
+    }
+
+    private static string? ResolvePrototypeBuildProjectPath(string repoPath)
+    {
+        var candidates = new[]
+        {
+            Path.Combine(repoPath, "GodotGame.csproj"),
+            Path.Combine(repoPath, "Game.Core", "Game.Core.csproj")
+        };
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    private static bool IsGodotBuildProject(string repoPath, string projectPath)
+    {
+        return string.Equals(
+            Path.GetFullPath(projectPath),
+            Path.GetFullPath(Path.Combine(repoPath, "GodotGame.csproj")),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsCompletedIterationGoalStatus(string? status)
     {
         return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
@@ -690,7 +801,7 @@ public sealed class PrototypeWorkflowService
         var latestRun = runs.FirstOrDefault(item => item.RunType == RunType);
         if (latestRun is null)
         {
-            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始原型骨架创建。", null, null, null, null, null, null, null);
+            return new PrototypeWorkflowProgress("idle", "", "", "尚未开始游戏场景创建。", null, null, null, null, null, null, null);
         }
 
         latestRun = await RecoverCompletedPrototypeRunIfNeededAsync(project, latestRun, cancellationToken);
@@ -837,7 +948,7 @@ public sealed class PrototypeWorkflowService
             "",
             evidenceJson,
             cancellationToken);
-        await SetProgressAsync(run.RunId, "succeeded", "", "原型骨架创建已完成。", cancellationToken);
+        await SetProgressAsync(run.RunId, "succeeded", "", "游戏场景创建已完成。", cancellationToken);
         return await _metadataStore.GetRunSnapshotAsync(run.RunId, cancellationToken) ?? run;
     }
 
@@ -1067,7 +1178,7 @@ public sealed class PrototypeWorkflowService
             runId,
             status,
             "",
-            status == "succeeded" ? "原型骨架创建已完成。" : "原型骨架创建失败，请查看运行记录错误输出。",
+            status == "succeeded" ? "游戏场景创建已完成。" : "游戏场景创建失败，请查看运行记录错误输出。",
             CancellationToken.None);
         await _metadataStore.RecordRunLlmAuditAsync(
             runId,
@@ -2501,10 +2612,10 @@ public sealed class PrototypeWorkflowService
         return status switch
         {
             "queued" => "已提交，等待 runner。",
-            "running" => "原型骨架创建运行中。",
-            "succeeded" => "原型骨架创建已完成。",
-            "failed" => "原型骨架创建失败。",
-            _ => "尚未开始原型骨架创建。"
+            "running" => "游戏场景创建运行中。",
+            "succeeded" => "游戏场景创建已完成。",
+            "failed" => "游戏场景创建失败。",
+            _ => "尚未开始游戏场景创建。"
         };
     }
 
@@ -2525,7 +2636,7 @@ public sealed class PrototypeWorkflowService
     {
         var processTrace = FirstNonEmpty(run.StderrText, run.StdoutText);
         var translatedTrace = TranslateFailureForUser(processTrace);
-        if (!string.Equals(translatedTrace, "原型骨架创建失败，请查看运行记录。", StringComparison.Ordinal))
+        if (!string.Equals(translatedTrace, "游戏场景创建失败，请查看运行记录。", StringComparison.Ordinal))
         {
             return translatedTrace;
         }
@@ -2534,7 +2645,7 @@ public sealed class PrototypeWorkflowService
             TryReadFailureCodeFromEvidence(run.EvidenceJson),
             run.StderrText,
             run.StdoutText,
-            "原型骨架创建失败。");
+            "游戏场景创建失败。");
         return TranslateFailureForUser(rawFailure);
     }
 
@@ -2576,7 +2687,7 @@ public sealed class PrototypeWorkflowService
     {
         if (string.IsNullOrWhiteSpace(rawFailure))
         {
-            return "原型骨架创建失败。";
+            return "游戏场景创建失败。";
         }
 
         if (rawFailure.Contains("prototype_valid_godot_scene_missing", StringComparison.OrdinalIgnoreCase) ||
@@ -2603,7 +2714,7 @@ public sealed class PrototypeWorkflowService
 
         if (rawFailure.Contains("prototype_completion_steps_missing", StringComparison.OrdinalIgnoreCase))
         {
-            return "原型骨架创建执行记录缺失。";
+            return "游戏场景创建执行记录缺失。";
         }
 
         if (rawFailure.Contains("prototype_completion_step_not_ok", StringComparison.OrdinalIgnoreCase))
@@ -2613,7 +2724,7 @@ public sealed class PrototypeWorkflowService
                 return "TDD 红灯阶段未出现预期失败，当前原型不符合严格 TDD 预期。";
             }
 
-            return "原型骨架创建未完整跑通，至少有一个步骤未达到成功条件。";
+            return "游戏场景创建未完整跑通，至少有一个步骤未达到成功条件。";
         }
 
         if (rawFailure.Contains("PROTOTYPE_TDD status=unexpected_green", StringComparison.OrdinalIgnoreCase) &&
@@ -2657,7 +2768,7 @@ public sealed class PrototypeWorkflowService
             return "原型项目验收未通过。";
         }
 
-        return "原型骨架创建失败，请查看运行记录。";
+        return "游戏场景创建失败，请查看运行记录。";
     }
 
     private async Task<PrototypeWorkflowRequest> EnrichRequestFromLatestDraftAsync(
@@ -2775,12 +2886,12 @@ public sealed class PrototypeWorkflowService
             GameName: FirstNonEmpty(project.GameName, title),
             GameType: NormalizeGameType(project.GameTypeSource),
             GameTypeSource: project.GameTypeSource,
-            Hypothesis: $"以当前项目 GDD 和 M1 spec 为设计来源，完成 M1 首个可玩模块；这一步同时承担原型骨架创建，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的基本操作、场景和首轮手感。",
+            Hypothesis: $"以当前项目 GDD 和 M1 spec 为设计来源，完成 M1 首个可玩模块；这一步同时承担游戏场景创建，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的基本操作、场景和首轮手感。",
             CorePlayerFantasy: TrimText(FirstNonEmpty(ExtractSection(gddText, "玩家幻想", "体验", "风格", "参考游戏", "Player Fantasy"), summary), 700),
             MinimumPlayableLoop: TrimText(FirstNonEmpty(loop, summary), 900),
             SuccessCriteria: successCriteria,
             GameFeature: TrimText(FirstNonEmpty(scenes, loop, summary) + $"\n\nM1 spec: {m1SpecPath}\nPrototype plan: docs/prototype-v1-plan.md\n\n" + physicsPolicy, 1200),
-            CoreGameplayLoop: TrimText(FirstNonEmpty(loop, controls, summary) + $"\n\n原型骨架创建必须按 M1 首个可玩模块执行，而不是创建空壳。执行前必须读取 docs/gdd/GDD.md、docs/prototype-v1-plan.md 和 {m1SpecPath}。", 1100),
+            CoreGameplayLoop: TrimText(FirstNonEmpty(loop, controls, summary) + $"\n\n游戏场景创建必须按 M1 首个可玩模块执行，而不是创建空壳。执行前必须读取 docs/gdd/GDD.md、docs/prototype-v1-plan.md 和 {m1SpecPath}。", 1100),
             WinFailConditions: TrimText(FirstNonEmpty(ExtractSection(gddText, "胜利", "失败", "目标", "Win", "Fail", "Goal"), milestones, summary), 700),
             Confirm: request.Confirm,
             StopAfterDay: request.StopAfterDay,
@@ -2812,7 +2923,7 @@ public sealed class PrototypeWorkflowService
         string? milestones)
     {
         var criteria = new List<string>();
-        AddCriterion(criteria, "原型骨架必须直接反映当前 GDD，不再使用骨架页面表单或导入文件作为设计来源。");
+        AddCriterion(criteria, "游戏场景必须直接反映当前 GDD，不再使用旧表单或导入文件作为设计来源。");
         AddCriterion(criteria, FirstNonEmpty(controls, "键盘鼠标基础操作必须在首个可玩场景中有明确映射。"));
         AddCriterion(criteria, FirstNonEmpty(scenes, "必须创建能表达参考游戏方向的首个可玩场景或场景占位。"));
         AddCriterion(criteria, FirstNonEmpty(loop, "必须具备可进入、可操作、可反馈的基础玩法循环。"));
@@ -3169,6 +3280,106 @@ public sealed class PrototypeWorkflowService
                 next_step_evaluation = NextStepEvaluation,
                 next_step_evaluation_reason = NextStepEvaluationReason
             };
+        }
+    }
+
+    private sealed record PrototypeDotnetBuildValidation(
+        bool Required,
+        bool Passed,
+        string? ProjectPath,
+        int ExitCode,
+        string Stdout,
+        string Stderr,
+        string? FailureSummary)
+    {
+        public static PrototypeDotnetBuildValidation NotRequired(string reason)
+        {
+            return new PrototypeDotnetBuildValidation(false, true, null, 0, "", "", reason);
+        }
+
+        public static PrototypeDotnetBuildValidation Timeout(string repoPath, string projectPath)
+        {
+            return new PrototypeDotnetBuildValidation(
+                true,
+                false,
+                ToSlash(Path.GetRelativePath(repoPath, projectPath)),
+                408,
+                "",
+                "dotnet build validation timed out.",
+                "dotnet build validation timed out.");
+        }
+
+        public static PrototypeDotnetBuildValidation FromResult(string repoPath, string projectPath, HostedProcessResult result)
+        {
+            var passed = result.ExitCode == 0;
+            return new PrototypeDotnetBuildValidation(
+                true,
+                passed,
+                ToSlash(Path.GetRelativePath(repoPath, projectPath)),
+                result.ExitCode,
+                result.Stdout,
+                result.Stderr,
+                passed ? null : ExtractBuildFailureSummary(result));
+        }
+
+        public object ToEvidence()
+        {
+            return new
+            {
+                required = Required,
+                passed = Passed,
+                project = ProjectPath,
+                exit_code = ExitCode,
+                failure_summary = FailureSummary
+            };
+        }
+
+        private static string ExtractBuildFailureSummary(HostedProcessResult result)
+        {
+            var text = string.Join(
+                Environment.NewLine,
+                new[] { result.Stdout, result.Stderr }.Where(value => !string.IsNullOrWhiteSpace(value)));
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return "dotnet build failed without process output.";
+            }
+
+            var lines = text
+                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var details = new List<string>();
+            foreach (var line in lines)
+            {
+                if (IsBuildFailureSignal(line) &&
+                    !details.Any(existing => string.Equals(existing, line, StringComparison.OrdinalIgnoreCase)))
+                {
+                    details.Add(line.Length <= 700 ? line : line[..700]);
+                }
+
+                if (details.Count >= 16)
+                {
+                    break;
+                }
+            }
+
+            return details.Count == 0
+                ? (text.Length <= 1600 ? text : text[..1600])
+                : string.Join(" | ", details);
+        }
+
+        private static bool IsBuildFailureSignal(string line)
+        {
+            return line.Contains(": error ", StringComparison.OrdinalIgnoreCase) ||
+                   line.Contains(" error CS", StringComparison.OrdinalIgnoreCase) ||
+                   line.Contains(" error MSB", StringComparison.OrdinalIgnoreCase) ||
+                   line.Contains(".cs(", StringComparison.OrdinalIgnoreCase) ||
+                   line.Contains("Build FAILED", StringComparison.OrdinalIgnoreCase) ||
+                   line.Contains("生成失败", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ToSlash(string path)
+        {
+            return path.Replace('\\', '/');
         }
     }
 

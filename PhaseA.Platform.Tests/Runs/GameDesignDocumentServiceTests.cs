@@ -1,4 +1,6 @@
 using FluentAssertions;
+using System.Text;
+using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
@@ -101,12 +103,88 @@ public sealed class GameDesignDocumentServiceTests
         outline.Sections.Should().ContainSingle(item => item.Id == "core-loop" && item.Title == "核心循环");
         File.Exists(Path.Combine(project!.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
         Directory.GetFiles(Path.Combine(project!.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
-        var artifacts = await store.ListArtifactsForRunAsync(result.RunId);
+        var artifacts = await store.ListArtifactsForRunAsync(result.RunId!);
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd" && item.RelativePath == "docs/gdd/GDD.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline" && item.RelativePath == "docs/gdd/gdd-outline.json");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline-draft" && item.RelativePath.EndsWith("gdd-outline.generated.json", StringComparison.Ordinal));
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath == "docs/prototype-v1-plan.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath.StartsWith("docs/m1-", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenModelAtCapacity_ShouldRetrySameModelBeforeSuccess()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            ModelCapacityFailuresBeforeSuccess = 3
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5),
+            modelCapacityRetryDelay: TimeSpan.Zero);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", null, []));
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().HaveCount(4);
+        runner.Commands.Select(command => command.Environment["PHASEA_CODEX_DEFAULT_MODEL"]).Should().OnlyContain(model => model == "gpt-5.5");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("succeeded");
+        run.EvidenceJson.Should().Contain("\"model\":\"gpt-5.5\"");
+        run.EvidenceJson.Should().Contain("\"model_capacity_retry_count\":3");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenModelCapacityPersists_ShouldFailWithBusyMessage()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var runner = new FakeHostedProcessRunner
+        {
+            ModelCapacityFailuresBeforeSuccess = 4
+        };
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5),
+            modelCapacityRetryDelay: TimeSpan.Zero);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("model_capacity");
+        result.Summary.Should().Contain("\u5927\u6a21\u578b\u8bbf\u95ee\u7e41\u5fd9");
+        runner.Commands.Should().HaveCount(4);
+        runner.Commands.Select(command => command.Environment["PHASEA_CODEX_DEFAULT_MODEL"]).Should().OnlyContain(model => model == "gpt-5.4");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+        run!.Status.Should().Be("failed");
+        run.ProgressSubstep.Should().Be("model_capacity");
+        run.EvidenceJson.Should().Contain("\"model_capacity_retry_count\":3");
     }
 
     [Fact]
@@ -775,22 +853,18 @@ public sealed class GameDesignDocumentServiceTests
         result.RequestedCount.Should().Be(1);
         result.CompletedCount.Should().Be(0);
         result.Sections.Should().BeEmpty();
-        GameDesignOutlineReadResult? outline = null;
-        for (var attempt = 0; attempt < 30; attempt++)
-        {
-            outline = await service.ReadOutlineAsync(accountId, projectId);
-            if (outline!.Sections.Any(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal)) &&
-                File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")) &&
-                Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Length > 0)
-            {
-                break;
-            }
-
-            await Task.Delay(100);
-        }
+        var finishedRun = await WaitForRunFinishedAsync(store, result.RunId!);
+        finishedRun.Status.Should().Be("succeeded");
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
 
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].StandardInput.Should().Contain("lightweight UI/UX pre-design");
+        runner.Commands[0].StandardInput.Should().Contain("Lightweight GDD section writer");
+        runner.Commands[0].StandardInput.Should().Contain("Do not invoke or load external skills");
+        runner.Commands[0].StandardInput.Should().Contain("Do not scan the repository");
+        runner.Commands[0].StandardInput.Should().Contain("Write a single JSON object");
+        runner.Commands[0].StandardInput.Should().NotContain("$bmad-agent-game-designer");
+        runner.Commands[0].StandardInput.Should().NotContain("BMAD");
         runner.Commands[0].StandardInput.Should().Contain("raw JSON draft file must be ASCII-only");
         runner.Commands[0].StandardInput.Should().Contain("json.dumps(..., ensure_ascii=True, indent=2)");
         runner.Commands[0].StandardInput.Should().Contain("Do not use PowerShell Set-Content");
@@ -809,10 +883,13 @@ public sealed class GameDesignDocumentServiceTests
         outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content == "Already done.");
         File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
         Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
+        var artifacts = await store.ListArtifactsForRunAsync(result.RunId!);
+        artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-section-draft" && item.RelativePath.EndsWith("gdd-section.generated.json", StringComparison.Ordinal));
+        artifacts.Should().NotContain(item => item.ArtifactType == "game-design-gdd-outline-draft");
     }
 
     [Fact]
-    public async Task CompleteMissingSectionsAsync_WhenThreeOrMoreMissing_ShouldUseSingleBatchCodexRun()
+    public async Task CompleteMissingSectionsAsync_WhenThreeOrMoreMissing_ShouldRunSectionsSequentiallyForProgress()
     {
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
@@ -852,35 +929,132 @@ public sealed class GameDesignDocumentServiceTests
 
         result.Status.Should().Be("queued");
         result.RequestedCount.Should().Be(3);
-        GameDesignOutlineReadResult? outline = null;
-        for (var attempt = 0; attempt < 30; attempt++)
-        {
-            outline = await service.ReadOutlineAsync(accountId, projectId);
-            if (outline!.Sections.Any(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal)) &&
-                File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")) &&
-                Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Length > 0)
-            {
-                break;
-            }
+        var finishedRun = await WaitForRunFinishedAsync(store, result.RunId!);
+        finishedRun.Status.Should().Be("succeeded");
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
 
-            await Task.Delay(100);
-        }
-
-        runner.Commands.Should().ContainSingle();
-        var prompt = runner.Commands[0].StandardInput;
-        prompt.Should().Contain("This run fills multiple planning outline sections");
-        prompt.Should().Contain("Fill all listed missing sections in this single run");
-        prompt.Should().Contain("- Section id: m1");
-        prompt.Should().Contain("- Section id: m2");
-        prompt.Should().Contain("- Section id: m3");
-        prompt.Should().Contain("exactly one authoritative milestone list");
-        prompt.Should().Contain("instead of adding a second simplified summary");
-        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated batch content for m1", StringComparison.Ordinal));
-        outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content.Contains("Generated batch content for m2", StringComparison.Ordinal));
-        outline.Sections.Should().Contain(item => item.Id == "m3" && item.Content.Contains("Generated batch content for m3", StringComparison.Ordinal));
+        runner.Commands.Should().HaveCount(3);
+        runner.Commands.Select(command => command.StandardInput).Should().OnlyContain(prompt => prompt.Contains("This run fills exactly one planning outline section", StringComparison.Ordinal));
+        runner.Commands.Select(command => command.StandardInput).Should().OnlyContain(prompt => prompt.Contains("Write a single JSON object", StringComparison.Ordinal));
+        runner.Commands.Select(command => command.StandardInput).Should().OnlyContain(prompt => !prompt.Contains("$bmad-agent-game-designer", StringComparison.Ordinal));
+        runner.Commands.Select(command => command.StandardInput).Should().OnlyContain(prompt => !prompt.Contains("BMAD", StringComparison.OrdinalIgnoreCase));
+        runner.Commands[0].StandardInput.Should().Contain("- Section id: m1");
+        runner.Commands[1].StandardInput.Should().Contain("- Section id: m2");
+        runner.Commands[2].StandardInput.Should().Contain("- Section id: m3");
+        runner.Commands[0].StandardInput.Should().Contain("exactly one authoritative milestone list");
+        runner.Commands[0].StandardInput.Should().Contain("instead of adding a second simplified summary");
+        finishedRun.ProgressLabel.Should().Be("\u7b56\u5212\u5927\u7eb2\u5df2\u6279\u91cf\u8865\u5168\u3002");
+        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m2" && item.Content.Contains("Generated content for m2", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m3" && item.Content.Contains("Generated content for m3", StringComparison.Ordinal));
         outline.Sections.Should().Contain(item => item.Id == "m4" && item.Content == "Already done.");
         File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
         Directory.GetFiles(Path.Combine(project.RepoPath, "docs"), "m1-*-spec.md").Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task CompleteMissingSectionsAsync_ShouldContinueAfterSectionFailure()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                { "id": "m1", "title": "M1", "skeleton": "First step.", "content": "" },
+                { "id": "m2", "title": "M2", "skeleton": "Second step.", "content": "" },
+                { "id": "m3", "title": "M3", "skeleton": "Third step.", "content": "" }
+              ]
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        runner.NonZeroExitSectionIds.Add("m2");
+        runner.SkipDraftSectionIds.Add("m2");
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CompleteMissingSectionsAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineCompleteAllRequest(null, "gpt-5.4"));
+
+        var finishedRun = await WaitForRunFinishedAsync(store, result.RunId!);
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        finishedRun.EvidenceJson.Should().NotBeNull();
+        using var evidence = JsonDocument.Parse(finishedRun.EvidenceJson!);
+        var root = evidence.RootElement;
+
+        runner.Commands.Should().HaveCount(3);
+        finishedRun.Status.Should().Be("failed");
+        finishedRun.ProgressSubstep.Should().Be("partial_failed");
+        finishedRun.ProgressLabel.Should().Be("\u7b56\u5212\u5927\u7eb2\u90e8\u5206\u6761\u76ee\u8865\u5168\u5931\u8d25\u3002");
+        root.GetProperty("requested_count").GetInt32().Should().Be(3);
+        root.GetProperty("completed_count").GetInt32().Should().Be(2);
+        root.GetProperty("sections").GetArrayLength().Should().Be(3);
+        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal));
+        outline.Sections.Should().Contain(item => item.Id == "m2" && string.IsNullOrWhiteSpace(item.Content));
+        outline.Sections.Should().Contain(item => item.Id == "m3" && item.Content.Contains("Generated content for m3", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CompleteMissingSectionsAsync_ShouldAcceptGeneratedSectionWithUtf8Bom()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        var outlinePath = Path.Combine(gddDir, "gdd-outline.json");
+        await File.WriteAllTextAsync(outlinePath, """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                { "id": "m1", "title": "M1", "skeleton": "First step.", "content": "" }
+              ]
+            }
+            """);
+        var runner = new FakeHostedProcessRunner();
+        runner.WriteBomSectionIds.Add("m1");
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CompleteMissingSectionsAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineCompleteAllRequest(null, "gpt-5.4"));
+
+        var finishedRun = await WaitForRunFinishedAsync(store, result.RunId!);
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        var outlineBytes = await File.ReadAllBytesAsync(outlinePath);
+
+        finishedRun.Status.Should().Be("succeeded");
+        outline!.Sections.Should().Contain(item => item.Id == "m1" && item.Content.Contains("Generated content for m1", StringComparison.Ordinal));
+        outlineBytes.Take(3).Should().NotEqual([0xEF, 0xBB, 0xBF]);
     }
 
     [Fact]
@@ -988,12 +1162,73 @@ public sealed class GameDesignDocumentServiceTests
         summarySection.Content.Should().NotContain("M1 Short summary: duplicate list.");
         summarySection.Content.Should().NotContain("M2 Short summary: duplicate list.");
         summarySection.Content.Should().Contain("Keep this non-milestone note.");
+        var rawOutline = await File.ReadAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"));
+        rawOutline.Should().NotContain("M1 Short summary: duplicate list.");
+        rawOutline.Should().NotContain("M2 Short summary: duplicate list.");
         var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
         markdown.Should().Contain("M1 First playable room: create controls and first combat room.");
         markdown.Should().Contain("M2 Wave loop: add enemy waves and rewards.");
         markdown.Should().NotContain("M1 Short summary: duplicate list.");
         markdown.Should().NotContain("M2 Short summary: duplicate list.");
         markdown.Should().Contain("Keep this non-milestone note.");
+    }
+
+    [Fact]
+    public async Task SaveSectionAsync_ShouldPreserveDisjointSupplementalMilestoneLists()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                {
+                  "id": "milestones",
+                  "title": "Milestones",
+                  "skeleton": "Authoritative list.",
+                  "content": "M1 First playable room: create controls and first combat room.\nM2 Wave loop: add enemy waves and rewards."
+                },
+                {
+                  "id": "supplement",
+                  "title": "Supplement",
+                  "skeleton": "Additional modules.",
+                  "content": "M3 Boss summary: add boss and run summary.\nM4 Polish package: package and tune the prototype."
+                }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.SaveSectionAsync(
+            accountId,
+            projectId,
+            new GameDesignOutlineSectionSaveRequest(
+                "supplement",
+                "Additional modules.",
+                "M3 Boss summary: add boss and run summary.\nM4 Polish package: package and tune the prototype."));
+
+        result!.Status.Should().Be("succeeded");
+        var outline = await service.ReadOutlineAsync(accountId, projectId);
+        outline!.Sections.Single(section => section.Id == "milestones").Content.Should().Contain("M1 First playable room");
+        outline.Sections.Single(section => section.Id == "supplement").Content.Should().Contain("M3 Boss summary");
+        var markdown = await File.ReadAllTextAsync(Path.Combine(gddDir, "GDD.md"));
+        markdown.Should().Contain("M1 First playable room: create controls and first combat room.");
+        markdown.Should().Contain("M3 Boss summary: add boss and run summary.");
     }
 
     [Fact]
@@ -1052,6 +1287,54 @@ public sealed class GameDesignDocumentServiceTests
         milestones.Content.Should().Contain("M2 Wave loop");
     }
 
+    [Fact]
+    public async Task CompleteMissingSectionsAsync_ShouldWriteStructuredMilestoneSpecs()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId, "Phantom Tower");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """
+            {
+              "title": "Outline",
+              "summary": "Summary",
+              "sections": [
+                {
+                  "id": "milestones",
+                  "title": "实现里程碑",
+                  "skeleton": "Authoritative playable module list.",
+                  "content": "M1 首个可玩战斗房：目标：做出非空壳的第一间可玩地城房\nScope In：PrototypeRoot、第一战斗房、WASD 移动、鼠标朝向、左键连击、空格翻滚、基础敌人\nScope Out：随机地城、永久升级、完整美术\nGodot/C#切片：CharacterBody3D、CollisionShape3D、Area3D 命中、HudView\n验收标准：能进入场景、移动顺滑、翻滚可避险并能清掉第一波\n验证标准：包体或编辑器运行、碰撞层可视检查、键鼠冒烟。"
+                }
+              ]
+            }
+            """);
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            new FakeHostedProcessRunner(),
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var exportResult = await service.ExportOutlineMarkdownAsync(accountId, projectId);
+
+        exportResult.Should().NotBeNull();
+        var spec = await File.ReadAllTextAsync(Path.Combine(project.RepoPath, "docs", "m1-首个可玩战斗房-spec.md"));
+        spec.Should().Contain("## Goal\n\n做出非空壳的第一间可玩地城房");
+        spec.Should().Contain("## Scope In\n\nPrototypeRoot、第一战斗房、WASD 移动、鼠标朝向、左键连击、空格翻滚、基础敌人");
+        spec.Should().Contain("## Scope Out\n\n随机地城、永久升级、完整美术");
+        spec.Should().Contain("## Godot Slice\n\nCharacterBody3D、CollisionShape3D、Area3D 命中、HudView");
+        spec.Should().Contain("## Acceptance\n\n能进入场景、移动顺滑、翻滚可避险并能清掉第一波");
+        spec.Should().Contain("## Player Validation\n\n包体或编辑器运行、碰撞层可视检查、键鼠冒烟");
+        spec.Should().NotContain("只实现 M1 当前模块所需的可玩功能：M1 首个可玩战斗房");
+    }
+
     private static Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
         return CreateProjectAsync(store, options, accountId, "RPG");
@@ -1063,6 +1346,28 @@ public sealed class GameDesignDocumentServiceTests
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
+    }
+
+    private static async Task<RunSnapshot> WaitForRunFinishedAsync(
+        PhaseAMetadataStore store,
+        string runId,
+        int attempts = 120)
+    {
+        RunSnapshot? run = null;
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            run = await store.GetRunSnapshotAsync(runId);
+            if (run?.FinishedUtc is not null)
+            {
+                return run;
+            }
+
+            await Task.Delay(100);
+        }
+
+        run.Should().NotBeNull();
+        run!.FinishedUtc.Should().NotBeNull();
+        return run;
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
@@ -1125,17 +1430,31 @@ public sealed class GameDesignDocumentServiceTests
         public List<HostedProcessCommand> Commands { get; } = [];
         public int ExitCode { get; init; }
         public bool ShouldWriteOutline { get; init; } = true;
+        public int ModelCapacityFailuresBeforeSuccess { get; init; }
         public FakeOutlineMode OutlineMode { get; init; } = FakeOutlineMode.ValidDraft;
+        public HashSet<string> NonZeroExitSectionIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> SkipDraftSectionIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> WriteBomSectionIds { get; } = new(StringComparer.OrdinalIgnoreCase);
+        private int _runCount;
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            _runCount++;
+            if (ModelCapacityFailuresBeforeSuccess > 0 && _runCount <= ModelCapacityFailuresBeforeSuccess)
+            {
+                return Task.FromResult(new HostedProcessResult(1, "{\"type\":\"error\",\"message\":\"Selected model is at capacity. Please try a different model.\"}", ""));
+            }
+
             if (ShouldWriteOutline)
             {
+                var sectionId = ExtractSectionId(command.StandardInput ?? "");
                 var draftRelativePath = ExtractDraftRelativePath(command.StandardInput ?? "");
                 var outlinePath = Path.Combine(command.WorkingDirectory, draftRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(outlinePath)!);
-                File.WriteAllText(outlinePath, TryCreateBatchSectionsDraft(command.StandardInput ?? "") ?? TryCreateSectionDraft(command.StandardInput ?? "") ?? (OutlineMode switch
+                if (!SkipDraftSectionIds.Contains(sectionId))
+                {
+                    var content = TryCreateSectionDraft(command.StandardInput ?? "") ?? (OutlineMode switch
                 {
                     FakeOutlineMode.GarbledDraft => """
                         {
@@ -1225,20 +1544,32 @@ public sealed class GameDesignDocumentServiceTests
                           ]
                         }
                         """
-                }));
+                    });
+                    File.WriteAllText(
+                        outlinePath,
+                        content,
+                        WriteBomSectionIds.Contains(sectionId)
+                            ? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)
+                            : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                }
             }
 
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "GDD created.");
-            return Task.FromResult(new HostedProcessResult(ExitCode, "codex stdout", ExitCode == 0 ? "" : "codex failed"));
+            var currentSectionId = ExtractSectionId(command.StandardInput ?? "");
+            var exitCode = NonZeroExitSectionIds.Contains(currentSectionId) ? 1 : ExitCode;
+            return Task.FromResult(new HostedProcessResult(exitCode, "codex stdout", exitCode == 0 ? "" : "codex failed"));
         }
 
         private static string? TryCreateSectionDraft(string prompt)
         {
             var marker = "- Section id: ";
             var idIndex = prompt.IndexOf(marker, StringComparison.Ordinal);
-            if (!prompt.Contains("This run fills exactly one planning outline section", StringComparison.Ordinal) || idIndex < 0)
+            if (!prompt.Contains("This run fills exactly one planning outline section", StringComparison.Ordinal) ||
+                !prompt.Contains("Write a single JSON object", StringComparison.Ordinal) ||
+                prompt.Contains("$bmad-agent-game-designer", StringComparison.Ordinal) ||
+                idIndex < 0)
             {
                 return null;
             }
@@ -1248,48 +1579,26 @@ public sealed class GameDesignDocumentServiceTests
             var sectionId = (idEnd > idStart ? prompt[idStart..idEnd] : prompt[idStart..]).Trim();
             return $$"""
                 {
-                  "title": "Outline",
-                  "summary": "Summary",
-                  "sections": [
-                    { "id": "{{sectionId}}", "title": "{{sectionId}}", "skeleton": "Skeleton", "content": "Generated content for {{sectionId}}" }
-                  ]
+                  "id": "{{sectionId}}",
+                  "title": "{{sectionId}}",
+                  "skeleton": "Skeleton",
+                  "content": "Generated content for {{sectionId}}"
                 }
                 """;
         }
 
-        private static string? TryCreateBatchSectionsDraft(string prompt)
+        private static string ExtractSectionId(string prompt)
         {
-            if (!prompt.Contains("This run fills multiple planning outline sections", StringComparison.Ordinal))
+            var marker = "- Section id: ";
+            var idIndex = prompt.IndexOf(marker, StringComparison.Ordinal);
+            if (idIndex < 0)
             {
-                return null;
+                return "";
             }
 
-            var ids = prompt
-                .Split(["\r\n", "\n"], StringSplitOptions.None)
-                .Select(line => line.Trim())
-                .Where(line => line.StartsWith("- Section id: ", StringComparison.Ordinal))
-                .Select(line => line["- Section id: ".Length..].Trim())
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-            if (ids.Length == 0)
-            {
-                return null;
-            }
-
-            var sections = string.Join(
-                ",\n",
-                ids.Select(id => $@"    {{ ""id"": ""{id}"", ""title"": ""{id}"", ""skeleton"": ""Skeleton"", ""content"": ""Generated batch content for {id}"" }}"));
-            return """
-                {
-                  "title": "Outline",
-                  "summary": "Summary",
-                  "sections": [
-                """ + sections + """
-
-                  ]
-                }
-                """;
+            var idStart = idIndex + marker.Length;
+            var idEnd = prompt.IndexOfAny(['\r', '\n'], idStart);
+            return (idEnd > idStart ? prompt[idStart..idEnd] : prompt[idStart..]).Trim();
         }
 
         private static string ExtractDraftRelativePath(string prompt)

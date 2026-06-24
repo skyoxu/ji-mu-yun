@@ -542,6 +542,8 @@ public sealed class PrototypeIterationGoalService
             - If this task is too large, complete only the core part and explicitly mark what remains.
             - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
 
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
             Project:
             - ProjectId: {project.ProjectId}
             - Name: {project.Name}
@@ -650,6 +652,8 @@ public sealed class PrototypeIterationGoalService
             - 完成后输出面向浏览器用户的简明结果，不要包含路径、命令、脚本名、日志名、环境变量。
             - 如果当前任务过大，只完成最核心的一部分，并明确指出仍未完成的点。
             - 面向浏览器用户的 SUMMARY/CHANGED/VERIFY/REMAINING 必须使用中文；只有 STATUS: completed|needs_fix 这类机器协议值保持英文。
+
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             项目：
             - ProjectId: {project.ProjectId}

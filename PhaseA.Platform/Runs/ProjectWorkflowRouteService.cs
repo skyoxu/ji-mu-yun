@@ -166,8 +166,8 @@ public sealed class ProjectWorkflowRouteService
         return
         [
             new("new-project", "游戏项目概述", "done", state.Project.Name),
-            new("create-prototype", "原型骨架创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
-            new("execute-or-repair", "骨架验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
+            new("create-prototype", "游戏场景创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
+            new("execute-or-repair", "场景验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
             new("iteration-plan", "创建游戏模块", state.IterationStatus, state.IterationEvidence),
             new("ui-optimization", "游戏界面优化", state.UiOptimizationStatus, state.UiOptimizationEvidence),
             new("prototype-acceptance", "原型项目验收", state.AcceptanceStatus, state.AcceptanceEvidence),
@@ -185,7 +185,7 @@ public sealed class ProjectWorkflowRouteService
 
         if (!state.HasPrototypeSkeleton)
         {
-            return Action("create-prototype", "运行原型骨架创建", "运行原型骨架创建", "create-prototype");
+            return Action("create-prototype", "运行游戏场景创建", "运行游戏场景创建", "create-prototype");
         }
 
         if (state.HasFailedAcceptance || state.HasRunnableRepairStep)
@@ -197,7 +197,7 @@ public sealed class ProjectWorkflowRouteService
 
         if (!state.SkeletonAcceptancePassed && state.RepairCompletedOrEmpty && !state.HasIterationPlan)
         {
-            return Action("prototype-acceptance", "骨架验收", "骨架验收", "execute-or-repair");
+            return Action("prototype-acceptance", "场景验收", "场景验收", "execute-or-repair");
         }
 
         if (!state.HasIterationPlan)
@@ -267,8 +267,8 @@ public sealed class ProjectWorkflowRouteService
         {
             $"项目：{project.Name}（{project.GameName}）",
             $"游戏类型：{project.GameTypeSource}",
-            $"原型骨架：{HumanStatus(state.PrototypeCreationStatus)}",
-            $"骨架/原型项目验收：{HumanStatus(state.AcceptanceStatus)}",
+            $"游戏场景：{HumanStatus(state.PrototypeCreationStatus)}",
+            $"场景/原型项目验收：{HumanStatus(state.AcceptanceStatus)}",
             $"游戏模块：{state.IterationEvidence}",
             $"项目包：{state.PackageEvidence}"
         };
@@ -290,11 +290,11 @@ public sealed class ProjectWorkflowRouteService
 
         return action.ActionId switch
         {
-            "create-prototype" => "建议先进行 2. 原型骨架创建。如果玩法设定还不清晰，可以先在聊天里使用高级策划模式梳理策划大纲；准备好后点击下方一次性按钮进入原型骨架创建。",
-            "create-repair-plan" => "当前骨架或验收存在失败记录，但还没有可执行修复任务。建议生成修复计划，把失败拆成小任务后逐项修复。",
-            "execute-repair-step" => "当前修复计划里仍有待执行或需要继续修复的任务。建议继续执行下一项修复；修复计划完成后再回到骨架验收。",
-            "prototype-acceptance" when action.UiTarget == "execute-or-repair" => "原型骨架已经创建，但当前没有可用的骨架验收通过状态。建议先做骨架验收，确认骨架可运行后再生成游戏模块。",
-            "create-iteration-plan" => "骨架验收已经通过，但当前还没有游戏模块。建议生成游戏模块，把最小可玩循环拆成可执行任务。",
+            "create-prototype" => "建议先进行 2. 游戏场景创建。如果玩法设定还不清晰，可以先在聊天里使用高级策划模式梳理策划大纲；准备好后点击下方一次性按钮进入游戏场景创建。",
+            "create-repair-plan" => "当前场景或验收存在失败记录，但还没有可执行修复任务。建议生成修复计划，把失败拆成小任务后逐项修复。",
+            "execute-repair-step" => "当前修复计划里仍有待执行或需要继续修复的任务。建议继续执行下一项修复；修复计划完成后再回到场景验收。",
+            "prototype-acceptance" when action.UiTarget == "execute-or-repair" => "游戏场景已经创建，但当前没有可用的场景验收通过状态。建议先做场景验收，确认场景可运行后再生成游戏模块。",
+            "create-iteration-plan" => "场景验收已经通过，但当前还没有游戏模块。建议生成游戏模块，把最小可玩循环拆成可执行任务。",
             "needs-fix-route" => "当前游戏模块中存在“需要修复”的任务。建议运行需要修复路由，只围绕当前失败任务修复，不推进后续任务。",
             "execute-iteration-goal" => "当前游戏模块还有待执行任务。建议继续执行下一任务，直到所有任务完成。",
             "ui-optimization" => "游戏模块已经完成。游戏界面优化是可选项，不会卡住后续流程；如果希望界面更贴近当前游戏类型模板，可以运行游戏界面优化。",
@@ -570,7 +570,7 @@ public sealed class ProjectWorkflowRouteService
                 usesGenericRoute,
                 stageId,
                 prototypeStepStatus,
-                hasPrototype ? "原型骨架已创建。" : progress.PrototypeCreationFailure ?? progress.Failure ?? progress.Label ?? "尚未创建原型骨架。",
+                hasPrototype ? "游戏场景已创建。" : progress.PrototypeCreationFailure ?? progress.Failure ?? progress.Label ?? "尚未创建游戏场景。",
                 repairStatus,
                 repairGoals.Count == 0 ? "尚未生成修复计划。" : $"修复计划 {repairGoals.Count} 个任务，待处理 {repairGoals.Count(goal => IsRunnable(goal.Status))} 个任务。",
                 iterationStatus,

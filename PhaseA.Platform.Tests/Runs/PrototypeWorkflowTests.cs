@@ -11,8 +11,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class PrototypeWorkflowTests
+public sealed class PrototypeWorkflowTests : IDisposable
 {
+    private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+
+    public void Dispose()
+    {
+        routeProfileOverride.Dispose();
+    }
+
     [Fact]
     public void MissingRequiredFields_TracksPrototypeLaneIntakeFields()
     {
@@ -913,7 +920,7 @@ public sealed class PrototypeWorkflowTests
 
         progress.Status.Should().Be("succeeded");
         progress.Step.Should().Be("succeeded");
-        progress.Label.Should().Be("原型骨架创建已完成。");
+        progress.Label.Should().Be("游戏场景创建已完成。");
         progress.CompletionSummary.Should().Contain("下一步建议");
         progress.DefaultScene.Should().Be("res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
         run!.Status.Should().Be("succeeded");
@@ -998,6 +1005,7 @@ public sealed class PrototypeWorkflowTests
         runner.Commands[5].Arguments.Should().Contain("--prewarm");
         run!.EvidenceJson.Should().Contain("\"validation_only\":true");
         run.EvidenceJson.Should().Contain("\"skeleton_validation_only\":true");
+        run.EvidenceJson.Should().Contain("\"dotnet_build\"");
         run.EvidenceJson.Should().Contain("\"rpg_gdunit_validation\"");
         run.EvidenceJson.Should().Contain("\"passed\":true");
         run.Status.Should().Be("succeeded");
@@ -1005,6 +1013,42 @@ public sealed class PrototypeWorkflowTests
         progress.RunId.Should().Be(result.RunId);
         progress.AcceptanceStatus.Should().BeNull();
         progress.AcceptanceRunId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ValidateSkeletonAsync_FailsWithDotnetBuildDiagnosticsBeforeSmoke()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            dotnetBuildExitCode: 1,
+            dotnetBuildStdoutOverride: "Game.Core/Prototypes/Towerdemo2PrototypeLoop.cs(385,34): error CS8506: No best type was found for the switch expression.");
+        var service = Service(store, options, runner);
+
+        _ = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        runner.Commands.Should().HaveCount(3);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        File.WriteAllText(Path.Combine(project!.RepoPath, "GodotGame.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>");
+
+        var result = await service.ValidateSkeletonAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.ExitCode.Should().Be(1);
+        result.Stderr.Should().Contain("CS8506");
+        run!.StderrText.Should().Contain("CS8506");
+        run.EvidenceJson.Should().Contain("\"dotnet_build\"");
+        run.EvidenceJson.Should().Contain("\"passed\":false");
+        runner.Commands.Should().HaveCount(4);
+        runner.Commands[3].FileName.Should().Be("dotnet");
+        runner.Commands[3].Arguments.Should().Contain("build");
+        runner.Commands[3].Arguments.Should().Contain(argument => argument.Contains("UseSharedCompilation=false", StringComparison.Ordinal));
+        runner.Commands[3].Arguments.Should().NotContain(argument => argument.Contains("BaseIntermediateOutputPath", StringComparison.Ordinal));
+        runner.Commands.Skip(4).SelectMany(command => command.Arguments).Should().NotContain("scripts/python/smoke_headless.py");
     }
 
     [Fact]
@@ -1972,6 +2016,9 @@ public sealed class PrototypeWorkflowTests
         private readonly int _workflowExitCode;
         private readonly string? _workflowStdoutOverride;
         private readonly string? _workflowStderrOverride;
+        private readonly int _dotnetBuildExitCode;
+        private readonly string? _dotnetBuildStdoutOverride;
+        private readonly string? _dotnetBuildStderrOverride;
 
         public FakeHostedProcessRunner(
             int completedThroughDay = 7,
@@ -1991,7 +2038,10 @@ public sealed class PrototypeWorkflowTests
             string? gdUnitStderrOverride = null,
             int workflowExitCode = 0,
             string? workflowStdoutOverride = null,
-            string? workflowStderrOverride = null)
+            string? workflowStderrOverride = null,
+            int dotnetBuildExitCode = 0,
+            string? dotnetBuildStdoutOverride = null,
+            string? dotnetBuildStderrOverride = null)
         {
             _completedThroughDay = completedThroughDay;
             _writeActiveState = writeActiveState;
@@ -2011,6 +2061,9 @@ public sealed class PrototypeWorkflowTests
             _workflowExitCode = workflowExitCode;
             _workflowStdoutOverride = workflowStdoutOverride;
             _workflowStderrOverride = workflowStderrOverride;
+            _dotnetBuildExitCode = dotnetBuildExitCode;
+            _dotnetBuildStdoutOverride = dotnetBuildStdoutOverride;
+            _dotnetBuildStderrOverride = dotnetBuildStderrOverride;
         }
 
         public List<HostedProcessCommand> Commands { get; } = [];
@@ -2018,6 +2071,15 @@ public sealed class PrototypeWorkflowTests
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (string.Equals(command.FileName, "dotnet", StringComparison.OrdinalIgnoreCase) &&
+                command.Arguments.Contains("build"))
+            {
+                return Task.FromResult(new HostedProcessResult(
+                    _dotnetBuildExitCode,
+                    _dotnetBuildStdoutOverride ?? (_dotnetBuildExitCode == 0 ? "Build succeeded.\n" : ""),
+                    _dotnetBuildStderrOverride ?? (_dotnetBuildExitCode == 0 ? "" : "Build failed.\n")));
+            }
+
             if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(

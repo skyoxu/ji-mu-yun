@@ -10,8 +10,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class PrototypeRepairPlanServiceTests
+public sealed class PrototypeRepairPlanServiceTests : IDisposable
 {
+    private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+
+    public void Dispose()
+    {
+        routeProfileOverride.Dispose();
+    }
+
     [Fact]
     public async Task CreateAsync_ShouldUseRpgSkillAndWriteRepairPlanState()
     {

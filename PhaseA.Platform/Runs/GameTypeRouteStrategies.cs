@@ -37,6 +37,10 @@ internal static class GameTypeRouteStrategies
     {
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(profile);
+        if (GameTypeRouteProfiles.UseGenericPrototypeRouteOnly)
+        {
+            return Default;
+        }
 
         if (string.Equals(profile.GameTypeId, "survivorslike", StringComparison.OrdinalIgnoreCase))
         {

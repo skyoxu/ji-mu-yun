@@ -23,7 +23,7 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         result!.NextAction.ActionId.Should().Be("create-prototype");
         result.StageId.Should().Be("create-prototype");
-        result.Recommendation.Should().Contain("建议先进行 2. 原型骨架创建");
+        result.Recommendation.Should().Contain("建议先进行 2. 游戏场景创建");
         result.Recommendation.Should().Contain("高级策划模式");
     }
 
@@ -36,7 +36,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
         result!.NextAction.ActionId.Should().Be("create-iteration-plan");
-        result.Recommendation.Should().Contain("骨架验收已经通过");
+        result.Recommendation.Should().Contain("场景验收已经通过");
         result.Recommendation.Should().Contain("生成游戏模块");
     }
 
@@ -144,18 +144,14 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "download-project",
-            "ui-optimization",
-            "asset-inventory",
             "create-next-iteration-plan");
-        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行游戏界面优化");
-        result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
         result.Recommendation.Should().Contain("下载压缩包");
-        result.Recommendation.Should().Contain("游戏界面优化");
-        result.Recommendation.Should().Contain("项目素材库");
+        result.Recommendation.Should().NotContain("游戏界面优化");
+        result.Recommendation.Should().NotContain("项目素材库");
     }
 
     [Fact]
-    public async Task QueryAsync_WhenPackageExistsForDragonQuestLikeRoute_RecommendsSpecializedUiAndAssets()
+    public async Task QueryAsync_WhenPackageExistsForDragonQuestLikeRoute_UsesGenericActions()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
         await fixture.SeedPrototypeCreationAsync("succeeded");
@@ -170,17 +166,13 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "download-project",
-            "ui-optimization",
-            "asset-inventory",
             "create-next-iteration-plan");
-        result.Actions!.Single(action => action.ActionId == "ui-optimization").ButtonLabel.Should().Be("运行游戏界面优化");
-        result.Actions!.Single(action => action.ActionId == "asset-inventory").ButtonLabel.Should().Be("查看项目素材库");
-        result.Recommendation.Should().Contain("游戏界面优化");
-        result.Recommendation.Should().Contain("项目素材库");
+        result.Recommendation.Should().NotContain("游戏界面优化");
+        result.Recommendation.Should().NotContain("项目素材库");
     }
 
     [Fact]
-    public async Task QueryAsync_WhenPackageExistsAndUiOptimizationAlreadySucceeded_HidesUiOptimizationAction()
+    public async Task QueryAsync_WhenPackageExistsAndUiOptimizationAlreadySucceeded_UsesGenericActions()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
         await fixture.SeedPrototypeCreationAsync("succeeded");
@@ -196,11 +188,10 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "download-project",
-            "asset-inventory",
             "create-next-iteration-plan");
         result.Actions!.Should().NotContain(action => action.ActionId == "ui-optimization");
-        result.Recommendation.Should().Contain("游戏界面优化也已完成");
-        result.Recommendation.Should().Contain("项目素材库");
+        result.Recommendation.Should().NotContain("游戏界面优化");
+        result.Recommendation.Should().NotContain("项目素材库");
     }
 
     [Fact]
@@ -240,9 +231,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "create-next-iteration-plan",
-            "download-project",
-            "ui-optimization",
-            "asset-inventory");
+            "download-project");
         result.Recommendation.Should().Contain("试玩反馈创建新一轮游戏模块");
     }
 
@@ -263,8 +252,7 @@ public sealed class ProjectWorkflowRouteServiceTests
         result.Actions.Should().NotBeNull();
         result.Actions!.Select(action => action.ActionId).Should().Equal(
             "create-next-iteration-plan",
-            "download-project",
-            "asset-inventory");
+            "download-project");
         result.Actions!.Should().NotContain(action => action.ActionId == "ui-optimization");
     }
 

@@ -168,6 +168,8 @@ public sealed record DemoPrototypeState;
         codexCommand.StandardInput.Should().Contain("Use EventBus only for true cross-route/global notifications");
         codexCommand.StandardInput.Should().Contain("Every movement increases encounter probability by 10% and encounter must happen within 10 steps.");
         codexCommand.StandardInput.Should().Contain("First enemy has 30 HP and 5 ATK.");
+        codexCommand.StandardInput.Should().Contain("Combat pressure interpretation guard");
+        codexCommand.StandardInput.Should().Contain("Do not implement hidden damage-over-time");
         var godotBuildCommand = runner.Commands.Single(command =>
             command.FileName == "dotnet" &&
             command.Arguments.Contains("build") &&

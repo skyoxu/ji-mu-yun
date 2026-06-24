@@ -11,8 +11,15 @@ using System.Text.Json;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class PrototypeQuickFixServiceTests
+public sealed class PrototypeQuickFixServiceTests : IDisposable
 {
+    private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+
+    public void Dispose()
+    {
+        routeProfileOverride.Dispose();
+    }
+
     [Fact]
     public void GoalRepairCompletionEvidence_ShouldAcceptStrongStructuredVerification()
     {
@@ -805,6 +812,46 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldContinueToCodex_WhenPreflightGodotSmokeSceneIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair missing smoke scene validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot smoke scene missing.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new QuickFixMissingSmokeSceneHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current missing Godot smoke scene.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "exec", StringComparison.Ordinal)));
+        runner.Commands.Should().NotContain(command => HasScriptArgument(command, "smoke_headless.py"));
+        var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
+        codexCommand.StandardInput.Should().Contain("Latest Godot smoke validation failed after platform static acceptance");
+        codexCommand.StandardInput.Should().Contain("prototype_smoke_scene_missing");
+        run!.EvidenceJson.Should().NotContain("\"preflight\":true");
+        run.EvidenceJson.Should().Contain("prototype_smoke_scene_missing");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldContinueToCodex_WhenPreflightGodotSmokeTimesOut()
     {
         using var database = TempSqliteDatabase.Create();
@@ -890,6 +937,8 @@ namespace Xunit
         runner.LastPrompt.Should().Contain("TrackLayer");
         runner.LastPrompt.Should().Contain("MovePlayer");
         runner.LastPrompt.Should().Contain("player marker or character");
+        runner.LastPrompt.Should().Contain("Combat pressure interpretation guard");
+        runner.LastPrompt.Should().Contain("guaranteed counter damage after player attacks");
     }
 
     [Fact]
@@ -2970,6 +3019,31 @@ SUMMARY: Quick fix attempted.
 CHANGED: Updated prototype start routing.
 VERIFY: Re-run platform validation.
 REMAINING: none
+""");
+            return Task.FromResult(new HostedProcessResult(0, "quick fix stdout", ""));
+        }
+    }
+
+    private sealed class QuickFixMissingSmokeSceneHostedProcessRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: needs_fix
+SUMMARY: Missing smoke scene still needs repair.
+CHANGED: Recorded missing smoke scene context.
+VERIFY: Re-run Godot smoke after creating a playable scene path.
+REMAINING: Create or register the prototype smoke scene.
 """);
             return Task.FromResult(new HostedProcessResult(0, "quick fix stdout", ""));
         }

@@ -70,7 +70,7 @@ public sealed class PrototypeNeedsFixRouteService
             : "";
         if (string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState) && string.IsNullOrWhiteSpace(prototypeState))
         {
-            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的原型骨架创建产物。请先运行原型骨架创建，再使用需要修复路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
+            return new PrototypeNeedsFixRouteResult("", "prototype_required", "当前项目缺少可恢复的游戏场景创建产物。请先运行游戏场景创建，再使用需要修复路由。", goal.GoalIndex, details.Session.Status, goal.Status, []);
         }
 
         var repairLedger = string.IsNullOrWhiteSpace(stepState) && !string.IsNullOrWhiteSpace(rawStepState)
@@ -560,6 +560,8 @@ public sealed class PrototypeNeedsFixRouteService
             如果验收仍报告 core_tests_failed 或缺少测试框架引用，在修复托管文件前不要输出 STATUS: completed。
             面向浏览器用户的输出必须使用简体中文。只有 STATUS: completed|needs_fix 这类机器协议值保持英文。
 
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             """;
     }
@@ -603,6 +605,8 @@ public sealed class PrototypeNeedsFixRouteService
             - Name: {project.Name}
             - GameName: {project.GameName}
             - GameType: {project.GameTypeSource}
+
+            {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             User reported issue:
             {userFeedback}

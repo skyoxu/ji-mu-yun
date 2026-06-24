@@ -597,6 +597,32 @@ app.MapPost("/api/projects/{projectId}/gdd/outline/sections/complete-missing", a
     }
 });
 
+app.MapPost("/api/projects/{projectId}/gdd/outline/sections/add", async (
+    string projectId,
+    GameDesignOutlineAddSectionRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await gdd.AddSectionAsync(
+            CurrentAccountId(context),
+            projectId,
+            request,
+            cancellationToken);
+        return result.Status == "succeeded" ? Results.Ok(result) : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
 app.MapPost("/api/projects/{projectId}/gdd/outline/sections/{sectionId}", async (
     string projectId,
     string sectionId,

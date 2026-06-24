@@ -43,6 +43,8 @@ This file is the top-level navigation for project docs.
 - Upgrade guide: `docs/workflows/business-repo-upgrade-guide.md`
 - Template upgrade protocol: `docs/workflows/template-upgrade-protocol.md`
 - Cloud platform evolution plan: `docs/workflows/cloud-platform-evolution-plan.md` (Phase A hosted runner boundary, Phase B workspace/ACL isolation, Phase C scale-out/strong isolation)
+- Phase B AGF/godogen absorption: `docs/workflows/phase-b-agf-godogen-absorption.md` (machine-closed readiness, prototype routes, route ledger, redacted evidence, asset readback, diagnostics, and toolchain probes; excludes human-only acceptance)
+- Phase C hardening and agent asset governance: `docs/workflows/phase-c-platform-hardening-and-agent-asset-governance.md` (deferred Phase A/B closure, ECC absorption, conflict resolution)
 - Project health dashboard: `docs/workflows/project-health-dashboard.md`
 - Local hard checks: `docs/workflows/local-hard-checks.md`
 - Stable entrypoint index: `docs/workflows/stable-public-entrypoints.md`

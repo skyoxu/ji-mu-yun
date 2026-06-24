@@ -13,8 +13,10 @@
 - 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。
 
 最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。
+`docs/workflows/phase-b-agf-godogen-absorption.md` ??? Phase B ?????????? Phase B ???????
 
 - `docs/workflows/phase-b-account-isolation.md`
+- `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `docs/workflows/cloud-platform-evolution-plan.cn.md`
 - `docs/workflows/phase-a-security-hardening-plan.cn.md`
 - `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md`
@@ -248,6 +250,7 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 ### 云端平台
 
 - `docs/workflows/phase-b-account-isolation.md`
+- `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `docs/workflows/cloud-platform-evolution-plan.cn.md`
 - `docs/workflows/cloud-user-telemetry-and-feedback-plan.cn.md`
 - `docs/workflows/phase-a-security-hardening-plan.cn.md`

@@ -78,6 +78,7 @@ Use this after Chapter 6 has closed the current completed backlog slice and you 
   - [../PROJECT_DOCUMENTATION_INDEX.md](../PROJECT_DOCUMENTATION_INDEX.md)
 - Hosted Phase A platform, runtime boundary, and cloud evolution:
   - [../workflows/cloud-platform-evolution-plan.md](../workflows/cloud-platform-evolution-plan.md)
+  - [../workflows/phase-c-platform-hardening-and-agent-asset-governance.md](../workflows/phase-c-platform-hardening-and-agent-asset-governance.md)
   - [../workflows/cloud-platform-evolution-plan.cn.md](../workflows/cloud-platform-evolution-plan.cn.md)
 - Harness, recovery, and review handoff:
   - [13-rag-sources-and-session-ssot.md](13-rag-sources-and-session-ssot.md)

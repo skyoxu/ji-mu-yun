@@ -112,7 +112,7 @@ public sealed class ProjectPackageService
             return Failure(projectId, "project_busy");
         }
 
-        var gate = await ResolvePackageGateAsync(project.ProjectId, cancellationToken);
+        var gate = await ResolvePackageGateAsync(project, cancellationToken);
         if (!gate.CanCreate)
         {
             return Failure(projectId, gate.DisabledReason ?? "package_prerequisites_not_met");
@@ -249,7 +249,7 @@ public sealed class ProjectPackageService
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
         }
 
-        var gate = await ResolvePackageGateAsync(project.ProjectId, cancellationToken);
+        var gate = await ResolvePackageGateAsync(project, cancellationToken);
         var isBusy = project.BootstrapStatus == "running" ||
                       await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken) ||
                       await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken);
@@ -328,15 +328,102 @@ public sealed class ProjectPackageService
         return runs.Count(run => run.RunType == RunType && run.Status == "succeeded") + 1;
     }
 
-    private async Task<PackageGate> ResolvePackageGateAsync(string projectId, CancellationToken cancellationToken)
+    private async Task<PackageGate> ResolvePackageGateAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
-        var runs = await _metadataStore.ListRunsForProjectAsync(projectId, cancellationToken);
+        var m1Gate = await TryResolveM1PackageGateAsync(project, cancellationToken);
+        if (m1Gate is not null)
+        {
+            return m1Gate;
+        }
+
+        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
         if (!runs.Any(run => run.RunType == "prototype-7day-playable" && IsDone(run.Status)))
         {
             return new PackageGate(false, "prototype_not_created");
         }
 
         return new PackageGate(true, null);
+    }
+
+    private static async Task<PackageGate?> TryResolveM1PackageGateAsync(ProjectSnapshot project, CancellationToken cancellationToken)
+    {
+        var statePath = ResolveGddMilestoneStatePath(project);
+        if (statePath is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(statePath);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            if (!document.RootElement.TryGetProperty("steps", out var steps) ||
+                steps.ValueKind != JsonValueKind.Array)
+            {
+                return new PackageGate(false, "m1_not_completed");
+            }
+
+            JsonElement? firstStep = null;
+            foreach (var step in steps.EnumerateArray())
+            {
+                if (step.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                firstStep ??= step;
+                if (step.TryGetProperty("stepId", out var id) &&
+                    string.Equals(id.GetString(), "M1", StringComparison.OrdinalIgnoreCase))
+                {
+                    return IsM1PackageReady(step)
+                        ? new PackageGate(true, null)
+                        : new PackageGate(false, "m1_not_completed");
+                }
+            }
+
+            return firstStep is { } fallback && IsM1PackageReady(fallback)
+                ? new PackageGate(true, null)
+                : new PackageGate(false, "m1_not_completed");
+        }
+        catch (JsonException)
+        {
+            return new PackageGate(false, "m1_not_completed");
+        }
+        catch (IOException)
+        {
+            return new PackageGate(false, "m1_not_completed");
+        }
+    }
+
+    private static string? ResolveGddMilestoneStatePath(ProjectSnapshot project)
+    {
+        var metaPath = Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json");
+        if (File.Exists(metaPath))
+        {
+            return metaPath;
+        }
+
+        var repoMirrorPath = Path.Combine(project.RepoPath, "meta", "routes", "gdd-milestones", "latest.json");
+        return File.Exists(repoMirrorPath) ? repoMirrorPath : null;
+    }
+
+    private static bool IsM1PackageReady(JsonElement step)
+    {
+        if (step.TryGetProperty("confirmedUtc", out var confirmedUtc) &&
+            !string.IsNullOrWhiteSpace(confirmedUtc.GetString()))
+        {
+            return true;
+        }
+
+        var status = step.TryGetProperty("status", out var statusElement)
+            ? statusElement.GetString()
+            : null;
+        return status is not null && IsM1PackageReadyStatus(status);
+    }
+
+    private static bool IsM1PackageReadyStatus(string status)
+    {
+        return status.Trim().ToLowerInvariant() is "confirmed" or "executed" or "feedback_submitted" or "succeeded" or "completed";
     }
 
     private static bool IsDone(string? status)

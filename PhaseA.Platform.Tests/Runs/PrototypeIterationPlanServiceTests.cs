@@ -3209,7 +3209,7 @@ public sealed class PrototypeIterationPlanServiceTests
                     """
                     {
                       "requiresPrototypeRecreation": true,
-                      "reason": "游戏功能计划改动过大，需要新建项目重新创建游戏原型骨架。"
+                      "reason": "游戏功能计划改动过大，需要新建项目重新创建游戏游戏场景。"
                     }
                     """;
                 return Task.FromResult(new CodexChatClientResult(true, guard, null, 0, "", ""));

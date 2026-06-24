@@ -6,7 +6,9 @@ public sealed record GddMilestoneStepPlanResult(
     string Summary,
     IReadOnlyList<GddMilestoneStepResult> Steps,
     string? CurrentStepId = null,
-    string? FailureCode = null);
+    string? FailureCode = null,
+    bool OutlineComplete = true,
+    IReadOnlyList<string>? IncompleteOutlineSections = null);
 
 public sealed record GddMilestoneStepResult(
     string StepId,
@@ -27,7 +29,12 @@ public sealed record GddMilestoneStepResult(
     bool CanSubmitFeedback,
     string? ReviewSummary = null,
     string? SpecRelativePath = null,
-    string? LatestEvidenceRelativePath = null);
+    string? LatestEvidenceRelativePath = null,
+    string? ExecutionRunId = null,
+    string? ExecutionSummary = null,
+    string? FeedbackRunId = null,
+    string? FeedbackSummary = null,
+    string? ConfirmedUtc = null);
 
 public sealed record GddMilestoneStepConfirmRequest(
     string? Notes = null,

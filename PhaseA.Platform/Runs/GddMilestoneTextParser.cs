@@ -16,17 +16,26 @@ internal static class GddMilestoneTextParser
     {
         var lines = Regex.Split(gddText.Replace("\r\n", "\n"), "\n");
         var searchRanges = BuildSearchRanges(lines);
+        var collected = new List<GddMilestoneTextStep>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var range in searchRanges)
         {
             var candidates = ExtractCandidates(lines, range.Start, range.End);
             var steps = BuildSteps(lines, candidates);
-            if (steps.Count > 0)
+            foreach (var step in steps)
             {
-                return steps;
+                if (seen.Add(step.StepId))
+                {
+                    collected.Add(step);
+                }
             }
         }
 
-        return [];
+        return collected
+            .OrderBy(step => StepSortKey(step.StepId))
+            .ThenBy(step => step.StepIndex)
+            .Select((step, index) => step with { StepIndex = index + 1 })
+            .ToList();
     }
 
     internal static bool ContainsMilestoneGroup(string text)
@@ -143,15 +152,23 @@ internal static class GddMilestoneTextParser
             }
         }
 
-        var ranges = strongRanges.Count > 0 ? strongRanges : weakRanges;
-        ranges.Add((0, lines.Count));
-        return ranges;
+        if (strongRanges.Count > 0)
+        {
+            return strongRanges;
+        }
+
+        if (weakRanges.Count > 0)
+        {
+            return weakRanges;
+        }
+
+        return [(0, lines.Count)];
     }
 
     private static int MilestoneHeadingStrength(string value)
     {
         var text = value.Trim();
-        if (ContainsAny(text, "里程碑", "实现步骤", "实施步骤", "模块步骤", "开发步骤", "Milestone", "Step Plan", "Implementation Steps"))
+        if (ContainsAny(text, "里程碑", "实现步骤", "实施步骤", "模块步骤", "游戏模块", "开发模块", "开发步骤", "Milestone", "Module", "Modules", "Step Plan", "Implementation Steps"))
         {
             return 2;
         }

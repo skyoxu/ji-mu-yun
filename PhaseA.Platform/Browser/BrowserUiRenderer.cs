@@ -223,6 +223,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail #iterationPlanStatus { display: none !important; }
                 body.v2-detail .milestone-progress-shell { display: grid; gap: 0.65rem; }
                 body.v2-detail .milestone-progress-header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+                body.v2-detail .milestone-progress-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
+                body.v2-detail .milestone-progress-actions button { width: auto; }
                 body.v2-detail .milestone-progress-track { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.8rem, 1fr)); gap: 0.45rem; }
                 body.v2-detail .milestone-progress-button { min-height: 3.25rem; display: grid; grid-template-rows: auto auto; gap: 0.32rem; align-items: center; justify-items: center; border: 1px solid var(--line); border-radius: 0.55rem; background: #fffdf8; color: var(--ink); padding: 0.48rem; }
                 body.v2-detail .milestone-progress-button.active { outline: 2px solid var(--accent-2); border-color: var(--accent-2); }
@@ -234,6 +236,9 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .milestone-progress-button.locked .milestone-status-square { background: #a8afad; }
                 body.v2-detail .milestone-evidence-list { margin: 0.35rem 0 0; padding-left: 1.1rem; }
                 body.v2-detail .milestone-evidence-list li { margin: 0.15rem 0; }
+                body.v2-detail .milestone-result-panel { border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.65rem; margin: 0.65rem 0; background: #fffdf8; }
+                body.v2-detail .milestone-result-panel ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
+                body.v2-detail .milestone-result-panel li { margin: 0.2rem 0; }
                 body.v2-detail .milestone-detail-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
                 body.v2-detail .milestone-detail-nav button { width: auto; }
                 @media (max-width: 1000px) {
@@ -293,8 +298,8 @@ public sealed class BrowserUiRenderer
                 const PrototypeSkeletonRunNotes = __PROTOTYPE_SKELETON_RUN_NOTES__;
                 const v2Steps = [
                   ["new-project", "游戏项目概述", "panel"],
-                  ["create-prototype", "原型骨架创建", "spark"],
-                  ["execute-or-repair", "骨架验收修复", "wrench"],
+                  ["create-prototype", "游戏场景创建", "spark"],
+                  ["execute-or-repair", "场景验收修复", "wrench"],
                   ["iteration-plan", "完成游戏模块", "list"],
                   ["ui-optimization", "游戏界面优化", "layout"],
                   ["prototype-acceptance", "原型项目验收", "check"],
@@ -733,6 +738,7 @@ public sealed class BrowserUiRenderer
                   const failed = prototypeStatus === "failed" || progressStatus === "failed" || !!state?.prototypeFailure;
                   if (stepId === "new-project") return state.projectId ? "done" : "pending";
                   if (stepId === "create-prototype") {
+                    if (prototypeSkeletonM1Completed()) return "done";
                     const skeletonValidation = v2LatestSkeletonValidationRun();
                     const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
                     if (skeletonValidationStatus === "succeeded") return "done";
@@ -762,6 +768,7 @@ public sealed class BrowserUiRenderer
                     return "pending";
                   }
                   if (stepId === "execute-or-repair") {
+                    if (prototypeSkeletonM1Completed()) return "done";
                     const goals = state.repairPlan?.goals || [];
                     const skeletonValidation = v2LatestSkeletonValidationRun();
                     const skeletonValidationStatus = String(skeletonValidation?.status || "").trim().toLowerCase();
@@ -1107,13 +1114,13 @@ public sealed class BrowserUiRenderer
                 async function validatePrototypeSkeleton(autoTriggered = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  setLocalBusy(true, autoTriggered ? "骨架创建完成，正在自动执行骨架验收。" : "骨架验收中，请等待当前任务执行完毕。");
+                  setLocalBusy(true, autoTriggered ? "场景创建完成，正在自动执行场景验收。" : "场景验收中，请等待当前任务执行完毕。");
                   const skeletonButton = $("v2SkeletonAcceptance");
-                  if (skeletonButton) skeletonButton.textContent = autoTriggered ? "骨架验收中..." : "验收中...";
+                  if (skeletonButton) skeletonButton.textContent = autoTriggered ? "场景验收中..." : "验收中...";
                   if (autoTriggered) {
-                    showPrototypeNotice("原型骨架创建完成，正在自动执行一次骨架验收；该操作只验证骨架可运行，不等同于最终原型项目验收。", "info");
+                    showPrototypeNotice("游戏场景创建完成，正在自动执行一次场景验收；该操作只验证场景可运行，不等同于最终原型项目验收。", "info");
                   } else {
-                    showPrototypeNotice("正在执行骨架验收；该操作只验证骨架可运行，不要求游戏模块已完成。", "info");
+                    showPrototypeNotice("正在执行场景验收；该操作只验证场景可运行，不要求游戏模块已完成。", "info");
                   }
                   try {
                     const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate-skeleton`, { method: "POST" });
@@ -1121,7 +1128,7 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                     await loadPrototypeProgress();
                     if (result.status === "failed") {
-                      const label = result.progress?.label || result.stderr || "骨架验收失败，请查看运行记录并生成修复计划。";
+                      const label = result.progress?.label || result.stderr || "场景验收失败，请查看运行记录并生成修复计划。";
                       showPrototypeNotice(label, "warn");
                     }
                     return result;
@@ -1131,7 +1138,7 @@ public sealed class BrowserUiRenderer
                     return null;
                   } finally {
                     setLocalBusy(false);
-                    if (skeletonButton) skeletonButton.textContent = "骨架验收";
+                    if (skeletonButton) skeletonButton.textContent = "场景验收";
                     await refreshActiveRun();
                   }
                 }
@@ -1194,7 +1201,7 @@ public sealed class BrowserUiRenderer
                   skeletonAcceptance.id = "v2SkeletonAcceptance";
                   skeletonAcceptance.className = "secondary";
                   skeletonAcceptance.type = "button";
-                  skeletonAcceptance.textContent = "骨架验收";
+                  skeletonAcceptance.textContent = "场景验收";
                   skeletonAcceptance.onclick = v2ValidateSkeletonIfAllowed;
                   [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
                   ["repairPlanStatus", "repairPlanGoals"].map($).filter(Boolean).forEach(element => panel.appendChild(element));
@@ -1388,14 +1395,14 @@ public sealed class BrowserUiRenderer
                   $("prototypeWorkflowPanel")?.classList.toggle("v2-prototype-locked", locked);
                   prototypeInputIds.forEach(id => { if ($(id)) $(id).disabled = locked; });
                   setPrototypeDraftFileLocked(locked);
-                  if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "原型骨架已验收通过，不能重复创建。");
+                  if ($("importDraft")) setButtonDisabledState($("importDraft"), locked, "游戏场景已验收通过，不能重复创建。");
                   if (!locked && typeof resetPrototypeActionButtonsVisualState === "function") {
                     resetPrototypeActionButtonsVisualState();
                     updateDraftImportButtonState();
                   }
                   if ($("runPrototype")) {
-                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "原型骨架已验收通过，不能重复创建。" : "");
-                    $("runPrototype").textContent = locked ? "M1 原型骨架已完成" : "确认 GDD 无误，执行 M1 原型骨架";
+                    setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? "游戏场景已验收通过，不能重复创建。" : "");
+                    $("runPrototype").textContent = locked ? "M1 游戏场景已完成" : "确认 GDD 无误，执行 M1 游戏场景";
                   }
                   if (typeof updatePrototypeSkeletonPackageButton === "function") updatePrototypeSkeletonPackageButton();
                 }
@@ -2295,21 +2302,21 @@ public sealed class BrowserUiRenderer
                     <button id="createProjectPackage" class="secondary" data-global-action="true" disabled>打包项目文件</button>
                     <button id="openProjectDownloads" class="ghost" disabled>打开项目文件下载页</button>
                     <button id="loadAssetInventory" class="ghost" disabled>查看项目素材库</button>
-                    <div id="prototypeProgress" class="card muted">尚未开始原型骨架创建。</div>
+                    <div id="prototypeProgress" class="card muted">尚未开始游戏场景创建。</div>
                     <div id="prototypeAcceptanceSummary" class="card muted">原型完成后，这里会显示默认场景、验证摘要数量和建议试玩重点。</div>
                     <div id="projectHealthSummary" class="card muted">选择项目后显示项目健康摘要。</div>
                     <div id="projectPackageStatus" class="card muted">尚未生成项目压缩包。</div>
                     <div id="assetInventoryStatus" class="card muted">原型素材库会在项目可检查时显示。</div>
                   </section>
                   <section id="prototypeWorkflowPanel" class="stack">
-                    <h2>原型骨架创建</h2>
+                    <h2>游戏场景创建</h2>
                     <div id="prototypeGddStatus" class="card muted">正在读取当前项目 GDD。</div>
                     <div class="prototype-draft-row hidden">
                       <input id="draftFile" type="file" accept=".txt,text/plain" disabled>
                       <button id="importDraft" class="secondary import-draft-button" data-global-action="true" disabled></button>
                     </div>
                     <div id="draftImportStatus" class="card muted hidden"></div>
-                    <div id="prototypeM1SpecStatus" class="card muted">创建策划大纲后显示 M1 原型骨架目标。</div>
+                    <div id="prototypeM1SpecStatus" class="card muted">创建策划大纲后显示 M1 游戏场景目标。</div>
                     <div class="hidden">
                       <label>游戏原型ID <input id="protoSlug" placeholder="demo-prototype"></label>
                       <label>原型假设 <textarea id="hypothesis" placeholder="这个原型要验证什么？"></textarea></label>
@@ -2321,7 +2328,7 @@ public sealed class BrowserUiRenderer
                       <label>胜利/失败条件 <textarea id="winFailConditions" placeholder="如何判定玩家成功或失败"></textarea></label>
                     </div>
                     <div class="split-actions">
-                      <button id="runPrototype" class="secondary" data-global-action="true" disabled>确认 GDD 无误，执行 M1 原型骨架</button>
+                      <button id="runPrototype" class="secondary" data-global-action="true" disabled>确认 GDD 无误，执行 M1 游戏场景</button>
                       <button id="packagePrototypeSkeleton" class="ghost" data-global-action="true" disabled>打包下载项目</button>
                     </div>
                   </section>
@@ -2358,6 +2365,7 @@ public sealed class BrowserUiRenderer
                     <div id="gddMilestoneStepStatus" class="card muted">创建策划大纲后显示游戏模块。</div>
                     <div id="gddMilestoneStepActions" class="split-actions">
                       <button id="executeCurrentMilestoneStep" class="secondary" data-global-action="true" disabled>执行当前模块</button>
+                      <button id="quickRepairCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>快速修复</button>
                       <button id="confirmCurrentMilestoneStep" class="ghost" data-global-action="true" disabled>完成当前模块并激活下一模块</button>
                       <button id="submitCurrentMilestoneFeedback" class="ghost" data-global-action="true" disabled>提交反馈并修正模块</button>
                     </div>
@@ -3424,7 +3432,7 @@ public sealed class BrowserUiRenderer
                   if ($("uiOptimizationStatus")) $("uiOptimizationStatus").textContent = "游戏界面优化暂未开放。";
                   return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成原型骨架创建，再运行游戏界面优化。");
+                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成游戏场景创建，再运行游戏界面优化。");
                   const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                   if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
                     return out("请先完成游戏模块，再运行游戏界面优化。");
@@ -4752,7 +4760,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedback() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
+                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先运行并完成游戏场景创建，再提交正式反馈。自由对话仍可使用。");
                   const feedback = $("chatMessage").value.trim();
                   const goal = currentNeedsFixRouteGoal();
                   if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
@@ -4798,7 +4806,7 @@ public sealed class BrowserUiRenderer
                 async function submitFormalFeedbackText(feedback, busyText) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
-                  if (!state.prototypeReadyForFeedback) return out("请先运行并完成原型骨架创建，再提交正式反馈。自由对话仍可使用。");
+                  if (!state.prototypeReadyForFeedback) return out("请先运行并完成游戏场景创建，再提交正式反馈。自由对话仍可使用。");
                   setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
@@ -5718,6 +5726,9 @@ public sealed class BrowserUiRenderer
                     return `\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
                   }
                   const label = run.progressLabel || run.progressStep || run.status || "";
+                  if (String(run.runType || "").trim().toLowerCase() === "game-design-gdd-section-batch") {
+                    return label ? `\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a${label}` : "\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\u3002";
+                  }
                   return `当前任务执行中：${run.runType || "未知"} · ${publicStatusLabel(run.status || "running")} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
 
@@ -5743,7 +5754,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function prototypeSkeletonBannerLine1() {
-                  return "系统正在进行游戏原型骨架创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；";
+                  return "系统正在进行游戏场景创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；";
                 }
 
                 function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId) {
@@ -6045,7 +6056,7 @@ public sealed class BrowserUiRenderer
                 function prototypeSkeletonM1Completed() {
                   const m1 = firstGddMilestoneStep();
                   const status = String(m1?.status || "").trim().toLowerCase();
-                  return prototypeSkeletonLocked() || ["executed", "feedback_submitted", "confirmed"].includes(status);
+                  return prototypeSkeletonLocked() || !!m1?.confirmedUtc || ["executed", "feedback_submitted", "confirmed"].includes(status);
                 }
 
                 function updatePrototypeSkeletonPackageButton() {
@@ -6055,7 +6066,7 @@ public sealed class BrowserUiRenderer
                   setButtonDisabledState(
                     button,
                     !enabled,
-                    enabled ? "" : "M1 原型骨架完成后才可以在这里打包下载项目。");
+                    enabled ? "" : "M1 游戏场景完成后才可以在这里打包下载项目。");
                 }
 
                 function renderPrototypeM1SpecStatus() {
@@ -6064,21 +6075,21 @@ public sealed class BrowserUiRenderer
                   const m1 = firstGddMilestoneStep();
                   if (!state.projectId) {
                     panel.className = "card muted";
-                    panel.textContent = "选择项目后显示 M1 原型骨架目标。";
+                    panel.textContent = "选择项目后显示 M1 游戏场景目标。";
                     updatePrototypeSkeletonPackageButton();
                     return;
                   }
 
                   if (!m1) {
                     panel.className = "card muted";
-                    panel.textContent = "创建策划大纲后显示 M1 原型骨架目标。";
+                    panel.textContent = "创建策划大纲后显示 M1 游戏场景目标。";
                     updatePrototypeSkeletonPackageButton();
                     return;
                   }
 
                   panel.className = "card";
                   panel.innerHTML = `
-                    <strong>M1 原型骨架目标：${escapeHtml(m1.title || "首个可玩模块")}</strong>
+                    <strong>M1 游戏场景目标：${escapeHtml(m1.title || "首个可玩模块")}</strong>
                     <p>${escapeHtml(m1.description || "完成首个可进入、可操作、可验证的可玩模块。")}</p>
                     ${renderStepSpecLine("验收", m1.acceptance)}
                     ${renderStepSpecLine("完成后试玩验证", m1.packagingValidation)}
@@ -6154,11 +6165,11 @@ public sealed class BrowserUiRenderer
                     $("runPrototype").style.removeProperty("color");
                     $("runPrototype").style.removeProperty("box-shadow");
                     $("runPrototype").removeAttribute("title");
-                    $("runPrototype").textContent = skeletonLocked ? "M1 原型骨架已完成" : "确认 GDD 无误，执行 M1 原型骨架";
+                    $("runPrototype").textContent = skeletonLocked ? "M1 游戏场景已完成" : "确认 GDD 无误，执行 M1 游戏场景";
                     setButtonDisabledState(
                       $("runPrototype"),
                       skeletonLocked,
-                      skeletonLocked ? "原型骨架已验收通过，不能重复创建。" : "");
+                      skeletonLocked ? "游戏场景已验收通过，不能重复创建。" : "");
                   }
                   if ($("importDraft")) {
                     setButtonBaseClass($("importDraft"), "secondary import-draft-button");
@@ -6180,7 +6191,7 @@ public sealed class BrowserUiRenderer
                   if ($("draftFile")) $("draftFile").disabled = true;
                   resetPrototypeActionButtonsVisualState();
                   setButtonDisabledState($("runPrototype"), false);
-                  setButtonDisabledState($("importDraft"), true, "原型骨架创建只读取当前项目 GDD。");
+                  setButtonDisabledState($("importDraft"), true, "游戏场景创建只读取当前项目 GDD。");
                   if ($("repairPrototype")) $("repairPrototype").textContent = "生成修复计划";
                   setButtonDisabledState($("repairPrototype"), false);
                 }
@@ -6198,8 +6209,8 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     if (button.id === "runPrototype" && prototypeSkeletonLocked()) {
-                      setButtonDisabledState(button, true, "原型骨架已验收通过，不能重复创建。");
-                      button.textContent = "M1 原型骨架已完成";
+                      setButtonDisabledState(button, true, "游戏场景已验收通过，不能重复创建。");
+                      button.textContent = "M1 游戏场景已完成";
                       return;
                     }
                     if (button.id === "packagePrototypeSkeleton") {
@@ -6207,7 +6218,7 @@ public sealed class BrowserUiRenderer
                       return;
                     }
                     if (button.id === "importDraft" && prototypeSkeletonLocked()) {
-                      setButtonDisabledState(button, true, "原型骨架已验收通过，不能重新导入。");
+                      setButtonDisabledState(button, true, "游戏场景已验收通过，不能重新导入。");
                       return;
                     }
                     setButtonDisabledState(button, busy, message);
@@ -6506,17 +6517,27 @@ public sealed class BrowserUiRenderer
 
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd`);
+                    let modulePlan = state.gddMilestoneSteps;
+                    try {
+                      modulePlan = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/latest`);
+                      state.gddMilestoneSteps = modulePlan;
+                      v2RenderProgress();
+                      v2RenderLeftProjectList();
+                    } catch {}
+                    const outlineIncomplete = modulePlan?.outlineComplete === false;
+                    const incompleteSections = Array.isArray(modulePlan?.incompleteOutlineSections) ? modulePlan.incompleteOutlineSections : [];
                     $("prototypeGddStatus").className = "card";
                     $("prototypeGddStatus").innerHTML = `
                       <strong>已载入当前项目 GDD</strong>
                       <p class="muted">${escapeHtml(result.relativePath || "docs/gdd/GDD.md")} · ${escapeHtml(result.lastUpdatedUtc || "")} · ${escapeHtml(String(result.sizeBytes || 0))} bytes</p>
-                      <p class="muted">原型骨架将只根据当前 GDD 创建；如需补充设计，请先回到“创建策划大纲”更新 GDD。</p>
+                      <p class="muted">游戏场景将只根据当前 GDD 创建；如需补充设计，请先回到“创建策划大纲”更新 GDD。</p>
+                      ${outlineIncomplete ? `<p class="muted"><strong>当前策划大纲尚未补全：</strong>${escapeHtml(incompleteSections.slice(0, 5).join("、") || "存在未补全章节")}。补全后才能执行 M1 游戏场景。</p>` : ""}
                     `;
                     setButtonDisabledState(
                       $("runPrototype"),
-                      prototypeSkeletonLocked() || isGlobalBusy(),
-                      prototypeSkeletonLocked() ? "原型骨架已验收通过，不能重复创建。" : isGlobalBusy() ? "项目有后台任务正在执行。" : "");
-                    if (prototypeSkeletonLocked() && $("runPrototype")) $("runPrototype").textContent = "M1 原型骨架已完成";
+                      prototypeSkeletonLocked() || isGlobalBusy() || outlineIncomplete,
+                      prototypeSkeletonLocked() ? "游戏场景已验收通过，不能重复创建。" : isGlobalBusy() ? "项目有后台任务正在执行。" : outlineIncomplete ? "请先补全所有策划大纲章节。" : "");
+                    if (prototypeSkeletonLocked() && $("runPrototype")) $("runPrototype").textContent = "M1 游戏场景已完成";
                     renderPrototypeM1SpecStatus();
                     return true;
                   } catch (error) {
@@ -6551,6 +6572,8 @@ public sealed class BrowserUiRenderer
                   }
                   renderGddMilestoneSteps();
                   renderPrototypeM1SpecStatus();
+                  v2RenderProgress();
+                  v2RenderLeftProjectList();
                 }
 
                 async function loadGddMilestoneEvidence(plan) {
@@ -6592,16 +6615,24 @@ public sealed class BrowserUiRenderer
                   const completedCount = steps.filter(step => gddMilestoneVisualState(step, active) === "done").length;
                   const activeIndex = active ? Math.max(0, steps.findIndex(step => step.stepId === active.stepId)) : steps.length;
                   const selectedIndex = selected ? Math.max(0, steps.findIndex(step => step.stepId === selected.stepId)) : -1;
+                  const incompleteSections = Array.isArray(plan?.incompleteOutlineSections) ? plan.incompleteOutlineSections : [];
+                  const outlineWarning = plan?.outlineComplete === false
+                    ? `<p class="muted"><strong>当前策划大纲尚未补全：</strong>${escapeHtml(incompleteSections.slice(0, 5).join("、") || "存在未补全章节")}。补全后才能执行游戏模块和 M1 游戏场景。</p>`
+                    : "";
                   panel.innerHTML = `
                     <div class="milestone-progress-shell">
                       <div class="milestone-progress-header">
                         <strong>当前模块执行进度</strong>
-                        <span class="muted">共 ${escapeHtml(String(steps.length))} 个模块 · 完成 ${escapeHtml(String(completedCount))} 个 · 当前 ${escapeHtml(active ? `模块 ${activeIndex + 1}` : "全部完成")}</span>
+                        <div class="milestone-progress-actions">
+                          <span class="muted">共 ${escapeHtml(String(steps.length))} 个模块 · 完成 ${escapeHtml(String(completedCount))} 个 · 当前 ${escapeHtml(active ? `模块 ${activeIndex + 1}` : "全部完成")}</span>
+                          <button id="refreshGddMilestoneSteps" type="button" class="ghost" data-global-action="true">更新游戏模块内容</button>
+                        </div>
                       </div>
                       <div class="milestone-progress-track">
                         ${steps.map((step, index) => renderGddMilestoneProgressButton(step, index, selected, active)).join("")}
                       </div>
                     </div>
+                    ${outlineWarning}
                     ${selected ? renderGddMilestoneStepItem(selected, selectedIndex, active) : "<p class='muted'>所有模块已确认完成，可以创建新一轮游戏模块。</p>"}
                   `;
                   panel.querySelectorAll("[data-gdd-milestone-step-id]").forEach(button => {
@@ -6609,6 +6640,8 @@ public sealed class BrowserUiRenderer
                   });
                   panel.querySelector("[data-gdd-milestone-nav='previous']")?.addEventListener("click", () => selectGddMilestoneByOffset(-1));
                   panel.querySelector("[data-gdd-milestone-nav='next']")?.addEventListener("click", () => selectGddMilestoneByOffset(1));
+                  panel.querySelector("#refreshGddMilestoneSteps")?.addEventListener("click", refreshGddMilestoneSteps);
+                  applyGddMilestoneActionState(selected, active);
                 }
 
                 function activeGddMilestoneStep(steps, plan) {
@@ -6680,12 +6713,42 @@ public sealed class BrowserUiRenderer
                       ${renderStepSpecLine("反馈改进", step.feedbackGuidance)}
                       ${renderStepSpecLine("下一模块调整检查", step.nextStepReview)}
                       ${step.reviewSummary ? `<p class="muted">解锁前检查：${escapeHtml(step.reviewSummary)}</p>` : ""}
+                      ${renderGddMilestoneResultPanel(step)}
                       ${renderGddMilestoneEvidence(step)}
                       <div class="milestone-detail-nav">
                         <button type="button" class="ghost" data-gdd-milestone-nav="previous" ${index <= 0 ? "disabled" : ""}>上一个模块</button>
                         <span class="muted">${isActive ? "当前激活模块" : "非激活模块，仅可查看"}</span>
                         <button type="button" class="ghost" data-gdd-milestone-nav="next" ${index >= steps.length - 1 ? "disabled" : ""}>下一个模块</button>
                       </div>
+                    </div>
+                  `;
+                }
+
+                function renderGddMilestoneResultPanel(step) {
+                  const executionRun = String(step?.executionRunId || "").trim();
+                  const feedbackRun = String(step?.feedbackRunId || "").trim();
+                  const executionSummary = sanitizePublicFailureContent(step?.executionSummary || "");
+                  const feedbackSummary = sanitizePublicFailureContent(step?.feedbackSummary || "");
+                  const latestRun = feedbackRun || executionRun;
+                  const latestSummary = feedbackSummary || executionSummary;
+                  const status = gddMilestoneStatusLabel(step?.status || "ready", false);
+                  const latestEvidence = String(step?.latestEvidenceRelativePath || "").trim();
+                  const rows = [
+                    ["模块状态", status],
+                    ["最近 run", latestRun || "尚未执行"],
+                    ["最近结果", latestSummary || "暂无执行结果摘要"],
+                    ["执行 run", executionRun || "尚未执行"],
+                    ["执行结果", executionSummary || "暂无执行结果摘要"],
+                    ["反馈修复 run", feedbackRun || "尚未提交反馈修复"],
+                    ["反馈修复结果", feedbackSummary || "暂无反馈修复结果摘要"],
+                    ["自动验收证据", latestEvidence || "尚未生成"]
+                  ];
+                  return `
+                    <div class="milestone-result-panel">
+                      <strong>模块执行结果</strong>
+                      <ul>
+                        ${rows.map(([label, value]) => `<li><strong>${escapeHtml(label)}：</strong>${escapeHtml(value)}</li>`).join("")}
+                      </ul>
                     </div>
                   `;
                 }
@@ -6730,9 +6793,16 @@ public sealed class BrowserUiRenderer
 
                 function applyGddMilestoneActionState(selected, active) {
                   const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
+                  setButtonDisabledState($("refreshGddMilestoneSteps"), !state.projectId || isGlobalBusy(), "选择项目后可以更新游戏模块内容。");
                   setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
+                  setButtonDisabledState($("quickRepairCurrentMilestoneStep"), !(canUse && canQuickRepairGddMilestoneStep(selected)), selected ? "只有当前激活模块存在失败执行结果时可以快速修复。" : "没有可快速修复的当前模块。");
                   setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");
                   setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && selected.canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
+                }
+
+                function canQuickRepairGddMilestoneStep(step) {
+                  const status = String(step?.status || "").trim().toLowerCase();
+                  return !!step?.canSubmitFeedback && ["needs_fix", "execution_failed", "feedback_failed", "timed_out"].includes(status);
                 }
 
                 function renderStepSpecLine(label, value) {
@@ -6763,6 +6833,65 @@ public sealed class BrowserUiRenderer
                       await loadIterationPlan();
                     }
                     await loadGddMilestoneSteps();
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    setLocalBusy(false);
+                    await refreshActiveRun();
+                  }
+                }
+
+                async function refreshGddMilestoneSteps() {
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  $("refreshGddMilestoneSteps").disabled = true;
+                  $("refreshGddMilestoneSteps").textContent = "刷新中...";
+                  try {
+                    await loadGddMilestoneSteps();
+                    out("游戏模块内容已更新。");
+                  } catch (error) {
+                    showError(error);
+                  } finally {
+                    if ($("refreshGddMilestoneSteps")) $("refreshGddMilestoneSteps").textContent = "更新游戏模块内容";
+                    applyGddMilestoneActionState(selectedGddMilestoneStep(Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [], activeGddMilestoneStep(Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [], state.gddMilestoneSteps)), activeGddMilestoneStep(Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [], state.gddMilestoneSteps));
+                  }
+                }
+
+                function buildQuickRepairFeedbackForMilestoneStep(step) {
+                  const executionSummary = String(step?.executionSummary || "").trim();
+                  const feedbackSummary = String(step?.feedbackSummary || "").trim();
+                  const latestSummary = feedbackSummary || executionSummary || "当前模块执行失败或需要修复，但没有结构化摘要，请查看运行记录和自动验收证据。";
+                  const lines = [
+                    `请根据当前模块 ${String(step?.stepId || "").trim()} 的最近执行结果直接修复，不需要等待玩家额外描述。`,
+                    `模块标题：${String(step?.title || "").trim()}`,
+                    `模块状态：${String(step?.status || "").trim()}`,
+                    `执行 run：${String(step?.executionRunId || "").trim() || "无"}`,
+                    `反馈修复 run：${String(step?.feedbackRunId || "").trim() || "无"}`,
+                    `自动验收证据：${String(step?.latestEvidenceRelativePath || "").trim() || "无"}`,
+                    "最近执行结果：",
+                    latestSummary,
+                    feedbackSummary && executionSummary && feedbackSummary !== executionSummary ? `原始执行结果：\n${executionSummary}` : ""
+                  ];
+                  return lines.filter(Boolean).join("\\n");
+                }
+
+                async function quickRepairCurrentMilestoneStep() {
+                  if (!guardGlobalAction()) return;
+                  if (!state.projectId) return out("请先选择一个项目。");
+                  const step = currentGddMilestoneStep();
+                  if (!step) return out("当前没有可快速修复的游戏模块。");
+                  if (!canQuickRepairGddMilestoneStep(step)) return out("当前模块没有失败执行结果，不能快速修复。");
+                  setLocalBusy(true, "正在根据当前模块执行结果启动快速修复。");
+                  try {
+                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
+                      method: "POST",
+                      timeoutMs: longLlmTimeoutMs,
+                      body: JSON.stringify({ feedback: buildQuickRepairFeedbackForMilestoneStep(step), model: $("globalModel").value || "gpt-5.5" })
+                    });
+                    out(result);
+                    state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
+                    renderGddMilestoneSteps();
+                    await loadGddMilestoneSteps();
+                    await loadRuns();
                   } catch (error) {
                     showError(error);
                   } finally {
@@ -6885,13 +7014,14 @@ public sealed class BrowserUiRenderer
                       ? "没有创建有效的godot场景文件，成功修复后才可以打包项目文件。"
                       : "成功运行原型创建后才可以打包项目文件。";
                   }
+                  if (reason === "m1_not_completed") return "M1 游戏场景完成后才可以打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行，请等待完成。";
                   if (reason === "project_not_selected") return "请先选择一个项目。";
                   return "暂不可打包项目文件。";
                 }
 
                 function isProjectPackagePrerequisiteReason(reason) {
-                  return reason === "prototype_not_created";
+                  return reason === "prototype_not_created" || reason === "m1_not_completed";
                 }
 
                 async function refreshAssetInventoryAvailability() {
@@ -6994,17 +7124,17 @@ public sealed class BrowserUiRenderer
                     return out("请先选择一个项目。");
                   }
                   if (prototypeSkeletonLocked()) {
-                    showPrototypeNotice("原型骨架已验收通过，不能重复创建。", "info");
+                    showPrototypeNotice("游戏场景已验收通过，不能重复创建。", "info");
                     setPrototypeFormLocked(true);
-                    return out("原型骨架已验收通过，不能重复创建。");
+                    return out("游戏场景已验收通过，不能重复创建。");
                   }
                   const hasGdd = await refreshPrototypeGddStatus();
                   if (!hasGdd) {
-                    showPrototypeNotice("请先创建策划大纲，确认 GDD 后再创建原型骨架。", "warn");
+                    showPrototypeNotice("请先创建策划大纲，确认 GDD 后再创建游戏场景。", "warn");
                     return out({ status: "gdd_not_found" });
                   }
                   showPrototypeNotice("正在提交原型创建请求，请不要重复点击。", "info");
-                  setLocalBusy(true, "原型骨架创建中，请等待当前任务执行完毕。");
+                  setLocalBusy(true, "游戏场景创建中，请等待当前任务执行完毕。");
                   setPrototypeFormLocked(true);
                   try {
                     const payload = {
@@ -7126,11 +7256,11 @@ public sealed class BrowserUiRenderer
                   const payload = error?.payload || {};
                   const missing = payload.missingRequiredFields || payload.MissingRequiredFields || [];
                   const message = missing.length
-                      ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请先更新 GDD 后再创建原型骨架。`
+                      ? `缺少必填项：${missing.map(prototypeFieldLabel).join("、")}。请先更新 GDD 后再创建游戏场景。`
                       : payload.status === "project_busy"
-                        ? "当前项目已有后台任务在执行，请等待顶部状态条消失后再启动原型骨架创建。"
+                        ? "当前项目已有后台任务在执行，请等待顶部状态条消失后再启动游戏场景创建。"
                     : payload.status === "gdd_not_found" || payload.failureCode === "gdd_not_found"
-                      ? "请先创建策划大纲，确认 GDD 后再创建原型骨架。"
+                      ? "请先创建策划大纲，确认 GDD 后再创建游戏场景。"
                     : payload.failureCode === "prototype_valid_godot_scene_missing"
                       ? "没有创建有效的godot场景文件"
                       : `原型创建请求失败：${publicErrorCode(payload.status || payload.error || payload.failureCode || error?.status || "unknown_error")}`;
@@ -7281,7 +7411,7 @@ public sealed class BrowserUiRenderer
                   const routeGoal = currentNeedsFixRouteGoal();
                   $("submitFormalFeedback").disabled = !canSubmit;
                   $("submitFormalFeedback").textContent = !canSubmit
-                    ? "需先完成原型骨架创建后才能提交反馈"
+                    ? "需先完成游戏场景创建后才能提交反馈"
                     : routeGoal
                       ? `提交到需要修复路由任务 ${String(routeGoal.goalIndex || "")}`
                       : "提交反馈到需要修复路由";
@@ -7383,11 +7513,11 @@ public sealed class BrowserUiRenderer
                     resetPrototypeActionButtonsVisualState();
                   }
                   if ($("runPrototype")) {
-                    const lockedReason = state.prototypeReadyForFeedback ? "原型骨架已验收通过，不能重复创建。" : "原型骨架创建中，请等待当前任务执行完毕。";
+                    const lockedReason = state.prototypeReadyForFeedback ? "游戏场景已验收通过，不能重复创建。" : "游戏场景创建中，请等待当前任务执行完毕。";
                     setButtonDisabledState($("runPrototype"), locked || isGlobalBusy(), locked ? lockedReason : "");
                     $("runPrototype").textContent = locked
-                      ? state.prototypeReadyForFeedback ? "M1 原型骨架已完成" : "M1 原型骨架执行中..刷新页面查阅进度."
-                      : "确认 GDD 无误，执行 M1 原型骨架";
+                      ? state.prototypeReadyForFeedback ? "M1 游戏场景已完成" : "M1 游戏场景执行中..刷新页面查阅进度."
+                      : "确认 GDD 无误，执行 M1 游戏场景";
                   }
                   updatePrototypeSkeletonPackageButton();
                   if ($("importDraft")) {
@@ -7540,6 +7670,7 @@ public sealed class BrowserUiRenderer
                 $("createRepairPlan").onclick = createRepairPlan;
                 $("executeRepairStep").onclick = executeRepairStep;
                 $("executeCurrentMilestoneStep").onclick = executeCurrentMilestoneStep;
+                $("quickRepairCurrentMilestoneStep").onclick = quickRepairCurrentMilestoneStep;
                 $("confirmCurrentMilestoneStep").onclick = confirmCurrentMilestoneStep;
                 $("submitCurrentMilestoneFeedback").onclick = openCurrentMilestoneFeedbackModal;
                 $("chatSkillMode").onchange = () => {
@@ -7552,11 +7683,16 @@ public sealed class BrowserUiRenderer
                 installClientErrorRecovery();
                 window.addEventListener("message", event => {
                   if (event.origin !== location.origin) return;
-                  if (event.data?.type !== "phasea:gdd-outline-deleted") return;
                   if (event.data?.projectId && event.data.projectId !== state.projectId) return;
-                  state.gddOutlineReady = false;
-                  if ($("createGddDocument")) $("createGddDocument").textContent = "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
-                  refreshGddOutlineStatus();
+                  if (event.data?.type === "phasea:gdd-outline-deleted") {
+                    state.gddOutlineReady = false;
+                    if ($("createGddDocument")) $("createGddDocument").textContent = "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                    refreshGddOutlineStatus();
+                    return;
+                  }
+                  if (event.data?.type === "phasea:gdd-modules-refresh") {
+                    loadGddMilestoneSteps();
+                  }
                 });
                 renderChatHistory();
                 restorePrototypeSkeletonBannerFromStorage();
@@ -7687,11 +7823,14 @@ public sealed class BrowserUiRenderer
         var latestUiOptimization = LatestRun(runs, "prototype-ui-optimization");
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
+        var firstMilestoneCompleted = IsFirstGddMilestoneCompleted(project);
         var skeletonValidationSucceeded = string.Equals(latestSkeletonValidation?.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
-        var prototypeFailed = !skeletonValidationSucceeded &&
+        var prototypeFailed = !firstMilestoneCompleted &&
+                              !skeletonValidationSucceeded &&
                               (string.Equals(latestSkeletonValidation?.Status, "failed", StringComparison.OrdinalIgnoreCase) ||
                                string.Equals(latestPrototype?.Status, "failed", StringComparison.OrdinalIgnoreCase));
-        var prototypeSucceeded = skeletonValidationSucceeded ||
+        var prototypeSucceeded = firstMilestoneCompleted ||
+                                 skeletonValidationSucceeded ||
                                  string.Equals(latestPrototype?.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
         var prototypeStepRun = skeletonValidationSucceeded
             ? latestSkeletonValidation
@@ -7700,20 +7839,89 @@ public sealed class BrowserUiRenderer
         return
         [
             new ProjectDetailStep(1, "游戏项目概述", "done", "/", "✓"),
-            CreateRunStep(2, "原型骨架创建", prototypeStepRun, "/#prototypeWorkflowPanel"),
-            prototypeFailed && latestRepair is null
-                ? new ProjectDetailStep(3, "骨架验收修复", "fix", "/#v2RepairPanel", "×")
+            firstMilestoneCompleted
+                ? new ProjectDetailStep(2, "游戏场景创建", "done", "/#prototypeWorkflowPanel", "✓")
+                : CreateRunStep(2, "游戏场景创建", prototypeStepRun, "/#prototypeWorkflowPanel"),
+            firstMilestoneCompleted
+                ? new ProjectDetailStep(3, "场景验收修复", "done", "/#v2RepairPanel", "✓")
+                : prototypeFailed && latestRepair is null
+                ? new ProjectDetailStep(3, "场景验收修复", "fix", "/#v2RepairPanel", "×")
                 : latestRepair is not null
-                    ? CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel")
+                    ? CreateRunStep(3, "场景验收修复", latestRepair, "/#v2RepairPanel")
                     : prototypeSucceeded
-                        ? new ProjectDetailStep(3, "骨架验收修复", "done", "/#v2RepairPanel", "✓")
-                        : CreateRunStep(3, "骨架验收修复", latestRepair, "/#v2RepairPanel"),
+                        ? new ProjectDetailStep(3, "场景验收修复", "done", "/#v2RepairPanel", "✓")
+                        : CreateRunStep(3, "场景验收修复", latestRepair, "/#v2RepairPanel"),
             CreateRunStep(4, "完成游戏模块", latestIteration, "/#v2IterationPanel"),
             CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
             CreateAcceptanceStep(6, runs, latestIteration, "/#v2AcceptancePanel"),
             CreateRunStep(7, "项目素材库", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
             CreateRunStep(8, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
+    }
+
+    private static bool IsFirstGddMilestoneCompleted(ProjectSnapshot project)
+    {
+        var path = Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json");
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            if (!document.RootElement.TryGetProperty("steps", out var steps) ||
+                steps.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            JsonElement? first = null;
+            foreach (var step in steps.EnumerateArray())
+            {
+                var stepId = step.TryGetProperty("stepId", out var stepIdElement)
+                    ? stepIdElement.GetString()
+                    : null;
+                if (string.Equals(stepId, "M1", StringComparison.OrdinalIgnoreCase))
+                {
+                    first = step;
+                    break;
+                }
+
+                first ??= step;
+            }
+
+            if (first is null)
+            {
+                return false;
+            }
+
+            var status = first.Value.TryGetProperty("status", out var statusElement)
+                ? statusElement.GetString()
+                : "";
+            var confirmedUtc = first.Value.TryGetProperty("confirmedUtc", out var confirmedUtcElement)
+                ? confirmedUtcElement.GetString()
+                : "";
+            return !string.IsNullOrWhiteSpace(confirmedUtc) ||
+                   IsCompletedMilestoneStatus(status);
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsCompletedMilestoneStatus(string? status)
+    {
+        return string.Equals(status, "confirmed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "executed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "feedback_submitted", StringComparison.OrdinalIgnoreCase);
     }
 
     private static ProjectDetailStep CreateAcceptanceStep(int number, IReadOnlyList<RunReadbackItem> runs, RunReadbackItem? latestIterationRun, string href)
@@ -7969,6 +8177,7 @@ public sealed class BrowserUiRenderer
                 <div class="row outline-toolbar" aria-label="GDD outline actions">
                   <button id="deleteGddOutline" class="ghost" type="button">&#21024;&#38500;&#31574;&#21010;&#22823;&#32434;</button>
                   <button id="completeAllSections" type="button">&#34917;&#20840;&#25152;&#26377;&#22823;&#32434;</button>
+                  <button id="openAddSection" type="button">&#26032;&#22686;&#22823;&#32434;&#31456;&#33410;</button>
                   <button id="exportGddMarkdown" class="secondary" type="button">&#23548;&#20986;&#20026; GDD.md</button>
                 </div>
                 <section>
@@ -7986,6 +8195,15 @@ public sealed class BrowserUiRenderer
                   <button id="saveSection" type="button">&#20445;&#23384;&#20462;&#25913;</button>
                   <button id="generateSection" class="secondary">&#29983;&#25104;&#20855;&#20307;&#20869;&#23481;</button>
                   <button id="closeEditor" class="ghost">&#20851;&#38381;</button>
+                </div>
+              </dialog>
+              <dialog id="addSectionDialog">
+                <h2>&#26032;&#22686;&#22823;&#32434;&#31456;&#33410;</h2>
+                <p class="muted">&#21482;&#20250;&#22312;&#29616;&#26377;&#22823;&#32434;&#26411;&#23614;&#22686;&#37327;&#34917;&#20805;&#26032;&#31456;&#33410;&#65292;&#19981;&#20250;&#20462;&#25913;&#12289;&#37325;&#25490;&#25110;&#21024;&#38500;&#21407;&#26377;&#22823;&#32434;&#32467;&#26500;&#12290;</p>
+                <label><strong>&#36755;&#20837;&#20449;&#24687;</strong><textarea id="addSectionMessage" placeholder="&#20363;&#22914;&#65306;&#26032;&#22686; M9 Boss &#19982;&#32467;&#31639;&#27169;&#22359;&#65292;&#35201;&#21253;&#21547;&#29609;&#23478;&#39564;&#25910;&#21644;&#25171;&#21253;&#39564;&#35777;&#12290;"></textarea></label>
+                <div class="row">
+                  <button id="confirmAddSection" type="button">&#30830;&#35748;&#26032;&#22686;</button>
+                  <button id="closeAddSection" class="ghost" type="button">&#20851;&#38381;</button>
                 </div>
               </dialog>
               <script>
@@ -8030,6 +8248,7 @@ public sealed class BrowserUiRenderer
                     : "当前策划大纲不可用，请删除后重新创建。";
                   $("deleteGddOutline").disabled = false;
                   $("completeAllSections").disabled = !hasSections;
+                  $("openAddSection").disabled = !hasSections;
                   $("exportGddMarkdown").disabled = !hasSections;
                   $("title").textContent = outline.title || "\u7b56\u5212\u5927\u7eb2";
                   $("summary").textContent = outline.summary || "";
@@ -8105,6 +8324,46 @@ public sealed class BrowserUiRenderer
                   } finally {
                     button.disabled = false;
                     button.textContent = "\u4fdd\u5b58\u4fee\u6539";
+                  }
+                }
+                function notifyGameModulesRefresh() {
+                  try {
+                    window.parent?.postMessage?.({ type: "phasea:gdd-modules-refresh", projectId }, location.origin);
+                  } catch {}
+                }
+                function openAddSectionDialog() {
+                  $("addSectionMessage").value = "";
+                  $("addSectionDialog").showModal();
+                  $("addSectionMessage").focus();
+                }
+                async function confirmAddSection() {
+                  const message = $("addSectionMessage").value || "";
+                  if (!message.trim()) {
+                    alert("\u8bf7\u8f93\u5165\u65b0\u589e\u5927\u7eb2\u7ae0\u8282\u7684\u8981\u6c42\u3002");
+                    return;
+                  }
+                  const button = $("confirmAddSection");
+                  button.disabled = true;
+                  button.textContent = "\u65b0\u589e\u4e2d...";
+                  $("openAddSection").disabled = true;
+                  $("completeAllSections").disabled = true;
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd/outline/sections/add`, {
+                      method:"POST",
+                      body: JSON.stringify({ message, model: localStorage.getItem("phaseASelectedModel") || null })
+                    });
+                    outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                    renderOutline();
+                    notifyGameModulesRefresh();
+                    $("addSectionDialog").close();
+                    $("meta").textContent = result.summary || "\u7b56\u5212\u5927\u7eb2\u65b0\u589e\u7ae0\u8282\u5df2\u521b\u5efa\u3002";
+                  } catch (error) {
+                    alert(error?.payload?.summary || publicErrorCode(error?.payload?.error || "add_section_failed"));
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "\u786e\u8ba4\u65b0\u589e";
+                    $("openAddSection").disabled = !Array.isArray(outline?.sections) || outline.sections.length === 0;
+                    $("completeAllSections").disabled = !Array.isArray(outline?.sections) || outline.sections.length === 0;
                   }
                 }
                 function isTerminalRunStatus(status) {
@@ -8191,6 +8450,7 @@ public sealed class BrowserUiRenderer
                     button.textContent = "\u8865\u5168\u6240\u6709\u5927\u7eb2";
                     $("deleteGddOutline").disabled = false;
                     $("generateSection").disabled = false;
+                    $("openAddSection").disabled = !Array.isArray(outline?.sections) || outline.sections.length === 0;
                     $("exportGddMarkdown").disabled = !Array.isArray(outline?.sections) || outline.sections.length === 0;
                     document.querySelectorAll("[data-quick-complete-section]").forEach(item => item.disabled = false);
                   }
@@ -8229,6 +8489,7 @@ public sealed class BrowserUiRenderer
                     $("summary").textContent = "";
                     $("sections").innerHTML = "<p class='muted'>\u7b56\u5212\u5927\u7eb2\u5df2\u5220\u9664\u3002</p>";
                     $("completeAllSections").disabled = true;
+                    $("openAddSection").disabled = true;
                     $("exportGddMarkdown").disabled = true;
                     notifyOutlineDeleted();
                   } catch (error) {
@@ -8239,6 +8500,9 @@ public sealed class BrowserUiRenderer
                   }
                 }
                 $("closeEditor").onclick = () => $("editor").close();
+                $("openAddSection").onclick = openAddSectionDialog;
+                $("closeAddSection").onclick = () => $("addSectionDialog").close();
+                $("confirmAddSection").onclick = confirmAddSection;
                 $("saveSection").onclick = saveSection;
                 $("generateSection").onclick = generateSection;
                 $("completeAllSections").onclick = completeAllSections;
@@ -8386,6 +8650,7 @@ public sealed class BrowserUiRenderer
                 }
                 function disabledText(reason) {
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
+                  if (reason === "m1_not_completed") return "M1 游戏场景完成后才可以打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
                   return "当前暂不能生成新的项目文件包。";
                 }

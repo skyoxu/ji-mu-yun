@@ -111,12 +111,12 @@ public sealed class BrowserUiRendererTests
         var html = new BrowserUiRenderer().RenderShellV2();
 
         html.Should().Contain("prototypeM1SpecStatus");
-        html.Should().Contain("M1 原型骨架目标");
+        html.Should().Contain("M1 游戏场景目标");
         html.Should().Contain("packagePrototypeSkeleton");
-        html.Should().Contain("确认 GDD 无误，执行 M1 原型骨架");
+        html.Should().Contain("确认 GDD 无误，执行 M1 游戏场景");
         html.Should().Contain("$(\"packagePrototypeSkeleton\").onclick = createProjectPackage");
         html.Should().Contain("prototypeSkeletonM1Completed()");
-        html.Should().Contain("M1 原型骨架完成后才可以在这里打包下载项目");
+        html.Should().Contain("M1 游戏场景完成后才可以在这里打包下载项目");
     }
 
     [Fact]
@@ -1197,7 +1197,7 @@ public sealed class BrowserUiRendererTests
               skeletonAcceptance.id = "v2SkeletonAcceptance";
               skeletonAcceptance.className = "secondary";
               skeletonAcceptance.type = "button";
-              skeletonAcceptance.textContent = "骨架验收";
+              skeletonAcceptance.textContent = "场景验收";
               skeletonAcceptance.onclick = v2ValidateSkeletonIfAllowed;
               [createRepair, $("executeRepairStep"), skeletonAcceptance].filter(Boolean).forEach(button => actions.appendChild(button));
               ["repairPlanStatus", "repairPlanGoals"].map($).filter(Boolean).forEach(element => panel.appendChild(element));
@@ -1388,9 +1388,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2-prototype-locked");
         html.Should().Contain("setPrototypeDraftFileLocked(locked);");
         html.Should().Contain("setButtonDisabledState($(\"importDraft\"), locked");
-        html.Should().Contain("原型骨架已验收通过，不能重复创建");
+        html.Should().Contain("游戏场景已验收通过，不能重复创建");
         html.Should().Contain("prototypeSkeletonLocked()");
-        html.Should().Contain("M1 原型骨架已完成");
+        html.Should().Contain("M1 游戏场景已完成");
         html.Should().Contain("setPrototypeFormLocked = function(locked)");
         html.Should().Contain("v2ApplyPrototypeFormSnapshot");
         html.Should().Contain("progress?.form");
@@ -1417,7 +1417,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("await loadProjectPackages();");
         html.Should().Contain("renderRunsListFromState");
         html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
-        html.Should().Contain("[\"create-prototype\", \"原型骨架创建\", \"spark\"]");
+        html.Should().Contain("[\"create-prototype\", \"游戏场景创建\", \"spark\"]");
         html.Should().Contain("v2-step-number");
         html.Should().Contain(".v2-step-number { display: inline-flex;");
         html.Should().NotContain(".v2-step-number { display: none;");
@@ -1429,11 +1429,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain(".v2-step-button.pending .v2-step-mark");
         html.Should().Contain(".v2-step-button.action .v2-step-mark");
         html.Should().Contain("游戏项目概述");
-        html.Should().Contain("原型骨架创建");
+        html.Should().Contain("游戏场景创建");
         html.Should().Contain("完成游戏模块");
-        html.Should().Contain("骨架验收修复");
+        html.Should().Contain("场景验收修复");
         html.Should().Contain("游戏界面优化");
-        html.IndexOf("[\"execute-or-repair\", \"骨架验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal));
+        html.IndexOf("[\"execute-or-repair\", \"场景验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal));
         html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"游戏界面优化\", \"layout\"]", StringComparison.Ordinal));
         html.Should().Contain("function v2RunIsCurrentForIteration(run)");
         html.Should().Contain("const sessionTime = v2IterationSessionTimestamp();");
@@ -1792,6 +1792,80 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderProject_MarksSkeletonStepsDone_WhenM1MilestoneCompleted()
+    {
+        var metaPath = Path.Combine(Path.GetTempPath(), $"phasea-meta-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(metaPath, "routes", "gdd-milestones"));
+            File.WriteAllText(
+                Path.Combine(metaPath, "routes", "gdd-milestones", "latest.json"),
+                """
+                {
+                  "currentStepId": "M2",
+                  "steps": [
+                    { "stepId": "M1", "status": "needs_fix", "locked": false, "confirmedUtc": "2026-06-24T00:00:00Z" },
+                    { "stepId": "M2", "status": "ready", "locked": false }
+                  ]
+                }
+                """);
+            var project = CreateProjectSnapshot() with { MetaPath = metaPath };
+            var failedPrototypeRun = new RunReadbackItem(
+                "run-failed-prototype",
+                "project-1",
+                "workspace-1",
+                "prototype-7day-playable",
+                "failed",
+                1,
+                "",
+                "",
+                "{\"prototype_completion\":{\"succeeded\":false}}",
+                "failed",
+                "",
+                "Prototype workflow failed.",
+                "2026-06-23T08:31:29.4240706+00:00",
+                null,
+                null,
+                null,
+                null,
+                []);
+            var failedRepairRun = new RunReadbackItem(
+                "run-failed-repair",
+                "project-1",
+                "workspace-1",
+                "prototype-quick-fix",
+                "failed",
+                1,
+                "",
+                "",
+                "{}",
+                "failed",
+                "",
+                "Repair failed.",
+                "2026-06-23T08:33:29.4240706+00:00",
+                null,
+                null,
+                null,
+                null,
+                []);
+
+            var html = new BrowserUiRenderer().RenderProject(project, [failedPrototypeRun, failedRepairRun]);
+
+            html.Should().Contain("detail-step done\" href=\"/#prototypeWorkflowPanel\"");
+            html.Should().Contain("detail-step done\" href=\"/#v2RepairPanel\"");
+            html.Should().NotContain("detail-step fix\" href=\"/#prototypeWorkflowPanel\"");
+            html.Should().NotContain("detail-step fix\" href=\"/#v2RepairPanel\"");
+        }
+        finally
+        {
+            if (Directory.Exists(metaPath))
+            {
+                Directory.Delete(metaPath, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void RenderProject_KeepsSkeletonCreationDone_WhenLaterPrototypeRunFailsAfterSkeletonValidationPassed()
     {
         var project = CreateProjectSnapshot();
@@ -1990,6 +2064,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
         html.Should().Contain("function runIsBusy(run)");
+        html.Should().Contain("game-design-gdd-section-batch");
+        html.Should().Contain(@"\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a");
         html.Should().Contain("if (!run.runId) return false;");
         html.Should().Contain("status === \"queued\" || status === \"running\"");
         html.Should().Contain("state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId");
@@ -2087,7 +2163,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("busy-banner-prototype-skeleton");
         html.Should().Contain("展开详细信息");
         html.Should().Contain("关闭详细信息");
-        html.Should().Contain("系统正在进行游戏原型骨架创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；");
+        html.Should().Contain("系统正在进行游戏场景创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；");
         html.Should().Contain("projectName");
         html.Should().Contain("projectNameError");
         html.Should().Contain("gameNameError");
@@ -2141,13 +2217,16 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain(@"$(""chapter2"")");
         html.Should().Contain("runPrototype");
         html.Should().Contain("prototypeGddStatus");
-        html.Should().Contain("确认 GDD 无误，执行 M1 原型骨架");
+        html.Should().Contain("确认 GDD 无误，执行 M1 游戏场景");
         html.Should().Contain("prototype-7day-playable/from-gdd");
         html.Should().Contain("refreshPrototypeGddStatus");
         html.Should().Contain("gddMilestoneStepStatus");
         html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeGreaterThan(html.IndexOf("主流程：游戏模块", StringComparison.Ordinal));
         html.IndexOf(@"id=""gddMilestoneStepStatus""", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("异常修复计划", StringComparison.Ordinal));
         html.Should().Contain("执行当前模块");
+        html.Should().Contain("快速修复");
+        html.Should().Contain("quickRepairCurrentMilestoneStep");
+        html.Should().Contain("更新游戏模块内容");
         html.Should().Contain("完成当前模块并激活下一模块");
         html.Should().Contain("建议先打包下载试玩验证");
         html.Should().Contain("提交反馈并修正模块");
@@ -2163,6 +2242,13 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (active && step?.stepId === active.stepId) return \"running\"");
         html.Should().Contain("当前激活模块");
         html.Should().Contain("自动验收证据");
+        html.Should().Contain("模块执行结果");
+        html.Should().Contain("executionRunId");
+        html.Should().Contain("feedbackRunId");
+        html.Should().Contain("最近 run");
+        html.Should().Contain("执行结果");
+        html.Should().Contain("latestSummary");
+        html.Should().Contain("feedbackSummary");
         html.Should().Contain("latestEvidenceRelativePath");
         html.Should().Contain("gddMilestoneEvidence");
         html.Should().Contain("prototype-evidence?path=");
@@ -2190,7 +2276,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("repair-plan");
         html.Should().Contain("executeRepairStep");
         html.Should().Contain("执行下一项修复");
-        html.Should().Contain("原型骨架创建");
+        html.Should().Contain("游戏场景创建");
         html.Should().Contain("prototypeWorkflowPanel");
         html.Should().Contain(@"$(""prototypeWorkflowPanel"").classList.toggle(""hidden"", status === ""succeeded"")");
         html.Should().Contain("userTopActions");
@@ -2248,7 +2334,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setPrototypeFormLocked");
         html.Should().Contain("isPrototypeCreationLocked");
         html.Should().Contain("![\"idle\", \"failed\", \"cancel\"].includes(status)");
-        html.Should().Contain("M1 原型骨架执行中..刷新页面查阅进度.");
+        html.Should().Contain("M1 游戏场景执行中..刷新页面查阅进度.");
         html.Should().Contain("prototypeCommandPanel");
         html.Should().Contain(@"role !== ""admin""");
         html.Should().Contain("id=\"loadRuns\" class=\"ghost hidden\"");
@@ -2377,7 +2463,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("正在准备提交任务");
         html.Should().Contain("需要修复路由已提交，正在等待后台 run 创建。");
         html.Should().Contain("当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。");
-        html.Should().NotContain("无法启动 needs-fix：当前页面未确认原型骨架已创建。");
+        html.Should().NotContain("无法启动 needs-fix：当前页面未确认游戏场景已创建。");
         html.Should().Contain("[\"needs_fix\", \"failed\"].includes");
         html.Should().Contain("feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal)");
         html.Should().NotContain("quickFixPanel");

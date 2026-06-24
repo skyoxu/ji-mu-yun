@@ -120,6 +120,260 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task GetOrCreateLatestAsync_ReconcilesLatestGddMilestoneSession_WhenStepStateMissedRunResult()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable room.
+        M2: Skill pressure.
+        M3: Run upgrade loop.
+        """);
+        WriteM3ReadyStepState(project.MetaPath, project.RepoPath);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "gdd_milestone_step",
+            "M3 session",
+            "M3 - Run upgrade loop",
+            [new ProjectIterationGoalCreateCommand(3, "M3: Run upgrade loop", "Implement M3.", "Validate M3.")]);
+        var details = await store.GetProjectIterationSessionAsync(projectId, session.SessionId);
+        var goal = details!.Goals.Single();
+        var executionRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-iteration-goal");
+        await store.CompleteRunAsync(executionRunId, "completed", 0, "execution stdout", "", "{\"goal_index\":3}", CancellationToken.None);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, goal.GoalId, executionRunId, "prototype-iteration-goal");
+        var repairRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-quick-fix");
+        await store.CompleteRunAsync(repairRunId, "completed", 0, "repair stdout", "", "{\"goal_index\":3}", CancellationToken.None);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, goal.GoalId, repairRunId, "prototype-iteration-goal-repair");
+        await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "needs_fix", "M3 still needs Godot smoke repair.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 3, "Task 3 still needs repair.", null, null);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var step = result!.Steps.Single(candidate => candidate.StepId == "M3");
+        step.Status.Should().Be("needs_fix");
+        step.ExecutionRunId.Should().Be(executionRunId);
+        step.FeedbackRunId.Should().Be(repairRunId);
+        step.ExecutionSummary.Should().Contain("M3 still needs Godot smoke repair.");
+        step.FeedbackSummary.Should().Contain("M3 still needs Godot smoke repair.");
+        step.CanSubmitFeedback.Should().BeTrue();
+        step.LatestEvidenceRelativePath.Should().NotBeNullOrWhiteSpace();
+        result.CurrentStepId.Should().Be("M3");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_PreservesConfirmedStep_WhenHistoricalResultStillNeedsFix()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable room.
+        M2: Skill pressure.
+        M3: Run upgrade loop.
+        """);
+        WriteStepState(project.MetaPath, project.RepoPath, """
+        {
+          "schema": "phase-a.gdd-milestone-steps.v2",
+          "status": "ready",
+          "summary": "M3 was incorrectly confirmed",
+          "currentStepId": "M4",
+          "steps": [
+            { "stepId": "M1", "stepIndex": 1, "title": "M1", "description": "M1", "status": "confirmed", "locked": false },
+            { "stepId": "M2", "stepIndex": 2, "title": "M2", "description": "M2", "status": "confirmed", "locked": false },
+            {
+              "stepId": "M3",
+              "stepIndex": 3,
+              "title": "M3",
+              "description": "M3",
+              "status": "confirmed",
+              "locked": false,
+              "confirmedUtc": "2026-06-24T00:00:00Z",
+              "executionRunId": "run-m3",
+              "feedbackRunId": "repair-m3",
+              "executionSummary": "STATUS: needs_fix\nREMAINING: continue repair",
+              "feedbackSummary": "STATUS: needs_fix\nREMAINING: continue repair"
+            }
+          ]
+        }
+        """);
+        var runner = new FakeHostedProcessRunner("""
+        STATUS: completed
+        VERIFY: Current module repair passed static check for the current milestone goal.
+        REMAINING: none
+        """);
+        var service = Service(store, options, runner: runner);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var step = result!.Steps.Single(candidate => candidate.StepId == "M3");
+        step.Status.Should().Be("confirmed");
+        step.CanConfirm.Should().BeFalse();
+        step.CanSubmitFeedback.Should().BeFalse();
+        step.ConfirmedUtc.Should().Be("2026-06-24T00:00:00Z");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_AppendsNewGddMilestones_WithoutResettingExistingState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        ## Milestones
+        M1: First playable scene and controls.
+        M2: Active skills.
+        M3: Boss and run summary.
+        """);
+        WriteCompletedAndReadyStepState(project.MetaPath, project.RepoPath);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M3");
+        result.Steps.Single(step => step.StepId == "M1").Status.Should().Be("confirmed");
+        result.Steps.Single(step => step.StepId == "M2").Status.Should().Be("ready");
+        result.Steps.Single(step => step.StepId == "M3").Status.Should().Be("locked");
+        result.Steps.Single(step => step.StepId == "M3").Locked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_AppendsMilestonesFromSupplementalGddSections()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        ## Milestones
+        M1: First playable scene and controls.
+        M2: Active skills.
+
+        ## Supplemental Modules
+        M3: Boss and run summary.
+        """);
+        WriteCompletedAndReadyStepState(project.MetaPath, project.RepoPath);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Steps.Select(step => step.StepId).Should().Equal("M1", "M2", "M3");
+        result.Steps.Single(step => step.StepId == "M3").Title.Should().Contain("Boss");
+        result.Steps.Single(step => step.StepId == "M3").Locked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_AppendsNewGddMilestone_AsActive_WhenExistingStepsAreConfirmed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        ## Milestones
+        M1: First playable scene and controls.
+        M2: Boss and run summary.
+        """);
+        WriteAllConfirmedStepState(project.MetaPath, project.RepoPath);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.CurrentStepId.Should().Be("M2");
+        result.Steps.Select(step => step.StepId).Should().Equal("M1", "M2");
+        result.Steps.Single(step => step.StepId == "M1").Status.Should().Be("confirmed");
+        result.Steps.Single(step => step.StepId == "M2").Status.Should().Be("ready");
+        result.Steps.Single(step => step.StepId == "M2").Locked.Should().BeFalse();
+        result.Steps.Single(step => step.StepId == "M2").CanExecute.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ExecuteCurrentStepAsync_Blocks_WhenGddOutlineHasIncompleteSections()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        ## Milestones
+        M1: First playable scene and controls.
+        """);
+        WriteOutline(project.RepoPath, """
+        {
+          "title": "Action Roguelike GDD",
+          "summary": "summary",
+          "sections": [
+            { "id": "milestones", "title": "Milestones", "skeleton": "M plan", "content": "" }
+          ]
+        }
+        """);
+        var service = Service(store, options);
+
+        var plan = await service.GetOrCreateLatestAsync(accountId, projectId);
+        var result = await service.ExecuteCurrentStepAsync(accountId, projectId);
+
+        plan.Should().NotBeNull();
+        plan!.OutlineComplete.Should().BeFalse();
+        plan.IncompleteOutlineSections.Should().Contain("Milestones");
+        plan.Steps.Single().CanExecute.Should().BeFalse();
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("outline_incomplete");
+        result.FailureCode.Should().Be("outline_incomplete");
+    }
+
+    [Fact]
     public async Task GetOrCreateLatestAsync_ExtractsChineseHeadingMilestones_AndReplacesUnstartedFallbackState()
     {
         using var database = TempSqliteDatabase.Create();
@@ -304,7 +558,104 @@ public sealed class GddMilestoneStepServiceTests
         m1.Status.Should().Be("executed");
         m1.CanConfirm.Should().BeTrue();
         result.CurrentStepId.Should().Be("M1");
-        result.Summary.Should().Contain("M1 已通过原型骨架创建完成");
+        result.Summary.Should().Contain("M1 已通过游戏场景创建完成");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_MarksM1NeedsFix_WhenSkeletonCreationFailed()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable scene with WASD movement, mouse facing, combo, dodge, and first room feel validation.
+        M2: Active skills.
+        """);
+        var runId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            "DAY4_IMPLEMENTATION_VALIDATION failed component_slots_not_wired=Game.Godot/Prototypes/Towerdemo2/Scripts/Towerdemo2Prototype.cs",
+            "",
+            """{"prototype_completion":{"succeeded":false,"error":"prototype_workflow_failed"},"godot_smoke":{"ran":false}}""");
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var m1 = result!.Steps.Single(step => step.StepId == "M1");
+        m1.Status.Should().Be("needs_fix");
+        m1.CanSubmitFeedback.Should().BeTrue();
+        m1.CanConfirm.Should().BeFalse();
+        m1.ExecutionRunId.Should().Be(runId);
+        m1.ExecutionSummary.Should().Contain("component_slots_not_wired");
+        m1.LatestEvidenceRelativePath.Should().StartWith("logs/prototype-evidence/");
+        result.CurrentStepId.Should().Be("M1");
+        result.Summary.Should().Contain("M1 游戏场景创建未通过");
+
+        var successRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(
+            successRunId,
+            "succeeded",
+            0,
+            "",
+            "",
+            """{"prototype_completion":{"succeeded":true},"godot_smoke":{"exit_code":0}}""");
+
+        var recovered = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        var recoveredM1 = recovered!.Steps.Single(step => step.StepId == "M1");
+        recoveredM1.Status.Should().Be("executed");
+        recoveredM1.ExecutionRunId.Should().Be(successRunId);
+        recoveredM1.LatestEvidenceRelativePath.Should().NotBe(m1.LatestEvidenceRelativePath);
+        File.ReadAllText(Path.Combine(project.RepoPath, recoveredM1.LatestEvidenceRelativePath!.Replace('/', Path.DirectorySeparatorChar)))
+            .Should().Contain("\"status\": \"passed\"");
+    }
+
+    [Fact]
+    public async Task GetOrCreateLatestAsync_IgnoresValidationOnlyPrototypeFailure_WhenReconcilingM1SceneCreation()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable scene with WASD movement, mouse facing, combo, dodge, and first room feel validation.
+        """);
+        var runId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            "",
+            "Godot validation failed.",
+            """{"validation_only":true,"skeleton_validation_only":true,"godot_smoke":{"exit_code":1}}""");
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var m1 = result!.Steps.Single(step => step.StepId == "M1");
+        m1.Status.Should().Be("ready");
+        m1.ExecutionRunId.Should().BeNull();
+        m1.CanSubmitFeedback.Should().BeFalse();
+        m1.CanExecute.Should().BeTrue();
     }
 
     [Fact]
@@ -532,7 +883,12 @@ public sealed class GddMilestoneStepServiceTests
         M1: First playable loop with visible state feedback.
         M2: Follow-up tuning.
         """);
-        var service = Service(store, options);
+        var runner = new FakeHostedProcessRunner("""
+        STATUS: completed
+        VERIFY: Current module repair passed static check for the current milestone goal.
+        REMAINING: none
+        """);
+        var service = Service(store, options, runner: runner);
         var executed = await service.ExecuteCurrentStepAsync(accountId, projectId);
 
         var result = await service.SubmitFeedbackAsync(
@@ -549,6 +905,8 @@ public sealed class GddMilestoneStepServiceTests
         result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
         result.Plan.Steps.Single(step => step.StepId == "M2").Locked.Should().BeTrue();
         result.NeedsFixRun!.GoalIndex.Should().Be(1);
+        runner.StandardInputs.Should().Contain(input => input.Contains("Combat pressure interpretation guard", StringComparison.Ordinal));
+        runner.StandardInputs.Should().Contain(input => input.Contains("Do not implement hidden damage-over-time", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -579,9 +937,58 @@ public sealed class GddMilestoneStepServiceTests
             new GddMilestoneStepFeedbackRequest("Please repair M1 and keep it scoped to the current milestone."));
 
         result.Should().NotBeNull();
-        result!.Plan!.Steps.Single(step => step.StepId == "M1").Status.Should().Be("feedback_submitted");
-        result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
-        result.Plan.Summary.Should().Contain("轻量验收已通过");
+        var step = result!.Plan!.Steps.Single(step => step.StepId == "M1");
+        step.Status.Should().Be("feedback_submitted");
+        step.CanConfirm.Should().BeTrue();
+        step.ExecutionRunId.Should().Be(step.FeedbackRunId);
+        step.ExecutionSummary.Should().Be(step.FeedbackSummary);
+        step.ExecutionSummary.Should().Contain("轻量验收已通过");
+        validation.Calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task SubmitFeedbackAsync_WhenSuccessfulRepairFeedbackContainsOldFailureText_DoesNotReopenNeedsFix()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Feedback Step GDD
+
+        M1: First playable loop with visible state feedback.
+        """);
+        var validation = new FakeLightweightValidationService(ValidationResult("validation-1", "succeeded", 0));
+        await Service(store, options).ExecuteCurrentStepAsync(accountId, projectId);
+        var service = Service(store, options, validationService: validation);
+
+        var result = await service.SubmitFeedbackAsync(
+            accountId,
+            projectId,
+            "M1",
+            new GddMilestoneStepFeedbackRequest("""
+            请根据当前模块 M1 的最近执行结果直接修复。
+            最近执行结果：
+            M1 轻量验收未通过，需要修复旧的编译错误。
+            """));
+        var reloaded = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var returnedStep = result!.Plan!.Steps.Single(step => step.StepId == "M1");
+        var persistedStep = reloaded!.Steps.Single(step => step.StepId == "M1");
+        returnedStep.Status.Should().Be("feedback_submitted");
+        returnedStep.CanConfirm.Should().BeTrue();
+        returnedStep.ExecutionSummary.Should().Contain("轻量验收已通过");
+        returnedStep.ExecutionSummary.Should().NotContain("未通过");
+        returnedStep.ExecutionSummary.Should().NotContain("需要修复");
+        persistedStep.Status.Should().Be("feedback_submitted");
+        persistedStep.CanConfirm.Should().BeTrue();
+        persistedStep.CanSubmitFeedback.Should().BeFalse();
         validation.Calls.Should().Be(1);
     }
 
@@ -621,7 +1028,9 @@ public sealed class GddMilestoneStepServiceTests
         step.Status.Should().Be("needs_fix");
         step.CanConfirm.Should().BeFalse();
         step.CanSubmitFeedback.Should().BeTrue();
-        result.Plan.Summary.Should().Contain("轻量验收自动修复后仍未通过");
+        step.ExecutionRunId.Should().Be(step.FeedbackRunId);
+        step.ExecutionSummary.Should().Be(step.FeedbackSummary);
+        step.ExecutionSummary.Should().Contain("轻量验收未通过");
         validation.Calls.Should().Be(4);
     }
 
@@ -649,7 +1058,8 @@ public sealed class GddMilestoneStepServiceTests
         VERIFY: quick code-level check completed
         REMAINING: none
         """;
-        var service = Service(store, options, runnerOutput: runnerOutput);
+        var runner = new FakeHostedProcessRunner(runnerOutput);
+        var service = Service(store, options, runner: runner, runnerOutput: runnerOutput);
 
         var result = await service.ExecuteCurrentStepAsync(accountId, projectId);
 
@@ -659,10 +1069,12 @@ public sealed class GddMilestoneStepServiceTests
         result.StepExecution.SessionStatus.Should().Be("needs_fix");
         result.Plan!.Steps.Single(step => step.StepId == "M1").Status.Should().Be("executed");
         result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
-        result.Plan.Summary.Should().Contain("可以直接确认完成");
+        result.Plan.Steps.Single(step => step.StepId == "M1").CanSubmitFeedback.Should().BeTrue();
         var run = await store.GetRunSnapshotAsync(result.StepExecution.RunId);
         run!.ProgressStep.Should().Be("completed");
         run.ProgressLabel.Should().Contain("M1 已执行完成");
+        runner.StandardInputs.Should().Contain(input => input.Contains("Combat pressure interpretation guard", StringComparison.Ordinal));
+        runner.StandardInputs.Should().Contain(input => input.Contains("standing-still damage", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -693,7 +1105,6 @@ public sealed class GddMilestoneStepServiceTests
         result!.NeedsFixRun.Should().NotBeNull();
         result.Plan!.Steps.Single(step => step.StepId == "M1").Status.Should().Be("executed");
         result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
-        result.Plan.Summary.Should().Contain("轻量验收已通过");
         validation.Calls.Should().Be(2);
     }
 
@@ -729,7 +1140,6 @@ public sealed class GddMilestoneStepServiceTests
         step.Status.Should().Be("needs_fix");
         step.CanConfirm.Should().BeFalse();
         step.CanSubmitFeedback.Should().BeTrue();
-        result.Plan.Summary.Should().Contain("提交反馈并修正模块");
         validation.Calls.Should().Be(4);
     }
 
@@ -818,9 +1228,10 @@ public sealed class GddMilestoneStepServiceTests
         VERIFY: Current module repair passed static check for the current milestone goal.
         REMAINING: none
         """,
-        IPrototypeLightweightValidationService? validationService = null)
+        IPrototypeLightweightValidationService? validationService = null,
+        FakeHostedProcessRunner? runner = null)
     {
-        var runner = new FakeHostedProcessRunner(runnerOutput);
+        runner ??= new FakeHostedProcessRunner(runnerOutput);
         return new GddMilestoneStepService(
             store,
             new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter()),
@@ -860,6 +1271,162 @@ public sealed class GddMilestoneStepServiceTests
         var path = Path.Combine(repoPath, "docs", "gdd", "GDD.md");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, text);
+    }
+
+    private static void WriteOutline(string repoPath, string text)
+    {
+        var path = Path.Combine(repoPath, "docs", "gdd", "gdd-outline.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, text);
+    }
+
+    private static void WriteCompletedAndReadyStepState(string metaPath, string repoPath)
+    {
+        const string payload = """
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "ready",
+  "summary": "existing state",
+  "currentStepId": "M2",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable scene and controls.",
+      "description": "First playable scene and controls.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:00:00Z"
+    },
+    {
+      "stepId": "M2",
+      "stepIndex": 2,
+      "title": "M2: Active skills.",
+      "description": "Active skills.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "ready",
+      "locked": false
+    }
+  ]
+}
+""";
+        WriteStepState(metaPath, repoPath, payload);
+    }
+
+    private static void WriteM3ReadyStepState(string metaPath, string repoPath)
+    {
+        const string payload = """
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "ready",
+  "summary": "M3 ready state without run result",
+  "currentStepId": "M3",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable room.",
+      "description": "First playable room.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:00:00Z"
+    },
+    {
+      "stepId": "M2",
+      "stepIndex": 2,
+      "title": "M2: Skill pressure.",
+      "description": "Skill pressure.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:05:00Z"
+    },
+    {
+      "stepId": "M3",
+      "stepIndex": 3,
+      "title": "M3: Run upgrade loop.",
+      "description": "Run upgrade loop.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "ready",
+      "locked": false
+    }
+  ]
+}
+""";
+        WriteStepState(metaPath, repoPath, payload);
+    }
+
+    private static void WriteAllConfirmedStepState(string metaPath, string repoPath)
+    {
+        const string payload = """
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "completed",
+  "summary": "all completed",
+  "currentStepId": null,
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable scene and controls.",
+      "description": "First playable scene and controls.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:00:00Z"
+    }
+  ]
+}
+""";
+        WriteStepState(metaPath, repoPath, payload);
+    }
+
+    private static void WriteStepState(string metaPath, string repoPath, string payload)
+    {
+        foreach (var root in new[] { metaPath, Path.Combine(repoPath, "meta") })
+        {
+            var path = Path.Combine(root, "routes", "gdd-milestones", "latest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, payload);
+        }
     }
 
     private static void WriteLegacyStepState(string metaPath, string repoPath)
@@ -905,12 +1472,7 @@ public sealed class GddMilestoneStepServiceTests
   ]
 }
 """;
-        foreach (var root in new[] { metaPath, Path.Combine(repoPath, "meta") })
-        {
-            var path = Path.Combine(root, "routes", "gdd-milestones", "latest.json");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, payload);
-        }
+        WriteStepState(metaPath, repoPath, payload);
     }
 
     private static void WriteNeedsFixStepState(string metaPath, string repoPath, string runId)
@@ -1043,6 +1605,8 @@ public sealed class DemoPrototype
     {
         private readonly string _output;
 
+        public List<string> StandardInputs { get; } = [];
+
         public FakeHostedProcessRunner(string output)
         {
             _output = output;
@@ -1050,6 +1614,11 @@ public sealed class DemoPrototype
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            if (!string.IsNullOrWhiteSpace(command.StandardInput))
+            {
+                StandardInputs.Add(command.StandardInput);
+            }
+
             if (command.Arguments.Any(argument =>
                     argument.Contains("smoke_headless.py", StringComparison.OrdinalIgnoreCase) ||
                     argument.Contains("prototype_main_menu_navigation_smoke.py", StringComparison.OrdinalIgnoreCase)))
