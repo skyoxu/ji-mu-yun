@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.IO.Compression;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -15,9 +16,13 @@ namespace PhaseA.Platform.Readback;
 public sealed class ProjectAssetLibraryService
 {
     private const string RunType = "project-asset-generation";
+    private const string ImportRunType = "project-asset-import";
+    private const string SelectionRunType = "project-asset-selection";
     private const int MaxInstructionLength = 2000;
     private const long MaxImportedAssetBytes = 50L * 1024L * 1024L;
-    private static readonly string[] ImportableAssetExtensions = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".glb", ".gltf", ".obj", ".fbx", ".zip"];
+    private static readonly string[] ImportableAssetExtensions = [".png", ".jpg", ".jpeg", ".webp", ".glb", ".gltf", ".obj", ".fbx", ".zip"];
+    private static readonly string[] RuntimeAssetExtensions = [".png", ".jpg", ".jpeg", ".webp", ".glb", ".gltf", ".obj", ".fbx"];
+    private static readonly string[] BlockedArchiveExtensions = [".cs", ".gd", ".dll", ".exe", ".bat", ".cmd", ".ps1", ".sh", ".js", ".ts", ".json", ".pck", ".so", ".dylib"];
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ProjectAssetImageGenerator _imageGenerator;
@@ -26,6 +31,7 @@ public sealed class ProjectAssetLibraryService
     private readonly AssetGenerationConcurrencyLimiter _assetConcurrencyLimiter;
     private readonly HttpClient _httpClient;
     private readonly IHostedProcessRunner _processRunner;
+    private readonly PrototypeEngineeringClosureService _engineeringClosure;
 
     public ProjectAssetLibraryService(
         PhaseAMetadataStore metadataStore,
@@ -35,7 +41,8 @@ public sealed class ProjectAssetLibraryService
         [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
         AssetGenerationConcurrencyLimiter? assetConcurrencyLimiter = null,
         HttpClient? httpClient = null,
-        IHostedProcessRunner? processRunner = null)
+        IHostedProcessRunner? processRunner = null,
+        PrototypeEngineeringClosureService? engineeringClosure = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -48,6 +55,7 @@ public sealed class ProjectAssetLibraryService
             AllowAutoRedirect = false
         });
         _processRunner = processRunner ?? new HostedProcessRunner();
+        _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
     }
 
     public async Task<ProjectAssetLibraryResult?> ReadAsync(
@@ -97,129 +105,166 @@ public sealed class ProjectAssetLibraryService
         Directory.CreateDirectory(outputAbsoluteDirectory);
         var prompt = BuildImagePrompt(project, unit, request.FloatingPrompt, actionId);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
-        await using var assetQueueLease = await _assetRunnerQueue.EnterAsync(
-            runId,
-            project.AccountId,
-            project.ProjectId,
-            RunType,
-            cancellationToken);
-        await _metadataStore.MarkRunStartedAsync(runId, assetQueueLease.QueuePositionAtStart, cancellationToken);
+        var projectLocked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!projectLocked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            throw new InvalidOperationException("Project runner is busy.");
+        }
 
-        ProjectAssetImageGenerationResult imageResult;
-        string? referenceImagePath = null;
         try
         {
-            referenceImagePath = WriteTemporaryReferenceImage(outputAbsoluteDirectory, request);
-            imageResult = await _imageGenerator.GenerateAsync(
-                project,
+            await using var assetQueueLease = await _assetRunnerQueue.EnterAsync(
                 runId,
-                prompt,
-                outputAbsoluteDirectory,
-                outputRelativeDirectory,
-                SanitizeFileStem(unit.InstanceName, actionId),
-                count,
-                referenceImagePath,
+                project.AccountId,
+                project.ProjectId,
+                RunType,
                 cancellationToken);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            var failureEvidence = JsonSerializer.Serialize(new
+            await _metadataStore.MarkRunStartedAsync(runId, assetQueueLease.QueuePositionAtStart, cancellationToken);
+
+            ProjectAssetImageGenerationResult imageResult;
+            string? referenceImagePath = null;
+            try
+            {
+                referenceImagePath = WriteTemporaryReferenceImage(outputAbsoluteDirectory, request);
+                imageResult = await _imageGenerator.GenerateAsync(
+                    project,
+                    runId,
+                    prompt,
+                    outputAbsoluteDirectory,
+                    outputRelativeDirectory,
+                    SanitizeFileStem(unit.InstanceName, actionId),
+                    count,
+                    referenceImagePath,
+                    cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var failureEvidence = JsonSerializer.Serialize(new
+                {
+                    run_type = RunType,
+                    action_id = actionId,
+                    skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+                    output_directory = outputRelativeDirectory,
+                    failure = ex.Message
+                });
+                await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), failureEvidence, CancellationToken.None);
+                imageResult = new ProjectAssetImageGenerationResult(
+                    runId,
+                    "failed",
+                    500,
+                    "",
+                    ex.ToString(),
+                    $"轻量图片生成失败：{ex.Message}",
+                    [],
+                    TimeSpan.Zero);
+            }
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(referenceImagePath) && File.Exists(referenceImagePath))
+                {
+                    File.Delete(referenceImagePath);
+                    var referenceDirectory = Path.GetDirectoryName(referenceImagePath);
+                    if (!string.IsNullOrWhiteSpace(referenceDirectory) && Directory.Exists(referenceDirectory))
+                    {
+                        Directory.Delete(referenceDirectory, recursive: true);
+                    }
+                }
+            }
+
+            foreach (var artifactPath in imageResult.ArtifactPaths)
+            {
+                await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
+                    runId,
+                    project.ProjectId,
+                    "project-asset-generation-output",
+                    artifactPath,
+                    "Project asset generation output"), cancellationToken);
+            }
+
+            var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
                 action_id = actionId,
                 skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
+                generation_mode = string.Equals(request.GenerationMode, "image-to-image", StringComparison.OrdinalIgnoreCase) ? "image-to-image" : "text-to-image",
+                requested_count = count,
                 output_directory = outputRelativeDirectory,
-                failure = ex.Message
+                elapsed_seconds = Math.Round(imageResult.Elapsed.TotalSeconds, 3),
+                artifacts = imageResult.ArtifactPaths
             });
-            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), failureEvidence, CancellationToken.None);
-            imageResult = new ProjectAssetImageGenerationResult(
+            await _metadataStore.CompleteRunAsync(
                 runId,
-                "failed",
-                500,
-                "",
-                ex.ToString(),
-                $"轻量图片生成失败：{ex.Message}",
-                [],
-                TimeSpan.Zero);
+                imageResult.Status,
+                imageResult.ExitCode,
+                imageResult.Stdout,
+                imageResult.Stderr,
+                evidenceJson,
+                cancellationToken);
+
+            var library = ReadLibrary(project);
+            var generatedFiles = EnumerateGeneratedFiles(project.RepoPath, outputAbsoluteDirectory).ToArray();
+            var generatedImageFiles = generatedFiles
+                .Where(path => IsPreviewResource(ToResPath(project.RepoPath, path)))
+                .ToArray();
+            var skillSucceeded = string.Equals(imageResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
+            var entryStatus = skillSucceeded && generatedImageFiles.Length == 0
+                ? "no_image_generated"
+                : imageResult.Status;
+            if (generatedImageFiles.Length == 0)
+            {
+                var entry = CreateLibraryEntry(project, entryId, runId, actionId, prompt, entryStatus, imageResult, null, generatedImageFiles);
+                await UpdateAssetsManifestAsync(project, unit, entry, cancellationToken);
+                await WriteAssetRouteEvidenceAsync(
+                    project,
+                    runId,
+                    entryStatus,
+                    generatedFiles,
+                    entry.SelectionValidation,
+                    entryStatus,
+                    cancellationToken);
+                await _engineeringClosure.TouchMemoryAsync(project, "asset-library", runId, imageResult.Status, null, cancellationToken);
+                return new ProjectAssetGenerationRunResult(
+                    entryStatus,
+                    actionId,
+                    entry,
+                    library);
+            }
+
+            var existingUnit = UpsertUnit(library, unit);
+            var entries = generatedImageFiles
+                .Select((path, index) => CreateLibraryEntry(project, index == 0 ? entryId : $"{entryId}-{index + 1:00}", runId, actionId, prompt, entryStatus, imageResult, path, generatedImageFiles))
+                .ToArray();
+            var updatedUnit = existingUnit with
+            {
+                Entries = [.. entries, .. existingUnit.Entries]
+            };
+            library = WriteUnit(library, updatedUnit);
+            await WriteLibraryAsync(project, library, cancellationToken);
+            foreach (var entry in entries)
+            {
+                await UpdateAssetsManifestAsync(project, unit, entry, cancellationToken);
+            }
+            await WriteAssetRouteEvidenceAsync(
+                project,
+                runId,
+                imageResult.Status,
+                generatedFiles,
+                entries[0].SelectionValidation,
+                imageResult.Status,
+                cancellationToken);
+            await _engineeringClosure.TouchMemoryAsync(project, "asset-library", runId, imageResult.Status, null, cancellationToken);
+
+            return new ProjectAssetGenerationRunResult(
+                imageResult.Status,
+                actionId,
+                entries[0],
+                ReadLibrary(project));
         }
         finally
         {
-            if (!string.IsNullOrWhiteSpace(referenceImagePath) && File.Exists(referenceImagePath))
-            {
-                File.Delete(referenceImagePath);
-                var referenceDirectory = Path.GetDirectoryName(referenceImagePath);
-                if (!string.IsNullOrWhiteSpace(referenceDirectory) && Directory.Exists(referenceDirectory))
-                {
-                    Directory.Delete(referenceDirectory, recursive: true);
-                }
-            }
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
-
-        foreach (var artifactPath in imageResult.ArtifactPaths)
-        {
-            await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(
-                runId,
-                project.ProjectId,
-                "project-asset-generation-output",
-                artifactPath,
-                "Project asset generation output"), cancellationToken);
-        }
-
-        var evidenceJson = JsonSerializer.Serialize(new
-        {
-            run_type = RunType,
-            action_id = actionId,
-            skill_name = actionId == "map-making-master" ? "generate2dmap" : "generate2dsprite",
-            generation_mode = string.Equals(request.GenerationMode, "image-to-image", StringComparison.OrdinalIgnoreCase) ? "image-to-image" : "text-to-image",
-            requested_count = count,
-            output_directory = outputRelativeDirectory,
-            elapsed_seconds = Math.Round(imageResult.Elapsed.TotalSeconds, 3),
-            artifacts = imageResult.ArtifactPaths
-        });
-        await _metadataStore.CompleteRunAsync(
-            runId,
-            imageResult.Status,
-            imageResult.ExitCode,
-            imageResult.Stdout,
-            imageResult.Stderr,
-            evidenceJson,
-            cancellationToken);
-
-        var library = ReadLibrary(project);
-        var generatedFiles = EnumerateGeneratedFiles(project.RepoPath, outputAbsoluteDirectory).ToArray();
-        var generatedImageFiles = generatedFiles
-            .Where(path => IsPreviewResource(ToResPath(project.RepoPath, path)))
-            .ToArray();
-        var skillSucceeded = string.Equals(imageResult.Status, "succeeded", StringComparison.OrdinalIgnoreCase);
-        var entryStatus = skillSucceeded && generatedImageFiles.Length == 0
-            ? "no_image_generated"
-            : imageResult.Status;
-        if (generatedImageFiles.Length == 0)
-        {
-            var entry = CreateLibraryEntry(project, entryId, runId, actionId, prompt, entryStatus, imageResult, null, generatedImageFiles);
-            return new ProjectAssetGenerationRunResult(
-                entryStatus,
-                actionId,
-                entry,
-                library);
-        }
-
-        var existingUnit = UpsertUnit(library, unit);
-        var entries = generatedImageFiles
-            .Select((path, index) => CreateLibraryEntry(project, index == 0 ? entryId : $"{entryId}-{index + 1:00}", runId, actionId, prompt, entryStatus, imageResult, path, generatedImageFiles))
-            .ToArray();
-        var updatedUnit = existingUnit with
-        {
-            Entries = [.. entries, .. existingUnit.Entries]
-        };
-        library = WriteUnit(library, updatedUnit);
-        await WriteLibraryAsync(project, library, cancellationToken);
-
-        return new ProjectAssetGenerationRunResult(
-            imageResult.Status,
-            actionId,
-            entries[0],
-            ReadLibrary(project));
     }
 
     public async Task<ProjectAssetLibraryResult?> SelectAsync(
@@ -243,33 +288,83 @@ public sealed class ProjectAssetLibraryService
         }
 
         var selectedEntry = selectedUnit.Entries.FirstOrDefault(entry => string.Equals(entry.EntryId, request.EntryId, StringComparison.Ordinal));
-        var patch = ApplySelectedEntryToScene(project, selectedUnit, selectedEntry);
-        var smoke = request.ValidateWithSmoke == true
-            ? await RunSelectionSmokeAsync(project, patch, cancellationToken)
-            : null;
-        var validation = ValidateReplacement(project, selectedUnit, selectedEntry, patch, smoke);
-        var units = library.Units.Select(unit =>
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, SelectionRunType, cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
         {
-            if (!string.Equals(unit.Key, request.UnitKey, StringComparison.Ordinal))
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            throw new InvalidOperationException("Project runner is busy.");
+        }
+
+        try
+        {
+            var patch = ApplySelectedEntryToScene(project, selectedUnit, selectedEntry);
+            var smoke = request.ValidateWithSmoke == true
+                ? await RunSelectionSmokeAsync(project, patch, cancellationToken)
+                : null;
+            var validation = ValidateReplacement(project, selectedUnit, selectedEntry, patch, smoke);
+            if (ShouldRollbackSelection(validation))
             {
-                return unit;
+                patch.Rollback();
+                patch = patch with { Applied = false, Reason = $"rolled_back_after_{validation.Status}" };
+                validation = ValidateReplacement(project, selectedUnit, selectedEntry, patch, smoke);
+            }
+            var units = library.Units.Select(unit =>
+            {
+                if (!string.Equals(unit.Key, request.UnitKey, StringComparison.Ordinal))
+                {
+                    return unit;
+                }
+
+                return unit with
+                {
+                    SelectedEntryId = ShouldKeepSelection(validation) ? request.EntryId : null,
+                    Entries = unit.Entries
+                        .Select(entry => entry with
+                        {
+                            Selected = ShouldKeepSelection(validation) && string.Equals(entry.EntryId, request.EntryId, StringComparison.Ordinal),
+                            SelectionValidation = string.Equals(entry.EntryId, request.EntryId, StringComparison.Ordinal) ? validation : entry.SelectionValidation
+                        })
+                        .ToArray()
+                };
+            }).ToArray();
+            library = library with { Units = units };
+            await WriteLibraryAsync(project, library, cancellationToken);
+            if (selectedEntry is not null)
+            {
+                await UpdateAssetsManifestAsync(project, selectedUnit, selectedEntry with { Selected = validation.Status is "ready_for_package_smoke" or "smoke_passed", SelectionValidation = validation, RunId = runId }, cancellationToken);
             }
 
-            return unit with
+            var engineeringEvidence = await WriteAssetRouteEvidenceAsync(
+                project,
+                runId,
+                validation.Status is "ready_for_package_smoke" or "smoke_passed" ? "passed" : "failed",
+                [],
+                validation,
+                validation.Status,
+                cancellationToken);
+            await _engineeringClosure.TouchMemoryAsync(project, "asset-library", runId, validation.Status, null, cancellationToken);
+            var evidence = JsonSerializer.Serialize(new
             {
-                SelectedEntryId = request.EntryId,
-                Entries = unit.Entries
-                    .Select(entry => entry with
-                    {
-                        Selected = string.Equals(entry.EntryId, request.EntryId, StringComparison.Ordinal),
-                        SelectionValidation = string.Equals(entry.EntryId, request.EntryId, StringComparison.Ordinal) ? validation : entry.SelectionValidation
-                    })
-                    .ToArray()
-            };
-        }).ToArray();
-        library = library with { Units = units };
-        await WriteLibraryAsync(project, library, cancellationToken);
-        return library;
+                run_type = SelectionRunType,
+                unit_key = request.UnitKey,
+                entry_id = request.EntryId,
+                validation = validation.Status,
+                scene_patch = validation.ScenePatch?.Reason,
+                engineering_evidence = engineeringEvidence.RelativePath
+            });
+            await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, "", "", evidence, cancellationToken);
+            return library;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), "{}", CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
     }
 
     public async Task<ProjectAssetImportResult?> ImportAsync(
@@ -298,6 +393,14 @@ public sealed class ProjectAssetLibraryService
         }
 
         var entryId = Guid.NewGuid().ToString("N");
+        var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, ImportRunType, cancellationToken);
+        var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
+        if (!locked)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "blocked", 423, "", "runner lock already held", "{}", cancellationToken);
+            throw new InvalidOperationException("Project runner is busy.");
+        }
+
         var outputRelativeDirectory = ToSlash(Path.Combine("Game.Godot", "Prototypes", "ProjectAssetLibrary", unit.Key, entryId));
         var outputAbsoluteDirectory = Path.Combine(project.RepoPath, outputRelativeDirectory.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(outputAbsoluteDirectory);
@@ -306,37 +409,134 @@ public sealed class ProjectAssetLibraryService
         var sourceUrlAllowed = false;
         var assistantMessage = "URL 不在白名单内或未提供 URL，已仅按关键词记录，不执行下载。";
 
-        if (source.Uri is not null && IsAllowedAssetUrl(source.Uri))
+        try
         {
-            sourceUrlAllowed = true;
-            var downloaded = await DownloadAssetAsync(source.Uri, outputAbsoluteDirectory, cancellationToken);
-            importedFiles = [downloaded];
-            status = "imported";
-            assistantMessage = "已从白名单 URL 导入素材。";
-        }
+            if (source.Uri is not null && IsAllowedAssetUrl(source.Uri))
+            {
+                sourceUrlAllowed = true;
+                IReadOnlyList<string> downloaded;
+                try
+                {
+                    downloaded = await DownloadAndStageAssetAsync(project, runId, source.Uri, outputAbsoluteDirectory, cancellationToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    var failedEntry = CreateAssetImportEntry(
+                        project,
+                        unit,
+                        entryId,
+                        runId,
+                        source,
+                        sourceUrlAllowed,
+                        "failed",
+                        $"素材下载失败：{ex.Message}",
+                        []);
+                    await UpdateAssetsManifestAsync(project, unit, failedEntry, cancellationToken);
+                    await _engineeringClosure.WriteEvidenceAsync(
+                        project,
+                        new PrototypeEngineeringEvidence(
+                            runId,
+                            "asset-library",
+                            "failed",
+                            null,
+                            AssetValidation: PrototypeEngineeringCheckResult.Failed(reason: ex.Message),
+                            FailureSummary: [ex.Message]),
+                        cancellationToken);
+                    throw;
+                }
 
+                importedFiles = downloaded.ToArray();
+                status = "imported";
+                assistantMessage = "已从白名单 URL 导入素材。";
+            }
+
+            var library = ReadLibrary(project);
+            var existingUnit = UpsertUnit(library, unit);
+            var entry = CreateAssetImportEntry(
+                project,
+                unit,
+                entryId,
+                runId,
+                source,
+                sourceUrlAllowed,
+                status,
+                assistantMessage,
+                importedFiles);
+            var updatedUnit = existingUnit with
+            {
+                Entries = [entry, .. existingUnit.Entries]
+            };
+            library = WriteUnit(library, updatedUnit);
+            await WriteLibraryAsync(project, library, cancellationToken);
+            await UpdateAssetsManifestAsync(project, unit, entry, cancellationToken);
+            var engineeringEvidence = await _engineeringClosure.WriteEvidenceAsync(
+                    project,
+                    new PrototypeEngineeringEvidence(
+                        runId,
+                        "asset-library",
+                        "passed",
+                        null,
+                        AssetValidation: status == "imported"
+                            ? PrototypeEngineeringCheckResult.Passed()
+                            : PrototypeEngineeringCheckResult.Skipped("keyword-only import does not download assets"),
+                        ChangedFiles: importedFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path))).ToArray(),
+                        FailureSummary: []),
+                    cancellationToken);
+            await _engineeringClosure.TouchMemoryAsync(project, "asset-library", runId, status, null, cancellationToken);
+            var runEvidence = JsonSerializer.Serialize(new
+            {
+                run_type = ImportRunType,
+                entry_id = entry.EntryId,
+                source_kind = entry.SourceKind,
+                source_url_allowed = sourceUrlAllowed,
+                engineering_evidence = engineeringEvidence.RelativePath
+            });
+            await _metadataStore.CompleteRunAsync(runId, status == "imported" || status == "keyword_only" ? "succeeded" : "failed", 0, assistantMessage, "", runEvidence, cancellationToken);
+
+            return new ProjectAssetImportResult(status, sourceUrlAllowed, entry, ReadLibrary(project));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await _metadataStore.CompleteRunAsync(runId, "failed", 500, "", ex.ToString(), "{}", CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
+        }
+    }
+
+    private static ProjectAssetLibraryEntry CreateAssetImportEntry(
+        ProjectSnapshot project,
+        ProjectAssetLibraryUnit unit,
+        string entryId,
+        string runId,
+        ProjectAssetImportSource source,
+        bool sourceUrlAllowed,
+        string status,
+        string assistantMessage,
+        IReadOnlyList<string> importedFiles)
+    {
         var imageResult = new ProjectAssetImageGenerationResult(
             "",
             status,
-            0,
+            status == "failed" ? 1 : 0,
             "",
             "",
             assistantMessage,
             importedFiles.Select(path => ToSlash(Path.GetRelativePath(project.RepoPath, path))).ToArray(),
             TimeSpan.Zero);
-        var library = ReadLibrary(project);
-        var existingUnit = UpsertUnit(library, unit);
         var entry = CreateLibraryEntry(
             project,
             entryId,
-            "",
+            runId,
             "asset-whitelist-import",
             BuildImportPrompt(unit, source.KeywordText, source.Uri, sourceUrlAllowed),
             status,
             imageResult,
             importedFiles.FirstOrDefault(IsReplacementResourceFile),
             importedFiles);
-        entry = entry with
+        return entry with
         {
             SourceKind = sourceUrlAllowed ? "whitelist_url" : "keyword_only",
             SourceUrl = sourceUrlAllowed ? source.Uri?.ToString() : null,
@@ -344,13 +544,99 @@ public sealed class ProjectAssetLibraryService
             SourceUrlAllowed = sourceUrlAllowed,
             SelectionValidation = ValidateReplacement(project, unit, entry)
         };
-        var updatedUnit = existingUnit with
+    }
+
+    private async Task<PrototypeEngineeringEvidenceWriteResult> WriteAssetRouteEvidenceAsync(
+        ProjectSnapshot project,
+        string runId,
+        string routeStatus,
+        IReadOnlyList<string> changedFiles,
+        ProjectAssetReplacementValidation? validation,
+        string failureStatus,
+        CancellationToken cancellationToken)
+    {
+        var assetValidation = validation is null
+            ? PrototypeEngineeringCheckResult.Skipped("asset is recorded but not selected for scene replacement")
+            : validation.Status is "ready_for_package_smoke" or "smoke_passed"
+                ? PrototypeEngineeringCheckResult.Passed()
+                : PrototypeEngineeringCheckResult.Failed(reason: validation.Status);
+        var routePassed = routeStatus is "succeeded" or "imported" or "keyword_only" or "passed" or "ready_for_package_smoke" or "smoke_passed";
+        var validationPassed = validation is null || validation.Status is "ready_for_package_smoke" or "smoke_passed";
+        var finalStatus = routePassed && validationPassed ? "passed" : "failed";
+        return await _engineeringClosure.WriteEvidenceAsync(
+            project,
+            new PrototypeEngineeringEvidence(
+                runId,
+                "asset-library",
+                finalStatus,
+                null,
+                AssetValidation: assetValidation,
+                ChangedFiles: changedFiles.Select(path => ToProjectRelativePath(project, path)).ToArray(),
+                FailureSummary: finalStatus == "passed" ? [] : [failureStatus]),
+            cancellationToken);
+    }
+
+    private async Task UpdateAssetsManifestAsync(
+        ProjectSnapshot project,
+        ProjectAssetLibraryUnit unit,
+        ProjectAssetLibraryEntry entry,
+        CancellationToken cancellationToken)
+    {
+        _engineeringClosure.EnsureProjectFiles(project);
+        var path = Path.Combine(project.RepoPath, PrototypeEngineeringClosureService.AssetsRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        var validation = entry.SelectionValidation;
+        var boundToScene = entry.Selected && validation?.ScenePatch?.Applied == true;
+        var verified = boundToScene &&
+                       validation is not null &&
+                       validation.ReplacementResourceExists &&
+                       validation.ScenePatchable &&
+                       validation.CollisionPreserved &&
+                       validation.Status is "ready_for_package_smoke" or "smoke_passed";
+        var status = verified ? "verified" :
+            string.Equals(entry.Status, "keyword_only", StringComparison.OrdinalIgnoreCase) ? "pending" :
+            validation?.Status is "smoke_failed" or "needs_review" ? "failed" : "pending";
+        var smokeStatus = validation?.SelectionSmoke is { Ran: true, ExitCode: 0 }
+            ? "passed"
+            : validation?.SelectionSmoke is { Ran: true }
+                ? "failed"
+                : "skipped";
+        var block = $"""
+
+            - id: {entry.EntryId}
+              source: {entry.SourceKind ?? entry.ActionId}
+              license: <unknown>
+              original_path: {FirstOrEmpty(entry.ArtifactPaths)}
+              godot_path: {entry.PreviewResourcePath ?? "none"}
+              usage: {FirstNonEmpty(unit.Kind, unit.IntendedUse, "asset")}
+              imported: {entry.ArtifactPaths.Count > 0}
+              bound_to_scene: {(boundToScene ? unit.ScenePath : "none")}
+              requires_collision: {RequiresCollisionPreservation(unit)}
+              collision_shape: {(validation?.CollisionPreserved == true ? "preserved_or_not_required" : "missing_or_unverified")}
+              asset_smoke: {smokeStatus}
+              status: {status}
+              last_verified_at: {DateTimeOffset.UtcNow:O}
+              validation_run_id: {FirstNonEmpty(entry.RunId, entry.EntryId)}
+            """;
+        await File.AppendAllTextAsync(path, block, Encoding.UTF8, cancellationToken);
+    }
+
+    private static string ToProjectRelativePath(ProjectSnapshot project, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
         {
-            Entries = [entry, .. existingUnit.Entries]
-        };
-        library = WriteUnit(library, updatedUnit);
-        await WriteLibraryAsync(project, library, cancellationToken);
-        return new ProjectAssetImportResult(status, sourceUrlAllowed, entry, ReadLibrary(project));
+            return "";
+        }
+
+        return Path.IsPathRooted(path)
+            ? ToSlash(Path.GetRelativePath(project.RepoPath, path))
+            : ToSlash(path);
+    }
+
+    private static string SafePathSegment(string value)
+    {
+        var chars = value.Select(ch => char.IsLetterOrDigit(ch) || ch is '-' or '_' ? ch : '-').ToArray();
+        var safe = new string(chars).Trim('-');
+        return string.IsNullOrWhiteSpace(safe) ? "unknown" : safe;
     }
 
     private async Task<ProjectSnapshot?> GetProjectAsync(string accountId, string projectId, CancellationToken cancellationToken)
@@ -478,8 +764,21 @@ public sealed class ProjectAssetLibraryService
             null);
     }
 
-    private async Task<string> DownloadAssetAsync(Uri sourceUri, string outputAbsoluteDirectory, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<string>> DownloadAndStageAssetAsync(
+        ProjectSnapshot project,
+        string runId,
+        Uri sourceUri,
+        string outputAbsoluteDirectory,
+        CancellationToken cancellationToken)
     {
+        var quarantineDirectory = Path.Combine(
+            project.RepoPath,
+            "logs",
+            "prototype-evidence",
+            SafePathSegment(project.ProjectId),
+            SafePathSegment(runId),
+            "asset-quarantine");
+        Directory.CreateDirectory(quarantineDirectory);
         using var response = await _httpClient.GetAsync(sourceUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (IsRedirectStatusCode(response.StatusCode))
         {
@@ -510,29 +809,113 @@ public sealed class ProjectAssetLibraryService
         }
 
         var fileName = $"{SanitizeFileStem(Path.GetFileNameWithoutExtension(sourceUri.AbsolutePath), "asset-whitelist-import")}{extension}";
-        var outputPath = Path.Combine(outputAbsoluteDirectory, fileName);
-        await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
-        await using var output = File.Create(outputPath);
-        var buffer = new byte[81920];
-        long total = 0;
-        while (true)
+        var quarantinePath = Path.Combine(quarantineDirectory, fileName);
+        await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))
+        await using (var output = File.Create(quarantinePath))
         {
-            var read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
-            if (read == 0)
+            var buffer = new byte[81920];
+            long total = 0;
+            while (true)
             {
-                break;
-            }
+                var read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                if (read == 0)
+                {
+                    break;
+                }
 
-            total += read;
-            if (total > MaxImportedAssetBytes)
-            {
-                throw new ArgumentException("Imported asset is too large.");
-            }
+                total += read;
+                if (total > MaxImportedAssetBytes)
+                {
+                    throw new ArgumentException("Imported asset is too large.");
+                }
 
-            await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            }
         }
 
-        return outputPath;
+        if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            return ExtractAllowedArchiveAssets(project, quarantinePath, outputAbsoluteDirectory);
+        }
+
+        if (!RuntimeAssetExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Imported asset type is not allowed for runtime use.");
+        }
+
+        var stagedPath = ResolveUnderDirectory(outputAbsoluteDirectory, fileName);
+        File.Copy(quarantinePath, stagedPath, overwrite: false);
+        return [stagedPath];
+    }
+
+    private static IReadOnlyList<string> ExtractAllowedArchiveAssets(
+        ProjectSnapshot project,
+        string archivePath,
+        string outputAbsoluteDirectory)
+    {
+        var staged = new List<string>();
+        using var archive = ZipFile.OpenRead(archivePath);
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name))
+            {
+                continue;
+            }
+
+            var extension = Path.GetExtension(entry.Name).ToLowerInvariant();
+            if (BlockedArchiveExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Imported archive contains dynamic code or executable files.");
+            }
+
+            if (!RuntimeAssetExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (entry.Length > MaxImportedAssetBytes)
+            {
+                throw new ArgumentException("Imported archive entry is too large.");
+            }
+
+            var entryName = entry.FullName.Replace('\\', '/');
+            if (entryName.StartsWith("/", StringComparison.Ordinal) ||
+                entryName.Contains("../", StringComparison.Ordinal) ||
+                entryName.Contains("..\\", StringComparison.Ordinal))
+            {
+                throw new ArgumentException("Imported archive entry path is not allowed.");
+            }
+
+            var outputName = $"{SanitizeFileStem(Path.GetFileNameWithoutExtension(entry.Name), "asset")}{extension}";
+            var outputPath = ResolveUnderDirectory(outputAbsoluteDirectory, outputName);
+            using var input = entry.Open();
+            using var output = File.Create(outputPath);
+            input.CopyTo(output);
+            if (!WorkspacePathPolicy.IsUnderRoot(project.RepoPath, outputPath))
+            {
+                throw new ArgumentException("Imported archive entry escaped the project repository root.");
+            }
+
+            staged.Add(outputPath);
+        }
+
+        if (staged.Count == 0)
+        {
+            throw new ArgumentException("Imported archive did not contain supported runtime assets.");
+        }
+
+        return staged;
+    }
+
+    private static string ResolveUnderDirectory(string root, string fileName)
+    {
+        var path = Path.GetFullPath(Path.Combine(root, fileName));
+        if (!WorkspacePathPolicy.IsUnderRoot(root, path))
+        {
+            throw new ArgumentException("Imported asset path escaped the output directory.");
+        }
+
+        return path;
     }
 
     private static bool IsRedirectStatusCode(HttpStatusCode statusCode)
@@ -706,6 +1089,27 @@ public sealed class ProjectAssetLibraryService
             smoke);
     }
 
+    private static bool ShouldRollbackSelection(ProjectAssetReplacementValidation validation)
+    {
+        return validation.ScenePatch?.Applied == true &&
+               validation.Status is "smoke_failed" or "needs_review";
+    }
+
+    private static bool ShouldKeepSelection(ProjectAssetReplacementValidation validation)
+    {
+        if (validation.Status is "ready_for_package_smoke" or "smoke_passed")
+        {
+            return true;
+        }
+
+        if (validation.Status != "needs_review" || validation.ScenePatch?.Applied == true)
+        {
+            return false;
+        }
+
+        return validation.ScenePatch?.Reason.StartsWith("rolled_back_after_", StringComparison.OrdinalIgnoreCase) != true;
+    }
+
     private static ProjectAssetScenePatchResult ApplySelectedEntryToScene(
         ProjectSnapshot project,
         ProjectAssetLibraryUnit unit,
@@ -713,18 +1117,18 @@ public sealed class ProjectAssetLibraryService
     {
         if (!IsResPath(entry?.PreviewResourcePath))
         {
-            return new ProjectAssetScenePatchResult(false, "selected_entry_has_no_preview_resource", null);
+            return ProjectAssetScenePatchResult.NoChange("selected_entry_has_no_preview_resource", null);
         }
 
         if (!IsResPath(unit.ScenePath) || !unit.ScenePath.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase))
         {
-            return new ProjectAssetScenePatchResult(false, "scene_path_not_patchable", null);
+            return ProjectAssetScenePatchResult.NoChange("scene_path_not_patchable", null);
         }
 
         var scenePath = ResolveResPath(project.RepoPath, unit.ScenePath);
         if (!File.Exists(scenePath))
         {
-            return new ProjectAssetScenePatchResult(false, "scene_file_missing", unit.ScenePath);
+            return ProjectAssetScenePatchResult.NoChange("scene_file_missing", unit.ScenePath);
         }
 
         var sceneText = File.ReadAllText(scenePath, Encoding.UTF8);
@@ -735,35 +1139,36 @@ public sealed class ProjectAssetLibraryService
             var newToken = $"path=\"{selectedPreviewResourcePath}\"";
             if (sceneText.Contains(newToken, StringComparison.Ordinal))
             {
-                return new ProjectAssetScenePatchResult(true, "scene_already_uses_selected_resource", unit.ScenePath);
+                return ProjectAssetScenePatchResult.NoChange("scene_already_uses_selected_resource", unit.ScenePath, applied: true);
             }
 
             if (!sceneText.Contains(oldToken, StringComparison.Ordinal))
             {
-                return new ProjectAssetScenePatchResult(false, "original_resource_reference_missing", unit.ScenePath);
+                return ProjectAssetScenePatchResult.NoChange("original_resource_reference_missing", unit.ScenePath);
             }
 
             File.WriteAllText(scenePath, sceneText.Replace(oldToken, newToken, StringComparison.Ordinal), Encoding.UTF8);
-            return new ProjectAssetScenePatchResult(true, "scene_resource_reference_replaced", unit.ScenePath);
+            return ProjectAssetScenePatchResult.Changed("scene_resource_reference_replaced", unit.ScenePath, scenePath, sceneText);
         }
 
         if (!IsDirectTextureNodeType(unit.NodeType))
         {
-            return new ProjectAssetScenePatchResult(false, "node_type_not_direct_texture", unit.ScenePath);
+            return ProjectAssetScenePatchResult.NoChange("node_type_not_direct_texture", unit.ScenePath);
         }
 
         var updatedSceneText = AddTextureReferenceToExistingNode(sceneText, unit, selectedPreviewResourcePath);
         if (updatedSceneText is null)
         {
-            return new ProjectAssetScenePatchResult(false, "target_node_missing", unit.ScenePath);
+            return ProjectAssetScenePatchResult.NoChange("target_node_missing", unit.ScenePath);
         }
 
         if (!string.Equals(updatedSceneText, sceneText, StringComparison.Ordinal))
         {
             File.WriteAllText(scenePath, updatedSceneText, Encoding.UTF8);
+            return ProjectAssetScenePatchResult.Changed("scene_texture_reference_inserted", unit.ScenePath, scenePath, sceneText);
         }
 
-        return new ProjectAssetScenePatchResult(true, "scene_texture_reference_inserted", unit.ScenePath);
+        return ProjectAssetScenePatchResult.NoChange("scene_texture_reference_inserted", unit.ScenePath, applied: true);
     }
 
     private static bool RequiresCollisionPreservation(ProjectAssetLibraryUnit unit)
@@ -1009,8 +1414,7 @@ public sealed class ProjectAssetLibraryService
         return extension.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
                extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
                extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-               extension.Equals(".webp", StringComparison.OrdinalIgnoreCase) ||
-               extension.Equals(".svg", StringComparison.OrdinalIgnoreCase);
+               extension.Equals(".webp", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsReplacementResourceFile(string path)
@@ -1030,7 +1434,6 @@ public sealed class ProjectAssetLibraryService
             "image/png" => ".png",
             "image/jpeg" => ".jpg",
             "image/webp" => ".webp",
-            "image/svg+xml" => ".svg",
             "model/gltf-binary" => ".glb",
             "model/gltf+json" => ".gltf",
             "application/zip" => ".zip",
@@ -1275,8 +1678,7 @@ public sealed class ProjectAssetLibraryService
                (extension.Equals(".png", StringComparison.OrdinalIgnoreCase) ||
                 extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
                 extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-                extension.Equals(".webp", StringComparison.OrdinalIgnoreCase) ||
-                extension.Equals(".svg", StringComparison.OrdinalIgnoreCase));
+                extension.Equals(".webp", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string ToResPath(string projectRoot, string absolutePath)
@@ -1305,6 +1707,16 @@ public sealed class ProjectAssetLibraryService
         return string.IsNullOrWhiteSpace(value)
             ? ""
             : System.Text.RegularExpressions.Regex.Replace(value.Trim(), "\\s+", " ");
+    }
+
+    private static string FirstOrEmpty(IReadOnlyList<string> values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";
+    }
+
+    private static string FirstNonEmpty(params string?[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? "";
     }
 
     private sealed record ProjectAssetImportSource(Uri? Uri, string KeywordText);
@@ -1403,7 +1815,24 @@ public sealed record ProjectAssetReplacementValidationCheck(
 public sealed record ProjectAssetScenePatchResult(
     bool Applied,
     string Reason,
-    string? ScenePath);
+    string? ScenePath,
+    string? AbsoluteScenePath = null,
+    string? OriginalSceneText = null)
+{
+    public static ProjectAssetScenePatchResult NoChange(string reason, string? scenePath, bool applied = false)
+        => new(applied, reason, scenePath);
+
+    public static ProjectAssetScenePatchResult Changed(string reason, string scenePath, string absoluteScenePath, string originalSceneText)
+        => new(true, reason, scenePath, absoluteScenePath, originalSceneText);
+
+    public void Rollback()
+    {
+        if (!string.IsNullOrWhiteSpace(AbsoluteScenePath) && OriginalSceneText is not null)
+        {
+            File.WriteAllText(AbsoluteScenePath, OriginalSceneText, Encoding.UTF8);
+        }
+    }
+}
 
 public sealed record ProjectAssetSelectionSmokeResult(
     bool Ran,

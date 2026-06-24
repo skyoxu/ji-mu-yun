@@ -2162,6 +2162,12 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("milestone-progress-title");
         html.Should().Contain("if (active && step?.stepId === active.stepId) return \"running\"");
         html.Should().Contain("当前激活模块");
+        html.Should().Contain("自动验收证据");
+        html.Should().Contain("latestEvidenceRelativePath");
+        html.Should().Contain("gddMilestoneEvidence");
+        html.Should().Contain("prototype-evidence?path=");
+        html.Should().Contain("milestone smoke");
+        html.Should().Contain("asset validation");
         html.Should().Contain("上一个模块");
         html.Should().Contain("下一个模块");
         html.Should().Contain("gdd-milestone-steps/latest");
@@ -2731,6 +2737,30 @@ public sealed class BrowserUiRendererTests
         whitelistIndex.Should().BeLessThan(authFailureIndex);
     }
 
+    [Fact]
+    public void Program_PrototypeEvidenceEndpointGuardsProjectLocalEvidenceJson()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().Contain("/api/projects/{projectId}/prototype-evidence");
+        source.Should().Contain("evidence_path_required");
+        source.Should().Contain("evidence_path_not_allowed");
+        source.Should().Contain("prototype_evidence_not_found");
+        source.Should().Contain("logs/prototype-evidence/");
+        source.Should().Contain("evidenceRoot");
+        source.Should().Contain("WorkspacePathPolicy.IsUnderRoot(evidenceRoot, absolutePath)");
+        source.Should().Contain("Path.DirectorySeparatorChar}evidence.json");
+        source.Should().Contain("JsonDocument.ParseAsync");
+    }
+
 
     [Fact]
     public void Program_SynchronousRunEndpointsTranslateServerSideRunCancellation()
@@ -2757,6 +2787,8 @@ public sealed class BrowserUiRendererTests
             "app.MapPost(\"/api/projects/{projectId}/gdd\"",
             "app.MapPost(\"/api/projects/{projectId}/gdd/outline/sections/{sectionId}\"",
             "app.MapPost(\"/api/projects/{projectId}/asset-library/generate\"",
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/import\"",
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/select\"",
             "app.MapPost(\"/api/projects/{projectId}/chat\"",
             "app.MapPost(\"/api/projects/{projectId}/iteration-plan/execute-next\"",
             "app.MapPost(\"/api/projects/{projectId}/ui-optimization\"",
@@ -2779,6 +2811,38 @@ public sealed class BrowserUiRendererTests
             var endpointSource = source[routeIndex..(nextRouteIndex < 0 ? source.Length : nextRouteIndex)];
             endpointSource.Should().Contain("catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)", $"{route} should translate queued or running cancellation");
             endpointSource.Should().Contain("return CancelledRunResult();", $"{route} should return the standard cancel payload");
+        }
+    }
+
+    [Fact]
+    public void Program_AssetLibraryWriteEndpointsTranslateProjectRunnerBusy()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        var routes = new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/generate\"",
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/import\"",
+            "app.MapPost(\"/api/projects/{projectId}/asset-library/select\""
+        };
+
+        foreach (var route in routes)
+        {
+            var routeIndex = source.IndexOf(route, StringComparison.Ordinal);
+            routeIndex.Should().BeGreaterThanOrEqualTo(0, $"{route} should exist");
+            var nextRouteIndex = source.IndexOf("app.Map", routeIndex + route.Length, StringComparison.Ordinal);
+            var endpointSource = source[routeIndex..(nextRouteIndex < 0 ? source.Length : nextRouteIndex)];
+            endpointSource.Should().Contain("Project runner is busy.", $"{route} should recognize the project runner lock failure");
+            endpointSource.Should().Contain("new { error = \"project_busy\" }", $"{route} should return the standard busy payload");
+            endpointSource.Should().Contain("StatusCodes.Status423Locked", $"{route} should return a locked status while another project write run is active");
         }
     }
 

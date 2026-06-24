@@ -32,6 +32,7 @@ public sealed class PrototypeWorkflowService
     private readonly GameTypeTemplateCatalog _templateCatalog;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeEngineeringClosureService _engineeringClosure;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
@@ -65,6 +66,7 @@ public sealed class PrototypeWorkflowService
         GameTypeTemplateCatalog templateCatalog,
         PrototypeRouteStateWriter? routeStateWriter = null,
         PrototypeContractService? contractService = null,
+        PrototypeEngineeringClosureService? engineeringClosure = null,
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
@@ -84,6 +86,7 @@ public sealed class PrototypeWorkflowService
         _templateCatalog = templateCatalog;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _contractService = contractService ?? new PrototypeContractService();
+        _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
@@ -208,6 +211,7 @@ public sealed class PrototypeWorkflowService
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, cancellationToken);
         WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, contract.RelativePath, slug, validation, smoke);
+        await WriteSkeletonEngineeringClosureAsync(project, runId, status, smoke.ExitCode, discoveredArtifacts.Select(a => a.RelativePath).ToArray(), cancellationToken);
         await SetProgressAsync(
             runId,
             status,
@@ -1054,6 +1058,11 @@ public sealed class PrototypeWorkflowService
         });
         await _metadataStore.CompleteRunAsync(runId, status, exitCode, stdout, stderr, evidenceJson, CancellationToken.None);
         WritePrototypeRouteState(project, runId, status, exitCode, prototypeRecordPath, prototypeContractPath, slug, validation, smoke);
+        var projectSnapshot = await _metadataStore.GetProjectSnapshotAsync(projectId, CancellationToken.None);
+        if (projectSnapshot is not null)
+        {
+            await WriteSkeletonEngineeringClosureAsync(projectSnapshot, runId, status, smoke.ExitCode, discoveredArtifacts.Select(a => a.RelativePath).ToArray(), CancellationToken.None);
+        }
         await SetProgressAsync(
             runId,
             status,
@@ -1326,6 +1335,38 @@ public sealed class PrototypeWorkflowService
                 exitCode: exitCode,
                 providerBilling: providerBilling),
             CancellationToken.None);
+    }
+
+    private async Task WriteSkeletonEngineeringClosureAsync(
+        ProjectSnapshot project,
+        string runId,
+        string status,
+        int smokeExitCode,
+        IReadOnlyList<string> changedFiles,
+        CancellationToken cancellationToken)
+    {
+        _engineeringClosure.EnsureProjectFiles(project);
+        await _engineeringClosure.WriteEvidenceAsync(
+            project,
+            new PrototypeEngineeringEvidence(
+                runId,
+                "skeleton-m1",
+                string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ? "passed" : "failed",
+                "M1",
+                DotnetBuild: PrototypeEngineeringCheckResult.Skipped("skeleton route owns full route evidence in run metadata"),
+                GodotImport: PrototypeEngineeringCheckResult.Skipped("skeleton route owns full route evidence in run metadata"),
+                HeadlessLoad: smokeExitCode == 0
+                    ? PrototypeEngineeringCheckResult.Passed()
+                    : PrototypeEngineeringCheckResult.Failed(reason: $"smoke_exit_code={smokeExitCode}"),
+                MilestoneSmoke: smokeExitCode == 0
+                    ? PrototypeEngineeringCheckResult.Passed()
+                    : PrototypeEngineeringCheckResult.Failed(reason: $"smoke_exit_code={smokeExitCode}"),
+                AssetValidation: PrototypeEngineeringCheckResult.Skipped("not an asset-library route"),
+                FrameCheck: PrototypeEngineeringCheckResult.Skipped("not required for skeleton route"),
+                ChangedFiles: changedFiles,
+                FailureSummary: string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ? [] : [$"status={status}; smoke_exit_code={smokeExitCode}"]),
+            cancellationToken);
+        await _engineeringClosure.TouchMemoryAsync(project, "skeleton-m1", runId, status, "M1", cancellationToken);
     }
 
     private async Task AdvancePrototypeStepsAsync(string runId, CancellationToken cancellationToken)

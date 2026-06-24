@@ -26,7 +26,8 @@ public sealed record GddMilestoneStepResult(
     bool CanConfirm,
     bool CanSubmitFeedback,
     string? ReviewSummary = null,
-    string? SpecRelativePath = null);
+    string? SpecRelativePath = null,
+    string? LatestEvidenceRelativePath = null);
 
 public sealed record GddMilestoneStepConfirmRequest(
     string? Notes = null,

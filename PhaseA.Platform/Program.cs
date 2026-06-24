@@ -67,6 +67,7 @@ builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
 builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
 builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeRouteStateWriter>();
+builder.Services.AddSingleton<PrototypeEngineeringClosureService>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
 builder.Services.AddSingleton<IPrototypeLightweightValidationService, PrototypeLightweightValidationService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
@@ -752,6 +753,44 @@ app.MapPost("/api/projects/{projectId}/asset-preview-ticket", async (
     });
 });
 
+app.MapGet("/api/projects/{projectId}/prototype-evidence", async (
+    string projectId,
+    string path,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(path))
+    {
+        return Results.BadRequest(new { error = "evidence_path_required" });
+    }
+
+    if (!path.Replace('\\', '/').StartsWith("logs/prototype-evidence/", StringComparison.Ordinal))
+    {
+        return Results.BadRequest(new { error = "evidence_path_not_allowed" });
+    }
+
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var evidenceRoot = Path.GetFullPath(Path.Combine(project.RepoPath, "logs", "prototype-evidence"));
+    var absolutePath = Path.GetFullPath(Path.Combine(project.RepoPath, path.Replace('/', Path.DirectorySeparatorChar)));
+    if (!WorkspacePathPolicy.IsUnderRoot(project.RepoPath, absolutePath) ||
+        !WorkspacePathPolicy.IsUnderRoot(evidenceRoot, absolutePath) ||
+        !absolutePath.EndsWith($"{Path.DirectorySeparatorChar}evidence.json", StringComparison.OrdinalIgnoreCase) ||
+        !File.Exists(absolutePath))
+    {
+        return Results.NotFound(new { error = "prototype_evidence_not_found" });
+    }
+
+    await using var stream = File.OpenRead(absolutePath);
+    using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+    return Results.Json(document.RootElement.Clone());
+});
+
 app.MapGet("/api/projects/{projectId}/asset-library", async (
     string projectId,
     HttpContext context,
@@ -787,6 +826,10 @@ app.MapPost("/api/projects/{projectId}/asset-library/generate", async (
     {
         return Results.Json(new { error = ex.FailureCode }, statusCode: StatusCodes.Status429TooManyRequests);
     }
+    catch (InvalidOperationException ex) when (string.Equals(ex.Message, "Project runner is busy.", StringComparison.Ordinal))
+    {
+        return Results.Json(new { error = "project_busy" }, statusCode: StatusCodes.Status423Locked);
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/asset-library/import", async (
@@ -811,9 +854,17 @@ app.MapPost("/api/projects/{projectId}/asset-library/import", async (
         var result = await library.ImportAsync(CurrentAccountId(context), projectId, request, cancellationToken);
         return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
     }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
     catch (ArgumentException ex)
     {
         return Results.BadRequest(new { error = ex.Message });
+    }
+    catch (InvalidOperationException ex) when (string.Equals(ex.Message, "Project runner is busy.", StringComparison.Ordinal))
+    {
+        return Results.Json(new { error = "project_busy" }, statusCode: StatusCodes.Status423Locked);
     }
 });
 
@@ -829,8 +880,19 @@ app.MapPost("/api/projects/{projectId}/asset-library/select", async (
         return Results.BadRequest(new { error = "asset_selection_required" });
     }
 
-    var result = await library.SelectAsync(CurrentAccountId(context), projectId, request, cancellationToken);
-    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    try
+    {
+        var result = await library.SelectAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+        return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex) when (string.Equals(ex.Message, "Project runner is busy.", StringComparison.Ordinal))
+    {
+        return Results.Json(new { error = "project_busy" }, statusCode: StatusCodes.Status423Locked);
+    }
 });
 
 app.MapGet("/projects/{projectId}/asset-preview", async (

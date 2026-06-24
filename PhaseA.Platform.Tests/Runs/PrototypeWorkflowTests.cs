@@ -321,6 +321,7 @@ public sealed class PrototypeWorkflowTests
 
         otherQueueCanFinish.SetResult();
         await occupiedOtherQueue.WaitAsync(TimeSpan.FromSeconds(5));
+        await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
     }
 
     [Fact]
@@ -382,6 +383,11 @@ public sealed class PrototypeWorkflowTests
         record.Should().Contain("Source Document");
         record.Should().Contain("WASD movement");
         record.Should().Contain("M1 core combat");
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "STRUCTURE.md")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "MEMORY.md")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "ASSETS.md")).Should().BeTrue();
+        Directory.EnumerateFiles(Path.Combine(project.RepoPath, "logs", "prototype-evidence", project.ProjectId), "evidence.json", SearchOption.AllDirectories)
+            .Should().NotBeEmpty();
     }
 
     [Fact]

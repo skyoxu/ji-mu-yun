@@ -1477,6 +1477,13 @@ public sealed class ArtifactReadbackServiceTests
         generated.Library.Units.Should().ContainSingle(unit =>
             unit.InstanceName == "RpgMapAsset" &&
             unit.Entries.Count == 2);
+        var assetsManifest = Path.Combine((await store.GetProjectSnapshotAsync(projectId))!.RepoPath, "docs", "prototype", "ASSETS.md");
+        File.Exists(assetsManifest).Should().BeTrue();
+        var manifestText = File.ReadAllText(assetsManifest);
+        manifestText.Should().Contain("source: map-making-master");
+        manifestText.Should().Contain("bound_to_scene: none");
+        Directory.EnumerateFiles(Path.Combine((await store.GetProjectSnapshotAsync(projectId))!.RepoPath, "logs", "prototype-evidence", projectId), "evidence.json", SearchOption.AllDirectories)
+            .Should().NotBeEmpty();
         runner.Commands.Should().ContainSingle();
         runner.Commands[0].FileName.Should().Be(options.PythonCommand);
         runner.Commands[0].Arguments.Should().Contain(arg => arg.EndsWith("aiartmirror_image_cli.py", StringComparison.Ordinal));
@@ -1688,6 +1695,16 @@ public sealed class ArtifactReadbackServiceTests
         imported.SourceUrlAllowed.Should().BeTrue();
         imported.Entry.PreviewResourcePath.Should().StartWith("res://Game.Godot/Prototypes/ProjectAssetLibrary/crate-unit/");
         File.Exists(Path.Combine(project.RepoPath, imported.Entry.ArtifactPaths.Single().Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        var assetsManifest = Path.Combine(project.RepoPath, "docs", "prototype", "ASSETS.md");
+        File.Exists(assetsManifest).Should().BeTrue();
+        var manifestText = File.ReadAllText(assetsManifest);
+        manifestText.Should().Contain("source: whitelist_url");
+        manifestText.Should().Contain("bound_to_scene: none");
+        manifestText.Should().Contain("bound_to_scene: res://Game.Godot/Scenes/Main.tscn");
+        var evidenceFiles = Directory.EnumerateFiles(Path.Combine(project.RepoPath, "logs", "prototype-evidence", project.ProjectId), "evidence.json", SearchOption.AllDirectories)
+            .ToArray();
+        evidenceFiles.Should().NotBeEmpty();
+        evidenceFiles.Select(File.ReadAllText).Should().Contain(payload => payload.Contains("\"status\": \"passed\"", StringComparison.Ordinal) && payload.Contains("keyword-only import does not download assets", StringComparison.Ordinal));
         keywordOnly!.Status.Should().Be("keyword_only");
         keywordOnly.SourceUrlAllowed.Should().BeFalse();
         keywordOnly.Entry.PreviewResourcePath.Should().BeNull();
@@ -1816,6 +1833,128 @@ public sealed class ArtifactReadbackServiceTests
         await act.Should().ThrowAsync<ArgumentException>().WithMessage("*redirects are not allowed*");
     }
 
+
+    [Fact]
+    public async Task ProjectAssetLibrary_WhitelistedZipImport_ExtractsOnlyRuntimeAssetsFromQuarantine()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        Write(project!.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene format=3]\n[node name=\"Crate\" type=\"Sprite2D\"]\n");
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes(("props/crate.png", MinimalPng(16, 16))), "application/zip")));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-unit",
+            "Crate",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace visual and preserve collision");
+
+        var imported = await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate-pack.zip", unit));
+
+        imported!.Status.Should().Be("imported");
+        imported.Entry.ArtifactPaths.Should().ContainSingle(path => path.EndsWith("crate.png", StringComparison.OrdinalIgnoreCase));
+        imported.Entry.PreviewResourcePath.Should().EndWith("/crate.png");
+        File.Exists(Path.Combine(project.RepoPath, imported.Entry.ArtifactPaths.Single().Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
+        Directory.EnumerateFiles(Path.Combine(project.RepoPath, "logs", "prototype-evidence", project.ProjectId), "crate-pack.zip", SearchOption.AllDirectories)
+            .Should().ContainSingle("downloaded zip should stay in the evidence quarantine area");
+    }
+
+    [Theory]
+    [InlineData("../escape.png", "path is not allowed")]
+    [InlineData("scripts/payload.cs", "dynamic code")]
+    [InlineData("props/vector.svg", "supported runtime assets")]
+    public async Task ProjectAssetLibrary_WhitelistedZipImport_RejectsUnsafeArchiveEntries(string entryName, string expectedMessage)
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes((entryName, MinimalPng(16, 16))), "application/zip")));
+        var unit = new ProjectAssetUnitRequest(
+            "crate-unit",
+            "Crate",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "",
+            "blocking_prop",
+            "solid dungeon prop",
+            "replace visual and preserve collision");
+
+        var act = async () => await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/crate-pack.zip", unit));
+
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage($"*{expectedMessage}*");
+        Directory.Exists(Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "ProjectAssetLibrary", "crate-unit"))
+            .Should().BeTrue("the run may create its output directory, but unsafe archive entries must not be staged as runtime files");
+        Directory.EnumerateFiles(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "ProjectAssetLibrary", "crate-unit"), "*", SearchOption.AllDirectories)
+            .Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_SelectAsync_RollsBackScenePatch_WhenSmokeFails()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteBytes(project!.RepoPath, "Game.Godot/Assets/player-old.png", MinimalPng(16, 16));
+        WriteBytes(project.RepoPath, "Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png", MinimalPng(16, 16));
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+            [gd_scene load_steps=2 format=3]
+            [ext_resource type="Texture2D" path="res://Game.Godot/Assets/player-old.png" id="1"]
+            [node name="PlayerSprite" type="Sprite2D"]
+            texture = ExtResource("1")
+            [node name="PlayerBody" type="CharacterBody2D"]
+            [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerBody"]
+            """);
+        Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
+        var runner = new FakeHostedProcessRunner("SMOKE FAIL\n", exitCode: 23);
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, runner),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            processRunner: runner);
+
+        var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("player-unit", "entry-1", ValidateWithSmoke: true));
+
+        var sceneText = File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "Main.tscn"));
+        sceneText.Should().Contain("res://Game.Godot/Assets/player-old.png");
+        sceneText.Should().NotContain("res://Game.Godot/Prototypes/ProjectAssetLibrary/player-unit/entry-1/player-new.png");
+        selected!.Units.Single().SelectedEntryId.Should().BeNull();
+        selected.Units.Single().Entries.Should().NotContain(entry => entry.Selected);
+        var attemptedEntry = selected.Units.Single().Entries.Single(entry => entry.EntryId == "entry-1");
+        attemptedEntry.SelectionValidation!.Status.Should().Be("smoke_failed");
+        attemptedEntry.SelectionValidation.ScenePatch!.Reason.Should().Contain("rolled_back_after_smoke_failed");
+        var assetsManifest = Path.Combine(project.RepoPath, "docs", "prototype", "ASSETS.md");
+        File.ReadAllText(assetsManifest).Should().Contain("status: failed");
+    }
+
     [Fact]
     public async Task ProjectAssetLibrary_SelectAsync_PatchesSceneImmediately_AndCanRunSmoke()
     {
@@ -1856,6 +1995,48 @@ public sealed class ArtifactReadbackServiceTests
         selectedEntry.SelectionValidation.ScenePatch!.Applied.Should().BeTrue();
         selectedEntry.SelectionValidation.SelectionSmoke!.Ran.Should().BeTrue();
         runner.Commands.Should().ContainSingle(command => command.Arguments.Any(argument => Path.GetFileName(argument).Equals("smoke_headless.py", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    [Fact]
+    public async Task ProjectAssetLibrary_WriteRoutes_BlockWhenProjectRunnerLockIsHeld()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        Write(project!.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
+        var heldRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "held-run");
+        (await store.TryAcquireRunnerLockAsync(projectId, heldRunId)).Should().BeTrue();
+        var runner = new FakeHostedProcessRunner("asset generation output");
+        var service = new ProjectAssetLibraryService(
+            store,
+            options,
+            new ProjectAssetImageGenerator(options, runner),
+            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))),
+            processRunner: runner);
+        var unit = new ProjectAssetUnitRequest(
+            "player-unit",
+            "PlayerSprite",
+            "Sprite2D",
+            "res://Game.Godot/Scenes/Main.tscn",
+            "res://Game.Godot/Assets/player-old.png",
+            "player_sprite",
+            "player",
+            "selected replacement");
+
+        var generate = async () => await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest("make player", unit));
+        var import = async () => await service.ImportAsync(accountId, projectId, new ProjectAssetImportRequest("https://assets.example.com/kaykit/player.png", unit));
+        var select = async () => await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("player-unit", "entry-1"));
+
+        await generate.Should().ThrowAsync<InvalidOperationException>().WithMessage("Project runner is busy.");
+        await import.Should().ThrowAsync<InvalidOperationException>().WithMessage("Project runner is busy.");
+        await select.Should().ThrowAsync<InvalidOperationException>().WithMessage("Project runner is busy.");
+        runner.Commands.Should().BeEmpty();
     }
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
@@ -2008,6 +2189,23 @@ public sealed class ArtifactReadbackServiceTests
         var path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, content);
+    }
+
+
+    private static byte[] ZipBytes(params (string Name, byte[] Content)[] entries)
+    {
+        using var memory = new MemoryStream();
+        using (var archive = new ZipArchive(memory, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var (name, content) in entries)
+            {
+                var entry = archive.CreateEntry(name);
+                using var stream = entry.Open();
+                stream.Write(content, 0, content.Length);
+            }
+        }
+
+        return memory.ToArray();
     }
 
     private static byte[] MinimalPng(int width, int height)

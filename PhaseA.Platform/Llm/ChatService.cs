@@ -346,7 +346,7 @@ public sealed class ChatService
         return $"""
             我已收到：{message}
 
-            当前是本机测试模式。我可以按规则帮你整理 Phase A 原型想法、解释控制台使用方式，或说明如何使用服务器 Codex CLI 后端。
+            当前是本机测试模式。我可以按规则帮你整理 Phase A 原型想法、解释控制台使用方式，或说明如何使用服务器后台生成服务。
             """;
     }
 

@@ -358,7 +358,7 @@ public sealed class PrototypeFeedbackIterationService
     {
         var result = !string.IsNullOrWhiteSpace(codexOutput)
             ? codexOutput.Trim()
-            : FirstNonEmpty(codexResult.Stdout, codexResult.Stderr, "Codex did not return a final message.");
+            : FirstNonEmpty(codexResult.Stdout, codexResult.Stderr, "本轮没有生成公开摘要。");
         var publicResult = PublicChatSanitizer.Sanitize(result);
         if (string.IsNullOrWhiteSpace(publicResult))
         {
@@ -375,7 +375,7 @@ public sealed class PrototypeFeedbackIterationService
             {publicResult}
 
             下一步建议：
-            请试玩当前原型，重点检查首分钟是否知道目标、操作反馈是否清晰、节奏是否顺畅、胜负条件是否明确。如果仍有明显问题，可以继续点击“同意继续优化”，我会把这些方向作为下一轮正式反馈继续交给 Codex 处理。
+            请试玩当前原型，重点检查首分钟是否知道目标、操作反馈是否清晰、节奏是否顺畅、胜负条件是否明确。如果仍有明显问题，可以继续点击“同意继续优化”，我会把这些方向作为下一轮正式反馈继续交给后台生成流程处理。
             """;
     }
 

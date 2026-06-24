@@ -232,6 +232,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .milestone-progress-button.running .milestone-status-square { background: #d7a924; }
                 body.v2-detail .milestone-progress-button.pending .milestone-status-square,
                 body.v2-detail .milestone-progress-button.locked .milestone-status-square { background: #a8afad; }
+                body.v2-detail .milestone-evidence-list { margin: 0.35rem 0 0; padding-left: 1.1rem; }
+                body.v2-detail .milestone-evidence-list li { margin: 0.15rem 0; }
                 body.v2-detail .milestone-detail-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
                 body.v2-detail .milestone-detail-nav button { width: auto; }
                 @media (max-width: 1000px) {
@@ -749,7 +751,7 @@ public sealed class BrowserUiRenderer
                     const milestoneSteps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
                     if (milestoneSteps.length) {
                       if (milestoneSteps.every(step => String(step.status || "").trim().toLowerCase() === "confirmed")) return "done";
-                      if (milestoneSteps.some(step => !step.locked && ["needs_fix", "execution_failed", "feedback_failed"].includes(String(step.status || "").trim().toLowerCase()))) return "fix";
+                      if (milestoneSteps.some(step => !step.locked && ["needs_fix", "execution_failed", "feedback_failed", "timed_out"].includes(String(step.status || "").trim().toLowerCase()))) return "fix";
                       if (milestoneSteps.some(step => !step.locked && String(step.status || "").trim().toLowerCase() !== "confirmed")) return "continue";
                     }
                     const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
@@ -2392,7 +2394,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
@@ -5639,6 +5641,7 @@ public sealed class BrowserUiRenderer
                   if (normalized === "running") return "执行中";
                   if (normalized === "failed") return "需要修复";
                   if (normalized === "needs-fix") return "需要修复";
+                  if (normalized === "timed-out") return "需要修复";
                   return "待执行";
                 }
 
@@ -6528,6 +6531,7 @@ public sealed class BrowserUiRenderer
                 async function loadGddMilestoneSteps() {
                   if (!state.projectId) {
                     state.gddMilestoneSteps = null;
+                    state.gddMilestoneEvidence = {};
                     renderGddMilestoneSteps();
                     return;
                   }
@@ -6535,6 +6539,7 @@ public sealed class BrowserUiRenderer
                   try {
                     const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/latest`);
                     state.gddMilestoneSteps = result;
+                    await loadGddMilestoneEvidence(result);
                     const active = activeGddMilestoneStep(Array.isArray(result?.steps) ? result.steps : [], result);
                     if (!state.gddMilestoneManualSelection && active) {
                       state.selectedGddMilestoneStepId = active.stepId || "";
@@ -6542,9 +6547,25 @@ public sealed class BrowserUiRenderer
                     writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection });
                   } catch (error) {
                     state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块。", steps: [] };
+                    state.gddMilestoneEvidence = {};
                   }
                   renderGddMilestoneSteps();
                   renderPrototypeM1SpecStatus();
+                }
+
+                async function loadGddMilestoneEvidence(plan) {
+                  const steps = Array.isArray(plan?.steps) ? plan.steps : [];
+                  const evidence = { ...(state.gddMilestoneEvidence || {}) };
+                  await Promise.all(steps.map(async step => {
+                    const path = step?.latestEvidenceRelativePath || "";
+                    if (!path || evidence[path]?.loaded) return;
+                    try {
+                      evidence[path] = { loaded: true, data: await api(`/api/projects/${encodeURIComponent(state.projectId)}/prototype-evidence?path=${encodeURIComponent(path)}`) };
+                    } catch (error) {
+                      evidence[path] = { loaded: true, error: error?.payload?.error || "prototype_evidence_unavailable" };
+                    }
+                  }));
+                  state.gddMilestoneEvidence = evidence;
                 }
 
                 function renderGddMilestoneSteps() {
@@ -6659,12 +6680,43 @@ public sealed class BrowserUiRenderer
                       ${renderStepSpecLine("反馈改进", step.feedbackGuidance)}
                       ${renderStepSpecLine("下一模块调整检查", step.nextStepReview)}
                       ${step.reviewSummary ? `<p class="muted">解锁前检查：${escapeHtml(step.reviewSummary)}</p>` : ""}
+                      ${renderGddMilestoneEvidence(step)}
                       <div class="milestone-detail-nav">
                         <button type="button" class="ghost" data-gdd-milestone-nav="previous" ${index <= 0 ? "disabled" : ""}>上一个模块</button>
                         <span class="muted">${isActive ? "当前激活模块" : "非激活模块，仅可查看"}</span>
                         <button type="button" class="ghost" data-gdd-milestone-nav="next" ${index >= steps.length - 1 ? "disabled" : ""}>下一个模块</button>
                       </div>
                     </div>
+                  `;
+                }
+
+                function renderGddMilestoneEvidence(step) {
+                  const evidencePath = step?.latestEvidenceRelativePath || "";
+                  const evidenceState = evidencePath ? state.gddMilestoneEvidence?.[evidencePath] : null;
+                  const evidence = evidenceState?.data || null;
+                  const checks = evidence?.checks || {};
+                  const rows = [
+                    ["build", checks.dotnetBuild],
+                    ["godot import", checks.godotImport],
+                    ["scene load", checks.headlessLoad],
+                    ["milestone smoke", checks.milestoneSmoke],
+                    ["asset validation", checks.assetValidation],
+                    ["frame check", checks.frameCheck]
+                  ];
+                  const rowHtml = evidence
+                    ? rows.map(([label, check]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(check?.status || "skipped")}${check?.reason ? ` · ${escapeHtml(check.reason)}` : ""}</li>`).join("")
+                    : "";
+                  const meta = evidence
+                    ? `<p class="muted">status: ${escapeHtml(evidence.status || "unknown")} · run: ${escapeHtml(evidence.runId || "")}</p><ul class="milestone-evidence-list">${rowHtml}</ul>`
+                    : evidenceState?.error
+                      ? `<p class="muted">证据读取失败：${escapeHtml(evidenceState.error)}</p>`
+                      : `<p class="muted">尚未读取结构化证据。</p>`;
+                  return `
+                    <details class="milestone-evidence">
+                      <summary>自动验收证据</summary>
+                      ${meta}
+                      <p class="muted">latest evidence path: ${escapeHtml(evidencePath || "尚未生成")}</p>
+                    </details>
                   `;
                 }
 

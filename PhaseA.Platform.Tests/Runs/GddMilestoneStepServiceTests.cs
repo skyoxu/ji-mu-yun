@@ -53,6 +53,25 @@ public sealed class GddMilestoneStepServiceTests
         M2: Active skills with right click, Q, and E cooldown feedback.
         M10-1: Asset replacement validation with collision and smoke checks.
         """);
+        WriteText(project!.RepoPath, "project.godot", """
+        [application]
+        run/main_scene="res://Game.Godot/Scenes/Main.tscn"
+
+        [autoload]
+        GameState="*res://Game.Godot/Scripts/GameState.cs"
+
+        [input]
+        move_left={"deadzone":0.5,"events":[]}
+        attack={"deadzone":0.5,"events":[]}
+
+        [layer_names]
+        3d_physics/layer_1="player"
+        3d_physics/layer_2="enemy"
+        """);
+        WriteText(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene format=3]\n");
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", "[gd_scene format=3]\n[node name=\"Player\" type=\"CharacterBody3D\"]\n[node name=\"Collider\" type=\"CollisionShape3D\"]\n");
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/Scripts/DemoPrototype.cs", "public sealed class DemoPrototype : CharacterBody3D {}\n");
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/Assets/hero.glb", "asset");
         var service = Service(store, options);
 
         var result = await service.GetOrCreateLatestAsync(accountId, projectId);
@@ -68,6 +87,8 @@ public sealed class GddMilestoneStepServiceTests
         result.Steps[0].ScopeIn.Should().Contain("当前 step");
         result.Steps[0].ScopeOut.Should().Contain("不提前实现后续锁定 step");
         result.Steps[0].GodotSlice.Should().Contain("Godot 4.5.1 + C#");
+        result.Steps[0].GodotSlice.Should().Contain("smoke/assertion");
+        result.Steps[0].Acceptance.Should().Contain("当前模块 smoke/assertion");
         result.Steps[0].PackagingValidation.Should().Contain("打包下载");
         result.Steps[0].FeedbackGuidance.Should().Contain("needs-fix 修复");
         result.Steps[0].NextStepReview.Should().Contain("解锁下一 step");
@@ -77,8 +98,23 @@ public sealed class GddMilestoneStepServiceTests
         File.Exists(Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json")).Should().BeTrue();
         File.Exists(Path.Combine(project.RepoPath, "meta", "routes", "gdd-milestones", "latest.json")).Should().BeTrue();
         File.Exists(Path.Combine(project.RepoPath, "docs", "prototype-v1-plan.md")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "STRUCTURE.md")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "MEMORY.md")).Should().BeTrue();
+        File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "ASSETS.md")).Should().BeTrue();
+        var structureText = File.ReadAllText(Path.Combine(project.RepoPath, "docs", "prototype", "STRUCTURE.md"));
+        structureText.Should().Contain("res://Game.Godot/Scenes/Main.tscn");
+        structureText.Should().Contain("Game.Godot/Prototypes/demo/DemoPrototype.tscn");
+        structureText.Should().Contain("Game.Godot/Prototypes/demo/Scripts/DemoPrototype.cs");
+        structureText.Should().Contain("move_left");
+        structureText.Should().Contain("3d_physics/layer_1");
+        structureText.Should().Contain("hero.glb");
+        var memoryText = File.ReadAllText(Path.Combine(project.RepoPath, "docs", "prototype", "MEMORY.md"));
+        memoryText.Should().Contain("dimension: 3d");
+        memoryText.Should().Contain("physics: godot-3d-physics");
         File.Exists(Path.Combine(project.RepoPath, result.Steps[0].SpecRelativePath!.Replace('/', Path.DirectorySeparatorChar))).Should().BeTrue();
         result.Steps[0].SpecRelativePath.Should().StartWith("docs/m1-");
+        var specText = File.ReadAllText(Path.Combine(project.RepoPath, result.Steps[0].SpecRelativePath!.Replace('/', Path.DirectorySeparatorChar)));
+        specText.Should().Contain("smoke/assertion");
         File.ReadAllText(Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json"))
             .Should().Contain("phase-a.gdd-milestone-steps.v2");
     }
@@ -269,6 +305,51 @@ public sealed class GddMilestoneStepServiceTests
         m1.CanConfirm.Should().BeTrue();
         result.CurrentStepId.Should().Be("M1");
         result.Summary.Should().Contain("M1 已通过原型骨架创建完成");
+    }
+
+    [Fact]
+    public async Task ExecuteCurrentStepAsync_WritesPrototypeEngineeringEvidence_AndExposesPath()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable scene and controls.
+        """);
+        var validation = new FakeLightweightValidationService(
+            ValidationResult("validation-1", "succeeded", 0));
+        var service = Service(store, options, validationService: validation);
+
+        var result = await service.ExecuteCurrentStepAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var step = result!.Plan!.Steps.Single(item => item.StepId == "M1");
+        step.Status.Should().Be("executed");
+        step.LatestEvidenceRelativePath.Should().StartWith("logs/prototype-evidence/");
+        var evidencePath = Path.Combine(project.RepoPath, step.LatestEvidenceRelativePath!.Replace('/', Path.DirectorySeparatorChar));
+        File.Exists(evidencePath).Should().BeTrue();
+        var evidence = File.ReadAllText(evidencePath);
+        evidence.Should().Contain("\"route\": \"module-execute\"");
+        evidence.Should().Contain("\"moduleId\": \"M1\"");
+        evidence.Should().Contain("\"status\": \"passed\"");
+        evidence.Should().Contain("\"dotnetBuild\":");
+        evidence.Should().Contain("\"milestoneSmoke\":");
+        evidence.Should().Contain("validation-1");
+        evidence.Should().Contain("exitCode=0");
+        File.ReadAllText(Path.Combine(project.RepoPath, "docs", "prototype", "MEMORY.md"))
+            .Should().Contain("route=module-execute");
+
+        await service.GetOrCreateLatestAsync(accountId, projectId);
+        File.ReadAllText(Path.Combine(project.RepoPath, "docs", "prototype", "MEMORY.md"))
+            .Should().Contain("route=module-execute");
     }
 
     [Fact]
@@ -698,6 +779,36 @@ public sealed class GddMilestoneStepServiceTests
         run!.ProgressStep.Should().Be("completed");
     }
 
+    [Fact]
+    public async Task GetOrCreateLatestAsync_RecoversTransientStepStatus_ToRetryableState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Single Step GDD
+
+        M1: First playable scene and controls.
+        """);
+        WriteTransientStepState(project.MetaPath, project.RepoPath);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var step = result!.Steps.Single(item => item.StepId == "M1");
+        step.Status.Should().Be("timed_out");
+        step.CanExecute.Should().BeTrue();
+        step.CanSubmitFeedback.Should().BeTrue();
+        step.CanConfirm.Should().BeFalse();
+    }
+
     private static GddMilestoneStepService Service(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
@@ -827,6 +938,43 @@ public sealed class GddMilestoneStepServiceTests
       "locked": false,
       "iterationSessionId": "legacy-session-1",
       "executionRunId": "{{runId}}"
+    }
+  ]
+}
+""";
+        foreach (var root in new[] { metaPath, Path.Combine(repoPath, "meta") })
+        {
+            var path = Path.Combine(root, "routes", "gdd-milestones", "latest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, payload);
+        }
+    }
+
+    private static void WriteTransientStepState(string metaPath, string repoPath)
+    {
+        const string payload = """
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "ready",
+  "summary": "interrupted transient state",
+  "currentStepId": "M1",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable scene and controls.",
+      "description": "First playable scene and controls.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "validating",
+      "locked": false,
+      "iterationSessionId": "interrupted-session-1",
+      "executionRunId": "interrupted-run-1"
     }
   ]
 }
