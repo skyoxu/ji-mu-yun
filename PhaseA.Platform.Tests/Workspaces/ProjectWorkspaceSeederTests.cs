@@ -147,6 +147,32 @@ public sealed class ProjectWorkspaceSeederTests
     }
 
     [Fact]
+    public void EnsureSeeded_DoesNotCopyGameTypeGuidesIntoHostedWorkspace()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        var sourceRoot = source.Path;
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "docs", "game-type-guides"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "docs", "prototype-type-kits"));
+        File.WriteAllText(Path.Combine(sourceRoot, "docs", "game-type-guides", "rpg.md"), "guide\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "kit\n");
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        var seeder = new ProjectWorkspaceSeeder(options);
+
+        seeder.EnsureSeeded(targetRepo);
+
+        Directory.Exists(Path.Combine(targetRepo, "docs", "game-type-guides")).Should().BeFalse();
+        File.Exists(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md")).Should().BeTrue();
+    }
+
+    [Fact]
     public void EnsureSeeded_SkipsDotnetToolCache_WhenWorkspaceHasPartialResidualFiles()
     {
         using var source = TempDirectory.Create("phase-a-source");

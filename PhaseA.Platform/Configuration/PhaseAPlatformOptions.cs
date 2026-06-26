@@ -20,7 +20,7 @@ public sealed record PhaseAPlatformOptions(
     string AdminUsername,
     string? AdminPasswordHash,
     string? AdminTokenHash,
-    string? UserTokenHash,
+    string? TicketSigningSecret,
     int MaxConcurrentChats,
     int MaxConcurrentChatsPerAccount,
     int MaxConcurrentProjectCreations,

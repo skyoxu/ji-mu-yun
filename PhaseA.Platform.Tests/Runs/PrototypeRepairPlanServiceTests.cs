@@ -20,7 +20,7 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldUseRpgSkillAndWriteRepairPlanState()
+    public async Task CreateAsync_ShouldUseRpgProfileAndWriteRepairPlanState()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -48,13 +48,15 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         result.Goals[2].Title.Should().Contain("修复 RPG 玩法合同");
         result.Goals[3].Title.Should().Contain("最终全量验收");
         stateJson.GetProperty("route").GetString().Should().Be("repair-plan");
-        stateJson.GetProperty("route_skill").GetProperty("routeSkillId").GetString().Should().Be("prototype-rpg-godot-zh");
+        stateJson.GetProperty("game_type_profile").GetProperty("gameTypeId").GetString().Should().Be("rpg");
+        stateJson.GetProperty("source_boundary").GetString().Should().Be("gdd_derived_contract_only_after_gdd_generation");
         stateJson.GetProperty("summary").GetString().Should().Contain("4 个修复任务");
         stateJson.GetProperty("goals").GetArrayLength().Should().Be(4);
         stateJson.GetProperty("goals")[0].GetProperty("description").GetString().Should().NotContain("Permission denied");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         details!.Session.SourceMessage.Should().Contain("Permission denied");
         details.Session.SourceMessage.Should().Contain("failure_signals");
+        details.Session.SourceMessage.Should().NotContain("route_skill");
     }
 
     [Fact]
@@ -283,7 +285,8 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         result.Status.Should().Be("ready");
         result.Goals.Should().HaveCount(3);
         result.Goals[0].Title.Should().Contain("恢复原型运行证据");
-        result.Goals[0].Description.Should().Contain("默认原型路由技能");
+        result.Goals[0].Description.Should().Contain("GDD 派生的项目合同");
+        result.Goals[0].Description.Should().Contain("不要读取 docs/game-type-guides");
         result.Goals[0].Description.Should().NotContain("Permission denied");
         result.Goals[1].Title.Should().Contain("修复通用原型合同缺口");
         result.Goals[2].Title.Should().Contain("最终全量验收");

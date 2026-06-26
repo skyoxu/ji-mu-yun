@@ -50,20 +50,14 @@ public sealed class PrototypeNeedsFixRouteService
             return await RunProjectLevelNeedsFixAsync(project, details, request, cancellationToken);
         }
 
-        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkill.IsAvailable)
-        {
-            return new PrototypeNeedsFixRouteResult("", routeSkill.FailureCode, routeSkill.FailureMessage, goal.GoalIndex, details.Session.Status, goal.Status, []);
-        }
-
         var readme = _stateWriter.ReadProjectReadme(project);
         var prototypeContract = _contractService.Read(project);
         var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
         var rawStepState = _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex);
         var rawExecuteNextGoalState = _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex);
-        var stepState = SelectCurrentNeedsFixState(rawStepState, rawExecuteNextGoalState, details.Session.SessionId, goal);
+        var stepState = PrototypeRouteStateSelection.SelectCurrentNeedsFixState(rawStepState, rawExecuteNextGoalState, details.Session.SessionId, goal);
         var executeNextGoalState = string.IsNullOrWhiteSpace(stepState)
-            ? SelectCurrentExecuteNextGoalState(rawExecuteNextGoalState, details.Session.SessionId, goal)
+            ? PrototypeRouteStateSelection.SelectCurrentExecuteNextGoalState(rawExecuteNextGoalState, details.Session.SessionId, goal)
             : "";
         var prototypeState = string.IsNullOrWhiteSpace(stepState) && string.IsNullOrWhiteSpace(executeNextGoalState)
             ? _stateWriter.ReadLatestPrototypeState(project)
@@ -111,8 +105,8 @@ public sealed class PrototypeNeedsFixRouteService
         _stateWriter.WriteNeedsFixState(project, goal.GoalIndex, new
         {
             route = "needs-fix",
-            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
             game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             project_id = project.ProjectId,
             session_id = details.Session.SessionId,
             goal_id = goal.GoalId,
@@ -151,12 +145,6 @@ public sealed class PrototypeNeedsFixRouteService
         PrototypeNeedsFixRouteRequest request,
         CancellationToken cancellationToken)
     {
-        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkill.IsAvailable)
-        {
-            return new PrototypeNeedsFixRouteResult("", routeSkill.FailureCode, routeSkill.FailureMessage, 0, details.Session.Status, null, []);
-        }
-
         var prototypeContract = _contractService.Read(project);
         var feedback = BuildProjectLevelFeedback(project, request.Feedback, _stateWriter.ReadProjectReadme(project), _stateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract), prototypeContract, _stateWriter.ReadLatestPrototypeState(project));
         var quickFixResult = await _quickFixService.SubmitAsync(
@@ -174,8 +162,8 @@ public sealed class PrototypeNeedsFixRouteService
         {
             route = "needs-fix",
             scope = "project",
-            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
             game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             project_id = project.ProjectId,
             session_id = details.Session.SessionId,
             run_id = quickFixResult.RunId,
@@ -228,90 +216,6 @@ public sealed class PrototypeNeedsFixRouteService
                    !string.Equals(goal.Status, "succeeded", StringComparison.Ordinal));
     }
 
-    private static string SelectCurrentNeedsFixState(
-        string needsFixState,
-        string executeNextGoalState,
-        string sessionId,
-        ProjectIterationGoalSnapshot goal)
-    {
-        if (string.IsNullOrWhiteSpace(needsFixState))
-        {
-            return "";
-        }
-
-        var match = RouteStateMatchesCurrentGoal(needsFixState, sessionId, goal);
-        if (match == true)
-        {
-            return needsFixState;
-        }
-
-        if (match == false)
-        {
-            return "";
-        }
-
-        return string.IsNullOrWhiteSpace(executeNextGoalState) ? needsFixState : "";
-    }
-
-    private static string SelectCurrentExecuteNextGoalState(
-        string executeNextGoalState,
-        string sessionId,
-        ProjectIterationGoalSnapshot goal)
-    {
-        if (string.IsNullOrWhiteSpace(executeNextGoalState))
-        {
-            return "";
-        }
-
-        var match = RouteStateMatchesCurrentGoal(executeNextGoalState, sessionId, goal);
-        return match == false ? "" : executeNextGoalState;
-    }
-
-    private static bool? RouteStateMatchesCurrentGoal(
-        string routeState,
-        string sessionId,
-        ProjectIterationGoalSnapshot goal)
-    {
-        try
-        {
-            using var document = JsonDocument.Parse(routeState);
-            var root = document.RootElement;
-            var stateSessionId = ReadString(root, "session_id");
-            var stateGoalId = ReadString(root, "goal_id");
-            var stateGoalIndex = ReadInt(root, "goal_index");
-            var hasIdentity = !string.IsNullOrWhiteSpace(stateSessionId) ||
-                              !string.IsNullOrWhiteSpace(stateGoalId) ||
-                              stateGoalIndex.HasValue;
-            if (!hasIdentity)
-            {
-                return null;
-            }
-
-            if (!string.IsNullOrWhiteSpace(stateSessionId) &&
-                !string.Equals(stateSessionId, sessionId, StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            if (!string.IsNullOrWhiteSpace(stateGoalId) &&
-                !string.Equals(stateGoalId, goal.GoalId, StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            if (stateGoalIndex.HasValue && stateGoalIndex.Value != goal.GoalIndex)
-            {
-                return false;
-            }
-
-            return true;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
     private async Task<string> BuildPreviousPlatformRejectionBlockAsync(
         ProjectIterationSessionDetails details,
         ProjectIterationGoalSnapshot goal,
@@ -347,7 +251,8 @@ public sealed class PrototypeNeedsFixRouteService
             var root = document.RootElement;
             var goalRepairStatus = ReadString(root, "goal_repair_status");
             var acceptanceStatus = ReadString(root, "acceptance_validation_status");
-            var acceptanceReason = ReadString(root, "acceptance_validation_reason");
+            var acceptanceReason = ReadString(root, "acceptance_validation_reason") ??
+                                   ReadString(root, "goal_repair_platform_acceptance_reason");
             var acceptanceDetails = ReadString(root, "acceptance_validation_details");
             var mutationGuard = BuildMutationGuardSummary(root);
             var godotSmoke = BuildValidationSummary(root, "godot_smoke_validation");
@@ -406,9 +311,37 @@ public sealed class PrototypeNeedsFixRouteService
         var reason = ReadValidationReason(validation);
         var diagnosticExcerpt = ReadValidationDiagnosticExcerpt(validation);
         var summary = $"required={required?.ToString() ?? "unknown"}; ran={ran?.ToString() ?? "unknown"}; passed={passed?.ToString() ?? "unknown"}; reason={reason}";
+        var pathEvidence = BuildValidationPathEvidence(validation);
+        if (!string.IsNullOrWhiteSpace(pathEvidence))
+        {
+            summary = $"{summary}; {pathEvidence}";
+        }
+
         return string.IsNullOrWhiteSpace(diagnosticExcerpt)
             ? summary
             : $"{summary}; diagnostic_excerpt={TrimForPrompt(diagnosticExcerpt, 1400)}";
+    }
+
+    private static string BuildValidationPathEvidence(JsonElement validation)
+    {
+        var parts = new List<string>();
+        AddPathEvidence(parts, "gdunit_path", ReadString(validation, "gdunit_path"));
+        AddPathEvidence(parts, "report_dir", ReadString(validation, "report_dir"));
+        var attemptedPaths = ReadStringArray(validation, "attempted_gdunit_paths");
+        if (attemptedPaths.Count > 0)
+        {
+            parts.Add($"attempted_gdunit_paths=[{string.Join(", ", attemptedPaths.Select(path => TrimForPrompt(path, 160)))}]");
+        }
+
+        return string.Join("; ", parts);
+    }
+
+    private static void AddPathEvidence(List<string> parts, string label, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            parts.Add($"{label}={TrimForPrompt(value, 220)}");
+        }
     }
 
     private static string BuildRepairFocusInstruction(string? acceptanceReason, string? acceptanceDetails)
@@ -504,7 +437,7 @@ public sealed class PrototypeNeedsFixRouteService
             : !string.IsNullOrWhiteSpace(executeNextGoalState)
                 ? "current execute next goal step state"
                 : "prototype route state";
-        var sourceState = CompactRouteState(!string.IsNullOrWhiteSpace(stepState)
+        var sourceState = CompactRouteState(project.RepoPath, !string.IsNullOrWhiteSpace(stepState)
             ? stepState
             : !string.IsNullOrWhiteSpace(executeNextGoalState)
                 ? executeNextGoalState
@@ -527,13 +460,13 @@ public sealed class PrototypeNeedsFixRouteService
 
             Project Execution Guide:
             - Path: {PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath}
-            - Route Recovery Protocol: follow the project-level /new recovery order from this guide before changing files.
-            {TrimForPrompt(projectExecutionGuide, 60)}
+            - Route Recovery Protocol: project-level /new recovery source was consumed before this needs-fix route.
+            - EmbeddedGuideBody: omitted from the repair prompt; use the current task, platform rejection, repair ledger, and compact route state below.
 
             Project prototype contract:
             - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
             - ContractPath: {prototypeContract.RelativePath}
-            - Rule: preserve contract traceability; do not override user form values with template defaults.
+            - Full contract block is supplied by the outer goal-repair prompt. This inner needs-fix feedback only names the consumed source to avoid duplicating the contract JSON.
 
             当前任务：
             - GoalIndex: {goal.GoalIndex}
@@ -549,10 +482,10 @@ public sealed class PrototypeNeedsFixRouteService
             {repairLedger}
 
             已读取恢复来源：{sourceLabel}
-            {TrimForPrompt(sourceState, 80)}
+            {sourceState}
 
             用户反馈：
-            {userFeedback?.Trim()}
+            {TrimForPrompt(userFeedback ?? "", 2000)}
 
             范围规则：
             只修复当前任务。不要读取或使用其他任务的 needs-fix 状态。
@@ -588,17 +521,20 @@ public sealed class PrototypeNeedsFixRouteService
             - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
 
             Project README:
-            {CompactRouteState(projectReadme)}
+            {TrimForPrompt(projectReadme, 220)}
 
             Project Execution Guide:
             - Path: {PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath}
-            - Route Recovery Protocol: follow the project-level /new recovery order from this guide before changing files.
-            {TrimForPrompt(projectExecutionGuide, 200)}
+            - Route Recovery Protocol: project-level /new recovery source was consumed before this needs-fix route.
+            - EmbeddedGuideBody: omitted from the repair prompt; use the project-level runtime issue and compact prototype state below.
 
-            {PrototypeContractService.BuildPromptBlock(prototypeContract)}
+            Project prototype contract:
+            - Status: {(string.IsNullOrWhiteSpace(prototypeContract.Json) ? "missing" : "present")}
+            - ContractPath: {prototypeContract.RelativePath}
+            - Full contract block is supplied by the outer quick-fix prompt. This project-level feedback only names the consumed source to avoid duplicating the contract JSON.
 
             Prototype route state:
-            {CompactRouteState(prototypeState)}
+            {CompactRouteState(project.RepoPath, prototypeState)}
 
             Project:
             - ProjectId: {project.ProjectId}
@@ -609,7 +545,7 @@ public sealed class PrototypeNeedsFixRouteService
             {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
             User reported issue:
-            {userFeedback}
+            {TrimForPrompt(userFeedback ?? "", 2000)}
             """;
     }
 
@@ -631,7 +567,7 @@ public sealed class PrototypeNeedsFixRouteService
         return summary.Length <= maxLength ? summary : summary[..maxLength];
     }
 
-    private static string CompactRouteState(string value)
+    private static string CompactRouteState(string projectRepoPath, string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -650,7 +586,16 @@ public sealed class PrototypeNeedsFixRouteService
                 ["goal_index"] = ReadInt(root, "goal_index"),
                 ["iteration_session_status"] = ReadString(root, "iteration_session_status"),
                 ["iteration_goal_status"] = ReadString(root, "iteration_goal_status"),
-                ["summary"] = BuildCompactSummary(ReadString(root, "summary"), 450)
+                ["summary"] = BuildCompactSummary(ReadString(root, "summary"), 450),
+                ["acceptance_validation_status"] = ReadValidationStatus(root, "acceptance_validation") ?? ReadString(root, "acceptance_validation_status"),
+                ["acceptance_validation_reason"] = ReadValidationReason(root, "acceptance_validation") ?? ReadString(root, "acceptance_validation_reason"),
+                ["acceptance_validation_details"] = BuildCompactSummary(ReadString(root, "acceptance_validation_details"), 450),
+                ["godot_smoke_required"] = ReadNestedBool(root, "godot_smoke_validation", "required"),
+                ["godot_smoke_passed"] = ReadNestedBool(root, "godot_smoke_validation", "passed"),
+                ["godot_smoke_reason"] = ReadNestedValidationReason(root, "godot_smoke_validation"),
+                ["prototype_completion_succeeded"] = ReadNestedBool(root, "prototype_completion", "succeeded"),
+                ["prototype_completion_error"] = ReadNestedString(root, "prototype_completion", "error"),
+                ["smoke_scene"] = ReadSafeSmokeScene(root, projectRepoPath)
             };
 
             return JsonSerializer.Serialize(compact.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value));
@@ -670,6 +615,23 @@ public sealed class PrototypeNeedsFixRouteService
             : null;
     }
 
+    private static IReadOnlyList<string> ReadStringArray(JsonElement root, string propertyName)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var value) ||
+            value.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return value.EnumerateArray()
+            .Where(static item => item.ValueKind == JsonValueKind.String)
+            .Select(static item => item.GetString())
+            .OfType<string>()
+            .Where(static item => !string.IsNullOrWhiteSpace(item))
+            .ToArray();
+    }
+
     private static int? ReadInt(JsonElement root, string propertyName)
     {
         return root.ValueKind == JsonValueKind.Object &&
@@ -687,6 +649,105 @@ public sealed class PrototypeNeedsFixRouteService
                (value.ValueKind == JsonValueKind.True || value.ValueKind == JsonValueKind.False)
             ? value.GetBoolean()
             : null;
+    }
+
+    private static string? ReadNestedString(JsonElement root, string objectName, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(objectName, out var value) &&
+               value.ValueKind == JsonValueKind.Object
+            ? ReadString(value, propertyName)
+            : null;
+    }
+
+    private static bool? ReadNestedBool(JsonElement root, string objectName, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(objectName, out var value) &&
+               value.ValueKind == JsonValueKind.Object
+            ? ReadBool(value, propertyName)
+            : null;
+    }
+
+    private static string? ReadValidationStatus(JsonElement root, string propertyName)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var validation) ||
+            validation.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return ReadString(validation, "status");
+    }
+
+    private static string? ReadValidationReason(JsonElement root, string propertyName)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var validation) ||
+            validation.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return ReadValidationReason(validation);
+    }
+
+    private static string? ReadNestedValidationReason(JsonElement root, string propertyName)
+    {
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty(propertyName, out var validation) ||
+            validation.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return ReadValidationReason(validation);
+    }
+
+    private static string? ReadSmokeScene(JsonElement root)
+    {
+        var completionScene = ReadNestedString(root, "prototype_completion", "smoke_scene");
+        if (!string.IsNullOrWhiteSpace(completionScene))
+        {
+            return completionScene;
+        }
+
+        var smokeScene = root.ValueKind == JsonValueKind.Object &&
+                         root.TryGetProperty("godot_smoke", out var smoke) &&
+                         smoke.ValueKind == JsonValueKind.Object
+            ? ReadString(smoke, "scene")
+            : null;
+        if (!string.IsNullOrWhiteSpace(smokeScene))
+        {
+            return smokeScene;
+        }
+
+        return ReadString(root, "smoke_scene") ?? ReadString(root, "default_scene") ?? ReadString(root, "scene");
+    }
+
+    private static string? ReadSafeSmokeScene(JsonElement root, string projectRepoPath)
+    {
+        var scene = ReadSmokeScene(root);
+        if (string.IsNullOrWhiteSpace(scene))
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(projectRepoPath))
+        {
+            return scene.StartsWith("res://", StringComparison.OrdinalIgnoreCase) &&
+                   scene.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase) &&
+                   !scene.Contains('\\', StringComparison.Ordinal) &&
+                   !scene["res://".Length..].Contains(':', StringComparison.Ordinal) &&
+                   !Path.IsPathRooted(scene["res://".Length..])
+                ? scene
+                : "invalid_scene_omitted";
+        }
+
+        return PrototypeGodotSmokeService.IsSafeRepoSceneReference(projectRepoPath, scene)
+            ? scene
+            : "invalid_scene_omitted";
     }
 
     private static string ReadValidationReason(JsonElement validation)
@@ -731,13 +792,7 @@ public sealed class PrototypeNeedsFixRouteService
 
     private static string TrimForPrompt(string value, int maxLength = 4000)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "(empty)";
-        }
-
-        var trimmed = value.Trim();
-        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+        return PrototypePromptText.TrimHeadAndTail(value, maxLength, "(empty)");
     }
 
     private static string ExtractAssistantClaimedStatus(string? assistantMessage)

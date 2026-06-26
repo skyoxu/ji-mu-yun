@@ -84,11 +84,6 @@ public sealed class PrototypeFeedbackIterationService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
-        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkillAvailability.IsAvailable)
-        {
-            return new PrototypeFeedbackResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
-        }
 
         if (!await HasSucceededPrototypeWorkflowAsync(project.ProjectId, cancellationToken))
         {
@@ -120,7 +115,7 @@ public sealed class PrototypeFeedbackIterationService
             var resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
             var now = DateTimeOffset.UtcNow.ToString("O");
             var skillAction = ResolveSkillAction(request.SkillActionId);
-            var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
+            var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
             await File.WriteAllTextAsync(
                 submittedAbsolutePath,
@@ -177,7 +172,8 @@ public sealed class PrototypeFeedbackIterationService
                 codex_output = codexOutputRelativePath,
                 skill_action_id = skillAction?.ActionId,
                 skill_name = skillAction?.SkillName,
-                route_skill = routeSkill
+                game_type_profile = routeProfile,
+                source_boundary = "gdd_derived_contract_only_after_gdd_generation"
             });
             await _metadataStore.CompleteRunAsync(runId, "completed", codexResult.ExitCode, codexResult.Stdout, codexResult.Stderr, evidenceJson, CancellationToken.None);
             await _metadataStore.RecordRunLlmAuditAsync(

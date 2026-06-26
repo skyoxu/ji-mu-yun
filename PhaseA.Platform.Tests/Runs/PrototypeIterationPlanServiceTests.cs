@@ -11,8 +11,15 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class PrototypeIterationPlanServiceTests
+public sealed class PrototypeIterationPlanServiceTests : IDisposable
 {
+    private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+
+    public void Dispose()
+    {
+        routeProfileOverride.Dispose();
+    }
+
     [Fact]
     public async Task EvaluateAsync_ShouldSuggestRefine_WhenFirstGoalIsTooBroad()
     {
@@ -533,7 +540,8 @@ public sealed class PrototypeIterationPlanServiceTests
         codex.LastPlanningAnalysisPrompt.Should().BeNull();
         codex.LastGoalPlanPrompt.Should().Contain("Prototype Chapter 3 Lite semantics");
         codex.LastGoalPlanPrompt.Should().Contain("formal acceptance files");
-        codex.LastGoalPlanPrompt.Should().Contain("older stable battle-route coverage");
+        codex.LastGoalPlanPrompt.Should().Contain("GDD-derived prototype contract");
+        codex.LastGoalPlanPrompt.Should().Contain("preserve those contract-specific capabilities");
         codex.LastGoalPlanPrompt.Should().Contain("Only omit BattleScene");
         codex.LastGoalPlanPrompt.Should().Contain("notes.txt");
         codex.LastGoalPlanPrompt.Should().Contain("Important boss design reference.");
@@ -1391,7 +1399,7 @@ public sealed class PrototypeIterationPlanServiceTests
 
         result.Decision.Should().Be("should_refine_plan");
         result.Reason.Should().Contain("acceptance boundary mismatch");
-        result.SuggestedAction.Should().Contain("JRPG first-loop capability profile");
+        result.SuggestedAction.Should().Contain("GDD 派生的项目原型合同");
         result.SuggestedPromptForRegeneration.Should().NotBeNullOrWhiteSpace();
     }
 

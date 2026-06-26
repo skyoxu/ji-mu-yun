@@ -77,3 +77,25 @@
 - Song length targets
 - Song unlock progression
 - Favorites and playlists
+
+### Module Matrix
+
+This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
+
+Use only these default values: `Always`, `Conditional`, `Optional`, and `Out of Scope`.
+
+| No | id | Module | Default | Purpose | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `performance_context_objective` | Performance context and objective | Always | Clarify song, stage, role, and performance goal. | Song or level name, target, performer context, and success condition are defined. |
+| 2 | `beat_grid_audio_sync` | Beat grid and audio sync | Always | Anchor timing gameplay in stable music and beat data. | Music playback, BPM or beat timing, measure progression, and input timing relationship are defined. |
+| 3 | `cue_readability` | Cue readability | Always | Let players see or hear when to act before the timing window. | Notes, beat lines, pulses, enemy tells, lanes, or visual cues are readable and do not hide core action. |
+| 4 | `timed_input_action` | Timed input action | Always | Define the core action performed on beat. | Tap, hold, slide, aim, dodge, attack, lane switch, or gesture input is scoped with early, accurate, and late outcomes. |
+| 5 | `timing_feedback_scoring` | Timing feedback and scoring | Always | Show immediately whether the player was accurate. | Perfect, good, miss, score, accuracy, health, meter, or grade feedback is defined. |
+| 6 | `song_section_progression` | Song section progression | Always | Prove more than a single note interaction. | At least two song sections or difficulty beats are planned with cue and pacing changes. |
+| 7 | `result_restart_loop` | Result and restart loop | Always | Close the song or stage experience. | Completion, failure, summary, retry, or next-song flow is defined. |
+| 8 | `combo_meter_reward_feedback` | Combo, meter, or reward feedback | Conditional | Give players a sustained performance target. | If included, combo, multiplier, crowd, heat, health, or reward meter changes with performance. |
+| 9 | `expressive_pitch_or_gesture_control` | Expressive pitch or gesture control | Optional | Support musical expression beyond binary timing. | If included, pitch, slide, intensity, aim direction, or gesture quality affects score, tone, or combat. |
+| 10 | `movement_or_rail_sync` | Movement or rail sync | Optional | Support music-driven movement, lane shifts, dodges, or collection. | If included, player motion, obstacles, or collectibles are synchronized to song sections. |
+| 11 | `combat_or_target_resolution` | Combat or target resolution | Optional | Support on-beat shooting, attacks, kills, or executions. | If included, rhythmic attacks produce clearer benefits and enemy feedback remains synchronized. |
+| 12 | `latency_calibration_accessibility` | Latency calibration and accessibility | Conditional | Reduce device-latency frustration. | Calibration, loose timing mode, visual beat assist, audio mix controls, or remapping is scoped when relevant. |
+| 13 | `final_rhythm_loop_acceptance` | Final rhythm loop acceptance | Always | Validate music, cue, input, scoring, and restart. | GDD or route plan links song start, beat sync, cues, input, score feedback, result, and retry; excluded modules have reasons. |

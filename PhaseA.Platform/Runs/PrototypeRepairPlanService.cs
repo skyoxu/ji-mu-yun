@@ -48,11 +48,7 @@ public sealed class PrototypeRepairPlanService
         CancellationToken cancellationToken = default)
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
-        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkill.IsAvailable)
-        {
-            return new PrototypeRepairPlanResult("", routeSkill.FailureCode, routeSkill.FailureMessage, []);
-        }
+        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
         var failedRun = await FindLatestFailedRunAsync(project.ProjectId, cancellationToken);
         if (failedRun is null)
@@ -62,15 +58,15 @@ public sealed class PrototypeRepairPlanService
 
         var prototypeContract = _contractService.Read(project);
         var failureText = BuildFailureText(project, failedRun);
-        var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeSkill.Context);
+        var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeProfile);
         var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复任务。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
             project.ProjectId,
             SourceKind,
-            BuildSourceMessage(failedRun, failureText, routeSkill.Context),
-            $"通过小而独立的修复任务修复失败的原型路由：{routeSkill.Context.RouteSkillId}。",
+            BuildSourceMessage(failedRun, failureText, routeProfile),
+            $"通过小而独立的修复任务修复失败的原型路由：{routeProfile.GameTypeId}。",
             goals.Select(goal => new ProjectIterationGoalCreateCommand(
                 goal.GoalIndex,
                 goal.Title,
@@ -88,8 +84,8 @@ public sealed class PrototypeRepairPlanService
             session_id = session.SessionId,
             status = "ready",
             summary,
-            route_skill = routeSkill.Context,
-            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            game_type_profile = routeProfile,
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             prototype_contract = prototypeContract.RelativePath,
             goals = goals.Select(goal => new
             {
@@ -129,11 +125,7 @@ public sealed class PrototypeRepairPlanService
         CancellationToken cancellationToken = default)
     {
         var project = await RequireProjectAsync(accountId, projectId, cancellationToken);
-        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkill.IsAvailable)
-        {
-            return new PrototypeRepairStepExecutionResult("", "", "", routeSkill.FailureCode, routeSkill.FailureMessage, 0, false, routeSkill.FailureCode);
-        }
+        var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken);
         if (details is null)
@@ -151,14 +143,14 @@ public sealed class PrototypeRepairPlanService
 
         if (IsServiceRestartRecoveryGoal(current))
         {
-            return await CompleteServiceRestartRecoveryStepWithoutCodexAsync(project, details, current, routeSkill.Context, cancellationToken);
+            return await CompleteServiceRestartRecoveryStepWithoutCodexAsync(project, details, current, routeProfile, cancellationToken);
         }
 
         await _metadataStore.UpdateProjectIterationGoalStatusAsync(current.GoalId, "running", current.ResultSummary, null, cancellationToken);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", current.GoalIndex, $"正在执行修复任务 {current.GoalIndex}。", null, null, cancellationToken);
 
         var projectExecutionGuide = _stateWriter.ReadOrCreateProjectExecutionGuide(project, _contractService.Read(project));
-        var feedback = BuildStepFeedback(project, details, current, request.Feedback, routeSkill.Context, projectExecutionGuide);
+        var feedback = BuildStepFeedback(project, details, current, request.Feedback, projectExecutionGuide);
         var result = await _quickFixService.SubmitAsync(
             project.AccountId,
             project.ProjectId,
@@ -215,7 +207,7 @@ public sealed class PrototypeRepairPlanService
             summary,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeSkill.Context));
+        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeProfile));
 
         return new PrototypeRepairStepExecutionResult(refreshed.Session.SessionId, current.GoalId, result.RunId, result.Status, summary, current.GoalIndex, true, sessionStatus);
     }
@@ -224,7 +216,7 @@ public sealed class PrototypeRepairPlanService
         ProjectSnapshot project,
         ProjectIterationSessionDetails details,
         ProjectIterationGoalSnapshot current,
-        PrototypeRouteSkillContext routeSkill,
+        GameTypeRouteProfile routeProfile,
         CancellationToken cancellationToken)
     {
         const string status = "blocked_by_revalidation_required";
@@ -252,7 +244,7 @@ public sealed class PrototypeRepairPlanService
             summary,
             updated_utc = DateTimeOffset.UtcNow.ToString("O")
         });
-        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeSkill));
+        _stateWriter.WriteRepairPlanState(project, BuildRepairPlanState(project, refreshed, sessionStatus, summary, routeProfile));
 
         return new PrototypeRepairStepExecutionResult(refreshed.Session.SessionId, current.GoalId, "", status, summary, current.GoalIndex, true, sessionStatus);
     }
@@ -262,7 +254,7 @@ public sealed class PrototypeRepairPlanService
         ProjectIterationSessionDetails details,
         string status,
         string summary,
-        PrototypeRouteSkillContext routeSkill)
+        GameTypeRouteProfile routeProfile)
     {
         return new
         {
@@ -272,8 +264,8 @@ public sealed class PrototypeRepairPlanService
             status,
             summary,
             source_message = details.Session.SourceMessage,
-            route_skill = routeSkill,
-            game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            game_type_profile = routeProfile,
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             goals = details.Goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -390,14 +382,15 @@ public sealed class PrototypeRepairPlanService
         }
     }
 
-    private static string BuildSourceMessage(RunSnapshot run, string failureText, PrototypeRouteSkillContext routeSkill)
+    private static string BuildSourceMessage(RunSnapshot run, string failureText, GameTypeRouteProfile routeProfile)
     {
         return JsonSerializer.Serialize(new
         {
             source_run_id = run.RunId,
             source_run_type = run.RunType,
             source_status = run.Status,
-            route_skill = routeSkill.RouteSkillId,
+            game_type_profile = routeProfile,
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             failure_excerpt = Trim(failureText, 4000),
             failure_signals = ExtractRepairEvidenceSummary(failureText, maxLines: 40)
         });
@@ -408,9 +401,9 @@ public sealed class PrototypeRepairPlanService
         PrototypeContractSnapshot contract,
         RunSnapshot failedRun,
         string failureText,
-        PrototypeRouteSkillContext routeSkill)
+        GameTypeRouteProfile routeProfile)
     {
-        return new PrototypeRepairPlanContext(routeSkill, contract, failedRun, failureText);
+        return new PrototypeRepairPlanContext(routeProfile, contract, failedRun, failureText);
     }
 
     private async Task<List<PrototypeRepairGoalResult>> BuildRepairGoalsAsync(
@@ -418,7 +411,7 @@ public sealed class PrototypeRepairPlanService
         PrototypeRepairPlanContext context,
         CancellationToken cancellationToken)
     {
-        if (context.RouteSkill.RouteSkillId == "prototype-rpg-godot-zh")
+        if (string.Equals(context.RouteProfile.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase))
         {
             if (ShouldUseServiceRestartRecoveryRepairPlan(context))
             {
@@ -856,7 +849,7 @@ public sealed class PrototypeRepairPlanService
         Add(
             "修复通用原型合同缺口",
             BuildGenericContractRepairDescription(context),
-            "默认原型路由技能和项目原型合同已经体现在修复后的输出中，并且没有新的原型漂移。");
+            "GDD 派生的项目原型合同已经体现在修复后的输出中，并且没有新的原型漂移。");
 
         Add(
             "执行最终全量验收",
@@ -869,15 +862,11 @@ public sealed class PrototypeRepairPlanService
     private static string BuildRpgEvidenceRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair the latest failed RPG prototype route evidence path using the route skill, project contract, and failure output.
-
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillGuide}
-            - {context.RouteSkill.RouteSkillContract}
+            Repair the latest failed prototype route evidence path using the GDD-derived project contract and failure output.
 
             Required repair scope:
             - Read the current project README and prototype contract first.
+            - Do not read docs/game-type-guides, docs/prototype-type-kits, or route skill documents to add gameplay requirements.
             - Use the latest failed run output as the source of truth for what broke.
             - Restore writable completion artifacts, TDD green evidence, and build outputs needed by the prototype route.
             - Do not broaden this step into gameplay or scene redesign.
@@ -999,11 +988,7 @@ public sealed class PrototypeRepairPlanService
     private static string BuildRpgSceneContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            Repair the RPG scene and node contract using the selected route skill and prototype contract.
-
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
+            Repair the scene and node contract using the GDD-derived prototype contract.
 
             Contract requirements:
             - The project prototype contract is authoritative.
@@ -1022,12 +1007,9 @@ public sealed class PrototypeRepairPlanService
         return $"""
             Repair RPG gameplay behavior against project-specific form_fields and input_traceability.
 
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
-
             Contract requirements:
             - User form fields override RPG defaults and template examples.
+            - Do not read docs/game-type-guides, docs/prototype-type-kits, or route skill documents to add gameplay requirements.
             - Encounter probability, guaranteed encounter, player stats, enemy stats, reward choices, return-to-map flow, and win/fail rules must match concrete project values when present.
             - Any concrete non-empty input field that cannot be implemented must become an explicit needs-fix blocker, not a silent omission.
 
@@ -1040,10 +1022,6 @@ public sealed class PrototypeRepairPlanService
     {
         return $"""
             Repair the user-facing RPG entry path first.
-
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
 
             Priority requirements:
             - Start Adventure must reveal the real playable MapScene from the main prototype shell.
@@ -1060,10 +1038,6 @@ public sealed class PrototypeRepairPlanService
         return $"""
             Repair the RPG reward loop strictly against the project contract.
 
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
-
             Contract requirements:
             - When the project contract explicitly requires reward 3-choice, do not skip or downgrade it to a template-default omission.
             - Victory must lead to reward selection and then return the player to the active map loop.
@@ -1079,10 +1053,6 @@ public sealed class PrototypeRepairPlanService
         return $"""
             Repair win/fail rules and concrete project-specific gameplay constraints.
 
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
-
             Contract requirements:
             - Concrete user form values override RPG defaults and examples.
             - Win after 15 battles, any-loss defeat, encounter rules, enemy scaling, and visible battle outcome rules must match the project contract when present.
@@ -1096,14 +1066,11 @@ public sealed class PrototypeRepairPlanService
     private static string BuildGenericEvidenceRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            使用默认原型路由技能和项目合同修复最新失败的原型路由证据路径。
-
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillGuide}
+            使用 GDD 派生的项目合同和最新失败证据修复原型路由证据路径。
 
             修复范围：
             - 先读取当前项目 README 和原型合同。
+            - 不要读取 docs/game-type-guides、docs/prototype-type-kits 或 route skill 文档来新增玩法需求。
             - 以最新失败运行输出作为故障事实来源。
             - 在更广泛的玩法修复前，先恢复路由完成证据。
             - 保持输出对浏览器用户安全。
@@ -1113,14 +1080,11 @@ public sealed class PrototypeRepairPlanService
     private static string BuildGenericContractRepairDescription(PrototypeRepairPlanContext context)
     {
         return $"""
-            按默认原型路由技能和项目原型合同修复当前原型。
-
-            Route skill:
-            - {context.RouteSkill.RouteSkillId}
-            - {context.RouteSkill.RouteSkillContract}
+            按 GDD 派生的项目原型合同修复当前原型。
 
             合同要求：
             - 用户表单字段优先于通用默认值。
+            - 不要读取 docs/game-type-guides、docs/prototype-type-kits 或 route skill 文档来新增玩法需求。
             - 可玩循环、UI 反馈和验证证据必须匹配项目原型合同。
             - 除非项目合同要求，不要虚构类型专属任务。
 
@@ -1167,10 +1131,10 @@ public sealed class PrototypeRepairPlanService
             - GameName: {project.GameName}
             - GameTypeSource: {project.GameTypeSource}
 
-            Route skill:
-            - RouteSkillId: {context.RouteSkill.RouteSkillId}
-            - RouteSkillGuide: {context.RouteSkill.RouteSkillGuide}
-            - RouteSkillContract: {context.RouteSkill.RouteSkillContract}
+            Downstream source boundary:
+            - Only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.
+            - Repair planning must use only the GDD-derived prototype contract, latest failed run, route state, repair ledger, and validation evidence as gameplay requirements.
+            - Do not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add gameplay requirements after GDD generation.
 
             Prototype contract:
             {Trim(context.Contract.Json ?? "", 3000)}
@@ -1297,7 +1261,7 @@ public sealed class PrototypeRepairPlanService
         return normalized;
     }
 
-    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, PrototypeRouteSkillContext routeSkill, string projectExecutionGuide)
+    private static string BuildStepFeedback(ProjectSnapshot project, ProjectIterationSessionDetails details, ProjectIterationGoalSnapshot goal, string? feedback, string projectExecutionGuide)
     {
         var recoveryOnlyRules = IsServiceRestartRecoveryGoal(goal)
             ? """
@@ -1344,14 +1308,10 @@ public sealed class PrototypeRepairPlanService
             Project Execution Guide:
             {Trim(projectExecutionGuide, 2200)}
 
-            Route skill context:
-            - RouteSkillId: {routeSkill.RouteSkillId}
-            - RouteSkillName: {routeSkill.RouteSkillName}
-            - RouteSkillLabel: {routeSkill.RouteSkillLabel}
-            - RouteSkillGuide: {routeSkill.RouteSkillGuide}
-            - RouteSkillContract: {routeSkill.RouteSkillContract}
-            - MandatorySkillEntry: ${routeSkill.RouteSkillId}
-            - MandatorySkillPath: {routeSkill.SkillRelativePath}
+            Downstream source boundary:
+            - Only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.
+            - Repair steps must use only the GDD-derived prototype contract, current goal, route state, repair ledger, latest validation evidence, and user feedback as gameplay requirements.
+            - Do not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add gameplay requirements after GDD generation.
 
             Extra user feedback:
             {feedback}
@@ -1535,7 +1495,7 @@ public sealed record PrototypeRepairStepExecutionResult(
     string SessionStatus);
 
 public sealed record PrototypeRepairPlanContext(
-    PrototypeRouteSkillContext RouteSkill,
+    GameTypeRouteProfile RouteProfile,
     PrototypeContractSnapshot Contract,
     RunSnapshot FailedRun,
     string FailureText);

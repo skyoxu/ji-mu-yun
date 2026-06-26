@@ -96,8 +96,8 @@ import pathlib
 import time
 path = pathlib.Path(r"{marker}")
 path.parent.mkdir(parents=True, exist_ok=True)
-for index in range(8):
-    path.write_text(str(index), encoding="utf-8")
+for index in range(12):
+    path.write_text("x" * (index + 1), encoding="utf-8")
     time.sleep(0.05)
 """);
         var runner = new HostedProcessRunner();
@@ -114,7 +114,7 @@ for index in range(8):
         var result = await runner.RunAsync(command);
 
         result.ExitCode.Should().Be(0, result.Stderr);
-        File.ReadAllText(marker).Should().Be("7");
+        File.ReadAllText(marker).Should().Be(new string('x', 12));
     }
 
     [Fact]

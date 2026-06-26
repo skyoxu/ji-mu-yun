@@ -868,7 +868,7 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderShellV2_ProgressStatusUsesSuccessfulUiOptimizationAndServerAcceptance()
+    public void RenderShellV2_ProgressStatusUsesLatestIterationForServerAcceptance()
     {
         var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
         if (node is null)
@@ -880,20 +880,6 @@ public sealed class BrowserUiRendererTests
             const state = {
               projectId: "project-1",
               runs: [
-                {
-                  runType: "prototype-ui-optimization",
-                  status: "failed",
-                  progressSubstep: "validation_failed",
-                  progressUpdatedUtc: "2026-06-09T07:01:39.4240706+00:00",
-                  runId: "old"
-                },
-                {
-                  runType: "prototype-ui-optimization",
-                  status: "succeeded",
-                  progressSubstep: "completed",
-                  progressUpdatedUtc: "2026-06-09T07:05:39.4240706+00:00",
-                  runId: "new"
-                },
                 {
                   runType: "prototype-7day-playable",
                   status: "succeeded",
@@ -928,6 +914,7 @@ public sealed class BrowserUiRendererTests
                 goals: [{ status: "succeeded", updatedUtc: "2026-06-05T07:43:48.7541844+00:00" }]
               }
             };
+            state.iterationPlans = [state.iterationPlan];
             const elements = new Map([["prototypeProgress", { textContent: "succeeded" }]]);
             const $ = id => elements.get(id) || null;
             function v2IsoTime(value) {
@@ -967,28 +954,33 @@ public sealed class BrowserUiRendererTests
                 .filter(run => String(run.runType || "").toLowerCase() === "prototype-7day-playable" && v2IsSkeletonValidationRun(run))
                 .sort((a, b) => v2RunTimestamp(b) - v2RunTimestamp(a) || String(b.runId || "").localeCompare(String(a.runId || "")))[0] || null;
             }
-            function v2IterationSessionTimestamp() {
-              const session = state.iterationPlan?.session || null;
-              const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+            function v2IterationSessionTimestamp(plan = state.iterationPlan) {
+              const session = plan?.session || null;
+              const goals = Array.isArray(plan?.goals) ? plan.goals : [];
               const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || "")));
               return goalTime || v2IsoTime(session?.completedUtc || session?.updatedUtc || session?.createdUtc || "");
             }
-            function v2RunIsCurrentForIteration(run) {
+            function v2RunIsCurrentForIteration(run, plan = state.iterationPlan) {
               if (!run) return false;
-              const sessionTime = v2IterationSessionTimestamp();
+              const sessionTime = v2IterationSessionTimestamp(plan);
               if (!sessionTime) return true;
               const runTime = v2IsoTime(run.progressUpdatedUtc || run.updatedUtc || run.completedUtc || run.createdUtc || "");
               return runTime >= sessionTime;
             }
-            function v2IterationPlanDone() {
-              const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+            function v2LatestIterationPlanForGlobalState() {
+              const plans = Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(Boolean) : [];
+              return plans.length ? plans[plans.length - 1] : state.iterationPlan;
+            }
+            function v2IterationPlanDone(plan = v2LatestIterationPlanForGlobalState()) {
+              const goals = Array.isArray(plan?.goals) ? plan.goals : [];
               return goals.length > 0 && goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
             }
             function v2FinalPrototypeAcceptanceRun() {
+              const latestPlan = v2LatestIterationPlanForGlobalState();
               const run = v2LatestValidationOnlyAcceptanceRun();
               if (!run || String(run.status || "").toLowerCase() !== "succeeded") return null;
-              if (!v2IterationPlanDone()) return null;
-              return v2RunIsCurrentForIteration(run) ? run : null;
+              if (!v2IterationPlanDone(latestPlan)) return null;
+              return v2RunIsCurrentForIteration(run, latestPlan) ? run : null;
             }
             function v2StepStatus(stepId) {
               const progressStatus = state?.prototypeFailure ? "failed" : "";
@@ -1007,8 +999,9 @@ public sealed class BrowserUiRendererTests
               if (stepId === "prototype-acceptance") {
                 if (state.v2PrototypeValidationInvalidatedByIteration) return "pending";
                 if (v2FinalPrototypeAcceptanceRun()) return "done";
+                const latestPlan = v2LatestIterationPlanForGlobalState();
                 const validationRun = v2LatestValidationOnlyAcceptanceRun();
-                if (validationRun && v2RunIsCurrentForIteration(validationRun) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
+                if (validationRun && v2RunIsCurrentForIteration(validationRun, latestPlan) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
                 return failed && v2IterationPlanDone() ? "fix" : "pending";
               }
               if (stepId === "execute-or-repair") {
@@ -1019,22 +1012,11 @@ public sealed class BrowserUiRendererTests
                 if (failed && creationStatus !== "succeeded") return "fix";
                 return creationStatus === "succeeded" ? "done" : "pending";
               }
-              if (stepId === "ui-optimization") {
-                const run = v2LatestRunByType("prototype-ui-optimization");
-                if (!run) return "pending";
-                const substep = String(run.progressSubstep || "").toLowerCase();
-                if (substep === "validation_skipped") return "pending";
-                if (substep === "validation_failed") return "fix";
-                if (String(run.status || "").toLowerCase() === "succeeded") return "done";
-                if (String(run.status || "").toLowerCase() === "failed") return "fix";
-                return "pending";
-              }
               return "pending";
             }
             function assert(condition, message) {
               if (!condition) throw new Error(message);
             }
-            assert(v2StepStatus("ui-optimization") === "done", "successful UI optimization should be done");
             assert(v2StepStatus("execute-or-repair") === "done", "successful skeleton validation should mark repair step done");
             assert(v2StepStatus("prototype-acceptance") === "fix", "newer final acceptance failure should be shown only on final acceptance");
             state.runs = state.runs.filter(run => run.runId !== "acceptance-failed-after-module");
@@ -1057,6 +1039,98 @@ public sealed class BrowserUiRendererTests
             assert(v2StepStatus("create-prototype") === "fix", "failed skeleton validation should mark creation step as fix");
             state.v2PrototypeValidationInvalidatedByIteration = true;
             assert(v2StepStatus("prototype-acceptance") === "pending", "local invalidation should still block until server progress clears it");
+            const historicalPlan = state.iterationPlan;
+            const latestPlan = {
+              session: { updatedUtc: "2026-06-09T07:20:00.0000000+00:00" },
+              goals: [{ status: "succeeded", updatedUtc: "2026-06-09T07:20:00.0000000+00:00" }]
+            };
+            state.v2PrototypeValidationInvalidatedByIteration = false;
+            state.prototypeFailure = "";
+            state.v2PrototypeStatus = "succeeded";
+            state.v2PrototypeCreationStatus = "succeeded";
+            state.iterationPlan = historicalPlan;
+            state.iterationPlans = [historicalPlan, latestPlan];
+            state.runs = state.runs.filter(run => !String(run.runId || "").startsWith("acceptance-latest-"));
+            state.runs.push({
+              runId: "acceptance-latest-stale",
+              runType: "prototype-7day-playable",
+              status: "succeeded",
+              evidenceJson: "{\"validation_only\":true}",
+              progressUpdatedUtc: "2026-06-09T07:10:00.0000000+00:00"
+            });
+            assert(v2StepStatus("prototype-acceptance") === "pending", "selected historical round must not make stale validation pass for latest round");
+            state.runs.push({
+              runId: "acceptance-latest-fresh",
+              runType: "prototype-7day-playable",
+              status: "succeeded",
+              evidenceJson: "{\"validation_only\":true}",
+              progressUpdatedUtc: "2026-06-09T07:21:00.0000000+00:00"
+            });
+            assert(v2StepStatus("prototype-acceptance") === "done", "validation after latest round should pass even when historical round is selected");
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
+    public void RenderShellV2_IterationStepStatusPrioritizesLatestGoalRepairOverMilestones()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        const string script = """
+            const state = {
+              iterationPlans: [
+                {
+                  session: { sessionId: "latest" },
+                  goals: [{ status: "failed" }]
+                }
+              ],
+              gddMilestoneSteps: {
+                steps: [{ status: "confirmed", locked: false }]
+              }
+            };
+            function v2LatestIterationPlanForGlobalState() {
+              const plans = Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(Boolean) : [];
+              return plans.length ? plans[plans.length - 1] : state.iterationPlan;
+            }
+            function v2GlobalIterationGoals() {
+              const plan = v2LatestIterationPlanForGlobalState();
+              return Array.isArray(plan?.goals) ? plan.goals : [];
+            }
+            function v2IsRepairGoalStatus(status) {
+              return ["needs_fix", "failed"].includes(String(status || "").trim().toLowerCase());
+            }
+            function v2StepStatus(stepId) {
+              if (stepId !== "iteration-plan") return "pending";
+              const goals = v2GlobalIterationGoals();
+              const goalsDone = goals.length > 0 && goals.every(goal => ["succeeded", "completed", "done"].includes(String(goal.status || "").trim().toLowerCase()));
+              if (goals.length) {
+                if (goals.some(goal => v2IsRepairGoalStatus(goal.status))) return "fix";
+                if (goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()))) return "continue";
+                if (!goalsDone) return "pending";
+              }
+              const milestoneSteps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
+              if (milestoneSteps.length) {
+                if (milestoneSteps.every(step => String(step.status || "").trim().toLowerCase() === "confirmed")) return "done";
+                if (milestoneSteps.some(step => !step.locked && ["needs_fix", "execution_failed", "feedback_failed", "timed_out"].includes(String(step.status || "").trim().toLowerCase()))) return "fix";
+                if (milestoneSteps.some(step => !step.locked && String(step.status || "").trim().toLowerCase() !== "confirmed")) return "continue";
+              }
+              if (!goals.length) return "pending";
+              if (goalsDone) return "done";
+              return "pending";
+            }
+            function assert(condition, message) {
+              if (!condition) throw new Error(message);
+            }
+            assert(v2StepStatus("iteration-plan") === "fix", "failed latest goal must override confirmed milestone");
+            state.iterationPlans[0].goals = [{ status: "pending" }];
+            assert(v2StepStatus("iteration-plan") === "continue", "pending latest goal must override confirmed milestone");
+            state.iterationPlans[0].goals = [{ status: "succeeded" }];
+            assert(v2StepStatus("iteration-plan") === "done", "confirmed milestone can mark done after latest goals are done");
             """;
 
         RunNodeScript(node, script);
@@ -1270,6 +1344,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("schemaVersion: v2ProjectUiStateVersion");
         html.Should().Contain("v2WriteProjectUiState");
         html.Should().Contain("v2RestoreProjectUiState");
+        html.Should().Contain("async function v2RestoreProjectUiState(projectId = state.projectId)");
+        html.Should().Contain("const remote = await v2FetchProjectUiState(projectId);");
+        html.Should().Contain("v2RestoreProjectUiState(state.projectId);");
         html.Should().Contain("v2LoadProjectUiStateTabState(source)");
         html.Should().Contain("v2RestoredProjectUiStateId = \"\"");
         html.Should().Contain("if (state.projectId && state.projectId !== projectId)");
@@ -1277,7 +1354,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2ActiveTabId = \"chat\";");
         html.Should().Contain("v2SelectedStep = \"new-project\";");
         html.Should().Contain("v2RenderTabs();");
-        html.Should().Contain("if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) return false;");
+        html.Should().Contain("const currentProjectCancelled = !!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === state.projectId;");
+        html.Should().Contain("if (currentProjectCancelled || readCancelledPrototypeMarker(state.projectId)) return false;");
         html.Should().Contain("window.addEventListener(\"beforeunload\", () =>");
         html.Should().Contain("callV2(\"v2WriteProjectUiState\")");
         html.Should().NotContain("window.addEventListener(\"beforeunload\", v2WriteProjectUiState)");
@@ -1325,9 +1403,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("buildWorkflowRouteChatContent");
         html.Should().Contain("renderWorkflowRouteAction");
         html.Should().Contain("function v2RunTimestamp(run)");
-        html.Should().Contain("v2RenderUiOptimizationStatus");
-        html.Should().Contain("游戏界面优化已完成，短验证已通过");
-        html.Should().Contain("左侧进度栏已标记为完成");
+        html.Should().NotContain("v2RenderUiOptimizationStatus");
+        html.Should().NotContain("游戏界面优化已完成，短验证已通过");
+        html.Should().NotContain("左侧进度栏已标记为完成");
         html.Should().Contain("workflowRouteActionConsumed");
         html.Should().NotContain("withTimeout(loadProjectPackages(), \"packages\")");
         html.Should().NotContain("已基于当前缓存状态生成建议");
@@ -1366,8 +1444,15 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2AcceptanceActionStatus");
         html.Should().Contain("await validatePrototype();");
         html.Should().Contain("v2IterationPlanAllowsAcceptance");
+        html.Should().NotContain("goals.length === 0) return true");
+        html.Should().Contain("请先生成并完成当前游戏模块，所有任务完成后再进行原型项目验收。");
         html.Should().Contain("请先完成当前游戏模块，所有任务完成后再进行原型项目验收。");
-        html.Should().Contain("游戏界面优化是可选步骤，不会阻塞验收。");
+        html.Should().Contain("const legacyRerun = $(\"validatePrototype\");");
+        html.Should().Contain("if (legacyRerun) setButtonDisabledState(legacyRerun, !!reason, reason || \"\");");
+        html.Should().Contain("validatePrototype = async function() {");
+        html.Should().Contain("const reason = v2PrototypeAcceptanceBlockReason();");
+        html.Should().Contain("原型项目验收入口会在游戏模块完成后启用。");
+        html.Should().NotContain("游戏界面优化是可选步骤，不会阻塞验收。");
         html.Should().NotContain("请先完成游戏界面优化，再进行原型项目验收。");
         html.Should().NotContain("if (stepId === \"prototype-acceptance\") {\n                    $(\"validatePrototype\")?.click();");
         html.Should().NotContain("[\"revalidate-prototype\", \"重新验收\"]");
@@ -1382,6 +1467,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (typeof v2OpenStepTab === \"function\")");
         html.Should().Contain("v2OpenStepTab(\"download-project\")");
         html.Should().Contain("v2OpenStepTab(\"asset-inventory\")");
+        html.Should().NotContain("if (stepId === \"ui-optimization\") return \"v2UiOptimizationPanel\";");
+        html.Should().NotContain("v2CreateUiOptimizationPanel();");
         html.Should().NotContain("$(\"createProjectPackage\")?.click()");
         html.Should().Contain("v2ApplyPrototypeFormLock");
         html.Should().Contain("v2ShouldLockPrototypeForm");
@@ -1404,6 +1491,31 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/projects/${encodeURIComponent(projectId)}/ui-state");
         html.Should().Contain("async function v2FetchProjectUiState(projectId = state.projectId)");
         html.Should().Contain("async function v2WriteProjectUiState()");
+        html.Should().Contain("let authEpoch = 0;");
+        html.Should().Contain("function bumpAuthEpoch()");
+        html.Should().Contain("function projectRequestContext(projectId = state.projectId)");
+        html.Should().Contain("function isCurrentProjectRequest(projectId, requestAuthEpoch = authEpoch)");
+        html.Should().Contain("function runBelongsToCurrentProject(run)");
+        html.Should().Contain("function currentProjectHasBusyRun()");
+        html.Should().Contain("function projectSwitchLocked()");
+        html.Should().Contain("function updateProjectSwitchAvailability()");
+        html.Should().Contain("button.disabled = locked && !!state.projectId;");
+        html.Should().Contain("if (projectSwitchLocked() && state.projectId)");
+        html.Should().Contain("当前操作完成前不能切换项目。");
+        html.Should().Contain("state.chatBusy = true;");
+        html.Should().Contain("state.chatBusy = false;");
+        html.Should().Contain("state.workflowRouteBusy = true;");
+        html.Should().Contain("state.workflowRouteBusy = false;");
+        html.Should().Contain("!!state.workflowRouteBusy");
+        html.Should().Contain("currentProjectHasBusyRun()");
+        html.Should().Contain("async function loadProjectRuntimeState()");
+        html.Should().Contain("const projectId = state.projectId;");
+        html.Should().Contain("state.prototypeReadyForFeedback = false;");
+        html.Should().Contain("state.draftAnalysisRunning = false;");
+        html.Should().Contain("state.v2PrototypeAcceptanceStatus = \"\";");
+        html.Should().Contain("if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;");
+        html.Should().Contain("try { v2RenderProgress(); } catch {}");
+        html.Should().Contain("if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return false;");
         html.Should().Contain("state.iterationPlan = null;");
         html.Should().Contain("state.iterationPlans = [];");
         html.Should().Contain("state.selectedIterationSessionId = \"\";");
@@ -1411,9 +1523,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function normalizeIterationPlanRounds(rounds)");
         html.Should().Contain("normalizeIterationPlanRounds(Array.isArray(result?.rounds) ? result.rounds : [])");
         html.Should().Contain("normalizeIterationPlanRounds(Array.isArray(cached.iterationPlans) ? cached.iterationPlans : [])");
-        html.Should().Contain("writeProjectStateCache({ prototypeProgress: progress })");
-        html.Should().Contain("writeProjectStateCache({ packageList: result })");
-        html.Should().Contain("writeProjectStateCache({ assetInventory: result })");
+        html.Should().Contain("writeProjectStateCache({ prototypeProgress: progress }, projectId)");
+        html.Should().Contain("writeProjectStateCache({ packageList: result }, projectId)");
+        html.Should().Contain("writeProjectStateCache({ assetInventory: result }, projectId)");
         html.Should().Contain("await loadProjectPackages();");
         html.Should().Contain("renderRunsListFromState");
         html.Should().NotContain("if (v2SelectedStep === \"create-prototype\") $(\"prototypeWorkflowPanel\")?.classList.remove(\"hidden\")");
@@ -1432,13 +1544,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("游戏场景创建");
         html.Should().Contain("完成游戏模块");
         html.Should().Contain("场景验收修复");
-        html.Should().Contain("游戏界面优化");
         html.IndexOf("[\"execute-or-repair\", \"场景验收修复\", \"wrench\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal));
-        html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"ui-optimization\", \"游戏界面优化\", \"layout\"]", StringComparison.Ordinal));
-        html.Should().Contain("function v2RunIsCurrentForIteration(run)");
-        html.Should().Contain("const sessionTime = v2IterationSessionTimestamp();");
+        html.IndexOf("[\"iteration-plan\", \"完成游戏模块\", \"list\"]", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("[\"prototype-acceptance\", \"原型项目验收\", \"check\"]", StringComparison.Ordinal));
+        html.Should().NotContain("[\"ui-optimization\", \"游戏界面优化\", \"layout\"]");
+        html.Should().Contain("function v2LatestIterationPlanForGlobalState()");
+        html.Should().Contain("function v2GlobalIterationGoals()");
+        html.Should().Contain("function v2IsRepairGoalStatus(status)");
+        html.Should().Contain("function v2RunIsCurrentForIteration(run, plan = state.iterationPlan)");
+        html.Should().Contain("const sessionTime = v2IterationSessionTimestamp(plan);");
+        html.Should().Contain("const latestPlan = v2LatestIterationPlanForGlobalState();");
+        html.Should().Contain("return v2RunIsCurrentForIteration(run, latestPlan) ? run : null;");
         html.Should().Contain("const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || \"\")));");
-        html.Should().Contain("if (!run) return \"pending\";");
         html.Should().NotContain("if (!run || !v2RunIsCurrentForIteration(run)) return \"pending\";");
         html.Should().Contain("function v2LatestSkeletonValidationRun()");
         html.Should().Contain("function v2SkeletonValidationSucceeded()");
@@ -1447,11 +1563,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("const skeletonValidation = v2LatestSkeletonValidationRun();");
         html.Should().Contain("if (skeletonValidationStatus === \"succeeded\") return \"done\";");
         html.Should().Contain("if (skeletonValidationStatus === \"failed\") return \"fix\";");
-        html.Should().Contain("if (substep === \"validation_skipped\") return \"pending\";");
-        html.Should().Contain("if (substep === \"validation_failed\") return \"fix\";");
-        html.Should().Contain("游戏界面优化暂未开放。");
-        html.Should().Contain("setButtonDisabledState($(\"runUiOptimization\"), true");
-        html.Should().Contain("out(\"游戏界面优化暂未开放。\")");
+        html.Should().NotContain("if (substep === \"validation_skipped\") return \"pending\";");
+        html.Should().NotContain("if (substep === \"validation_failed\") return \"fix\";");
+        html.Should().NotContain("setButtonDisabledState($(\"runUiOptimization\"), true");
+        html.Should().NotContain("out(\"游戏界面优化暂未开放。\")");
         html.Should().Contain("v2RepairPanel");
         html.Should().Contain("v2CreateRepairPanel");
         html.Should().Contain("const goals = state.repairPlan?.goals || []");
@@ -1535,7 +1650,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("创建新的游戏模块");
         html.Should().Contain("downloadChatHistory");
         html.Should().Contain("messageCount: messages.length");
-        html.Should().Contain("const result = await api(`/api/projects/${state.projectId}/chat-history`);");
+        html.Should().Contain("function chatHistoryDownloadFileName(projectId = state.projectId)");
+        html.Should().Contain("const projectId = state.projectId;");
+        html.Should().Contain("const result = await api(`/api/projects/${projectId}/chat-history`);");
+        html.Should().Contain("const requestAuthEpoch = authEpoch;");
+        html.Should().Contain("if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return out(\"项目或登录状态已切换，本次聊天记录下载已取消。\");");
+        html.Should().Contain("anchor.download = chatHistoryDownloadFileName(projectId);");
         html.Should().Contain("chatAttachmentFiles");
         html.Should().Contain("currentChatAttachmentsForRun");
         html.Should().Contain("attachments: currentChatAttachmentsForRun()");
@@ -1566,7 +1686,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("history: state.chatHistory.slice(-10)");
         html.Should().Contain("记录已下载。");
         html.Should().Contain("createGddDocument");
-        html.Should().Contain("/api/projects/${state.projectId}/gdd");
+        html.Should().Contain("/api/projects/${projectId}/gdd");
         html.Should().Contain("gddOutlineUrl");
         html.Should().Contain("v2OpenGddOutlineTab");
         html.Should().Contain("v2OpenEmbeddedTab(");
@@ -1616,7 +1736,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("await Promise.allSettled([");
         html.Should().Contain("正在读取项目列表");
         html.Should().NotContain("state.gddMilestoneSteps = cached.gddMilestoneSteps");
-        html.Should().Contain("writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection })");
+        html.Should().Contain("writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection }, projectId)");
         html.Should().Contain("v2RepairActions");
         html.Should().Contain("margin-left: auto");
         html.Should().Contain("$(\"evaluateIterationPlanFromChat\")?.classList.add(\"hidden\")");
@@ -1635,8 +1755,16 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("merged.splice(previousIndex + 1, 0, entry.message);");
         html.Should().Contain("merged.splice(nextIndex, 0, entry.message);");
         html.Should().Contain("renderChatHistory");
-        html.Should().Contain("/api/projects/${state.projectId}/workflow-route");
-        html.Should().Contain("/api/projects/${state.projectId}/workflow-route/intent");
+        html.Should().Contain("/api/projects/${projectId}/workflow-route");
+        html.Should().NotContain("/api/projects/${state.projectId}/workflow-route");
+        html.Should().Contain("/api/projects/${projectId}/workflow-route/intent");
+        html.Should().Contain("const result = await api(`/api/projects/${projectId}/chat`");
+        html.Should().Contain("if (!guardGlobalAction()) return;");
+        html.Should().Contain("await loadServerChatHistoryForProject(projectId, context.authEpoch);");
+        html.Should().Contain("async function queryWorkflowRoute(intent = null, projectId = state.projectId, allowCurrentBusy = false, requestAuthEpoch = authEpoch)");
+        html.Should().Contain("if (!allowCurrentBusy && isGlobalBusy()) return out(\"当前有任务正在执行，请等待当前任务完成后再扫描项目状态。\");");
+        html.Should().Contain("const route = await fetchWorkflowRoute(intent, projectId);");
+        html.Should().Contain("async function fetchWorkflowRoute(intent = null, projectId = state.projectId)");
         html.Should().Contain("queryWorkflowRoute");
         html.Should().Contain("runWorkflowRecommendedAction");
         html.Should().Contain("function workflowRouteActions(route)");
@@ -1651,7 +1779,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("v2OpenStepTab(\"execute-or-repair\", false)");
         html.Should().Contain("v2OpenStepTab(\"iteration-plan\", false)");
         html.Should().Contain("openIterationPlanUpdateModal(\"new\")");
-        html.Should().Contain("v2OpenStepTab(\"ui-optimization\", false)");
+        html.Should().NotContain("v2OpenStepTab(\"ui-optimization\", false)");
+        html.Should().Contain("游戏界面优化当前未作为主流程开放，请继续进行原型项目验收或打包试玩。");
         html.Should().NotContain("await runPrototype();");
         html.Should().NotContain("await createIterationPlan();");
         html.Should().NotContain("await runUiOptimization();");
@@ -1667,8 +1796,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("invalidateWorkflowRouteAction");
         html.Should().Contain("restoreWorkflowRouteActionFromHistory");
         html.Should().Contain("state.workflowRouteActionToken = latest.workflowActionToken");
-        html.Should().Contain("fetchWorkflowRoute(message.workflowIntent)");
+        html.Should().Contain("fetchWorkflowRoute(message.workflowIntent, projectId)");
+        html.Should().Contain("if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;");
         html.Should().Contain("workflowActionsMatch");
+        Regex.IsMatch(
+                html,
+                @"\}\s*finally\s*\{\s*if \(!isCurrentProjectRequest\(projectId, requestAuthEpoch\)\) return;\s*state\.workflowRouteBusy = false;",
+                RegexOptions.CultureInvariant)
+            .Should().BeTrue();
         html.Should().Contain("项目进度已经变化，请重新点击");
         html.Should().Contain("无法确认当前项目进度，请重新点击");
         html.Should().Contain("if (message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;");
@@ -1677,7 +1812,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (shouldClearChatAttachments) clearChatAttachments();");
         html.Should().NotContain("invalidateWorkflowRouteAction();\n                  switch (action.actionId)");
         html.Should().Contain("if (busy) invalidateWorkflowRouteAction();");
-        html.IndexOf("if (routeIntent?.shouldRoute)", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("const result = await api(`/api/projects/${state.projectId}/chat`", StringComparison.Ordinal));
+        html.IndexOf("if (routeIntent?.shouldRoute)", StringComparison.Ordinal).Should().BeLessThan(html.IndexOf("const result = await api(`/api/projects/${projectId}/chat`", StringComparison.Ordinal));
         html.Should().Contain("nextStepButton.onclick = () => queryWorkflowRoute()");
         html.Should().NotContain("v2BuildLocalNextStepSuggestion");
         html.Should().NotContain("v2JudgeNextStepLocally");
@@ -1699,7 +1834,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("v2ProgressDescription");
         html.Should().NotContain("v2ProgressUpdated");
         html.Should().NotContain("v2ProjectHealth");
-        html.Should().Contain("/api/projects/${state.projectId}/prototype-7day-playable/progress");
+        html.Should().Contain("/api/projects/${projectId}/prototype-7day-playable/progress");
     }
 
     [Fact]
@@ -1710,8 +1845,11 @@ public sealed class BrowserUiRendererTests
         var html = new BrowserUiRenderer().RenderProject(project, []);
 
         html.Should().Contain("detail-progress");
+        html.Should().Contain("grid-template-columns: repeat(7, minmax(5.6rem, 1fr))");
+        html.Should().NotContain("grid-template-columns: repeat(9, minmax(5.6rem, 1fr))");
         html.Should().Contain("detail-step-number\">1</span>");
-        html.Should().Contain("detail-step-number\">8</span>");
+        html.Should().Contain("detail-step-number\">7</span>");
+        html.Should().NotContain("detail-step-number\">8</span>");
         html.Should().Contain("打包下载项目");
         html.Should().Contain("detail-step pending");
         html.Should().NotContain("detail-step fix");
@@ -1973,6 +2111,123 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderProject_DoesNotKeepIterationFix_WhenLaterGoalRepairSucceeded()
+    {
+        var project = CreateProjectSnapshot();
+        var failedIterationRun = new RunReadbackItem(
+            "run-iteration-failed",
+            "project-1",
+            "workspace-1",
+            "prototype-iteration-goal",
+            "failed",
+            1,
+            "",
+            "",
+            "{}",
+            "failed",
+            "",
+            "Iteration goal failed.",
+            "2026-06-09T07:05:39.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+        var succeededGoalRepair = new RunReadbackItem(
+            "run-goal-repair",
+            "project-1",
+            "workspace-1",
+            "prototype-quick-fix",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{\"quick_fix\":true,\"goal_repair\":true,\"goal_repair_status\":\"succeeded\"}",
+            "succeeded",
+            "",
+            "Goal repair completed.",
+            "2026-06-09T07:06:39.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [succeededGoalRepair, failedIterationRun]);
+
+        html.Should().Contain("detail-step pending\" href=\"/#v2IterationPanel\"");
+        html.Should().NotContain("detail-step fix\" href=\"/#v2IterationPanel\"");
+    }
+
+    [Fact]
+    public void RenderProject_MarksFinalAcceptanceDone_WhenValidationFollowsSuccessfulGoalRepair()
+    {
+        var project = CreateProjectSnapshot();
+        var failedIterationRun = new RunReadbackItem(
+            "run-iteration-failed",
+            "project-1",
+            "workspace-1",
+            "prototype-iteration-goal",
+            "failed",
+            1,
+            "",
+            "",
+            "{}",
+            "failed",
+            "",
+            "Iteration goal failed.",
+            "2026-06-09T07:05:39.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+        var succeededGoalRepair = new RunReadbackItem(
+            "run-goal-repair",
+            "project-1",
+            "workspace-1",
+            "prototype-quick-fix",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{\"quick_fix\":true,\"goal_repair\":true,\"goal_repair_status\":\"succeeded\"}",
+            "succeeded",
+            "",
+            "Goal repair completed.",
+            "2026-06-09T07:06:39.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+        var finalValidation = new RunReadbackItem(
+            "run-final-validation",
+            "project-1",
+            "workspace-1",
+            "prototype-7day-playable",
+            "succeeded",
+            0,
+            "",
+            "",
+            "{\"validation_only\":true}",
+            "succeeded",
+            "",
+            "Final validation completed.",
+            "2026-06-09T07:07:39.4240706+00:00",
+            null,
+            null,
+            null,
+            null,
+            []);
+
+        var html = new BrowserUiRenderer().RenderProject(project, [finalValidation, succeededGoalRepair, failedIterationRun]);
+
+        html.Should().Contain("detail-step done\" href=\"/#v2AcceptancePanel\"");
+        html.Should().NotContain("detail-step pending\" href=\"/#v2AcceptancePanel\"");
+    }
+
+    [Fact]
     public void RenderProject_MarksDownloadDone_WhenPackageExists()
     {
         var project = CreateProjectSnapshot();
@@ -2002,7 +2257,7 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderProject_ShouldNotMarkUiOptimizationDone_WhenShortValidationWasSkipped()
+    public void RenderProject_ShouldNotExposeUiOptimizationAsMainDetailStep()
     {
         var project = CreateProjectSnapshot();
         var run = new RunReadbackItem(
@@ -2027,8 +2282,8 @@ public sealed class BrowserUiRendererTests
 
         var html = new BrowserUiRenderer().RenderProject(project, [run]);
 
-        html.Should().Contain("detail-step pending\" href=\"/#v2UiOptimizationPanel\"");
-        html.Should().NotContain("detail-step done\" href=\"/#v2UiOptimizationPanel\"");
+        html.Should().NotContain("href=\"/#v2UiOptimizationPanel\"");
+        html.Should().NotContain("<span class=\"detail-step-label\">游戏界面优化</span>");
     }
 
     [Fact]
@@ -2063,14 +2318,18 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
+        html.Should().Contain("runBelongsToCurrentProject(run)");
         html.Should().Contain("function runIsBusy(run)");
         html.Should().Contain("game-design-gdd-section-batch");
         html.Should().Contain(@"\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a");
         html.Should().Contain("if (!run.runId) return false;");
         html.Should().Contain("status === \"queued\" || status === \"running\"");
         html.Should().Contain("state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId");
-        html.Should().Contain("writeCancelledPrototypeMarker(runId);");
-        html.Should().Contain("writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });");
+        html.Should().Contain("state.cancelledActiveRunProjectId = runProjectId;");
+        html.Should().Contain("if (isPrototypeSkeletonCreationRun(run) && runProjectId)");
+        html.Should().Contain("writeCancelledPrototypeMarker(runId, runProjectId);");
+        html.Should().Contain("if (cancelledCurrentPrototypeRun)");
+        html.Should().Contain("writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() }, runProjectId);");
         html.Should().Contain("state.v2PrototypeCreationStatus = \"idle\";");
         html.Should().Contain("if (!activeRun?.runId)");
         html.Should().Contain("function hideActiveRunBanner()");
@@ -2078,18 +2337,22 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function setButtonBaseClass(button, baseClassName)");
         html.Should().Contain("function cancelledPrototypeProgressSnapshot()");
         html.Should().Contain("function cancelledPrototypeMarkerKey(projectId = state.projectId)");
-        html.Should().Contain("function writeCancelledPrototypeMarker(runId)");
+        html.Should().Contain("function writeCancelledPrototypeMarker(runId, projectId = state.projectId)");
         html.Should().Contain("function readCancelledPrototypeMarker(projectId = state.projectId)");
         html.Should().Contain("function setPrototypeDraftFileLocked(locked)");
         html.Should().Contain("function setButtonDisabledState(button, disabled, title = \"\")");
         html.Should().Contain("function resetPrototypeActionButtonsVisualState()");
         html.Should().Contain("function unlockPrototypeFormAfterCancel()");
-        html.Should().Contain("unlockPrototypeFormAfterCancel();");
+        html.Should().Contain("if (cancelledCurrentPrototypeRun) unlockPrototypeFormAfterCancel();");
         html.Should().Contain("setButtonBaseClass($(\"runPrototype\"), \"secondary\");");
         html.Should().Contain("setButtonBaseClass($(\"importDraft\"), \"secondary import-draft-button\");");
         html.Should().Contain("button.classList.remove(\"button-state-enabled\", \"button-state-disabled\", \"import-draft-ready\");");
         html.Should().Contain("if ([\"queued\", \"running\"].includes(creationStatus))");
-        html.Should().Contain("if (state.cancelledActiveRunId || readCancelledPrototypeMarker())");
+        html.Should().Contain("const currentProjectCancelled = !!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === projectId;");
+        html.Should().Contain("if (currentProjectCancelled || readCancelledPrototypeMarker(projectId))");
+        html.Should().Contain("phaseA.prototypeSkeletonBanner.${projectId || \"none\"}.${runId || \"none\"}");
+        html.Should().Contain("phaseA.prototypeSkeletonBanner.current.${projectId || \"none\"}");
+        html.Should().Contain("projectId: state.projectId || \"\"");
         html.Should().Contain("if ($(\"draftFile\")) $(\"draftFile\").disabled = true;");
         html.Should().Contain("button.classList.toggle(\"button-state-enabled\", !!enabled);");
         html.Should().Contain("button.classList.toggle(\"button-state-disabled\", !enabled);");
@@ -2104,19 +2367,27 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function prototypeSkeletonDisplayCountFromStartedAt(startedAtMs)");
         html.Should().Contain("Math.floor(elapsedMs / 20000) + 1");
         html.Should().Contain("const changed = syncPrototypeSkeletonBannerDisplayedCount();");
-        html.Should().Contain("function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId)");
-        html.Should().Contain("function prototypeSkeletonBannerCurrentKey()");
+        html.Should().Contain("function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId, projectId = state.projectId)");
+        html.Should().Contain("function prototypeSkeletonBannerCurrentKey(projectId = state.projectId)");
         html.Should().Contain("function prototypeSkeletonBannerStoredRunId()");
         html.Should().Contain("restorePrototypeSkeletonBannerFromStorage();");
         html.Should().Contain("void refreshActiveRun();");
         html.Should().Contain("state.pendingPrototypeSkeletonRun = {");
-        html.Should().Contain("const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;");
+        html.Should().Contain("state.pendingPrototypeSkeletonRun = null;");
+        html.Should().Contain("resetPrototypeSkeletonBannerState(false);");
+        html.Should().Contain("const skeletonRun = skeletonBannerRun();");
+        html.Should().NotContain("const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;");
         html.Should().Contain("hasPendingPrototypeSkeletonBannerRun()");
         html.Should().Contain("state.pendingPrototypeSkeletonRun.status = state.pendingPrototypeSkeletonRun.status || \"running\";");
         html.Should().Contain("busy: runIsBusy(run)");
         html.Should().Contain("if (!runIsBusy(run))");
+        html.Should().Contain("runBelongsToCurrentProject(activeRun)");
+        html.Should().Contain("async function refreshPrototypeSkeletonRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch)");
+        html.Should().Contain("const actualProjectId = runProjectId(run) || projectId;");
+        html.Should().Contain("if (actualProjectId !== projectId || !isCurrentProjectRequest(projectId, requestAuthEpoch)) return;");
+        html.Should().Contain("refreshPrototypeSkeletonRun(skeletonRun.runId, runProjectId(skeletonRun) || state.projectId)");
         html.Should().Contain("localStorage.setItem(prototypeSkeletonBannerCurrentKey(), state.prototypeSkeletonBannerRunId);");
-        html.Should().Contain("readPrototypeSkeletonBannerState(run.runId)");
+        html.Should().Contain("readPrototypeSkeletonBannerState(run.runId, state.projectId)");
         html.Should().Contain("writePrototypeSkeletonBannerState()");
         html.Should().Contain("function prototypeSkeletonVisibleNotes()");
         html.Should().Contain("function prototypeSkeletonBannerNotes()");
@@ -2145,6 +2416,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("if (!sessionValidated)");
         html.Should().Contain("if (error?.status === 401 || error?.status === 403)");
         html.Should().Contain("Token 已验证。项目状态刷新失败，请稍后重试。");
+        html.Should().Contain("function persistAccessToken(value)");
         html.Should().Contain("function persistAccessTokenFromInput()");
         html.Should().Contain("function readBrowserCookie(name)");
         html.Should().Contain("function writeBrowserCookie(name, value, maxAgeSeconds)");
@@ -2157,8 +2429,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("window.addEventListener(\"unhandledrejection\"");
         html.Should().Contain("setTimeout(() =>");
         html.Should().NotContain("autofill_empty");
-        html.Should().Contain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
-        html.Should().Contain("$(\"token\").addEventListener(\"change\", persistAccessTokenFromInput)");
+        html.Should().Contain("$(\"token\").addEventListener(\"input\", bumpAuthEpoch)");
+        html.Should().Contain("$(\"token\").addEventListener(\"change\", bumpAuthEpoch)");
+        html.Should().NotContain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
         html.Should().Contain("Token 已保留");
         html.Should().Contain("busy-banner-prototype-skeleton");
         html.Should().Contain("展开详细信息");
@@ -2243,6 +2516,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("当前激活模块");
         html.Should().Contain("自动验收证据");
         html.Should().Contain("模块执行结果");
+        html.Should().Contain("玩家试玩验收内容");
+        html.Should().Contain("milestone-playtest-panel");
+        html.Should().Contain("试玩验收");
+        html.Should().Contain("打包试玩");
+        html.IndexOf("renderGddMilestoneResultPanel(step)", StringComparison.Ordinal)
+            .Should().BeLessThan(html.IndexOf("renderGddMilestonePlaytestPanel(step)", StringComparison.Ordinal));
         html.Should().Contain("executionRunId");
         html.Should().Contain("feedbackRunId");
         html.Should().Contain("最近 run");
@@ -2452,6 +2731,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("type=\"button\" class=\"secondary\" data-needs-fix-goal");
         html.Should().Contain("onclick=\"event.stopPropagation(); runNeedsFixIterationGoal('");
         html.Should().Contain("needsFixDisabledAttrs");
+        html.Should().Contain("const needsFixDisabled = !isLatestPlan || isGlobalBusy();");
+        html.Should().Contain("只能修复最新一轮游戏模块。请切回最新轮次后再运行需要修复路由。");
+        html.Should().Contain("function latestIterationPlanForAction()");
+        html.Should().Contain("function selectLatestIterationPlanForAction()");
+        html.Should().Contain("const goals = latestIterationPlanGoalsForAction();");
+        html.Should().Contain("const hasNeedsFix = goals.some(goal => v2IsRepairGoalStatus(goal.status));");
         html.Should().Contain("document.querySelectorAll(\"[data-needs-fix-goal]\").forEach");
         html.Should().Contain("document.addEventListener(\"click\", event =>");
         html.Should().Contain("event.target?.closest?.(\"[data-needs-fix-goal]\")");
@@ -2472,6 +2757,7 @@ public sealed class BrowserUiRendererTests
         html.Should().NotContain("兼容入口：快速修复");
         html.Should().Contain("submitFormalFeedback");
         html.Should().Contain("提交反馈到需要修复路由");
+        html.Should().Contain("const goal = latestNeedsFixRouteGoalForAction();");
         html.Should().Contain("buildNeedsFixFeedbackForUserReport(goal, feedback)");
         html.Should().Contain("goalId: goal?.goalId || null");
         html.Should().Contain("如果当前项目还没有可修复目标，请返回明确的前置条件提示，不要生成游戏模块");
@@ -2587,7 +2873,10 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("请先修复当前任务");
         html.Should().Contain("/iteration-plan");
         html.Should().Contain("/iteration-plan/evaluate");
-        html.Should().Contain("state.iterationPlanEvaluation = response?.evaluation || response;");
+        html.Should().Contain("const actionPlan = selectLatestIterationPlanForAction();");
+        html.Should().Contain("const evaluation = response?.evaluation || response;");
+        html.Should().Contain("latestPlan.latestEvaluation = evaluation;");
+        html.Should().Contain("state.iterationPlanEvaluation = evaluation;");
         html.Should().Contain("const longLlmTimeoutMs = 1200 * 1000;");
         html.Should().Contain("failureCode: \"client_timeout\"");
         html.Should().Contain("timeoutMs: longLlmTimeoutMs");
@@ -2597,7 +2886,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("submitIterationPlanFromFeedback");
         html.Should().NotContain("iteration-plan-request");
         html.Should().NotContain("iteration-plan-result");
-        html.Should().Contain("await loadServerChatHistoryForProject(state.projectId);");
+        html.Should().Contain("await loadServerChatHistoryForProject(projectId, context.authEpoch);");
         html.Should().Contain("sanitizePublicRunContent");
         html.Should().Contain("publicArtifactLabel");
         html.Should().Contain("/chat");
@@ -2824,6 +3113,24 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_DoesNotMapLegacyUserTokenToAdminAccount()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().Contain("ResolveAccountByTokenHashAsync");
+        source.Should().NotContain("legacy-user");
+        source.Should().NotContain("new AccountIdentity(adminAccountId, \"legacy-user\"");
+    }
+
+    [Fact]
     public void Program_PrototypeEvidenceEndpointGuardsProjectLocalEvidenceJson()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(
@@ -3039,6 +3346,27 @@ public sealed class BrowserUiRendererTests
         var assembly = typeof(BrowserUiRenderer).Assembly;
         var names = assembly.GetManifestResourceNames();
         names.Should().Contain(name => name.EndsWith("Browser.Assets.PrototypeSkeletonRunNotes.txt", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Renderer_ContextCapturingActionsGuardBusyCleanup()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Browser",
+            "BrowserUiRenderer.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().MatchRegex("(?s)async function sendChat\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*state\\.chatBusy = false;");
+        source.Should().MatchRegex("(?s)async function createGddDocument\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*clearChatAttachments\\(\\);");
+        source.Should().MatchRegex("(?s)async function createRepairPlan\\(\\).*?catch \\(error\\) \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*showError\\(error\\);\\s*\\} finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;");
+        source.Should().MatchRegex("(?s)async function submitFormalFeedbackText\\(feedback, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await loadProjectPackages\\(\\);");
+        source.Should().MatchRegex("(?s)async function submitNeedsFixRouteRequest\\(payload, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await refreshActiveRun\\(\\);");
     }
 
 }

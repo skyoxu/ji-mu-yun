@@ -237,6 +237,8 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .milestone-evidence-list { margin: 0.35rem 0 0; padding-left: 1.1rem; }
                 body.v2-detail .milestone-evidence-list li { margin: 0.15rem 0; }
                 body.v2-detail .milestone-result-panel { border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.65rem; margin: 0.65rem 0; background: #fffdf8; }
+                body.v2-detail .milestone-playtest-panel { border: 1px solid #c9dbff; border-radius: 0.45rem; padding: 0.65rem; margin: 0.65rem 0; background: #f8fbff; }
+                body.v2-detail .milestone-playtest-panel p { margin: 0.35rem 0 0; }
                 body.v2-detail .milestone-result-panel ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
                 body.v2-detail .milestone-result-panel li { margin: 0.2rem 0; }
                 body.v2-detail .milestone-detail-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.65rem; }
@@ -301,7 +303,6 @@ public sealed class BrowserUiRenderer
                   ["create-prototype", "游戏场景创建", "spark"],
                   ["execute-or-repair", "场景验收修复", "wrench"],
                   ["iteration-plan", "完成游戏模块", "list"],
-                  ["ui-optimization", "游戏界面优化", "layout"],
                   ["prototype-acceptance", "原型项目验收", "check"],
                   ["asset-inventory", "项目素材库", "image"],
                   ["download-project", "打包下载项目", "download"]
@@ -426,9 +427,10 @@ public sealed class BrowserUiRenderer
                 async function v2WriteProjectUiState() {
                   const payload = v2BuildProjectUiStatePayload();
                   if (!payload) return;
-                  try { localStorage.setItem(v2ProjectUiStateKey(state.projectId), JSON.stringify(payload)); } catch {}
+                  const projectId = payload.projectId || state.projectId;
+                  try { localStorage.setItem(v2ProjectUiStateKey(projectId), JSON.stringify(payload)); } catch {}
                   try {
-                    await api(`/api/projects/${encodeURIComponent(state.projectId)}/ui-state`, {
+                    await api(`/api/projects/${encodeURIComponent(projectId)}/ui-state`, {
                       method: "POST",
                       body: JSON.stringify(payload)
                     });
@@ -455,20 +457,24 @@ public sealed class BrowserUiRenderer
                   if (tab.id === "gdd-outline" || tab.id === "step:gdd-outline") return "v2GddOutlineFrame";
                   return "";
                 }
-                async function v2RestoreProjectUiState() {
-                  if (!state.projectId) return;
-                  if (v2RestoredProjectUiStateId === state.projectId) {
+                async function v2RestoreProjectUiState(projectId = state.projectId) {
+                  if (!projectId) return;
+                  const requestAuthEpoch = authEpoch;
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                  if (v2RestoredProjectUiStateId === projectId) {
                     v2LoadProjectUiStateTabState();
                     return;
                   }
-                  v2RestoredProjectUiStateId = state.projectId;
-                  const cached = v2ReadProjectUiState(state.projectId);
-                  const remote = await v2FetchProjectUiState(state.projectId);
-                  const source = v2ChooseProjectUiStateSource(remote, cached) || v2BuildProjectUiStateSeed(state.projectId);
+                  v2RestoredProjectUiStateId = projectId;
+                  const cached = v2ReadProjectUiState(projectId);
+                  const remote = await v2FetchProjectUiState(projectId);
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                  const source = v2ChooseProjectUiStateSource(remote, cached) || v2BuildProjectUiStateSeed(projectId);
                   if (!cached) {
-                    try { localStorage.setItem(v2ProjectUiStateKey(state.projectId), JSON.stringify(source)); } catch {}
+                    try { localStorage.setItem(v2ProjectUiStateKey(projectId), JSON.stringify(source)); } catch {}
                   }
                   if (!source) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.projectAnalysisMode = false;
                     v2PendingProjectUiSkillMode = "";
                     if ($("chatSkillMode")) $("chatSkillMode").value = "normal";
@@ -518,6 +524,7 @@ public sealed class BrowserUiRenderer
                   }
                   renderSelectedSkillAction();
                   v2RenderProjectAnalysisMode();
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                   v2LoadProjectUiStateTabState(source);
                 }
                 function v2LoadProjectUiStateTabState(source = null) {
@@ -567,7 +574,6 @@ public sealed class BrowserUiRenderer
                   if (stepId === "create-prototype") return "prototypeWorkflowPanel";
                   if (stepId === "prototype-acceptance") return "v2AcceptancePanel";
                   if (stepId === "iteration-plan") return "v2IterationPanel";
-                  if (stepId === "ui-optimization") return "v2UiOptimizationPanel";
                   if (stepId === "execute-or-repair") return "v2RepairPanel";
                   if (stepId === "asset-inventory") return "v2AssetInventoryFramePanel";
                   if (stepId === "download-project") return "v2DownloadsFramePanel";
@@ -662,6 +668,7 @@ public sealed class BrowserUiRenderer
                   shell.querySelectorAll("[data-v2-left-project]").forEach(button => {
                     button.onclick = () => selectProject(button.dataset.v2LeftProject);
                   });
+                  updateProjectSwitchAvailability();
                 }
                 function v2HasPackages() {
                   if (Array.isArray(state.packageList)) return state.packageList.length > 0;
@@ -707,28 +714,40 @@ public sealed class BrowserUiRenderer
                   const time = Date.parse(value || "");
                   return Number.isFinite(time) ? time : 0;
                 }
-                function v2IterationSessionTimestamp() {
-                  const session = state.iterationPlan?.session || null;
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                function v2IterationSessionTimestamp(plan = state.iterationPlan) {
+                  const session = plan?.session || null;
+                  const goals = Array.isArray(plan?.goals) ? plan.goals : [];
                   const goalTime = Math.max(0, ...goals.map(goal => v2IsoTime(goal.completedUtc || goal.updatedUtc || goal.createdUtc || "")));
                   return goalTime || v2IsoTime(session?.completedUtc || session?.updatedUtc || session?.createdUtc || "");
                 }
-                function v2RunIsCurrentForIteration(run) {
+                function v2RunIsCurrentForIteration(run, plan = state.iterationPlan) {
                   if (!run) return false;
-                  const sessionTime = v2IterationSessionTimestamp();
+                  const sessionTime = v2IterationSessionTimestamp(plan);
                   if (!sessionTime) return true;
                   const runTime = v2IsoTime(run.progressUpdatedUtc || run.updatedUtc || run.completedUtc || run.createdUtc || "");
                   return runTime >= sessionTime;
                 }
-                function v2IterationPlanDone() {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                function v2LatestIterationPlanForGlobalState() {
+                  const plans = Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(Boolean) : [];
+                  return plans.length ? plans[plans.length - 1] : state.iterationPlan;
+                }
+                function v2GlobalIterationGoals() {
+                  const plan = v2LatestIterationPlanForGlobalState();
+                  return Array.isArray(plan?.goals) ? plan.goals : [];
+                }
+                function v2IsRepairGoalStatus(status) {
+                  return ["needs_fix", "failed"].includes(String(status || "").trim().toLowerCase());
+                }
+                function v2IterationPlanDone(plan = v2LatestIterationPlanForGlobalState()) {
+                  const goals = Array.isArray(plan?.goals) ? plan.goals : [];
                   return goals.length > 0 && goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
                 function v2FinalPrototypeAcceptanceRun() {
+                  const latestPlan = v2LatestIterationPlanForGlobalState();
                   const run = v2LatestValidationOnlyAcceptanceRun();
                   if (!run || String(run.status || "").toLowerCase() !== "succeeded") return null;
-                  if (!v2IterationPlanDone()) return null;
-                  return v2RunIsCurrentForIteration(run) ? run : null;
+                  if (!v2IterationPlanDone(latestPlan)) return null;
+                  return v2RunIsCurrentForIteration(run, latestPlan) ? run : null;
                 }
                 function v2StepStatus(stepId) {
                   const progressStatus = state?.prototypeFailure ? "failed" : "";
@@ -749,22 +768,27 @@ public sealed class BrowserUiRenderer
                   if (stepId === "prototype-acceptance") {
                     if (state.v2PrototypeValidationInvalidatedByIteration) return "pending";
                     if (v2FinalPrototypeAcceptanceRun()) return "done";
+                    const latestPlan = v2LatestIterationPlanForGlobalState();
                     const validationRun = v2LatestValidationOnlyAcceptanceRun();
-                    if (validationRun && v2RunIsCurrentForIteration(validationRun) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
+                    if (validationRun && v2RunIsCurrentForIteration(validationRun, latestPlan) && String(validationRun.status || "").toLowerCase() === "failed") return "fix";
                     return failed && v2IterationPlanDone() ? "fix" : "pending";
                   }
                   if (stepId === "iteration-plan") {
+                    const goals = v2GlobalIterationGoals();
+                    const goalsDone = goals.length > 0 && goals.every(goal => ["succeeded", "completed", "done"].includes(String(goal.status || "").trim().toLowerCase()));
+                    if (goals.length) {
+                      if (goals.some(goal => v2IsRepairGoalStatus(goal.status))) return "fix";
+                      if (goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()))) return "continue";
+                      if (!goalsDone) return "pending";
+                    }
                     const milestoneSteps = Array.isArray(state.gddMilestoneSteps?.steps) ? state.gddMilestoneSteps.steps : [];
                     if (milestoneSteps.length) {
                       if (milestoneSteps.every(step => String(step.status || "").trim().toLowerCase() === "confirmed")) return "done";
                       if (milestoneSteps.some(step => !step.locked && ["needs_fix", "execution_failed", "feedback_failed", "timed_out"].includes(String(step.status || "").trim().toLowerCase()))) return "fix";
                       if (milestoneSteps.some(step => !step.locked && String(step.status || "").trim().toLowerCase() !== "confirmed")) return "continue";
                     }
-                    const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
                     if (!goals.length) return "pending";
-                    if (goals.some(goal => ["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()))) return "fix";
-                    if (goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) return "done";
-                    if (goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()))) return "continue";
+                    if (goalsDone) return "done";
                     return "pending";
                   }
                   if (stepId === "execute-or-repair") {
@@ -780,59 +804,9 @@ public sealed class BrowserUiRenderer
                     if (!goals.length && v2HasPrototypeSkeleton()) return "done";
                     return "pending";
                   }
-                  if (stepId === "ui-optimization") {
-                    const run = v2LatestRunByType("prototype-ui-optimization");
-                    if (!run) return "pending";
-                    const substep = String(run.progressSubstep || "").toLowerCase();
-                    if (substep === "validation_skipped") return "pending";
-                    if (substep === "validation_failed") return "fix";
-                    if (String(run.status || "").toLowerCase() === "succeeded") return "done";
-                    if (String(run.status || "").toLowerCase() === "failed") return "fix";
-                    return "pending";
-                  }
                   if (stepId === "asset-inventory") return v2AssetInventoryConfirmed() ? "done" : "pending";
                   if (stepId === "download-project") return v2HasPackages() ? "done" : "pending";
                   return "pending";
-                }
-                function v2RenderUiOptimizationStatus() {
-                  const status = $("uiOptimizationStatus");
-                  if (!status) return;
-                  if ($("runUiOptimization")) {
-                    setButtonDisabledState($("runUiOptimization"), true, "游戏界面优化暂未开放。");
-                  }
-                  status.className = "card muted";
-                  status.textContent = "游戏界面优化暂未开放。";
-                  return;
-                }
-
-                function v2RenderUiOptimizationStatusLegacy() {
-                  const status = $("uiOptimizationStatus");
-                  if (!status) return;
-                  const run = v2LatestRunByType("prototype-ui-optimization");
-                  if (!run) {
-                    status.className = "card muted";
-                    status.textContent = "完成游戏模块后运行。系统会尝试复用现有原型场景和节点，不创建第二套无关 UI。";
-                    return;
-                  }
-                  const runStatus = String(run.status || "").toLowerCase();
-                  const substep = String(run.progressSubstep || "").toLowerCase();
-                  if (runStatus === "succeeded" && substep !== "validation_skipped") {
-                    status.className = "card";
-                    status.textContent = run.progressLabel || "游戏界面优化已完成，短验证已通过。左侧进度栏已标记为完成；如需再次调整，可以重新运行游戏界面优化。";
-                    return;
-                  }
-                  if (runStatus === "failed" || substep === "validation_failed") {
-                    status.className = "card";
-                    status.textContent = run.progressLabel || "最近一次游戏界面优化失败，请检查运行记录后重新运行。";
-                    return;
-                  }
-                  if (runStatus === "running" || runStatus === "queued") {
-                    status.className = "card muted";
-                    status.textContent = run.progressLabel || "游戏界面优化正在运行，请等待后台任务完成。";
-                    return;
-                  }
-                  status.className = "card muted";
-                  status.textContent = run.progressLabel || `最近一次游戏界面优化状态：${run.status || "未知"}。`;
                 }
                 function v2ApplySelectedStepVisibility() {
                   const show = id => $(id)?.classList.remove("hidden");
@@ -1027,7 +1001,6 @@ public sealed class BrowserUiRenderer
                     rightWorkspace.appendChild(grid);
                   }
                   v2CreateAcceptancePanel();
-                  v2CreateUiOptimizationPanel();
                   v2CreateEmbeddedFramePanel("v2AssetInventoryFramePanel", "v2AssetInventoryFrame", "项目素材库");
                   v2CreateEmbeddedFramePanel("v2DownloadsFramePanel", "v2DownloadsFrame", "打包下载项目");
                   v2CreateEmbeddedFramePanel("v2GddOutlineFramePanel", "v2GddOutlineFrame", "查阅策划大纲");
@@ -1070,29 +1043,19 @@ public sealed class BrowserUiRenderer
                   const status = document.createElement("div");
                   status.id = "v2AcceptanceActionStatus";
                   status.className = "card muted";
-                  status.textContent = "原型项目验收入口会在游戏模块完成后启用。游戏界面优化是可选步骤，不会阻塞验收。";
+                  status.textContent = "原型项目验收入口会在游戏模块完成后启用。";
                   panel.appendChild(status);
                 }
-                function v2CreateUiOptimizationPanel() {
-                  if ($("v2UiOptimizationPanel")) return;
-                  const panel = document.createElement("section");
-                  panel.id = "v2UiOptimizationPanel";
-                  panel.className = "stack hidden";
-                  panel.innerHTML = `
-                    <h2>游戏界面优化</h2>
-                    <p class="muted">按照当前游戏类型模板重新对齐原型 UI。RPG 项目会优先参考 He-is-Coming 的地图、战斗、奖励、状态和日志布局。</p>
-                    <button id="runUiOptimization" class="secondary" type="button" data-global-action="true" disabled>运行游戏界面优化</button>
-                    <div id="uiOptimizationStatus" class="card muted">游戏界面优化暂未开放。</div>
-                  `;
-                  $("v2AcceptancePanel")?.insertAdjacentElement("beforebegin", panel);
-                  $("runUiOptimization").onclick = runUiOptimization;
-                }
                 function v2IterationPlanAllowsAcceptance() {
-                  const goals = state.iterationPlan?.goals;
-                  if (!Array.isArray(goals) || goals.length === 0) return true;
+                  const goals = v2GlobalIterationGoals();
+                  if (!Array.isArray(goals) || goals.length === 0) return false;
                   return goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
                 function v2PrototypeAcceptanceBlockReason() {
+                  const goals = v2GlobalIterationGoals();
+                  if (!Array.isArray(goals) || goals.length === 0) {
+                    return "请先生成并完成当前游戏模块，所有任务完成后再进行原型项目验收。";
+                  }
                   if (!v2IterationPlanAllowsAcceptance()) {
                     return "请先完成当前游戏模块，所有任务完成后再进行原型项目验收。";
                   }
@@ -1103,17 +1066,21 @@ public sealed class BrowserUiRenderer
                 }
                 function v2RefreshAcceptanceActionState() {
                   const rerun = $("v2RevalidatePrototype");
+                  const legacyRerun = $("validatePrototype");
                   const status = $("v2AcceptanceActionStatus");
-                  if (!rerun || !status) return;
                   const reason = v2PrototypeAcceptanceBlockReason();
-                  rerun.disabled = !!reason;
-                  rerun.title = reason || "";
-                  status.className = reason ? "card muted" : "card";
-                  status.textContent = reason || "当前已满足原型项目验收条件，点击按钮会创建一条原型项目验收 run。";
+                  if (rerun) setButtonDisabledState(rerun, !!reason, reason || "");
+                  if (legacyRerun) setButtonDisabledState(legacyRerun, !!reason, reason || "");
+                  if (status) {
+                    status.className = reason ? "card muted" : "card";
+                    status.textContent = reason || "当前已满足原型项目验收条件，点击按钮会创建一条原型项目验收 run。";
+                  }
                 }
                 async function validatePrototypeSkeleton(autoTriggered = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, autoTriggered ? "场景创建完成，正在自动执行场景验收。" : "场景验收中，请等待当前任务执行完毕。");
                   const skeletonButton = $("v2SkeletonAcceptance");
                   if (skeletonButton) skeletonButton.textContent = autoTriggered ? "场景验收中..." : "验收中...";
@@ -1123,7 +1090,8 @@ public sealed class BrowserUiRenderer
                     showPrototypeNotice("正在执行场景验收；该操作只验证场景可运行，不要求游戏模块已完成。", "info");
                   }
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate-skeleton`, { method: "POST" });
+                    const result = await api(`/api/projects/${projectId}/prototype-7day-playable/validate-skeleton`, { method: "POST" });
+                    if (!isCurrentProjectContext(context)) return null;
                     out(result);
                     await loadRuns();
                     await loadPrototypeProgress();
@@ -1133,13 +1101,18 @@ public sealed class BrowserUiRenderer
                     }
                     return result;
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return null;
                     if (!autoTriggered) showError(error);
                     await loadPrototypeProgress();
                     return null;
                   } finally {
-                    setLocalBusy(false);
-                    if (skeletonButton) skeletonButton.textContent = "场景验收";
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return null;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      if (skeletonButton) skeletonButton.textContent = "场景验收";
+                    }
                   }
                 }
                 async function v2ValidatePrototypeIfAllowed() {
@@ -1345,10 +1318,10 @@ public sealed class BrowserUiRenderer
                   button.setAttribute("aria-pressed", active ? "true" : "false");
                 }
                 function v2IterationPlanExists() {
-                  return Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.length > 0;
+                  return v2GlobalIterationGoals().length > 0;
                 }
                 function v2IterationPlanCompleted() {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goals = v2GlobalIterationGoals();
                   return goals.length > 0 && goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
                 function v2PrototypeValidationPassedForPlanning() {
@@ -1385,7 +1358,8 @@ public sealed class BrowserUiRenderer
                   return state.v2PrototypeStatus || "";
                 }
                 function v2ShouldLockPrototypeForm() {
-                  if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) return false;
+                  const currentProjectCancelled = !!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === state.projectId;
+                  if (currentProjectCancelled || readCancelledPrototypeMarker(state.projectId)) return false;
                   const acceptanceStatus = String(state.prototypeReadyForFeedback ? "succeeded" : state?.v2PrototypeAcceptanceStatus || "").trim().toLowerCase();
                   const status = String(state?.v2PrototypeCreationStatus || v2PrototypeStatus() || "").trim().toLowerCase();
                   return !!state.projectId && (acceptanceStatus === "succeeded" || v2HasPrototypeSkeleton() || v2SkeletonValidationSucceeded() || (status !== "" && !["idle", "failed"].includes(status)));
@@ -1440,8 +1414,9 @@ public sealed class BrowserUiRenderer
                   return goals.length === 0 || goals.every(goal => ["succeeded", "completed", "done"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
                 function v2IterationPlanGoalState() {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
-                  const hasPlan = !!state.iterationPlan?.session && goals.length > 0;
+                  const plan = v2LatestIterationPlanForGlobalState();
+                  const goals = Array.isArray(plan?.goals) ? plan.goals : [];
+                  const hasPlan = !!plan?.session && goals.length > 0;
                   const hasNeedsFix = goals.some(goal => ["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase()));
                   const hasPending = goals.some(goal => ["pending", "running"].includes(String(goal.status || "").trim().toLowerCase()));
                   const allCompleted = hasPlan && goals.every(goal => v2CompletedIterationStatus(goal.status));
@@ -1519,13 +1494,18 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function runWorkflowRecommendedAction(token, actionId = "") {
+                  const projectId = state.projectId;
+                  if (!projectId) return out("请先选择一个项目。");
+                  const requestAuthEpoch = authEpoch;
                   const message = state.chatHistory.find(item => item.workflowActionToken === token);
                   const action = workflowMessageActions(message).find(item => item.actionId === actionId) || workflowMessageActions(message)[0];
                   if (!message || !action || message.workflowActionConsumed || state.workflowRouteActionToken !== token) return;
                   let currentRoute = null;
                   try {
-                    currentRoute = await fetchWorkflowRoute(message.workflowIntent);
+                    currentRoute = await fetchWorkflowRoute(message.workflowIntent, projectId);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     showError(error);
                     return out("无法确认当前项目进度，请重新点击“下一步建议”后再打开推荐页面。");
                   }
@@ -1562,8 +1542,7 @@ public sealed class BrowserUiRenderer
                       v2OpenStepTab("iteration-plan", false);
                       return;
                     case "ui-optimization":
-                      v2OpenStepTab("ui-optimization", false);
-                      return;
+                      return out("游戏界面优化当前未作为主流程开放，请继续进行原型项目验收或打包试玩。");
                     case "asset-inventory":
                       v2OpenStepTab("asset-inventory");
                       return;
@@ -1578,8 +1557,13 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function queryWorkflowRoute(intent = null) {
-                  if (!state.projectId) return out("请先选择一个项目。");
+                async function queryWorkflowRoute(intent = null, projectId = state.projectId, allowCurrentBusy = false, requestAuthEpoch = authEpoch) {
+                  if (!projectId) return out("请先选择一个项目。");
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                  if (!allowCurrentBusy && isGlobalBusy()) return out("当前有任务正在执行，请等待当前任务完成后再扫描项目状态。");
+                  if (state.workflowRouteBusy) return out("项目状态扫描中，请等待当前扫描完成。");
+                  state.workflowRouteBusy = true;
+                  applyGlobalBusyState("正在扫描项目状态，请等待当前扫描完成。");
                   const button = $("v2JudgeNextStep");
                   if (button) {
                     button.disabled = true;
@@ -1588,13 +1572,18 @@ public sealed class BrowserUiRenderer
                   v2ShowChatTab();
                   const thinking = startChatThinkingMessage("正在扫描项目状态...");
                   try {
-                    const route = await fetchWorkflowRoute(intent);
+                    const route = await fetchWorkflowRoute(intent, projectId);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     thinking.complete(buildWorkflowRouteChatContent(route, intent), false, "workflow-route", buildWorkflowRouteMessageExtra(route, intent));
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     const failure = workflowRouteFailureMessage(error);
                     thinking.complete(failure, true, "workflow-route");
                     showError(error);
                   } finally {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    state.workflowRouteBusy = false;
+                    applyGlobalBusyState();
                     if (button) {
                       button.disabled = false;
                       button.textContent = "下一步建议";
@@ -1619,8 +1608,8 @@ public sealed class BrowserUiRenderer
                     ? `?playtestFeedback=${encodeURIComponent(intent.feedbackSummary)}`
                     : "";
                 }
-                async function fetchWorkflowRoute(intent = null) {
-                  return await api(`/api/projects/${state.projectId}/workflow-route${workflowRouteQueryForIntent(intent)}`);
+                async function fetchWorkflowRoute(intent = null, projectId = state.projectId) {
+                  return await api(`/api/projects/${projectId}/workflow-route${workflowRouteQueryForIntent(intent)}`);
                 }
                 function workflowActionsMatch(currentAction, storedAction) {
                   if (!currentAction || !storedAction) return false;
@@ -1639,7 +1628,6 @@ public sealed class BrowserUiRenderer
                   document.querySelectorAll("[data-v2-step]").forEach(button => button.onclick = () => v2ShowStep(button.dataset.v2Step, true));
                   v2RenderChatIterationPlanButtonState();
                   v2RefreshAcceptanceActionState();
-                  v2RenderUiOptimizationStatus();
                 }
                 const v2OriginalShowProjectDetail = showProjectDetail;
                 showProjectDetail = function() {
@@ -1659,7 +1647,7 @@ public sealed class BrowserUiRenderer
                   v2OriginalShowProjectDetail();
                   v2LoadPrototypeValidationInvalidation();
                   v2EnsureContentGrid();
-                  v2RestoreProjectUiState();
+                  v2RestoreProjectUiState(state.projectId);
                   $("chatPanel")?.classList.remove("hidden");
                   v2ApplySelectedStepVisibility();
                   v2RenderTabs();
@@ -1695,6 +1683,16 @@ public sealed class BrowserUiRenderer
                 };
                 const v2OriginalValidatePrototype = validatePrototype;
                 validatePrototype = async function() {
+                  const reason = v2PrototypeAcceptanceBlockReason();
+                  if (reason) {
+                    const status = $("v2AcceptanceActionStatus");
+                    if (status) {
+                      status.className = "card muted";
+                      status.textContent = reason;
+                    }
+                    out(reason);
+                    return;
+                  }
                   await v2OriginalValidatePrototype();
                   if (state.prototypeReadyForFeedback) {
                     v2SetPrototypeValidationInvalidated(false);
@@ -2402,7 +2400,8 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
+                let authEpoch = 0;
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
@@ -2418,11 +2417,27 @@ public sealed class BrowserUiRenderer
                 ];
                 const $ = id => document.getElementById(id);
                 const out = value => $("output").textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+                function bumpAuthEpoch() {
+                  authEpoch += 1;
+                  return authEpoch;
+                }
+                function isCurrentAuthRequest(requestAuthEpoch) {
+                  return requestAuthEpoch === authEpoch;
+                }
+                function projectRequestContext(projectId = state.projectId) {
+                  return { projectId, authEpoch };
+                }
+                function isCurrentProjectContext(context) {
+                  return !!context?.projectId && state.projectId === context.projectId && context.authEpoch === authEpoch;
+                }
                 function storedAccessToken() {
                   return localStorage.getItem("phaseAAccessToken") || readBrowserCookie("phaseAAccessToken") || localStorage.getItem("phaseAAdminToken") || "";
                 }
+                function rawTokenInput() {
+                  return $("token").value.trim();
+                }
                 function token() {
-                  const inputValue = $("token").value.trim();
+                  const inputValue = rawTokenInput();
                   if (inputValue) return inputValue;
                   const stored = storedAccessToken();
                   if (stored) {
@@ -2561,12 +2576,20 @@ public sealed class BrowserUiRenderer
                 function clearBrowserCookie(name) {
                   writeBrowserCookie(name, "", 0);
                 }
-                function persistAccessTokenFromInput() {
-                  const value = token();
-                  if (!value) return;
+                function clearAccessTokenStorage() {
+                  localStorage.removeItem("phaseAAdminToken");
+                  localStorage.removeItem("phaseAAccessToken");
+                  clearBrowserCookie("phaseAAccessToken");
+                }
+                function persistAccessToken(value) {
+                  if (!value) return false;
                   localStorage.setItem("phaseAAccessToken", value);
                   localStorage.removeItem("phaseAAdminToken");
                   writeBrowserCookie("phaseAAccessToken", value, 60 * 60 * 24 * 30);
+                  return true;
+                }
+                function persistAccessTokenFromInput() {
+                  return persistAccessToken(rawTokenInput());
                 }
 
                 function callV2(name, ...args) {
@@ -2714,7 +2737,7 @@ public sealed class BrowserUiRenderer
                 }
 
                 function applyChatWorkflowActions() {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goals = latestIterationPlanGoalsForAction();
                   const shouldOfferPlanEvaluation = goals.some(goal => goal.status === "pending" || goal.status === "needs_fix");
                   let latestGoalResultIndex = -1;
                   for (let index = state.chatHistory.length - 1; index >= 0; index--) {
@@ -2758,13 +2781,14 @@ public sealed class BrowserUiRenderer
                   renderChatHistory();
                 }
 
-                async function loadServerChatHistoryForProject(projectId) {
+                async function loadServerChatHistoryForProject(projectId, requestAuthEpoch = authEpoch) {
                   if (!projectId) return;
                   try {
                     const localWorkflowRouteEntries = state.chatHistory
                       .map((message, index) => ({ message, previousKey: previousStoredMessageKey(index), nextKey: nextStoredMessageKey(index) }))
                       .filter(entry => entry.message?.kind === "workflow-route");
                     const result = await api(`/api/projects/${projectId}/chat-history`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     const serverMessages = (result.messages || [])
                       .map(message => ({
                         role: message.role,
@@ -2788,12 +2812,15 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                     updateContinueSuggestionFromText(state.chatHistory.filter(message => message.role === "assistant").slice(-1)[0]?.content || "");
                   } catch {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     renderChatHistory();
                   }
                 }
 
                 async function loadIterationPlan() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     state.iterationPlan = null;
                     state.iterationPlans = [];
                     state.selectedIterationSessionId = "";
@@ -2802,27 +2829,29 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/iteration-plans`);
+                    const result = await api(`/api/projects/${projectId}/iteration-plans`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.iterationPlans = normalizeIterationPlanRounds(Array.isArray(result?.rounds) ? result.rounds : []);
                     state.iterationPlan = selectIterationPlanForDisplay(state.iterationPlans);
                     state.iterationPlanEvaluation = state.iterationPlan?.latestEvaluation || null;
                     state.iterationPlanFailure = "";
                     syncIterationPlanRegenerationSuggestion();
-                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlans: state.iterationPlans, selectedIterationSessionId: state.selectedIterationSessionId, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: "" });
+                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlans: state.iterationPlans, selectedIterationSessionId: state.selectedIterationSessionId, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: "" }, projectId);
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     if (error?.status === 404) {
                       state.iterationPlan = null;
                       state.iterationPlans = [];
                       state.selectedIterationSessionId = "";
                       state.iterationPlanEvaluation = null;
                       state.iterationPlanFailure = "";
-                      writeProjectStateCache({ iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "" });
+                      writeProjectStateCache({ iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "" }, projectId);
                     } else {
                       showError(error);
                     }
                   }
                   renderIterationPlan();
-                  await loadProjectPackages();
+                  if (isCurrentProjectRequest(projectId, requestAuthEpoch)) await loadProjectPackages();
                 }
 
                 function selectIterationPlanForDisplay(rounds) {
@@ -2860,18 +2889,23 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function loadRepairPlan() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     state.repairPlan = null;
                     renderRepairPlan();
                     return;
                   }
                   try {
-                    state.repairPlan = await api(`/api/projects/${state.projectId}/repair-plan/latest`);
-                    writeProjectStateCache({ repairPlan: state.repairPlan });
+                    const repairPlan = await api(`/api/projects/${projectId}/repair-plan/latest`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    state.repairPlan = repairPlan;
+                    writeProjectStateCache({ repairPlan: state.repairPlan }, projectId);
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     if (error?.status === 404) {
                       state.repairPlan = null;
-                      writeProjectStateCache({ repairPlan: null });
+                      writeProjectStateCache({ repairPlan: null }, projectId);
                     } else {
                       showError(error);
                     }
@@ -2998,7 +3032,7 @@ public sealed class BrowserUiRenderer
                   const session = plan.session;
                   const goals = Array.isArray(plan.goals) ? plan.goals : [];
                   const planningAnalysis = plan.planningAnalysis || null;
-                  const hasNeedsFix = goals.some(goal => goal.status === "needs_fix");
+                  const hasNeedsFix = goals.some(goal => v2IsRepairGoalStatus(goal.status));
                   const hasPending = goals.some(goal => goal.status === "pending");
                   const evaluationDecision = currentIterationPlanDecision();
                   const shouldRefinePlan = evaluationDecision === "should_refine_plan";
@@ -3053,12 +3087,17 @@ public sealed class BrowserUiRenderer
                     ? "当前有任务需要修复。点击对应任务卡片里的“运行需要修复路由”会直接提交后台 run。"
                     : "当前没有需要修复的任务。";
                   renderChatHistory();
-                  const needsFixBusy = isGlobalBusy();
-                  const needsFixDisabledAttrs = needsFixBusy ? ` disabled title="有任务正在执行，请等待当前任务执行完毕。"` : "";
+                  const needsFixDisabled = !isLatestPlan || isGlobalBusy();
+                  const needsFixTitle = !isLatestPlan
+                    ? "只能修复最新一轮游戏模块。请切回最新轮次后再运行需要修复路由。"
+                    : isGlobalBusy()
+                      ? "有任务正在执行，请等待当前任务执行完毕。"
+                      : "";
+                  const needsFixDisabledAttrs = needsFixDisabled ? ` disabled title="${escapeHtml(needsFixTitle)}"` : "";
                   $("iterationPlanGoals").innerHTML = goals.map(goal => `
                     <div class="card">
                       <strong>任务 ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
-                      ${["needs_fix", "failed"].includes(String(goal.status || "").trim().toLowerCase())
+                      ${v2IsRepairGoalStatus(goal.status)
                         ? `<div class="v2-action-row"><button type="button" class="secondary" data-needs-fix-goal="${escapeHtml(String(goal.goalIndex || ""))}" onclick="event.stopPropagation(); runNeedsFixIterationGoal('${escapeHtml(String(goal.goalIndex || ""))}'); return false;"${needsFixDisabledAttrs}>运行需要修复路由</button></div>`
                         : ""}
                       <p>${escapeHtml(goal.title || "")}</p>
@@ -3079,35 +3118,65 @@ public sealed class BrowserUiRenderer
                   return sanitizePublicIterationPlanText(goal?.resultSummary || "");
                 }
 
-                function iterationPlanGoals() {
-                  return Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                function iterationPlanGoals(plan = state.iterationPlan) {
+                  return Array.isArray(plan?.goals) ? plan.goals : [];
                 }
 
-                function hasAnyIterationPlan() {
-                  return !!(state.iterationPlan?.session && iterationPlanGoals().length);
+                function latestIterationPlanForAction() {
+                  return v2LatestIterationPlanForGlobalState();
                 }
 
-                function hasOpenIterationPlan() {
-                  return iterationPlanGoals().some(goal => ["pending", "needs_fix", "failed", "running"].includes(String(goal.status || "").trim().toLowerCase()));
+                function latestIterationPlanGoalsForAction() {
+                  return iterationPlanGoals(latestIterationPlanForAction());
                 }
 
-                function isIterationPlanComplete() {
-                  const goals = iterationPlanGoals();
+                function selectLatestIterationPlanForAction() {
+                  const plan = latestIterationPlanForAction();
+                  if (!plan?.session) return plan;
+                  if (state.iterationPlan?.session?.sessionId !== plan.session.sessionId) {
+                    state.iterationPlan = plan;
+                    state.selectedIterationSessionId = plan.session.sessionId || "";
+                    state.iterationPlanEvaluation = plan.latestEvaluation || null;
+                    writeProjectStateCache({ iterationPlan: state.iterationPlan, iterationPlans: state.iterationPlans, selectedIterationSessionId: state.selectedIterationSessionId, iterationPlanEvaluation: state.iterationPlanEvaluation, iterationPlanFailure: state.iterationPlanFailure || "" });
+                    renderIterationPlan();
+                  }
+                  return plan;
+                }
+
+                function latestIterationPlanEvaluationForAction() {
+                  const plan = latestIterationPlanForAction();
+                  if (!plan?.session) return null;
+                  if (plan.latestEvaluation) return plan.latestEvaluation;
+                  return state.iterationPlan?.session?.sessionId === plan.session.sessionId
+                    ? state.iterationPlanEvaluation
+                    : null;
+                }
+
+                function hasAnyIterationPlan(plan = state.iterationPlan) {
+                  return !!(plan?.session && iterationPlanGoals(plan).length);
+                }
+
+                function hasOpenIterationPlan(plan = state.iterationPlan) {
+                  return iterationPlanGoals(plan).some(goal => ["pending", "needs_fix", "failed", "running"].includes(String(goal.status || "").trim().toLowerCase()));
+                }
+
+                function isIterationPlanComplete(plan = state.iterationPlan) {
+                  const goals = iterationPlanGoals(plan);
                   return goals.length > 0 && goals.every(goal => ["completed", "succeeded"].includes(String(goal.status || "").trim().toLowerCase()));
                 }
 
-                function isIterationPlanStarted() {
-                  const goals = iterationPlanGoals();
-                  const hasGoalRun = Array.isArray(state.iterationPlan?.goalRuns) && state.iterationPlan.goalRuns.length > 0;
-                  const currentIndex = Number(state.iterationPlan?.session?.currentGoalIndex || 0);
+                function isIterationPlanStarted(plan = state.iterationPlan) {
+                  const goals = iterationPlanGoals(plan);
+                  const hasGoalRun = Array.isArray(plan?.goalRuns) && plan.goalRuns.length > 0;
+                  const currentIndex = Number(plan?.session?.currentGoalIndex || 0);
                   return hasGoalRun || currentIndex > 0 || goals.some(goal => String(goal.status || "").trim().toLowerCase() !== "pending");
                 }
 
-                function currentNeedsFixRouteGoal() {
-                  const goals = iterationPlanGoals();
+                function currentNeedsFixRouteGoal(plan = state.iterationPlan) {
+                  const goals = iterationPlanGoals(plan);
                   if (!goals.length) return null;
                   const byStatus = status => goals.find(goal => String(goal.status || "").trim().toLowerCase() === status);
-                  const currentIndex = Number(state.iterationPlan?.session?.currentGoalIndex || 0);
+                  const currentIndex = Number(plan?.session?.currentGoalIndex || 0);
                   const currentGoal = currentIndex > 0 ? goals.find(goal => Number(goal.goalIndex || 0) === currentIndex) : null;
                   const currentStatus = String(currentGoal?.status || "").trim().toLowerCase();
                   return byStatus("needs_fix")
@@ -3115,6 +3184,10 @@ public sealed class BrowserUiRenderer
                     || byStatus("running")
                     || (currentGoal && currentStatus !== "pending" && currentStatus !== "succeeded" ? currentGoal : null)
                     || null;
+                }
+
+                function latestNeedsFixRouteGoalForAction() {
+                  return currentNeedsFixRouteGoal(latestIterationPlanForAction());
                 }
 
                 function buildNeedsFixFeedbackForUserReport(goal, userFeedback) {
@@ -3212,7 +3285,8 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   const mode = state.iterationPlanUpdateMode || "update";
-                  if (mode !== "new" && isIterationPlanStarted()) {
+                  const actionPlan = mode === "new" ? latestIterationPlanForAction() : selectLatestIterationPlanForAction();
+                  if (mode !== "new" && isIterationPlanStarted(actionPlan)) {
                     out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                     return;
                   }
@@ -3223,9 +3297,10 @@ public sealed class BrowserUiRenderer
                     $("iterationPlanUpdateInput").focus();
                     return;
                   }
-                  const evaluationMessage = currentIterationPlanRegenerationPrompt()
-                    || state.iterationPlanEvaluation?.suggestedAction
-                    || state.iterationPlanEvaluation?.reason
+                  const actionEvaluation = latestIterationPlanEvaluationForAction();
+                  const evaluationMessage = latestIterationPlanRegenerationPrompt()
+                    || actionEvaluation?.suggestedAction
+                    || actionEvaluation?.reason
                     || "";
                   const message = typedMessage || evaluationMessage || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = mode === "new" ? "new_iteration_plan" : typedMessage ? "iteration_plan_update" : "completion_suggestion";
@@ -3236,12 +3311,14 @@ public sealed class BrowserUiRenderer
                 async function createIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (hasAnyIterationPlan()) {
-                    if (isIterationPlanComplete()) {
+                  const actionPlan = latestIterationPlanForAction();
+                  if (hasAnyIterationPlan(actionPlan)) {
+                    selectLatestIterationPlanForAction();
+                    if (isIterationPlanComplete(actionPlan)) {
                       openIterationPlanUpdateModal("new");
                       return;
                     }
-                    if (isIterationPlanStarted()) {
+                    if (isIterationPlanStarted(actionPlan)) {
                       out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                       return;
                     }
@@ -3249,7 +3326,7 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   const typedMessage = $("chatMessage").value.trim();
-                  const message = typedMessage || currentIterationPlanRegenerationPrompt() || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
+                  const message = typedMessage || latestIterationPlanRegenerationPrompt() || state.nextSuggestedFeedback || defaultNextSuggestedFeedback();
                   const sourceKind = typedMessage ? "manual_feedback" : "completion_suggestion";
                   if (!typedMessage) {
                     out("未输入优化目标，已使用当前下一步建议生成游戏模块。");
@@ -3260,37 +3337,49 @@ public sealed class BrowserUiRenderer
                 async function evaluateIterationPlan(announceInChat = false) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!state.iterationPlan?.session) return out("请先生成游戏模块。");
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  const actionPlan = selectLatestIterationPlanForAction();
+                  if (!actionPlan?.session) return out("请先生成游戏模块。");
+                  const actionSessionId = actionPlan.session.sessionId || "";
                   state.iterationPlanEvaluationRunning = true;
+                  applyGlobalBusyState("正在评估当前游戏模块，请等待当前评估完成。");
                   renderIterationPlan();
                   try {
-                    const response = await api(`/api/projects/${state.projectId}/iteration-plan/evaluate`, {
+                    const response = await api(`/api/projects/${projectId}/iteration-plan/evaluate`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
                     });
-                    state.iterationPlanEvaluation = response?.evaluation || response;
-                    if (state.iterationPlan) {
-                      state.iterationPlan.latestEvaluation = state.iterationPlanEvaluation;
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    const evaluation = response?.evaluation || response;
+                    const latestPlan = latestIterationPlanForAction();
+                    if (actionSessionId && latestPlan?.session?.sessionId !== actionSessionId) return out("游戏模块已变化，本次评估结果已丢弃。");
+                    if (latestPlan) {
+                      latestPlan.latestEvaluation = evaluation;
                     }
-                    syncIterationPlanRegenerationSuggestion();
+                    if (state.iterationPlan?.session?.sessionId === latestPlan?.session?.sessionId) {
+                      state.iterationPlanEvaluation = evaluation;
+                    }
+                    syncIterationPlanRegenerationSuggestion(evaluation);
                     renderIterationPlanEvaluation();
                     renderIterationPlan();
                     if (!announceInChat) {
                       out({
                         action: "iteration_plan_evaluated",
-                        decision: state.iterationPlanEvaluation?.decision || "",
-                        summary: state.iterationPlanEvaluation?.summary || "",
-                        suggestedAction: state.iterationPlanEvaluation?.suggestedAction || ""
+                        decision: evaluation?.decision || "",
+                        summary: evaluation?.summary || "",
+                        suggestedAction: evaluation?.suggestedAction || ""
                       });
                     }
                     out({
                       action: "iteration_plan_evaluated",
-                      decision: state.iterationPlanEvaluation?.decision || "",
-                      summary: sanitizePublicIterationPlanText(state.iterationPlanEvaluation?.summary || ""),
-                      suggestedAction: sanitizePublicIterationPlanText(state.iterationPlanEvaluation?.suggestedAction || "")
+                      decision: evaluation?.decision || "",
+                      summary: sanitizePublicIterationPlanText(evaluation?.summary || ""),
+                      suggestedAction: sanitizePublicIterationPlanText(evaluation?.suggestedAction || "")
                     });
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     const payload = error?.payload;
                     if (payload?.status && payload?.summary) {
                       out({
@@ -3302,21 +3391,25 @@ public sealed class BrowserUiRenderer
                     }
                   } finally {
                     state.iterationPlanEvaluationRunning = false;
-                    renderIterationPlan();
+                    applyGlobalBusyState();
+                    if (isCurrentProjectRequest(projectId, requestAuthEpoch)) renderIterationPlan();
                     await refreshActiveRun();
                   }
                 }
 
                 async function submitIterationPlanFromFeedback(message, busyText, sourceKind = "manual_feedback") {
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "正在生成游戏模块，请等待当前任务执行完毕。");
                   let shouldReloadIterationPlan = true;
                   try {
                     $("chatMessage").value = "";
-                    const result = await api(`/api/projects/${state.projectId}/iteration-plan`, {
+                    const result = await api(`/api/projects/${projectId}/iteration-plan`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({ message, sourceKind, attachments: currentChatAttachmentsForRun(), model: $("globalModel").value || "gpt-5.5" })
                     });
+                    if (!isCurrentProjectContext(context)) return null;
                     const summary = result.goals?.length
                       ? `${result.summary}\n\n本次目标拆分：\n${result.goals.map(goal => `${goal.goalIndex}. ${goal.title}`).join("\n")}`
                       : result.summary;
@@ -3349,25 +3442,32 @@ public sealed class BrowserUiRenderer
                     out(result);
                     return result;
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return null;
                     showError(error);
                     shouldReloadIterationPlan = false;
                     return null;
                   } finally {
-                    clearChatAttachments();
-                    setLocalBusy(false);
-                    if (shouldReloadIterationPlan) {
-                      await loadIterationPlan();
-                    } else {
-                      renderIterationPlan();
+                    if (!isCurrentProjectContext(context)) return null;
+                    try {
+                      clearChatAttachments();
+                      if (shouldReloadIterationPlan) {
+                        await loadIterationPlan();
+                      } else {
+                        renderIterationPlan();
+                      }
+                      await loadProjectPackages();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
                     }
-                    await loadProjectPackages();
-                    await refreshActiveRun();
                   }
                 }
 
                 async function deleteIterationPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   if (!hasAnyIterationPlan()) return out("当前没有可删除的游戏模块。");
                   if (isIterationPlanComplete()) return out("游戏模块已经全部完成，不可以删除。");
                   const sessionId = state.iterationPlan?.session?.sessionId || state.selectedIterationSessionId || "";
@@ -3377,7 +3477,8 @@ public sealed class BrowserUiRenderer
                   if (!confirm(`确定要删除${roundLabel}游戏模块吗？该操作不会删除其他轮次。`)) return;
                   setLocalBusy(true, `正在删除${roundLabel}游戏模块...`);
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/iteration-plans/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+                    const result = await api(`/api/projects/${projectId}/iteration-plans/${encodeURIComponent(sessionId)}`, { method: "DELETE" });
+                    if (!isCurrentProjectContext(context)) return;
                     state.iterationPlan = null;
                     state.selectedIterationSessionId = "";
                     state.iterationPlanEvaluation = null;
@@ -3386,94 +3487,85 @@ public sealed class BrowserUiRenderer
                     out(result.summary || `${roundLabel}游戏模块已删除。`);
                     await loadIterationPlan();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await loadProjectPackages();
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadProjectPackages();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
                 async function executeIterationGoal() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
-                  if (!state.iterationPlan?.session) return out("请先生成游戏模块。");
-                  const needsFixGoal = currentNeedsFixRouteGoal();
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
+                  const actionPlan = selectLatestIterationPlanForAction();
+                  if (!actionPlan?.session) return out("请先生成游戏模块。");
+                  const needsFixGoal = currentNeedsFixRouteGoal(actionPlan);
                   if (needsFixGoal) {
                     await runNeedsFixIterationGoal(needsFixGoal.goalIndex);
                     return;
                   }
-                  const evaluationDecision = currentIterationPlanDecision();
+                  const evaluationDecision = latestIterationPlanDecision();
                   if (evaluationDecision === "should_refine_plan") return out("当前评估建议先重拆游戏模块，已停止执行旧目标。");
                   if (evaluationDecision === "llm_failed") return out("当前游戏模块评估失败，请先修复评估调用并重新评估计划。");
                   if (evaluationDecision === "blocked_by_current_goal") return out("当前评估显示已有任务阻塞，请先处理当前阻塞项。");
                   setLocalBusy(true, "正在执行下一任务，请等待当前任务执行完毕。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/iteration-plan/execute-next`, {
+                    const result = await api(`/api/projects/${projectId}/iteration-plan/execute-next`, {
                       method: "POST"
                     });
-                    await loadServerChatHistoryForProject(state.projectId);
+                    if (!isCurrentProjectContext(context)) return;
+                    await loadServerChatHistoryForProject(projectId, context.authEpoch);
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                   } catch (error) {
-                    await loadServerChatHistoryForProject(state.projectId);
+                    if (!isCurrentProjectContext(context)) return;
+                    await loadServerChatHistoryForProject(projectId, context.authEpoch);
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await loadIterationPlan();
-                    await loadRuns();
-                    await loadProjectPackages();
-                    await refreshActiveRun();
-                  }
-                }
-
-                async function runUiOptimization() {
-                  if (!guardGlobalAction()) return;
-                  out("游戏界面优化暂未开放。");
-                  if ($("uiOptimizationStatus")) $("uiOptimizationStatus").textContent = "游戏界面优化暂未开放。";
-                  return;
-                  if (!state.projectId) return out("请先选择一个项目。");
-                  if (!callV2("v2HasPrototypeSkeleton")) return out("请先完成游戏场景创建，再运行游戏界面优化。");
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
-                  if (!goals.length || !goals.every(goal => ["succeeded", "completed"].includes(String(goal.status || "").trim().toLowerCase()))) {
-                    return out("请先完成游戏模块，再运行游戏界面优化。");
-                  }
-                  $("uiOptimizationStatus").textContent = "正在运行游戏界面优化，请等待后台任务完成。";
-                  setLocalBusy(true, "正在运行游戏界面优化，请等待当前任务执行完毕。");
-                  try {
-                    const result = await api(`/api/projects/${state.projectId}/ui-optimization`, {
-                      method: "POST",
-                      body: JSON.stringify({ model: $("globalModel").value || "gpt-5.5" })
-                    });
-                    $("uiOptimizationStatus").textContent = result.summary || "游戏界面优化已完成。";
-                    if (String(result.status || "").toLowerCase() === "succeeded") callV2("v2SetPrototypeValidationInvalidated", true);
-                    out(result);
-                  } catch (error) {
-                    $("uiOptimizationStatus").textContent = `游戏界面优化失败：${error.message || error}`;
-                    showError(error);
-                  } finally {
-                    setLocalBusy(false);
-                    await loadRuns();
-                    await refreshActiveRun();
-                    callV2("v2RenderProgress");
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadIterationPlan();
+                      await loadRuns();
+                      await loadProjectPackages();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
                 async function createRepairPlan() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "正在生成修复计划，请等待当前任务执行完毕。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/repair-plan`, { method: "POST" });
+                    const result = await api(`/api/projects/${projectId}/repair-plan`, { method: "POST" });
+                    if (!isCurrentProjectContext(context)) return;
                     state.repairPlan = result;
                     renderRepairPlan();
                     focusRepairPlanPanel();
                     out(result);
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await loadRepairPlan();
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadRepairPlan();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -3481,22 +3573,31 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (!state.repairPlan?.sessionId) return out("请先生成修复计划。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "正在执行下一项修复，请等待当前任务执行完毕。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/repair-plan/execute-next`, {
+                    const result = await api(`/api/projects/${projectId}/repair-plan/execute-next`, {
                       method: "POST",
                       body: JSON.stringify({ model: $("globalModel").value })
                     });
-                    await loadServerChatHistoryForProject(state.projectId);
+                    if (!isCurrentProjectContext(context)) return;
+                    await loadServerChatHistoryForProject(projectId, context.authEpoch);
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                   } catch (error) {
-                    await loadServerChatHistoryForProject(state.projectId);
+                    if (!isCurrentProjectContext(context)) return;
+                    await loadServerChatHistoryForProject(projectId, context.authEpoch);
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await loadRepairPlan();
-                    await loadRuns();
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadRepairPlan();
+                      await loadRuns();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -3787,7 +3888,11 @@ public sealed class BrowserUiRenderer
                   state.authenticated = false;
                   state.activeRun = null;
                   state.localBusy = false;
+                  state.chatBusy = false;
+                  state.workflowRouteBusy = false;
                   state.iterationPlan = null;
+                  clearChatAttachments();
+                  invalidateWorkflowRouteAction();
                   closeUserModals();
                   setUserTopActionsVisible(false);
                   $("sessionPanel").classList.remove("hidden");
@@ -3880,6 +3985,45 @@ public sealed class BrowserUiRenderer
                   } catch {}
                 }
 
+                function isCurrentProjectRequest(projectId, requestAuthEpoch = authEpoch) {
+                  return !!projectId && state.projectId === projectId && requestAuthEpoch === authEpoch;
+                }
+
+                function runProjectId(run) {
+                  return String(run?.projectId || "").trim();
+                }
+
+                function runBelongsToCurrentProject(run) {
+                  const projectId = runProjectId(run);
+                  return !projectId || (!!state.projectId && projectId === state.projectId);
+                }
+
+                function currentProjectHasBusyRun() {
+                  return runIsBusy(state.activeRun) && !isInlineOnlyRun(state.activeRun) && runBelongsToCurrentProject(state.activeRun);
+                }
+
+                function projectSwitchLocked() {
+                  return !!state.localBusy ||
+                    !!state.chatBusy ||
+                    !!state.workflowRouteBusy ||
+                    !!state.iterationPlanEvaluationRunning ||
+                    currentProjectHasBusyRun() ||
+                    hasPendingPrototypeSkeletonBannerRun();
+                }
+
+                function updateProjectSwitchAvailability() {
+                  const locked = projectSwitchLocked();
+                  document.querySelectorAll("[data-v2-left-project], [data-project]").forEach(button => {
+                    button.disabled = locked && !!state.projectId;
+                    button.title = button.disabled ? "当前操作完成前不能切换项目。" : "";
+                  });
+                  ["openProjectListModal", "refreshProjects"].forEach(id => {
+                    const button = $(id);
+                    if (!button) return;
+                    setButtonDisabledState(button, locked && !!state.projectId, "当前操作完成前不能切换项目。");
+                  });
+                }
+
                 function readProjectStateCache(projectId = state.projectId) {
                   if (!projectId) return null;
                   try {
@@ -3890,11 +4034,11 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                function writeProjectStateCache(patch = {}) {
-                  if (!state.projectId) return;
-                  const previous = readProjectStateCache(state.projectId) || { projectId: state.projectId };
-                  const next = { ...previous, ...patch, projectId: state.projectId, updatedAt: new Date().toISOString() };
-                  try { localStorage.setItem(projectStateCacheKey(state.projectId), JSON.stringify(next)); } catch {}
+                function writeProjectStateCache(patch = {}, projectId = state.projectId) {
+                  if (!projectId) return;
+                  const previous = readProjectStateCache(projectId) || { projectId };
+                  const next = { ...previous, ...patch, projectId, updatedAt: new Date().toISOString() };
+                  try { localStorage.setItem(projectStateCacheKey(projectId), JSON.stringify(next)); } catch {}
                 }
 
                 function applyProjectStateCache(projectId) {
@@ -3926,7 +4070,7 @@ public sealed class BrowserUiRenderer
                       renderPrototypeProgress(progress);
                       renderPrototypeAcceptanceSummary(progress);
                       const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
-                      const suppressLockedState = !!state.cancelledActiveRunId && ["queued", "running"].includes(creationStatus);
+                      const suppressLockedState = ((!!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === projectId) || !!readCancelledPrototypeMarker(projectId)) && ["queued", "running"].includes(creationStatus);
                       setPrototypeFormLocked(suppressLockedState ? false : isPrototypeCreationLocked(progress));
                       if (creationStatus === "idle" && progress?.step === "cancelled" && $("draftFile")) {
                         $("draftFile").disabled = true;
@@ -4008,9 +4152,14 @@ public sealed class BrowserUiRenderer
 
 
                 async function sendChat() {
+                  if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const message = $("chatMessage").value.trim();
                   if (!message) return out("请输入消息。");
+                  state.chatBusy = true;
+                  applyGlobalBusyState("正在等待聊天回复，请等待当前任务执行完毕。");
                   $("sendChat").disabled = true;
                   $("sendChat").textContent = "发送中...";
                   let shouldClearChatAttachments = false;
@@ -4018,11 +4167,12 @@ public sealed class BrowserUiRenderer
                     let routeIntent = null;
                     if (state.projectAnalysisMode) {
                       try {
-                        routeIntent = await api(`/api/projects/${state.projectId}/workflow-route/intent`, {
+                        routeIntent = await api(`/api/projects/${projectId}/workflow-route/intent`, {
                           method: "POST",
                           timeoutMs: 90 * 1000,
                           body: JSON.stringify({ message, model: $("globalModel").value || null })
                         });
+                        if (!isCurrentProjectContext(context)) return;
                       } catch {
                         routeIntent = null;
                       }
@@ -4032,7 +4182,7 @@ public sealed class BrowserUiRenderer
                       renderChatHistory();
                       saveChatHistoryForProject();
                       $("chatMessage").value = "";
-                      await queryWorkflowRoute(routeIntent);
+                      await queryWorkflowRoute(routeIntent, projectId, true, context.authEpoch);
                       return;
                     }
                     invalidateWorkflowRouteAction();
@@ -4049,16 +4199,18 @@ public sealed class BrowserUiRenderer
                     saveChatHistoryForProject();
                     $("chatMessage").value = "";
                     const thinking = startChatThinkingMessage();
-                    const result = await api(`/api/projects/${state.projectId}/chat`, { method: "POST", body: JSON.stringify(payload) });
+                    const result = await api(`/api/projects/${projectId}/chat`, { method: "POST", body: JSON.stringify(payload) });
+                    if (!isCurrentProjectContext(context)) return;
                     if (result.assistantMessage) {
                       thinking.complete(result.assistantMessage);
                     } else {
                       thinking.complete("本次没有生成回复。");
                     }
-                    await loadServerChatHistoryForProject(state.projectId);
+                    await loadServerChatHistoryForProject(projectId);
                     out(result);
                     await loadRuns();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     const message = publicErrorCode(error?.payload?.failureCode || error?.payload?.error || "unknown_error");
                     const pending = state.chatHistory.find(item => item.pending);
                     if (pending) {
@@ -4071,6 +4223,9 @@ public sealed class BrowserUiRenderer
                     showError(error);
                   }
                   finally {
+                    if (!isCurrentProjectContext(context)) return;
+                    state.chatBusy = false;
+                    applyGlobalBusyState();
                     if (shouldClearChatAttachments) clearChatAttachments();
                     $("sendChat").disabled = false;
                     $("sendChat").textContent = "发送";
@@ -4079,14 +4234,18 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function refreshGddOutlineStatus() {
-                  if (!state.projectId || !$("createGddDocument")) return;
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId || !$("createGddDocument")) return;
                   try {
-                    const outlineStatus = await api(`/api/projects/${state.projectId}/gdd/outline`);
+                    const outlineStatus = await api(`/api/projects/${projectId}/gdd/outline`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.gddOutlineReady = Array.isArray(outlineStatus?.sections) && outlineStatus.sections.length > 0;
                   } catch {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.gddOutlineReady = false;
                   }
-                  writeProjectStateCache({ gddOutlineReady: state.gddOutlineReady });
+                  writeProjectStateCache({ gddOutlineReady: state.gddOutlineReady }, projectId);
                   $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                 }
 
@@ -4112,6 +4271,8 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (!guardGlobalAction()) return;
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const message = $("chatMessage").value.trim();
                   const button = $("createGddDocument");
                   setLocalBusy(true, "\u6b63\u5728\u521b\u5efa\u7b56\u5212\u5927\u7eb2\uff0c\u8bf7\u7b49\u5f85\u5f53\u524d\u4efb\u52a1\u6267\u884c\u5b8c\u6bd5\u3002");
@@ -4123,8 +4284,10 @@ public sealed class BrowserUiRenderer
                       model: $("globalModel").value || null,
                       attachments: currentChatAttachmentsForRun()
                     };
-                    const result = await api(`/api/projects/${state.projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
-                    await loadServerChatHistoryForProject(state.projectId);
+                    const result = await api(`/api/projects/${projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
+                    if (!isCurrentProjectContext(context)) return;
+                    await loadServerChatHistoryForProject(projectId);
+                    if (!isCurrentProjectContext(context)) return;
                     state.chatHistory.push({
                       role: "assistant",
                       kind: "gdd-result",
@@ -4139,6 +4302,7 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                     await loadProjectPackages();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     const failureMessage = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || error?.payload?.failureCode || "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002");
                     state.chatHistory.push({
                       role: "assistant",
@@ -4148,20 +4312,24 @@ public sealed class BrowserUiRenderer
                     renderChatHistory();
                     saveChatHistoryForProject();
                     out(failureMessage);
-                    await loadServerChatHistoryForProject(state.projectId).catch(() => {});
+                    await loadServerChatHistoryForProject(projectId).catch(() => {});
                     showError(error);
                   } finally {
+                    if (!isCurrentProjectContext(context)) return;
                     clearChatAttachments();
-                    setLocalBusy(false);
-                    button.disabled = false;
-                    button.textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
-                    await refreshActiveRun();
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      button.disabled = false;
+                      button.textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
+                    }
                   }
                 }
 
-                function chatHistoryDownloadFileName() {
-                  const project = state.projects.find(item => item.projectId === state.projectId);
-                  const base = (project?.name || project?.gameName || state.projectId || "chat-history")
+                function chatHistoryDownloadFileName(projectId = state.projectId) {
+                  const project = state.projects.find(item => item.projectId === projectId);
+                  const base = (project?.name || project?.gameName || projectId || "chat-history")
                     .replace(/[^\p{L}\p{N}._-]+/gu, "-")
                     .replace(/^-+|-+$/g, "") || "chat-history";
                   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -4170,12 +4338,15 @@ public sealed class BrowserUiRenderer
 
                 async function downloadChatHistory() {
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
                   const button = $("downloadChatHistory");
                   const originalText = button.textContent;
                   button.disabled = true;
                   button.textContent = "下载中...";
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/chat-history`);
+                    const result = await api(`/api/projects/${projectId}/chat-history`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return out("项目或登录状态已切换，本次聊天记录下载已取消。");
                     const messages = (result.messages || [])
                       .map(message => ({
                         role: message.role,
@@ -4187,7 +4358,7 @@ public sealed class BrowserUiRenderer
                       }))
                       .filter(isStoredChatMessage);
                     const payload = {
-                      projectId: state.projectId,
+                      projectId,
                       exportedAt: new Date().toISOString(),
                       messageCount: messages.length,
                       messages
@@ -4196,7 +4367,7 @@ public sealed class BrowserUiRenderer
                     const url = URL.createObjectURL(blob);
                     const anchor = document.createElement("a");
                     anchor.href = url;
-                    anchor.download = chatHistoryDownloadFileName();
+                    anchor.download = chatHistoryDownloadFileName(projectId);
                     document.body.appendChild(anchor);
                     anchor.click();
                     anchor.remove();
@@ -4212,14 +4383,17 @@ public sealed class BrowserUiRenderer
 
                 async function syncChatHistory() {
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
                   const button = $("syncChatHistory");
                   const originalText = button.textContent;
                   button.disabled = true;
                   button.textContent = "同步中...";
                   try {
-                    await loadServerChatHistoryForProject(state.projectId);
+                    await loadServerChatHistoryForProject(context.projectId, context.authEpoch);
+                    if (!isCurrentProjectContext(context)) return;
                     out("服务器聊天记录已同步。");
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
                     button.disabled = false;
@@ -4266,10 +4440,13 @@ public sealed class BrowserUiRenderer
                     $("createUserAccountResult").textContent = error?.payload?.error || "create_user_failed";
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    $("createUserAccount").disabled = false;
-                    $("createUserAccount").textContent = "Create user token";
-                    await refreshActiveRun();
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      $("createUserAccount").disabled = false;
+                      $("createUserAccount").textContent = "Create user token";
+                    }
                   }
                 }
 
@@ -4762,8 +4939,9 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!callV2("v2HasPrototypeSkeleton")) return out("请先运行并完成游戏场景创建，再提交正式反馈。自由对话仍可使用。");
                   const feedback = $("chatMessage").value.trim();
-                  const goal = currentNeedsFixRouteGoal();
+                  const goal = latestNeedsFixRouteGoalForAction();
                   if (!feedback && !goal) return out("\u8bf7\u8f93\u5165\u8981\u6b63\u5f0f\u63d0\u4ea4\u7684\u53cd\u9988\u3002");
+                  if (goal) selectLatestIterationPlanForAction();
                   await submitNeedsFixRouteRequest({
                     feedback: feedback ? buildNeedsFixFeedbackForUserReport(goal, feedback) : buildNeedsFixFeedbackForGoal(goal),
                     goalId: goal?.goalId || null,
@@ -4781,7 +4959,9 @@ public sealed class BrowserUiRenderer
                     renderChatHistory();
                     saveChatHistoryForProject();
                   }
-                  const hasPendingPlan = state.iterationPlan?.session && Array.isArray(state.iterationPlan?.goals) && state.iterationPlan.goals.some(goal => goal.status === "pending");
+                  const actionPlan = latestIterationPlanForAction();
+                  const actionGoals = iterationPlanGoals(actionPlan);
+                  const hasPendingPlan = !!actionPlan?.session && actionGoals.some(goal => goal.status === "pending");
                   if (suggestion === "__iteration_plan_evaluate__") {
                     await evaluateIterationPlan(true);
                     return;
@@ -4791,8 +4971,9 @@ public sealed class BrowserUiRenderer
                     await executeIterationGoal();
                     return;
                   }
-                  if (hasPendingPlan && currentIterationPlanDecision() === "should_refine_plan") {
-                    if (isIterationPlanStarted()) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
+                  if (hasPendingPlan && latestIterationPlanDecision() === "should_refine_plan") {
+                    if (isIterationPlanStarted(actionPlan)) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
+                    selectLatestIterationPlanForAction();
                     openIterationPlanUpdateModal("update", suggestion);
                     return;
                   }
@@ -4807,28 +4988,36 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("\u8bf7\u5148\u9009\u62e9\u4e00\u4e2a\u9879\u76ee\u3002");
                   if (!state.prototypeReadyForFeedback) return out("请先运行并完成游戏场景创建，再提交正式反馈。自由对话仍可使用。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true);
                   $("submitFormalFeedback").disabled = true;
                   $("submitFormalFeedback").textContent = busyText || "\u6b63\u5f0f\u63d0\u4ea4\u4e2d...";
                   try {
                     $("chatMessage").value = "";
-                    const result = await api(`/api/projects/${state.projectId}/prototype-feedback-iterations`, {
+                    const result = await api(`/api/projects/${projectId}/prototype-feedback-iterations`, {
                       method: "POST",
                       body: JSON.stringify({ feedback, model: $("globalModel").value, skillActionId: $("chatSkillMode").value || "normal" })
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     await loadRuns();
                     updateContinueSuggestionFromText(result.assistantMessage);
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     const message = sanitizePublicChatContent(error?.payload?.assistantMessage || error?.payload?.error || "本轮正式反馈处理失败。");
                     out(message);
                     showError(error);
                   }
                   finally {
-                    setLocalBusy(false);
-                    setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
-                    await loadProjectPackages();
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadProjectPackages();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    }
                   }
                 }
 
@@ -4846,6 +5035,12 @@ public sealed class BrowserUiRenderer
                 async function runNeedsFixIterationGoal(goalIndex) {
                   $("iterationNeedsFixStatus").className = "card muted";
                   $("iterationNeedsFixStatus").textContent = `正在准备提交任务 ${String(goalIndex || "").trim()} 的需要修复路由...`;
+                  if (!isDisplayingLatestIterationPlan()) {
+                    const message = "只能修复最新一轮游戏模块。请切回最新轮次后再运行需要修复路由。";
+                    $("iterationNeedsFixStatus").className = "card muted";
+                    $("iterationNeedsFixStatus").textContent = message;
+                    return out(message);
+                  }
                   await refreshActiveRun();
                   if (isGlobalBusy()) {
                     $("iterationNeedsFixStatus").className = "card muted";
@@ -4879,6 +5074,8 @@ public sealed class BrowserUiRenderer
                     $("iterationNeedsFixStatus").textContent = "当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。";
                     return out("当前有任务正在执行，请等待当前 run 完成后再启动需要修复路由。");
                   }
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true);
                   $("iterationNeedsFixStatus").className = "card muted";
                   $("iterationNeedsFixStatus").textContent = busyText || "需要修复路由已提交，正在等待后台 run 创建。";
@@ -4886,7 +5083,7 @@ public sealed class BrowserUiRenderer
                   try {
                     const feedback = String(payload?.feedback || "").trim();
                     $("chatMessage").value = "";
-                    const result = await api(`/api/projects/${state.projectId}/needs-fix-route`, {
+                    const result = await api(`/api/projects/${projectId}/needs-fix-route`, {
                       method: "POST",
                       body: JSON.stringify({
                         feedback,
@@ -4896,6 +5093,7 @@ public sealed class BrowserUiRenderer
                         goalIndex: payload?.goalIndex || null
                       })
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     const routeStatus = String(result.status || "").trim().toLowerCase();
                     const goalStatus = String(result.iterationGoalStatus || "").trim().toLowerCase();
                     const needsMoreFix = goalStatus === "needs_fix" || goalStatus === "failed" || routeStatus === "needs_fix" || routeStatus === "failed";
@@ -4905,6 +5103,7 @@ public sealed class BrowserUiRenderer
                     await loadRuns();
                     await loadIterationPlan();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     const message = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || "Needs fix route failed.");
                     $("iterationNeedsFixStatus").className = "card";
                     $("iterationNeedsFixStatus").textContent = message;
@@ -4912,9 +5111,13 @@ public sealed class BrowserUiRenderer
                     showError(error);
                   }
                   finally {
-                    setLocalBusy(false);
-                    setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      setFormalFeedbackAvailability(state.prototypeReadyForFeedback);
+                    }
                   }
                 }
 
@@ -4992,9 +5195,11 @@ public sealed class BrowserUiRenderer
 
                 async function refreshProjects(options = {}) {
                   const autoSelect = options.autoSelect !== false;
+                  const requestAuthEpoch = authEpoch;
                   let sessionValidated = false;
                   try {
                     const session = await api("/api/session");
+                    if (!isCurrentAuthRequest(requestAuthEpoch)) return;
                     sessionValidated = true;
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
@@ -5006,6 +5211,7 @@ public sealed class BrowserUiRenderer
                     showUserLoadingFallback();
 
                     const projects = await api("/api/projects");
+                    if (!isCurrentAuthRequest(requestAuthEpoch)) return;
                     state.projects = projects;
                     const initializing = hasInitializingProject(projects);
                     $("initStatusPanel").classList.toggle("hidden", !initializing);
@@ -5015,7 +5221,7 @@ public sealed class BrowserUiRenderer
 
                     const visibleProjects = listableProjects(projects);
                     const latestFailure = visibleProjects.length === 0 && !initializing ? await loadLatestProjectCreationFailure() : null;
-                    const health = await loadProjectHealthSummary();
+                    if (!isCurrentAuthRequest(requestAuthEpoch)) return;
                     const sortedVisibleProjects = visibleProjects
                       .slice()
                       .sort((a, b) => (projectTimestamp(b) || 0) - (projectTimestamp(a) || 0) || String(b.projectId || "").localeCompare(String(a.projectId || "")));
@@ -5025,7 +5231,6 @@ public sealed class BrowserUiRenderer
                         <strong>${escapeHtml(p.name)}</strong>
                         <span class="muted">${escapeHtml(p.gameName)} · ${escapeHtml(p.templateRuleId)} · ${escapeHtml(p.bootstrapStatus)}</span>
                         ${p.bootstrapStatus === "failed" ? `<span class="danger">初始化失败：${escapeHtml(sanitizePublicFailureContent(p.bootstrapError || "未知错误"))}</span>` : ""}
-                        ${renderProjectHealthInline(health)}
                         </button>
                         <div class="grid">
                           <label>删除确认 1 <input data-delete-one="${p.projectId}" placeholder="输入 delete"></label>
@@ -5036,7 +5241,12 @@ public sealed class BrowserUiRenderer
                     `).join("");
                     document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
                     document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
+                    updateProjectSwitchAvailability();
                     callV2("v2RenderLeftProjectList");
+                    if (projectSwitchLocked() && state.projectId) {
+                      out(projects);
+                      return;
+                    }
                     const currentProjectVisible = !!state.projectId && visibleProjects.some(project => project.projectId === state.projectId);
                     if (visibleProjects.length === 0 && latestFailure) {
                       showCreationFailure(latestFailure.failureError);
@@ -5055,11 +5265,11 @@ public sealed class BrowserUiRenderer
                     }
                     out(projects);
                   } catch (error) {
+                    if (!isCurrentAuthRequest(requestAuthEpoch)) return;
                     if (!sessionValidated) {
                       if (error?.status === 401 || error?.status === 403) {
-                        localStorage.removeItem("phaseAAccessToken");
-                        localStorage.removeItem("phaseAAdminToken");
-                        clearBrowserCookie("phaseAAccessToken");
+                        clearAccessTokenStorage();
+                        bumpAuthEpoch();
                       }
                       showLoggedOut();
                     } else {
@@ -5135,21 +5345,33 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function selectProject(projectId) {
+                  if (projectSwitchLocked() && state.projectId) {
+                    out("当前操作完成前不能切换项目。");
+                    updateProjectSwitchAvailability();
+                    return;
+                  }
+                  const switchingProject = state.projectId !== projectId;
                   if (state.projectId && state.projectId !== projectId) {
                     try { await v2WriteProjectUiState(); } catch {}
                   }
+                  if (switchingProject) clearChatAttachments();
+                  state.pendingPrototypeSkeletonRun = null;
+                  resetPrototypeSkeletonBannerState(false);
                   state.projectId = projectId;
                   v2RestoredProjectUiStateId = "";
                   writeSelectedProjectId(projectId);
                   state.assetInventory = null;
                   state.assetInventoryExpanded = false;
+                  state.draftAnalysisRunning = false;
                   state.gddMilestoneSteps = null;
                   state.selectedGddMilestoneStepId = "";
                   state.gddMilestoneManualSelection = false;
                   state.packageList = null;
                   state.runs = [];
                   state.prototypeFailure = "";
+                  state.prototypeReadyForFeedback = false;
                   state.v2PrototypeStatus = "";
+                  state.v2PrototypeAcceptanceStatus = "";
                   state.v2PrototypeCreationStatus = "";
                   state.iterationPlan = null;
                   state.iterationPlans = [];
@@ -5173,8 +5395,10 @@ public sealed class BrowserUiRenderer
                   try { v2RenderTabs(); } catch {}
                   try { v2ApplySelectedStepVisibility(); } catch {}
                   try { v2RenderProgress(); } catch {}
+                  try { setFormalFeedbackAvailability(false); } catch {}
+                  try { v2ApplyPrototypeFormLock(); } catch {}
                   try { applyProjectStateCache(projectId); } catch {}
-                  void v2RestoreProjectUiState().catch(recoverVisiblePageFromClientError);
+                  void v2RestoreProjectUiState(projectId).catch(recoverVisiblePageFromClientError);
                   void loadProjectRuntimeState().catch(recoverVisiblePageFromClientError);
                   void loadServerChatHistoryForProject(projectId).catch(() => {});
                   void loadIterationPlan().catch(() => {});
@@ -5184,6 +5408,8 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function loadProjectRuntimeState() {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
                   await Promise.allSettled([
                     loadRuns(),
                     loadPrototypeProgress(),
@@ -5192,21 +5418,26 @@ public sealed class BrowserUiRenderer
                     refreshPrototypeGddStatus(),
                     loadGddMilestoneSteps()
                   ]);
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                   try { v2RenderProgress(); } catch {}
                 }
 
                 async function loadLatestPrototypeDraft(forceVisibleNotice = false) {
-                  if (!state.projectId) return;
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) return;
                   try {
-                    const draft = await api(`/api/projects/${state.projectId}/prototype-drafts/latest`);
+                    const draft = await api(`/api/projects/${projectId}/prototype-drafts/latest`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return null;
                     applyDraftToForm(draft);
                     renderDraftImportStatus(draft);
-                    writeProjectStateCache({ latestPrototypeDraft: draft });
+                    writeProjectStateCache({ latestPrototypeDraft: draft }, projectId);
                     if (forceVisibleNotice && draft.status === "succeeded") {
                       showPrototypeNotice("已同步最近一次草稿分析结果，表单已自动补全到最新状态。", "info");
                     }
                     return draft;
                   } catch {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return null;
                     $("draftImportStatus").className = "card muted";
                     $("draftImportStatus").textContent = "";
                     $("draftImportStatus").classList.add("hidden");
@@ -5304,10 +5535,13 @@ public sealed class BrowserUiRenderer
                     showCreationFailure(projectCreationErrorMessage(error));
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    $("createProject").disabled = false;
-                    $("createProject").textContent = "创建项目";
-                    await refreshActiveRun();
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      $("createProject").disabled = false;
+                      $("createProject").textContent = "创建项目";
+                    }
                   }
                 }
 
@@ -5426,27 +5660,36 @@ public sealed class BrowserUiRenderer
                     await refreshProjects();
                   } catch (error) { showError(error); }
                   finally {
-                    if (deleteButton) {
-                      deleteButton.disabled = false;
-                      deleteButton.textContent = "删除项目";
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      if (deleteButton) {
+                        deleteButton.disabled = false;
+                        deleteButton.textContent = "删除项目";
+                      }
+                      setLocalBusy(false);
                     }
-                    setLocalBusy(false);
-                    await refreshActiveRun();
                   }
                 }
 
                 async function loadRuns() {
-                  if (!state.projectId) return out("请先选择一个项目。");
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) return out("请先选择一个项目。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/runs`);
+                    const result = await api(`/api/projects/${projectId}/runs`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.runs = result.runs || [];
                     renderProjectHealth(result.projectHealth);
                     renderRunsListFromState(result.projectHealth);
-                    writeProjectStateCache({ runs: state.runs, projectHealth: result.projectHealth || null });
+                    writeProjectStateCache({ runs: state.runs, projectHealth: result.projectHealth || null }, projectId);
                     renderFeedbackRecords();
                     callV2("v2RenderProgress");
                     out(result);
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    showError(error);
+                  }
                 }
 
                 function renderRunsListFromState(projectHealth = null) {
@@ -5504,21 +5747,22 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderFeedbackSummary(legacyFeedbackRuns = []) {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const goals = latestIterationPlanGoalsForAction();
                   if (goals.length > 0) {
                     const completedGoals = goals.filter(goal => goal.status === "succeeded").length;
                     const runningGoal = goals.find(goal => goal.status === "running");
                     const needsFixGoal = goals.find(goal => goal.status === "needs_fix");
                     const pendingGoal = goals.find(goal => goal.status === "pending");
                     const failedGoal = goals.find(goal => goal.status === "failed");
-                    const currentGoal = needsFixGoal || failedGoal || runningGoal || pendingGoal || goals[goals.length - 1];
-                    const nextGoal = needsFixGoal || failedGoal ? null : pendingGoal;
+                    const repairGoal = needsFixGoal || failedGoal;
+                    const currentGoal = repairGoal || runningGoal || pendingGoal || goals[goals.length - 1];
+                    const nextGoal = repairGoal ? null : pendingGoal;
                     $("feedbackSummary").className = "card";
                     $("feedbackSummary").innerHTML = `
                       <strong>计划摘要</strong>
                       <p class="muted">总任务数：${escapeHtml(String(goals.length))} · 完成：${escapeHtml(String(completedGoals))}</p>
                       <p class="muted">当前任务：${currentGoal ? escapeHtml(`任务 ${currentGoal.goalIndex} · ${currentGoal.title || ""}`) : "暂无"}</p>
-                      <p class="muted">下一任务：${needsFixGoal ? "请先修复当前任务" : nextGoal ? escapeHtml(`任务 ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
+                      <p class="muted">下一任务：${repairGoal ? "请先修复当前任务" : nextGoal ? escapeHtml(`任务 ${nextGoal.goalIndex} · ${nextGoal.title || ""}`) : "全部完成"}</p>
                       ${renderFeedbackPrimaryAction()}
                     `;
                     const primaryActionButton = $("feedbackPrimaryAction");
@@ -5546,18 +5790,19 @@ public sealed class BrowserUiRenderer
                 }
 
                 function feedbackPrimaryActionState() {
-                  const goals = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  const actionPlan = latestIterationPlanForAction();
+                  const goals = iterationPlanGoals(actionPlan);
                   if (!goals.length || !state.prototypeReadyForFeedback) {
                     return { label: "", action: "", source: "", disabled: true };
                   }
-                  const decision = currentIterationPlanDecision();
+                  const decision = latestIterationPlanDecision();
                   const hasNeedsFix = goals.some(goal => goal.status === "needs_fix" || goal.status === "failed");
                   const hasPending = goals.some(goal => goal.status === "pending");
                   if (decision === "llm_failed") {
                     return { label: "LLM 调用失败，先修复", action: "", source: "当前计划评估", disabled: true };
                   }
                   if (decision === "should_refine_plan") {
-                    return { label: "重新生成游戏模块", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() || isIterationPlanStarted() };
+                    return { label: "重新生成游戏模块", action: "refine", source: "当前计划评估", disabled: isGlobalBusy() || isIterationPlanStarted(actionPlan) };
                   }
                   if (hasNeedsFix || hasPending) {
                     return { label: "继续评估当前计划", action: "evaluate", source: "目标执行结果", disabled: isGlobalBusy() };
@@ -5581,20 +5826,23 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function runFeedbackPrimaryAction() {
-                  const state = feedbackPrimaryActionState();
-                  if (!state.action) return out("当前没有可执行的推荐动作。");
-                  if (state.action === "refine") {
-                    if (isIterationPlanStarted()) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
-                    const evaluationSuggestion = currentIterationPlanRegenerationPrompt();
+                  const actionState = feedbackPrimaryActionState();
+                  if (!actionState.action) return out("当前没有可执行的推荐动作。");
+                  const actionPlan = latestIterationPlanForAction();
+                  if (actionState.action === "refine") {
+                    if (isIterationPlanStarted(actionPlan)) return out("当前游戏模块已经开始执行，不允许更新游戏模块。");
+                    const evaluationSuggestion = latestIterationPlanRegenerationPrompt();
                     if (evaluationSuggestion) {
+                      selectLatestIterationPlanForAction();
                       openIterationPlanUpdateModal("update", evaluationSuggestion);
                       return;
                     }
                     if (!state.nextSuggestedFeedback) return out("当前没有可用于重拆计划的建议。");
+                    selectLatestIterationPlanForAction();
                     openIterationPlanUpdateModal("update", state.nextSuggestedFeedback);
                     return;
                   }
-                  if (state.action === "execute") {
+                  if (actionState.action === "execute") {
                     await executeIterationGoal();
                     return;
                   }
@@ -5701,6 +5949,9 @@ public sealed class BrowserUiRenderer
 
                 function isGlobalBusy() {
                   return state.localBusy ||
+                    state.chatBusy ||
+                    state.workflowRouteBusy ||
+                    state.iterationPlanEvaluationRunning ||
                     (runIsBusy(state.activeRun) && !isInlineOnlyRun(state.activeRun)) ||
                     hasPendingPrototypeSkeletonBannerRun();
                 }
@@ -5720,16 +5971,18 @@ public sealed class BrowserUiRenderer
 
                 function activeRunText(run) {
                   if (!runIsBusy(run)) return "";
+                  const projectLabel = run.projectName || run.projectId || "";
+                  const projectText = projectLabel ? `项目：${projectLabel} · ` : "";
                   if (run.heavyRunnerQueuePosition) {
                     const waitSeconds = Math.max(0, run.heavyRunnerEstimatedWaitSeconds || 0);
                     const waitMinutes = Math.max(1, Math.ceil(waitSeconds / 60));
-                    return `\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
+                    return `${projectText}\u4f60\u5df2\u8fdb\u5165\u91cd\u4efb\u52a1\u961f\u5217\uff1a\u7b2c ${run.heavyRunnerQueuePosition} \u4f4d\uff0c\u5f53\u524d\u7b49\u5f85 ${run.heavyRunnerQueuedCount || 0} \u4e2a\uff0c\u9884\u8ba1\u7b49\u5f85\u7ea6 ${waitMinutes} \u5206\u949f\u3002`;
                   }
                   const label = run.progressLabel || run.progressStep || run.status || "";
                   if (String(run.runType || "").trim().toLowerCase() === "game-design-gdd-section-batch") {
-                    return label ? `\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a${label}` : "\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\u3002";
+                    return label ? `${projectText}\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a${label}` : `${projectText}\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\u3002`;
                   }
-                  return `当前任务执行中：${run.runType || "未知"} · ${publicStatusLabel(run.status || "running")} · ${run.runId || ""}${label ? " · " + label : ""}`;
+                  return `${projectText}当前任务执行中：${run.runType || "未知"} · ${publicStatusLabel(run.status || "running")} · ${run.runId || ""}${label ? " · " + label : ""}`;
                 }
 
                 function isPrototypeSkeletonRunType(run) {
@@ -5745,11 +5998,13 @@ public sealed class BrowserUiRenderer
                 }
 
                 function hasPendingPrototypeSkeletonBannerRun() {
-                  return !!state.pendingPrototypeSkeletonRun?.runId && isPrototypeSkeletonCreationRun(state.pendingPrototypeSkeletonRun);
+                  return !!state.pendingPrototypeSkeletonRun?.runId &&
+                    isPrototypeSkeletonCreationRun(state.pendingPrototypeSkeletonRun) &&
+                    runBelongsToCurrentProject(state.pendingPrototypeSkeletonRun);
                 }
 
                 function skeletonBannerRun() {
-                  if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun)) return state.activeRun;
+                  if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun) && runBelongsToCurrentProject(state.activeRun)) return state.activeRun;
                   return hasPendingPrototypeSkeletonBannerRun() ? state.pendingPrototypeSkeletonRun : null;
                 }
 
@@ -5757,12 +6012,12 @@ public sealed class BrowserUiRenderer
                   return "系统正在进行游戏场景创建工作，其中可能存在的信息延迟或显示遗漏但不影响实际进程；";
                 }
 
-                function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId) {
-                  return `phaseA.prototypeSkeletonBanner.${runId || "none"}`;
+                function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId, projectId = state.projectId) {
+                  return `phaseA.prototypeSkeletonBanner.${projectId || "none"}.${runId || "none"}`;
                 }
 
-                function prototypeSkeletonBannerCurrentKey() {
-                  return "phaseA.prototypeSkeletonBanner.current";
+                function prototypeSkeletonBannerCurrentKey(projectId = state.projectId) {
+                  return `phaseA.prototypeSkeletonBanner.current.${projectId || "none"}`;
                 }
 
                 function prototypeSkeletonBannerStoredRunId() {
@@ -5783,11 +6038,11 @@ public sealed class BrowserUiRenderer
                   return Number.isFinite(time) ? time : 0;
                 }
 
-                function readPrototypeSkeletonBannerState(runId) {
+                function readPrototypeSkeletonBannerState(runId, projectId = state.projectId) {
                   if (!runId) return null;
                   try {
-                    const cached = JSON.parse(localStorage.getItem(prototypeSkeletonBannerStorageKey(runId)) || "null");
-                    return cached && cached.runId === runId ? cached : null;
+                    const cached = JSON.parse(localStorage.getItem(prototypeSkeletonBannerStorageKey(runId, projectId)) || "null");
+                    return cached && cached.runId === runId && (!cached.projectId || cached.projectId === projectId) ? cached : null;
                   } catch {
                     return null;
                   }
@@ -5799,6 +6054,7 @@ public sealed class BrowserUiRenderer
                     localStorage.setItem(prototypeSkeletonBannerCurrentKey(), state.prototypeSkeletonBannerRunId);
                     localStorage.setItem(prototypeSkeletonBannerStorageKey(), JSON.stringify({
                       runId: state.prototypeSkeletonBannerRunId,
+                      projectId: state.projectId || "",
                       expanded: !!state.prototypeSkeletonBannerExpanded,
                       displayedCount: Math.max(0, state.prototypeSkeletonBannerDisplayedCount || 0),
                       startedAtMs: Math.max(0, state.prototypeSkeletonBannerStartedAtMs || 0),
@@ -5811,12 +6067,12 @@ public sealed class BrowserUiRenderer
                   } catch {}
                 }
 
-                function clearPrototypeSkeletonBannerState(runId = state.prototypeSkeletonBannerRunId) {
+                function clearPrototypeSkeletonBannerState(runId = state.prototypeSkeletonBannerRunId, projectId = state.projectId) {
                   if (!runId) return;
                   try {
-                    localStorage.removeItem(prototypeSkeletonBannerStorageKey(runId));
-                    if (localStorage.getItem(prototypeSkeletonBannerCurrentKey()) === runId) {
-                      localStorage.removeItem(prototypeSkeletonBannerCurrentKey());
+                    localStorage.removeItem(prototypeSkeletonBannerStorageKey(runId, projectId));
+                    if (localStorage.getItem(prototypeSkeletonBannerCurrentKey(projectId)) === runId) {
+                      localStorage.removeItem(prototypeSkeletonBannerCurrentKey(projectId));
                     }
                   } catch {}
                 }
@@ -5852,9 +6108,11 @@ public sealed class BrowserUiRenderer
 
                 function restorePrototypeSkeletonBannerFromStorage() {
                   if (state.prototypeSkeletonBannerRunId) return;
+                  const projectId = state.projectId;
+                  if (!projectId) return;
                   try {
-                    const runId = localStorage.getItem(prototypeSkeletonBannerCurrentKey()) || "";
-                    const cached = readPrototypeSkeletonBannerState(runId);
+                    const runId = localStorage.getItem(prototypeSkeletonBannerCurrentKey(projectId)) || "";
+                    const cached = readPrototypeSkeletonBannerState(runId, projectId);
                     if (!cached?.runId) return;
                     state.prototypeSkeletonBannerRunId = cached.runId;
                     state.prototypeSkeletonBannerExpanded = !!cached.expanded;
@@ -5872,6 +6130,7 @@ public sealed class BrowserUiRenderer
                     syncPrototypeSkeletonBannerDisplayedCount();
                     state.pendingPrototypeSkeletonRun = {
                       runId: cached.runId,
+                      projectId,
                       busy: true,
                       runType: "prototype-7day-playable",
                       status: "running",
@@ -5887,15 +6146,16 @@ public sealed class BrowserUiRenderer
 
                 function ensurePrototypeSkeletonBannerRun(run) {
                   if (!run?.runId) return;
+                  if (!runBelongsToCurrentProject(run)) return;
                   if (state.prototypeSkeletonBannerRunId === run.runId) {
                     if (!state.prototypeSkeletonBannerStartedAtMs) {
-                      const cached = readPrototypeSkeletonBannerState(run.runId);
+                      const cached = readPrototypeSkeletonBannerState(run.runId, state.projectId);
                       state.prototypeSkeletonBannerStartedAtMs = Math.max(0, cached?.startedAtMs || 0) || prototypeSkeletonRunStartedAtMs(run) || prototypeSkeletonNowMs();
                     }
                     syncPrototypeSkeletonBannerDisplayedCount();
                     return;
                   }
-                  const cached = readPrototypeSkeletonBannerState(run.runId);
+                  const cached = readPrototypeSkeletonBannerState(run.runId, state.projectId);
                   state.prototypeSkeletonBannerRunId = run.runId;
                   state.prototypeSkeletonBannerExpanded = !!cached?.expanded;
                   state.prototypeSkeletonBannerIndex = 0;
@@ -5988,21 +6248,24 @@ public sealed class BrowserUiRenderer
 
                 function canCancelActiveRun(run) {
                   const runType = String(run?.runType || "").trim().toLowerCase();
-                  return !!run?.runId && !["chapter2-bootstrap", "project-creation", "project-asset-generation", "asset-generation"].includes(runType);
+                  return !!run?.runId &&
+                    runBelongsToCurrentProject(run) &&
+                    !["chapter2-bootstrap", "project-creation", "project-asset-generation", "asset-generation"].includes(runType);
                 }
 
                 function clearCancelledActiveRunState() {
                   state.cancelledActiveRunId = "";
+                  state.cancelledActiveRunProjectId = "";
                 }
 
                 function cancelledPrototypeMarkerKey(projectId = state.projectId) {
                   return `phaseA.cancelledPrototypeRun.${projectId || "none"}`;
                 }
 
-                function writeCancelledPrototypeMarker(runId) {
-                  if (!state.projectId || !runId) return;
+                function writeCancelledPrototypeMarker(runId, projectId = state.projectId) {
+                  if (!projectId || !runId) return;
                   try {
-                    localStorage.setItem(cancelledPrototypeMarkerKey(), JSON.stringify({
+                    localStorage.setItem(cancelledPrototypeMarkerKey(projectId), JSON.stringify({
                       runId,
                       updatedAt: new Date().toISOString()
                     }));
@@ -6026,7 +6289,8 @@ public sealed class BrowserUiRenderer
 
                 function shouldSuppressPrototypeFormLockForProgress(progress) {
                   const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
-                  return !!readCancelledPrototypeMarker() && ["queued", "running"].includes(creationStatus);
+                  const currentProjectCancelled = !!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === state.projectId;
+                  return (currentProjectCancelled || !!readCancelledPrototypeMarker(state.projectId)) && ["queued", "running"].includes(creationStatus);
                 }
 
                 function cancelledPrototypeProgressSnapshot() {
@@ -6203,11 +6467,8 @@ public sealed class BrowserUiRenderer
 
                 function applyGlobalBusyState(message = "有任务正在执行，请等待当前任务执行完毕。") {
                   const busy = isGlobalBusy();
+                  updateProjectSwitchAvailability();
                   document.querySelectorAll("[data-global-action]").forEach(button => {
-                    if (button.id === "runUiOptimization") {
-                      setButtonDisabledState(button, true, "游戏界面优化暂未开放。");
-                      return;
-                    }
                     if (button.id === "runPrototype" && prototypeSkeletonLocked()) {
                       setButtonDisabledState(button, true, "游戏场景已验收通过，不能重复创建。");
                       button.textContent = "M1 游戏场景已完成";
@@ -6259,25 +6520,33 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function cancelActiveRun() {
-                  const runId = state.activeRun?.runId;
+                  const run = state.activeRun;
+                  const runId = run?.runId;
                   if (!runId) return;
                   if (!confirm("确定要取消当前 run 吗？")) return;
                   try {
+                    const runProjectId = String(run?.projectId || state.projectId || "");
+                    const cancelledCurrentPrototypeRun = isPrototypeSkeletonCreationRun(run) && !!runProjectId && runProjectId === state.projectId;
                     await api(`/api/runs/${encodeURIComponent(runId)}/cancel`, { method: "POST", body: "{}" });
                     state.cancelledActiveRunId = runId;
-                    writeCancelledPrototypeMarker(runId);
+                    state.cancelledActiveRunProjectId = runProjectId;
+                    if (isPrototypeSkeletonCreationRun(run) && runProjectId) {
+                      writeCancelledPrototypeMarker(runId, runProjectId);
+                    }
                     state.activeRun = null;
                     state.localBusy = false;
                     state.draftAnalysisRunning = false;
                     state.pendingPrototypeSkeletonRun = null;
-                    state.v2PrototypeCreationStatus = "idle";
-                    writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });
+                    if (cancelledCurrentPrototypeRun) {
+                      state.v2PrototypeCreationStatus = "idle";
+                      writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() }, runProjectId);
+                    }
                     resetPrototypeSkeletonBannerState(true);
-                    unlockPrototypeFormAfterCancel();
+                    if (cancelledCurrentPrototypeRun) unlockPrototypeFormAfterCancel();
                     out("当前 run 已取消。");
                     hideActiveRunBanner();
                     applyGlobalBusyState();
-                    unlockPrototypeFormAfterCancel();
+                    if (cancelledCurrentPrototypeRun) unlockPrototypeFormAfterCancel();
                     if (state.projectId) {
                       await Promise.allSettled([
                         loadRuns(),
@@ -6285,7 +6554,7 @@ public sealed class BrowserUiRenderer
                         refreshGddOutlineStatus()
                       ]);
                     }
-                    unlockPrototypeFormAfterCancel();
+                    if (cancelledCurrentPrototypeRun) unlockPrototypeFormAfterCancel();
                   } catch (error) {
                     showError(error);
                     await refreshActiveRun();
@@ -6312,16 +6581,16 @@ public sealed class BrowserUiRenderer
                         applyGlobalBusyState();
                         return;
                       }
-                      state.cancelledActiveRunId = "";
+                      clearCancelledActiveRunState();
                     } else if (state.cancelledActiveRunId && (!activeRun?.runId || activeRun.runId !== state.cancelledActiveRunId || !runIsBusy(activeRun))) {
-                      state.cancelledActiveRunId = "";
+                      clearCancelledActiveRunState();
                     }
                     if (activeRun?.runId && state.cancelledActiveRunId === activeRun.runId && runIsBusy(activeRun)) {
                       state.activeRun = null;
                     } else {
                       state.activeRun = activeRun;
                     }
-                    if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun)) {
+                    if (isPrototypeSkeletonCreationRun(state.activeRun) && runIsBusy(state.activeRun) && runBelongsToCurrentProject(state.activeRun)) {
                       state.pendingPrototypeSkeletonRun = state.activeRun;
                       ensurePrototypeSkeletonBannerRun(state.activeRun);
                     } else if (hasPendingPrototypeSkeletonBannerRun()) {
@@ -6342,7 +6611,7 @@ public sealed class BrowserUiRenderer
                       await loadIterationPlan();
                       await loadRuns();
                     }
-                    if (wasBusy && !runIsBusy(activeRun) && !hasPendingPrototypeSkeletonBannerRun() && state.projectId) {
+                    if (wasBusy && !runIsBusy(activeRun) && !hasPendingPrototypeSkeletonBannerRun() && state.projectId && runBelongsToCurrentProject(activeRun)) {
                       await loadPrototypeProgress();
                       await loadProjectPackages();
                       await refreshAssetInventoryAvailability();
@@ -6415,6 +6684,8 @@ public sealed class BrowserUiRenderer
                 async function importDraft() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先创建并选择项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const file = $("draftFile").files?.[0];
                   if (!file) return out("请先选择一个 txt 文件。");
                   setLocalBusy(true, "草稿分析中，请等待当前任务执行完毕。");
@@ -6429,28 +6700,34 @@ public sealed class BrowserUiRenderer
                     const form = new FormData();
                     form.append("draftFile", file);
                     form.append("model", $("globalModel").value || "gpt-5.5");
-                    const response = await fetch(`/api/projects/${state.projectId}/prototype-drafts/analyze`, { method: "POST", body: form, headers: { "Authorization": `Bearer ${token()}` } });
+                    const response = await fetch(`/api/projects/${projectId}/prototype-drafts/analyze`, { method: "POST", body: form, headers: { "Authorization": `Bearer ${token()}` } });
                     const payload = await response.json();
                     if (!response.ok) throw payload;
+                    if (!isCurrentProjectContext(context)) return;
                     applyDraftToForm(payload);
                     renderDraftImportStatus(payload);
                     out(payload);
                     await loadRuns();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     $("draftImportStatus").className = "card muted";
                     $("draftImportStatus").textContent = `草稿分析失败：${publicErrorCode(error?.error || error?.failureCode || "unknown_error")}`;
                     $("draftImportStatus").classList.remove("hidden");
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    resetPrototypeActionButtonsVisualState();
-                    setButtonDisabledState($("runPrototype"), isGlobalBusy());
-                    setButtonDisabledState($("importDraft"), false);
-                    updateDraftImportButtonState();
-                    await refreshActiveRun();
-                    resetPrototypeActionButtonsVisualState();
-                    setButtonDisabledState($("runPrototype"), isGlobalBusy());
-                    updatePrototypeSkeletonPackageButton();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      resetPrototypeActionButtonsVisualState();
+                      setButtonDisabledState($("runPrototype"), isGlobalBusy());
+                      setButtonDisabledState($("importDraft"), false);
+                      updateDraftImportButtonState();
+                      resetPrototypeActionButtonsVisualState();
+                      setButtonDisabledState($("runPrototype"), isGlobalBusy());
+                      updatePrototypeSkeletonPackageButton();
+                    }
                   }
                 }
 
@@ -6466,41 +6743,53 @@ public sealed class BrowserUiRenderer
                 async function createProjectPackage() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "打包项目文件中，请等待当前任务执行完毕。");
                   $("createProjectPackage").disabled = true;
                   $("createProjectPackage").textContent = "打包中...";
                   $("projectPackageStatus").className = "card muted";
                   $("projectPackageStatus").textContent = "正在生成只包含项目相关文件的压缩包。";
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/packages`, { method: "POST" });
+                    const result = await api(`/api/projects/${projectId}/packages`, { method: "POST" });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     await loadRuns();
                     await loadProjectPackages();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     const reason = publicErrorCode(error?.payload?.failureCode || error?.payload?.disabledReason || error?.payload?.error || error?.payload?.status || error?.message || "unknown_error");
                     $("projectPackageStatus").className = "card";
                     $("projectPackageStatus").textContent = `打包失败：${projectPackageDisabledText(reason)} (${reason})`;
                     showError(error);
                   }
                   finally {
-                    setLocalBusy(false);
-                    $("createProjectPackage").textContent = "打包项目文件";
-                    await loadProjectPackages();
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await loadProjectPackages();
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      $("createProjectPackage").textContent = "打包项目文件";
+                    }
                   }
                 }
 
                 async function loadProjectPackages() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     renderProjectPackages({ canCreatePackage: false, disabledReason: "project_not_selected", packages: [] });
                     return;
                   }
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/packages`);
+                    const result = await api(`/api/projects/${projectId}/packages`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.packageList = result;
                     renderProjectPackages(result);
-                    writeProjectStateCache({ packageList: result });
+                    writeProjectStateCache({ packageList: result }, projectId);
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     $("projectPackageStatus").className = "card muted";
                     $("projectPackageStatus").textContent = "项目文件包列表暂不可用。";
                   }
@@ -6508,7 +6797,9 @@ public sealed class BrowserUiRenderer
 
                 async function refreshPrototypeGddStatus() {
                   if (!$("prototypeGddStatus")) return false;
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     $("prototypeGddStatus").className = "card muted";
                     $("prototypeGddStatus").textContent = "请先选择项目。";
                     setButtonDisabledState($("runPrototype"), true, "请先选择项目。");
@@ -6516,10 +6807,12 @@ public sealed class BrowserUiRenderer
                   }
 
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd`);
+                    const result = await api(`/api/projects/${projectId}/gdd`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return false;
                     let modulePlan = state.gddMilestoneSteps;
                     try {
-                      modulePlan = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/latest`);
+                      modulePlan = await api(`/api/projects/${projectId}/gdd-milestone-steps/latest`);
+                      if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return false;
                       state.gddMilestoneSteps = modulePlan;
                       v2RenderProgress();
                       v2RenderLeftProjectList();
@@ -6541,6 +6834,7 @@ public sealed class BrowserUiRenderer
                     renderPrototypeM1SpecStatus();
                     return true;
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return false;
                     $("prototypeGddStatus").className = "card muted";
                     $("prototypeGddStatus").textContent = "当前项目还没有 GDD。请先创建策划大纲；创建策划大纲时仍可导入参考文件，并会优先参考导入内容。";
                     setButtonDisabledState($("runPrototype"), true, "请先创建策划大纲。");
@@ -6550,7 +6844,9 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function loadGddMilestoneSteps() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     state.gddMilestoneSteps = null;
                     state.gddMilestoneEvidence = {};
                     renderGddMilestoneSteps();
@@ -6558,15 +6854,18 @@ public sealed class BrowserUiRenderer
                   }
 
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/latest`);
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/latest`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.gddMilestoneSteps = result;
-                    await loadGddMilestoneEvidence(result);
+                    await loadGddMilestoneEvidence(result, projectId, requestAuthEpoch);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     const active = activeGddMilestoneStep(Array.isArray(result?.steps) ? result.steps : [], result);
                     if (!state.gddMilestoneManualSelection && active) {
                       state.selectedGddMilestoneStepId = active.stepId || "";
                     }
-                    writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection });
+                    writeProjectStateCache({ gddMilestoneSteps: result, selectedGddMilestoneStepId: state.selectedGddMilestoneStepId, gddMilestoneManualSelection: state.gddMilestoneManualSelection }, projectId);
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.gddMilestoneSteps = { status: "gdd_not_found", summary: "创建策划大纲后显示游戏模块。", steps: [] };
                     state.gddMilestoneEvidence = {};
                   }
@@ -6576,18 +6875,19 @@ public sealed class BrowserUiRenderer
                   v2RenderLeftProjectList();
                 }
 
-                async function loadGddMilestoneEvidence(plan) {
+                async function loadGddMilestoneEvidence(plan, projectId = state.projectId, requestAuthEpoch = authEpoch) {
                   const steps = Array.isArray(plan?.steps) ? plan.steps : [];
                   const evidence = { ...(state.gddMilestoneEvidence || {}) };
                   await Promise.all(steps.map(async step => {
                     const path = step?.latestEvidenceRelativePath || "";
                     if (!path || evidence[path]?.loaded) return;
                     try {
-                      evidence[path] = { loaded: true, data: await api(`/api/projects/${encodeURIComponent(state.projectId)}/prototype-evidence?path=${encodeURIComponent(path)}`) };
+                      evidence[path] = { loaded: true, data: await api(`/api/projects/${encodeURIComponent(projectId)}/prototype-evidence?path=${encodeURIComponent(path)}`) };
                     } catch (error) {
                       evidence[path] = { loaded: true, error: error?.payload?.error || "prototype_evidence_unavailable" };
                     }
                   }));
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                   state.gddMilestoneEvidence = evidence;
                 }
 
@@ -6708,18 +7008,35 @@ public sealed class BrowserUiRenderer
                       ${renderStepSpecLine("本模块范围", step.scopeIn)}
                       ${renderStepSpecLine("暂不包含", step.scopeOut)}
                       ${renderStepSpecLine("Godot/C# 实现切片", step.godotSlice)}
-                      ${renderStepSpecLine("验收", step.acceptance)}
-                      ${renderStepSpecLine("打包验证", step.packagingValidation)}
                       ${renderStepSpecLine("反馈改进", step.feedbackGuidance)}
                       ${renderStepSpecLine("下一模块调整检查", step.nextStepReview)}
                       ${step.reviewSummary ? `<p class="muted">解锁前检查：${escapeHtml(step.reviewSummary)}</p>` : ""}
                       ${renderGddMilestoneResultPanel(step)}
+                      ${renderGddMilestonePlaytestPanel(step)}
                       ${renderGddMilestoneEvidence(step)}
                       <div class="milestone-detail-nav">
                         <button type="button" class="ghost" data-gdd-milestone-nav="previous" ${index <= 0 ? "disabled" : ""}>上一个模块</button>
                         <span class="muted">${isActive ? "当前激活模块" : "非激活模块，仅可查看"}</span>
                         <button type="button" class="ghost" data-gdd-milestone-nav="next" ${index >= steps.length - 1 ? "disabled" : ""}>下一个模块</button>
                       </div>
+                    </div>
+                  `;
+                }
+
+                function renderGddMilestonePlaytestPanel(step) {
+                  const acceptance = String(step?.acceptance || "").trim();
+                  const packagingValidation = String(step?.packagingValidation || "").trim();
+                  const acceptanceHtml = acceptance
+                    ? `<p><strong>试玩验收：</strong>${escapeHtml(acceptance)}</p>`
+                    : `<p class="muted">暂无单独试玩验收说明，请先补全该模块的大纲内容。</p>`;
+                  const packageHtml = packagingValidation
+                    ? `<p><strong>打包试玩：</strong>${escapeHtml(packagingValidation)}</p>`
+                    : "";
+                  return `
+                    <div class="milestone-playtest-panel">
+                      <strong>玩家试玩验收内容</strong>
+                      ${acceptanceHtml}
+                      ${packageHtml}
                     </div>
                   `;
                 }
@@ -6819,25 +7136,33 @@ public sealed class BrowserUiRenderer
                 async function executeCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const step = currentGddMilestoneStep();
                   if (!step) return out("当前没有可执行的游戏模块。");
                   setLocalBusy(true, "正在执行当前游戏模块。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/current/execute`, {
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/current/execute`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({})
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     if (result.stepExecution) {
                       await loadIterationPlan();
                     }
                     await loadGddMilestoneSteps();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -6877,26 +7202,34 @@ public sealed class BrowserUiRenderer
                 async function quickRepairCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const step = currentGddMilestoneStep();
                   if (!step) return out("当前没有可快速修复的游戏模块。");
                   if (!canQuickRepairGddMilestoneStep(step)) return out("当前模块没有失败执行结果，不能快速修复。");
                   setLocalBusy(true, "正在根据当前模块执行结果启动快速修复。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({ feedback: buildQuickRepairFeedbackForMilestoneStep(step), model: $("globalModel").value || "gpt-5.5" })
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
                     renderGddMilestoneSteps();
                     await loadGddMilestoneSteps();
                     await loadRuns();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -6905,12 +7238,15 @@ public sealed class BrowserUiRenderer
                   const step = currentGddMilestoneStep();
                   if (!state.projectId || !step) return out("当前没有可确认的游戏模块。");
                   if (!confirm(`建议先打包下载试玩验证 ${step.stepId}，但不是必需。确认完成后会解锁下一个模块，并触发下一模块解锁前检查。`)) return;
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "正在确认当前模块并执行下一模块解锁前检查。");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
                       method: "POST",
                       body: JSON.stringify({ notes: "confirmed from browser", model: $("globalModel").value || "gpt-5.5" })
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
                     state.selectedGddMilestoneStepId = result.plan?.currentStepId || "";
@@ -6918,10 +7254,15 @@ public sealed class BrowserUiRenderer
                     renderGddMilestoneSteps();
                     await loadGddMilestoneSteps();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                   } finally {
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -6944,6 +7285,8 @@ public sealed class BrowserUiRenderer
                   if (!guardGlobalAction()) return;
                   const step = currentGddMilestoneStep();
                   if (!state.projectId || !step) return out("当前没有可反馈的游戏模块。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   const feedback = $("milestoneFeedbackInput").value || "";
                   if (!feedback?.trim()) return;
                   setLocalBusy(true, "正在提交当前模块的反馈修复。");
@@ -6951,11 +7294,12 @@ public sealed class BrowserUiRenderer
                   $("confirmMilestoneFeedback").textContent = "提交中...";
                   $("milestoneFeedbackHint").textContent = "正在根据当前模块反馈启动修复。";
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
                       body: JSON.stringify({ feedback, model: $("globalModel").value || "gpt-5.5" })
                     });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
                     setModalVisible("milestoneFeedbackModal", false);
@@ -6963,13 +7307,18 @@ public sealed class BrowserUiRenderer
                     await loadGddMilestoneSteps();
                     await loadRuns();
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     $("milestoneFeedbackHint").textContent = "提交失败，请检查反馈内容或稍后重试。";
                     showError(error);
                   } finally {
-                    $("confirmMilestoneFeedback").disabled = false;
-                    $("confirmMilestoneFeedback").textContent = "提交反馈并修正模块";
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      $("confirmMilestoneFeedback").disabled = false;
+                      $("confirmMilestoneFeedback").textContent = "提交反馈并修正模块";
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -7025,18 +7374,22 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function refreshAssetInventoryAvailability() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     state.assetInventory = null;
                     state.assetInventoryExpanded = false;
                     renderAssetInventory({ canReadInventory: false, disabledReason: "project_not_selected", usedAssets: [], generationCandidates: [] }, false);
                     return;
                   }
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/asset-inventory?judge=false`);
+                    const result = await api(`/api/projects/${projectId}/asset-inventory?judge=false`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.assetInventory = result;
                     renderAssetInventory(result, state.assetInventoryExpanded);
-                    writeProjectStateCache({ assetInventory: result });
+                    writeProjectStateCache({ assetInventory: result }, projectId);
                   } catch {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     $("loadAssetInventory").disabled = true;
                     $("assetInventoryStatus").className = "card muted";
                     $("assetInventoryStatus").textContent = "项目素材库暂不可用。";
@@ -7123,12 +7476,15 @@ public sealed class BrowserUiRenderer
                     showPrototypeNotice("请先选择一个项目。", "warn");
                     return out("请先选择一个项目。");
                   }
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
                   if (prototypeSkeletonLocked()) {
                     showPrototypeNotice("游戏场景已验收通过，不能重复创建。", "info");
                     setPrototypeFormLocked(true);
                     return out("游戏场景已验收通过，不能重复创建。");
                   }
                   const hasGdd = await refreshPrototypeGddStatus();
+                  if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                   if (!hasGdd) {
                     showPrototypeNotice("请先创建策划大纲，确认 GDD 后再创建游戏场景。", "warn");
                     return out({ status: "gdd_not_found" });
@@ -7142,11 +7498,13 @@ public sealed class BrowserUiRenderer
                       scoreEngine: "deterministic",
                       model: $("globalModel").value
                     };
-                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/from-gdd`, { method: "POST", body: JSON.stringify(payload) });
+                    const result = await api(`/api/projects/${projectId}/prototype-7day-playable/from-gdd`, { method: "POST", body: JSON.stringify(payload) });
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     out(result);
                     if (result?.runId) {
                       state.pendingPrototypeSkeletonRun = {
                         runId: result.runId,
+                        projectId,
                         busy: true,
                         runType: "prototype-7day-playable",
                         progressStep: "queued",
@@ -7156,15 +7514,20 @@ public sealed class BrowserUiRenderer
                       ensurePrototypeSkeletonBannerRun(state.pendingPrototypeSkeletonRun);
                       writePrototypeSkeletonBannerState();
                       applyGlobalBusyState();
-                      await refreshPrototypeSkeletonRun(result.runId);
+                      await refreshPrototypeSkeletonRun(result.runId, projectId, requestAuthEpoch);
                     }
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     showPrototypeNotice(`原型创建请求已提交，状态：${result.status || "queued"}。刷新页面可继续查看创建进度。`, "info");
                     await loadRuns();
                     await loadPrototypeProgress();
-                    await loadServerChatHistoryForProject(state.projectId);
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    await loadServerChatHistoryForProject(projectId, requestAuthEpoch);
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     setLocalBusy(false);
                     setPrototypeFormLocked(false);
                     state.pendingPrototypeSkeletonRun = null;
@@ -7173,15 +7536,18 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function refreshPrototypeSkeletonRun(runId) {
-                  if (!runId) return;
+                async function refreshPrototypeSkeletonRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  if (!runId || !projectId) return;
                   if (state.cancelledActiveRunId === runId) return;
                   try {
                     const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
                     const run = result?.run || null;
                     if (!run) return;
+                    const actualProjectId = runProjectId(run) || projectId;
+                    if (actualProjectId !== projectId || !isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     state.pendingPrototypeSkeletonRun = {
                       runId: run.runId,
+                      projectId: actualProjectId,
                       busy: runIsBusy(run),
                       runType: run.runType,
                       status: run.status,
@@ -7195,7 +7561,7 @@ public sealed class BrowserUiRenderer
                       state.pendingPrototypeSkeletonRun = null;
                       resetPrototypeSkeletonBannerState(true);
                       applyGlobalBusyState();
-                      if (String(run.status || "").toLowerCase() === "succeeded") {
+                      if (String(run.status || "").toLowerCase() === "succeeded" && isCurrentProjectRequest(projectId, requestAuthEpoch)) {
                         await validatePrototypeSkeleton(true);
                       }
                     }
@@ -7275,11 +7641,14 @@ public sealed class BrowserUiRenderer
                 async function validatePrototype() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "原型重新验收中，请等待当前任务执行完毕。");
                   $("validatePrototype").textContent = "验收中...";
                   showPrototypeNotice("正在重新验收当前原型；该操作会运行平台验收、Godot smoke 和项目专属行为验收，不会触发生成流程。", "info");
                   try {
-                    const result = await api(`/api/projects/${state.projectId}/prototype-7day-playable/validate`, { method: "POST" });
+                    const result = await api(`/api/projects/${projectId}/prototype-7day-playable/validate`, { method: "POST" });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     await loadRuns();
                     await loadPrototypeProgress();
@@ -7290,17 +7659,24 @@ public sealed class BrowserUiRenderer
                       showPrototypeNotice(label, "warn");
                     }
                   } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
                     showError(error);
                     await loadPrototypeProgress();
                   } finally {
-                    setLocalBusy(false);
-                    $("validatePrototype").textContent = "重新触发原型项目验收";
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                      $("validatePrototype").textContent = "重新触发原型项目验收";
+                    }
                   }
                 }
 
                 async function loadPrototypeProgress() {
-                  if (!state.projectId) {
+                  const projectId = state.projectId;
+                  const requestAuthEpoch = authEpoch;
+                  if (!projectId) {
                     state.prototypeFailure = "";
                     $("validatePrototype").disabled = true;
                     $("prototypeProgress").className = "card muted";
@@ -7313,8 +7689,10 @@ public sealed class BrowserUiRenderer
                   }
                   try {
                     $("validatePrototype").disabled = isGlobalBusy();
-                    const progress = await api(`/api/projects/${state.projectId}/prototype-7day-playable/progress`);
-                    if (state.cancelledActiveRunId || readCancelledPrototypeMarker()) {
+                    const progress = await api(`/api/projects/${projectId}/prototype-7day-playable/progress`);
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    const currentProjectCancelled = !!state.cancelledActiveRunId && state.cancelledActiveRunProjectId === projectId;
+                    if (currentProjectCancelled || readCancelledPrototypeMarker(projectId)) {
                       const creationStatus = String(progress?.prototypeCreationStatus || progress?.status || "").trim().toLowerCase();
                       if (["queued", "running"].includes(creationStatus)) {
                         state.v2PrototypeCreationStatus = "idle";
@@ -7322,10 +7700,10 @@ public sealed class BrowserUiRenderer
                         renderPrototypeProgress(cancelledPrototypeProgressSnapshot());
                         setPrototypeFormLocked(false);
                         if ($("draftFile")) $("draftFile").disabled = true;
-                        writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() });
+                        writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() }, projectId);
                         return;
                       }
-                      clearCancelledPrototypeMarker();
+                      clearCancelledPrototypeMarker(projectId);
                     }
                     const acceptanceStatus = String(progress?.acceptanceStatus || progress?.status || "").trim().toLowerCase();
                     state.v2PrototypeStatus = progress?.status || "";
@@ -7340,8 +7718,11 @@ public sealed class BrowserUiRenderer
                     setPrototypeFormLocked(isPrototypeCreationLocked(progress));
                     renderPrototypeM1SpecStatus();
                     updateChatPanelVisibility(progress);
-                    writeProjectStateCache({ prototypeProgress: progress });
-                  } catch (error) { showError(error); }
+                    writeProjectStateCache({ prototypeProgress: progress }, projectId);
+                  } catch (error) {
+                    if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
+                    showError(error);
+                  }
                 }
 
                 function renderPrototypeProgress(progress) {
@@ -7408,7 +7789,7 @@ public sealed class BrowserUiRenderer
 
                 function setFormalFeedbackAvailability(canSubmit) {
                   state.prototypeReadyForFeedback = canSubmit;
-                  const routeGoal = currentNeedsFixRouteGoal();
+                  const routeGoal = latestNeedsFixRouteGoalForAction();
                   $("submitFormalFeedback").disabled = !canSubmit;
                   $("submitFormalFeedback").textContent = !canSubmit
                     ? "需先完成游戏场景创建后才能提交反馈"
@@ -7471,18 +7852,34 @@ public sealed class BrowserUiRenderer
                   return "请继续优化这个半成品原型：优先检查首分钟体验、操作反馈、目标提示、胜负条件和基础手感；如果发现明显短板，请直接改进并在完成后给出新的下一步建议。";
                 }
 
+                function iterationPlanDecision(evaluation = state.iterationPlanEvaluation) {
+                  return String(evaluation?.decision || "").trim().toLowerCase();
+                }
+
                 function currentIterationPlanDecision() {
-                  return String(state.iterationPlanEvaluation?.decision || "").trim().toLowerCase();
+                  return iterationPlanDecision(state.iterationPlanEvaluation);
+                }
+
+                function latestIterationPlanDecision() {
+                  return iterationPlanDecision(latestIterationPlanEvaluationForAction());
+                }
+
+                function iterationPlanRegenerationPrompt(evaluation = state.iterationPlanEvaluation) {
+                  const decision = iterationPlanDecision(evaluation);
+                  if (decision !== "should_refine_plan") return "";
+                  return String(evaluation?.suggestedPromptForRegeneration || "").trim();
                 }
 
                 function currentIterationPlanRegenerationPrompt() {
-                  const decision = currentIterationPlanDecision();
-                  if (decision !== "should_refine_plan") return "";
-                  return String(state.iterationPlanEvaluation?.suggestedPromptForRegeneration || "").trim();
+                  return iterationPlanRegenerationPrompt(state.iterationPlanEvaluation);
                 }
 
-                function syncIterationPlanRegenerationSuggestion() {
-                  const suggestion = currentIterationPlanRegenerationPrompt();
+                function latestIterationPlanRegenerationPrompt() {
+                  return iterationPlanRegenerationPrompt(latestIterationPlanEvaluationForAction());
+                }
+
+                function syncIterationPlanRegenerationSuggestion(evaluation = state.iterationPlanEvaluation) {
+                  const suggestion = iterationPlanRegenerationPrompt(evaluation);
                   if (suggestion) {
                     state.nextSuggestedFeedback = suggestion;
                   }
@@ -7533,6 +7930,8 @@ public sealed class BrowserUiRenderer
                 async function runTdd(stage) {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "TDD 命令执行中，请等待当前任务执行完毕。");
                   try {
                     const payload = {
@@ -7543,19 +7942,29 @@ public sealed class BrowserUiRenderer
                       timeoutSec: 300,
                       dotnetTarget: $("dotnetTarget").value.split("\n").map(x => x.trim()).filter(Boolean)
                     };
-                    const result = await api(`/api/projects/${state.projectId}/prototype-tdd`, { method: "POST", body: JSON.stringify(payload) });
+                    const result = await api(`/api/projects/${projectId}/prototype-tdd`, { method: "POST", body: JSON.stringify(payload) });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     await loadRuns();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
+                    showError(error);
+                  }
                   finally {
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
                 async function createScene() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
                   setLocalBusy(true, "原型场景创建中，请等待当前任务执行完毕。");
                   try {
                     const sceneSlug = $("tddSlug").value.trim() || $("protoSlug").value.trim();
@@ -7571,13 +7980,21 @@ public sealed class BrowserUiRenderer
                       coreGameplayLoop: prototypePayload.coreGameplayLoop,
                       winFailConditions: prototypePayload.winFailConditions
                     };
-                    const result = await api(`/api/projects/${state.projectId}/prototype-scene`, { method: "POST", body: JSON.stringify(payload) });
+                    const result = await api(`/api/projects/${projectId}/prototype-scene`, { method: "POST", body: JSON.stringify(payload) });
+                    if (!isCurrentProjectContext(context)) return;
                     out(result);
                     await loadRuns();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
+                    showError(error);
+                  }
                   finally {
-                    setLocalBusy(false);
-                    await refreshActiveRun();
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
                   }
                 }
 
@@ -7590,16 +8007,23 @@ public sealed class BrowserUiRenderer
                 }
 
                 $("saveToken").onclick = () => {
-                  persistAccessTokenFromInput();
-                  $("sessionStatus").textContent = token() ? "Token 验证中..." : "Token 已清空。";
-                  if (token()) refreshProjects(); else showLoggedOut();
+                  const value = rawTokenInput();
+                  bumpAuthEpoch();
+                  if (!value) {
+                    clearAccessTokenStorage();
+                    $("sessionStatus").textContent = "Token 已清空。";
+                    showLoggedOut();
+                    return;
+                  }
+                  persistAccessToken(value);
+                  $("sessionStatus").textContent = "Token 验证中...";
+                  refreshProjects();
                 };
-                $("token").addEventListener("input", persistAccessTokenFromInput);
-                $("token").addEventListener("change", persistAccessTokenFromInput);
+                $("token").addEventListener("input", bumpAuthEpoch);
+                $("token").addEventListener("change", bumpAuthEpoch);
                 $("logout").onclick = () => {
-                  localStorage.removeItem("phaseAAdminToken");
-                  localStorage.removeItem("phaseAAccessToken");
-                  clearBrowserCookie("phaseAAccessToken");
+                  bumpAuthEpoch();
+                  clearAccessTokenStorage();
                   $("token").value = "";
                   state.projectId = "";
                   writeSelectedProjectId("");
@@ -7608,11 +8032,15 @@ public sealed class BrowserUiRenderer
                 };
                 $("openCreateProjectPage").onclick = () => showCreateProjectPage();
                 $("openProjectListModal").onclick = async () => {
+                  if (projectSwitchLocked() && state.projectId) return out("当前操作完成前不能切换项目。");
                   setModalVisible("projectListModal", true);
                   await refreshProjects({ autoSelect: false });
                 };
                 $("closeProjectListModal").onclick = () => setModalVisible("projectListModal", false);
-                $("refreshProjects").onclick = () => refreshProjects({ autoSelect: false });
+                $("refreshProjects").onclick = () => {
+                  if (projectSwitchLocked() && state.projectId) return out("当前操作完成前不能切换项目。");
+                  return refreshProjects({ autoSelect: false });
+                };
                 $("createProject").onclick = createProject;
                 ["projectName", "gameName", "gameTypeSource"].forEach(id => {
                   $(id)?.addEventListener("input", () => validateCreateProjectForm(false));
@@ -7718,13 +8146,12 @@ public sealed class BrowserUiRenderer
                 setTimeout(() => {
                   const currentToken = token();
                   if (currentToken) {
-                    persistAccessTokenFromInput();
                     if (!state.authenticated) refreshProjects();
                   }
                 }, 250);
                 setInterval(refreshActiveRun, 5000);
                 setInterval(() => {
-                  const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;
+                  const skeletonRun = skeletonBannerRun();
                   if (!skeletonRun?.runId) return;
                   ensurePrototypeSkeletonBannerRun(skeletonRun);
                   state.prototypeSkeletonBannerTick += 1;
@@ -7733,9 +8160,9 @@ public sealed class BrowserUiRenderer
                   if (changed) applyGlobalBusyState();
                 }, 5000);
                 setInterval(() => {
-                  const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;
+                  const skeletonRun = skeletonBannerRun();
                   if (!skeletonRun?.runId) return;
-                  refreshPrototypeSkeletonRun(skeletonRun.runId);
+                  refreshPrototypeSkeletonRun(skeletonRun.runId, runProjectId(skeletonRun) || state.projectId);
                 }, 5000);
               </script>
             </body>
@@ -7765,7 +8192,7 @@ public sealed class BrowserUiRenderer
               h1 { margin: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: 0; }
               p { color: var(--muted); }
               .card { background: var(--panel); border: 1px solid var(--line); border-radius: 0.75rem; padding: 1rem; box-shadow: 0 1rem 2.4rem rgba(57, 43, 24, 0.1); }
-              .detail-progress { display: grid; grid-template-columns: repeat(9, minmax(5.6rem, 1fr)); gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem; }
+              .detail-progress { display: grid; grid-template-columns: repeat(7, minmax(5.6rem, 1fr)); gap: 0.5rem; overflow-x: auto; padding-bottom: 0.2rem; }
               .detail-step { min-width: 5.6rem; display: grid; justify-items: center; gap: 0.25rem; padding: 0.35rem 0.3rem 0.62rem; color: var(--muted); text-decoration: none; background: #fffdf8; border: 1px solid var(--line); border-radius: 0.75rem; }
               .detail-step-number { color: var(--accent); font-size: 0.82rem; line-height: 1; font-weight: 800; }
               .detail-step-icon { width: 2rem; height: 2rem; border-radius: 999px; background: #eef0ec; border: 2px solid var(--pending); }
@@ -7820,7 +8247,7 @@ public sealed class BrowserUiRenderer
             .FirstOrDefault();
         var latestRepair = LatestRun(runs, "prototype-repair-step", "prototype-quick-fix");
         var latestIteration = LatestRun(runs, "prototype-iteration-goal", "prototype-feedback-iteration");
-        var latestUiOptimization = LatestRun(runs, "prototype-ui-optimization");
+        var latestGoalRepair = LatestGoalRepairRun(runs);
         var latestAssetInventory = LatestRun(runs, "project-asset-inventory");
         var latestPackage = LatestRun(runs, "project-package");
         var firstMilestoneCompleted = IsFirstGddMilestoneCompleted(project);
@@ -7851,11 +8278,10 @@ public sealed class BrowserUiRenderer
                     : prototypeSucceeded
                         ? new ProjectDetailStep(3, "场景验收修复", "done", "/#v2RepairPanel", "✓")
                         : CreateRunStep(3, "场景验收修复", latestRepair, "/#v2RepairPanel"),
-            CreateRunStep(4, "完成游戏模块", latestIteration, "/#v2IterationPanel"),
-            CreateUiOptimizationStep(5, latestUiOptimization, "/#v2UiOptimizationPanel"),
-            CreateAcceptanceStep(6, runs, latestIteration, "/#v2AcceptancePanel"),
-            CreateRunStep(7, "项目素材库", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
-            CreateRunStep(8, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
+            CreateIterationStep(4, latestIteration, latestGoalRepair, "/#v2IterationPanel"),
+            CreateAcceptanceStep(5, runs, latestIteration, latestGoalRepair, "/#v2AcceptancePanel"),
+            CreateRunStep(6, "项目素材库", latestAssetInventory, $"/assets?projectId={Uri.EscapeDataString(project.ProjectId)}"),
+            CreateRunStep(7, "打包下载项目", latestPackage, $"/downloads?projectId={Uri.EscapeDataString(project.ProjectId)}")
         ];
     }
 
@@ -7924,7 +8350,12 @@ public sealed class BrowserUiRenderer
                string.Equals(status, "feedback_submitted", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static ProjectDetailStep CreateAcceptanceStep(int number, IReadOnlyList<RunReadbackItem> runs, RunReadbackItem? latestIterationRun, string href)
+    private static ProjectDetailStep CreateAcceptanceStep(
+        int number,
+        IReadOnlyList<RunReadbackItem> runs,
+        RunReadbackItem? latestIterationRun,
+        RunReadbackItem? latestGoalRepair,
+        string href)
     {
         var latestValidation = runs
             .Where(run => string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
@@ -7932,10 +8363,10 @@ public sealed class BrowserUiRenderer
             .OrderByDescending(RunSortTimeUtc)
             .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
             .FirstOrDefault();
+        var effectiveIterationBoundary = EffectiveIterationAcceptanceBoundary(latestIterationRun, latestGoalRepair);
         if (latestValidation is null ||
-            latestIterationRun is null ||
-            !string.Equals(latestIterationRun.Status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
-            RunSortTimeUtc(latestValidation) < RunSortTimeUtc(latestIterationRun))
+            effectiveIterationBoundary is null ||
+            RunSortTimeUtc(latestValidation) < RunSortTimeUtc(effectiveIterationBoundary))
         {
             return new ProjectDetailStep(number, "原型项目验收", "pending", href, "");
         }
@@ -7946,6 +8377,24 @@ public sealed class BrowserUiRenderer
             "failed" => new ProjectDetailStep(number, "原型项目验收", "fix", href, "×"),
             _ => new ProjectDetailStep(number, "原型项目验收", "pending", href, "")
         };
+    }
+
+    private static RunReadbackItem? EffectiveIterationAcceptanceBoundary(RunReadbackItem? latestIterationRun, RunReadbackItem? latestGoalRepair)
+    {
+        RunReadbackItem? boundary = null;
+        if (string.Equals(latestIterationRun?.Status, "succeeded", StringComparison.OrdinalIgnoreCase))
+        {
+            boundary = latestIterationRun;
+        }
+
+        if (latestIterationRun is not null &&
+            IsSucceededGoalRepair(latestGoalRepair) &&
+            RunSortTimeUtc(latestGoalRepair!) >= RunSortTimeUtc(latestIterationRun))
+        {
+            boundary = latestGoalRepair;
+        }
+
+        return boundary;
     }
 
     private static ProjectDetailStep CreateRunStep(int number, string label, RunReadbackItem? run, string href)
@@ -7963,24 +8412,85 @@ public sealed class BrowserUiRenderer
         };
     }
 
-    private static ProjectDetailStep CreateUiOptimizationStep(int number, RunReadbackItem? run, string href)
+    private static ProjectDetailStep CreateIterationStep(int number, RunReadbackItem? latestIteration, RunReadbackItem? latestGoalRepair, string href)
     {
-        if (run is null)
+        if (latestGoalRepair is not null &&
+            (latestIteration is null || RunSortTimeUtc(latestGoalRepair) >= RunSortTimeUtc(latestIteration)))
         {
-            return new ProjectDetailStep(number, "游戏界面优化", "pending", href, "");
+            var repairStatus = ReadStringFromEvidence(latestGoalRepair, "goal_repair_status");
+            if (string.Equals(latestGoalRepair.Status, "failed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(latestGoalRepair.ProgressSubstep, "validation_failed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(repairStatus, "needs_fix", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(repairStatus, "failed", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ProjectDetailStep(number, "完成游戏模块", "fix", href, "×");
+            }
+
+            if (string.Equals(latestGoalRepair.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(repairStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ProjectDetailStep(number, "完成游戏模块", "pending", href, "");
+            }
         }
 
-        if (string.Equals(run.ProgressSubstep, "validation_skipped", StringComparison.OrdinalIgnoreCase))
+        return CreateRunStep(number, "完成游戏模块", latestIteration, href);
+    }
+
+    private static RunReadbackItem? LatestGoalRepairRun(IReadOnlyList<RunReadbackItem> runs)
+    {
+        return runs
+            .Where(run => string.Equals(run.RunType, "prototype-quick-fix", StringComparison.OrdinalIgnoreCase) &&
+                          IsGoalRepairRun(run))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(run => run.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
+    }
+
+    private static bool IsGoalRepairRun(RunReadbackItem run)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
         {
-            return new ProjectDetailStep(number, "游戏界面优化", "pending", href, "");
+            return false;
         }
 
-        if (string.Equals(run.ProgressSubstep, "validation_failed", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            return new ProjectDetailStep(number, "游戏界面优化", "fix", href, "×");
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty("goal_repair", out var value) &&
+                   value.ValueKind == JsonValueKind.True;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsSucceededGoalRepair(RunReadbackItem? run)
+    {
+        return run is not null &&
+               string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(ReadStringFromEvidence(run, "goal_repair_status"), "succeeded", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ReadStringFromEvidence(RunReadbackItem run, string propertyName)
+    {
+        if (string.IsNullOrWhiteSpace(run.EvidenceJson))
+        {
+            return null;
         }
 
-        return CreateRunStep(number, "游戏界面优化", run, href);
+        try
+        {
+            using var document = JsonDocument.Parse(run.EvidenceJson);
+            return document.RootElement.TryGetProperty(propertyName, out var value) &&
+                   value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static RunReadbackItem? LatestRun(IReadOnlyList<RunReadbackItem> runs, params string[] runTypes)

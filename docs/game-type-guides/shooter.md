@@ -60,3 +60,19 @@
 - Loadout systems
 - Matchmaking and ranking
 - Balance considerations (skill ceiling, counter-play)
+
+### Module Matrix
+
+This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
+
+Use only these default values: `Always`, `Conditional`, `Optional`, and `Out of Scope`.
+
+| No | id | Module | Default | Purpose | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `first_loop_context` | First-loop context and objective | Always | Establish the player role, starting state, and near-term objective for the first Shooter loop. | GDD or route plan identifies the player role, first playable state, short-term goal, and success or failure condition. |
+| 2 | `weapon_systems` | Weapon Systems | Conditional | Plan the first-loop weapon systems needed for this game type. | If included, the GDD or route plan defines the weapon systems behavior, player-facing feedback, and how it changes the first-loop state. |
+| 3 | `aiming_and_combat_mechanics` | Aiming and Combat Mechanics | Conditional | Plan the first-loop aiming and combat mechanics needed for this game type. | If included, the GDD or route plan defines the aiming and combat mechanics behavior, player-facing feedback, and how it changes the first-loop state. |
+| 4 | `enemy_design_and_ai` | Enemy Design and AI | Conditional | Plan the first-loop enemy design and ai needed for this game type. | If included, the GDD or route plan defines the enemy design and ai behavior, player-facing feedback, and how it changes the first-loop state. |
+| 5 | `arena_and_level_design` | Arena and Level Design | Conditional | Plan the first-loop arena and level design needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the arena and level design behavior, player-facing feedback, and how it changes the first-loop state. |
+| 6 | `multiplayer_considerations` | Multiplayer Considerations | Conditional | Plan the first-loop multiplayer considerations needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the multiplayer considerations behavior, player-facing feedback, and how it changes the first-loop state. |
+| 7 | `final_shooter_loop_acceptance` | Final Shooter first-loop acceptance | Always | Validate that the selected Shooter modules form one coherent playable first loop. | GDD or route plan links entry, core action, feedback, result, and next state; excluded conditional or optional modules have clear reasons. |

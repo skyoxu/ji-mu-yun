@@ -116,6 +116,71 @@ internal sealed class DefaultGameTypeRouteStrategy : IGameTypeRouteStrategy
                 ]);
         }
 
+        if (GameTypeRouteProfiles.IsRpgProject(project) &&
+            ContainsAny(text, "final first-loop acceptance", "final acceptance", "prototype acceptance", "full playable", "\u6700\u7ec8\u9a8c\u6536", "\u9996\u8f6e\u95ed\u73af"))
+        {
+            var requiresBattle = RequiresBattleSceneForGoalText(text, goal);
+            var requiresReward = RequiresRewardFlowForGoalText(text, goal);
+            return new PrototypeGoalAcceptanceContract(
+                "default-rpg-final-first-loop-acceptance",
+                BuildDefaultRpgFinalMarkers(requiresBattle, requiresReward),
+                AssetUsageAcceptance: true,
+                MapEntryAcceptance: true,
+                BattleSceneAcceptance: requiresBattle,
+                RewardFlowAcceptance: requiresReward,
+                MainSceneHostUiHiddenAcceptance: true,
+                FinalAcceptance: true);
+        }
+
+        if (GameTypeRouteProfiles.IsRpgProject(project) &&
+            ContainsDefaultRpgBattleOrChallenge(text))
+        {
+            var requiresBattle = RequiresBattleSceneForGoalText(text, goal);
+            return new PrototypeGoalAcceptanceContract(
+                "default-rpg-battle-or-challenge-resolution",
+                requiresBattle
+                    ? ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"]
+                    : [],
+                BattleSceneAcceptance: requiresBattle,
+                StaticAcceptanceOnly: !requiresBattle);
+        }
+
+        if (GameTypeRouteProfiles.IsRpgProject(project) &&
+            ContainsAny(
+                text,
+                "map movement",
+                "stabilize map",
+                "stable movement",
+                "start adventure",
+                "visible map",
+                "field navigation",
+                "stable control",
+                "town scene",
+                "\u5730\u56fe\u79fb\u52a8",
+                "\u7a33\u5b9a\u79fb\u52a8",
+                "\u5730\u56fe\u5bfc\u822a",
+                "\u7a33\u5b9a\u64cd\u63a7"))
+        {
+            return Static(
+                "default-rpg-map-movement-entry",
+                ["Objective", "Start Adventure", "MoveOnMap"]);
+        }
+
+        if (GameTypeRouteProfiles.IsRpgProject(project) &&
+            ContainsAny(
+                text,
+                "opening context",
+                "player objective",
+                "objective",
+                "\u5f00\u5c40\u8bed\u5883",
+                "\u73a9\u5bb6\u76ee\u6807",
+                "\u76ee\u6807"))
+        {
+            return Static(
+                "default-rpg-opening-context-objective",
+                ["Objective", "Start Adventure"]);
+        }
+
         if (ContainsAny(text, "loop", "continue", "restart", "repeat", "next round", "first loop", "\u5faa\u73af", "\u7ee7\u7eed", "\u91cd\u65b0", "\u53cd\u590d", "\u4e0b\u4e00\u8f6e", "\u6700\u5c0f\u5faa\u73af"))
         {
             return Static(
@@ -132,6 +197,67 @@ internal sealed class DefaultGameTypeRouteStrategy : IGameTypeRouteStrategy
     private static PrototypeGoalAcceptanceContract Static(string kind, IReadOnlyList<string> markers)
     {
         return new PrototypeGoalAcceptanceContract(kind, markers, StaticAcceptanceOnly: true);
+    }
+
+    private static bool ContainsDefaultRpgBattleOrChallenge(string text)
+    {
+        return ContainsAny(
+            text,
+            "battle",
+            "combat",
+            "battlescene",
+            "fight",
+            "enemy",
+            "monster",
+            "challenge resolution",
+            "battle or challenge resolution",
+            "settlement",
+            "\u6218\u6597",
+            "\u654c\u4eba",
+            "\u602a\u7269",
+            "\u6311\u6218\u7ed3\u7b97",
+            "\u6218\u6597\u6216\u6311\u6218\u7ed3\u7b97",
+            "\u7ed3\u7b97");
+    }
+
+    private static bool RequiresBattleSceneForGoalText(string fullText, ProjectIterationGoalSnapshot goal)
+    {
+        var bodyText = string.Join(" ", goal.Description ?? "", goal.AcceptanceHint ?? "");
+        if (JrpgRouteSemantics.ContainsBattleNegation(bodyText) &&
+            !JrpgRouteSemantics.RequiresBattleScene(bodyText))
+        {
+            return false;
+        }
+
+        return JrpgRouteSemantics.RequiresBattleScene(fullText);
+    }
+
+    private static bool RequiresRewardFlowForGoalText(string fullText, ProjectIterationGoalSnapshot goal)
+    {
+        var bodyText = string.Join(" ", goal.Description ?? "", goal.AcceptanceHint ?? "");
+        if (JrpgRouteSemantics.ContainsRewardNegation(bodyText) &&
+            !JrpgRouteSemantics.RequiresRewardFlow(bodyText))
+        {
+            return false;
+        }
+
+        return JrpgRouteSemantics.RequiresRewardFlow(fullText);
+    }
+
+    private static string[] BuildDefaultRpgFinalMarkers(bool requiresBattle, bool requiresReward)
+    {
+        var markers = new List<string> { "Objective", "Start Adventure", "MoveOnMap" };
+        if (requiresBattle)
+        {
+            markers.AddRange(["ResolveAttackTurn", "VictoryBattleCount", "IsVictory", "IsGameOver"]);
+        }
+
+        if (requiresReward)
+        {
+            markers.AddRange(["RewardOptions.Count", "ApplyReward", "Battle reward selected"]);
+        }
+
+        return markers.ToArray();
     }
 
     private static bool ContainsAny(string text, params string[] values)
@@ -559,16 +685,6 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 MapEntryAcceptance: true);
         }
 
-        if (!ContainsAny(text, "\u573a\u666f\u5207\u6362", "scene switching", "main prototype scene", "\u4e3b\u539f\u578b") &&
-            !ContainsAssetOrUiValidation(text) &&
-            ContainsAny(text, "\u5730\u56fe\u79fb\u52a8", "map", "visible map", "start adventure", "field navigation", "stable control", "town scene", "地图导航", "稳定操控"))
-        {
-            return new PrototypeGoalAcceptanceContract(
-                ContainsAny(text, "jrpg", "field navigation", "stable control", "town scene") ? "jrpg-field-navigation-stable-control" : "rpg-step1-visible-map-movement",
-                ["MoveOnMap"],
-                MapEntryAcceptance: true);
-        }
-
         if (ContainsAny(text, "\u6218\u6597", "battle", "\u7ed3\u7b97", "settlement", "battlescene", "challenge resolution", "挑战结算"))
         {
             if (!RequiresBattleSceneForGoalContext(text, goal))
@@ -583,6 +699,16 @@ internal sealed class RpgGameTypeRouteStrategy : IGameTypeRouteStrategy
                 ContainsAny(text, "jrpg", "challenge resolution") ? "jrpg-battle-or-challenge-resolution" : "rpg-step3-battlescene-settlement",
                 ["ShouldReachRewardPhase_AfterWinningTheFirstEncounter", "ResolveAttackTurn", "BattlesWon", "Victory"],
                 BattleSceneAcceptance: true);
+        }
+
+        if (!ContainsAny(text, "\u573a\u666f\u5207\u6362", "scene switching", "main prototype scene", "\u4e3b\u539f\u578b") &&
+            !ContainsAssetOrUiValidation(text) &&
+            ContainsAny(text, "\u5730\u56fe\u79fb\u52a8", "map movement", "visible map", "start adventure", "field navigation", "stable control", "town scene", "地图导航", "稳定操控"))
+        {
+            return new PrototypeGoalAcceptanceContract(
+                ContainsAny(text, "jrpg", "field navigation", "stable control", "town scene") ? "jrpg-field-navigation-stable-control" : "rpg-step1-visible-map-movement",
+                ["MoveOnMap"],
+                MapEntryAcceptance: true);
         }
 
         if (ContainsAny(text, "party", "character state", "hp", "stat", "status", "equipment", "\u961f\u4f0d", "\u89d2\u8272\u72b6\u6001", "\u5c5e\u6027", "\u88c5\u5907", "状态可读性"))

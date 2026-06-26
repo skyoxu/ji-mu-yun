@@ -68,20 +68,25 @@ BMAD/GDS game-type templates are design semantics, not Phase A executable routes
 Use boundaries:
 
 - Use them for game-type classification, GDD/free-chat context, iteration-plan semantic hints, and source material for future route profiles.
+- If a guide includes a `Module Matrix`, treat it as a planning hint for first-loop module ordering and scoping.
+- Do not assume the matrix is already parsed into structured route fields or dedicated runtime state.
+- Treat authority in this order: executable route contract/strategy, prototype type kit, project brief or GDD, guide-level `Module Matrix`, guide prose.
+- If sources conflict, keep the higher-authority source and record the discarded lower-authority matrix row or guide signal in route/type-kit notes instead of silently merging both.
 - Do not turn every GDD section in a template into iteration steps.
+- Do not automatically promote optional or conditional modules to required scope unless the project brief, type kit, or route contract says so.
 - Do not assume all 24 ids have dedicated Godot executable routes just because the taxonomy exists.
 - A type becomes a Phase A executable route only after it has `GameTypeRouteProfile`, `IGameTypeRouteStrategy`, skill contract, plan generation/evaluation, execution acceptance, and tests.
 
 Current runtime integration:
 
-- `BmadGameTypeDesignCatalog` loads the 24 design templates read-only.
-- RPG/JRPG iteration planning injects the `rpg` guide excerpt as taxonomy and semantic hints.
+- `BmadGameTypeDesignCatalog` loads the 24 design templates read-only and exposes raw guide excerpts; it does not yet parse module matrices into structured fields.
+- RPG/JRPG GDD prompting can use the `rpg` guide excerpt and its module matrix as taxonomy, first-loop structure, and semantic hints. Executable route planning still needs type-kit and strategy support before treating matrix rows as route scope.
 - RPG/JRPG execution boundaries still come from `prototype-rpg-godot-zh`, `GameTypeRouteProfiles.Rpg`, and `RpgGameTypeRouteStrategy`.
 - Survivors-like execution boundaries come from `prototype-survivorslike-godot-zh`, `GameTypeRouteProfiles.SurvivorsLike`, and `SurvivorsLikeGameTypeRouteStrategy`.
 - Deckbuilder execution boundaries come from `prototype-deckbuilder-godot-zh`, `GameTypeRouteProfiles.Deckbuilder`, and `DeckbuilderGameTypeRouteStrategy`.
 - Generic project-level next-step advice, UI optimization prompts, asset inventory prompts, package/download prompts, and route buttons are produced by `ProjectWorkflowRouteService`, not by the game-type route strategy itself.
 
-When adding a new game type, extract first-loop capability vocabulary from the BMAD/GDS guide first, then decide whether the type deserves a Phase A executable route profile.
+When adding a new game type, extract first-loop capability vocabulary from the BMAD/GDS guide first, and add a matrix only when the type needs explicit module ordering or acceptance anchors. If the type later gets an executable route, cross-reference matrix ids from the type kit or route docs instead of copying the table.
 
 ## 新增游戏类型步骤
 ### 1. 新增专属 skill

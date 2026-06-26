@@ -61,7 +61,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_ADMIN_USERNAME"] = "root",
             ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-hash",
             ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
-            ["PHASEA_USER_TOKEN_HASH"] = "user-token-hash",
+            ["PHASEA_TICKET_SIGNING_SECRET"] = "ticket-secret",
             ["PHASEA_MAX_CONCURRENT_CHATS"] = "9",
             ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
@@ -89,7 +89,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.AdminUsername.Should().Be("root");
         options.AdminPasswordHash.Should().Be("password-hash");
         options.AdminTokenHash.Should().Be("token-hash");
-        options.UserTokenHash.Should().Be("user-token-hash");
+        options.TicketSigningSecret.Should().Be("ticket-secret");
         options.MaxConcurrentChats.Should().Be(9);
         options.MaxConcurrentChatsPerAccount.Should().Be(3);
         options.MaxConcurrentProjectCreations.Should().Be(4);

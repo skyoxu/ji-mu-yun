@@ -89,3 +89,20 @@ This game type is **narrative-critical**. You MUST run the Narrative Design work
 - Undo/rewind mechanics
 - Walkthrough or hint accessibility
 - Replayability considerations
+
+### Module Matrix
+
+This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
+
+Use only these default values: `Always`, `Conditional`, `Optional`, and `Out of Scope`.
+
+| No | id | Module | Default | Purpose | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `first_loop_context` | First-loop context and objective | Always | Establish the player role, starting state, and near-term objective for the first Text Based loop. | GDD or route plan identifies the player role, first playable state, short-term goal, and success or failure condition. |
+| 2 | `input_system` | Input System | Conditional | Plan the first-loop input system needed for this game type. | If included, the GDD or route plan defines the input system behavior, player-facing feedback, and how it changes the first-loop state. |
+| 3 | `room_location_structure` | Room/Location Structure | Conditional | Plan the first-loop room/location structure needed for this game type. | If included, the GDD or route plan defines the room/location structure behavior, player-facing feedback, and how it changes the first-loop state. |
+| 4 | `item_and_inventory_system` | Item and Inventory System | Conditional | Plan the first-loop item and inventory system needed for this game type. | If included, the GDD or route plan defines the item and inventory system behavior, player-facing feedback, and how it changes the first-loop state. |
+| 5 | `puzzle_design` | Puzzle Design | Conditional | Plan the first-loop puzzle design needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the puzzle design behavior, player-facing feedback, and how it changes the first-loop state. |
+| 6 | `narrative_and_writing` | Narrative and Writing | Conditional | Plan the first-loop narrative and writing needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the narrative and writing behavior, player-facing feedback, and how it changes the first-loop state. |
+| 7 | `game_flow_and_pacing` | Game Flow and Pacing | Conditional | Plan the first-loop game flow and pacing needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the game flow and pacing behavior, player-facing feedback, and how it changes the first-loop state. |
+| 8 | `final_text_based_loop_acceptance` | Final Text Based first-loop acceptance | Always | Validate that the selected Text Based modules form one coherent playable first loop. | GDD or route plan links entry, core action, feedback, result, and next state; excluded conditional or optional modules have clear reasons. |

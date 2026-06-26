@@ -106,19 +106,6 @@ public sealed class PrototypeCommandService
             await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, runType, CancellationToken.None);
             await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
-            var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-            if (!routeSkill.IsAvailable)
-            {
-                var routeSkillEvidenceJson = JsonSerializer.Serialize(new
-                {
-                    run_type = runType,
-                    slug,
-                    route_skill = routeSkill.Context,
-                    failure_code = routeSkill.FailureCode
-                });
-                await _metadataStore.CompleteRunAsync(runId, "failed", 428, "", routeSkill.FailureMessage, routeSkillEvidenceJson, cancellationToken);
-                return new HostedCommandResult(runId, routeSkill.FailureCode, 428, "", routeSkill.FailureMessage, [], []);
-            }
 
             var command = commandFactory(project);
             var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
@@ -134,6 +121,7 @@ public sealed class PrototypeCommandService
             {
                 run_type = runType,
                 slug,
+                source_boundary = "gdd_derived_contract_only_after_gdd_generation",
                 artifacts = artifacts.Select(a => a.RelativePath).ToArray()
             });
             await _metadataStore.CompleteRunAsync(runId, status, normalizedProcess.ExitCode, normalizedProcess.Stdout, normalizedProcess.Stderr, evidenceJson, cancellationToken);

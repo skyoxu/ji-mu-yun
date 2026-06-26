@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -105,6 +106,7 @@ public sealed class PrototypeUiOptimizationService
         Directory.CreateDirectory(Path.GetDirectoryName(promptAbsolutePath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(outputAbsolutePath)!);
         var codexStartedUtc = DateTimeOffset.MinValue;
+        var preCodexPrototypeSnapshot = PrototypeUiWorkspaceSnapshot.Capture(project.RepoPath);
 
         try
         {
@@ -133,17 +135,15 @@ public sealed class PrototypeUiOptimizationService
             var godotSmoke = process.ExitCode == 0
                 ? await RunGodotSmokeValidationAsync(runId, project, smokeScene, CancellationToken.None)
                 : PrototypeGodotSmokeResult.NotRun("codex_ui_optimization_failed", smokeScene);
-            var status = process.ExitCode == 0 && (!godotSmoke.Ran || godotSmoke.ExitCode == 0)
+            var status = process.ExitCode == 0 && godotSmoke.Ran && godotSmoke.ExitCode == 0
                 ? "succeeded"
                 : "failed";
-            var exitCode = process.ExitCode != 0 ? process.ExitCode : godotSmoke.Ran ? godotSmoke.ExitCode : 0;
+            var exitCode = process.ExitCode != 0 ? process.ExitCode : godotSmoke.Ran ? godotSmoke.ExitCode : 1;
             var progressSubstep = status == "succeeded"
-                ? godotSmoke.Ran ? "completed" : "validation_skipped"
+                ? "completed"
                 : process.ExitCode == 0 ? "validation_failed" : "codex_failed";
             var progressLabel = status == "succeeded"
-                ? godotSmoke.Ran
-                    ? "UI \u4f18\u5316\u5df2\u5b8c\u6210\uff0c\u77ed\u9a8c\u8bc1\u5df2\u901a\u8fc7\u3002"
-                    : "UI \u4f18\u5316\u5df2\u5b8c\u6210\uff0c\u77ed\u9a8c\u8bc1\u5df2\u8df3\u8fc7\u3002"
+                ? "UI \u4f18\u5316\u5df2\u5b8c\u6210\uff0c\u77ed\u9a8c\u8bc1\u5df2\u901a\u8fc7\u3002"
                 : process.ExitCode == 0
                     ? "UI \u4f18\u5316\u5df2\u4fee\u6539\uff0c\u4f46\u77ed\u9a8c\u8bc1\u5931\u8d25\u3002"
                     : "UI \u4f18\u5316\u5931\u8d25\u3002";
@@ -158,7 +158,7 @@ public sealed class PrototypeUiOptimizationService
                 validation_policy = "codex_ui_edit_only_platform_short_godot_smoke",
                 codex_exit_code = process.ExitCode,
                 godot_text_bom_cleaned = bomCleanedFiles,
-                validation_required = godotSmoke.Ran,
+                validation_required = process.ExitCode == 0,
                 godot_smoke = godotSmoke.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(runId, status, exitCode, process.Stdout, process.Stderr, evidenceJson, CancellationToken.None);
@@ -212,18 +212,22 @@ public sealed class PrototypeUiOptimizationService
                 promptRelativePath,
                 outputRelativePath,
                 codexStartedUtc,
+                preCodexPrototypeSnapshot,
                 CancellationToken.None);
             if (timeoutRecovery is not null)
             {
                 return timeoutRecovery;
             }
 
+            var timeoutChanges = DetectPrototypeUiChanges(project.RepoPath, codexStartedUtc, preCodexPrototypeSnapshot);
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 route = RunType,
                 timeout_seconds = (int)_executionTimeout.TotalSeconds,
                 failure_code = "ui_optimization_codex_timeout",
                 validation_policy = "codex_ui_edit_only_platform_short_godot_smoke",
+                changed_files_detected = timeoutChanges.ChangedPaths.Count > 0,
+                changed_paths = timeoutChanges.ChangedPaths,
                 prompt = promptRelativePath.Replace('\\', '/'),
                 output = outputRelativePath.Replace('\\', '/')
             });
@@ -258,16 +262,31 @@ public sealed class PrototypeUiOptimizationService
         string promptRelativePath,
         string outputRelativePath,
         DateTimeOffset codexStartedUtc,
+        PrototypeUiWorkspaceSnapshot preCodexPrototypeSnapshot,
         CancellationToken cancellationToken)
     {
-        if (!HasPrototypeUiEditsSince(project.RepoPath, codexStartedUtc))
+        var changeDetection = DetectPrototypeUiChanges(project.RepoPath, codexStartedUtc, preCodexPrototypeSnapshot);
+        if (changeDetection.ChangedPaths.Count == 0)
         {
             return null;
         }
 
+        var bomCleanedFiles = StripGodotTextResourceBom(project.RepoPath);
         var smokeScene = await ResolveLatestPrototypeSmokeSceneAsync(project, cancellationToken);
+        if (string.IsNullOrWhiteSpace(smokeScene))
+        {
+            if (!changeDetection.HasPrototypeUiFileChanges)
+            {
+                return null;
+            }
+        }
+        else if (!changeDetection.CanValidateSmokeScene(project.RepoPath, smokeScene))
+        {
+            return null;
+        }
+
         var godotSmoke = await RunGodotSmokeValidationAsync(runId, project, smokeScene, cancellationToken);
-        var validationPassed = !godotSmoke.Ran || godotSmoke.ExitCode == 0;
+        var validationPassed = godotSmoke.Ran && godotSmoke.ExitCode == 0;
         if (!validationPassed)
         {
             var failedEvidenceJson = JsonSerializer.Serialize(new
@@ -280,6 +299,9 @@ public sealed class PrototypeUiOptimizationService
                 changed_files_detected = true,
                 prompt = promptRelativePath.Replace('\\', '/'),
                 output = outputRelativePath.Replace('\\', '/'),
+                changed_paths = changeDetection.ChangedPaths,
+                validation_required = true,
+                godot_text_bom_cleaned = bomCleanedFiles,
                 godot_smoke = godotSmoke.ToEvidence()
             });
             await _metadataStore.CompleteRunAsync(
@@ -306,7 +328,9 @@ public sealed class PrototypeUiOptimizationService
             changed_files_detected = true,
             prompt = promptRelativePath.Replace('\\', '/'),
             output = outputRelativePath.Replace('\\', '/'),
-            validation_required = godotSmoke.Ran,
+            changed_paths = changeDetection.ChangedPaths,
+            validation_required = true,
+            godot_text_bom_cleaned = bomCleanedFiles,
             godot_smoke = godotSmoke.ToEvidence()
         });
         await _metadataStore.CompleteRunAsync(runId, "succeeded", 0, "", "UI optimization timed out after edits; post-timeout short validation passed.", evidenceJson, CancellationToken.None);
@@ -325,39 +349,45 @@ public sealed class PrototypeUiOptimizationService
                 exitCode: 0),
             CancellationToken.None);
         await AddUiOptimizationArtifactsAsync(runId, project.ProjectId, promptRelativePath, outputRelativePath, CancellationToken.None);
-        await _metadataStore.UpdateRunProgressAsync(runId, "succeeded", godotSmoke.Ran ? "completed_after_timeout" : "validation_skipped_after_timeout", "UI \u4f18\u5316\u8d85\u65f6\u540e\u68c0\u6d4b\u5230\u5df2\u5199\u5165\u6539\u52a8\uff0c\u77ed\u9a8c\u8bc1\u5df2\u901a\u8fc7\u3002", CancellationToken.None);
+        await _metadataStore.UpdateRunProgressAsync(runId, "succeeded", "completed_after_timeout", "UI \u4f18\u5316\u8d85\u65f6\u540e\u68c0\u6d4b\u5230\u5df2\u5199\u5165\u6539\u52a8\uff0c\u77ed\u9a8c\u8bc1\u5df2\u901a\u8fc7\u3002", CancellationToken.None);
         return new PrototypeUiOptimizationResult(runId, "succeeded", "UI optimization timed out after edits, but short validation passed.");
     }
 
-    private static bool HasPrototypeUiEditsSince(string repoPath, DateTimeOffset codexStartedUtc)
+    private static PrototypeUiChangeDetection DetectPrototypeUiChanges(
+        string repoPath,
+        DateTimeOffset codexStartedUtc,
+        PrototypeUiWorkspaceSnapshot preCodexPrototypeSnapshot)
     {
         if (codexStartedUtc == DateTimeOffset.MinValue)
         {
-            return false;
+            return PrototypeUiChangeDetection.Empty;
         }
 
-        var prototypesRoot = Path.Combine(repoPath, "Game.Godot", "Prototypes");
-        if (!Directory.Exists(prototypesRoot))
+        var currentSnapshot = PrototypeUiWorkspaceSnapshot.Capture(repoPath);
+        var changedPaths = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var relativePath in currentSnapshot.Files.Keys.Concat(preCodexPrototypeSnapshot.Files.Keys))
         {
-            return false;
-        }
-
-        var thresholdUtc = codexStartedUtc.UtcDateTime.AddSeconds(-2);
-        foreach (var file in Directory.EnumerateFiles(prototypesRoot, "*", SearchOption.AllDirectories))
-        {
-            var extension = Path.GetExtension(file);
-            if (!IsPrototypeUiFileExtension(extension))
+            var currentExists = currentSnapshot.Files.TryGetValue(relativePath, out var current);
+            var beforeExists = preCodexPrototypeSnapshot.Files.TryGetValue(relativePath, out var before);
+            if (currentExists != beforeExists ||
+                current is null ||
+                before is null ||
+                before.Length != current.Length ||
+                !string.Equals(before.Hash, current.Hash, StringComparison.Ordinal) ||
+                !string.Equals(before.Status, current.Status, StringComparison.Ordinal))
             {
-                continue;
-            }
-
-            if (File.GetLastWriteTimeUtc(file) >= thresholdUtc)
-            {
-                return true;
+                changedPaths.Add(relativePath);
             }
         }
 
-        return false;
+        var projectGodotMainSceneChanged = changedPaths.Contains("project.godot") &&
+                                           !string.Equals(
+                                               preCodexPrototypeSnapshot.ProjectGodotPrototypeMainScene,
+                                               currentSnapshot.ProjectGodotPrototypeMainScene,
+                                               StringComparison.OrdinalIgnoreCase);
+        return new PrototypeUiChangeDetection(
+            changedPaths.ToArray(),
+            projectGodotMainSceneChanged ? currentSnapshot.ProjectGodotPrototypeMainScene : null);
     }
 
     private static bool IsPrototypeUiFileExtension(string extension)
@@ -371,6 +401,246 @@ public sealed class PrototypeUiOptimizationService
                string.Equals(extension, ".jpg", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(extension, ".jpeg", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(extension, ".webp", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed record PrototypeUiChangeDetection(IReadOnlyList<string> ChangedPaths, string? ChangedProjectGodotPrototypeMainScene)
+    {
+        public static PrototypeUiChangeDetection Empty { get; } = new([], null);
+
+        public bool HasPrototypeUiFileChanges => ChangedPaths.Any(path =>
+            path.StartsWith("Game.Godot/Prototypes/", StringComparison.OrdinalIgnoreCase));
+
+        public bool CanValidateSmokeScene(string repoPath, string? smokeScene)
+        {
+            if (string.IsNullOrWhiteSpace(smokeScene))
+            {
+                return false;
+            }
+
+            if (!smokeScene.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ChangedProjectGodotPrototypeMainScene) &&
+                string.Equals(ChangedProjectGodotPrototypeMainScene, smokeScene, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var smokeSceneRelativePath = smokeScene["res://".Length..].Replace('\\', '/');
+            return ChangedPaths.Any(path =>
+                path.StartsWith("Game.Godot/Prototypes/", StringComparison.OrdinalIgnoreCase) &&
+                (string.Equals(path, smokeSceneRelativePath, StringComparison.OrdinalIgnoreCase) ||
+                 SmokeSceneReferencesPath(repoPath, smokeSceneRelativePath, path)));
+        }
+
+        private static bool SmokeSceneReferencesPath(string repoPath, string smokeSceneRelativePath, string changedPath)
+        {
+            var sceneFullPath = Path.Combine(repoPath, smokeSceneRelativePath.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(sceneFullPath))
+            {
+                return false;
+            }
+
+            var sceneDirectory = Path.GetDirectoryName(smokeSceneRelativePath)?.Replace('\\', '/') ?? "";
+            IReadOnlyList<string> referencedPaths;
+            try
+            {
+                referencedPaths = ReadGodotResourceReferencePaths(sceneFullPath, sceneDirectory).ToArray();
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+
+            foreach (var referencedPath in referencedPaths)
+            {
+                if (string.Equals(referencedPath, changedPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static IEnumerable<string> ReadGodotResourceReferencePaths(string sceneFullPath, string sceneDirectory)
+        {
+            foreach (var line in File.ReadLines(sceneFullPath))
+            {
+                var searchStart = 0;
+                while (true)
+                {
+                    var pathStart = line.IndexOf("path=\"", searchStart, StringComparison.Ordinal);
+                    if (pathStart < 0)
+                    {
+                        break;
+                    }
+
+                    pathStart += "path=\"".Length;
+                    var pathEnd = line.IndexOf('"', pathStart);
+                    if (pathEnd < 0)
+                    {
+                        break;
+                    }
+
+                    var reference = line[pathStart..pathEnd];
+                    var resolved = ResolveGodotResourceReference(sceneDirectory, reference);
+                    if (!string.IsNullOrWhiteSpace(resolved))
+                    {
+                        yield return resolved;
+                    }
+
+                    searchStart = pathEnd + 1;
+                }
+            }
+        }
+
+        private static string? ResolveGodotResourceReference(string sceneDirectory, string reference)
+        {
+            if (string.IsNullOrWhiteSpace(reference) ||
+                reference.StartsWith("uid://", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            if (reference.StartsWith("res://", StringComparison.OrdinalIgnoreCase))
+            {
+                return reference["res://".Length..].Replace('\\', '/');
+            }
+
+            var combined = string.IsNullOrWhiteSpace(sceneDirectory)
+                ? reference
+                : $"{sceneDirectory}/{reference}";
+            return NormalizeRelativeResourcePath(combined);
+        }
+
+        private static string NormalizeRelativeResourcePath(string path)
+        {
+            var parts = new List<string>();
+            foreach (var part in path.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (part == ".")
+                {
+                    continue;
+                }
+
+                if (part == "..")
+                {
+                    if (parts.Count > 0)
+                    {
+                        parts.RemoveAt(parts.Count - 1);
+                    }
+
+                    continue;
+                }
+
+                parts.Add(part);
+            }
+
+            return string.Join("/", parts);
+        }
+    }
+
+    private sealed record PrototypeUiWorkspaceSnapshot(
+        IReadOnlyDictionary<string, PrototypeUiFileSnapshot> Files,
+        string? ProjectGodotPrototypeMainScene)
+    {
+        public static PrototypeUiWorkspaceSnapshot Capture(string repoPath)
+        {
+            var prototypesRoot = Path.Combine(repoPath, "Game.Godot", "Prototypes");
+            var result = new Dictionary<string, PrototypeUiFileSnapshot>(StringComparer.OrdinalIgnoreCase);
+            var projectGodotPath = Path.Combine(repoPath, "project.godot");
+            if (File.Exists(projectGodotPath))
+            {
+                result["project.godot"] = CaptureFile(projectGodotPath);
+            }
+
+            CaptureDirectory(result, prototypesRoot, "Game.Godot/Prototypes");
+
+            return new PrototypeUiWorkspaceSnapshot(result, ResolveProjectGodotPrototypeMainScene(repoPath));
+        }
+
+        private static void CaptureDirectory(Dictionary<string, PrototypeUiFileSnapshot> result, string root, string relativePrefix)
+        {
+            if (!Directory.Exists(root))
+            {
+                return;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+            {
+                if (!IsPrototypeUiFileExtension(Path.GetExtension(file)))
+                {
+                    continue;
+                }
+
+                var relativePath = relativePrefix + "/" + Path.GetRelativePath(root, file).Replace('\\', '/');
+                result[relativePath] = CaptureFile(file);
+            }
+        }
+
+        private static PrototypeUiFileSnapshot CaptureFile(string file)
+        {
+            try
+            {
+                using var stream = File.OpenRead(file);
+                var hash = Convert.ToHexString(SHA256.HashData(stream));
+                return new PrototypeUiFileSnapshot(stream.Length, hash, "read");
+            }
+            catch (IOException)
+            {
+                return new PrototypeUiFileSnapshot(null, null, "io_error");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return new PrototypeUiFileSnapshot(null, null, "unauthorized");
+            }
+        }
+    }
+
+    private sealed record PrototypeUiFileSnapshot(long? Length, string? Hash, string Status);
+
+    private static string? ResolveProjectGodotPrototypeMainScene(string repoPath)
+    {
+        var projectGodotPath = Path.Combine(repoPath, "project.godot");
+        if (!File.Exists(projectGodotPath))
+        {
+            return null;
+        }
+
+        string? resolvedScene = null;
+        foreach (var rawLine in File.ReadLines(projectGodotPath))
+        {
+            var line = rawLine.Trim();
+            if (line.StartsWith(";", StringComparison.Ordinal) ||
+                line.StartsWith("#", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var separatorIndex = line.IndexOf('=', StringComparison.Ordinal);
+            if (separatorIndex < 0 ||
+                !string.Equals(line[..separatorIndex].Trim(), "run/main_scene", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var value = line[(separatorIndex + 1)..].Trim().Trim('"');
+            var scene = PrototypeGodotSmokeService.ResolveSceneReference(repoPath, value);
+            if (!string.IsNullOrWhiteSpace(scene) &&
+                scene.StartsWith("res://Game.Godot/Prototypes/", StringComparison.OrdinalIgnoreCase))
+            {
+                resolvedScene = scene;
+            }
+        }
+
+        return resolvedScene;
     }
 
     private static IReadOnlyList<string> StripGodotTextResourceBom(string repoPath)
@@ -457,48 +727,11 @@ public sealed class PrototypeUiOptimizationService
 
     private async Task<string?> ResolveLatestPrototypeSmokeSceneAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
-        var mainScene = TryReadMainSceneFromProjectGodot(project.RepoPath);
-        if (!string.IsNullOrWhiteSpace(mainScene))
-        {
-            return mainScene;
-        }
-
-        var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
-        foreach (var run in runs.Where(run =>
-                     string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
-                     string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase)))
-        {
-            var scene = TryReadSmokeScene(run.EvidenceJson);
-            if (!string.IsNullOrWhiteSpace(scene))
-            {
-                return scene;
-            }
-        }
-
-        return null;
-    }
-
-    private static string? TryReadMainSceneFromProjectGodot(string repoPath)
-    {
-        var projectGodotPath = Path.Combine(repoPath, "project.godot");
-        if (!File.Exists(projectGodotPath))
-        {
-            return null;
-        }
-
-        foreach (var rawLine in File.ReadLines(projectGodotPath))
-        {
-            var line = rawLine.Trim();
-            if (!line.StartsWith("run/main_scene=", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            var value = line["run/main_scene=".Length..].Trim().Trim('"');
-            return string.IsNullOrWhiteSpace(value) ? null : value;
-        }
-
-        return null;
+        return await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+            _metadataStore,
+            project,
+            new PrototypeRouteStateWriter(),
+            cancellationToken: cancellationToken);
     }
 
     private async Task<PrototypeGodotSmokeResult> RunGodotSmokeValidationAsync(string runId, ProjectSnapshot project, string? scenePath, CancellationToken cancellationToken)
@@ -518,7 +751,7 @@ public sealed class PrototypeUiOptimizationService
                 "short_validation",
                 "正在运行游戏界面优化短验证。",
                 CancellationToken.None);
-            return await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(_options, _processRunner, project.RepoPath, scenePath, timeout.Token);
+            return await PrototypeGodotSmokeService.RunAsync(_options, _processRunner, project.RepoPath, scenePath, timeout.Token);
         }
         catch (OperationCanceledException)
         {
@@ -530,39 +763,6 @@ public sealed class PrototypeUiOptimizationService
                 "ui_optimization_godot_smoke_timeout",
                 scenePath);
         }
-    }
-
-    private static string? TryReadSmokeScene(string? evidenceJson)
-    {
-        if (string.IsNullOrWhiteSpace(evidenceJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(evidenceJson);
-            if (document.RootElement.TryGetProperty("prototype_completion", out var completion) &&
-                completion.ValueKind == JsonValueKind.Object &&
-                completion.TryGetProperty("smoke_scene", out var smokeScene) &&
-                smokeScene.ValueKind == JsonValueKind.String)
-            {
-                return smokeScene.GetString();
-            }
-
-            if (document.RootElement.TryGetProperty("godot_smoke", out var smoke) &&
-                smoke.ValueKind == JsonValueKind.Object &&
-                smoke.TryGetProperty("scene", out var scene) &&
-                scene.ValueKind == JsonValueKind.String)
-            {
-                return scene.GetString();
-            }
-        }
-        catch (JsonException)
-        {
-        }
-
-        return null;
     }
 
     private static string FormatReadinessSummary(string status)

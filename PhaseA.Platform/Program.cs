@@ -697,9 +697,10 @@ app.MapPost("/api/projects/{projectId}/gdd/download-ticket", async (
         return Results.NotFound(new { error = "project_not_found" });
     }
 
+    var accountId = CurrentAccountId(context);
     return Results.Ok(new
     {
-        downloadUrl = $"/projects/{projectId}/gdd/GDD.md?ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, "GDD.md"))}"
+        downloadUrl = $"/projects/{projectId}/gdd/GDD.md?ticket={Uri.EscapeDataString(tickets.CreateTicket(accountId, projectId, "GDD.md"))}"
     });
 });
 
@@ -711,16 +712,16 @@ app.MapGet("/projects/{projectId}/gdd/GDD.md", async (
     [FromServices] GameDesignDocumentService gdd,
     CancellationToken cancellationToken) =>
 {
-    var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, projectId, "GDD.md"))
-    {
-        return Results.Unauthorized();
-    }
-
     var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
     if (project is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, project.AccountId, projectId, "GDD.md"))
+    {
+        return Results.Unauthorized();
     }
 
     var result = await gdd.ReadAsync(project.AccountId, projectId, cancellationToken);
@@ -775,7 +776,7 @@ app.MapPost("/api/projects/{projectId}/asset-preview-ticket", async (
 
     return Results.Ok(new
     {
-        previewUrl = $"/projects/{projectId}/asset-preview?resource={Uri.EscapeDataString(request.ResourcePath)}&ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, request.ResourcePath))}"
+        previewUrl = $"/projects/{projectId}/asset-preview?resource={Uri.EscapeDataString(request.ResourcePath)}&ticket={Uri.EscapeDataString(tickets.CreateTicket(CurrentAccountId(context), projectId, request.ResourcePath))}"
     });
 });
 
@@ -930,16 +931,16 @@ app.MapGet("/projects/{projectId}/asset-preview", async (
     [FromServices] ProjectAssetPreviewTicketService tickets,
     CancellationToken cancellationToken) =>
 {
-    var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, projectId, resource))
-    {
-        return Results.Unauthorized();
-    }
-
     var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
     if (project is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, project.AccountId, projectId, resource))
+    {
+        return Results.Unauthorized();
     }
 
     var result = await assets.ReadPreviewAsync(project.AccountId, projectId, resource, cancellationToken);
@@ -957,16 +958,16 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
     [FromServices] ProjectPackageDownloadTicketService tickets,
     CancellationToken cancellationToken) =>
 {
-    var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, projectId, fileName))
-    {
-        return Results.Unauthorized();
-    }
-
     var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
     if (project is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var ticket = request.Query["ticket"].FirstOrDefault();
+    if (!tickets.IsValid(ticket, project.AccountId, projectId, fileName))
+    {
+        return Results.Unauthorized();
     }
 
     var result = await packages.ReadPackageAsync(project.AccountId, projectId, fileName, cancellationToken);
@@ -988,9 +989,10 @@ app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", asy
         return Results.NotFound(new { error = "project_not_found" });
     }
 
+    var accountId = CurrentAccountId(context);
     return Results.Ok(new
     {
-        downloadUrl = $"/projects/{projectId}/packages/{Uri.EscapeDataString(fileName)}?ticket={Uri.EscapeDataString(tickets.CreateTicket(projectId, fileName))}"
+        downloadUrl = $"/projects/{projectId}/packages/{Uri.EscapeDataString(fileName)}?ticket={Uri.EscapeDataString(tickets.CreateTicket(accountId, projectId, fileName))}"
     });
 });
 
@@ -2302,11 +2304,6 @@ static async Task<AccountIdentity?> ResolveIdentityAsync(HttpContext context, st
             account.AccountId,
             account.Username,
             account.IsAdmin ? PhaseAAuth.AdminRole : PhaseAAuth.UserRole);
-    }
-
-    if (role == PhaseAAuth.UserRole)
-    {
-        return new AccountIdentity(adminAccountId, "legacy-user", PhaseAAuth.UserRole);
     }
 
     return null;

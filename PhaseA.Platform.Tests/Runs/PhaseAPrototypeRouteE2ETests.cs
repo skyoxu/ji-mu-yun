@@ -64,11 +64,14 @@ public sealed class PhaseAPrototypeRouteE2ETests
 
         var details = await store.GetLatestProjectIterationSessionAsync(project.ProjectId);
         var blockedGoal = details!.Goals[0];
+        WriteRpgAcceptanceFiles(project.RepoPath);
         await store.UpdateProjectIterationGoalStatusAsync(blockedGoal.GoalId, "needs_fix", "Current step is blocked and requires repair.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", blockedGoal.GoalIndex, "Goal 1 needs fix.");
         routeStateWriter.WriteExecuteNextGoalState(project, blockedGoal.GoalIndex, new
         {
             route = "execute-next-goal",
+            session_id = blockedGoal.SessionId,
+            goal_id = blockedGoal.GoalId,
             goal_index = blockedGoal.GoalIndex,
             status = "needs_fix",
             summary = "Current step is blocked and requires repair."
@@ -85,7 +88,9 @@ public sealed class PhaseAPrototypeRouteE2ETests
             project.ProjectId,
             new PrototypeNeedsFixRouteRequest("Repair this step.", "gpt-5.4", "normal", blockedGoal.GoalId, blockedGoal.GoalIndex));
 
-        fixedResult.Status.Should().Be("completed");
+        fixedResult.Status.Should().Be(
+            "completed",
+            $"goal title={blockedGoal.Title}; description={blockedGoal.Description}; acceptance={blockedGoal.AcceptanceHint}; summary={fixedResult.Summary}");
         fixedResult.IterationGoalStatus.Should().Be("succeeded", fixedResult.Summary);
         routeStateWriter.ReadLatestNeedsFixState(project, blockedGoal.GoalIndex).Should().Contain(fixedResult.RunId);
         if (!string.IsNullOrWhiteSpace(needsFixRunner.Prompt))
@@ -131,12 +136,12 @@ public sealed class PhaseAPrototypeRouteE2ETests
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (ContainsScript(command, "scripts/python/smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (marker)\n", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (ContainsScript(command, "scripts/python/prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/route-e2e-rpg/RouteE2eRpgPrototype.tscn\n", ""));
             }
@@ -192,12 +197,12 @@ public sealed class PhaseAPrototypeRouteE2ETests
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
-            if (command.Arguments.Contains("scripts/python/smoke_headless.py"))
+            if (ContainsScript(command, "scripts/python/smoke_headless.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (marker)\n", ""));
             }
 
-            if (command.Arguments.Contains("scripts/python/prototype_main_menu_navigation_smoke.py"))
+            if (ContainsScript(command, "scripts/python/prototype_main_menu_navigation_smoke.py"))
             {
                 return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS scene=res://Game.Godot/Prototypes/route-e2e-rpg/RouteE2eRpgPrototype.tscn\n", ""));
             }
@@ -221,6 +226,13 @@ REMAINING: none
         }
     }
 
+    private static bool ContainsScript(HostedProcessCommand command, string script)
+    {
+        var normalizedScript = script.Replace('\\', '/');
+        return command.Arguments.Any(argument =>
+            argument.Replace('\\', '/').EndsWith(normalizedScript, StringComparison.OrdinalIgnoreCase));
+    }
+
 
     private static void WriteRpgAcceptanceFiles(string root)
     {
@@ -234,6 +246,7 @@ public sealed class DqRpgPrototypeLoop
     private const string RewardOptionsMarker = "RewardOptions.Count";
     public int RewardOptionsCount => 3;
     public int VictoryBattleCount => 1;
+    public int BattlesWon => 1;
     public bool IsVictory => true;
     public bool IsGameOver => false;
     public void MoveOnMap() { }

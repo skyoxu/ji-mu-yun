@@ -22,6 +22,21 @@ public sealed class PhaseAAuthTests
     }
 
     [Fact]
+    public void IsConfigured_ReturnsFalse_WhenOnlyAdminPasswordHashIsConfigured()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_ADMIN_PASSWORD_HASH"] = HashToken("local-admin-password")
+        });
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Authorization = "Bearer local-admin-password";
+
+        PhaseAAuth.IsConfigured(options).Should().BeFalse();
+        PhaseAAuth.IsAuthorized(context.Request, options).Should().BeFalse();
+        PhaseAAuth.GetRole(context.Request, options).Should().BeNull();
+    }
+
+    [Fact]
     public void IsAuthorized_AcceptsBearerToken_WhenSha256HashMatchesConfiguredAdminTokenHash()
     {
         const string token = "local-admin-token";
@@ -39,7 +54,7 @@ public sealed class PhaseAAuthTests
     }
 
     [Fact]
-    public void GetRole_ReturnsUser_WhenSha256HashMatchesConfiguredUserTokenHash()
+    public void GetRole_ReturnsNull_WhenSha256HashMatchesDeprecatedUserTokenHash()
     {
         const string token = "local-user-token";
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
@@ -52,12 +67,12 @@ public sealed class PhaseAAuthTests
 
         var role = PhaseAAuth.GetRole(context.Request, options);
 
-        role.Should().Be(PhaseAAuth.UserRole);
-        PhaseAAuth.IsAuthorized(context.Request, options).Should().BeTrue();
+        role.Should().BeNull();
+        PhaseAAuth.IsAuthorized(context.Request, options).Should().BeFalse();
     }
 
     [Fact]
-    public void GetRole_ReturnsUser_WhenSha256HashMatchesAccessTokenCookie()
+    public void GetRole_ReturnsNull_WhenSha256HashMatchesDeprecatedUserAccessTokenCookie()
     {
         const string token = "local-user-token";
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
@@ -70,18 +85,17 @@ public sealed class PhaseAAuthTests
 
         var role = PhaseAAuth.GetRole(context.Request, options);
 
-        role.Should().Be(PhaseAAuth.UserRole);
-        PhaseAAuth.IsAuthorized(context.Request, options).Should().BeTrue();
+        role.Should().BeNull();
+        PhaseAAuth.IsAuthorized(context.Request, options).Should().BeFalse();
     }
 
     [Fact]
     public void GetRole_FallsBackToAccessTokenCookie_WhenBearerHeaderIsEmpty()
     {
-        const string token = "local-user-token";
+        const string token = "local-admin-token";
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
-            ["PHASEA_ADMIN_TOKEN_HASH"] = HashToken("local-admin-token"),
-            ["PHASEA_USER_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(token)
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(token)
         });
         var context = new DefaultHttpContext();
         context.Request.Headers.Authorization = "Bearer ";
@@ -89,7 +103,7 @@ public sealed class PhaseAAuthTests
 
         var role = PhaseAAuth.GetRole(context.Request, options);
 
-        role.Should().Be(PhaseAAuth.UserRole);
+        role.Should().Be(PhaseAAuth.AdminRole);
         PhaseAAuth.IsAuthorized(context.Request, options).Should().BeTrue();
     }
 

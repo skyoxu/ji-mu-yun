@@ -15,4 +15,5 @@ Use these kits as document inputs before implementing or wiring executable game-
 
 - `docs/game-type-guides/` contains extracted BMAD/GDS genre guides and broad design semantics.
 - `docs/prototype-type-kits/` contains Phase A prototype-lane requirements and acceptance boundaries.
-- Do not treat a generic guide keyword as a runtime obligation. A type kit must decide whether a system is always-on or conditional.
+- For guide-level `Module Matrix` rules and authority order, see `docs/game-type-guides/README.md`.
+- Do not treat a generic guide keyword or guide-level `Module Matrix` row as a runtime obligation. A type kit must decide whether a system is always-on, conditional, optional, or out of scope for an executable route.

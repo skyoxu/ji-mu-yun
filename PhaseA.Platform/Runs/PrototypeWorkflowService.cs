@@ -625,7 +625,7 @@ public sealed class PrototypeWorkflowService
             ? await RunPostPrototypeGodotSmokeAsync(project.RepoPath, validation.SmokeScene, cancellationToken)
             : PrototypeGodotSmokeResult.NotRun(dotnetBuild.Passed ? "prototype_completion_validation_failed" : "prototype_dotnet_build_failed");
         var rpgGdUnitValidation = dotnetBuild.Passed && validation.Succeeded && smoke.ExitCode == 0
-            ? await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(_options, _processRunner, project, slug, cancellationToken)
+            ? await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(_options, _processRunner, project, slug, cancellationToken: cancellationToken)
             : PrototypeRpgGdUnitValidationResult.NotRequired(dotnetBuild.Passed ? "prototype_smoke_validation_failed" : "prototype_dotnet_build_failed");
         var status = dotnetBuild.Passed && validation.Succeeded && smoke.ExitCode == 0 && rpgGdUnitValidation.Passed ? "succeeded" : "failed";
         var validationExitCode = rpgGdUnitValidation.Required && !rpgGdUnitValidation.Passed && rpgGdUnitValidation.ExitCode == 0
@@ -808,33 +808,40 @@ public sealed class PrototypeWorkflowService
         var effectiveRuns = latestRun == runs.FirstOrDefault(item => item.RunType == RunType)
             ? runs
             : runs.Select(item => item.RunId == latestRun.RunId ? latestRun : item).ToArray();
+        var latestIteration = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, cancellationToken);
+        var latestIterationCompletionUtc = LatestIterationCompletionUtc(latestIteration);
         var creationRun = ResolvePrototypeCreationRun(effectiveRuns, latestRun);
-        var finalValidationRun = ResolveFinalValidationRun(effectiveRuns);
-        var readbackRun = creationRun ?? latestRun;
-        var step = string.IsNullOrWhiteSpace(latestRun.ProgressStep) ? latestRun.Status : latestRun.ProgressStep;
-        var label = string.IsNullOrWhiteSpace(latestRun.ProgressLabel) ? DefaultLabel(latestRun.Status) : latestRun.ProgressLabel;
-        var completionSummary = ReadCompletionSummaryFromRun(latestRun);
-        var nextStepSource = ReadNextStepSourceFromRun(latestRun);
-        var nextStepEvaluation = ReadNextStepEvaluationFromRun(latestRun);
-        var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(latestRun);
+        var finalValidationRun = ResolveFinalValidationRun(effectiveRuns, latestIterationCompletionUtc);
+        var progressRun = IsFinalValidationOnlyRun(latestRun) &&
+                          finalValidationRun is null &&
+                          latestIterationCompletionUtc.HasValue
+            ? creationRun ?? latestRun
+            : latestRun;
+        var readbackRun = creationRun ?? progressRun;
+        var step = string.IsNullOrWhiteSpace(progressRun.ProgressStep) ? progressRun.Status : progressRun.ProgressStep;
+        var label = string.IsNullOrWhiteSpace(progressRun.ProgressLabel) ? DefaultLabel(progressRun.Status) : progressRun.ProgressLabel;
+        var completionSummary = ReadCompletionSummaryFromRun(progressRun);
+        var nextStepSource = ReadNextStepSourceFromRun(progressRun);
+        var nextStepEvaluation = ReadNextStepEvaluationFromRun(progressRun);
+        var nextStepEvaluationReason = ReadNextStepEvaluationReasonFromRun(progressRun);
         var packaging = ReadPackagingSummaryFromRun(project.RepoPath, readbackRun);
-        var prototypeCreationStatus = creationRun?.Status ?? (IsAnyValidationOnlyRun(latestRun) ? "missing" : latestRun.Status);
+        var prototypeCreationStatus = creationRun?.Status ?? (IsAnyValidationOnlyRun(progressRun) ? "missing" : progressRun.Status);
         var prototypeCreationFailure = string.Equals(prototypeCreationStatus, "failed", StringComparison.OrdinalIgnoreCase)
-            ? ResolveUserFacingFailure(creationRun ?? latestRun)
+            ? ResolveUserFacingFailure(creationRun ?? progressRun)
             : null;
         var acceptanceFailure = finalValidationRun is not null &&
                                 string.Equals(finalValidationRun.Status, "failed", StringComparison.OrdinalIgnoreCase)
             ? ResolveUserFacingFailure(finalValidationRun)
             : null;
         return new PrototypeWorkflowProgress(
-            latestRun.Status,
+            progressRun.Status,
             step,
-            latestRun.ProgressSubstep,
+            progressRun.ProgressSubstep,
             label,
-            latestRun.ProgressUpdatedUtc,
-            latestRun.RunId,
-            string.Equals(latestRun.Status, "failed", StringComparison.OrdinalIgnoreCase)
-                ? ResolveUserFacingFailure(latestRun)
+            progressRun.ProgressUpdatedUtc,
+            progressRun.RunId,
+            string.Equals(progressRun.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                ? ResolveUserFacingFailure(progressRun)
                 : null,
             completionSummary,
             nextStepSource,
@@ -866,9 +873,56 @@ public sealed class PrototypeWorkflowService
                (!IsAnyValidationOnlyRun(latestRun) ? latestRun : null);
     }
 
-    private static RunSnapshot? ResolveFinalValidationRun(IReadOnlyList<RunSnapshot> runs)
+    private static RunSnapshot? ResolveFinalValidationRun(IReadOnlyList<RunSnapshot> runs, DateTimeOffset? latestIterationCompletionUtc)
     {
-        return runs.FirstOrDefault(item => item.RunType == RunType && IsFinalValidationOnlyRun(item));
+        var run = runs
+            .Where(item => item.RunType == RunType && IsFinalValidationOnlyRun(item))
+            .OrderByDescending(RunSortTimeUtc)
+            .ThenByDescending(item => item.RunId, StringComparer.Ordinal)
+            .FirstOrDefault();
+        if (run is null || !latestIterationCompletionUtc.HasValue)
+        {
+            return run;
+        }
+
+        var runTime = RunSortTimeUtc(run);
+        return runTime >= latestIterationCompletionUtc.Value ? run : null;
+    }
+
+    private static DateTimeOffset? LatestIterationCompletionUtc(ProjectIterationSessionDetails? iteration)
+    {
+        if (iteration is null || iteration.Goals.Count == 0 || !iteration.Goals.All(goal => IsDone(goal.Status)))
+        {
+            return null;
+        }
+
+        var times = iteration.Goals
+            .Select(goal => ParseUtc(goal.CompletedUtc ?? goal.UpdatedUtc ?? goal.CreatedUtc))
+            .Where(time => time.HasValue)
+            .Select(time => time!.Value)
+            .ToArray();
+        return times.Length == 0 ? null : times.Max();
+    }
+
+    private static bool IsDone(string? status)
+    {
+        return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(status, "done", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateTimeOffset RunSortTimeUtc(RunSnapshot run)
+    {
+        return ParseUtc(run.FinishedUtc) ??
+               ParseUtc(run.ProgressUpdatedUtc) ??
+               ParseUtc(run.StartedUtc) ??
+               ParseUtc(run.CreatedUtc) ??
+               DateTimeOffset.MinValue;
+    }
+
+    private static DateTimeOffset? ParseUtc(string? value)
+    {
+        return DateTimeOffset.TryParse(value, out var parsed) ? parsed : null;
     }
 
     private static bool IsFinalValidationOnlyRun(RunSnapshot run)
@@ -1535,7 +1589,7 @@ public sealed class PrototypeWorkflowService
 
     private async Task<PrototypeGodotSmokeResult> RunPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
     {
-        return await PrototypeGodotSmokeService.RunAsync(_options, _processRunner, projectRepoPath, scenePath, cancellationToken);
+        return await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(_options, _processRunner, projectRepoPath, scenePath, cancellationToken);
     }
 
     private async Task<PrototypeGodotSmokeResult> RunQueuedPostPrototypeGodotSmokeAsync(string projectRepoPath, string scenePath, CancellationToken cancellationToken)
@@ -1672,13 +1726,10 @@ public sealed class PrototypeWorkflowService
 
     private static string TrimForPromptExcerpt(string value, int maxLength)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "";
-        }
-
-        var compact = Regex.Replace(value.Trim(), @"\s+", " ");
-        return compact.Length <= maxLength ? compact : compact[..maxLength] + "...";
+        var compact = string.IsNullOrWhiteSpace(value)
+            ? ""
+            : Regex.Replace(value.Trim(), @"\s+", " ");
+        return PrototypePromptText.TrimHeadAndTail(compact, maxLength);
     }
 
     private static bool ShouldUsePostValidationRepair(RunSnapshot failedRun)
@@ -3119,8 +3170,8 @@ public sealed class PrototypeWorkflowService
         _routeStateWriter.WritePrototypeState(project, new
         {
             route = RunType,
-            route_skill = PrototypeRouteSkillPolicy.Resolve(project),
             game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             run_id = runId,
             status,
             exit_code = exitCode,

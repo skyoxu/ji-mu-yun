@@ -195,7 +195,28 @@ internal static class PrototypeGodotSmokeService
             return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("godot_bin_not_configured"));
         }
 
-        var scenePath = ResolveSmokeScene(prototypeStateJson);
+        var scenePath = ResolveSmokeScene(project.RepoPath, prototypeStateJson);
+        return await ValidateGoalSceneAsync(project, goal, scenePath, options, processRunner, cancellationToken);
+    }
+
+    public static async Task<PrototypeGoalGodotSmokeValidationResult> ValidateGoalSceneAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        string? scenePath,
+        PhaseAPlatformOptions options,
+        IHostedProcessRunner processRunner,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(project);
+        ArgumentNullException.ThrowIfNull(goal);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(processRunner);
+
+        if (string.IsNullOrWhiteSpace(options.GodotBin))
+        {
+            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("godot_bin_not_configured", scenePath));
+        }
+
         if (string.IsNullOrWhiteSpace(scenePath))
         {
             return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"));
@@ -210,33 +231,54 @@ internal static class PrototypeGodotSmokeService
         IHostedProcessRunner processRunner,
         ProjectSnapshot project,
         string slug,
+        IReadOnlyList<string>? preferredGdUnitPaths = null,
+        bool requireSuite = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(processRunner);
         ArgumentNullException.ThrowIfNull(project);
 
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (!GameTypeRouteProfiles.IsRpgProject(project))
         {
             return PrototypeRpgGdUnitValidationResult.NotRequired("not_rpg_project");
         }
 
-        var gdUnitRelativePath = ResolveRpgGdUnitRelativePath(project.RepoPath, slug);
+        var preferredCandidates = NormalizePreferredRpgGdUnitPaths(preferredGdUnitPaths);
+        var fallbackCandidates = BuildRpgGdUnitFallbackPaths(slug);
+        var attemptedGdUnitPaths = preferredCandidates.Concat(fallbackCandidates)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var requiredCandidatePaths = requireSuite && preferredCandidates.Count > 0
+            ? preferredCandidates
+            : attemptedGdUnitPaths;
+        var gdUnitRelativePath = ResolveRpgGdUnitRelativePath(project.RepoPath, requiredCandidatePaths);
         if (string.IsNullOrWhiteSpace(gdUnitRelativePath))
         {
-            return PrototypeRpgGdUnitValidationResult.NotRequired("rpg_gdunit_tests_missing");
+            return requireSuite
+                ? PrototypeRpgGdUnitValidationResult.RequiredNotRun(
+                    false,
+                    1,
+                    "",
+                    "",
+                    "rpg_gdunit_tests_missing",
+                    requiredCandidatePaths.FirstOrDefault() ?? attemptedGdUnitPaths.FirstOrDefault(),
+                    null,
+                    attemptedGdUnitPaths)
+                : PrototypeRpgGdUnitValidationResult.NotRequired("rpg_gdunit_tests_missing");
         }
 
         if (string.IsNullOrWhiteSpace(options.GodotBin))
         {
-            return PrototypeRpgGdUnitValidationResult.RequiredResult(
+            return PrototypeRpgGdUnitValidationResult.RequiredNotRun(
                 false,
                 0,
                 "",
                 "",
                 "godot_bin_not_configured",
                 gdUnitRelativePath,
-                null);
+                null,
+                attemptedGdUnitPaths);
         }
 
         var reportDir = Path.Combine(
@@ -282,7 +324,8 @@ internal static class PrototypeGodotSmokeService
             result.Stderr,
             reason,
             gdUnitRelativePath,
-            reportDir.Replace('\\', '/'));
+            reportDir.Replace('\\', '/'),
+            attemptedGdUnitPaths);
     }
 
     public static bool ShouldValidateGoal(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
@@ -293,16 +336,35 @@ internal static class PrototypeGodotSmokeService
         return goal.GoalIndex > 0;
     }
 
-    private static string? ResolveRpgGdUnitRelativePath(string projectRepoPath, string slug)
+    private static IReadOnlyList<string> NormalizePreferredRpgGdUnitPaths(IReadOnlyList<string>? preferredGdUnitPaths)
     {
-        var candidates = new[]
+        return (preferredGdUnitPaths ?? [])
+            .Select(PrototypeGdUnitPathResolver.NormalizeGdUnitAddPath)
+            .OfType<string>()
+            .Where(static path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> BuildRpgGdUnitFallbackPaths(string slug)
+    {
+        return new[]
         {
+            $"tests/Prototype/{slug}",
             $"tests/Prototype/{ToPascalCase(slug)}",
+            $"tests/Prototype/{ToPascalCase(slug)}Prototype",
             "tests/Prototype/DqRpgPrototype",
             "tests/Prototype/DefaultRpgPrototype"
-        };
+        }
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
 
-        foreach (var candidate in candidates)
+    private static string? ResolveRpgGdUnitRelativePath(
+        string projectRepoPath,
+        IReadOnlyList<string> candidatePaths)
+    {
+        foreach (var candidate in candidatePaths.Where(static candidate => !string.IsNullOrWhiteSpace(candidate)))
         {
             var absolute = Path.Combine(projectRepoPath, "Tests.Godot", candidate.Replace('/', Path.DirectorySeparatorChar));
             if (Directory.Exists(absolute))
@@ -359,7 +421,95 @@ internal static class PrototypeGodotSmokeService
             : processExitCode;
     }
 
-    private static string? ResolveSmokeScene(string prototypeStateJson)
+    internal static string? ResolveSmokeScene(string projectRepoPath, string? prototypeStateJson)
+    {
+        if (string.IsNullOrWhiteSpace(prototypeStateJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(prototypeStateJson);
+            var root = document.RootElement;
+            var sawRecordedScene = false;
+            if (root.TryGetProperty("prototype_completion", out var completion) &&
+                completion.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var completionScene in ReadSceneCandidates(completion, "smoke_scene", "default_scene", "scene"))
+                {
+                    sawRecordedScene = true;
+                    if (TryAcceptSceneReference(projectRepoPath, completionScene, out var acceptedCompletionScene))
+                    {
+                        return acceptedCompletionScene;
+                    }
+                }
+            }
+
+            if (root.TryGetProperty("godot_smoke", out var smoke) &&
+                smoke.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var smokeScene in ReadSceneCandidates(smoke, "scene", "smoke_scene", "default_scene"))
+                {
+                    sawRecordedScene = true;
+                    if (TryAcceptSceneReference(projectRepoPath, smokeScene, out var acceptedSmokeScene))
+                    {
+                        return acceptedSmokeScene;
+                    }
+                }
+            }
+
+            foreach (var rootScene in ReadSceneCandidates(root, "smoke_scene", "default_scene", "scene"))
+            {
+                sawRecordedScene = true;
+                if (TryAcceptSceneReference(projectRepoPath, rootScene, out var acceptedRootScene))
+                {
+                    return acceptedRootScene;
+                }
+            }
+
+            if (sawRecordedScene)
+            {
+                return null;
+            }
+
+            var slug = FirstNonEmpty(
+                TryReadString(root, "slug"),
+                TryReadString(root, "prototype_slug"));
+            if (!string.IsNullOrWhiteSpace(slug) &&
+                TryFindGeneratedPrototypeScene(projectRepoPath, slug, out var generatedScene))
+            {
+                return generatedScene;
+            }
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return null;
+    }
+
+    internal static string? ResolveSceneReference(string projectRepoPath, string? sceneReference)
+    {
+        return TryAcceptSceneReference(projectRepoPath, sceneReference ?? "", out var scene)
+            ? scene
+            : null;
+    }
+
+    internal static string? ResolveSafeSceneReference(string projectRepoPath, string? sceneReference)
+    {
+        if (!TryNormalizeSceneReference(sceneReference ?? "", out var trimmed))
+        {
+            return null;
+        }
+
+        return TryResolveGodotScenePath(projectRepoPath, trimmed, out var fullPath)
+            ? $"res://{Path.GetRelativePath(Path.GetFullPath(projectRepoPath), fullPath).Replace(Path.DirectorySeparatorChar, '/')}"
+            : null;
+    }
+
+    internal static string? ResolveSafeRecordedSmokeScene(string projectRepoPath, string? prototypeStateJson)
     {
         if (string.IsNullOrWhiteSpace(prototypeStateJson))
         {
@@ -371,27 +521,238 @@ internal static class PrototypeGodotSmokeService
             using var document = JsonDocument.Parse(prototypeStateJson);
             var root = document.RootElement;
             if (root.TryGetProperty("prototype_completion", out var completion) &&
-                completion.ValueKind == JsonValueKind.Object &&
-                completion.TryGetProperty("smoke_scene", out var completionScene) &&
-                completionScene.ValueKind == JsonValueKind.String)
+                completion.ValueKind == JsonValueKind.Object)
             {
-                return completionScene.GetString();
+                foreach (var scene in ReadSceneCandidates(completion, "smoke_scene", "default_scene", "scene"))
+                {
+                    var safeScene = ResolveSafeSceneReference(projectRepoPath, scene);
+                    if (!string.IsNullOrWhiteSpace(safeScene))
+                    {
+                        return safeScene;
+                    }
+                }
             }
 
             if (root.TryGetProperty("godot_smoke", out var smoke) &&
-                smoke.ValueKind == JsonValueKind.Object &&
-                smoke.TryGetProperty("scene", out var scene) &&
-                scene.ValueKind == JsonValueKind.String)
+                smoke.ValueKind == JsonValueKind.Object)
             {
-                return scene.GetString();
+                foreach (var scene in ReadSceneCandidates(smoke, "scene", "smoke_scene", "default_scene"))
+                {
+                    var safeScene = ResolveSafeSceneReference(projectRepoPath, scene);
+                    if (!string.IsNullOrWhiteSpace(safeScene))
+                    {
+                        return safeScene;
+                    }
+                }
             }
+
+            foreach (var scene in ReadSceneCandidates(root, "smoke_scene", "default_scene", "scene"))
+            {
+                var safeScene = ResolveSafeSceneReference(projectRepoPath, scene);
+                if (!string.IsNullOrWhiteSpace(safeScene))
+                {
+                    return safeScene;
+                }
+            }
+
+            return null;
         }
         catch (JsonException)
         {
             return null;
         }
+    }
 
-        return null;
+    internal static bool IsSafeRepoSceneReference(string projectRepoPath, string? sceneReference)
+    {
+        if (!TryNormalizeSceneReference(sceneReference ?? "", out var trimmed))
+        {
+            return false;
+        }
+
+        return TryResolveGodotScenePath(projectRepoPath, trimmed, out _);
+    }
+
+    private static string TryReadString(JsonElement root, string propertyName)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+               root.TryGetProperty(propertyName, out var value) &&
+               value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? ""
+            : "";
+    }
+
+    private static IEnumerable<string> ReadSceneCandidates(JsonElement root, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            var value = TryReadString(root, propertyName);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                yield return value.Trim();
+            }
+        }
+    }
+
+    private static string FirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return "";
+    }
+
+    private static bool TryFindGeneratedPrototypeScene(string projectRepoPath, string slug, out string scene)
+    {
+        scene = "";
+        if (string.IsNullOrWhiteSpace(projectRepoPath) || string.IsNullOrWhiteSpace(slug))
+        {
+            return false;
+        }
+
+        var prototypeSceneDirectory = Path.Combine(
+            projectRepoPath,
+            "Game.Godot",
+            "Prototypes",
+            PrototypeRecordWriter.SanitizeSlug(slug));
+        if (!Directory.Exists(prototypeSceneDirectory))
+        {
+            return false;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(prototypeSceneDirectory, "*.tscn", SearchOption.AllDirectories)
+                     .OrderBy(path => GetPrototypeScenePriority(path), StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(path => path, StringComparer.OrdinalIgnoreCase))
+        {
+            if (!IsValidGodotSceneFile(file))
+            {
+                continue;
+            }
+
+            var relativePath = Path.GetRelativePath(projectRepoPath, file).Replace(Path.DirectorySeparatorChar, '/');
+            scene = $"res://{relativePath}";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryAcceptSceneReference(string projectRepoPath, string sceneReference, out string scene)
+    {
+        scene = "";
+        if (!TryNormalizeSceneReference(sceneReference, out var trimmed))
+        {
+            return false;
+        }
+
+        if (!TryResolveGodotScenePath(projectRepoPath, trimmed, out var fullPath))
+        {
+            return false;
+        }
+
+        if (!IsValidGodotSceneFile(fullPath))
+        {
+            return false;
+        }
+
+        scene = $"res://{Path.GetRelativePath(Path.GetFullPath(projectRepoPath), fullPath).Replace(Path.DirectorySeparatorChar, '/')}";
+        return true;
+    }
+
+    private static bool TryNormalizeSceneReference(string sceneReference, out string trimmed)
+    {
+        trimmed = "";
+        if (string.IsNullOrWhiteSpace(sceneReference))
+        {
+            return false;
+        }
+
+        trimmed = sceneReference.Trim();
+        if (!trimmed.StartsWith("res://", StringComparison.OrdinalIgnoreCase) ||
+            !trimmed.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.Contains('\\', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryResolveGodotScenePath(string projectRepoPath, string sceneReference, out string fullPath)
+    {
+        fullPath = "";
+        if (string.IsNullOrWhiteSpace(projectRepoPath) || string.IsNullOrWhiteSpace(sceneReference))
+        {
+            return false;
+        }
+
+        var relative = sceneReference.Trim()["res://".Length..];
+        if (string.IsNullOrWhiteSpace(relative) ||
+            Path.IsPathRooted(relative) ||
+            relative.Contains(':', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        fullPath = Path.GetFullPath(Path.Combine(projectRepoPath, relative.Replace('/', Path.DirectorySeparatorChar)));
+        var repoRoot = Path.GetFullPath(projectRepoPath);
+        return fullPath.StartsWith(repoRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(fullPath, repoRoot, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetPrototypeScenePriority(string path)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        if (fileName.Contains("prototype", StringComparison.OrdinalIgnoreCase))
+        {
+            return "0";
+        }
+
+        if (fileName.Contains("main", StringComparison.OrdinalIgnoreCase))
+        {
+            return "1";
+        }
+
+        return "2";
+    }
+
+    private static bool IsValidGodotSceneFile(string fullPath)
+    {
+        if (!File.Exists(fullPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var reader = new StreamReader(fullPath, System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                return line.TrimStart().StartsWith("[gd_scene", StringComparison.Ordinal);
+            }
+
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
+    internal static bool HasValidGodotScenePrefix(string fullPath)
+    {
+        return IsValidGodotSceneFile(fullPath);
     }
 
     private static int ResolvePrototypeSmokeExitCode(HostedProcessResult result)
@@ -415,6 +776,7 @@ internal static class PrototypeGodotSmokeService
         return output.Contains("ERROR:", StringComparison.OrdinalIgnoreCase)
                || output.Contains("Parse Error:", StringComparison.OrdinalIgnoreCase)
                || output.Contains("C# backtrace", StringComparison.OrdinalIgnoreCase)
+               || output.Contains("SMOKE FAIL", StringComparison.OrdinalIgnoreCase)
                || output.Contains("Nodes with non-equal opposite anchors", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -647,11 +1009,12 @@ internal sealed record PrototypeRpgGdUnitValidationResult(
     string Stderr,
     string Reason,
     string? GdUnitPath,
-    string? ReportDir)
+    string? ReportDir,
+    IReadOnlyList<string> AttemptedGdUnitPaths)
 {
     public static PrototypeRpgGdUnitValidationResult NotRequired(string reason)
     {
-        return new PrototypeRpgGdUnitValidationResult(false, false, true, 0, "", "", reason, null, null);
+        return new PrototypeRpgGdUnitValidationResult(false, false, true, 0, "", "", reason, null, null, []);
     }
 
     public static PrototypeRpgGdUnitValidationResult RequiredResult(
@@ -661,9 +1024,23 @@ internal sealed record PrototypeRpgGdUnitValidationResult(
         string stderr,
         string reason,
         string? gdUnitPath,
-        string? reportDir)
+        string? reportDir,
+        IReadOnlyList<string>? attemptedGdUnitPaths = null)
     {
-        return new PrototypeRpgGdUnitValidationResult(true, true, passed, exitCode, stdout, stderr, reason, gdUnitPath, reportDir);
+        return new PrototypeRpgGdUnitValidationResult(true, true, passed, exitCode, stdout, stderr, reason, gdUnitPath, reportDir, attemptedGdUnitPaths ?? []);
+    }
+
+    public static PrototypeRpgGdUnitValidationResult RequiredNotRun(
+        bool passed,
+        int exitCode,
+        string stdout,
+        string stderr,
+        string reason,
+        string? gdUnitPath,
+        string? reportDir,
+        IReadOnlyList<string>? attemptedGdUnitPaths = null)
+    {
+        return new PrototypeRpgGdUnitValidationResult(true, false, passed, exitCode, stdout, stderr, reason, gdUnitPath, reportDir, attemptedGdUnitPaths ?? []);
     }
 
     public object ToEvidence()
@@ -676,7 +1053,8 @@ internal sealed record PrototypeRpgGdUnitValidationResult(
             exit_code = ExitCode,
             reason = Reason,
             gdunit_path = GdUnitPath,
-            report_dir = ReportDir
+            report_dir = ReportDir,
+            attempted_gdunit_paths = AttemptedGdUnitPaths
         };
     }
 }

@@ -97,6 +97,22 @@ public sealed class ProjectWorkflowRouteServiceTests
     }
 
     [Fact]
+    public async Task QueryAsync_WhenOnlyOldFailedValidationPredatesCompletedIteration_RecommendsPrototypeAcceptance()
+    {
+        var fixture = await WorkflowFixture.CreateAsync();
+        await fixture.SeedPrototypeCreationAsync("succeeded");
+        await fixture.SeedValidationOnlyRunAsync("failed");
+        await Task.Delay(20);
+        await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
+
+        var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
+
+        result!.NextAction.ActionId.Should().Be("prototype-acceptance");
+        result.StageId.Should().Be("prototype-acceptance");
+        result.Steps.Single(step => step.Id == "prototype-acceptance").Status.Should().Be("pending");
+    }
+
+    [Fact]
     public async Task QueryAsync_WhenLatestValidationSucceedsAfterFailure_MarksAcceptanceDone()
     {
         var fixture = await WorkflowFixture.CreateAsync();
@@ -115,7 +131,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     }
 
     [Fact]
-    public async Task QueryAsync_WhenLatestUiOptimizationSucceedsAfterFailure_MarksUiDone()
+    public async Task QueryAsync_WhenUiOptimizationRunsExist_DoesNotExposeUiOptimizationAsMainStep()
     {
         var fixture = await WorkflowFixture.CreateAsync();
         await fixture.SeedUiOptimizationRunAsync("failed");
@@ -124,8 +140,8 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
-        result!.Steps.Single(step => step.Id == "ui-optimization").Status.Should().Be("done");
-        result.Steps.Single(step => step.Id == "ui-optimization").Evidence.Should().Be("游戏界面优化已完成。");
+        result!.Steps.Should().NotContain(step => step.Id == "ui-optimization");
+        result.Actions.Should().NotContain(action => action.ActionId == "ui-optimization");
     }
 
     [Fact]

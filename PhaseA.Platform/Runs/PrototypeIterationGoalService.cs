@@ -106,11 +106,6 @@ public sealed class PrototypeIterationGoalService
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
-        var routeSkill = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkill.IsAvailable)
-        {
-            return new PrototypeIterationGoalExecutionResult(details.Session.SessionId, nextGoal.GoalId, "", routeSkill.FailureCode, routeSkill.FailureMessage, nextGoal.GoalIndex, true, details.Session.Status);
-        }
 
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
@@ -205,7 +200,17 @@ public sealed class PrototypeIterationGoalService
             {
                 publicSummary = AppendAcceptanceValidationSummary(publicSummary, nextGoal);
                 codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
-                godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, nextGoal, prototypeState, _options, _processRunner, CancellationToken.None);
+                var smokeScene = await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+                    _metadataStore,
+                    project,
+                    _stateWriter,
+                    nextGoal.GoalIndex,
+                    CancellationToken.None,
+                    sessionId: details.Session.SessionId,
+                    goal: nextGoal,
+                    allowMissingGoalStateScene: true,
+                    allowBaselineFallbackForGoalContext: true);
+                godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalSceneAsync(project, nextGoal, smokeScene, _options, _processRunner, CancellationToken.None);
                 if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
                 {
                     publicSummary = AppendGodotSmokeValidationSummary(publicSummary, nextGoal, godotSmokeValidation);
@@ -297,8 +302,8 @@ public sealed class PrototypeIterationGoalService
             _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
             {
                 route = "execute-next-goal",
-                route_skill = routeProfile.RouteSkill,
                 game_type_profile = routeProfile,
+                source_boundary = "gdd_derived_contract_only_after_gdd_generation",
                 project_id = project.ProjectId,
                 session_id = details.Session.SessionId,
                 goal_id = nextGoal.GoalId,

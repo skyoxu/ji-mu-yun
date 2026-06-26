@@ -86,3 +86,20 @@ This game type is **narrative-moderate to heavy**. Consider running the Narrativ
 - Branching campaigns
 - Permadeath vs. casualty systems
 - Resource management between missions
+
+### Module Matrix
+
+This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
+
+Use only these default values: `Always`, `Conditional`, `Optional`, and `Out of Scope`.
+
+| No | id | Module | Default | Purpose | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `first_loop_context` | First-loop context and objective | Always | Establish the player role, starting state, and near-term objective for the first Turn Based Tactics loop. | GDD or route plan identifies the player role, first playable state, short-term goal, and success or failure condition. |
+| 2 | `grid_system_and_movement` | Grid System and Movement | Conditional | Plan the first-loop grid system and movement needed for this game type. | If included, the GDD or route plan defines the grid system and movement behavior, player-facing feedback, and how it changes the first-loop state. |
+| 3 | `unit_types_and_classes` | Unit Types and Classes | Conditional | Plan the first-loop unit types and classes needed for this game type. | If included, the GDD or route plan defines the unit types and classes behavior, player-facing feedback, and how it changes the first-loop state. |
+| 4 | `action_economy` | Action Economy | Conditional | Plan the first-loop action economy needed for this game type. | If included, the GDD or route plan defines the action economy behavior, player-facing feedback, and how it changes the first-loop state. |
+| 5 | `positioning_and_tactics` | Positioning and Tactics | Conditional | Plan the first-loop positioning and tactics needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the positioning and tactics behavior, player-facing feedback, and how it changes the first-loop state. |
+| 6 | `terrain_and_environmental_effects` | Terrain and Environmental Effects | Conditional | Plan the first-loop terrain and environmental effects needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the terrain and environmental effects behavior, player-facing feedback, and how it changes the first-loop state. |
+| 7 | `campaign_structure` | Campaign Structure | Conditional | Plan the first-loop campaign structure needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the campaign structure behavior, player-facing feedback, and how it changes the first-loop state. |
+| 8 | `final_turn_based_tactics_loop_acceptance` | Final Turn Based Tactics first-loop acceptance | Always | Validate that the selected Turn Based Tactics modules form one coherent playable first loop. | GDD or route plan links entry, core action, feedback, result, and next state; excluded conditional or optional modules have clear reasons. |

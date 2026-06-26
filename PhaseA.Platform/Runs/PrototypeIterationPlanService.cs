@@ -109,14 +109,8 @@ public sealed class PrototypeIterationPlanService
                 [],
                 null);
         }
-        var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var routeStrategy = GameTypeRouteStrategies.Resolve(project, routeProfile);
-        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkillAvailability.IsAvailable)
-        {
-            return new PrototypeIterationPlanResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, [], null);
-        }
 
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
         if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase) &&
@@ -150,7 +144,7 @@ public sealed class PrototypeIterationPlanService
         IterationPlanningContext planningContext;
         try
         {
-            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, routeSkill, prototypeContract, promptMessage, sourceKind, regenerationGuidance, model, cancellationToken);
+            planningContext = await BuildPlanningContextAsync(project, routeProfile, routeStrategy, prototypeContract, promptMessage, sourceKind, regenerationGuidance, model, cancellationToken);
         }
         catch (PrototypeIterationPlanLlmException ex) when (routeStrategy.RequiresModelBackedIterationPlanning)
         {
@@ -262,8 +256,8 @@ public sealed class PrototypeIterationPlanService
         _routeStateWriter.WriteIterationPlanState(project, new
         {
             route = "iteration-plan",
-            route_skill = routeSkill,
             game_type_profile = routeProfile,
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             project_execution_guide_present = !string.IsNullOrWhiteSpace(projectExecutionGuide),
             project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
             prototype_contract = prototypeContract.RelativePath,
@@ -340,7 +334,6 @@ public sealed class PrototypeIterationPlanService
         ProjectSnapshot project,
         GameTypeRouteProfile routeProfile,
         IGameTypeRouteStrategy routeStrategy,
-        PrototypeRouteSkillContext routeSkill,
         PrototypeContractSnapshot prototypeContract,
         string message,
         string sourceKind,
@@ -373,7 +366,6 @@ public sealed class PrototypeIterationPlanService
             PrototypeStateExcerpt: TrimForPrompt(prototypeState),
             SourceMessage: message,
             SourceKind: sourceKind,
-            RouteSkillId: routeSkill.RouteSkillId,
             StageTelemetry: []);
 
         if (AllowsSoftPlanningAnalysisFallback(routeStrategy))
@@ -623,11 +615,11 @@ public sealed class PrototypeIterationPlanService
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite semantics: split small ordered prototype goals from context without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
             - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
-            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract, latest prototype state, draft/form snapshot, and latest prototype run evidence.
+            - Recover route memory in this order: route profile, Project execution guide, prototype contract, latest prototype state, draft/form snapshot, and latest prototype run evidence.
             - Do not use AGENTS.md as hosted game-project recovery memory.
             - status must be one of completed, partial, missing.
             - Judge completion against the current prototype result, not only the form text.
-            - Focus on prototype-form fields and the current route profile. For RPG/JRPG, judge only the JRPG first-loop capabilities implied by the project semantics instead of forcing every map/battle/reward template section.
+            - Focus on prototype-form fields, the GDD-derived prototype contract, and the current route profile. Do not force template sections that are not implied by the project semantics.
             - Keep evidence and missingReason short and browser-safe.
             - Player-visible text rule for planning: any future goal that creates or changes in-game Godot text should require Chinese player-visible text by default, while preserving English code identifiers, fixed node names, resource paths, tests, logs, and platform validation names.
             - When suggesting implementation work, prefer a lightweight prototype split: PrototypeRoot orchestration, State/Data, gameplay Systems, and View components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView.
@@ -639,12 +631,12 @@ public sealed class PrototypeIterationPlanService
             - Name: {project.Name}
             - GameName: {project.GameName}
             - GameTypeSource: {project.GameTypeSource}
-            - RouteSkillId: {fallback.RouteSkillId}
             - TemplateId: {fallback.TemplateId}
             - GameTypeProfileId: {routeProfile.ProfileId}
             - RouteSetId: {routeProfile.RouteSetId}
             - PromptProtocolId: {routeProfile.PromptProtocolId}
             - PlannerId: {routeProfile.PlannerId}
+            - SourceBoundary: GDD-derived contract only after GDD generation; do not use route skill documents as gameplay sources.
 
             Source message:
             {CompactForPrompt(fallback.SourceMessage, 1600)}
@@ -707,18 +699,18 @@ public sealed class PrototypeIterationPlanService
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite semantics: refine the lightweight iteration plan only, without creating Taskmaster triplets, formal task files, overlays, formal acceptance files, or architecture contracts.
             - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
-            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract, latest prototype state, planning analysis, and scaffold.
+            - Recover route memory in this order: route profile, Project execution guide, prototype contract, latest prototype state, planning analysis, and scaffold.
             - Do not use AGENTS.md as hosted game-project recovery memory.
             - Do not generate a new plan from scratch.
             - Keep the exact scaffold order.
             - Keep every title exactly unchanged from the scaffold.
             - description and acceptanceHint are browser-facing fields. They must be written in Simplified Chinese by default; English is allowed only for code identifiers, fixed node names, resource paths, tests, logs, route ids, and platform validation names.
-            - Only refine description and acceptanceHint so they better reflect the current prototype state, prototype-form coverage, and RPG route-skill contract.
+            - Only refine description and acceptanceHint so they better reflect the current prototype state, prototype-form coverage, and GDD-derived prototype contract.
             - If the prototype already succeeded once, keep the convergence/closure framing already present in the scaffold.
             - If some user fields are still only partial, mention the most important missing runtime proof in the relevant later steps.
             - Keep each goal narrow enough to execute independently.
-            - Treat RPG as a JRPG first-loop capability profile, not a fixed DQ-like script.
-            - If the prototype contract or user fields mention encounter, enemy, monster, boss, combat, battle, fight, challenge, reward, item, experience, level, loot, or return-to-map, preserve the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
+            - Treat the GDD-derived prototype contract as the gameplay source of truth, not a fixed DQ-like script or external type guide.
+            - If the prototype contract or user fields mention encounter, enemy, monster, boss, combat, battle, fight, challenge, reward, item, experience, level, loot, or return-to-map, preserve those contract-specific capabilities without adding unrelated template requirements.
             - Only omit BattleScene, enemy asset, reward, or return-loop capability when the project contract explicitly negates combat/conflict/reward, such as non-combat, no battle, no encounter, no enemy, or without reward choices.
             - The scaffold is a semantic capability graph. Do not add, remove, or reorder capabilities.
             - If a goal creates or changes any player-visible Godot text, its description or acceptanceHint must preserve this rule: Label, Button, RichTextLabel, HUD, menus, battle logs, quest prompts, result prompts, and win/fail/error prompts default to Chinese; code identifiers, fixed node names, resource paths, tests, logs, and platform validation names remain English.
@@ -1656,7 +1648,7 @@ public sealed class PrototypeIterationPlanService
                     "should_refine_plan",
                     "当前 RPG 游戏模块缺少类型路由要求的场景、顺序或验收覆盖。",
                     rpgPlanIssue,
-                "请按 JRPG first-loop capability profile 重新生成游戏模块：任务 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
+                "请按 GDD 派生的项目原型合同重新生成游戏模块：任务 1 只覆盖项目入口、可见地图/场景与稳定移动；后续只选择项目语义实际需要的能力模块，并以最终首轮闭环验收收尾。",
                     BuildRpgRegenerationPrompt(details)));
             }
 
@@ -2103,7 +2095,7 @@ public sealed class PrototypeIterationPlanService
     {
         var selected = SelectJrpgFirstLoopCapabilities(message, planningContext, prototypeContract, regenerationGuidance);
         var contractInstruction = prototypeContract is null
-            ? "Use the project execution guide, current prototype state, and route-skill contract as hard acceptance input."
+            ? "Use the project execution guide, current prototype state, and GDD-derived prototype contract as hard acceptance input."
             : BuildContractGoalInstruction(prototypeContract);
         var explicitRules = ExtractExplicitContractRuleClauses(
             JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json),
@@ -2935,7 +2927,7 @@ public sealed class PrototypeIterationPlanService
 
         if (fieldGoal is null)
         {
-            return "JRPG first-loop plan boundary mismatch: the selected capability graph must include field navigation and stable control.";
+            return "GDD-derived plan boundary mismatch: the selected capability graph must include field navigation and stable control when required by the project contract.";
         }
 
         var fieldGoalText = string.Join(" ", fieldGoal.Title, fieldGoal.Description, fieldGoal.AcceptanceHint);
@@ -2971,18 +2963,18 @@ public sealed class PrototypeIterationPlanService
         var finalGoalText = string.Join(" ", orderedGoals[^1].Title, orderedGoals[^1].Description, orderedGoals[^1].AcceptanceHint);
         if (!ContainsAny(finalGoalText, "final acceptance", "full playable", "package readiness", "final first-loop acceptance", "first-loop acceptance", "end-to-end", "最终验收", "最终首轮闭环验收", "完整可玩", "端到端", "打包准备度"))
         {
-            return "JRPG first-loop plan boundary mismatch: the final goal must be final first-loop acceptance with selected capability, contract, Godot validation, and package readiness coverage.";
+            return "GDD-derived plan boundary mismatch: the final goal must be final first-loop acceptance with selected capability, contract, Godot validation, and package readiness coverage.";
         }
 
         var selectedCapabilities = ResolveJrpgCapabilitiesFromGoals(orderedGoals);
         if (!selectedCapabilities.Contains("field_navigation", StringComparer.OrdinalIgnoreCase))
         {
-            return "JRPG first-loop plan boundary mismatch: the selected capability graph must include field navigation and stable control.";
+            return "GDD-derived plan boundary mismatch: the selected capability graph must include field navigation and stable control when required by the project contract.";
         }
 
         if (!selectedCapabilities.Contains("final_first_loop_acceptance", StringComparer.OrdinalIgnoreCase))
         {
-            return "JRPG first-loop plan boundary mismatch: the selected capability graph must end with final first-loop acceptance.";
+            return "GDD-derived plan boundary mismatch: the selected capability graph must end with final first-loop acceptance.";
         }
 
         var hasReward = selectedCapabilities.Contains("growth_feedback", StringComparer.OrdinalIgnoreCase);
@@ -3498,7 +3490,7 @@ public sealed class PrototypeIterationPlanService
             sourceMessage = details.Session.OverallGoal?.Trim();
         }
 
-        var guidance = "Regenerate the RPG iteration plan as a JRPG first-loop capability plan. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route. For combat-oriented RPG/JRPG semantics, restore the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance. Omit battle/reward only when the project explicitly negates combat, encounter, enemy, or reward.";
+        var guidance = "Regenerate the iteration plan from the GDD-derived prototype contract only. Select only the capabilities implied by the project semantics: opening context, field navigation, interaction/discovery, conflict entry, battle/challenge resolution, party or character state, growth/reward/consequence feedback, return/continue loop, quest/story progress, and final first-loop acceptance. Do not force a fixed 7-step DQ-like route or external type-guide requirements. For combat-oriented project semantics, preserve only the contract-implied capabilities. Omit battle/reward when the project explicitly negates combat, encounter, enemy, or reward.";
         return string.IsNullOrWhiteSpace(sourceMessage)
             ? guidance
             : $"{guidance} Source request: {sourceMessage}";
@@ -3524,7 +3516,7 @@ public sealed class PrototypeIterationPlanService
         var planningJson = JsonSerializer.Serialize(planningAnalysis);
 
         return $"""
-            You are evaluating whether an RPG/JRPG prototype iteration plan is accurate enough to execute as-is.
+            You are evaluating whether a prototype iteration plan is accurate enough to execute as-is against the GDD-derived prototype contract.
             Output JSON only. Do not explain. Do not use Markdown.
             Return these keys only:
             decision, summary, reason, suggestedAction, suggestedPromptForRegeneration
@@ -3534,12 +3526,12 @@ public sealed class PrototypeIterationPlanService
             - Do not read files, inspect the repository, call tools, or ask for more context.
             - Use Prototype Chapter 3 Lite / Chapter 6 Lite boundaries: evaluate whether the lightweight prototype goals are executable, not whether formal Chapter 3/6 task artifacts exist.
             - Treat the Project execution guide below as the project-level /new recovery protocol, especially its Route Recovery Protocol section.
-            - Recover route memory in this order: route profile and route skill, Project execution guide, prototype contract/state inside the guide, current iteration goals, prototype progress, and planning analysis.
+            - Recover route memory in this order: route profile, Project execution guide, prototype contract/state inside the guide, current iteration goals, prototype progress, and planning analysis.
             - Do not use AGENTS.md as hosted game-project recovery memory.
             - decision must be one of: ready_to_execute, should_refine_plan.
-            - Use the current prototype result, planning analysis, and RPG/JRPG type requirements.
-            - Treat the route as a JRPG first-loop capability profile, not a fixed DQ-like 7-step script.
-            - For combat-oriented RPG/JRPG semantics, evaluate against the older stable battle-route coverage: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
+            - Use the current prototype result, planning analysis, and GDD-derived prototype contract requirements.
+            - Treat the route as a project-specific first-loop contract, not a fixed DQ-like 7-step script or external type guide.
+            - For combat-oriented project semantics, evaluate only the capabilities implied by the GDD-derived contract: field navigation, conflict entry, battle/challenge resolution, reward or growth feedback, return-or-continue loop, win/fail or character-state readability, and final first-loop acceptance.
             - A plan that omits battle/reward/return capability despite explicit encounter, enemy, monster, boss, combat, battle, fight, reward, item, experience, level, loot, or return-to-map semantics should_refine_plan.
             - Omit BattleScene/reward requirements only when the source semantics explicitly negates combat/conflict/reward.
             - If the plan is generic, misses the selected capability coverage, lacks field navigation, lacks final first-loop acceptance, or merges unrelated boundaries, return should_refine_plan.
@@ -4199,7 +4191,6 @@ public sealed class PrototypeIterationPlanService
         string PrototypeStateExcerpt,
         string SourceMessage,
         string SourceKind,
-        string RouteSkillId,
         IReadOnlyList<PrototypeIterationPlanStageTelemetryResult> StageTelemetry);
 
     private static string EnsurePlanningAnalysisSchemaFile()

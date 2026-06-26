@@ -39,7 +39,7 @@ public static class PhaseAPlatformOptionsLoader
         var adminUsername = GetString(get, "PHASEA_ADMIN_USERNAME", "admin");
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
-        var userTokenHash = GetOptionalString(get, "PHASEA_USER_TOKEN_HASH");
+        var ticketSigningSecret = GetOptionalString(get, "PHASEA_TICKET_SIGNING_SECRET");
         var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
         var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
         var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
@@ -80,7 +80,7 @@ public static class PhaseAPlatformOptionsLoader
             adminUsername,
             adminPasswordHash,
             adminTokenHash,
-            userTokenHash,
+            ticketSigningSecret,
             maxConcurrentChats,
             maxConcurrentChatsPerAccount,
             maxConcurrentProjectCreations,

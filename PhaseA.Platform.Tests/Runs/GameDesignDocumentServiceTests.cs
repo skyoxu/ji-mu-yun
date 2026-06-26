@@ -90,6 +90,8 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("Game Type Design Template Baseline");
         runner.Commands[0].StandardInput.Should().Contain("TemplateId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("RPG Specific Elements");
+        runner.Commands[0].StandardInput.Should().Contain("Module Matrix");
+        runner.Commands[0].StandardInput.Should().Contain("final_first_loop_acceptance");
         runner.Commands[0].StandardInput.Should().Contain("Current user input and uploaded references override this baseline");
         runner.Commands[0].StandardInput.Should().Contain("This template must not affect prototype skeleton creation");
         runner.Commands[0].StandardInput.Should().Contain("Each milestone item must be implementation-facing enough to become a SPEC");

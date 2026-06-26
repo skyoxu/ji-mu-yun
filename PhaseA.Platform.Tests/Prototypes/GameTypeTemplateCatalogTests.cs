@@ -115,6 +115,316 @@ public sealed class GameTypeTemplateCatalogTests
     }
 
     [Fact]
+    public void BmadCatalog_ShouldPreserveCompleteModuleMatrix_WhenGuideExcerptIsTruncated()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        | 1 | `opening_context` | Opening context | Always | Establish context. | Context is visible. |
+        | 5 | `battle_or_challenge_resolution` | Battle or challenge resolution | Optional | Resolve conflict. | Conflict is settled. |
+        | 10 | `final_first_loop_acceptance` | Final first-loop acceptance | Always | Close the loop. | Selected modules are linked. |
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Should().Contain("RPG Specific Elements");
+        rpg!.GuideExcerpt.Should().Contain("Module Matrix");
+        rpg.GuideExcerpt.Should().Contain("Compact index");
+        rpg.GuideExcerpt.Should().Contain("`opening_context`");
+        rpg.GuideExcerpt.Should().Contain("`battle_or_challenge_resolution`");
+        rpg.GuideExcerpt.Should().Contain("`final_first_loop_acceptance`");
+        rpg.GuideExcerpt.Should().Contain("Selected modules are linked.");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldBoundGuideExcerpt_WhenModuleMatrixHasLargeTrailingSection()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        | 1 | `opening_context` | Opening context | Always | Establish context. | Context is visible. |
+        | 5 | `battle_or_challenge_resolution` | Battle or challenge resolution | Optional | Resolve conflict. | Conflict is settled. |
+        | 10 | `final_first_loop_acceptance` | Final first-loop acceptance | Always | Close the loop. | Selected modules are linked. |
+
+        ## Huge Reference Appendix
+
+        {new string('Z', 10000)}
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg.GuideExcerpt.Should().Contain("Module Matrix");
+        rpg.GuideExcerpt.Should().Contain("`battle_or_challenge_resolution`");
+        rpg.GuideExcerpt.Should().Contain("`final_first_loop_acceptance`");
+        rpg.GuideExcerpt.Should().Contain("Conflict is settled.");
+        rpg.GuideExcerpt.Should().NotContain("Huge Reference Appendix");
+        rpg.GuideExcerpt.Should().NotContain(new string('Z', 100));
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldPreserveAllModuleIds_WhenModuleMatrixExceedsDetailedBudget()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        var rows = string.Join(Environment.NewLine, Enumerable.Range(1, 24).Select(index =>
+            $"| {index} | `module_{index:00}` | Very long module title {index} with extra words for budget pressure | Optional | {new string('P', 160)} | {new string('A', 180)} |"));
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        {rows}
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg.GuideExcerpt.Should().Contain("Compact id index");
+        rpg.GuideExcerpt.Should().Contain("`module_01`");
+        rpg.GuideExcerpt.Should().Contain("`module_24`");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldPreserveOneHundredModuleIds_WhenModuleMatrixRequiresMinimalIndex()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        var rows = string.Join(Environment.NewLine, Enumerable.Range(1, 100).Select(index =>
+            $"| {index} | `module_{index:000}` | Very long module title {index} with extra words for budget pressure | Optional | {new string('P', 160)} | {new string('A', 180)} |"));
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        {rows}
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg.GuideExcerpt.Should().Contain("Compact id index");
+        rpg.GuideExcerpt.Should().Contain("`module_001`");
+        rpg.GuideExcerpt.Should().Contain("`module_050`");
+        rpg.GuideExcerpt.Should().Contain("`module_100`");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldMarkOmittedModuleIds_WhenMinimalIndexStillExceedsBudget()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        var rows = string.Join(Environment.NewLine, Enumerable.Range(1, 300).Select(index =>
+            $"| {index} | `very_long_module_identifier_{index:000}` | Very long module title {index} with extra words for budget pressure | Optional | {new string('P', 160)} | {new string('A', 180)} |"));
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        {rows}
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg.GuideExcerpt.Should().Contain("Compact id index");
+        rpg.GuideExcerpt.Should().Contain("omitted");
+        rpg.GuideExcerpt.Should().Contain("module ids");
+        rpg.GuideExcerpt.Should().NotContain("preserve every module id");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldParseEscapedPipeCellsInModuleMatrix()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        | 1 | `opening_context` | Opening \| context | Always | Shows A \| B choice. | Choice copy stays visible. |
+        | 2 | `final_first_loop_acceptance` | Final loop | Always | Close loop. | Loop closes. |
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Should().Contain("`opening_context`");
+        rpg.GuideExcerpt.Should().Contain("Opening \\| context");
+        rpg.GuideExcerpt.Should().Contain("Shows A \\| B choice.");
+        rpg.GuideExcerpt.Should().Contain("`final_first_loop_acceptance`");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldPreserveOrdinaryBackslashesInModuleMatrixCells()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 2600)}
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        | 1 | `opening_context` | Regex \d+ context | Always | Uses C:\temp\module path. | Backslashes stay visible. |
+        | 2 | `final_first_loop_acceptance` | Final loop | Always | Close loop. | Loop closes. |
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Should().Contain(@"Regex \d+ context");
+        rpg.GuideExcerpt.Should().Contain(@"Uses C:\temp\module path.");
+        rpg.GuideExcerpt.Should().Contain("`final_first_loop_acceptance`");
+    }
+
+    [Fact]
     public void BmadCatalog_ShouldPreferExtractedDocsGuidesOverSkillFallback()
     {
         using var workspace = TempDirectory.Create("phase-a-workspaces");

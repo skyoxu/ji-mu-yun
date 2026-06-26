@@ -33,7 +33,6 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "scripts",
         ".agents/skills",
         "docs/prototype-type-kits",
-        "docs/game-type-guides",
         "Tests.Godot/addons/gdUnit4"
     ];
 
@@ -301,6 +300,11 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             return true;
         }
 
+        if (ShouldSkipDownstreamGameTypeGuideDirectory(sourceRoot, fullPath))
+        {
+            return true;
+        }
+
         if (ShouldSkipGeneratedPrototypeContent(sourceRoot, fullPath, name, isDirectory: true))
         {
             return true;
@@ -317,6 +321,16 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
 
         return relativePath.Equals(
             $"Tests.Godot{Path.DirectorySeparatorChar}addons{Path.DirectorySeparatorChar}gdUnit4{Path.DirectorySeparatorChar}bin",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ShouldSkipDownstreamGameTypeGuideDirectory(string sourceRoot, string fullPath)
+    {
+        var relativePath = Path.GetRelativePath(sourceRoot, fullPath)
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+        return relativePath.Equals(
+            $"docs{Path.DirectorySeparatorChar}game-type-guides",
             StringComparison.OrdinalIgnoreCase);
     }
 

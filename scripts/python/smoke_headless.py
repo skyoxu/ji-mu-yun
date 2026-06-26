@@ -442,7 +442,9 @@ def _run_smoke(
     has_runtime_failure = _has_runtime_failure(text)
     has_prototype_alive = _is_prototype_scene(scene) and has_any and not has_runtime_failure
 
-    if has_marker:
+    if has_runtime_failure:
+        print("SMOKE FAIL (runtime failure)")
+    elif has_marker:
         print("SMOKE PASS (marker)")
     elif has_db_open:
         print("SMOKE PASS (db opened)")

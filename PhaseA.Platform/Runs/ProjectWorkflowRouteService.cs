@@ -169,7 +169,6 @@ public sealed class ProjectWorkflowRouteService
             new("create-prototype", "游戏场景创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
             new("execute-or-repair", "场景验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
             new("iteration-plan", "创建游戏模块", state.IterationStatus, state.IterationEvidence),
-            new("ui-optimization", "游戏界面优化", state.UiOptimizationStatus, state.UiOptimizationEvidence),
             new("prototype-acceptance", "原型项目验收", state.AcceptanceStatus, state.AcceptanceEvidence),
             new("asset-inventory", "项目素材库", state.AssetInventoryStatus, state.AssetInventoryEvidence),
             new("download-project", "打包下载项目", state.DownloadStatus, state.DownloadEvidence)
@@ -249,12 +248,6 @@ public sealed class ProjectWorkflowRouteService
         if (!state.UsesGenericPrototypeRoute)
         {
             var insertIndex = primary.ActionId == "create-next-iteration-plan" ? 2 : 1;
-            if (!state.UiOptimizationSucceeded)
-            {
-                actions.Insert(insertIndex, Action("ui-optimization", "运行游戏界面优化", "运行游戏界面优化", "ui-optimization"));
-                insertIndex++;
-            }
-
             actions.Insert(insertIndex, Action("asset-inventory", "查看项目素材库", "查看项目素材库", "asset-inventory"));
         }
 
@@ -297,15 +290,13 @@ public sealed class ProjectWorkflowRouteService
             "create-iteration-plan" => "场景验收已经通过，但当前还没有游戏模块。建议生成游戏模块，把最小可玩循环拆成可执行任务。",
             "needs-fix-route" => "当前游戏模块中存在“需要修复”的任务。建议运行需要修复路由，只围绕当前失败任务修复，不推进后续任务。",
             "execute-iteration-goal" => "当前游戏模块还有待执行任务。建议继续执行下一任务，直到所有任务完成。",
-            "ui-optimization" => "游戏模块已经完成。游戏界面优化是可选项，不会卡住后续流程；如果希望界面更贴近当前游戏类型模板，可以运行游戏界面优化。",
-            "prototype-acceptance" => "游戏模块已经完成，建议重新进行原型项目验收，确认当前可玩闭环仍然成立。游戏界面优化是可选项，如果希望先调整界面表现，可以从左侧进度栏进入游戏界面优化；它不会阻塞原型项目验收。",
+            "ui-optimization" => "游戏模块已经完成。游戏界面优化当前未作为主流程开放，请继续进行原型项目验收。",
+            "prototype-acceptance" => "游戏模块已经完成，建议重新进行原型项目验收，确认当前可玩闭环仍然成立。",
             "asset-inventory" => "原型项目验收已经通过。建议进入项目素材库，检查已使用素材和可生成素材候选，必要时替换默认素材。",
             "download-project" when !state.HasPackage => "项目素材库状态已满足继续推进。建议进入“打包下载项目”，点击“打包项目文件”生成可下载的项目压缩包。",
             "download-project" => state.UsesGenericPrototypeRoute
                 ? "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；试玩结果可以发到聊天里，准备创建第二轮游戏模块。"
-                : state.UiOptimizationSucceeded
-                    ? "项目文件包已经生成，游戏界面优化也已完成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；也可以查看项目素材库确认和替换素材。试玩结果可以发到聊天里，准备创建第二轮游戏模块。"
-                    : "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；也可以先进入游戏界面优化，让界面更贴近当前游戏类型模板，或查看项目素材库确认和替换素材。试玩结果可以发到聊天里，准备创建第二轮游戏模块。",
+                : "项目文件包已经生成。建议进入“打包下载项目”下载压缩包并在本地 Godot 试玩；也可以查看项目素材库确认和替换素材。试玩结果可以发到聊天里，准备创建第二轮游戏模块。",
             _ => $"建议进入：{action.RunName}。系统不会自动启动 run；点击下方一次性按钮只会打开对应页面，需要你在页面内确认执行。"
         };
     }
@@ -511,7 +502,11 @@ public sealed class ProjectWorkflowRouteService
                                         latestAcceptanceRun is not null &&
                                         (!latestIterationCompletionUtc.HasValue ||
                                          latestAcceptanceUtc >= latestIterationCompletionUtc.Value);
-            var failedAcceptance = acceptanceStatusRaw == "failed" || skeletonAcceptanceStatusRaw == "failed";
+            var finalAcceptanceFailed = acceptanceStatusRaw == "failed" &&
+                                        (latestAcceptanceRun is null ||
+                                         !latestIterationCompletionUtc.HasValue ||
+                                         (latestAcceptanceUtc.HasValue && latestAcceptanceUtc >= latestIterationCompletionUtc.Value));
+            var failedAcceptance = finalAcceptanceFailed || skeletonAcceptanceStatusRaw == "failed";
 
             var repairGoals = repair?.Goals ?? [];
             var hasRunnableRepair = repairGoals.Any(goal => IsRunnable(goal.Status));

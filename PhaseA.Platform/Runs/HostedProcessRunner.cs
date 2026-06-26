@@ -148,11 +148,17 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             return;
         }
 
+        var lastWatchedSnapshot = GetWatchedActivitySnapshot(command);
         while (!process.HasExited)
         {
             var now = DateTimeOffset.UtcNow;
-            var newestWatchedWrite = GetNewestWatchedWriteTime(command);
-            if (newestWatchedWrite is { } watchedWrite && watchedWrite > lastActivityAt())
+            var watchedSnapshot = GetWatchedActivitySnapshot(command);
+            if (watchedSnapshot != lastWatchedSnapshot)
+            {
+                setLastActivityAt(now);
+                lastWatchedSnapshot = watchedSnapshot;
+            }
+            else if (watchedSnapshot?.NewestWrite is { } watchedWrite && watchedWrite > lastActivityAt())
             {
                 setLastActivityAt(watchedWrite);
             }
@@ -182,7 +188,7 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         }
     }
 
-    private static DateTimeOffset? GetNewestWatchedWriteTime(HostedProcessCommand command)
+    private static WatchedActivitySnapshot? GetWatchedActivitySnapshot(HostedProcessCommand command)
     {
         if (command.ActivityWatchPaths is null || command.ActivityWatchPaths.Count == 0)
         {
@@ -190,6 +196,8 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
         }
 
         DateTimeOffset? newest = null;
+        var fileCount = 0;
+        long totalBytes = 0;
         foreach (var configuredPath in command.ActivityWatchPaths)
         {
             if (string.IsNullOrWhiteSpace(configuredPath))
@@ -205,13 +213,13 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             {
                 if (File.Exists(path))
                 {
-                    newest = Max(newest, File.GetLastWriteTimeUtc(path));
+                    AddFile(path, ref fileCount, ref totalBytes, ref newest);
                 }
                 else if (Directory.Exists(path))
                 {
                     foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
                     {
-                        newest = Max(newest, File.GetLastWriteTimeUtc(file));
+                        AddFile(file, ref fileCount, ref totalBytes, ref newest);
                     }
                 }
             }
@@ -223,7 +231,17 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             }
         }
 
-        return newest;
+        return fileCount == 0
+            ? null
+            : new WatchedActivitySnapshot(fileCount, totalBytes, newest);
+    }
+
+    private static void AddFile(string path, ref int fileCount, ref long totalBytes, ref DateTimeOffset? newest)
+    {
+        var info = new FileInfo(path);
+        fileCount++;
+        totalBytes += info.Length;
+        newest = Max(newest, info.LastWriteTimeUtc);
     }
 
     private static DateTimeOffset Max(DateTimeOffset? current, DateTimeOffset candidate)
@@ -251,4 +269,6 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
             ? $"{timeout.TotalMinutes:0.##} minute(s)"
             : $"{timeout.TotalSeconds:0.##} second(s)";
     }
+
+    private sealed record WatchedActivitySnapshot(int FileCount, long TotalBytes, DateTimeOffset? NewestWrite);
 }

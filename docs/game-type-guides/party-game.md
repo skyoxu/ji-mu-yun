@@ -77,3 +77,20 @@
 - Drop-in/drop-out support
 - Pause and resume
 - Party management (hosting, invites)
+
+### Module Matrix
+
+This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
+
+Use only these default values: `Always`, `Conditional`, `Optional`, and `Out of Scope`.
+
+| No | id | Module | Default | Purpose | Acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `first_loop_context` | First-loop context and objective | Always | Establish the player role, starting state, and near-term objective for the first Party Game loop. | GDD or route plan identifies the player role, first playable state, short-term goal, and success or failure condition. |
+| 2 | `minigame_variety` | Minigame Variety | Conditional | Plan the first-loop minigame variety needed for this game type. | If included, the GDD or route plan defines the minigame variety behavior, player-facing feedback, and how it changes the first-loop state. |
+| 3 | `turn_structure` | Turn Structure | Conditional | Plan the first-loop turn structure needed for this game type. | If included, the GDD or route plan defines the turn structure behavior, player-facing feedback, and how it changes the first-loop state. |
+| 4 | `player_elimination_vs_points` | Player Elimination vs. Points | Conditional | Plan the first-loop player elimination vs. points needed for this game type. | If included, the GDD or route plan defines the player elimination vs. points behavior, player-facing feedback, and how it changes the first-loop state. |
+| 5 | `local_multiplayer_ux` | Local Multiplayer UX | Conditional | Plan the first-loop local multiplayer ux needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the local multiplayer ux behavior, player-facing feedback, and how it changes the first-loop state. |
+| 6 | `accessibility_and_skill_range` | Accessibility and Skill Range | Conditional | Plan the first-loop accessibility and skill range needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the accessibility and skill range behavior, player-facing feedback, and how it changes the first-loop state. |
+| 7 | `session_length` | Session Length | Conditional | Plan the first-loop session length needed for this game type without turning the whole template into scope. | If included, the GDD or route plan defines the session length behavior, player-facing feedback, and how it changes the first-loop state. |
+| 8 | `final_party_game_loop_acceptance` | Final Party Game first-loop acceptance | Always | Validate that the selected Party Game modules form one coherent playable first loop. | GDD or route plan links entry, core action, feedback, result, and next state; excluded conditional or optional modules have clear reasons. |

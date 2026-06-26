@@ -13,6 +13,7 @@ internal static class PrototypeGoalAcceptancePromptBuilder
         if (contract is null ||
             (!contract.Kind.StartsWith("rpg-", StringComparison.Ordinal) &&
              !contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal) &&
+             !contract.Kind.StartsWith("default-rpg-", StringComparison.Ordinal) &&
              !contract.Kind.StartsWith("survivorslike-", StringComparison.Ordinal) &&
              !contract.Kind.StartsWith("deckbuilder-", StringComparison.Ordinal)))
         {
@@ -100,6 +101,35 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 - The selected first-loop capabilities must work together end-to-end from entry through the final playable state.
                 - Project-specific contract fields, runtime proof, Godot smoke, asset usage, and package readiness must pass.
                 - If the route uses RPG map, battle, reward, or return-loop contracts, those selected capabilities must remain valid.
+                - Main.tscn root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false when final host UI hiding is required.
+                - Missing final first-loop proof means STATUS: needs_fix.
+                """,
+            "default-rpg-opening-context-objective" => """
+                Platform hard acceptance for default RPG opening context:
+                - The prototype entry must communicate who the player is, where they are, and the immediate objective.
+                - The objective must be visible in runtime UI, dialog, or scene text, not only in code or docs.
+                - Preserve Start Adventure or the project entry path for later playable capabilities.
+                - Missing opening objective proof means STATUS: needs_fix.
+                """,
+            "default-rpg-map-movement-entry" => """
+                Platform hard acceptance for default RPG map movement:
+                - Start Adventure or the project entry must open a visible playable map, field, or town scene.
+                - The player marker or character must be visible and controllable with stable movement.
+                - Runtime proof must include map entry and movement evidence, not only static labels.
+                - Do not advance this step into battle, reward, or final acceptance unless the current goal explicitly requires it.
+                - Missing map movement proof means STATUS: needs_fix.
+                """,
+            "default-rpg-battle-or-challenge-resolution" => """
+                Platform hard acceptance for default RPG battle or challenge resolution:
+                - A readable battle, challenge, or obstacle resolution loop must show player state, opponent or obstacle state, action feedback, and success or failure settlement.
+                - If BattleScene exists or the goal requires battle, keep battle UI and behavior in the active playable battle path.
+                - Do not report completion from map movement alone when the current goal asks for battle, combat, enemies, settlement, or challenge resolution.
+                - Missing battle or challenge resolution proof means STATUS: needs_fix.
+                """,
+            "default-rpg-final-first-loop-acceptance" => """
+                Platform hard acceptance for default RPG final first-loop acceptance:
+                - The selected first-loop capabilities must work together end-to-end from entry through the final playable state.
+                - Start Adventure or the project entry, visible map movement, selected battle or reward capability, runtime asset usage, Godot smoke, and host Main.tscn UI hiding must remain valid when required by the current goal.
                 - Main.tscn root-level VBox, Overlays, and ScreenRoot must exist and default to visible = false when final host UI hiding is required.
                 - Missing final first-loop proof means STATUS: needs_fix.
                 """,

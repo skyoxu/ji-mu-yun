@@ -10,11 +10,19 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class PrototypeIterationGoalServiceTests
+public sealed class PrototypeIterationGoalServiceTests : IDisposable
 {
+    private readonly IDisposable routeProfileOverride = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+
+    public void Dispose()
+    {
+        routeProfileOverride.Dispose();
+    }
+
     [Fact]
     public async Task GoalAcceptanceValidator_ShouldPassDefaultProductionFeedback_FromGenericPrototypeFiles()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         var repoPath = workspaceRoot.Path;
         WriteText(Path.Combine(repoPath, "Game.Core", "Prototypes", "DemoPrototypeLoop.cs"), """
@@ -55,6 +63,7 @@ public sealed class DemoPrototype
     [Fact]
     public async Task GoalAcceptanceValidator_ShouldFailDefaultProductionFeedback_WhenFeedbackMarkerIsMissing()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         var repoPath = workspaceRoot.Path;
         WriteText(Path.Combine(repoPath, "Game.Core", "Prototypes", "DemoPrototypeLoop.cs"), """

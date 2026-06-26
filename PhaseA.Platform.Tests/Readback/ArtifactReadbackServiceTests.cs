@@ -1171,15 +1171,52 @@ public sealed class ArtifactReadbackServiceTests
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
-            ["PHASEA_ADMIN_TOKEN_HASH"] = "test-secret"
+            ["PHASEA_TICKET_SIGNING_SECRET"] = "test-secret"
         });
         var service = new ProjectPackageDownloadTicketService(options);
 
-        var ticket = service.CreateTicket("project-a", "package.zip");
+        var ticket = service.CreateTicket("account-a", "project-a", "package.zip");
 
-        service.IsValid(ticket, "project-a", "package.zip").Should().BeTrue();
-        service.IsValid(ticket, "project-b", "package.zip").Should().BeFalse();
-        service.IsValid(ticket, "project-a", "other.zip").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-a", "package.zip").Should().BeTrue();
+        service.IsValid(ticket, "account-b", "project-a", "package.zip").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-b", "package.zip").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-a", "other.zip").Should().BeFalse();
+    }
+
+    [Fact]
+    public void ProjectPackageDownloadTicketService_RequiresConfiguredSigningSecret()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-no-secret-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
+        var service = new ProjectPackageDownloadTicketService(options);
+
+        var act = () => service.CreateTicket("account-a", "project-a", "package.zip");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Ticket signing secret is not configured.");
+    }
+
+    [Fact]
+    public void ProjectPackageDownloadTicketService_RejectsAdminAuthHashesAsSigningSecret()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-password-only-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
+            ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-secret",
+            ["PHASEA_ADMIN_TOKEN_HASH"] = "token-secret"
+        });
+        var service = new ProjectPackageDownloadTicketService(options);
+
+        var act = () => service.CreateTicket("account-a", "project-a", "package.zip");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Ticket signing secret is not configured.");
     }
 
     [Fact]
@@ -1490,15 +1527,52 @@ public sealed class ArtifactReadbackServiceTests
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
-            ["PHASEA_ADMIN_TOKEN_HASH"] = "test-secret"
+            ["PHASEA_TICKET_SIGNING_SECRET"] = "test-secret"
         });
         var service = new ProjectAssetPreviewTicketService(options);
 
-        var ticket = service.CreateTicket("project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png");
+        var ticket = service.CreateTicket("account-a", "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png");
 
-        service.IsValid(ticket, "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeTrue();
-        service.IsValid(ticket, "project-b", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeFalse();
-        service.IsValid(ticket, "project-a", "res://Game.Godot/Prototypes/demo/Assets/enemy.png").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeTrue();
+        service.IsValid(ticket, "account-b", "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-b", "res://Game.Godot/Prototypes/demo/Assets/player.png").Should().BeFalse();
+        service.IsValid(ticket, "account-a", "project-a", "res://Game.Godot/Prototypes/demo/Assets/enemy.png").Should().BeFalse();
+    }
+
+    [Fact]
+    public void ProjectAssetPreviewTicketService_RequiresConfiguredSigningSecret()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-no-secret-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
+        });
+        var service = new ProjectAssetPreviewTicketService(options);
+
+        var act = () => service.CreateTicket("account-a", "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Ticket signing secret is not configured.");
+    }
+
+    [Fact]
+    public void ProjectAssetPreviewTicketService_RejectsAdminAuthHashesAsSigningSecret()
+    {
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-password-only-test.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
+            ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-secret",
+            ["PHASEA_ADMIN_TOKEN_HASH"] = "token-secret"
+        });
+        var service = new ProjectAssetPreviewTicketService(options);
+
+        var act = () => service.CreateTicket("account-a", "project-a", "res://Game.Godot/Prototypes/demo/Assets/player.png");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Ticket signing secret is not configured.");
     }
 
     [Fact]

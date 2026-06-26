@@ -22,14 +22,18 @@ public sealed class PrototypeRouteSkillPolicyTests
         context.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
         context.SkillRelativePath.Should().Be(".agents/skills/prototype-7day-playable-godot-zh/SKILL.md");
         context.ContractRelativePath.Should().BeNull();
-        prompt.Should().Contain("MandatorySkillEntry: $prototype-7day-playable-godot-zh");
+        prompt.Should().Contain("Downstream source boundary");
+        prompt.Should().Contain("only the GDD route may read broad game-type sources");
+        prompt.Should().Contain("do not read docs/game-type-guides");
+        prompt.Should().NotContain("MandatorySkillEntry");
+        prompt.Should().NotContain("MandatorySkillPath");
+        prompt.Should().NotContain("RouteSkillContract");
         prompt.Should().Contain("GameTypeId: default");
         prompt.Should().Contain("ProfileId: godot-playable-default-v1");
         prompt.Should().Contain("RouteSetId: default-prototype-routes-v1");
         prompt.Should().Contain("PromptProtocolId: default-prompt-protocol-v1");
         prompt.Should().Contain("ILlmRouteEngine");
         prompt.Should().Contain("CodexHostedProcessCommandFactory");
-        prompt.Should().Contain("do not run a bare/generic prototype route");
         prompt.Should().Contain("do not use AGENTS.md as hosted project memory");
         prompt.Should().Contain("Player-visible text rule");
         prompt.Should().Contain("must default to Chinese");
@@ -79,7 +83,9 @@ public sealed class PrototypeRouteSkillPolicyTests
         profile.FinalAcceptanceId.Should().Be("default-final-acceptance-v1");
         profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
         profile.RouteSkill.ContractRelativePath.Should().BeNull();
-        prompt.Should().Contain("MandatorySkillEntry: $prototype-7day-playable-godot-zh");
+        prompt.Should().Contain("Downstream source boundary");
+        prompt.Should().Contain("do not read docs/game-type-guides");
+        prompt.Should().NotContain("MandatorySkillEntry");
         prompt.Should().Contain("GameTypeId: default");
         prompt.Should().Contain("Player-visible text rule");
     }
@@ -106,7 +112,9 @@ public sealed class PrototypeRouteSkillPolicyTests
         profile.FinalAcceptanceId.Should().Be("default-final-acceptance-v1");
         profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
         profile.RouteSkill.ContractRelativePath.Should().BeNull();
-        prompt.Should().Contain("MandatorySkillEntry: $prototype-7day-playable-godot-zh");
+        prompt.Should().Contain("Downstream source boundary");
+        prompt.Should().Contain("do not read docs/game-type-guides");
+        prompt.Should().NotContain("MandatorySkillEntry");
         prompt.Should().Contain("GameTypeId: default");
         prompt.Should().Contain("Player-visible text rule");
     }
@@ -409,6 +417,34 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldExposeDefaultRpgHardAcceptance_WhenGenericRoutingIsEnabled()
+    {
+        var project = Project(
+            name: "rpgdemo",
+            gameName: "rpgdemo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            2,
+            "Goal 2: map movement and objective clarity",
+            "Start Adventure opens a visible map and stable movement.",
+            "Pass when map entry and movement evidence are visible.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for default RPG map movement");
+        prompt.Should().Contain("Start Adventure or the project entry must open a visible playable map");
+        prompt.Should().NotContain("Platform hard acceptance for JRPG field navigation");
+    }
+
+    [Fact]
     public void GodotSmokePolicy_ShouldValidateSurvivorsLikeFirstLoopGoals()
     {
         var project = Project(
@@ -454,7 +490,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void RouteStrategy_ShouldNotUseRpgFinalAcceptanceContract_WhenGenericRoutingIsEnabled()
+    public void RouteStrategy_ShouldUseDefaultRpgFinalAcceptanceContract_WhenGenericRoutingIsEnabled()
     {
         var project = Project(
             name: "rpgdemo",
@@ -476,7 +512,9 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
 
-        contract.Should().BeNull();
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-final-first-loop-acceptance");
+        contract.MainSceneHostUiHiddenAcceptance.Should().BeTrue();
     }
 
     [Fact]
@@ -523,6 +561,268 @@ public sealed class PrototypeRouteSkillPolicyTests
         profile.RouteSkill.ContractRelativePath.Should().BeNull();
         prompt.Should().Contain("Player-visible text rule");
         prompt.Should().Contain("must default to Chinese");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldRequireMovementMarker_ForRpgMapMovementFallback()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "Goal 1: stabilize map movement",
+            "Start Adventure opens a visible map and stable movement.",
+            "Pass when the map is visible and movement is stable.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-map-movement-entry");
+        contract.RequiredMarkers.Should().Contain("MoveOnMap");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldRequireBattleAcceptance_ForRpgBattleChallengeFallback()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Module 5: battle or challenge resolution with movement readability",
+            "Resolve the first challenge and keep movement feedback readable during the battle.",
+            "Pass when battle or challenge resolution settles victory or failure.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-battle-or-challenge-resolution");
+        contract.BattleSceneAcceptance.Should().BeTrue();
+        contract.RequiredMarkers.Should().Contain("ResolveAttackTurn");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldPreferBattleFallback_WhenGoalAlsoMentionsObjective()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Module 5: battle or challenge resolution objective",
+            "Resolve the first battle and keep the player objective readable.",
+            "Pass when battle or challenge resolution settles victory or failure.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-battle-or-challenge-resolution");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldPreferBattleChallengeFallback_WhenGoalAlsoMentionsMovement()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Module 5: battle or challenge resolution with map movement readability",
+            "Resolve the first battle and keep stable movement feedback readable.",
+            "Pass when battle or challenge resolution settles victory or failure.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-battle-or-challenge-resolution");
+        contract.MapEntryAcceptance.Should().BeFalse();
+        contract.BattleSceneAcceptance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldPreferRpgMapMovementFallback_WhenLoopTextAlsoAppears()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            1,
+            "Goal 1: first loop stable movement",
+            "Start Adventure opens a visible map, then the first loop continues with stable movement.",
+            "Pass when the map is visible and movement is stable.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-map-movement-entry");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldRequireMainSceneHostAcceptance_ForRpgFinalFallback()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate final acceptance for the playable first loop.",
+            "Pass when final first-loop acceptance is ready.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-final-first-loop-acceptance");
+        contract.MainSceneHostUiHiddenAcceptance.Should().BeTrue();
+        contract.MapEntryAcceptance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldUseFullFinalContract_WhenRpgFinalMentionsBattleAndReward()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: final first-loop acceptance",
+            "Validate the full playable final acceptance with battle settlement and reward choice.",
+            "Pass when final first-loop acceptance covers map, battle, reward, assets, and host UI.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-final-first-loop-acceptance");
+        contract.FinalAcceptance.Should().BeTrue();
+        contract.AssetUsageAcceptance.Should().BeTrue();
+        contract.MapEntryAcceptance.Should().BeTrue();
+        contract.BattleSceneAcceptance.Should().BeTrue();
+        contract.RewardFlowAcceptance.Should().BeTrue();
+        contract.MainSceneHostUiHiddenAcceptance.Should().BeTrue();
+        contract.RequiredMarkers.Should().Contain("MoveOnMap");
+        contract.RequiredMarkers.Should().Contain("ResolveAttackTurn");
+        contract.RequiredMarkers.Should().Contain("RewardOptions.Count");
+    }
+
+    [Fact]
+    public void DefaultRouteStrategy_ShouldPreferFinalFallback_WhenGoalAlsoMentionsObjective()
+    {
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            6,
+            "JRPG First Loop: final first-loop acceptance with objective",
+            "Validate final acceptance while preserving the current player objective.",
+            "Pass when final first-loop acceptance covers map, battle, reward, assets, and host UI.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("default-rpg-final-first-loop-acceptance");
+        contract.FinalAcceptance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RpgRouteStrategy_ShouldPreferBattleResolution_WhenChallengeGoalMentionsMovement()
+    {
+        using var routeProfile = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(false);
+        var project = Project(
+            name: "rpg-demo",
+            gameName: "RPG Demo",
+            gameTypeSource: "RPG",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Module 5: battle or challenge resolution with movement readability",
+            "Resolve the first challenge and keep movement feedback readable during the battle.",
+            "Pass when battle or challenge resolution settles victory or failure.",
+            "needs_fix",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("jrpg-battle-or-challenge-resolution");
+        contract.MapEntryAcceptance.Should().BeFalse();
     }
 
     [Fact]

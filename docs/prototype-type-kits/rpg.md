@@ -57,6 +57,8 @@ RPG 类型项目必须在 prototype、iteration-plan、execute-next-goal 和 nee
 
 ### Capability-Driven Minimum Acceptance
 
+This executable kit intentionally aligns its capability ids with `docs/game-type-guides/rpg.md` `Module Matrix` ids. The guide matrix is a GDD planning input; this section is the prototype-lane acceptance authority.
+
 RPG/JRPG prototypes use a JRPG first-loop capability profile instead of a fixed DQ-like battle script. The route must always include:
 
 - `opening_context`: the player can understand who they control, where they are, and the immediate objective.

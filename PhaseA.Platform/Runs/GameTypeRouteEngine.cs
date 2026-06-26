@@ -45,7 +45,6 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
     {
         ArgumentNullException.ThrowIfNull(project);
         var profile = Resolve(project);
-        var context = profile.RouteSkill;
         return $"""
             Game type route profile:
             - GameTypeId: {profile.GameTypeId}
@@ -58,17 +57,11 @@ public sealed class GameTypeRouteEngine : IGameTypeRouteEngine
             - NeedsFixId: {profile.NeedsFixId}
             - FinalAcceptanceId: {profile.FinalAcceptanceId}
 
-            Route skill context:
-            - RouteSkillId: {context.RouteSkillId}
-            - RouteSkillName: {context.RouteSkillName}
-            - RouteSkillLabel: {context.RouteSkillLabel}
-            - RouteSkillGuide: {context.RouteSkillGuide}
-            - RouteSkillContract: {context.RouteSkillContract}
-            - MandatorySkillEntry: ${context.RouteSkillId}
-            - MandatorySkillPath: {context.SkillRelativePath}
-            - Rule: all cloud business top-level routes must enter through this game type route profile before planning, coding, repairing, validating, or reporting.
-            - Rule: treat the selected route skill as the operating playbook for this route; load and follow it before using generic prototype behavior.
-            - Rule: do not run a bare/generic prototype route when the route skill is missing or unresolved; report route_skill_required instead.
+            Downstream source boundary:
+            - Rule: this route profile is an internal platform routing identity, not a gameplay design source.
+            - Rule: only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.
+            - Rule: planning, coding, repairing, validating, UI optimization, and readback routes must use only the current GDD-derived prototype contract, current module spec, route state, repair ledger, and latest validation evidence as gameplay requirements.
+            - Rule: do not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add new gameplay requirements after GDD generation.
             - Rule: recover hosted project memory from project guide, contract, route state, ledger, and latest validation; do not use AGENTS.md as hosted project memory.
             - Rule: read-only JSON routes must use ILlmRouteEngine; executable Codex routes must use CodexHostedProcessCommandFactory with stdin prompt transport.
             - {PrototypePlayerVisibleTextPolicy.PromptRule}

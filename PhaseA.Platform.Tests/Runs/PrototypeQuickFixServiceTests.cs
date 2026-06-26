@@ -172,6 +172,23 @@ REMAINING: none
     }
 
     [Fact]
+    public void ExtractGdUnitPromptSummaryForTesting_ShouldCaptureDynamicPrototypeSuiteFailureDetails()
+    {
+        var lines = PrototypeQuickFixService.ExtractGdUnitPromptSummaryForTesting(
+            """
+            res://tests/Prototype/TowerdemoPrototype/test_towerdemo.gd:42 - FAILED:
+            'Current map state'
+            but is 'Missing map state'
+            Statistics: 1 failed
+            """,
+            10);
+
+        lines.Should().Contain(line => line.Contains("TowerdemoPrototype", StringComparison.Ordinal));
+        lines.Should().Contain("'Current map state'");
+        lines.Should().Contain("but is 'Missing map state'");
+    }
+
+    [Fact]
     public void GoalRepairOutcome_ShouldIgnoreToolLogOffTopicNoise_WhenStructuredOutputIsCompleted()
     {
         var goal = new ProjectIterationGoalSnapshot(
@@ -334,6 +351,9 @@ REMAINING: none
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        WritePrototypeSmokeState(project);
         var runner = new FakeHostedProcessRunner();
         var service = new PrototypeQuickFixService(store, options, runner);
 
@@ -345,9 +365,11 @@ REMAINING: none
         result.AssistantMessage.Should().Contain("快速修复已完成");
         run!.RunType.Should().Be("prototype-quick-fix");
         run.Status.Should().Be("completed");
-        runner.Commands.Should().ContainSingle();
-        runner.Commands[0].Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
-        runner.Commands[0].Arguments.Should().Contain(["-c", "model_reasoning_effort=\"low\""]);
+        var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
+        codexCommand.Arguments.Should().Contain(["exec", "--sandbox", "workspace-write", "-m", "gpt-5.4"]);
+        codexCommand.Arguments.Should().Contain(["-c", "model_reasoning_effort=\"low\""]);
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
         artifacts.Select(a => a.ArtifactType).Should().Contain([
             "prototype-quick-fix-submission",
             "prototype-quick-fix-result-log",
@@ -383,6 +405,7 @@ REMAINING: none
     [Fact]
     public async Task SubmitAsync_NonGoalRpgQuickFix_ShouldFailRun_WhenPostFixPrototypeSmokeFails()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
@@ -414,6 +437,122 @@ REMAINING: none
         run.EvidenceJson.Should().Contain("project_smoke_validation");
         runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
         runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
+    }
+
+    [Fact]
+    public async Task SubmitAsync_NonGoalRpgQuickFix_ShouldFailRun_WhenPostFixSmokeSceneIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "勇者斗恶龙");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/MissingPrototype.tscn"
+            }
+        });
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("failed");
+        result.AssistantMessage.Should().Contain("STATUS: needs_fix");
+        run!.Status.Should().Be("failed");
+        run.EvidenceJson.Should().Contain("\"required\":true");
+        run.EvidenceJson.Should().Contain("prototype_smoke_scene_missing");
+        runner.Commands.Should().NotContain(command => HasScriptArgument(command, "smoke_headless.py"));
+    }
+
+    [Fact]
+    public async Task SubmitAsync_NonGoalRpgQuickFix_ShouldSkipHostMainSceneAndUsePrototypeEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        File.WriteAllText(Path.Combine(project.RepoPath, "project.godot"), """
+        [application]
+        run/main_scene="res://Game.Godot/Scenes/Main.tscn"
+        """);
+        const string prototypeScene = "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn";
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = prototypeScene
+            }
+        });
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        runner.Commands.Should().Contain(command =>
+            HasScriptArgument(command, "smoke_headless.py") &&
+            command.Arguments.Contains(prototypeScene));
+        run!.EvidenceJson.Should().Contain(prototypeScene);
+        run.EvidenceJson.Should().NotContain("res://Game.Godot/Scenes/Main.tscn");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_NonGoalRpgQuickFix_ShouldUseLatestSucceededPrototypeRunBeforeStaleRouteState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        const string succeededScene = "res://Game.Godot/Prototypes/dq-rpg/DqRpgUiOptimized.tscn";
+        File.WriteAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "DqRpgUiOptimized.tscn"), "[gd_scene format=3]\n\n[node name=\"Optimized\" type=\"Node\"]\n");
+        var succeededRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(succeededRunId, "succeeded", 0, "", "", $$"""
+        {
+          "prototype_completion": {
+            "smoke_scene": "{{succeededScene}}"
+          }
+        }
+        """);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/MissingPrototype.tscn"
+            }
+        });
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        runner.Commands.Should().Contain(command =>
+            HasScriptArgument(command, "smoke_headless.py") &&
+            command.Arguments.Contains(succeededScene));
+        run!.EvidenceJson.Should().Contain(succeededScene);
+        run.EvidenceJson.Should().NotContain("MissingPrototype.tscn");
     }
 
     [Fact]
@@ -512,6 +651,14 @@ REMAINING: none
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair map entry smoke validation."));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
         var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        new PrototypeRouteStateWriter().WriteNeedsFixState(project, targetGoal.GoalIndex, new
+        {
+            route = "needs-fix",
+            session_id = details.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            gdunit_path = "tests/Prototype/CustomSuite"
+        });
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new TimedOutSmokeFailingGoalRepairRunner();
@@ -535,6 +682,8 @@ REMAINING: none
         run.EvidenceJson.Should().Contain("\"acceptance_validation_status\":\"passed\"");
         run.EvidenceJson.Should().Contain("\"post_acceptance_validation_status\":\"failed\"");
         run.EvidenceJson.Should().Contain("prototype_main_menu_navigation_failed");
+        var runMemory = await store.GetProjectRunMemoryAsync(projectId, "goal-repair-step-1");
+        runMemory!.AllowedScopeJson.Should().Contain("Tests.Godot/tests/Prototype/CustomSuite");
         runner.Commands.Should().Contain(command => command.Arguments.Contains("exec"));
         runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
     }
@@ -688,6 +837,9 @@ namespace Xunit
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        WritePrototypeSmokeState(project);
         using var callerCancellation = new CancellationTokenSource();
         var runner = new CancelCallerThenReturnHostedProcessRunner(callerCancellation);
         var service = new PrototypeQuickFixService(store, options, runner);
@@ -852,6 +1004,308 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldDiscoverProjectSlugSmokeScene_WhenPrototypeStateSceneIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo2", "Towerdemo2Prototype.tscn");
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            slug = "Towerdemo2",
+            prototype_completion = new
+            {
+                succeeded = false,
+                error = "prototype_completion_state_missing",
+                smoke_scene = (string?)null
+            },
+            godot_smoke = new
+            {
+                ran = false,
+                reason = "prototype_completion_validation_failed",
+                scene = (string?)null
+            }
+        });
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair Towerdemo2 module smoke validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot smoke scene missing.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new QuickFixNavigationFailHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current missing Godot smoke scene.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "smoke_headless.py"));
+        runner.Commands.Should().Contain(command => HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"));
+        runner.Commands.Should().Contain(command => command.Arguments.Contains("res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn"));
+        run!.EvidenceJson.Should().Contain("prototype_main_menu_navigation_failed");
+        run.EvidenceJson.Should().NotContain("prototype_smoke_scene_missing");
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldIgnoreDiscoveredScene_WhenSceneDoesNotStartWithGdSceneHeader()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo3");
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "Towerdemo3Prototype.tscn"), "[resource]\n");
+        File.WriteAllText(Path.Combine(prototypeDir, "Main.tscn"), "\n[gd_scene format=3]\n");
+        File.WriteAllText(Path.Combine(prototypeDir, "CleanFallback.tscn"), """
+[gd_scene format=3]
+[node name="Prototype" type="Node"]
+""");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "slug": "Towerdemo3",
+  "prototype_completion": { "smoke_scene": null },
+  "godot_smoke": { "scene": null }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().Be("res://Game.Godot/Prototypes/Towerdemo3/Main.tscn");
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldNotFallbackToDiscoveredScene_WhenRecordedSceneIsInvalid()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo4");
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "Towerdemo4Prototype.tscn"), """
+[gd_scene format=3]
+[node name="Prototype" type="Node"]
+""");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "slug": "Towerdemo4",
+  "prototype_completion": {
+    "smoke_scene": "res://Game.Godot/Prototypes/Towerdemo4/MissingPrototype.tscn"
+  },
+  "godot_smoke": {
+    "scene": "res://Game.Godot/Prototypes/Towerdemo4/AlsoMissing.tscn"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().BeNull();
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldRejectAbsoluteAndEscapingRecordedScenes()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        using var outsideRoot = TempDirectory.Create("phase-a-outside");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo5");
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "Towerdemo5Prototype.tscn"), """
+[gd_scene format=3]
+[node name="Prototype" type="Node"]
+""");
+        var externalScenePath = Path.Combine(outsideRoot.Path, "ExternalPrototype.tscn");
+        File.WriteAllText(externalScenePath, """
+[gd_scene format=3]
+[node name="External" type="Node"]
+""");
+        var escapedScene = Path.GetRelativePath(repoRoot.Path, externalScenePath).Replace('\\', '/');
+        var prototypeState = $$"""
+{
+  "route": "prototype-7day-playable",
+  "slug": "Towerdemo5",
+  "prototype_completion": {
+    "smoke_scene": "{{externalScenePath.Replace("\\", "\\\\")}}"
+  },
+  "godot_smoke": {
+    "scene": "res://{{escapedScene}}"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().BeNull();
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldUseLaterRecordedScene_WhenEarlierRecordedSceneIsInvalid()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo5b");
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "ValidPrototype.tscn"), """
+[gd_scene format=3]
+[node name="Prototype" type="Node"]
+""");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "prototype_completion": {
+    "smoke_scene": "res://Game.Godot/Prototypes/Towerdemo5b/MissingPrototype.tscn"
+  },
+  "godot_smoke": {
+    "scene": "res://Game.Godot/Prototypes/Towerdemo5b/ValidPrototype.tscn"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().Be("res://Game.Godot/Prototypes/Towerdemo5b/ValidPrototype.tscn");
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldRejectDriveLikeResReferences()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo6");
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, "Towerdemo6Prototype.tscn"), """
+[gd_scene format=3]
+[node name="Prototype" type="Node"]
+""");
+        var alternateScenePath = Path.Combine(prototypeDir, "Alternate.tscn");
+        File.WriteAllText(alternateScenePath, """
+[gd_scene format=3]
+[node name="Alternate" type="Node"]
+""");
+        var driveLikeScene = "res://" + Path.GetFullPath(alternateScenePath).Replace('\\', '/');
+        var prototypeState = $$"""
+{
+  "route": "prototype-7day-playable",
+  "slug": "Towerdemo6",
+  "prototype_completion": {
+    "smoke_scene": "{{driveLikeScene}}"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().BeNull();
+    }
+
+    [Fact]
+    public void ResolveSafeRecordedSmokeScene_ShouldKeepMissingButSafeRecordedScene()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "prototype_completion": {
+    "smoke_scene": "res://Game.Godot/Prototypes/Towerdemo7/MissingPrototype.tscn"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSafeRecordedSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().Be("res://Game.Godot/Prototypes/Towerdemo7/MissingPrototype.tscn");
+    }
+
+    [Fact]
+    public void ResolveSafeRecordedSmokeScene_ShouldUseLaterSafeScene_WhenEarlierRecordedSceneIsUnsafe()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "prototype_completion": {
+    "smoke_scene": "C:/outside/ExternalPrototype.tscn"
+  },
+  "godot_smoke": {
+    "scene": "res://Game.Godot/Prototypes/Towerdemo7/SafePrototype.tscn"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSafeRecordedSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().Be("res://Game.Godot/Prototypes/Towerdemo7/SafePrototype.tscn");
+    }
+
+    [Fact]
+    public void ResolveSmokeScene_ShouldAllowBomAndLeadingWhitespaceBeforeGdScene()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var prototypeDir = Path.Combine(repoRoot.Path, "Game.Godot", "Prototypes", "Towerdemo8");
+        Directory.CreateDirectory(prototypeDir);
+        var scenePath = Path.Combine(prototypeDir, "Towerdemo8Prototype.tscn");
+        File.WriteAllText(scenePath, "\uFEFF\n  [gd_scene format=3]\n[node name=\"Prototype\" type=\"Node\"]\n");
+        const string prototypeState = """
+{
+  "route": "prototype-7day-playable",
+  "prototype_completion": {
+    "smoke_scene": "res://Game.Godot/Prototypes/Towerdemo8/Towerdemo8Prototype.tscn"
+  }
+}
+""";
+
+        var scene = PrototypeGodotSmokeService.ResolveSmokeScene(repoRoot.Path, prototypeState);
+
+        scene.Should().Be("res://Game.Godot/Prototypes/Towerdemo8/Towerdemo8Prototype.tscn");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldTrimOversizedFeedbackBeforeCodexPrompt()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair oversized needs-fix feedback."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Oversized feedback should not enter Codex in full.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new QuickFixMissingSmokeSceneHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+        var oversizedFeedback = "KEEP_CURRENT_BLOCKER prototype_smoke_scene_missing\n" +
+                                string.Concat(Enumerable.Repeat("NEEDS_FIX_BULK_CONTEXT ", 2000)) +
+                                "TAIL_SHOULD_NOT_REACH_PROMPT";
+
+        await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            oversizedFeedback,
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
+        codexCommand.StandardInput.Should().Contain("KEEP_CURRENT_BLOCKER prototype_smoke_scene_missing");
+        codexCommand.StandardInput.Should().Contain("[truncated ");
+        codexCommand.StandardInput.Should().Contain("TAIL_SHOULD_NOT_REACH_PROMPT");
+        codexCommand.StandardInput!.Length.Should().BeLessThan(35000);
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldContinueToCodex_WhenPreflightGodotSmokeTimesOut()
     {
         using var database = TempSqliteDatabase.Create();
@@ -895,6 +1349,37 @@ namespace Xunit
         var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
         codexCommand.StandardInput.Should().Contain("godot_smoke_validation_timeout");
         run!.EvidenceJson.Should().Contain("prototype_main_menu_navigation_failed");
+        run.EvidenceJson.Should().Contain("res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_QuickFix_ShouldTrimOversizedFeedbackBeforeCodexPrompt()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        WritePrototypeSmokeState(project);
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+        var oversizedFeedback = "QUICK_FIX_KEEP_ME repair the start button\n" +
+                                string.Concat(Enumerable.Repeat("QUICK_FIX_BULK_CONTEXT ", 1800)) +
+                                "QUICK_FIX_TAIL_SHOULD_NOT_REACH_PROMPT";
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(oversizedFeedback));
+
+        result.Status.Should().Be("completed");
+        var codexCommand = runner.Commands.Single(command => command.Arguments.Contains("exec"));
+        codexCommand.StandardInput.Should().Contain("QUICK_FIX_KEEP_ME repair the start button");
+        codexCommand.StandardInput.Should().Contain("[truncated ");
+        codexCommand.StandardInput.Should().Contain("QUICK_FIX_TAIL_SHOULD_NOT_REACH_PROMPT");
+        codexCommand.StandardInput!.Length.Should().BeLessThan(25000);
     }
 
     [Fact]
@@ -970,6 +1455,41 @@ namespace Xunit
         File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.completion.md")).Should().BeTrue();
         recoveredPrototypeState.Should().Contain("\"status\": \"succeeded\"");
         recoveredPrototypeState.Should().Contain("recovered_from_prototype_repair_state");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepNeedsFix_WhenProtectedRecoveryAlsoViolatesMutationGuard()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: true,
+            includeActiveState: false);
+        var testShimDir = Path.Combine(scenario.Project.RepoPath, "Game.Core.Tests", "Prototypes");
+        Directory.CreateDirectory(testShimDir);
+        File.WriteAllText(Path.Combine(testShimDir, "XunitShim.cs"), """
+namespace Xunit
+{
+    public sealed class FactAttribute : System.Attribute { }
+}
+""");
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var run = await scenario.Store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.IterationSessionStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        run!.EvidenceJson.Should().Contain("test_framework_shadowing_detected");
+        result.AssistantMessage.Should().Contain("Platform mutation guard");
+        result.AssistantMessage.Should().Contain("test_framework_shadowing_detected");
     }
 
     [Fact]
@@ -1100,6 +1620,31 @@ namespace Xunit
             includeRepairSteps: false,
             includeActiveState: true,
             activeStateSmokeScene: "res://Game.Godot/Prototypes/Towerdemo/AnotherTowerdemoPrototype.tscn");
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair protected prototype completion state.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, 1, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        recoveredPrototypeState.Should().Contain("\"status\": \"failed\"");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotRecoverProtectedPrototypeCompletionState_WhenSmokeSceneHasInvalidHeader()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: true);
+        var scenePath = Path.Combine(scenario.Project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn");
+        File.WriteAllText(scenePath, "[resource]\n");
         var runner = new CompletionRecoveryNeedsFixRunner();
         var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
 
@@ -2059,6 +2604,110 @@ public sealed class DqRpgPrototype
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepFinalStepNeedsFix_WhenRpgGdUnitSuiteIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Bring the RPG final acceptance to a clean full playable validation."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Last();
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Need final validation.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal final needs fix");
+
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeRouteStateWriter().WritePrototypeState(project!, new
+        {
+            route = "prototype-7day-playable",
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        EnsureRpgPrototypeContractValues(project.MetaPath);
+        WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
+
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("rpg_gdunit_tests_missing");
+        result.AssistantMessage.Should().Contain("GDUNIT_ATTEMPTED_PATHS");
+        result.AssistantMessage.Should().Contain("tests/Prototype/dq-rpg");
+        result.AssistantMessage.Should().Contain("Tests.Godot/tests/Prototype/dq-rpg");
+        run!.EvidenceJson.Should().Contain("rpg_gdunit_tests_missing");
+        run.EvidenceJson.Should().Contain("attempted_gdunit_paths");
+        run.EvidenceJson.Should().Contain("\"ran\":false");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldKeepExplicitGdUnitGoalNeedsFix_WhenSuiteIsMissing()
+    {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        EnsureRpgAcceptanceMarkers(project.RepoPath);
+        WritePrototypeSmokeState(project);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "repair_plan",
+            "rpg_gdunit_check",
+            "Run RPG GdUnit validation.",
+            [
+                new ProjectIterationGoalCreateCommand(
+                    1,
+                    "RPG field navigation and stable control GdUnit suite check",
+                    "Start Adventure shows a visible MapScene with stable movement, then run the RPG GdUnit suite.",
+                    "Map movement acceptance and GdUnit validation both pass.")
+            ]);
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var targetGoal = details!.Goals[0];
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit suite is missing.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal needs GdUnit fix.");
+        var runner = new GoalRepairStep5HostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        PrototypeRouteSkillPolicy.Resolve(project).RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("rpg_gdunit_tests_missing");
+        result.AssistantMessage.Should().Contain("任务 1 修复已完成");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldKeepFinalStepNeedsFix_WhenRpgGdUnitFails()
     {
         using var database = TempSqliteDatabase.Create();
@@ -2258,6 +2907,642 @@ public sealed class DqRpgPrototype
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotSyncMainSceneFromFocusedWorkspaceForMapGoal()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        WritePrototypeSmokeState(project);
+        File.WriteAllText(Path.Combine(project.RepoPath, "project.godot"), "[application]\nrun/main_scene=\"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn\"\n");
+        File.WriteAllText(Path.Combine(project.RepoPath, "Directory.Build.props"), "<Project></Project>\n");
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs focused workspace repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var workspaceRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            var mainScene = Path.Combine(workspaceRoot, "Game.Godot", "Scenes", "Main.tscn");
+            File.Exists(mainScene).Should().BeFalse();
+            File.AppendAllText(Path.Combine(workspaceRoot, "project.godot"), "\nrun/main_scene=\"res://Game.Godot/Scenes/Main.tscn\"\n");
+            File.AppendAllText(Path.Combine(workspaceRoot, "Directory.Build.props"), "<!-- out-of-scope root edit -->\n");
+            var catalog = Path.Combine(workspaceRoot, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs");
+            File.AppendAllText(catalog, "\npublic static class FocusedWorkspaceCatalogMarker { }\n");
+            RestoreCoreAcceptanceMarker(workspaceRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().NotBeEmpty();
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "Main.tscn")).Should().NotContain("FocusedWorkspaceMarker");
+        File.ReadAllText(Path.Combine(project.RepoPath, "project.godot")).Should().NotContain("res://Game.Godot/Scenes/Main.tscn");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Directory.Build.props")).Should().NotContain("out-of-scope root edit");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scripts", "Prototypes", "PrototypeCatalog.cs")).Should().Contain("FocusedWorkspaceCatalogMarker");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Scenes/**");
+        runner.LastPrompt.Should().NotContain("project.godot");
+        runner.LastPrompt.Should().NotContain("Directory.Build.props");
+        runner.LastPrompt.Should().Contain("Game.Godot/Scripts/Prototypes");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldSyncActiveSlugPrototypeDirectoryFromFocusedWorkspace()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        await CreateSucceededPrototypeRunAsync(store, project, "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn");
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs active slug focused workspace repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            var activeSlugScene = Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn");
+            File.Exists(activeSlugScene).Should().BeTrue();
+            File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class TowerdemoFocusedWorkspaceMarker { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/dq-rpg/**");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs")).Should().Contain("TowerdemoFocusedWorkspaceMarker");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldUseLatestSucceededRunForFocusedWorkspace_WhenRouteStateIsStale()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        await CreateSucceededPrototypeRunAsync(store, project, "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn");
+        WritePrototypeSmokeState(project);
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs latest prototype focused workspace repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            File.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn")).Should().BeTrue();
+            File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class LatestRunFocusedWorkspaceMarker { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/dq-rpg/**");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs")).Should().Contain("LatestRunFocusedWorkspaceMarker");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldUseExecuteNextGoalStateForFocusedWorkspace_BeforeLatestSucceededRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        new PrototypeRouteStateWriter().WriteExecuteNextGoalState(project, targetGoal.GoalIndex, new
+        {
+            session_id = details.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs execute-next active slug repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            File.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn")).Should().BeTrue();
+            File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class ExecuteNextFocusedWorkspaceMarker { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/dq-rpg/**");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs")).Should().Contain("ExecuteNextFocusedWorkspaceMarker");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldIgnoreStaleSessionStateForFocusedWorkspace()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "StaleSlug", "StalePrototype.tscn");
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair the current RPG map movement goal."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteNeedsFixState(project, targetGoal.GoalIndex, new
+        {
+            session_id = "old-session",
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            prototype_completion = new
+            {
+                smoke_scene = "res://Game.Godot/Prototypes/StaleSlug/StalePrototype.tscn"
+            }
+        });
+        writer.WriteExecuteNextGoalState(project, targetGoal.GoalIndex, new
+        {
+            session_id = details!.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            prototype_completion = new
+            {
+                smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs current session repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            File.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn")).Should().BeTrue();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "StaleSlug")).Should().BeFalse();
+            File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class CurrentSessionFocusedWorkspaceMarker { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/StaleSlug/**");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs")).Should().Contain("CurrentSessionFocusedWorkspaceMarker");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldPreferCurrentGoalStateOverProjectGodotMainScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        File.AppendAllText(Path.Combine(project.RepoPath, "project.godot"), "\nrun/main_scene=\"res://Game.Godot/Prototypes/OldMain/OldMainPrototype.tscn\"\n");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair the current RPG map movement goal."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        new PrototypeRouteStateWriter().WriteExecuteNextGoalState(project, targetGoal.GoalIndex, new
+        {
+            session_id = details!.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            prototype_completion = new
+            {
+                smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs current goal repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            File.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn")).Should().BeTrue();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "OldMain")).Should().BeFalse();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Scenes")).Should().BeFalse();
+            File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class CurrentGoalBeatsProjectGodotMarker { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/OldMain/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Scenes/**");
+        runner.Commands.Should().Contain(command =>
+            HasScriptArgument(command, "smoke_headless.py") &&
+            command.Arguments.Contains("res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"));
+        runner.Commands.Should().NotContain(command =>
+            HasScriptArgument(command, "smoke_headless.py") &&
+            command.Arguments.Contains("res://Game.Godot/Prototypes/OldMain/OldMainPrototype.tscn"));
+        File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs")).Should().Contain("CurrentGoalBeatsProjectGodotMarker");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldScopeFocusedWorkspaceFromCurrentGoalScene_WhenSceneFileIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
+        File.AppendAllText(Path.Combine(project.RepoPath, "project.godot"), "\nrun/main_scene=\"res://Game.Godot/Prototypes/OldMain/OldMainPrototype.tscn\"\n");
+        var towerScriptPath = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "Scripts");
+        Directory.CreateDirectory(towerScriptPath);
+        File.WriteAllText(Path.Combine(towerScriptPath, "Hud.cs"), "public sealed class Hud { }\n");
+        var slugTestPath = Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "Towerdemo");
+        Directory.CreateDirectory(slugTestPath);
+        File.WriteAllText(Path.Combine(slugTestPath, "test_towerdemo.gd"), "extends Node\n");
+        var customGdUnitPath = Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "CustomSuite");
+        Directory.CreateDirectory(customGdUnitPath);
+        File.WriteAllText(Path.Combine(customGdUnitPath, "test_custom.gd"), "extends Node\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair the current RPG map movement goal."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        new PrototypeRouteStateWriter().WriteExecuteNextGoalState(project, targetGoal.GoalIndex, new
+        {
+            session_id = details!.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            gdunit_path = "tests/Prototype/CustomSuite",
+            prototype_completion = new
+            {
+                smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/MissingPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs missing scene repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo")).Should().BeTrue();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "OldMain")).Should().BeFalse();
+            File.Exists(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "Towerdemo", "test_towerdemo.gd")).Should().BeTrue();
+            File.Exists(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "CustomSuite", "test_custom.gd")).Should().BeTrue();
+            File.WriteAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "MissingPrototype.tscn"), "[gd_scene format=3]\n[node name=\"Towerdemo\" type=\"Node\"]\n");
+            File.AppendAllText(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "Towerdemo", "test_towerdemo.gd"), "\n# focused workspace slug test synced\n");
+            File.AppendAllText(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "CustomSuite", "test_custom.gd"), "\n# focused workspace custom gdunit test synced\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().Contain("Tests.Godot/tests/Prototype/Towerdemo/**");
+        runner.LastPrompt.Should().Contain("Tests.Godot/tests/Prototype/CustomSuite/**");
+        runner.LastPrompt.Should().NotContain("Game.Godot/Prototypes/OldMain/**");
+        File.Exists(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "MissingPrototype.tscn")).Should().BeTrue();
+        File.ReadAllText(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "Towerdemo", "test_towerdemo.gd")).Should().Contain("focused workspace slug test synced");
+        File.ReadAllText(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "CustomSuite", "test_custom.gd")).Should().Contain("focused workspace custom gdunit test synced");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldIgnoreStaleRouteStateGdUnitPathForFocusedWorkspace()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        var customGdUnitPath = Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "CustomSuite");
+        Directory.CreateDirectory(customGdUnitPath);
+        File.WriteAllText(Path.Combine(customGdUnitPath, "test_custom.gd"), "extends Node\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair the current RPG map movement goal."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        var writer = new PrototypeRouteStateWriter();
+        writer.WriteNeedsFixState(project, targetGoal.GoalIndex, new
+        {
+            session_id = "old-session",
+            goal_id = "old-goal",
+            goal_index = targetGoal.GoalIndex,
+            gdunit_path = "tests/Prototype/CustomSuite"
+        });
+        writer.WriteExecuteNextGoalState(project, targetGoal.GoalIndex, new
+        {
+            session_id = details!.Session.SessionId,
+            goal_id = targetGoal.GoalId,
+            goal_index = targetGoal.GoalIndex,
+            prototype_completion = new
+            {
+                smoke_scene = "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs current goal repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            Directory.Exists(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo")).Should().BeTrue();
+            Directory.Exists(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "CustomSuite")).Should().BeFalse();
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Game.Godot/Prototypes/Towerdemo/**");
+        runner.LastPrompt.Should().NotContain("Tests.Godot/tests/Prototype/CustomSuite/**");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldSyncNewActiveSlugGdUnitDirectoryFromFocusedWorkspace()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        EnsurePrototypeSmokeSceneFile(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
+        await CreateSucceededPrototypeRunAsync(store, project, "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn");
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn"
+            }
+        });
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "needs active slug gdunit test repair", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            var testDirectory = Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "TowerdemoPrototype");
+            Directory.CreateDirectory(testDirectory);
+            File.WriteAllText(Path.Combine(testDirectory, "TowerdemoTest.cs"), "public sealed class TowerdemoTest { }\n");
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().Contain("Tests.Godot/tests/Prototype/TowerdemoPrototype/**");
+        File.Exists(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "TowerdemoPrototype", "TowerdemoTest.cs")).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotDeleteManagedFocusedWorkspaceDirectory_WhenRootIsMissing()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        WritePrototypeSmokeState(project);
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var staleDirectory = Path.Combine(project.RepoPath, "Game.Godot", "Scripts", "Prototypes");
+        Directory.CreateDirectory(staleDirectory);
+        File.WriteAllText(Path.Combine(staleDirectory, "StaleCatalog.cs"), "public sealed class StaleCatalog { }\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "remove stale directory", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var focusedRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            Directory.Delete(Path.Combine(focusedRoot, "Game.Godot", "Scripts", "Prototypes"), recursive: true);
+            RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        Directory.Exists(staleDirectory).Should().BeTrue();
+        File.Exists(Path.Combine(staleDirectory, "StaleCatalog.cs")).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldMirrorDeleteManagedFocusedWorkspaceFiles()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        WritePrototypeSmokeState(project);
+        RemoveCoreAcceptanceMarker(project.RepoPath, "MoveOnMap");
+        var staleFile = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "StaleRoute.cs");
+        File.WriteAllText(staleFile, "public sealed class StaleRoute { }\n");
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = FindGoal(details!, "field navigation and stable control");
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "remove stale file", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, "goal needs fix");
+        var runner = new FocusedWorkspaceEditRunner(command =>
+        {
+            var workspaceRoot = command.Arguments.SkipWhile(arg => arg != "--cd").Skip(1).First();
+            File.Delete(Path.Combine(workspaceRoot, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "StaleRoute.cs"));
+            RestoreCoreAcceptanceMarker(workspaceRoot, "MoveOnMap");
+        });
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, targetGoal.GoalIndex, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary)));
+
+        result.Status.Should().Be("completed");
+        runner.LastPrompt.Should().NotBeEmpty();
+        File.Exists(staleFile).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldKeepNeedsFix_WhenCurrentGoalIsStillBlocked()
     {
         using var database = TempSqliteDatabase.Create();
@@ -2267,7 +3552,7 @@ public sealed class DqRpgPrototype
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
-        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("先让玩家能稳定移动并明确触发第一次遇敌，再继续后续目标。"));
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2376,6 +3661,96 @@ public sealed class DqRpgPrototype
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldAllowNonGameplayEvidenceRepair_WhenRpgAcceptanceValidationDoesNotRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "repair_plan",
+            "restore_runtime_evidence",
+            "Restore route evidence.",
+            [new ProjectIterationGoalCreateCommand(1, "Restore route evidence", "Restore route run record only.", "Evidence record is present.")]);
+        var createdDetails = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        await store.UpdateProjectIterationGoalStatusAsync(createdDetails!.Goals[0].GoalId, "needs_fix", "evidence missing", null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var runner = new StructuredCompletedHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details!.Session.SessionId, details.Goals[0].GoalId, 1, details.Goals[0].Title, details.Goals[0].Description, details.Goals[0].AcceptanceHint, details.Goals[0].ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        result.IterationSessionStatus.Should().Be("completed");
+        result.AssistantMessage.Should().NotContain("platform_acceptance_not_run_for_rpg_goal");
+        refreshed!.Goals[0].Status.Should().Be("succeeded");
+        run!.EvidenceJson.Should().NotContain("platform_acceptance_not_run_for_rpg_goal");
+    }
+
+    [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldExplainNeedsFix_WhenGameplayAcceptanceValidationDoesNotRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgSmokeSceneFile(project!.RepoPath);
+        File.AppendAllText(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"), "\n// ShouldReachRewardPhase_AfterWinningTheFirstEncounter BattlesWon\n");
+        var testProject = Path.Combine(project.RepoPath, "Game.Core.Tests", "Game.Core.Tests.csproj");
+        if (File.Exists(testProject))
+        {
+            File.Delete(testProject);
+        }
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "repair_plan",
+            "restore_runtime_evidence",
+            "Restore route evidence.",
+            [new ProjectIterationGoalCreateCommand(3, "RPG Step 3: BattleScene visualization and settlement validation", "BattleScene resolves one readable battle and victory.", "BattleScene settlement is validated.")]);
+        var createdDetails = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        await store.UpdateProjectIterationGoalStatusAsync(createdDetails!.Goals[0].GoalId, "needs_fix", "gameplay acceptance not yet proven", null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var runner = new StructuredCompletedHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Repair current goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details!.Session.SessionId, details.Goals[0].GoalId, 3, details.Goals[0].Title, details.Goals[0].Description, details.Goals[0].AcceptanceHint, details.Goals[0].ResultSummary)));
+        var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("needs_fix");
+        result.IterationSessionStatus.Should().Be("needs_fix");
+        result.AssistantMessage.Should().Contain("platform_acceptance_not_run_for_rpg_goal");
+        refreshed!.Goals[0].Status.Should().Be("needs_fix");
+        run!.EvidenceJson.Should().Contain("platform_acceptance_not_run_for_rpg_goal");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldRejectOffTopicSuccessOutput()
     {
         using var database = TempSqliteDatabase.Create();
@@ -2452,6 +3827,18 @@ public sealed class DqRpgPrototype
         }
 
         return result.ProjectId!;
+    }
+
+    private static async Task CreateSucceededPrototypeRunAsync(PhaseAMetadataStore store, ProjectSnapshot project, string smokeScene)
+    {
+        var runId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(runId, "succeeded", 0, "", "", $$"""
+        {
+          "prototype_completion": {
+            "smoke_scene": "{{smokeScene}}"
+          }
+        }
+        """);
     }
 
     private static async Task<ProjectIterationSessionDetails> CreateRpgGdUnitRepairSessionAsync(
@@ -2637,6 +4024,35 @@ public sealed class PackageReferenceFailureTests
 """);
     }
 
+    private static void RemoveCoreAcceptanceMarker(string repoPath, string marker)
+    {
+        foreach (var path in EnumerateCoreAcceptanceMarkerFiles(repoPath))
+        {
+            var text = File.ReadAllText(path);
+            File.WriteAllText(path, text.Replace(marker, RemovedCoreAcceptanceMarker(marker), StringComparison.Ordinal));
+        }
+    }
+
+    private static void RestoreCoreAcceptanceMarker(string repoPath, string marker)
+    {
+        foreach (var path in EnumerateCoreAcceptanceMarkerFiles(repoPath))
+        {
+            var text = File.ReadAllText(path);
+            File.WriteAllText(path, text.Replace(RemovedCoreAcceptanceMarker(marker), marker, StringComparison.Ordinal));
+        }
+    }
+
+    private static string RemovedCoreAcceptanceMarker(string marker)
+    {
+        return $"__REMOVED_CORE_ACCEPTANCE_MARKER_{marker.Length}__";
+    }
+
+    private static IEnumerable<string> EnumerateCoreAcceptanceMarkerFiles(string repoPath)
+    {
+        yield return Path.Combine(repoPath, "Game.Core.Tests", "Prototypes", "DqRpgPrototypeLoopTests.cs");
+        yield return Path.Combine(repoPath, "Game.Core", "Prototypes", "DqRpgPrototypeLoop.cs");
+    }
+
     private static void EnsureRpgPrototypeContractValues(string metaPath)
     {
         var contractDir = Path.Combine(metaPath, "routes", "prototype-contract");
@@ -2761,6 +4177,21 @@ public static class PrototypeCatalog
         }
     }
 
+    private static void WritePrototypeSmokeState(ProjectSnapshot project)
+    {
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            },
+            godot_smoke = new
+            {
+                scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+    }
+
     private static void RemoveStepOneMapSizeAndPlayerVisibilityContract(string repoPath)
     {
         var mapScene = Path.Combine(repoPath, "Game.Godot", "Prototypes", "dq-rpg", "MapScene.tscn");
@@ -2804,6 +4235,13 @@ public static class PrototypeCatalog
         File.WriteAllText(Path.Combine(contractDir, "latest.json"), "{}");
     }
 
+    private static void EnsurePrototypeSmokeSceneFile(string repoPath, string slug, string sceneFileName)
+    {
+        var prototypeDir = Path.Combine(repoPath, "Game.Godot", "Prototypes", slug);
+        Directory.CreateDirectory(prototypeDir);
+        File.WriteAllText(Path.Combine(prototypeDir, sceneFileName), "[gd_scene format=3]\n\n[node name=\"Prototype\" type=\"Node\"]\n");
+    }
+
     private static object[] BuildRecoveredRepairSteps()
     {
         return
@@ -2834,7 +4272,7 @@ public static class PrototypeCatalog
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
-        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "Phantom Tower");
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
         SeedRecoveredPrototypeFiles(project!.RepoPath, "Towerdemo");
         if (includeActiveState)
@@ -2982,6 +4420,16 @@ public static class PrototypeCatalog
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            if (HasScriptArgument(command, "smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
+            }
+
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS", ""));
+            }
+
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, "Quick fix applied.");
@@ -3095,6 +4543,11 @@ REMAINING: Continue fixing the current Godot smoke timeout.
     {
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            if (!command.Arguments.Contains("exec"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "command ok", ""));
+            }
+
             if (command.FileName == "dotnet")
             {
                 return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
@@ -3117,6 +4570,49 @@ REMAINING: Continue fixing the current Godot smoke timeout.
 玩家现在可以稳定移动，并且能够明确触发第一次遇敌。
 地图中的第一次遇敌入口已经接通，本 step 现在已可继续。
 ready to continue
+""");
+            return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
+        }
+    }
+
+    private sealed class FocusedWorkspaceEditRunner(Action<HostedProcessCommand> editWorkspace) : IHostedProcessRunner
+    {
+        public string LastPrompt { get; private set; } = "";
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            if (command.FileName == "dotnet")
+            {
+                return Task.FromResult(new HostedProcessResult(0, command.Arguments.Contains("build") ? "dotnet build ok" : "dotnet test ok", ""));
+            }
+
+            if (HasScriptArgument(command, "smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS", ""));
+            }
+
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "NAVIGATION PASS", ""));
+            }
+
+            if (!command.Arguments.Contains("exec"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "command ok", ""));
+            }
+
+            LastPrompt = command.StandardInput ?? "";
+            editWorkspace(command);
+            var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, """
+STATUS: completed
+SUMMARY: Focused workspace edit completed.
+CHANGED: Updated managed RPG prototype files.
+VERIFY: Godot gameplay verification passed for map movement and first encounter trigger.
+REMAINING: none
 """);
             return Task.FromResult(new HostedProcessResult(0, "goal repair stdout", ""));
         }
@@ -3694,6 +5190,16 @@ REMAINING: canonical active prototype state is protected from overwrite.
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            if (HasScriptArgument(command, "smoke_headless.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "SMOKE PASS (prototype scene alive)", ""));
+            }
+
+            if (HasScriptArgument(command, "prototype_main_menu_navigation_smoke.py"))
+            {
+                return Task.FromResult(new HostedProcessResult(0, "MAIN_MENU_PROTOTYPE_NAV PASS", ""));
+            }
+
             _callerCancellation.Cancel();
             var outputPath = command.Arguments.SkipWhile(arg => arg != "-o").Skip(1).First();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);

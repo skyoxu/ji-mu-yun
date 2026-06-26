@@ -291,12 +291,9 @@ public sealed class PrototypeRouteStateWriter
 
             ## Recovery Rules
 
-            - Default route skill context:
-              - RPG projects use `prototype-rpg-godot-zh`.
-              - Non-RPG prototype projects use `prototype-7day-playable-godot-zh`.
-            - The same route skill context is inherited by prototype, iteration plan, execute-next-goal, and needs-fix.
-              - The project prototype contract is the source of truth for user form fields.
-              - User form fields override route skill templates and generic type defaults.
+            - The project prototype contract is the source of truth for user form fields and gameplay requirements after GDD generation.
+            - Only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.
+            - Prototype, iteration plan, execute-next-goal, needs-fix, repair, validation, and UI routes must not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add gameplay requirements.
 
             - Start from this README to identify the project and game type.
             - Prototype, iteration plan, execute next goal, and needs fix must read the prototype contract before reporting success.
@@ -319,49 +316,8 @@ public sealed class PrototypeRouteStateWriter
         string latestStatus)
     {
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
-        var routeSkill = routeProfile.RouteSkill;
         var normalizedSlug = string.IsNullOrWhiteSpace(slug) ? "<prototype-slug>" : PrototypeRecordWriter.SanitizeSlug(slug.Trim());
         var prototypeRoot = $"Game.Godot/Prototypes/{normalizedSlug}";
-        var isRpg = string.Equals(routeProfile.GameTypeId, "rpg", StringComparison.OrdinalIgnoreCase);
-        var typeSpecificProtocol = isRpg
-            ? """
-                ## RPG Type Protocol
-
-                - Treat this project as an RPG route project unless the prototype contract explicitly says otherwise.
-                - Preserve the main menu entry path: main shell -> Start Adventure -> visible MapScene -> selected JRPG capability loop.
-                - User form fields override RPG defaults, template examples, and fallback kit values.
-                - RPG work should keep MapScene, selected conflict/reward capabilities, win/fail visibility when applicable, and final acceptance aligned.
-                - Do not create, require, or repair BattleScene unless the project contract, selected capabilities, or latest failure evidence names combat/conflict work.
-                - If platform validation names a concrete compile, node, asset, navigation, or GdUnit blocker, repair that blocker before gameplay polish.
-
-                ## RPG Expected Artifact Anchors
-
-                - Prototype shell scene: Game.Godot/Prototypes/<slug>/<PascalSlug>Prototype.tscn
-                - RPG map scene: Game.Godot/Prototypes/<slug>/MapScene.tscn
-                - RPG battle scene, only when battle/conflict capability is selected or named by latest failure: Game.Godot/Prototypes/<slug>/BattleScene.tscn
-                - RPG scripts: Game.Godot/Prototypes/<slug>/Scripts/
-                - RPG optional view components: Game.Godot/Prototypes/<slug>/Scripts/Components/
-                - RPG optional gameplay systems: Game.Godot/Prototypes/<slug>/Scripts/Systems/
-                - RPG optional state/tuning data: Game.Godot/Prototypes/<slug>/Scripts/Data/
-                - RPG core loop: Game.Core/Prototypes/
-                - RPG core tests: Game.Core.Tests/Prototypes/
-                - RPG Godot tests: Tests.Godot/tests/Prototype/
-                - Prefer PrototypeRoot for orchestration and small Node/scene components such as HudView, MapView, BattleView, RewardView, ActorView, or LogView for UI/runtime responsibilities.
-                - Prefer exported NodePath bindings or one local binding method for stable scene references instead of scattering long GetNode("CanvasLayer/...") strings.
-                - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications.
-                """
-            : """
-                ## Default Type Protocol
-
-                - Treat this project as a default playable Godot prototype route project.
-                - User form fields override templates and examples.
-                - Keep the smallest playable loop, user-visible UI feedback, and final acceptance aligned with the prototype contract.
-                - If platform validation names a concrete compile, scene, asset, or smoke blocker, repair that blocker before feature polish.
-                - Prefer PrototypeRoot for orchestration, small View components for UI/feedback, Systems for gameplay calculation, and Data/State classes for tuning or transient state when that split is cheaper than one large script.
-                - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not introduce ECS, EntityComponent, IComponent, or a new framework.
-                - Prefer exported NodePath bindings or one local binding method for stable scene references instead of repeating long GetNode("CanvasLayer/...") strings.
-                - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications or promotion candidates.
-                """;
 
         return $"""
             # Project Execution Guide
@@ -389,9 +345,6 @@ public sealed class PrototypeRouteStateWriter
             - ExecutorId: {routeProfile.ExecutorId}
             - NeedsFixId: {routeProfile.NeedsFixId}
             - FinalAcceptanceId: {routeProfile.FinalAcceptanceId}
-            - SkillId: {routeSkill.RouteSkillId}
-            - SkillPath: {routeSkill.SkillRelativePath}
-            - SkillContractPath: {routeSkill.ContractRelativePath ?? "(none)"}
 
             ## Source Of Truth
 
@@ -426,19 +379,29 @@ public sealed class PrototypeRouteStateWriter
             - Prototype logs/artifacts: logs/ci/active-prototypes/
             - Iteration run logs: logs/phase-a-iteration/
 
-            {typeSpecificProtocol}
+            ## Downstream Source Boundary
+
+            - Only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.
+            - After GDD generation, gameplay requirements must come from the prototype contract, current module spec, route state, repair ledger, and latest validation evidence.
+            - Do not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add gameplay requirements during iteration planning, execution, needs-fix, repair, validation, UI optimization, or readback.
+            - User form fields and the GDD-derived prototype contract override templates, examples, and generic defaults.
+            - If platform validation names a concrete compile, scene, asset, navigation, or smoke blocker, repair that blocker before feature polish.
+            - Prefer PrototypeRoot for orchestration, small View components for UI/feedback, Systems for gameplay calculation, and Data/State classes for tuning or transient state when that split is cheaper than one large script.
+            - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not introduce ECS, EntityComponent, IComponent, or a new framework.
+            - Prefer exported NodePath bindings or one local binding method for stable scene references instead of repeating long GetNode("CanvasLayer/...") strings.
+            - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications or promotion candidates.
 
             ## Route Recovery Protocol
 
             Every iteration-plan, execute-next-goal, needs-fix, prototype-repair, and repair-step route must start from this order:
 
-            1. Read this guide to identify game type, route profile, skill, and artifact paths.
+            1. Read this guide to identify the project, route profile, source boundary, and artifact paths.
             2. Read the prototype contract and treat user form fields as authoritative.
             3. Read the latest relevant route state for the current route and current step only.
             4. For needs-fix, read the current step repair ledger before changing files.
             5. Use the latest live platform acceptance blocker as highest priority when it differs from older route state or ledger memory.
             6. Keep changes scoped to the hosted game project unless the current goal explicitly asks for platform changes.
-            7. Before reporting succeeded, verify the work against the current goal, prototype contract, and type-specific route rules.
+            7. Before reporting succeeded, verify the work against the current goal, prototype contract, current module spec, and latest validation evidence.
             8. Do not use AGENTS.md as hosted project recovery memory; AGENTS.md is platform-repo guidance, not this project-level route memory.
 
             ## Priority Rules
@@ -446,7 +409,7 @@ public sealed class PrototypeRouteStateWriter
             - Current platform acceptance blocker overrides prior assistant summaries, this guide, and repair ledger history.
             - Repair ledger is continuity memory; it is not authority over live validation.
             - Current goal or repair step overrides later goals.
-            - Prototype contract overrides type templates and generic examples.
+            - Prototype contract overrides external templates, route skill documents, and generic examples.
             - Do not use needs-fix state from another step.
             - Do not treat route/platform tests as proof that a gameplay goal is complete.
             - Do not expose local paths, commands, script names, logs, or environment values in browser-facing output.

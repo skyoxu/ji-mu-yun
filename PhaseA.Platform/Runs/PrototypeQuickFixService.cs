@@ -14,6 +14,10 @@ public sealed partial class PrototypeQuickFixService
     private const string RunType = "prototype-quick-fix";
     private const string ReasoningEffort = "low";
     private const int RecoveredWorkflowMaxDay = 7;
+    private const int QuickFixFeedbackPromptMaxChars = 8000;
+    private const int GoalRepairFeedbackPromptMaxChars = 12000;
+    private const int FeedbackArtifactMaxChars = 20000;
+    private const int GeneratorStreamLogMaxChars = 20000;
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromSeconds(300);
     private static readonly TimeSpan DefaultGoalRepairExecutionTimeout = TimeSpan.FromMinutes(12);
     private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(45);
@@ -137,11 +141,6 @@ public sealed partial class PrototypeQuickFixService
         }
 
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
-        var routeSkillAvailability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
-        if (!routeSkillAvailability.IsAvailable)
-        {
-            return new PrototypeFeedbackResult("", routeSkillAvailability.FailureCode, routeSkillAvailability.FailureMessage, []);
-        }
 
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);
@@ -177,9 +176,7 @@ public sealed partial class PrototypeQuickFixService
             resultAbsolutePath = Path.Combine(project.RepoPath, resultRelativePath.Replace('/', Path.DirectorySeparatorChar));
             codexOutputAbsolutePath = Path.Combine(project.RepoPath, codexOutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
             skillAction = ResolveSkillAction(request.SkillActionId);
-            var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
             var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
-            executionWorkspace = PrepareExecutionWorkspace(project, targetGoal, runId, codexOutputAbsolutePath);
 
             await File.WriteAllTextAsync(
                 submittedAbsolutePath,
@@ -200,7 +197,6 @@ public sealed partial class PrototypeQuickFixService
                     resultAbsolutePath,
                     codexOutputRelativePath,
                     codexOutputAbsolutePath,
-                    routeSkill,
                     skillAction,
                     now,
                     smokeFailure => preflightGodotSmokeFailure = smokeFailure,
@@ -210,6 +206,10 @@ public sealed partial class PrototypeQuickFixService
                 return preflightResult;
             }
 
+            var currentAcceptanceValidation = targetGoal is null
+                ? PrototypeGoalAcceptanceValidationResult.NotRun()
+                : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
+            executionWorkspace = await PrepareExecutionWorkspaceAsync(project, targetGoal, currentAcceptanceValidation, runId, codexOutputAbsolutePath, CancellationToken.None);
             var model = PrototypeModelPolicy.Normalize(request.Model);
             var effectiveTimeout = goalRepairMode
                 ? Max(_executionTimeout, DefaultGoalRepairExecutionTimeout)
@@ -222,10 +222,7 @@ public sealed partial class PrototypeQuickFixService
                 ? await GodotFailureDiagnosticService.AnalyzeLatestAsync(_metadataStore, project, CancellationToken.None)
                 : BuildGodotDiagnosticFromSmokeFailure(preflightGodotSmokeFailure);
             var godotCleanup = await GodotFailureDiagnosticService.CleanupIfRecommendedAsync(project, godotDiagnostic, CancellationToken.None);
-            var currentAcceptanceValidation = targetGoal is null
-                ? PrototypeGoalAcceptanceValidationResult.NotRun()
-                : await PrototypeGoalAcceptanceValidator.ValidateAsync(project, targetGoal, _processRunner, CancellationToken.None);
-            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
+            var prompt = BuildCodexPrompt(project, runId, feedback, skillAction, targetGoal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation, executionWorkspace.ManagedPaths);
             await SetProgressAsync(runId, "running", "generation", goalRepairMode ? $"正在修复任务 {targetGoal!.GoalIndex}。" : "正在执行快速修复。", CancellationToken.None);
             var runtimeCredential = await ResolveRuntimeCredentialAsync(project.AccountId, CancellationToken.None);
             var billingApiKeyName = runtimeCredential.BillingKeyName ?? project.AccountId;
@@ -274,8 +271,7 @@ public sealed partial class PrototypeQuickFixService
             {
                 assistantMessage = AppendAcceptanceValidationSummary(assistantMessage, targetGoal!);
                 codexOutput = AppendAcceptanceValidationEvidence(codexOutput);
-                var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
-                godotSmokeValidation = await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal!, prototypeState, _options, _processRunner, CancellationToken.None);
+                godotSmokeValidation = await ValidateGoalGodotSmokeWithTimeoutAsync(project, targetGoal!, CancellationToken.None);
                 if (godotSmokeValidation.Passed && godotSmokeValidation.Required)
                 {
                     assistantMessage = BuildValidatedGoalRepairSummary(targetGoal!);
@@ -298,6 +294,11 @@ public sealed partial class PrototypeQuickFixService
                 assistantMessage = AppendAcceptanceValidationFailure(assistantMessage, targetGoal, acceptanceValidation);
                 codexOutput = AppendAcceptanceValidationFailureEvidence(codexOutput, acceptanceValidation);
             }
+            else if (targetGoal is not null && IsGoalRepairPlatformAcceptanceFailedOrMissing(project, targetGoal, acceptanceValidation))
+            {
+                assistantMessage = AppendAcceptanceValidationNotRunFailure(assistantMessage, targetGoal);
+                codexOutput = AppendAcceptanceValidationNotRunEvidence(codexOutput);
+            }
             else if (projectSmokeValidation.Required)
             {
                 assistantMessage = projectSmokeValidation.Passed
@@ -315,15 +316,16 @@ public sealed partial class PrototypeQuickFixService
 
             var goalRepairOutcome = targetGoal is null
                 ? null
-                : recoveredProtectedCompletionState
-                    ? new GoalRepairOutcome("succeeded", true)
                 : !mutationGuardValidation.AllowsProgress
                     ? new GoalRepairOutcome("needs_fix", false)
+                : recoveredProtectedCompletionState
+                    ? new GoalRepairOutcome("succeeded", true)
                 : acceptanceValidation.Passed
                     ? godotSmokeValidation.Passed && !IsRpgGdUnitBlockingForGoal(targetGoal, rpgGdUnitValidation)
                         ? new GoalRepairOutcome("succeeded", true)
                         : new GoalRepairOutcome("needs_fix", false)
-                    : RequiresHardPlatformAcceptance(targetGoal, acceptanceValidation)
+                    : RequiresHardPlatformAcceptance(targetGoal, acceptanceValidation) ||
+                      IsGoalRepairPlatformAcceptanceFailedOrMissing(project, targetGoal, acceptanceValidation)
                         ? new GoalRepairOutcome("needs_fix", false)
                     : DetermineGoalRepairOutcome(targetGoal, assistantMessage, codexResult, codexOutput);
 
@@ -352,6 +354,9 @@ public sealed partial class PrototypeQuickFixService
                 codexOutputRelativePath,
                 "Prototype quick fix generation output"), CancellationToken.None);
 
+            var platformAcceptanceRepairReason = targetGoal is not null
+                ? ResolveGoalRepairPlatformAcceptanceReason(project, targetGoal, acceptanceValidation)
+                : null;
             var evidenceJson = JsonSerializer.Serialize(new
             {
                 run_type = RunType,
@@ -359,8 +364,8 @@ public sealed partial class PrototypeQuickFixService
                 submitted_feedback = submittedRelativePath,
                 result_log = resultRelativePath,
                 codex_output = codexOutputRelativePath,
-                route_skill = routeSkill,
                 game_type_profile = routeProfile,
+                source_boundary = "gdd_derived_contract_only_after_gdd_generation",
                 prototype_contract = prototypeContract.RelativePath,
                 prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
                 skill_action_id = skillAction?.ActionId,
@@ -374,6 +379,7 @@ public sealed partial class PrototypeQuickFixService
                 acceptance_validation_status = acceptanceValidation.Status,
                 acceptance_validation_reason = acceptanceValidation.Reason,
                 acceptance_validation_details = acceptanceValidation.Details,
+                goal_repair_platform_acceptance_reason = platformAcceptanceRepairReason,
                 mutation_guard = mutationGuardValidation.ToEvidence(),
                 godot_diagnostic = GodotFailureDiagnosticService.ToEvidence(godotDiagnostic, godotCleanup),
                 godot_smoke_validation = godotSmokeValidation.ToEvidence(),
@@ -435,7 +441,7 @@ public sealed partial class PrototypeQuickFixService
                     sessionStatus == "completed" ? now : null,
                     CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
-                await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], CancellationToken.None);
+                await UpsertGoalRunMemoryAsync(project, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], executionWorkspace.ManagedPaths, CancellationToken.None);
 
                 await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"任务 {targetGoal.GoalIndex} 修复完成。" : $"任务 {targetGoal.GoalIndex} 仍需继续修复。", CancellationToken.None);
 
@@ -501,7 +507,7 @@ public sealed partial class PrototypeQuickFixService
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", $"继续修复当前任务的最小验收范围：{timeoutFocus}", summary, [summary], CancellationToken.None);
+                await UpsertGoalRunMemoryAsync(project, targetGoal, "needs_fix", $"继续修复当前任务的最小验收范围：{timeoutFocus}", summary, [summary], executionWorkspace?.ManagedPaths, CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "timeout", $"任务 {targetGoal.GoalIndex} 修复超时，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前任务修复超时。系统没有切换到后续任务，你可以继续再次修复当前任务。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
@@ -530,7 +536,7 @@ public sealed partial class PrototypeQuickFixService
                 await _metadataStore.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", summary, null, CancellationToken.None);
                 await _metadataStore.UpdateProjectIterationSessionStatusAsync(iterationDetails.Session.SessionId, "needs_fix", targetGoal.GoalIndex, summary, iterationDetails.Session.LatestEvaluationJson, null, CancellationToken.None);
                 PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", summary, DateTimeOffset.UtcNow.ToString("O"), summary);
-                await UpsertGoalRunMemoryAsync(projectId, targetGoal, "needs_fix", summary, "当前任务修复失败。", [summary], CancellationToken.None);
+                await UpsertGoalRunMemoryAsync(project, targetGoal, "needs_fix", summary, "当前任务修复失败。", [summary], executionWorkspace?.ManagedPaths, CancellationToken.None);
                 await SetProgressAsync(runId, "failed", "error", $"任务 {targetGoal.GoalIndex} 修复失败，仍需继续修复。", CancellationToken.None);
                 return new PrototypeFeedbackResult(runId, "failed", "当前任务修复失败。系统没有推进后续任务，请继续修复这个任务。", [], "needs_fix", "needs_fix", targetGoal.GoalIndex);
             }
@@ -576,7 +582,6 @@ public sealed partial class PrototypeQuickFixService
         string resultAbsolutePath,
         string codexOutputRelativePath,
         string codexOutputAbsolutePath,
-        object routeSkill,
         SkillActionDefinition? skillAction,
         string now,
         Action<PrototypeGoalGodotSmokeValidationResult>? onGodotSmokeFailure = null,
@@ -672,8 +677,8 @@ public sealed partial class PrototypeQuickFixService
             submitted_feedback = submittedRelativePath,
             result_log = resultRelativePath,
             codex_output = codexOutputRelativePath,
-            route_skill = routeSkill,
             game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+            source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             skill_action_id = skillAction?.ActionId,
             skill_name = skillAction?.SkillName,
             quick_fix = true,
@@ -725,7 +730,7 @@ public sealed partial class PrototypeQuickFixService
             sessionStatus == "completed" ? now : null,
             cancellationToken);
         PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, goalRepairOutcome.GoalStatus, assistantMessage, now, sessionSummary);
-        await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], cancellationToken);
+        await UpsertGoalRunMemoryAsync(project, targetGoal, goalRepairOutcome.GoalStatus, sessionSummary, assistantMessage, goalRepairOutcome.GoalStatus == "succeeded" ? [] : [sessionSummary], null, cancellationToken);
         await SetProgressAsync(runId, "completed", "", goalRepairOutcome.GoalStatus == "succeeded" ? $"任务 {targetGoal.GoalIndex} 验收完成。" : $"任务 {targetGoal.GoalIndex} 仍需继续修复。", cancellationToken);
 
         var goalArtifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
@@ -948,7 +953,7 @@ public sealed partial class PrototypeQuickFixService
                 sessionStatus == "completed" ? now : null,
                 cancellationToken);
             PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "succeeded", assistantMessage, now, sessionSummary);
-            await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "succeeded", sessionSummary, assistantMessage, [], cancellationToken);
+            await UpsertGoalRunMemoryAsync(project, targetGoal, "succeeded", sessionSummary, assistantMessage, [], null, cancellationToken);
             await SetProgressAsync(runId, "completed", "", $"任务 {targetGoal.GoalIndex} 已通过超时后复验。", cancellationToken);
 
             var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
@@ -1082,7 +1087,7 @@ public sealed partial class PrototypeQuickFixService
             null,
             cancellationToken);
         PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, targetGoal, "needs_fix", assistantMessage, now, sessionSummary);
-        await UpsertGoalRunMemoryAsync(project.ProjectId, targetGoal, "needs_fix", sessionSummary, assistantMessage, [sessionSummary], cancellationToken);
+        await UpsertGoalRunMemoryAsync(project, targetGoal, "needs_fix", sessionSummary, assistantMessage, [sessionSummary], null, cancellationToken);
         await SetProgressAsync(runId, "failed", "validation", $"任务 {targetGoal.GoalIndex} 超时，仍需继续修复验证问题。", cancellationToken);
 
         var artifacts = await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
@@ -1101,14 +1106,23 @@ public sealed partial class PrototypeQuickFixService
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(GodotSmokeValidationTimeout);
-        var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
+        string? scenePath = null;
         try
         {
-            return await PrototypeGodotSmokeService.ValidateGoalAsync(project, targetGoal, prototypeState, _options, _processRunner, timeout.Token);
+            scenePath = await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+                _metadataStore,
+                project,
+                _stateWriter,
+                targetGoal.GoalIndex,
+                timeout.Token,
+                sessionId: targetGoal.SessionId,
+                goal: targetGoal,
+                allowMissingGoalStateScene: true,
+                allowBaselineFallbackForGoalContext: true);
+            return await PrototypeGodotSmokeService.ValidateGoalSceneAsync(project, targetGoal, scenePath, _options, _processRunner, timeout.Token);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            var scenePath = ResolveSmokeSceneForTimeout(prototypeState);
             return PrototypeGoalGodotSmokeValidationResult.RequiredResult(new PrototypeGodotSmokeResult(
                 true,
                 124,
@@ -1131,14 +1145,28 @@ public sealed partial class PrototypeQuickFixService
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(150));
+        var selectedRouteStates = SelectCurrentRouteStates(project, targetGoal);
+        var preferredGdUnitPaths = PrototypeGdUnitPathResolver.ExtractGdUnitAddPathsFromRouteStates(selectedRouteStates);
+        var smokeScene = await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+            _metadataStore,
+            project,
+            _stateWriter,
+            targetGoal.GoalIndex,
+            cancellationToken,
+            sessionId: targetGoal.SessionId,
+            goal: targetGoal,
+            allowMissingGoalStateScene: true);
+        var slug = TryResolvePrototypeSlug(smokeScene) ?? "dq-rpg";
         try
         {
             return await PrototypeGodotSmokeService.RunRpgGdUnitValidationAsync(
                 _options,
                 _processRunner,
                 project,
-                "dq-rpg",
-                timeout.Token);
+                slug,
+                preferredGdUnitPaths,
+                requireSuite: true,
+                cancellationToken: timeout.Token);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -1148,14 +1176,35 @@ public sealed partial class PrototypeQuickFixService
                 "",
                 "RPG GdUnit validation timed out.",
                 "rpg_project_specific_gdunit_timeout",
-                "tests/Prototype/DqRpgPrototype",
-                null);
+                preferredGdUnitPaths.FirstOrDefault() ?? "tests/Prototype/DqRpgPrototype",
+                null,
+                preferredGdUnitPaths);
         }
+    }
+
+    private static string? TryResolvePrototypeSlug(string? scene)
+    {
+        const string prefix = "res://Game.Godot/Prototypes/";
+        if (string.IsNullOrWhiteSpace(scene) ||
+            !scene.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var remainder = scene[prefix.Length..].Replace('\\', '/');
+        var slashIndex = remainder.IndexOf('/', StringComparison.Ordinal);
+        if (slashIndex <= 0)
+        {
+            return null;
+        }
+
+        var slug = remainder[..slashIndex];
+        return string.IsNullOrWhiteSpace(slug) ? null : slug;
     }
 
     private static bool RequiresRpgGdUnitValidation(ProjectSnapshot project, ProjectIterationGoalSnapshot targetGoal)
     {
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (!GameTypeRouteProfiles.IsRpgProject(project))
         {
             return false;
         }
@@ -1184,7 +1233,18 @@ public sealed partial class PrototypeQuickFixService
             return true;
         }
 
+        if (RequiresExplicitRpgGdUnitValidation(targetGoal) && !validation.Ran)
+        {
+            return true;
+        }
+
         return HasBlockingRpgGdUnitInfrastructureFailure(validation);
+    }
+
+    private static bool RequiresExplicitRpgGdUnitValidation(ProjectIterationGoalSnapshot targetGoal)
+    {
+        var text = string.Join(" ", targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint);
+        return text.Contains("GdUnit", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool RequiresFullRpgGdUnitValidation(ProjectIterationGoalSnapshot targetGoal)
@@ -1228,50 +1288,9 @@ public sealed partial class PrototypeQuickFixService
         return blockingMarkers.Any(marker => combined.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static string? ResolveSmokeSceneForTimeout(string prototypeStateJson)
-    {
-        if (string.IsNullOrWhiteSpace(prototypeStateJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(prototypeStateJson);
-            var root = document.RootElement;
-            if (root.TryGetProperty("prototype_completion", out var completion) &&
-                completion.ValueKind == JsonValueKind.Object &&
-                completion.TryGetProperty("smoke_scene", out var completionScene) &&
-                completionScene.ValueKind == JsonValueKind.String)
-            {
-                return completionScene.GetString();
-            }
-
-            if (root.TryGetProperty("godot_smoke", out var smoke) &&
-                smoke.ValueKind == JsonValueKind.Object &&
-                smoke.TryGetProperty("scene", out var scene) &&
-                scene.ValueKind == JsonValueKind.String)
-            {
-                return scene.GetString();
-            }
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        return null;
-    }
-
     private static string TrimForPromptExcerpt(string? value, int maxLength)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "";
-        }
-
-        var trimmed = value.Trim();
-        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+        return PrototypePromptText.TrimHeadAndTail(value, maxLength);
     }
 
     private static string BuildGoalRepairTimeoutFocus(ProjectIterationGoalSnapshot goal)
@@ -1387,6 +1406,7 @@ public sealed partial class PrototypeQuickFixService
         SkillActionDefinition? skillAction,
         ProjectIterationGoalSnapshot? goal)
     {
+        var feedbackForArtifact = TrimForPromptExcerpt(feedback, FeedbackArtifactMaxChars);
         return $"""
             # Prototype Quick Fix Submission
 
@@ -1399,7 +1419,7 @@ public sealed partial class PrototypeQuickFixService
 
             ## Feedback
 
-            {feedback}
+            {feedbackForArtifact}
             
             {(goal is null ? "" : $"""
             ## Goal Context
@@ -1433,11 +1453,12 @@ public sealed partial class PrototypeQuickFixService
         PrototypeContractSnapshot? prototypeContract = null,
         GodotFailureDiagnostic? godotDiagnostic = null,
         GodotCacheCleanupResult? godotCleanup = null,
-        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null)
+        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null,
+        IReadOnlyList<string>? focusedWorkspaceDirectories = null)
     {
         if (goal is not null)
         {
-            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation);
+            return BuildGoalRepairPrompt(project, runId, feedback, goal, runMemory, prototypeContract, godotDiagnostic, godotCleanup, currentAcceptanceValidation, focusedWorkspaceDirectories ?? []);
         }
 
         var skillInstruction = skillAction is null
@@ -1445,6 +1466,7 @@ public sealed partial class PrototypeQuickFixService
             : $"能力模式：{skillAction.Label}。执行时使用 ${skillAction.SkillName} 的方法。";
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
+        var feedbackForPrompt = TrimForPromptExcerpt(feedback, QuickFixFeedbackPromptMaxChars);
 
         return $"""
             你正在执行积木云 Phase A 的快速修复任务。
@@ -1476,7 +1498,7 @@ public sealed partial class PrototypeQuickFixService
             - QuickFixRunId: {runId}
 
             用户快速修复请求：
-            {feedback}
+            {feedbackForPrompt}
 
             返回格式：
             1. 是否完成快速修复
@@ -1488,55 +1510,19 @@ public sealed partial class PrototypeQuickFixService
 
     private async Task<PrototypeGoalGodotSmokeValidationResult> ValidateProjectSmokeAfterQuickFixAsync(ProjectSnapshot project, CancellationToken cancellationToken)
     {
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project))
+        if (!GameTypeRouteProfiles.IsRpgProject(project))
         {
             return PrototypeGoalGodotSmokeValidationResult.NotRequired();
         }
 
-        var prototypeState = new PrototypeRouteStateWriter().ReadLatestPrototypeState(project);
-        var scenePath = ResolveSmokeScene(prototypeState);
+        var scenePath = await PrototypeSmokeSceneResolver.ResolveLatestAsync(_metadataStore, project, _stateWriter, cancellationToken: cancellationToken);
         if (string.IsNullOrWhiteSpace(scenePath))
         {
-            return PrototypeGoalGodotSmokeValidationResult.NotRequired();
+            return PrototypeGoalGodotSmokeValidationResult.RequiredResult(PrototypeGodotSmokeResult.NotRun("prototype_smoke_scene_missing"));
         }
 
         var smoke = await PrototypeGodotSmokeService.RunAsync(_options, _processRunner, project.RepoPath, scenePath, cancellationToken);
         return PrototypeGoalGodotSmokeValidationResult.RequiredResult(smoke);
-    }
-
-    private static string? ResolveSmokeScene(string prototypeStateJson)
-    {
-        if (string.IsNullOrWhiteSpace(prototypeStateJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(prototypeStateJson);
-            var root = document.RootElement;
-            if (root.TryGetProperty("prototype_completion", out var completion) &&
-                completion.ValueKind == JsonValueKind.Object &&
-                completion.TryGetProperty("smoke_scene", out var completionScene) &&
-                completionScene.ValueKind == JsonValueKind.String)
-            {
-                return completionScene.GetString();
-            }
-
-            if (root.TryGetProperty("godot_smoke", out var smoke) &&
-                smoke.ValueKind == JsonValueKind.Object &&
-                smoke.TryGetProperty("scene", out var scene) &&
-                scene.ValueKind == JsonValueKind.String)
-            {
-                return scene.GetString();
-            }
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        return null;
     }
 
     private bool TryRecoverProtectedPrototypeCompletionState(
@@ -1702,8 +1688,8 @@ public sealed partial class PrototypeQuickFixService
             _stateWriter.WritePrototypeState(project, new
             {
                 route = "prototype-7day-playable",
-                route_skill = PrototypeRouteSkillPolicy.Resolve(project),
                 game_type_profile = PrototypeRouteSkillPolicy.ResolveProfile(project),
+                source_boundary = "gdd_derived_contract_only_after_gdd_generation",
                 run_id = runId,
                 status = "succeeded",
                 exit_code = 0,
@@ -1768,7 +1754,8 @@ public sealed partial class PrototypeQuickFixService
         PrototypeContractSnapshot? prototypeContract,
         GodotFailureDiagnostic? godotDiagnostic = null,
         GodotCacheCleanupResult? godotCleanup = null,
-        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null)
+        PrototypeGoalAcceptanceValidationResult? currentAcceptanceValidation = null,
+        IReadOnlyList<string>? focusedWorkspaceDirectories = null)
     {
         var memoryBlock = runMemory is null
             ? "暂无结构化运行记忆，直接按当前目标执行。"
@@ -1789,6 +1776,7 @@ public sealed partial class PrototypeQuickFixService
         var platformAcceptanceScopeOverrideBlock = BuildPlatformAcceptanceScopeOverrideBlock(currentAcceptanceValidation);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
         var rpgGdUnitContextBlock = BuildRpgGdUnitRepairContextBlock(project, goal);
+        var feedbackForPrompt = TrimForPromptExcerpt(feedback, GoalRepairFeedbackPromptMaxChars);
 
         return $"""
             你正在执行积木云 Phase A 的单目标迭代修复任务。
@@ -1804,7 +1792,7 @@ public sealed partial class PrototypeQuickFixService
             - 直接围绕当前任务实现，不要先做任务恢复、仓库导览、规则总结或工作流巡检。
             - 不要读取或总结 AGENTS.md、decision-logs、execution-plans、active-task、session recovery 一类文件。
             - 不要修改 PhaseA.Platform/**、PhaseA.Platform.Tests/**、scripts/**、docs/** 这些云端控制台与工具链文件。
-            - 如果当前任务是 RPG 原型修复，默认只允许修改 Game.Godot/Prototypes/dq-rpg/**、Game.Core/Prototypes/**、Game.Core.Tests/Prototypes/**、Tests.Godot/tests/Prototype/** 这些与原型直接相关的位置。
+            - 如果当前任务是 RPG 原型修复，默认只允许修改 {BuildFocusedWorkspaceScopeText(focusedWorkspaceDirectories ?? [])} 这些与原型直接相关的位置。
             - Godot C# 项目结构：可构建项目是仓库根目录的 GodotGame.csproj；Game.Godot/ 只是运行时场景和脚本目录，不是独立 C# 项目。不要执行或引用 Game.Godot/Game.Godot.csproj。
             - 不要在本路由中执行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些本地验证命令会写入 obj/bin/.godot 并可能触发文件锁。修复完成后由平台统一执行隔离验收。
             - 仅当 Godot stderr 明确指出 `Game.Godot/Examples/**.tscn:1 - Parse Error: Expected '['` 时，允许把被点名的示例场景重写为无 UTF-8 BOM 的 Godot 文本场景；不要借机改示例内容。
@@ -1847,11 +1835,11 @@ public sealed partial class PrototypeQuickFixService
             {platformAcceptanceScopeOverrideBlock}
 
             用户触发这次修复时附带的说明：
-            {feedback}
+            {feedbackForPrompt}
 
             {memoryBlock}
 
-            当前运行环境已经切到一个只包含原型白名单目录的聚焦工作区。
+            {BuildWorkspaceRuntimeText(focusedWorkspaceDirectories ?? [])}
             你不需要也不应该做仓库恢复、全仓巡检、部署修复或文档整理。
 
             成功定义：
@@ -1914,6 +1902,13 @@ public sealed partial class PrototypeQuickFixService
             """;
     }
 
+    private static string BuildWorkspaceRuntimeText(IReadOnlyList<string> focusedWorkspaceDirectories)
+    {
+        return focusedWorkspaceDirectories.Count == 0
+            ? "当前运行环境使用完整项目工作区；仍必须按当前任务范围执行，不要做仓库恢复、全仓巡检、部署修复或文档整理。"
+            : "当前运行环境已经切到一个只包含原型白名单目录的聚焦工作区。";
+    }
+
     private static bool IsCoreTestFailure(PrototypeGoalAcceptanceValidationResult? validation)
     {
         return validation is not null &&
@@ -1948,7 +1943,7 @@ public sealed partial class PrototypeQuickFixService
 
     private static string BuildRpgGdUnitRepairContextBlock(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
     {
-        if (!PrototypeRouteSkillPolicy.IsRpgProject(project) ||
+        if (!GameTypeRouteProfiles.IsRpgProject(project) ||
             !RequiresRpgGdUnitValidation(project, goal))
         {
             return "";
@@ -2029,7 +2024,7 @@ public sealed partial class PrototypeQuickFixService
                 "FAILED",
                 "Expecting:",
                 "do contains");
-            if (line.StartsWith("res://tests/Prototype/DqRpgPrototype/", StringComparison.OrdinalIgnoreCase))
+            if (line.StartsWith("res://tests/Prototype/", StringComparison.OrdinalIgnoreCase))
             {
                 isImportant = true;
                 captureFailure = line.Contains("FAILED", StringComparison.OrdinalIgnoreCase);
@@ -2039,7 +2034,10 @@ public sealed partial class PrototypeQuickFixService
                 isImportant = true;
                 captureFailure = true;
             }
-            else if (captureFailure && (line.StartsWith("'", StringComparison.Ordinal) || line.Contains(" but is ", StringComparison.OrdinalIgnoreCase)))
+            else if (captureFailure &&
+                     (line.StartsWith("'", StringComparison.Ordinal) ||
+                      line.StartsWith("but is ", StringComparison.OrdinalIgnoreCase) ||
+                      line.Contains(" but is ", StringComparison.OrdinalIgnoreCase)))
             {
                 isImportant = true;
             }
@@ -2141,6 +2139,89 @@ public sealed partial class PrototypeQuickFixService
                 acceptanceValidation.Kind.StartsWith("survivorslike-", StringComparison.Ordinal));
     }
 
+    private static bool IsGoalRepairPlatformAcceptanceFailedOrMissing(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalAcceptanceValidationResult acceptanceValidation)
+    {
+        return ResolveGoalRepairPlatformAcceptanceReason(project, goal, acceptanceValidation) is not null;
+    }
+
+    private static string? ResolveGoalRepairPlatformAcceptanceReason(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalAcceptanceValidationResult acceptanceValidation)
+    {
+        if (string.Equals(acceptanceValidation.Status, "failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.IsNullOrWhiteSpace(acceptanceValidation.Reason)
+                ? "platform_acceptance_failed"
+                : acceptanceValidation.Reason;
+        }
+
+        if (string.Equals(acceptanceValidation.Status, "not_run", StringComparison.OrdinalIgnoreCase) &&
+            RequiresRpgGoalPlatformAcceptance(project, goal))
+        {
+            return "platform_acceptance_not_run_for_rpg_goal";
+        }
+
+        return null;
+    }
+
+    private static bool RequiresRpgGoalPlatformAcceptance(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+        if (contract is not null &&
+            (contract.MapEntryAcceptance ||
+             contract.BattleSceneAcceptance ||
+             contract.RewardFlowAcceptance ||
+             contract.FinalAcceptance ||
+             contract.AssetUsageAcceptance ||
+             contract.MainSceneHostUiHiddenAcceptance ||
+             contract.Kind.StartsWith("rpg-", StringComparison.Ordinal) ||
+             contract.Kind.StartsWith("jrpg-", StringComparison.Ordinal) ||
+             contract.Kind.StartsWith("default-rpg-", StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        if (!GameTypeRouteProfiles.IsRpgProject(project))
+        {
+            return false;
+        }
+
+        var text = string.Join(" ", project.GameTypeSource, project.GameName, goal.Title, goal.Description, goal.AcceptanceHint);
+        return ContainsAny(
+            text,
+            "start adventure",
+            "map movement",
+            "stable movement",
+            "visible map",
+            "mapscene",
+            "battle",
+            "battle scene",
+            "battlescene",
+            "encounter",
+            "challenge resolution",
+            "battle or challenge resolution",
+            "settlement",
+            "reward loop",
+            "return to map",
+            "first loop",
+            "地图移动",
+            "稳定移动",
+            "可见地图",
+            "战斗",
+            "遇敌",
+            "战斗场景",
+            "挑战结算",
+            "战斗或挑战结算",
+            "结算",
+            "奖励回路",
+            "返回地图",
+            "首轮闭环");
+    }
+
     private static string BuildAssistantMessage(string publicCodexReport, ProjectIterationGoalSnapshot? goal)
     {
         return $"""
@@ -2177,6 +2258,10 @@ public sealed partial class PrototypeQuickFixService
         ProjectIterationGoalSnapshot? goal,
         GoalRepairOutcome? goalRepairOutcome)
     {
+        var feedbackForLog = TrimForPromptExcerpt(feedback, FeedbackArtifactMaxChars);
+        var stdoutForLog = TrimForPromptExcerpt(codexResult.Stdout, GeneratorStreamLogMaxChars);
+        var stderrForLog = TrimForPromptExcerpt(codexResult.Stderr, GeneratorStreamLogMaxChars);
+        var outputForLog = TrimForPromptExcerpt(codexOutput, GeneratorStreamLogMaxChars);
         return $"""
             # Prototype Quick Fix Result
 
@@ -2192,7 +2277,7 @@ public sealed partial class PrototypeQuickFixService
 
             ## Submitted Feedback
 
-            {feedback}
+            {feedbackForLog}
 
             {(goal is null ? "" : $"""
             ## Goal Context
@@ -2210,15 +2295,15 @@ public sealed partial class PrototypeQuickFixService
 
             ## Generator Stdout
 
-            {codexResult.Stdout}
+            {stdoutForLog}
 
             ## Generator Stderr
 
-            {codexResult.Stderr}
+            {stderrForLog}
 
             ## Generator Output
 
-            {codexOutput}
+            {outputForLog}
             """;
     }
 
@@ -2366,6 +2451,21 @@ public sealed partial class PrototypeQuickFixService
             """;
     }
 
+    private static string AppendAcceptanceValidationNotRunFailure(
+        string assistantMessage,
+        ProjectIterationGoalSnapshot goal)
+    {
+        return $"""
+            {assistantMessage.Trim()}
+
+            平台验收：
+            STATUS: needs_fix
+            任务 {goal.GoalIndex} 还没有可用的平台玩法验收合同，当前任务仍保持需要修复。
+            原因：platform_acceptance_not_run_for_rpg_goal
+            细节：请先恢复或补齐当前 RPG/JRPG 任务可验证的合同、标记或验收文件，再报告完成。
+            """;
+    }
+
     private static string BuildPublicAcceptanceValidationDetails(PrototypeGoalAcceptanceValidationResult validation)
     {
         if (string.Equals(validation.Reason, "core_tests_failed", StringComparison.OrdinalIgnoreCase) &&
@@ -2390,6 +2490,17 @@ public sealed partial class PrototypeQuickFixService
             VERIFY: Platform acceptance validation failed for the current gameplay goal.
             REASON: {validation.Reason ?? validation.Status}
             DETAILS: {validation.Details ?? "none"}
+            """;
+    }
+
+    private static string AppendAcceptanceValidationNotRunEvidence(string codexOutput)
+    {
+        var prefix = string.IsNullOrWhiteSpace(codexOutput) ? "" : codexOutput.Trim() + Environment.NewLine + Environment.NewLine;
+        return $"""
+            {prefix}STATUS: needs_fix
+            VERIFY: Platform acceptance validation did not run for the current RPG/JRPG gameplay goal.
+            REASON: platform_acceptance_not_run_for_rpg_goal
+            DETAILS: current RPG/JRPG goal needs a concrete platform acceptance contract before it can be marked completed
             """;
     }
 
@@ -2490,6 +2601,8 @@ public sealed partial class PrototypeQuickFixService
     {
         var summary = BuildRpgGdUnitFailureSummaryForUser(project, validation);
         return $"""
+            {assistantMessage.Trim()}
+
             RPG GdUnit validation:
             STATUS: needs_fix
             VERIFY: Project-specific RPG GdUnit validation did not pass.
@@ -2524,6 +2637,16 @@ public sealed partial class PrototypeQuickFixService
         var summaryPath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "run-summary.json");
         var consolePath = ResolveRpgGdUnitReportFile(project.RepoPath, validation.ReportDir, "gdunit-console.txt");
         var lines = new List<string>();
+        if (validation.AttemptedGdUnitPaths.Count > 0)
+        {
+            lines.Add($"GDUNIT_ATTEMPTED_PATHS: {string.Join(", ", validation.AttemptedGdUnitPaths)}");
+        }
+
+        if (string.Equals(validation.Reason, "rpg_gdunit_tests_missing", StringComparison.OrdinalIgnoreCase))
+        {
+            lines.Add($"GDUNIT_PATH_HINT: create or repair a project-specific suite under Tests.Godot/{validation.GdUnitPath ?? validation.AttemptedGdUnitPaths.FirstOrDefault() ?? "tests/Prototype/<PrototypeSuite>"}.");
+        }
+
         if (!string.IsNullOrWhiteSpace(summaryPath) && File.Exists(summaryPath))
         {
             lines.Add($"GDUNIT_SUMMARY: {TrimForPromptExcerpt(File.ReadAllText(summaryPath, Encoding.UTF8), 700)}");
@@ -2685,6 +2808,11 @@ public sealed partial class PrototypeQuickFixService
         string stderr)
     {
         return DetermineGoalRepairOutcome(goal, "", new HostedProcessResult(0, stdout, stderr), codexOutput).GoalStatus;
+    }
+
+    public static IReadOnlyList<string> ExtractGdUnitPromptSummaryForTesting(string consoleText, int maxLines)
+    {
+        return ExtractGdUnitPromptSummary(consoleText, maxLines);
     }
 
     private static bool HasOffTopicEvidence(string normalizedText)
@@ -3224,31 +3352,7 @@ public sealed partial class PrototypeQuickFixService
 
     private static bool IsValidGodotSceneFile(string fullPath)
     {
-        if (!File.Exists(fullPath))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var reader = new StreamReader(fullPath, Encoding.UTF8, true);
-            while (!reader.EndOfStream)
-            {
-                var line = reader.ReadLine();
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-
-                return line.TrimStart().StartsWith("[gd_scene", StringComparison.Ordinal);
-            }
-        }
-        catch (IOException)
-        {
-            return false;
-        }
-
-        return false;
+        return PrototypeGodotSmokeService.HasValidGodotScenePrefix(fullPath);
     }
 
     private static string AppendCompletionRecoveryEvidence(string codexOutput, string recoveryEvidence)
@@ -3377,22 +3481,31 @@ public sealed partial class PrototypeQuickFixService
                combined.Contains("安全");
     }
 
+    private static string BuildGoalMemoryScope(int goalIndex)
+    {
+        return $"goal-repair-step-{goalIndex}";
+    }
+
     private async Task UpsertGoalRunMemoryAsync(
-        string projectId,
+        ProjectSnapshot project,
         ProjectIterationGoalSnapshot goal,
         string status,
         string nextRecommendedAction,
         string lastRunOutcome,
         IReadOnlyList<string> blockers,
+        IReadOnlyList<string>? allowedScopeOverride,
         CancellationToken cancellationToken)
     {
         var completed = status == "succeeded"
             ? JsonSerializer.Serialize(new[] { goal.Title })
             : "[]";
         var blockersJson = JsonSerializer.Serialize(blockers);
-        var allowedScopeJson = JsonSerializer.Serialize(FocusedWorkspaceDirectories);
+        var allowedScope = allowedScopeOverride is { Count: > 0 }
+            ? allowedScopeOverride
+            : await ResolveGoalAllowedScopeAsync(project, goal, cancellationToken);
+        var allowedScopeJson = JsonSerializer.Serialize(allowedScope);
         await _metadataStore.UpsertProjectRunMemoryAsync(
-            projectId,
+            project.ProjectId,
             BuildGoalMemoryScope(goal.GoalIndex),
             status,
             goal.Description,
@@ -3405,16 +3518,31 @@ public sealed partial class PrototypeQuickFixService
             cancellationToken);
     }
 
-    private static string BuildGoalMemoryScope(int goalIndex)
+    private static string BuildFocusedWorkspaceScopeText(IReadOnlyList<string> focusedWorkspaceDirectories)
     {
-        return $"goal-repair-step-{goalIndex}";
+        return focusedWorkspaceDirectories.Count == 0
+            ? "当前项目工作区"
+            : string.Join("、", focusedWorkspaceDirectories.Select(FormatFocusedWorkspaceScopePath));
     }
 
-    private static ExecutionWorkspace PrepareExecutionWorkspace(ProjectSnapshot project, ProjectIterationGoalSnapshot? goal, string runId, string fallbackCodexOutputPath)
+    private static string FormatFocusedWorkspaceScopePath(string path)
+    {
+        return FocusedWorkspaceRootFiles.Contains(path, StringComparer.OrdinalIgnoreCase)
+            ? path
+            : $"{path}/**";
+    }
+
+    private async Task<ExecutionWorkspace> PrepareExecutionWorkspaceAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot? goal,
+        PrototypeGoalAcceptanceValidationResult currentAcceptanceValidation,
+        string runId,
+        string fallbackCodexOutputPath,
+        CancellationToken cancellationToken)
     {
         if (!ShouldUseFocusedWorkspace(project, goal))
         {
-            return new ExecutionWorkspace(project.RepoPath, CreateShortRuntimeOutputPath(runId), false, []);
+            return new ExecutionWorkspace(project.RepoPath, CreateShortRuntimeOutputPath(runId), false, [], []);
         }
 
         var focusedRoot = Path.Combine(Path.GetTempPath(), "phasea-focused-workspaces", runId);
@@ -3428,15 +3556,28 @@ public sealed partial class PrototypeQuickFixService
         {
             CopyRelativeFileIfExists(project.RepoPath, focusedRoot, relativeFile);
         }
+        var writableRootFiles = ResolveFocusedWorkspaceWritableRootFiles(project, goal, currentAcceptanceValidation);
 
-        foreach (var relativeDirectory in FocusedWorkspaceDirectories)
+        var activeSmokeScene = await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+            _metadataStore,
+            project,
+            _stateWriter,
+            goal?.GoalIndex,
+            cancellationToken,
+            sessionId: goal?.SessionId,
+            goal: goal,
+            allowMissingGoalStateScene: true,
+            allowBaselineFallbackForGoalContext: true);
+        var managedDirectories = ResolveFocusedWorkspaceDirectories(project, activeSmokeScene, goal);
+        AddFocusedRouteStateTestDirectories(project, managedDirectories, goal);
+        foreach (var relativeDirectory in managedDirectories)
         {
             CopyRelativeDirectoryIfExists(project.RepoPath, focusedRoot, relativeDirectory);
         }
 
         var codexOutputPath = Path.Combine(focusedRoot, ".phasea", "codex-output.txt");
         Directory.CreateDirectory(Path.GetDirectoryName(codexOutputPath)!);
-        return new ExecutionWorkspace(focusedRoot, codexOutputPath, true, FocusedWorkspaceDirectories.Concat(FocusedWorkspaceRootFiles).ToArray());
+        return new ExecutionWorkspace(focusedRoot, codexOutputPath, true, managedDirectories, managedDirectories.Concat(writableRootFiles).ToArray());
     }
 
     private static string CreateShortRuntimeOutputPath(string runId)
@@ -3449,7 +3590,68 @@ public sealed partial class PrototypeQuickFixService
     private static bool ShouldUseFocusedWorkspace(ProjectSnapshot project, ProjectIterationGoalSnapshot? goal)
     {
         return goal is not null &&
-               project.GameTypeSource.Contains("rpg", StringComparison.OrdinalIgnoreCase);
+               GameTypeRouteProfiles.IsRpgProject(project);
+    }
+
+    private static IReadOnlyList<string> ResolveFocusedWorkspaceWritableRootFiles(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot? goal,
+        PrototypeGoalAcceptanceValidationResult currentAcceptanceValidation)
+    {
+        if (goal is null)
+        {
+            return [];
+        }
+
+        var files = new List<string>();
+        if (ShouldIncludeProjectGodotRootFile(project, goal, currentAcceptanceValidation))
+        {
+            AddUnique(files, "project.godot");
+        }
+
+        if (AllowsBuildRootFileRepair(currentAcceptanceValidation))
+        {
+            AddUnique(files, "Game.sln");
+            AddUnique(files, "GodotGame.sln");
+            AddUnique(files, "GodotGame.csproj");
+            AddUnique(files, "Directory.Build.props");
+            AddUnique(files, "Directory.Build.targets");
+            AddUnique(files, "packages.lock.json");
+        }
+
+        return files;
+    }
+
+    private static bool ShouldIncludeProjectGodotRootFile(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        PrototypeGoalAcceptanceValidationResult currentAcceptanceValidation)
+    {
+        if (ShouldIncludeHostSceneDirectory(project, goal))
+        {
+            return true;
+        }
+
+        if (string.Equals(currentAcceptanceValidation.Reason, "main_scene_default_ui_not_hidden", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
+        return ContainsAny(text, "project.godot", "run/main_scene");
+    }
+
+    private static bool AllowsBuildRootFileRepair(PrototypeGoalAcceptanceValidationResult currentAcceptanceValidation)
+    {
+        return IsCoreTestFailure(currentAcceptanceValidation) ||
+               ContainsAny(
+                   string.Join(" ", currentAcceptanceValidation.Reason, currentAcceptanceValidation.Details),
+                   "MSBuildProjectExtensionsPath",
+                   "Directory.Build.props",
+                   "Directory.Build.targets",
+                   "GodotGame.csproj",
+                   "CS0246",
+                   "PackageReference");
     }
 
     private static void SyncFocusedWorkspaceBack(ExecutionWorkspace workspace, string projectRepoPath)
@@ -3460,7 +3662,7 @@ public sealed partial class PrototypeQuickFixService
             var targetPath = Path.Combine(projectRepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
             if (Directory.Exists(sourcePath))
             {
-                CopyDirectoryContents(sourcePath, targetPath);
+                MirrorDirectoryContents(sourcePath, targetPath);
                 continue;
             }
 
@@ -3468,7 +3670,12 @@ public sealed partial class PrototypeQuickFixService
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
                 File.Copy(sourcePath, targetPath, overwrite: true);
+                continue;
             }
+
+            // Missing managed roots are ignored. File-level deletes inside an existing managed
+            // directory are still mirrored by MirrorDirectoryContents, but a transient workspace
+            // omission must not remove an entire source-tree directory.
         }
     }
 
@@ -3497,6 +3704,32 @@ public sealed partial class PrototypeQuickFixService
         CopyDirectoryContents(sourcePath, targetPath);
     }
 
+    private static void MirrorDirectoryContents(string sourceDirectory, string targetDirectory)
+    {
+        Directory.CreateDirectory(targetDirectory);
+        foreach (var file in Directory.EnumerateFiles(targetDirectory, "*", SearchOption.AllDirectories))
+        {
+            var relative = Path.GetRelativePath(targetDirectory, file);
+            if (!File.Exists(Path.Combine(sourceDirectory, relative)))
+            {
+                File.Delete(file);
+            }
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(targetDirectory, "*", SearchOption.AllDirectories)
+                     .OrderByDescending(path => path.Length))
+        {
+            var relative = Path.GetRelativePath(targetDirectory, directory);
+            if (!Directory.Exists(Path.Combine(sourceDirectory, relative)) &&
+                !Directory.EnumerateFileSystemEntries(directory).Any())
+            {
+                Directory.Delete(directory);
+            }
+        }
+
+        CopyDirectoryContents(sourceDirectory, targetDirectory);
+    }
+
     private static void CopyDirectoryContents(string sourceDirectory, string targetDirectory)
     {
         Directory.CreateDirectory(targetDirectory);
@@ -3515,12 +3748,172 @@ public sealed partial class PrototypeQuickFixService
         }
     }
 
-    private static readonly string[] FocusedWorkspaceDirectories =
+    private static List<string> ResolveFocusedWorkspaceDirectories(ProjectSnapshot project, string? activeSmokeScene, ProjectIterationGoalSnapshot? goal)
+    {
+        var directories = new List<string>(FocusedWorkspaceBaseDirectories);
+        if (ShouldIncludeHostSceneDirectory(project, goal))
+        {
+            AddUnique(directories, "Game.Godot/Scenes");
+        }
+
+        var prototypeDirectory = TryResolvePrototypeDirectory(activeSmokeScene);
+        if (!string.IsNullOrWhiteSpace(prototypeDirectory))
+        {
+            AddUnique(directories, prototypeDirectory);
+            AddFocusedPrototypeTestDirectories(project.RepoPath, directories, prototypeDirectory);
+        }
+
+        return directories;
+    }
+
+    private async Task<IReadOnlyList<string>> ResolveGoalAllowedScopeAsync(
+        ProjectSnapshot project,
+        ProjectIterationGoalSnapshot goal,
+        CancellationToken cancellationToken)
+    {
+        if (!ShouldUseFocusedWorkspace(project, goal))
+        {
+            return [];
+        }
+
+        var activeSmokeScene = await PrototypeSmokeSceneResolver.ResolveLatestAsync(
+            _metadataStore,
+            project,
+            _stateWriter,
+            goal.GoalIndex,
+            cancellationToken,
+            sessionId: goal.SessionId,
+            goal: goal,
+            allowMissingGoalStateScene: true,
+            allowBaselineFallbackForGoalContext: true);
+        var directories = ResolveFocusedWorkspaceDirectories(project, activeSmokeScene, goal);
+        AddFocusedRouteStateTestDirectories(project, directories, goal);
+        return directories;
+    }
+
+    private void AddFocusedRouteStateTestDirectories(ProjectSnapshot project, List<string> directories, ProjectIterationGoalSnapshot? goal)
+    {
+        if (goal is null)
+        {
+            return;
+        }
+
+        foreach (var gdUnitPath in PrototypeGdUnitPathResolver.ExtractManagedDirectoriesFromRouteStates(SelectCurrentRouteStates(project, goal)))
+        {
+            AddUnique(directories, gdUnitPath);
+        }
+    }
+
+    private static bool ShouldIncludeHostSceneDirectory(ProjectSnapshot project, ProjectIterationGoalSnapshot? goal)
+    {
+        if (goal is null)
+        {
+            return false;
+        }
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+        if (contract?.MainSceneHostUiHiddenAcceptance == true)
+        {
+            return true;
+        }
+
+        var text = string.Join(" ", goal.Title, goal.Description, goal.AcceptanceHint);
+        return ContainsAny(text, "Main.tscn", "main scene", "host ui", "host scene");
+    }
+
+    private IReadOnlyList<string> SelectCurrentRouteStates(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
+    {
+        return PrototypeRouteStateSelection.SelectCurrentRouteStates(
+            _stateWriter.ReadLatestNeedsFixState(project, goal.GoalIndex),
+            _stateWriter.ReadLatestExecuteNextGoalState(project, goal.GoalIndex),
+            goal.SessionId,
+            goal);
+    }
+
+    private static string? TryResolvePrototypeDirectory(string? scene)
+    {
+        const string prefix = "res://Game.Godot/Prototypes/";
+        if (string.IsNullOrWhiteSpace(scene) ||
+            !scene.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var remainder = scene[prefix.Length..].Replace('\\', '/');
+        var slashIndex = remainder.IndexOf('/', StringComparison.Ordinal);
+        if (slashIndex <= 0)
+        {
+            return null;
+        }
+
+        var slug = remainder[..slashIndex];
+        return string.IsNullOrWhiteSpace(slug) ? null : $"Game.Godot/Prototypes/{slug}";
+    }
+
+    private static void AddFocusedPrototypeTestDirectories(string repoPath, List<string> directories, string prototypeDirectory)
+    {
+        var slug = prototypeDirectory.Split('/').LastOrDefault();
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return;
+        }
+
+        var pascalSlug = ToPascalCase(slug);
+        foreach (var candidate in new[]
+                 {
+                     $"Tests.Godot/tests/Prototype/{slug}",
+                     $"Tests.Godot/tests/Prototype/{pascalSlug}",
+                     $"Tests.Godot/tests/Prototype/{pascalSlug}Prototype"
+                 })
+        {
+            AddUnique(directories, candidate);
+        }
+
+        var testsRoot = Path.Combine(repoPath, "Tests.Godot", "tests", "Prototype");
+        if (!Directory.Exists(testsRoot))
+        {
+            return;
+        }
+
+        var normalizedSlug = NormalizeDirectoryToken(slug);
+        var normalizedPascalSlug = NormalizeDirectoryToken(pascalSlug);
+        foreach (var directory in Directory.EnumerateDirectories(testsRoot))
+        {
+            var name = Path.GetFileName(directory);
+            var normalizedName = NormalizeDirectoryToken(name);
+            if (normalizedName == normalizedSlug ||
+                normalizedName == normalizedPascalSlug ||
+                normalizedName == $"{normalizedPascalSlug}prototype")
+            {
+                AddUnique(directories, $"Tests.Godot/tests/Prototype/{name}");
+            }
+        }
+    }
+
+    private static string ToPascalCase(string value)
+    {
+        var parts = value.Split(['-', '_', ' '], StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+    }
+
+    private static string NormalizeDirectoryToken(string value)
+    {
+        return new string(value.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
+    }
+
+    private static void AddUnique(List<string> values, string value)
+    {
+        if (!values.Contains(value, StringComparer.OrdinalIgnoreCase))
+        {
+            values.Add(value);
+        }
+    }
+
+    private static readonly string[] FocusedWorkspaceBaseDirectories =
     [
-        "Game.Godot/Prototypes/dq-rpg",
+        "Game.Godot/Scripts/Prototypes",
         "Game.Core/Prototypes",
-        "Game.Core.Tests/Prototypes",
-        "Tests.Godot/tests/Prototype/DqRpgPrototype"
+        "Game.Core.Tests/Prototypes"
     ];
 
     private static readonly string[] FocusedWorkspaceRootFiles =
@@ -3536,7 +3929,7 @@ public sealed partial class PrototypeQuickFixService
     ];
 
     private sealed record GoalRepairOutcome(string GoalStatus, bool MarkCompleted);
-    private sealed record ExecutionWorkspace(string RootPath, string CodexOutputPath, bool SyncBack, IReadOnlyList<string> ManagedPaths);
+    private sealed record ExecutionWorkspace(string RootPath, string CodexOutputPath, bool SyncBack, IReadOnlyList<string> ManagedDirectories, IReadOnlyList<string> ManagedPaths);
     private sealed record AcceptanceValidationResult(string Kind, string Status)
     {
         public bool Passed => string.Equals(Status, "passed", StringComparison.Ordinal);

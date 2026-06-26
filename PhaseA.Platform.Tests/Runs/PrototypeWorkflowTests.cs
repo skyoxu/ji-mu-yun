@@ -101,6 +101,53 @@ public sealed class PrototypeWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task GodotSmoke_PostPrototypeAcceptance_ShouldAllowNavigationPassAfterDirectSceneWarning()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(repoRoot.Path, repoRoot.Path);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 14,
+            smokeStdoutOverride: "",
+            smokeStderrOverride: "Scene exited with a non-fatal warning.",
+            mainMenuNavigationExitCode: 0);
+
+        var result = await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(
+            options,
+            runner,
+            repoRoot.Path,
+            "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
+
+        result.ExitCode.Should().Be(0);
+        result.Reason.Should().Be("strict_headless_prototype_scene_warning_main_menu_navigation_passed");
+        runner.Commands.Should().HaveCount(2);
+        runner.Commands[0].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands[1].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
+    }
+
+    [Fact]
+    public async Task GodotSmoke_PostPrototypeAcceptance_ShouldFailWhenDirectSceneReportsSmokeFail()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(repoRoot.Path, repoRoot.Path);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 1,
+            smokeStdoutOverride: "SMOKE FAIL (runtime failure)\n",
+            smokeStderrOverride: "",
+            mainMenuNavigationExitCode: 0);
+
+        var result = await PrototypeGodotSmokeService.RunPostPrototypeAcceptanceAsync(
+            options,
+            runner,
+            repoRoot.Path,
+            "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn");
+
+        result.ExitCode.Should().Be(1);
+        result.Reason.Should().Be("strict_headless_prototype_scene");
+        runner.Commands.Should().ContainSingle();
+        runner.Commands[0].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+    }
+
+    [Fact]
     public void GodotSmokeEvidence_ShouldDiagnoseOnlyRuntimeResources_NotSceneLineMarkers()
     {
         using var repoRoot = TempDirectory.Create("phase-a-repo");
@@ -220,11 +267,43 @@ public sealed class PrototypeWorkflowTests : IDisposable
         File.Exists(projectGuidePath).Should().BeTrue();
         var projectGuide = File.ReadAllText(projectGuidePath);
         projectGuide.Should().Contain("GameTypeId: rpg");
-        projectGuide.Should().Contain("SkillId: prototype-rpg-godot-zh");
+        projectGuide.Should().Contain("Downstream Source Boundary");
+        projectGuide.Should().Contain("Only the GDD route may read broad game-type sources");
+        projectGuide.Should().Contain("Do not read docs/game-type-guides");
+        projectGuide.Should().NotContain("SkillId:");
+        projectGuide.Should().NotContain("SkillPath:");
+        projectGuide.Should().NotContain("SkillContractPath:");
         projectGuide.Should().Contain("Prototype Chapter 3/6 Lite Protocol");
         projectGuide.Should().Contain("does not create or validate formal acceptance files");
         projectGuide.Should().Contain("Route Recovery Protocol");
         projectGuide.Should().Contain("Do not use AGENTS.md as hosted project recovery memory");
+    }
+
+    [Fact]
+    public async Task RunAsync_AllowsNavigationPassAfterDirectSceneWarning()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 14,
+            smokeStdoutOverride: "",
+            smokeStderrOverride: "Scene exited with a non-fatal warning.",
+            mainMenuNavigationExitCode: 0);
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: false));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("succeeded");
+        run!.Status.Should().Be("succeeded");
+        run.EvidenceJson.Should().Contain("strict_headless_prototype_scene_warning_main_menu_navigation_passed");
+        runner.Commands.Should().HaveCount(3);
+        runner.Commands[1].Arguments.Should().Contain("scripts/python/smoke_headless.py");
+        runner.Commands[2].Arguments.Should().Contain("scripts/python/prototype_main_menu_navigation_smoke.py");
     }
 
     [Fact]
@@ -713,7 +792,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
-        var runner = new FakeHostedProcessRunner(smokeExitCode: 1, smokeStdoutOverride: "SMOKE PASS (any output)\n");
+        var runner = new FakeHostedProcessRunner(
+            smokeExitCode: 1,
+            smokeStdoutOverride: "SMOKE PASS (any output)\n",
+            smokeStderrOverride: "");
         var service = Service(store, options, runner);
 
         var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
@@ -854,6 +936,40 @@ public sealed class PrototypeWorkflowTests : IDisposable
         finished.Form.CoreGameplayLoop.Should().Be("Move, choose action, resolve enemy response.");
         finished.Form.WinFailConditions.Should().Be("Win by defeating enemy; fail when health reaches zero.");
         finished.Form.SourcePath.Should().StartWith("docs/prototypes/");
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_IgnoresFinalValidationFailureThatPredatesCompletedIteration()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var service = Service(store, options, new FakeHostedProcessRunner());
+
+        var creation = await service.RunAsync(accountId, projectId, ValidRequest(confirm: true));
+        var project = (await store.GetProjectSnapshotAsync(projectId))!;
+        var failedRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.MarkRunStartedAsync(failedRunId);
+        await store.CompleteRunAsync(
+            failedRunId,
+            "failed",
+            1,
+            "",
+            "old final validation failed",
+            """{"validation_only":true,"prototype_completion":{"succeeded":false}}""");
+        await Task.Delay(20);
+        await CreateCompletedIterationPlanAsync(store, accountId, projectId);
+
+        var progress = await service.GetProgressAsync(accountId, projectId);
+
+        progress.Status.Should().Be("succeeded");
+        progress.RunId.Should().Be(creation.RunId);
+        progress.AcceptanceStatus.Should().BeNull();
+        progress.AcceptanceRunId.Should().BeNull();
+        progress.Failure.Should().BeNull();
     }
 
     [Fact]

@@ -14,9 +14,7 @@ public static class PhaseAAuth
     public static bool IsConfigured(PhaseAPlatformOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        return !string.IsNullOrWhiteSpace(options.AdminTokenHash) ||
-               !string.IsNullOrWhiteSpace(options.UserTokenHash) ||
-               !string.IsNullOrWhiteSpace(options.AdminPasswordHash);
+        return !string.IsNullOrWhiteSpace(options.AdminTokenHash);
     }
 
     public static bool IsAuthorized(HttpRequest request, PhaseAPlatformOptions options)
@@ -46,12 +44,6 @@ public static class PhaseAAuth
             {
                 return AdminRole;
             }
-        }
-
-        if (!string.IsNullOrWhiteSpace(options.UserTokenHash) &&
-            TokenMatches(token, options.UserTokenHash.Trim()))
-        {
-            return UserRole;
         }
 
         return null;

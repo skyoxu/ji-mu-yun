@@ -16,8 +16,8 @@ public sealed class PrototypeContractService
     [
         new("slug", "Prototype identifier and current prototype folder/name anchor.", "Prototype folder, prototype scene name, route state, artifacts."),
         new("game_name", "Player-facing game name.", "Prototype title, menu copy, visible UI labels when useful."),
-        new("game_type", "Normalized type route selected by the platform.", "Route skill, type kit, default scene/asset rules."),
-        new("game_type_source", "Original game type source supplied by the project/user.", "Type-specific skill selection and ambiguity handling."),
+        new("game_type", "Normalized type route selected by the platform.", "Game type profile, GDD-derived module scope, project-specific validation rules."),
+        new("game_type_source", "Original game type source supplied by the project/user.", "GDD generation input, game type profile, ambiguity handling."),
         new("hypothesis", "What the prototype must validate.", "Scenario framing, final report, acceptance focus."),
         new("core_player_fantasy", "What the player should feel or do.", "Primary verbs, UI feedback, scene presentation."),
         new("minimum_playable_loop", "Smallest complete playable loop.", "Scene flow, state transitions, smoke/acceptance target."),
@@ -36,7 +36,6 @@ public sealed class PrototypeContractService
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(request);
 
-        var routeSkill = PrototypeRouteSkillPolicy.Resolve(project);
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var payload = new
         {
@@ -46,14 +45,16 @@ public sealed class PrototypeContractService
             game_name = FirstNonEmpty(request.GameName, project.GameName),
             game_type = FirstNonEmpty(request.GameType, request.GameTypeSource, project.GameTypeSource),
             game_type_source = FirstNonEmpty(request.GameTypeSource, project.GameTypeSource),
-            route_skill = routeSkill,
             game_type_profile = routeProfile,
+            source_boundary = "Only the GDD route may read broad game-type sources. Downstream routes must use this contract, current module spec, route state, repair ledger, and latest validation evidence as gameplay requirements.",
             slug,
             prototype_record = prototypeRecordPath,
             hard_rules = new[]
             {
                 "Treat this contract as the project-specific source of truth for prototype, iteration-plan, execute-next-goal, and needs-fix.",
-                "User form fields override type templates, examples, generic RPG defaults, and fallback kit defaults.",
+                "Only the GDD route may read broad game-type sources such as docs/game-type-guides, prototype type kits, or route skill documents for design semantics.",
+                "Downstream routes must not read docs/game-type-guides, docs/prototype-type-kits, or .agents/skills route documents to add gameplay requirements after GDD generation.",
+                "User form fields override external type templates, examples, generic RPG defaults, and fallback kit defaults.",
                 "Do not replace concrete values from the user form with template defaults unless the field is empty or explicitly ambiguous.",
                 "When the form is ambiguous, preserve the ambiguity in the result and mark the related goal as needs_fix instead of silently guessing.",
                 "Every route must verify the current work against this contract before reporting succeeded.",
@@ -190,7 +191,7 @@ public sealed class PrototypeContractService
             using var document = JsonDocument.Parse(value);
             var root = document.RootElement;
             var compact = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-            foreach (var propertyName in new[] { "form_fields", "input_traceability", "route_skill", "game_type_profile" })
+            foreach (var propertyName in new[] { "form_fields", "input_traceability", "game_type_profile", "source_boundary" })
             {
                 if (root.TryGetProperty(propertyName, out var property))
                 {
