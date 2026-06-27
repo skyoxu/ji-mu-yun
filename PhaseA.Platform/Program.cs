@@ -84,6 +84,9 @@ builder.Services.AddSingleton<PrototypeRepairPlanService>();
 builder.Services.AddSingleton<PrototypeUiOptimizationService>();
 builder.Services.AddSingleton<GddMilestoneStepService>();
 builder.Services.AddSingleton<GameDesignDocumentService>();
+builder.Services.AddSingleton(new QuestionFormConcurrencyLimiter(
+    options.MaxConcurrentQuestionForms,
+    options.MaxConcurrentQuestionFormsPerAccount));
 builder.Services.AddSingleton<GameDesignQuestionFormService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
@@ -555,7 +558,14 @@ app.MapPost("/api/projects/{projectId}/gdd/question-form", async (
     CancellationToken cancellationToken) =>
 {
     var result = await questionForms.CreateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
-    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return result.Status == "rate_limited"
+        ? Results.Json(result, statusCode: StatusCodes.Status429TooManyRequests)
+        : Results.Ok(result);
 });
 
 app.MapGet("/api/projects/{projectId}/gdd", async (

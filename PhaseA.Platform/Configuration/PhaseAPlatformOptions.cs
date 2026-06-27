@@ -24,6 +24,8 @@ public sealed record PhaseAPlatformOptions(
     string? WebPreviewSigningSecret,
     int MaxConcurrentChats,
     int MaxConcurrentChatsPerAccount,
+    int MaxConcurrentQuestionForms,
+    int MaxConcurrentQuestionFormsPerAccount,
     int MaxConcurrentProjectCreations,
     int MaxConcurrentProjectCreationsPerAccount,
     int MaxConcurrentOtherRuns,

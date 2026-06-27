@@ -14,10 +14,13 @@ public sealed class GameDesignQuestionFormService
     private const int MaxSchemaCacheEntries = 128;
     private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan FallbackSchemaCacheTtl = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DefaultSchemaGenerationTimeout = TimeSpan.FromSeconds(120);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
+    private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
+    private readonly TimeSpan _schemaGenerationTimeout;
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, CachedQuestionFormSchema> _schemaCache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Task<GameDesignQuestionFormResult>> _inFlightSchemas = new(StringComparer.Ordinal);
@@ -29,11 +32,15 @@ public sealed class GameDesignQuestionFormService
     public GameDesignQuestionFormService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
-        ILlmRouteEngine llmRouteEngine)
+        ILlmRouteEngine llmRouteEngine,
+        QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
+        TimeSpan? schemaGenerationTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine;
+        _concurrencyLimiter = concurrencyLimiter ?? new QuestionFormConcurrencyLimiter();
+        _schemaGenerationTimeout = schemaGenerationTimeout ?? DefaultSchemaGenerationTimeout;
     }
 
     public async Task<GameDesignQuestionFormResult?> CreateAsync(
@@ -112,17 +119,33 @@ public sealed class GameDesignQuestionFormService
         string model,
         string accountId)
     {
+        var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId);
+        if (concurrency.Lease is null)
+        {
+            return RateLimited(project, concurrency.FailureCode ?? "gdd_question_form_concurrency_limit_exceeded");
+        }
+
+        await using var lease = concurrency.Lease;
+        using var timeout = new CancellationTokenSource(_schemaGenerationTimeout);
         var prompt = BuildPrompt(project);
-        var completion = await _llmRouteEngine.CompleteAsync(
-            new LlmRouteRequest(
-                WorkspaceRoot: ResolveLlmWorkspace(project),
-                Purpose: "gdd-question-form",
-                Model: model,
-                Prompt: prompt,
-                Options: new CodexChatClientOptions(ReasoningEffort: "low"),
-                BillingAccountId: accountId,
-                RequireJsonObject: true),
-            CancellationToken.None);
+        LlmRouteResult completion;
+        try
+        {
+            completion = await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    WorkspaceRoot: ResolveLlmWorkspace(project),
+                    Purpose: "gdd-question-form",
+                    Model: model,
+                    Prompt: prompt,
+                    Options: new CodexChatClientOptions(ReasoningEffort: "low"),
+                    BillingAccountId: accountId,
+                    RequireJsonObject: true),
+                timeout.Token);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            return Cache(cacheKey, Fallback(project, "schema_timeout"), FallbackSchemaCacheTtl);
+        }
 
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
@@ -162,6 +185,19 @@ public sealed class GameDesignQuestionFormService
             GameType(project),
             BuildFallbackFields(project),
             "fallback",
+            failureCode);
+    }
+
+    private GameDesignQuestionFormResult RateLimited(ProjectSnapshot project, string failureCode)
+    {
+        return new GameDesignQuestionFormResult(
+            "rate_limited",
+            project.ProjectId,
+            SchemaVersion,
+            "创建策划大纲",
+            GameType(project),
+            [],
+            "none",
             failureCode);
     }
 

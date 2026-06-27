@@ -43,6 +43,8 @@ public static class PhaseAPlatformOptionsLoader
         var webPreviewSigningSecret = GetOptionalString(get, "PHASEA_WEB_PREVIEW_SIGNING_SECRET");
         var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
         var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
+        var maxConcurrentQuestionForms = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS", 4);
+        var maxConcurrentQuestionFormsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT", 1);
         var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
         var maxConcurrentProjectCreationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", 1);
         var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 3);
@@ -89,6 +91,8 @@ public static class PhaseAPlatformOptionsLoader
             webPreviewSigningSecret,
             maxConcurrentChats,
             maxConcurrentChatsPerAccount,
+            maxConcurrentQuestionForms,
+            maxConcurrentQuestionFormsPerAccount,
             maxConcurrentProjectCreations,
             maxConcurrentProjectCreationsPerAccount,
             maxConcurrentOtherRuns,

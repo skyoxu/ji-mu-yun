@@ -30,6 +30,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.WebPreviewSigningSecret.Should().BeNull();
         options.MaxConcurrentChats.Should().Be(8);
         options.MaxConcurrentChatsPerAccount.Should().Be(1);
+        options.MaxConcurrentQuestionForms.Should().Be(4);
+        options.MaxConcurrentQuestionFormsPerAccount.Should().Be(1);
         options.MaxConcurrentProjectCreations.Should().Be(3);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(1);
         options.MaxConcurrentOtherRuns.Should().Be(3);
@@ -70,6 +72,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_WEB_PREVIEW_SIGNING_SECRET"] = "web-preview-secret",
             ["PHASEA_MAX_CONCURRENT_CHATS"] = "9",
             ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
+            ["PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS"] = "5",
+            ["PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT"] = "2",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT"] = "2",
             ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
@@ -103,6 +107,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.WebPreviewSigningSecret.Should().Be("web-preview-secret");
         options.MaxConcurrentChats.Should().Be(9);
         options.MaxConcurrentChatsPerAccount.Should().Be(3);
+        options.MaxConcurrentQuestionForms.Should().Be(5);
+        options.MaxConcurrentQuestionFormsPerAccount.Should().Be(2);
         options.MaxConcurrentProjectCreations.Should().Be(4);
         options.MaxConcurrentProjectCreationsPerAccount.Should().Be(2);
         options.MaxConcurrentOtherRuns.Should().Be(2);
@@ -127,6 +133,8 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("APP_BIND_URL", "https://127.0.0.1:8080")]
     [InlineData("PHASEA_MAX_CONCURRENT_CHATS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_OTHER_RUNS", "0")]

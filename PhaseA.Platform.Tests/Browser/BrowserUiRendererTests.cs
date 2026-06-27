@@ -125,11 +125,7 @@ public sealed class BrowserUiRendererTests
     [Fact]
     public void RenderShellV2_GddQuestionFormModalBehaviorSmoke()
     {
-        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
-        if (node is null)
-        {
-            return;
-        }
+        var node = RequireNodeForGddQuestionFormTests();
 
         var source = File.ReadAllText(BrowserUiRendererSourcePath());
         var gddQuestionFormScript = ExtractJavaScriptRange(
@@ -317,23 +313,123 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
-    public void RenderShellV2_GddQuestionFormFallbackMatchesBackendCoreContract()
+    public void RenderShellV2_GddQuestionFormStartRouteBehaviorSmoke()
     {
-        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
-        if (node is null)
-        {
-            return;
-        }
+        var node = RequireNodeForGddQuestionFormTests();
+
+        var source = File.ReadAllText(BrowserUiRendererSourcePath());
+        var routeScript = ExtractJavaScriptRange(
+            source,
+            "async function startGddDocumentRoute(message)",
+            "function chatHistoryDownloadFileName(projectId = state.projectId)");
+
+        var script = $$"""
+            const assert = require("assert");
+            const elements = new Map([
+              ["createGddDocument", { disabled: false, textContent: "创建策划大纲" }],
+              ["globalModel", { value: "gpt-test" }]
+            ]);
+            const state = {
+              projectId: "p1",
+              chatHistory: [],
+              chatAttachments: [{ name: "brief.md", content: "raw" }],
+              gddOutlineReady: false,
+              localBusy: false
+            };
+            const calls = { api: [], loadHistory: 0, render: 0, save: 0, out: [], loadRuns: 0, loadPackages: 0, clear: 0, refresh: 0, errors: 0, busy: [] };
+            let apiMode = "success";
+            const $ = id => elements.get(id) || null;
+            function guardGlobalAction() { return true; }
+            function projectRequestContext() { return { projectId: state.projectId }; }
+            function isCurrentProjectContext(context) { return context.projectId === state.projectId; }
+            function setLocalBusy(busy, message = "") { state.localBusy = busy; calls.busy.push({ busy, message }); }
+            function currentChatAttachmentsForRun() { return [...state.chatAttachments]; }
+            async function api(path, options) {
+              calls.api.push({ path, options });
+              if (apiMode === "failure") throw { payload: { failureCode: "route_failed" } };
+              return { summary: "GDD ready", downloadUrl: "/gdd-outline?projectId=p1" };
+            }
+            async function loadServerChatHistoryForProject() { calls.loadHistory += 1; }
+            function renderChatHistory() { calls.render += 1; }
+            function saveChatHistoryForProject() { calls.save += 1; }
+            function out(message) { calls.out.push(message); }
+            async function loadRuns() { calls.loadRuns += 1; }
+            async function loadProjectPackages() { calls.loadPackages += 1; }
+            function sanitizePublicChatContent(value) { return String(value || ""); }
+            function showError() { calls.errors += 1; }
+            function clearChatAttachments() { calls.clear += 1; state.chatAttachments = []; }
+            async function refreshActiveRun() { calls.refresh += 1; }
+
+            {{routeScript}}
+
+            (async () => {
+              const success = await startGddDocumentRoute("raw material");
+              assert.strictEqual(success, true);
+              assert.strictEqual(calls.api[0].path, "/api/projects/p1/gdd");
+              const payload = JSON.parse(calls.api[0].options.body);
+              assert.strictEqual(payload.message, "raw material");
+              assert.strictEqual(payload.model, "gpt-test");
+              assert.deepStrictEqual(payload.attachments, [{ name: "brief.md", content: "raw" }]);
+              assert.strictEqual(state.gddOutlineReady, true);
+              assert.strictEqual(calls.clear, 1);
+              assert.deepStrictEqual(state.chatAttachments, []);
+              assert.strictEqual(elements.get("createGddDocument").disabled, false);
+              assert.strictEqual(elements.get("createGddDocument").textContent, "查阅策划大纲");
+              assert.strictEqual(state.localBusy, false);
+              assert.strictEqual(calls.refresh, 1);
+
+              state.gddOutlineReady = false;
+              state.chatAttachments = [{ name: "brief.md", content: "raw" }];
+              apiMode = "failure";
+              const failure = await startGddDocumentRoute("raw material");
+              assert.strictEqual(failure, false);
+              assert.strictEqual(calls.clear, 1);
+              assert.deepStrictEqual(state.chatAttachments, [{ name: "brief.md", content: "raw" }]);
+              assert.strictEqual(calls.errors, 1);
+              assert.strictEqual(elements.get("createGddDocument").disabled, false);
+              assert.strictEqual(elements.get("createGddDocument").textContent, "创建策划大纲");
+              assert.strictEqual(state.localBusy, false);
+              assert.strictEqual(calls.refresh, 2);
+            })().catch(error => {
+              console.error(error);
+              process.exit(1);
+            });
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Theory]
+    [InlineData("Towerdemo2", "Tower Demo", "塔防", "tower-defense")]
+    [InlineData("Diablo Demo", "Diablo Demo", "Diablolike ARPG", "rpg")]
+    [InlineData("Deck Demo", "Deck Demo", "deckbuilder", "deck")]
+    [InlineData("Survivor Demo", "Survivor Demo", "survivorslike arena", "arena")]
+    [InlineData("Generic Demo", "Generic Demo", "puzzle adventure", "generic")]
+    public void RenderShellV2_GddQuestionFormFallbackMatchesBackendCoreContract(
+        string gameName,
+        string name,
+        string gameTypeSource,
+        string templateRuleId)
+    {
+        var node = RequireNodeForGddQuestionFormTests();
 
         var source = File.ReadAllText(BrowserUiRendererSourcePath());
         var fallbackScript = ExtractJavaScriptRange(
             source,
             "function currentProjectSnapshot(projectId = state.projectId)",
             "function normalizeGddQuestionFormFields(fields)");
+        var projectJson = JsonSerializer.Serialize(new Dictionary<string, string?>
+        {
+            ["projectId"] = "p1",
+            ["gameName"] = gameName,
+            ["name"] = name,
+            ["gameTypeSource"] = gameTypeSource,
+            ["templateRuleId"] = templateRuleId
+        });
         var script = $$"""
             const state = {
               projectId: "p1",
-              projects: [{ projectId: "p1", gameName: "Towerdemo2", name: "Tower Demo", gameTypeSource: "\u5854\u9632", templateRuleId: "tower-defense" }]
+              projects: [{{projectJson}}]
             };
             {{fallbackScript}}
             const fallbackJson = JSON.stringify(fallbackGddQuestionFormFields().map(field => ({
@@ -355,7 +451,7 @@ public sealed class BrowserUiRendererTests
             .Trim();
         var frontendJson = Encoding.UTF8.GetString(Convert.FromBase64String(frontendJsonBase64));
         var frontendFields = JsonSerializer.Deserialize<List<GddFallbackFieldContract>>(frontendJson, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        var backendFields = GameDesignQuestionFormService.BuildFallbackFields(TowerDefenseProjectSnapshot())
+        var backendFields = GameDesignQuestionFormService.BuildFallbackFields(ProjectSnapshotForGddQuestionForm("p1", gameName, name, gameTypeSource, templateRuleId))
             .Select(field => new GddFallbackFieldContract(
                 field.Id,
                 field.Label,
@@ -367,8 +463,8 @@ public sealed class BrowserUiRendererTests
         frontendFields.Should().NotBeNull();
         var actualFrontendFields = frontendFields!;
         actualFrontendFields.Should().Equal(backendFields);
-        actualFrontendFields.Where(field => field.Required).Should().HaveCount(4);
-        actualFrontendFields.Select(field => field.Id).Should().Contain(["reference_signal", "tower_loop", "tower_map"]);
+        actualFrontendFields.Where(field => field.Required).Should().HaveCount(count => count >= 4 && count <= 6);
+        actualFrontendFields.Select(field => field.Id).Should().Contain("reference_signal");
     }
 
     [Fact]
@@ -2686,6 +2782,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("gddQuestionFormSchemaCache");
         html.Should().Contain("maxlength=");
         html.Should().Contain("gddQuestionFormMessageBudget");
+        html.Should().Contain("gddQuestionFormFallbackCacheTtlMs");
         html.Should().Contain("gddQuestionFormSchemaTimeoutMs");
         html.Should().Contain("isCurrentGddQuestionFormRequest");
         html.Should().Contain("abortController.signal");
@@ -3494,6 +3591,27 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_GddQuestionFormEndpointTranslatesConcurrencyLimit()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var routeIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/question-form\"", StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/gdd\"", routeIndex, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        var endpointSource = source[routeIndex..nextRouteIndex];
+        endpointSource.Should().Contain("result.Status == \"rate_limited\"");
+        endpointSource.Should().Contain("StatusCodes.Status429TooManyRequests");
+    }
+
+    [Fact]
     public void Program_WebPreviewRoutesApplySandboxAndCorsHeaders()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(
@@ -3696,24 +3814,29 @@ public sealed class BrowserUiRendererTests
             "C:\\workspaces\\project-1\\.phasea");
     }
 
-    private static ProjectSnapshot TowerDefenseProjectSnapshot()
+    private static ProjectSnapshot ProjectSnapshotForGddQuestionForm(
+        string projectId,
+        string gameName,
+        string name,
+        string gameTypeSource,
+        string templateRuleId)
     {
         return new ProjectSnapshot(
-            "p1",
+            projectId,
             "account-1",
-            "Tower Demo",
-            "Towerdemo2",
-            "塔防",
-            "tower-defense",
+            name,
+            gameName,
+            gameTypeSource,
+            templateRuleId,
             false,
             "[]",
             "succeeded",
             null,
             "workspace-1",
             "C:\\workspaces",
-            "C:\\workspaces\\p1",
-            "C:\\workspaces\\p1\\runtime",
-            "C:\\workspaces\\p1\\.phasea");
+            $"C:\\workspaces\\{projectId}",
+            $"C:\\workspaces\\{projectId}\\runtime",
+            $"C:\\workspaces\\{projectId}\\.phasea");
     }
 
     private sealed record GddFallbackFieldContract(
@@ -3746,6 +3869,13 @@ public sealed class BrowserUiRendererTests
         }
 
         return null;
+    }
+
+    private static string RequireNodeForGddQuestionFormTests()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        node.Should().NotBeNull("GDD question-form behavior tests execute the generated browser JavaScript");
+        return node!;
     }
 
     private static string BrowserUiRendererSourcePath()

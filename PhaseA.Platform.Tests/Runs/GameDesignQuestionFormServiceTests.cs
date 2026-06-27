@@ -114,6 +114,69 @@ public sealed class GameDesignQuestionFormServiceTests
         llm.CallCount.Should().Be(1);
     }
 
+    [Fact]
+    public async Task CreateAsync_ShouldReturnRateLimited_WhenAccountQuestionFormLimitIsExceeded()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var firstProjectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var secondProjectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
+        var limiter = new QuestionFormConcurrencyLimiter(maxConcurrentQuestionForms: 8, maxConcurrentQuestionFormsPerAccount: 1);
+        var service = new GameDesignQuestionFormService(store, options, llm, limiter);
+
+        var first = service.CreateAsync(account.AccountId, firstProjectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        await Task.Delay(25);
+        var second = await service.CreateAsync(account.AccountId, secondProjectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        var firstResult = await first;
+
+        firstResult.Should().NotBeNull();
+        firstResult!.Source.Should().Be("agent");
+        second.Should().NotBeNull();
+        second!.Status.Should().Be("rate_limited");
+        second.Source.Should().Be("none");
+        second.FailureCode.Should().Be("user_gdd_question_form_concurrency_limit_exceeded");
+        llm.CallCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldReturnFallbackSchema_WhenSchemaGenerationTimesOut()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(500));
+        var service = new GameDesignQuestionFormService(
+            store,
+            options,
+            llm,
+            new QuestionFormConcurrencyLimiter(),
+            schemaGenerationTimeout: TimeSpan.FromMilliseconds(50));
+
+        var result = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest());
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("ready");
+        result.Source.Should().Be("fallback");
+        result.FailureCode.Should().Be("schema_timeout");
+        result.Fields.Should().Contain(field => field.Id == "tower_map");
+        llm.CallCount.Should().Be(1);
+
+        var cached = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest());
+
+        cached.Should().NotBeNull();
+        cached!.FailureCode.Should().Be("schema_timeout");
+        llm.CallCount.Should().Be(1);
+    }
+
     private static string ValidSchemaJson()
     {
         return """

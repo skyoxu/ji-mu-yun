@@ -2426,6 +2426,7 @@ public sealed class BrowserUiRenderer
                 const maxStoredChatMessages = 30;
                 const gddQuestionFormMessageBudget = 5500;
                 const gddQuestionFormSchemaCacheTtlMs = 5 * 60 * 1000;
+                const gddQuestionFormFallbackCacheTtlMs = 30 * 1000;
                 const gddQuestionFormSchemaTimeoutMs = 90 * 1000;
                 const chatThinkingPrompts = [
                   "正在理解你的问题...",
@@ -4533,10 +4534,10 @@ public sealed class BrowserUiRenderer
                   return cached.schema;
                 }
 
-                function writeGddQuestionFormSchemaCache(cacheKey, schema) {
+                function writeGddQuestionFormSchemaCache(cacheKey, schema, ttlMs = gddQuestionFormSchemaCacheTtlMs) {
                   state.gddQuestionFormSchemaCache.set(cacheKey, {
                     schema,
-                    expiresAt: Date.now() + gddQuestionFormSchemaCacheTtlMs
+                    expiresAt: Date.now() + ttlMs
                   });
                 }
 
@@ -4569,13 +4570,13 @@ public sealed class BrowserUiRenderer
                       return schema;
                     }
                     const fallbackSchema = { fields: normalizeGddQuestionFormFields(fallbackGddQuestionFormFields()), source: "fallback", failureCode: "invalid_schema" };
-                    writeGddQuestionFormSchemaCache(cacheKey, fallbackSchema);
+                    writeGddQuestionFormSchemaCache(cacheKey, fallbackSchema, gddQuestionFormFallbackCacheTtlMs);
                     return fallbackSchema;
                   } catch (error) {
                     if (error?.status === 401 || error?.status === 403 || error?.status === 404) throw error;
                     if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return null;
                     const fallbackSchema = { fields: normalizeGddQuestionFormFields(fallbackGddQuestionFormFields()), source: "fallback", failureCode: error?.payload?.failureCode || error?.payload?.error || "schema_request_failed" };
-                    writeGddQuestionFormSchemaCache(cacheKey, fallbackSchema);
+                    writeGddQuestionFormSchemaCache(cacheKey, fallbackSchema, gddQuestionFormFallbackCacheTtlMs);
                     return fallbackSchema;
                   }
                 }
