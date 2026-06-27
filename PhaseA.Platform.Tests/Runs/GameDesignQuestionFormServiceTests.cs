@@ -63,6 +63,31 @@ public sealed class GameDesignQuestionFormServiceTests
         result.FailureCode.Should().Be("model_capacity");
         result.Fields.Should().HaveCount(10);
         result.Fields.Should().Contain(field => field.Id == "tower_map");
+        result.Fields.Where(field => field.Required).Should().HaveCount(4);
+        result.Fields.First(field => field.Id == "tower_map").Required.Should().BeTrue();
+        result.Fields.First(field => field.Id == "reference_signal").Required.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCacheSchemaForSameProjectAndModel()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson());
+        var service = new GameDesignQuestionFormService(store, options, llm);
+
+        var first = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        var second = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        first!.Fields.Should().Equal(second!.Fields);
+        llm.CallCount.Should().Be(1);
     }
 
     private static string ValidSchemaJson()
@@ -142,10 +167,12 @@ public sealed class GameDesignQuestionFormServiceTests
         }
 
         public LlmRouteRequest? LastRequest { get; private set; }
+        public int CallCount { get; private set; }
 
         public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
         {
             LastRequest = request;
+            CallCount += 1;
             return Task.FromResult(new LlmRouteResult(
                 _succeeded,
                 _json,
