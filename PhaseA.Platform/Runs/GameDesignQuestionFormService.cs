@@ -11,6 +11,7 @@ public sealed class GameDesignQuestionFormService
     private const int MinFields = 8;
     private const int MaxFields = 12;
     private const int DefaultMaxLength = 500;
+    private const int MaxSchemaCacheEntries = 128;
     private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan FallbackSchemaCacheTtl = TimeSpan.FromSeconds(30);
 
@@ -19,6 +20,7 @@ public sealed class GameDesignQuestionFormService
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, CachedQuestionFormSchema> _schemaCache = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Task<GameDesignQuestionFormResult>> _inFlightSchemas = new(StringComparer.Ordinal);
 
     private sealed record CachedQuestionFormSchema(
         GameDesignQuestionFormResult Result,
@@ -57,6 +59,59 @@ public sealed class GameDesignQuestionFormService
             return cached;
         }
 
+        var schemaTask = GetOrStartSchemaTask(cacheKey, project, model, accountId);
+        return await schemaTask.WaitAsync(cancellationToken);
+    }
+
+    private Task<GameDesignQuestionFormResult> GetOrStartSchemaTask(
+        string cacheKey,
+        ProjectSnapshot project,
+        string model,
+        string accountId)
+    {
+        lock (_cacheLock)
+        {
+            if (TryReadCacheLocked(cacheKey, DateTimeOffset.UtcNow, out var cached))
+            {
+                return Task.FromResult(cached!);
+            }
+
+            if (_inFlightSchemas.TryGetValue(cacheKey, out var existing))
+            {
+                return existing;
+            }
+
+            var task = CreateAndCacheSchemaAsync(cacheKey, project, model, accountId);
+            _inFlightSchemas[cacheKey] = task;
+            return task;
+        }
+    }
+
+    private async Task<GameDesignQuestionFormResult> CreateAndCacheSchemaAsync(
+        string cacheKey,
+        ProjectSnapshot project,
+        string model,
+        string accountId)
+    {
+        try
+        {
+            return await CreateAndCacheSchemaCoreAsync(cacheKey, project, model, accountId);
+        }
+        finally
+        {
+            lock (_cacheLock)
+            {
+                _inFlightSchemas.Remove(cacheKey);
+            }
+        }
+    }
+
+    private async Task<GameDesignQuestionFormResult> CreateAndCacheSchemaCoreAsync(
+        string cacheKey,
+        ProjectSnapshot project,
+        string model,
+        string accountId)
+    {
         var prompt = BuildPrompt(project);
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
@@ -67,7 +122,7 @@ public sealed class GameDesignQuestionFormService
                 Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                 BillingAccountId: accountId,
                 RequireJsonObject: true),
-            cancellationToken);
+            CancellationToken.None);
 
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
@@ -215,7 +270,7 @@ public sealed class GameDesignQuestionFormService
         return fields;
     }
 
-    private static IReadOnlyList<GameDesignQuestionFormField> BuildFallbackFields(ProjectSnapshot project)
+    internal static IReadOnlyList<GameDesignQuestionFormField> BuildFallbackFields(ProjectSnapshot project)
     {
         var fields = new List<GameDesignQuestionFormField>
         {
@@ -347,15 +402,22 @@ public sealed class GameDesignQuestionFormService
     {
         lock (_cacheLock)
         {
-            if (_schemaCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresAt > DateTimeOffset.UtcNow)
-            {
-                result = cached.Result;
-                return true;
-            }
+            return TryReadCacheLocked(cacheKey, DateTimeOffset.UtcNow, out result);
+        }
+    }
 
-            _schemaCache.Remove(cacheKey);
+    private bool TryReadCacheLocked(
+        string cacheKey,
+        DateTimeOffset now,
+        out GameDesignQuestionFormResult? result)
+    {
+        if (_schemaCache.TryGetValue(cacheKey, out var cached) && cached.ExpiresAt > now)
+        {
+            result = cached.Result;
+            return true;
         }
 
+        _schemaCache.Remove(cacheKey);
         result = null;
         return false;
     }
@@ -367,10 +429,37 @@ public sealed class GameDesignQuestionFormService
     {
         lock (_cacheLock)
         {
-            _schemaCache[cacheKey] = new CachedQuestionFormSchema(result, DateTimeOffset.UtcNow.Add(ttl));
+            var now = DateTimeOffset.UtcNow;
+            _schemaCache[cacheKey] = new CachedQuestionFormSchema(result, now.Add(ttl));
+            PruneCacheLocked(now);
         }
 
         return result;
+    }
+
+    private void PruneCacheLocked(DateTimeOffset now)
+    {
+        foreach (var key in _schemaCache
+            .Where(item => item.Value.ExpiresAt <= now)
+            .Select(item => item.Key)
+            .ToArray())
+        {
+            _schemaCache.Remove(key);
+        }
+
+        if (_schemaCache.Count <= MaxSchemaCacheEntries)
+        {
+            return;
+        }
+
+        foreach (var key in _schemaCache
+            .OrderBy(item => item.Value.ExpiresAt)
+            .Take(_schemaCache.Count - MaxSchemaCacheEntries)
+            .Select(item => item.Key)
+            .ToArray())
+        {
+            _schemaCache.Remove(key);
+        }
     }
 
     private static string CacheKey(ProjectSnapshot project, string model)

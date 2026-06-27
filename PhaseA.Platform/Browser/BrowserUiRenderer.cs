@@ -4589,7 +4589,7 @@ public sealed class BrowserUiRenderer
                   $("gddQuestionForm").dataset.schema = "question-form";
                   $("gddQuestionForm").innerHTML = state.gddQuestionFormFields.map(field => `
                     <label data-gdd-question="${escapeHtml(field.id)}">${escapeHtml(field.label)}${field.required ? " *" : ""}
-                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" placeholder="${escapeHtml(field.placeholder || "")}"></textarea>
+                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" placeholder="${escapeHtml(field.placeholder || "")}" ${field.required ? "required aria-required=\"true\"" : ""}></textarea>
                     </label>
                   `).join("");
                   $("gddQuestionFormMeta").textContent = `${project?.gameName || project?.name || "当前项目"} · ${gameType}`;
@@ -4693,6 +4693,7 @@ public sealed class BrowserUiRenderer
                   const missingRequired = answers.filter(item => item.required && !item.answer);
                   if (missingRequired.length > 0) {
                     $("gddQuestionFormHint").textContent = `请先填写必填问题：${missingRequired.slice(0, 3).map(item => item.label).join("、")}。`;
+                    document.querySelector(`[data-gdd-question-input="${missingRequired[0].id}"]`)?.focus();
                     return;
                   }
                   if (answeredCount < 4) {

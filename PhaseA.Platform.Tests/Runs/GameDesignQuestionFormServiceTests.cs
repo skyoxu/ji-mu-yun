@@ -90,6 +90,30 @@ public sealed class GameDesignQuestionFormServiceTests
         llm.CallCount.Should().Be(1);
     }
 
+    [Fact]
+    public async Task CreateAsync_ShouldCoalesceConcurrentSchemaRequestsForSameProjectAndModel()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(100));
+        var service = new GameDesignQuestionFormService(store, options, llm);
+
+        var tasks = Enumerable.Range(0, 8)
+            .Select(_ => service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4")))
+            .ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        results.Should().OnlyContain(result => result != null && result.Source == "agent");
+        results.Select(result => result!.Fields).Should().OnlyContain(fields => fields.SequenceEqual(results[0]!.Fields));
+        llm.CallCount.Should().Be(1);
+    }
+
     private static string ValidSchemaJson()
     {
         return """
@@ -158,22 +182,34 @@ public sealed class GameDesignQuestionFormServiceTests
         private readonly string _json;
         private readonly bool _succeeded;
         private readonly string? _failureCode;
+        private readonly TimeSpan _completionDelay;
+        private int _callCount;
 
-        public FakeLlmRouteEngine(string json, bool succeeded = true, string? failureCode = null)
+        public FakeLlmRouteEngine(
+            string json,
+            bool succeeded = true,
+            string? failureCode = null,
+            TimeSpan completionDelay = default)
         {
             _json = json;
             _succeeded = succeeded;
             _failureCode = failureCode;
+            _completionDelay = completionDelay;
         }
 
         public LlmRouteRequest? LastRequest { get; private set; }
-        public int CallCount { get; private set; }
+        public int CallCount => Volatile.Read(ref _callCount);
 
-        public Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        public async Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
         {
             LastRequest = request;
-            CallCount += 1;
-            return Task.FromResult(new LlmRouteResult(
+            Interlocked.Increment(ref _callCount);
+            if (_completionDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(_completionDelay, cancellationToken);
+            }
+
+            return new LlmRouteResult(
                 _succeeded,
                 _json,
                 _succeeded ? _json : null,
@@ -187,7 +223,7 @@ public sealed class GameDesignQuestionFormServiceTests
                 1,
                 request.Prompt.Length,
                 Encoding.UTF8.GetByteCount(request.Prompt),
-                1));
+                1);
         }
     }
 

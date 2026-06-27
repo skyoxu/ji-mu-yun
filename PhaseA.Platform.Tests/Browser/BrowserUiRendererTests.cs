@@ -2,7 +2,10 @@ using FluentAssertions;
 using PhaseA.Platform.Browser;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Readback;
+using PhaseA.Platform.Runs;
 using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -117,6 +120,255 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("$(\"packagePrototypeSkeleton\").onclick = createProjectPackage");
         html.Should().Contain("prototypeSkeletonM1Completed()");
         html.Should().Contain("M1 游戏场景完成后才可以在这里打包下载项目");
+    }
+
+    [Fact]
+    public void RenderShellV2_GddQuestionFormModalBehaviorSmoke()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        var source = File.ReadAllText(BrowserUiRendererSourcePath());
+        var gddQuestionFormScript = ExtractJavaScriptRange(
+            source,
+            "function currentProjectSnapshot(projectId = state.projectId)",
+            "async function startGddDocumentRoute(message)");
+
+        var script = $$"""
+            const assert = require("assert");
+            let focusedElement = null;
+
+            class ClassList {
+              constructor() { this.items = new Set(); }
+              add(name) { this.items.add(name); }
+              remove(name) { this.items.delete(name); }
+              contains(name) { return this.items.has(name); }
+              toggle(name, force) {
+                if (force) this.items.add(name);
+                else this.items.delete(name);
+              }
+            }
+
+            class Element {
+              constructor(id = "") {
+                this.id = id;
+                this.dataset = {};
+                this.disabled = false;
+                this.textContent = "";
+                this.value = "";
+                this.rows = 0;
+                this.maxLength = 0;
+                this.placeholder = "";
+                this.required = false;
+                this.attributes = new Map();
+                this.classList = new ClassList();
+                this._innerHTML = "";
+              }
+              set innerHTML(value) {
+                this._innerHTML = value;
+                if (this.id !== "gddQuestionForm") return;
+                document.inputs.clear();
+                const textareaPattern = /<textarea\b([^>]*)><\/textarea>/g;
+                let match;
+                while ((match = textareaPattern.exec(value)) !== null) {
+                  const attrs = match[1];
+                  const id = /data-gdd-question-input="([^"]+)"/.exec(attrs)?.[1] || "";
+                  const input = new Element(id);
+                  input.dataset.gddQuestionInput = id;
+                  input.rows = Number(/rows="([^"]+)"/.exec(attrs)?.[1] || 0);
+                  input.maxLength = Number(/maxlength="([^"]+)"/.exec(attrs)?.[1] || 0);
+                  input.placeholder = /placeholder="([^"]*)"/.exec(attrs)?.[1] || "";
+                  input.required = /\srequired(?:\s|>|$)/.test(attrs);
+                  if (/aria-required="true"/.test(attrs)) input.attributes.set("aria-required", "true");
+                  document.inputs.set(id, input);
+                }
+              }
+              get innerHTML() { return this._innerHTML; }
+              getAttribute(name) { return this.attributes.get(name) || null; }
+              focus() { focusedElement = this; }
+            }
+
+            const elements = new Map();
+            function addElement(id) {
+              const element = new Element(id);
+              elements.set(id, element);
+              return element;
+            }
+
+            const document = {
+              inputs: new Map(),
+              querySelector(selector) {
+                const match = /^\[data-gdd-question-input="([^"]+)"\]$/.exec(selector);
+                return match ? this.inputs.get(match[1]) || null : null;
+              }
+            };
+            global.document = document;
+            global.window = { open() {} };
+
+            [
+              "gddQuestionFormModal",
+              "gddQuestionForm",
+              "gddQuestionFormMeta",
+              "gddQuestionFormHint",
+              "confirmGddQuestionForm",
+              "createGddDocument",
+              "chatMessage",
+              "globalModel"
+            ].forEach(addElement);
+            elements.get("gddQuestionFormModal").classList.add("hidden");
+            elements.get("globalModel").value = "gpt-test";
+
+            const state = {
+              projectId: "p1",
+              projects: [{ projectId: "p1", gameName: "Towerdemo2", name: "Tower Demo", gameTypeSource: "塔防", templateRuleId: "tower-defense" }],
+              gddQuestionFormFields: [],
+              gddQuestionFormSource: "",
+              gddQuestionFormRequestToken: 0,
+              gddQuestionFormAbortController: null,
+              gddQuestionFormSchemaCache: new Map(),
+              gddOutlineReady: false,
+              localBusy: false
+            };
+            const gddQuestionFormMessageBudget = 5500;
+            const gddQuestionFormSchemaCacheTtlMs = 5 * 60 * 1000;
+            const gddQuestionFormSchemaTimeoutMs = 90 * 1000;
+            const $ = id => elements.get(id) || null;
+            function escapeHtml(value) {
+              return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;");
+            }
+            function setModalVisible(id, visible) {
+              const element = $(id);
+              if (visible) element.classList.remove("hidden");
+              else element.classList.add("hidden");
+            }
+            function guardGlobalAction() { return true; }
+            function callV2() {}
+            function out(message) { global.lastOut = message; }
+            function showError(error) { global.lastError = error; }
+            async function refreshProjects() {}
+
+            let apiCalls = [];
+            let resolveApi;
+            async function api(path, options) {
+              apiCalls.push({ path, options });
+              return await new Promise(resolve => { resolveApi = resolve; });
+            }
+
+            {{gddQuestionFormScript}}
+
+            let routeCalls = [];
+            let routeShouldSucceed = false;
+            async function startGddDocumentRoute(message) {
+              routeCalls.push(message);
+              return routeShouldSucceed;
+            }
+
+            (async () => {
+              const openPromise = openGddQuestionFormModal();
+              await Promise.resolve();
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
+              assert.strictEqual(apiCalls.length, 1);
+              closeGddQuestionFormModal();
+              assert.strictEqual(apiCalls[0].options.signal.aborted, true);
+              resolveApi({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              await openPromise;
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
+              assert.strictEqual(state.gddQuestionFormFields.length, 0);
+
+              renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              setModalVisible("gddQuestionFormModal", true);
+              assert.strictEqual(document.inputs.get("reference_signal").required, true);
+              assert.strictEqual(document.inputs.get("reference_signal").getAttribute("aria-required"), "true");
+
+              await confirmGddQuestionForm();
+              assert.strictEqual(routeCalls.length, 0);
+              assert.ok($("gddQuestionFormHint").textContent.includes("请先填写必填问题"));
+              assert.strictEqual(focusedElement, document.inputs.get("reference_signal"));
+
+              for (const field of state.gddQuestionFormFields.filter(field => field.required).slice(0, 4)) {
+                document.inputs.get(field.id).value = `${field.label} answer`;
+              }
+              routeShouldSucceed = false;
+              await confirmGddQuestionForm();
+              assert.strictEqual(routeCalls.length, 1);
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
+              assert.strictEqual(document.inputs.get("reference_signal").value, "参考游戏或体验标杆 answer");
+              assert.strictEqual($("confirmGddQuestionForm").disabled, false);
+
+              routeShouldSucceed = true;
+              await confirmGddQuestionForm();
+              assert.strictEqual(routeCalls.length, 2);
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
+              assert.ok(routeCalls[1].includes("GDD question-form raw material:"));
+            })().catch(error => {
+              console.error(error);
+              process.exit(1);
+            });
+            """;
+
+        RunNodeScript(node, script);
+    }
+
+    [Fact]
+    public void RenderShellV2_GddQuestionFormFallbackMatchesBackendCoreContract()
+    {
+        var node = FindExecutableOnPath("node.exe") ?? FindExecutableOnPath("node");
+        if (node is null)
+        {
+            return;
+        }
+
+        var source = File.ReadAllText(BrowserUiRendererSourcePath());
+        var fallbackScript = ExtractJavaScriptRange(
+            source,
+            "function currentProjectSnapshot(projectId = state.projectId)",
+            "function normalizeGddQuestionFormFields(fields)");
+        var script = $$"""
+            const state = {
+              projectId: "p1",
+              projects: [{ projectId: "p1", gameName: "Towerdemo2", name: "Tower Demo", gameTypeSource: "\u5854\u9632", templateRuleId: "tower-defense" }]
+            };
+            {{fallbackScript}}
+            const fallbackJson = JSON.stringify(fallbackGddQuestionFormFields().map(field => ({
+              id: field.id,
+              label: field.label,
+              placeholder: field.placeholder,
+              rows: field.rows || 3,
+              required: !!field.required
+            })));
+            console.log("__GDD_FALLBACK_JSON_B64__" + Buffer.from(fallbackJson, "utf8").toString("base64"));
+            """;
+
+        var output = RunNodeScript(node, script);
+        const string marker = "__GDD_FALLBACK_JSON_B64__";
+        var markerIndex = output.LastIndexOf(marker, StringComparison.Ordinal);
+        markerIndex.Should().BeGreaterThanOrEqualTo(0, "the node smoke should print the fallback contract JSON");
+        var frontendJsonBase64 = output[(markerIndex + marker.Length)..]
+            .Split(["\r\n", "\n"], StringSplitOptions.None)[0]
+            .Trim();
+        var frontendJson = Encoding.UTF8.GetString(Convert.FromBase64String(frontendJsonBase64));
+        var frontendFields = JsonSerializer.Deserialize<List<GddFallbackFieldContract>>(frontendJson, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var backendFields = GameDesignQuestionFormService.BuildFallbackFields(TowerDefenseProjectSnapshot())
+            .Select(field => new GddFallbackFieldContract(
+                field.Id,
+                field.Label,
+                field.Placeholder,
+                field.Rows,
+                field.Required))
+            .ToList();
+
+        frontendFields.Should().NotBeNull();
+        var actualFrontendFields = frontendFields!;
+        actualFrontendFields.Should().Equal(backendFields);
+        actualFrontendFields.Where(field => field.Required).Should().HaveCount(4);
+        actualFrontendFields.Select(field => field.Id).Should().Contain(["reference_signal", "tower_loop", "tower_map"]);
     }
 
     [Fact]
@@ -3444,6 +3696,33 @@ public sealed class BrowserUiRendererTests
             "C:\\workspaces\\project-1\\.phasea");
     }
 
+    private static ProjectSnapshot TowerDefenseProjectSnapshot()
+    {
+        return new ProjectSnapshot(
+            "p1",
+            "account-1",
+            "Tower Demo",
+            "Towerdemo2",
+            "塔防",
+            "tower-defense",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\p1",
+            "C:\\workspaces\\p1\\runtime",
+            "C:\\workspaces\\p1\\.phasea");
+    }
+
+    private sealed record GddFallbackFieldContract(
+        string Id,
+        string Label,
+        string Placeholder,
+        int Rows,
+        bool Required);
+
     private static string? FindExecutableOnPath(string name)
     {
         var path = Environment.GetEnvironmentVariable("PATH");
@@ -3469,7 +3748,29 @@ public sealed class BrowserUiRendererTests
         return null;
     }
 
-    private static void RunNodeScript(string node, string script)
+    private static string BrowserUiRendererSourcePath()
+    {
+        return Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Browser",
+            "BrowserUiRenderer.cs"));
+    }
+
+    private static string ExtractJavaScriptRange(string source, string startMarker, string endMarker)
+    {
+        var start = source.IndexOf(startMarker, StringComparison.Ordinal);
+        start.Should().BeGreaterThanOrEqualTo(0, $"{startMarker} should exist in BrowserUiRenderer");
+        var end = source.IndexOf(endMarker, start, StringComparison.Ordinal);
+        end.Should().BeGreaterThan(start, $"{endMarker} should follow {startMarker}");
+        return source[start..end];
+    }
+
+    private static string RunNodeScript(string node, string script)
     {
         var scriptPath = Path.Combine(Path.GetTempPath(), $"phasea-browser-smoke-{Guid.NewGuid():N}.js");
         try
@@ -3488,8 +3789,11 @@ public sealed class BrowserUiRendererTests
             process.Should().NotBeNull();
             var running = process!;
             running.WaitForExit(10_000).Should().BeTrue();
-            var output = running.StandardOutput.ReadToEnd() + running.StandardError.ReadToEnd();
+            var standardOutput = running.StandardOutput.ReadToEnd();
+            var standardError = running.StandardError.ReadToEnd();
+            var output = standardOutput + standardError;
             running.ExitCode.Should().Be(0, output);
+            return standardOutput.Trim();
         }
         finally
         {
