@@ -84,6 +84,7 @@ builder.Services.AddSingleton<PrototypeRepairPlanService>();
 builder.Services.AddSingleton<PrototypeUiOptimizationService>();
 builder.Services.AddSingleton<GddMilestoneStepService>();
 builder.Services.AddSingleton<GameDesignDocumentService>();
+builder.Services.AddSingleton<GameDesignQuestionFormService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -544,6 +545,17 @@ app.MapPost("/api/projects/{projectId}/gdd", async (
     {
         return Results.NotFound(new { error = ex.Message });
     }
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/question-form", async (
+    string projectId,
+    GameDesignQuestionFormRequest request,
+    HttpContext context,
+    [FromServices] GameDesignQuestionFormService questionForms,
+    CancellationToken cancellationToken) =>
+{
+    var result = await questionForms.CreateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapGet("/api/projects/{projectId}/gdd", async (

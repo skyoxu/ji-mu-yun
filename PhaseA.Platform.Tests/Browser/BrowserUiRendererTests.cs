@@ -2419,6 +2419,24 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setInterval(refreshActiveRun, 5000)");
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
+        html.Should().Contain("gddQuestionFormModal");
+        html.Should().Contain("gddQuestionForm");
+        html.Should().Contain("question-form");
+        html.Should().Contain("function fallbackGddQuestionFormFields()");
+        html.Should().Contain("async function loadGddQuestionFormSchema(projectId)");
+        html.Should().Contain("function openGddQuestionFormModal()");
+        html.Should().Contain("function confirmGddQuestionForm()");
+        html.Should().Contain("function startGddDocumentRoute(message)");
+        html.Should().Contain("/gdd/question-form");
+        html.Should().Contain("state.gddQuestionFormFields");
+        html.Should().Contain("maxlength=");
+        html.Should().Contain("gddQuestionFormMessageBudget");
+        html.Should().Contain("GDD question-form raw material:");
+        html.Should().Contain("Use these answers as authoritative raw material");
+        html.Should().Contain("至少填写 4 个关键问题");
+        html.Should().NotContain("closeGddQuestionFormModal();\r\n                  await startGddDocumentRoute(message);");
+        html.Should().Contain("confirmGddQuestionForm");
+        html.Should().Contain("cancelGddQuestionForm");
         html.Should().Contain("let sessionValidated = false");
         html.Should().Contain("sessionValidated = true");
         html.Should().Contain("if (!sessionValidated)");
@@ -3495,7 +3513,7 @@ public sealed class BrowserUiRendererTests
         var source = File.ReadAllText(sourcePath);
 
         source.Should().MatchRegex("(?s)async function sendChat\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*state\\.chatBusy = false;");
-        source.Should().MatchRegex("(?s)async function createGddDocument\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*clearChatAttachments\\(\\);");
+        source.Should().MatchRegex("(?s)async function startGddDocumentRoute\\(message\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*if \\(succeeded\\) clearChatAttachments\\(\\);");
         source.Should().MatchRegex("(?s)async function createRepairPlan\\(\\).*?catch \\(error\\) \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*showError\\(error\\);\\s*\\} finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;");
         source.Should().MatchRegex("(?s)async function submitFormalFeedbackText\\(feedback, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await loadProjectPackages\\(\\);");
         source.Should().MatchRegex("(?s)async function submitNeedsFixRouteRequest\\(payload, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await refreshActiveRun\\(\\);");

@@ -2229,6 +2229,20 @@ public sealed class BrowserUiRenderer
                   </section>
                 </div>
               </div>
+              <div id="gddQuestionFormModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="gddQuestionFormTitle">
+                <div class="modal-card modal-card-large">
+                  <section class="stack">
+                    <h2 id="gddQuestionFormTitle">创建策划大纲</h2>
+                    <div id="gddQuestionFormMeta" class="card muted"></div>
+                    <form id="gddQuestionForm" class="stack modal-scroll"></form>
+                    <div class="split-actions">
+                      <button id="confirmGddQuestionForm" class="secondary" type="button" data-global-action="true">确认并创建策划大纲</button>
+                      <button id="cancelGddQuestionForm" class="ghost" type="button">取消</button>
+                    </div>
+                    <p id="gddQuestionFormHint" class="muted"></p>
+                  </section>
+                </div>
+              </div>
               <main>
                 <section id="sessionPanel" class="stack login-shell">
                   <h2>会话</h2>
@@ -2401,7 +2415,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddQuestionFormFields: [], gddQuestionFormSource: "", gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
                 let authEpoch = 0;
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
@@ -2410,6 +2424,7 @@ public sealed class BrowserUiRenderer
                 const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
+                const gddQuestionFormMessageBudget = 5500;
                 const chatThinkingPrompts = [
                   "正在理解你的问题...",
                   "正在结合当前项目上下文...",
@@ -2462,6 +2477,7 @@ public sealed class BrowserUiRenderer
 
                 function closeUserModals() {
                   setModalVisible("projectListModal", false);
+                  setModalVisible("gddQuestionFormModal", false);
                 }
 
                 function setUserTopActionsVisible(visible, logoutOnly = false) {
@@ -4396,17 +4412,233 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                async function createGddDocument() {
+                function currentProjectSnapshot(projectId = state.projectId) {
+                  return (state.projects || []).find(project => project.projectId === projectId) || null;
+                }
+
+                function currentProjectGameTypeText() {
+                  const project = currentProjectSnapshot();
+                  return [
+                    project?.gameTypeSource,
+                    project?.templateRuleId,
+                    project?.gameName,
+                    project?.name
+                  ].filter(Boolean).join(" ");
+                }
+
+                function fallbackGddQuestionFormFields() {
+                  const project = currentProjectSnapshot();
+                  const gameTypeText = currentProjectGameTypeText();
+                  const normalized = gameTypeText.toLowerCase();
+                  const isRpg = /rpg|role|jrpg|crpg|arpg|diablo|dungeon/.test(normalized);
+                  const isDeckbuilder = /deck|card|牌|卡/.test(normalized);
+                  const isSurvivorslike = /survivor|arena|吸血鬼|割草|幸存/.test(normalized);
+                  const isTowerDefense = /tower|defen|塔防/.test(normalized);
+
+                  const fields = [
+                    { id: "reference_signal", label: "参考游戏或体验标杆", placeholder: "例如参考对象、想保留的体验、明确不想要的方向。", rows: 2 },
+                    { id: "player_fantasy", label: "玩家核心幻想", placeholder: "玩家在 1 分钟内应该感到自己在做什么、变强什么、承担什么风险。", rows: 3 },
+                    { id: "core_loop", label: "核心循环", placeholder: "进入场景、做选择、获得反馈、成长或失败、再次尝试的循环。", rows: 3 },
+                    { id: "first_scene", label: "首个可玩场景", placeholder: "首个场景里要出现的地图、对象、敌人、目标、交互或事件。", rows: 3 },
+                    { id: "controls_camera", label: "操作、视角与基础手感", placeholder: "移动、点击、键鼠输入、镜头、节奏、碰撞或命中反馈。", rows: 3 },
+                    { id: "challenge_fail", label: "主要挑战与失败条件", placeholder: "玩家如何受压、如何犯错、失败或损失如何发生。", rows: 3 },
+                    { id: "progression_reward", label: "成长、奖励与解锁", placeholder: "局内/局外成长、资源、装备、技能、卡牌、关卡或剧情推进。", rows: 3 },
+                    { id: "ui_feedback", label: "UI/HUD 与玩家反馈", placeholder: "必须显示的状态、提示、数值、按钮、战斗/交互反馈。", rows: 3 },
+                    { id: "scope_boundaries", label: "首版范围边界", placeholder: "本次 GDD 和首个原型必须做什么，明确不做什么。", rows: 3 },
+                    { id: "acceptance", label: "验收标准", placeholder: "怎样判断 GDD 和第一个可玩版本是成功的。", rows: 3 }
+                  ];
+
+                  if (isRpg) {
+                    fields[3] = { id: "rpg_scene", label: "首个可探索区域", placeholder: "区域布局、NPC/敌人、事件、入口出口、互动对象。", rows: 3 };
+                    fields[5] = { id: "rpg_conflict", label: "战斗/冲突/遭遇", placeholder: "遇敌方式、回合或即时规则、角色能力、胜负反馈。", rows: 3 };
+                    fields[6] = { id: "rpg_growth", label: "角色成长与叙事推进", placeholder: "等级、装备、技能、任务、剧情或队伍状态如何推进。", rows: 3 };
+                  } else if (isDeckbuilder) {
+                    fields[2] = { id: "deck_loop", label: "牌局核心循环", placeholder: "抽牌、出牌、资源、敌方回合、结算、奖励和下一场。", rows: 3 };
+                    fields[5] = { id: "deck_pressure", label: "敌人压力与失败条件", placeholder: "敌人意图、伤害、状态、倒计时或资源枯竭。", rows: 3 };
+                    fields[6] = { id: "deck_growth", label: "卡组构筑与奖励", placeholder: "新增卡、删卡、升级、遗物、货币、路线选择。", rows: 3 };
+                  } else if (isSurvivorslike) {
+                    fields[2] = { id: "survivors_loop", label: "单局战斗循环", placeholder: "移动、自动/手动攻击、拾取、升级、敌潮、坚持或撤离。", rows: 3 };
+                    fields[5] = { id: "survivors_pressure", label: "敌潮、精英与生存压力", placeholder: "敌人类型、刷怪节奏、危险升级、失败原因。", rows: 3 };
+                    fields[6] = { id: "survivors_build", label: "升级、构筑与局外成长", placeholder: "局内升级选择、武器组合、被动、局外解锁。", rows: 3 };
+                  } else if (isTowerDefense) {
+                    fields[2] = { id: "tower_loop", label: "波次防守循环", placeholder: "布防、出怪、战斗、结算、升级、下一波。", rows: 3 };
+                    fields[3] = { id: "tower_map", label: "首张防守地图", placeholder: "路径、入口出口、建造点、阻挡、目标生命或基地。", rows: 3 };
+                    fields[6] = { id: "tower_economy", label: "塔、敌人与经济", placeholder: "塔类型、升级、费用、敌人护甲/速度/特殊能力、收益。", rows: 3 };
+                  }
+
+                  if (project?.gameName) {
+                    fields[0].placeholder = `${project.gameName} 的参考对象、体验目标和禁忌方向。`;
+                  }
+
+                  return fields;
+                }
+
+                function normalizeGddQuestionFormFields(fields) {
+                  if (!Array.isArray(fields)) return [];
+                  const usedIds = new Set();
+                  return fields.map(field => {
+                    const label = String(field?.label || "").trim().slice(0, 32);
+                    const id = String(field?.id || label || "")
+                      .trim()
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "_")
+                      .replace(/^_+|_+$/g, "");
+                    if (!id || !label || usedIds.has(id)) return null;
+                    usedIds.add(id);
+                    const rawRows = Number(field?.rows || 3);
+                    const rawMaxLength = Number(field?.maxLength || 500);
+                    const rows = Math.min(4, Math.max(2, Number.isFinite(rawRows) ? rawRows : 3));
+                    const maxLength = Math.min(700, Math.max(120, Number.isFinite(rawMaxLength) ? rawMaxLength : 500));
+                    return {
+                      id,
+                      label,
+                      placeholder: String(field?.placeholder || "").trim().slice(0, 120),
+                      inputType: "textarea",
+                      rows,
+                      maxLength,
+                      required: field?.required !== false
+                    };
+                  }).filter(Boolean).slice(0, 12);
+                }
+
+                function setGddQuestionFormLoading() {
+                  state.gddQuestionFormFields = [];
+                  state.gddQuestionFormSource = "";
+                  $("gddQuestionForm").dataset.schema = "question-form";
+                  $("gddQuestionForm").innerHTML = `<p class="muted">正在根据当前游戏类型规划问题...</p>`;
+                  $("gddQuestionFormMeta").textContent = "正在准备策划大纲问题";
+                  $("gddQuestionFormHint").textContent = "";
+                  $("confirmGddQuestionForm").disabled = true;
+                }
+
+                async function loadGddQuestionFormSchema(projectId) {
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd/question-form`, {
+                      method: "POST",
+                      body: JSON.stringify({ model: $("globalModel").value || null })
+                    });
+                    const fields = normalizeGddQuestionFormFields(result?.fields);
+                    if (fields.length >= 8 && fields.length <= 12) {
+                      return { fields, source: result?.source || "agent", failureCode: result?.failureCode || "" };
+                    }
+                    return { fields: normalizeGddQuestionFormFields(fallbackGddQuestionFormFields()), source: "fallback", failureCode: "invalid_schema" };
+                  } catch (error) {
+                    return { fields: normalizeGddQuestionFormFields(fallbackGddQuestionFormFields()), source: "fallback", failureCode: error?.payload?.failureCode || error?.payload?.error || "schema_request_failed" };
+                  }
+                }
+
+                function renderGddQuestionForm(schema) {
+                  const project = currentProjectSnapshot();
+                  const fields = normalizeGddQuestionFormFields(schema?.fields);
+                  const gameType = currentProjectGameTypeText() || "未指定游戏类型";
+                  state.gddQuestionFormFields = fields.length >= 8 && fields.length <= 12 ? fields : normalizeGddQuestionFormFields(fallbackGddQuestionFormFields());
+                  state.gddQuestionFormSource = schema?.source || "fallback";
+                  $("gddQuestionForm").dataset.schema = "question-form";
+                  $("gddQuestionForm").innerHTML = state.gddQuestionFormFields.map(field => `
+                    <label data-gdd-question="${escapeHtml(field.id)}">${escapeHtml(field.label)}
+                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" placeholder="${escapeHtml(field.placeholder || "")}"></textarea>
+                    </label>
+                  `).join("");
+                  $("gddQuestionFormMeta").textContent = `${project?.gameName || project?.name || "当前项目"} · ${gameType}`;
+                  $("gddQuestionFormHint").textContent = state.gddQuestionFormSource === "agent"
+                    ? "请补充关键原始资料。"
+                    : "已使用保底问题，请补充关键原始资料。";
+                  $("confirmGddQuestionForm").disabled = false;
+                }
+
+                async function openGddQuestionFormModal() {
                   if (!state.projectId) return out("请先选择一个项目。");
                   if (state.gddOutlineReady) {
                     callV2("v2OpenGddOutlineTab");
                     return;
                   }
                   if (!guardGlobalAction()) return;
+                  const projectId = state.projectId;
+                  setGddQuestionFormLoading();
+                  setModalVisible("gddQuestionFormModal", true);
+                  if (!currentProjectSnapshot()) {
+                    await refreshProjects({ autoSelect: false }).catch(() => {});
+                  }
+                  if (state.projectId !== projectId) return;
+                  const schema = await loadGddQuestionFormSchema(projectId);
+                  if (state.projectId !== projectId) return;
+                  renderGddQuestionForm(schema);
+                }
+
+                function closeGddQuestionFormModal() {
+                  setModalVisible("gddQuestionFormModal", false);
+                  $("gddQuestionFormHint").textContent = "";
+                  $("confirmGddQuestionForm").disabled = false;
+                }
+
+                function collectGddQuestionFormAnswers() {
+                  const fields = state.gddQuestionFormFields.length ? state.gddQuestionFormFields : normalizeGddQuestionFormFields(fallbackGddQuestionFormFields());
+                  return fields.map(field => ({
+                    id: field.id,
+                    label: field.label,
+                    answer: (document.querySelector(`[data-gdd-question-input="${field.id}"]`)?.value || "").trim()
+                  }));
+                }
+
+                function buildGddQuestionFormMessage(message, answers) {
+                  const project = currentProjectSnapshot();
+                  const lines = [
+                    "GDD question-form raw material:",
+                    `Project: ${project?.gameName || project?.name || state.projectId}`,
+                    `Game type: ${currentProjectGameTypeText() || "unspecified"}`,
+                    `Question form source: ${state.gddQuestionFormSource || "fallback"}`,
+                    ""
+                  ];
+                  const trimmedMessage = (message || "").trim();
+                  if (trimmedMessage) {
+                    lines.push("User freeform note:", trimmedMessage, "");
+                  }
+                  lines.push("Question-form answers:");
+                  answers.forEach((item, index) => {
+                    lines.push(`${index + 1}. ${item.label}: ${item.answer || "未填写"}`);
+                  });
+                  lines.push("", "Use these answers as authoritative raw material for creating the GDD outline. Preserve the existing GDD route design and validation rules.");
+                  return lines.join("\n");
+                }
+
+                async function confirmGddQuestionForm() {
+                  const answers = collectGddQuestionFormAnswers();
+                  const answeredCount = answers.filter(item => item.answer).length;
+                  if (answeredCount < 4) {
+                    $("gddQuestionFormHint").textContent = "请至少填写 4 个关键问题。";
+                    return;
+                  }
+                  const message = buildGddQuestionFormMessage($("chatMessage").value, answers);
+                  if (message.length > gddQuestionFormMessageBudget) {
+                    $("gddQuestionFormHint").textContent = `当前原始资料约 ${message.length} 字，超过 ${gddQuestionFormMessageBudget} 字预算，请缩短后再创建。`;
+                    return;
+                  }
+                  const button = $("confirmGddQuestionForm");
+                  button.disabled = true;
+                  button.textContent = "创建中...";
+                  try {
+                    const succeeded = await startGddDocumentRoute(message);
+                    if (succeeded) closeGddQuestionFormModal();
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = "确认并创建策划大纲";
+                  }
+                }
+
+                async function createGddDocument() {
+                  await openGddQuestionFormModal();
+                }
+
+                async function startGddDocumentRoute(message) {
+                  if (!state.projectId) {
+                    out("请先选择一个项目。");
+                    return false;
+                  }
+                  if (!guardGlobalAction()) return false;
                   const context = projectRequestContext();
                   const projectId = context.projectId;
-                  const message = $("chatMessage").value.trim();
                   const button = $("createGddDocument");
+                  let succeeded = false;
                   setLocalBusy(true, "\u6b63\u5728\u521b\u5efa\u7b56\u5212\u5927\u7eb2\uff0c\u8bf7\u7b49\u5f85\u5f53\u524d\u4efb\u52a1\u6267\u884c\u5b8c\u6bd5\u3002");
                   button.disabled = true;
                   button.textContent = "创建中...";
@@ -4417,9 +4649,9 @@ public sealed class BrowserUiRenderer
                       attachments: currentChatAttachmentsForRun()
                     };
                     const result = await api(`/api/projects/${projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
-                    if (!isCurrentProjectContext(context)) return;
+                    if (!isCurrentProjectContext(context)) return false;
                     await loadServerChatHistoryForProject(projectId);
-                    if (!isCurrentProjectContext(context)) return;
+                    if (!isCurrentProjectContext(context)) return false;
                     state.chatHistory.push({
                       role: "assistant",
                       kind: "gdd-result",
@@ -4433,8 +4665,10 @@ public sealed class BrowserUiRenderer
                     out(result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002");
                     await loadRuns();
                     await loadProjectPackages();
+                    succeeded = true;
+                    return true;
                   } catch (error) {
-                    if (!isCurrentProjectContext(context)) return;
+                    if (!isCurrentProjectContext(context)) return false;
                     const failureMessage = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || error?.payload?.failureCode || "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002");
                     state.chatHistory.push({
                       role: "assistant",
@@ -4446,9 +4680,10 @@ public sealed class BrowserUiRenderer
                     out(failureMessage);
                     await loadServerChatHistoryForProject(projectId).catch(() => {});
                     showError(error);
+                    return false;
                   } finally {
                     if (!isCurrentProjectContext(context)) return;
-                    clearChatAttachments();
+                    if (succeeded) clearChatAttachments();
                     try {
                       await refreshActiveRun();
                     } finally {
@@ -8333,6 +8568,8 @@ public sealed class BrowserUiRenderer
                 $("draftFile").onchange = updateDraftImportButtonState;
                 $("sendChat").onclick = sendChat;
                 $("createGddDocument").onclick = createGddDocument;
+                $("confirmGddQuestionForm").onclick = confirmGddQuestionForm;
+                $("cancelGddQuestionForm").onclick = closeGddQuestionFormModal;
                 $("syncChatHistory").onclick = syncChatHistory;
                 $("downloadChatHistory").onclick = downloadChatHistory;
                 $("chatAttachmentFiles").onchange = loadChatAttachmentFiles;
