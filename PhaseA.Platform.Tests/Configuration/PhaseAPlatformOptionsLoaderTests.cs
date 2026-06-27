@@ -27,6 +27,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.PythonCommand.Should().Be("py");
         options.DeliveryProfile.Should().Be("fast-ship");
         options.AdminUsername.Should().Be("admin");
+        options.WebPreviewSigningSecret.Should().BeNull();
         options.MaxConcurrentChats.Should().Be(8);
         options.MaxConcurrentChatsPerAccount.Should().Be(1);
         options.MaxConcurrentProjectCreations.Should().Be(3);
@@ -34,6 +35,10 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentOtherRuns.Should().Be(3);
         options.MaxConcurrentPrototypeCreations.Should().Be(2);
         options.MaxConcurrentAssetGenerations.Should().Be(2);
+        options.MaxConcurrentWebPreviews.Should().Be(3);
+        options.MaxConcurrentWebPreviewsPerAccount.Should().Be(1);
+        options.Godot3WebPreviewExportTimeoutSeconds.Should().Be(180);
+        options.Godot3WebPreviewExportInactivityTimeoutSeconds.Should().Be(45);
         options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
         options.AssetAllowedUrlPrefixes.Should().BeEmpty();
     }
@@ -62,6 +67,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_ADMIN_PASSWORD_HASH"] = "password-hash",
             ["PHASEA_ADMIN_TOKEN_HASH"] = "token-hash",
             ["PHASEA_TICKET_SIGNING_SECRET"] = "ticket-secret",
+            ["PHASEA_WEB_PREVIEW_SIGNING_SECRET"] = "web-preview-secret",
             ["PHASEA_MAX_CONCURRENT_CHATS"] = "9",
             ["PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT"] = "3",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "4",
@@ -69,6 +75,10 @@ public sealed class PhaseAPlatformOptionsLoaderTests
             ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
             ["PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS"] = "6",
             ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS"] = "5",
+            ["PHASEA_MAX_CONCURRENT_WEB_PREVIEWS"] = "7",
+            ["PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT"] = "2",
+            ["PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS"] = "240",
+            ["PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS"] = "60",
             ["PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT"] = "1",
             ["PHASEA_ASSET_ALLOWED_URLS"] = "https://assets.example.com/kaykit/; https://cdn.example.com/free/"
         };
@@ -90,6 +100,7 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.AdminPasswordHash.Should().Be("password-hash");
         options.AdminTokenHash.Should().Be("token-hash");
         options.TicketSigningSecret.Should().Be("ticket-secret");
+        options.WebPreviewSigningSecret.Should().Be("web-preview-secret");
         options.MaxConcurrentChats.Should().Be(9);
         options.MaxConcurrentChatsPerAccount.Should().Be(3);
         options.MaxConcurrentProjectCreations.Should().Be(4);
@@ -97,6 +108,10 @@ public sealed class PhaseAPlatformOptionsLoaderTests
         options.MaxConcurrentOtherRuns.Should().Be(2);
         options.MaxConcurrentPrototypeCreations.Should().Be(6);
         options.MaxConcurrentAssetGenerations.Should().Be(5);
+        options.MaxConcurrentWebPreviews.Should().Be(7);
+        options.MaxConcurrentWebPreviewsPerAccount.Should().Be(2);
+        options.Godot3WebPreviewExportTimeoutSeconds.Should().Be(240);
+        options.Godot3WebPreviewExportInactivityTimeoutSeconds.Should().Be(60);
         options.MaxConcurrentAssetGenerationsPerAccount.Should().Be(1);
         options.AssetAllowedUrlPrefixes.Should().Equal("https://assets.example.com/kaykit", "https://cdn.example.com/free");
     }
@@ -117,6 +132,10 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     [InlineData("PHASEA_MAX_CONCURRENT_OTHER_RUNS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_WEB_PREVIEWS", "0")]
+    [InlineData("PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT", "0")]
+    [InlineData("PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS", "0")]
+    [InlineData("PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS", "0")]
     [InlineData("PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", "0")]
     [InlineData("PHASEA_ASSET_ALLOWED_URLS", "http://assets.example.com/free/")]
     public void FromDictionary_FailsClosed_ForInvalidValues(string key, string value)
@@ -133,5 +152,28 @@ public sealed class PhaseAPlatformOptionsLoaderTests
     {
         WorkspacePathPolicy.IsUnderRoot(@"C:\workspaces", @"C:\workspaces\project-a\repo").Should().BeTrue();
         WorkspacePathPolicy.IsUnderRoot(@"C:\workspaces", @"C:\other\project-a").Should().BeFalse();
+    }
+
+    [Fact]
+    public void StartPhaseA_WebPreviewSigningSecretPrefersPersistentFile()
+    {
+        var scriptPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "runtime",
+            "phase-a",
+            "start-phasea.ps1"));
+        var source = File.ReadAllText(scriptPath);
+
+        var fileReadIndex = source.IndexOf("[System.IO.File]::ReadAllText($webPreviewSecretFile).Trim()", StringComparison.Ordinal);
+        var hostReadIndex = source.IndexOf("Resolve-HostEnvironmentValue 'PHASEA_WEB_PREVIEW_SIGNING_SECRET'", StringComparison.Ordinal);
+
+        fileReadIndex.Should().BeGreaterThanOrEqualTo(0);
+        hostReadIndex.Should().BeGreaterThan(fileReadIndex);
+        source.Should().Contain("$env:PHASEA_WEB_PREVIEW_SIGNING_SECRET = $resolvedWebPreviewSecret");
+        source.Should().Contain("$psi.Environment['PHASEA_WEB_PREVIEW_SIGNING_SECRET'] = $env:PHASEA_WEB_PREVIEW_SIGNING_SECRET");
     }
 }

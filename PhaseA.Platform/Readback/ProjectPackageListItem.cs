@@ -6,4 +6,6 @@ public sealed record ProjectPackageListItem(
     string RelativePath,
     string DownloadUrl,
     long SizeBytes,
-    string CreatedUtc);
+    string PackageSha256,
+    string CreatedUtc,
+    ProjectWebPreviewPackageStatus WebPreview);

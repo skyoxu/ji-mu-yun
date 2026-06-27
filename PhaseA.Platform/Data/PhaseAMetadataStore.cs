@@ -1691,6 +1691,11 @@ public sealed class PhaseAMetadataStore
 
     public async Task MarkRunStartedAsync(string runId, int? queuePositionAtStart, CancellationToken cancellationToken = default)
     {
+        await TryMarkRunStartedAsync(runId, queuePositionAtStart, cancellationToken);
+    }
+
+    public async Task<bool> TryMarkRunStartedAsync(string runId, int? queuePositionAtStart, CancellationToken cancellationToken = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -1710,7 +1715,7 @@ public sealed class PhaseAMetadataStore
         var updated = await command.ExecuteNonQueryAsync(cancellationToken);
         if (updated > 0)
         {
-            return;
+            return true;
         }
 
         var status = await GetRunStatusAsync(connection, runId, cancellationToken);
@@ -1724,6 +1729,8 @@ public sealed class PhaseAMetadataStore
 
             throw new OperationCanceledException($"Run {runId} was cancelled before it started.");
         }
+
+        return false;
     }
 
     public async Task UpdateRunProgressAsync(
@@ -2674,6 +2681,60 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(3),
                 reader.GetString(4),
                 reader.GetString(5)));
+        }
+
+        return artifacts;
+    }
+
+    public async Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunsAsync(
+        IReadOnlyCollection<string> runIds,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(runIds);
+
+        var normalizedRunIds = runIds
+            .Where(runId => !string.IsNullOrWhiteSpace(runId))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (normalizedRunIds.Length == 0)
+        {
+            return [];
+        }
+
+        var artifacts = new List<ArtifactSnapshot>();
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+
+        const int chunkSize = 500;
+        foreach (var runIdChunk in normalizedRunIds.Chunk(chunkSize))
+        {
+            await using var command = connection.CreateCommand();
+            var parameterNames = new List<string>(runIdChunk.Length);
+            for (var i = 0; i < runIdChunk.Length; i++)
+            {
+                var parameterName = $"$run_id_{i}";
+                parameterNames.Add(parameterName);
+                command.Parameters.AddWithValue(parameterName, runIdChunk[i]);
+            }
+
+            command.CommandText =
+                $"""
+                SELECT id, run_id, project_id, artifact_type, relative_path, summary
+                FROM artifacts
+                WHERE run_id IN ({string.Join(", ", parameterNames)})
+                ORDER BY created_utc, id;
+                """;
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                artifacts.Add(new ArtifactSnapshot(
+                    reader.GetString(0),
+                    reader.IsDBNull(1) ? null : reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetString(5)));
+            }
         }
 
         return artifacts;

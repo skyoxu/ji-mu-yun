@@ -7,7 +7,8 @@ public static class RunCancellationPolicy
         "chapter2-bootstrap",
         "project-creation",
         "project-asset-generation",
-        "asset-generation"
+        "asset-generation",
+        "project-web-preview"
     };
 
     public static bool IsCancellationBlocked(string? runType)

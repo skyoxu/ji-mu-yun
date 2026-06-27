@@ -510,6 +510,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_phase_a_public.add_argument("--repository-root", default=".")
     p_phase_a_public.add_argument("--allow-http", action="store_true")
     p_phase_a_public.add_argument("--create-project", action="store_true")
+    p_phase_a_public.add_argument("--web-preview-url", default="")
+    p_phase_a_public.add_argument("--web-preview-preview-id", default="")
+    p_phase_a_public.add_argument("--web-preview-project-id", default="")
+    p_phase_a_public.add_argument("--web-preview-package-file", default="")
+    p_phase_a_public.add_argument("--web-preview-package-sha256", default="")
+    p_phase_a_public.add_argument("--require-web-preview", action="store_true")
     p_phase_a_public.add_argument("--timeout-seconds", type=float, default=15.0)
     p_phase_a_public.set_defaults(func=cmd_phase_a_public_smoke)
 

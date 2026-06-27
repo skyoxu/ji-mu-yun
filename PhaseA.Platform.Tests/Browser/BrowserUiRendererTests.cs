@@ -573,9 +573,10 @@ public sealed class BrowserUiRendererTests
             }
             function applyGddMilestoneActionState(selected, active) {
               const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
+              const canSubmitFeedback = !!selected?.canSubmitFeedback || !!selected?.canConfirm;
               setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
               setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");
-              setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && selected.canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
+              setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
             }
             function renderGddMilestoneSteps() {
               const plan = state.gddMilestoneSteps;
@@ -646,6 +647,9 @@ public sealed class BrowserUiRendererTests
             assert($("executeCurrentMilestoneStep").disabled, "executed module no longer executes again");
             assert(!$("confirmCurrentMilestoneStep").disabled, "executed active module can be confirmed");
             assert(!$("submitCurrentMilestoneFeedback").disabled, "executed active module can submit feedback");
+            state.gddMilestoneSteps.steps[0] = { ...state.gddMilestoneSteps.steps[0], status: "feedback_submitted", canConfirm: true, canSubmitFeedback: false };
+            renderGddMilestoneSteps();
+            assert(!$("submitCurrentMilestoneFeedback").disabled, "confirmable active module can still submit feedback when legacy payload omits canSubmitFeedback");
             assert(cacheWrites.some(write => write.selectedGddMilestoneStepId === "M3"), "nav selection should be cached");
             """;
 
@@ -2318,12 +2322,16 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
+        html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750)");
         html.Should().Contain("runBelongsToCurrentProject(run)");
         html.Should().Contain("function runIsBusy(run)");
         html.Should().Contain("game-design-gdd-section-batch");
         html.Should().Contain(@"\u7b56\u5212\u5927\u7eb2\u8865\u5168\u4e2d\uff1a");
         html.Should().Contain("if (!run.runId) return false;");
         html.Should().Contain("status === \"queued\" || status === \"running\"");
+        html.Should().Contain("const hadTrackedBusyRun = runIsBusy(state.activeRun) || hasPendingPrototypeSkeletonBannerRun();");
+        html.Should().Contain("refreshCurrentProjectAfterActiveRunSettled");
+        html.Should().Contain("loadGddMilestoneSteps()");
         html.Should().Contain("state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId");
         html.Should().Contain("state.cancelledActiveRunProjectId = runProjectId;");
         html.Should().Contain("if (isPrototypeSkeletonCreationRun(run) && runProjectId)");
@@ -2370,7 +2378,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function prototypeSkeletonBannerStorageKey(runId = state.prototypeSkeletonBannerRunId, projectId = state.projectId)");
         html.Should().Contain("function prototypeSkeletonBannerCurrentKey(projectId = state.projectId)");
         html.Should().Contain("function prototypeSkeletonBannerStoredRunId()");
-        html.Should().Contain("restorePrototypeSkeletonBannerFromStorage();");
+        html.Should().Contain("runStartupStep(\"restorePrototypeSkeletonBannerFromStorage\", restorePrototypeSkeletonBannerFromStorage);");
         html.Should().Contain("void refreshActiveRun();");
         html.Should().Contain("state.pendingPrototypeSkeletonRun = {");
         html.Should().Contain("state.pendingPrototypeSkeletonRun = null;");
@@ -2414,24 +2422,42 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("let sessionValidated = false");
         html.Should().Contain("sessionValidated = true");
         html.Should().Contain("if (!sessionValidated)");
-        html.Should().Contain("if (error?.status === 401 || error?.status === 403)");
+        html.Should().Contain("retryOnAuthFailure");
+        html.Should().Contain("正在恢复登录状态，请稍候...");
+        html.Should().Contain("function restoreSessionFromStoredToken()");
+        html.Should().Contain("function runStartupSessionRestore()");
+        html.Should().Contain("function runStartupStep(name, action)");
+        html.Should().Contain("startup_${name}_error");
+        html.Should().Contain("restoreSessionFromStoredToken();");
+        html.Should().NotContain("if (token()) refreshProjects(); else showLoggedOut();");
+        html.Should().NotContain("if (error?.status === 401 || error?.status === 403)");
         html.Should().Contain("Token 已验证。项目状态刷新失败，请稍后重试。");
         html.Should().Contain("function persistAccessToken(value)");
         html.Should().Contain("function persistAccessTokenFromInput()");
         html.Should().Contain("function readBrowserCookie(name)");
         html.Should().Contain("function writeBrowserCookie(name, value, maxAgeSeconds)");
         html.Should().Contain("function clearBrowserCookie(name)");
-        html.Should().NotContain("sessionDiagnostics");
-        html.Should().NotContain("function updateSessionDiagnostics(reason = \"\")");
-        html.Should().NotContain("登录诊断：${location.origin}");
+        html.Should().Contain("sessionDiagnostics");
+        html.Should().NotContain("copySessionProbe");
+        html.Should().NotContain("复制登录诊断");
+        html.Should().NotContain("sessionProbeOutput");
+        html.Should().Contain("function updateSessionDiagnostics(reason = \"\")");
+        html.Should().Contain("function recordSessionProbe(reason = \"manual\", extra = {})");
+        html.Should().Contain("phaseASessionProbeLog");
+        html.Should().Contain("[phasea-session-probe]");
+        html.Should().Contain("window.phaseASessionProbeDump");
+        html.Should().Contain("api_response_error");
+        html.Should().Contain("refreshProjects_error");
+        html.Should().Contain("startup_before_restore");
+        html.Should().Contain("登录诊断：${location.origin}");
         html.Should().Contain("function recoverVisiblePageFromClientError(error)");
         html.Should().Contain("window.addEventListener(\"error\"");
         html.Should().Contain("window.addEventListener(\"unhandledrejection\"");
         html.Should().Contain("setTimeout(() =>");
-        html.Should().NotContain("autofill_empty");
-        html.Should().Contain("$(\"token\").addEventListener(\"input\", bumpAuthEpoch)");
-        html.Should().Contain("$(\"token\").addEventListener(\"change\", bumpAuthEpoch)");
-        html.Should().NotContain("$(\"token\").addEventListener(\"input\", persistAccessTokenFromInput)");
+        html.Should().Contain("function scheduleAutofillTokenRecovery()");
+        html.Should().Contain("autofill_empty_${delayMs}");
+        html.Should().Contain("persistTokenInputFromBrowser(\"input\")");
+        html.Should().Contain("persistTokenInputFromBrowser(\"change\")");
         html.Should().Contain("Token 已保留");
         html.Should().Contain("busy-banner-prototype-skeleton");
         html.Should().Contain("展开详细信息");
@@ -2649,6 +2675,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("setInterval");
         html.Should().Contain("shouldAutoRefreshIterationPlan");
         html.Should().Contain(@"activeRun?.runType === ""prototype-iteration-goal""");
+        html.Should().Contain("const canSubmitFeedback = !!selected?.canSubmitFeedback || !!selected?.canConfirm;");
         html.Should().Contain("updateChatPanelVisibility");
         html.Should().Contain("seedChatFromPrototypeProgress");
         html.Should().Contain("prototypeSeedMessage");
@@ -2909,6 +2936,62 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void RenderShell_RefreshProjectsDoesNotClearPersistedTokenOnSessionFailure()
+    {
+        var html = new BrowserUiRenderer().RenderShell();
+        var refreshStart = html.IndexOf("async function refreshProjects", StringComparison.Ordinal);
+        var refreshEnd = html.IndexOf("function selectDefaultProject", refreshStart, StringComparison.Ordinal);
+
+        refreshStart.Should().BeGreaterThanOrEqualTo(0);
+        refreshEnd.Should().BeGreaterThan(refreshStart);
+
+        var refreshProjects = html[refreshStart..refreshEnd];
+        refreshProjects.Should().Contain("showLoggedOut();");
+        refreshProjects.Should().Contain("retryOnAuthFailure");
+        refreshProjects.Should().Contain("showUserLoadingFallback(\"正在恢复登录状态，请稍候...\")");
+        refreshProjects.Should().NotContain("clearAccessTokenStorage");
+        refreshProjects.Should().NotContain("bumpAuthEpoch();");
+    }
+
+    [Fact]
+    public void RenderShell_RestoresStoredTokenThroughLoadingStateOnPageRefresh()
+    {
+        var html = new BrowserUiRenderer().RenderShell();
+        var restoreStart = html.IndexOf("function restoreSessionFromStoredToken()", StringComparison.Ordinal);
+        var restoreEnd = html.IndexOf("function selectDefaultProject", restoreStart, StringComparison.Ordinal);
+
+        restoreStart.Should().BeGreaterThanOrEqualTo(0);
+        restoreEnd.Should().BeGreaterThan(restoreStart);
+
+        var restore = html[restoreStart..restoreEnd];
+        restore.Should().Contain("const currentToken = token();");
+        restore.Should().Contain("showUserLoadingFallback(\"正在恢复登录状态，请稍候...\")");
+        restore.Should().Contain("void refreshProjects({ autoSelect: true });");
+        restore.Should().Contain("showLoggedOut();");
+    }
+
+    [Fact]
+    public void RenderShell_GameModuleLongRunsScheduleActiveRunRefreshForCancellation()
+    {
+        var html = new BrowserUiRenderer().RenderShell();
+        var normalized = html.Replace("\r\n", "\n", StringComparison.Ordinal);
+
+        ShouldScheduleAfter(normalized, "setLocalBusy(true, \"正在执行当前游戏模块。\");");
+        ShouldScheduleAfter(normalized, "setLocalBusy(true, \"正在根据当前模块执行结果启动快速修复。\");");
+        ShouldScheduleAfter(normalized, "setLocalBusy(true, \"正在确认当前模块并执行下一模块解锁前检查。\");");
+        ShouldScheduleAfter(normalized, "setLocalBusy(true, \"正在提交当前模块的反馈修复。\");");
+
+        static void ShouldScheduleAfter(string html, string marker)
+        {
+            var markerIndex = html.IndexOf(marker, StringComparison.Ordinal);
+            markerIndex.Should().BeGreaterThanOrEqualTo(0);
+            var scheduleIndex = html.IndexOf("scheduleActiveRunRefresh();", markerIndex, StringComparison.Ordinal);
+            scheduleIndex.Should().BeGreaterThan(markerIndex);
+            (scheduleIndex - markerIndex).Should().BeLessThan(200);
+        }
+    }
+
+    [Fact]
     public void RenderShellV2_ShowsSanitizedIterationPlanFailureReasonInUserUi()
     {
         var html = new BrowserUiRenderer().RenderShellV2();
@@ -3131,6 +3214,29 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_WebPreviewRoutesApplySandboxAndCorsHeaders()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        source.Should().Contain("ApplyWebPreviewCachePolicy");
+        source.Should().Contain("AccessControlAllowOrigin = \"*\"");
+        source.Should().Contain("ContentSecurityPolicy");
+        source.Should().Contain("sandbox allow-scripts allow-pointer-lock");
+        source.Should().Contain("XContentTypeOptions = \"nosniff\"");
+        source.Should().Contain("\"user_web_preview_concurrency_limit_exceeded\" => StatusCodes.Status429TooManyRequests");
+        source.Should().Contain("failureCode = queued.FailureCode");
+        source.Should().Contain("WebPreviewNotFound(context)");
+    }
+
+    [Fact]
     public void Program_PrototypeEvidenceEndpointGuardsProjectLocalEvidenceJson()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(
@@ -3256,6 +3362,32 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("下载准备中...");
         html.Should().Contain("download-ticket");
         html.Should().Contain("/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(fileName)}/download-ticket");
+        html.Should().Contain("const previewResult = await waitForWebPreview(fileName, button, payload.runId || \"\")");
+        html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
+        html.Should().Contain("await loadPackages()");
+        html.Should().Contain("webPreviewFailureCodeFromRun(run)");
+        html.Should().Contain("webPreviewQueueText(preview)");
+        html.Should().Contain("function formatDuration(seconds)");
+        html.Should().Contain("preview.fidelityTier");
+        html.Should().Contain("preview.playableSurface");
+        html.Should().Contain("preview.gameTypeId");
+        html.Should().Contain("\\u5305\\u8f6c\\u6362\\u8bd5\\u73a9\\u7248");
+        html.Should().Contain("preview.estimatedWaitSeconds");
+        html.Should().Contain("preview.queuePosition");
+        html.Should().Contain("user_web_preview_concurrency_limit_exceeded");
+        html.Should().Contain("web_preview_signing_secret_missing");
+        html.Should().Contain("godot3_shell_patch_failed");
+        html.Should().Contain("web_preview_background_failed");
+        html.Should().Contain("abandoned_run_recovered");
+        html.Should().Contain("web_preview_converter_fingerprint_mismatch");
+        html.Should().Contain("const stale = preview.status === \"stale\"");
+        html.Should().Contain("converter_schema_outdated");
+        html.Should().Contain("package_invalid_zip");
+        html.Should().Contain("package_scan_budget_exceeded");
+        html.Should().Contain("const maxAttempts = 900;");
+        html.Should().NotContain("window.open(previewResult.url");
+        html.Should().Contain("target=\"_blank\" rel=\"noopener\"");
+        html.Should().NotContain("async function handleWebPreview(button, fileName, previewUrl)");
         html.Should().Contain("/api/projects/${projectId}/gdd/download-ticket");
         html.Should().Contain("下载 GDD.md");
         html.Should().Contain("cache: \"no-store\"");

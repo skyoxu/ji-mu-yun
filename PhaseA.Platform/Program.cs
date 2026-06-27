@@ -60,6 +60,11 @@ builder.Services.AddKeyedSingleton("prototype-creation", new HeavyRunnerQueueSer
 builder.Services.AddKeyedSingleton("asset-generation", new HeavyRunnerQueueService(
     TimeSpan.FromMinutes(4),
     options.MaxConcurrentAssetGenerations));
+builder.Services.AddKeyedSingleton("web-preview", new HeavyRunnerQueueService(
+    TimeSpan.FromMinutes(3),
+    options.MaxConcurrentWebPreviews));
+builder.Services.AddSingleton(new ProjectWebPreviewConcurrencyLimiter(
+    options.MaxConcurrentWebPreviewsPerAccount));
 builder.Services.AddSingleton(new AssetGenerationConcurrencyLimiter(
     options.MaxConcurrentAssetGenerationsPerAccount));
 builder.Services.AddSingleton<PrototypeRecordWriter>();
@@ -85,6 +90,7 @@ builder.Services.AddSingleton<PrototypeCommandService>();
 builder.Services.AddSingleton<SkillActionCatalog>();
 builder.Services.AddSingleton<SkillActionService>();
 builder.Services.AddSingleton<ArtifactReadbackService>();
+builder.Services.AddSingleton<ProjectWebPreviewService>();
 builder.Services.AddSingleton<ProjectPackageService>();
 builder.Services.AddSingleton<ProjectAssetInventoryService>();
 builder.Services.AddSingleton<ProjectAssetImageGenerator>();
@@ -122,6 +128,30 @@ await metadataStore.ReconcileProjectBootstrapStatusAsync();
 await initializationService.ReconcileStaleInitializationsAsync();
 var workspaceMaintenance = app.Services.GetRequiredService<ProjectWorkspaceMaintenanceService>();
 await workspaceMaintenance.EnsureAllWorkspacesSeededAsync();
+_ = Task.Run(async () =>
+{
+    try
+    {
+        var health = await app.Services.GetRequiredService<ProjectWebPreviewService>().GetGodot3HealthAsync(CancellationToken.None);
+        if (string.Equals(health.Status, "healthy", StringComparison.Ordinal))
+        {
+            app.Logger.LogInformation(
+                "Godot3 web preview health preheat completed. SmokeStatus={SmokeStatus}",
+                health.SmokeStatus);
+        }
+        else
+        {
+            app.Logger.LogWarning(
+                "Godot3 web preview health preheat reported unhealthy status. SmokeStatus={SmokeStatus} Error={SmokeError}",
+                health.SmokeStatus,
+                health.SmokeError);
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Godot3 web preview health preheat failed.");
+    }
+}, CancellationToken.None);
 if (interruptedRunCount > 0)
 {
     app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
@@ -136,6 +166,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/healthz" ||
+        context.Request.Path == "/favicon.ico" ||
         context.Request.Path == "/" ||
         context.Request.Path == "/ui" ||
         context.Request.Path == "/ui-v2" ||
@@ -153,6 +184,8 @@ app.Use(async (context, next) =>
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/packages/", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")) ||
+        (context.Request.Path.StartsWithSegments("/projects") &&
+         context.Request.Path.Value?.Contains("/web-previews/", StringComparison.Ordinal) == true) ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/gdd/GDD.md", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")))
@@ -190,6 +223,8 @@ app.MapGet("/healthz", () => Results.Ok(new
     status = "ok",
     service = "phase-a-platform"
 }));
+
+app.MapGet("/favicon.ico", () => Results.NoContent());
 
 app.MapGet("/", (
     [FromServices] BrowserUiRenderer ui) =>
@@ -263,6 +298,7 @@ app.MapPost("/api/runs/{runId}/cancel", async (
     [FromServices] HeavyRunnerQueueService heavyRunnerQueue,
     [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService prototypeCreationQueue,
     [FromKeyedServices("asset-generation")] HeavyRunnerQueueService assetRunnerQueue,
+    [FromKeyedServices("web-preview")] HeavyRunnerQueueService webPreviewQueue,
     CancellationToken cancellationToken) =>
 {
     var accountId = CurrentAccountId(context);
@@ -292,6 +328,7 @@ app.MapPost("/api/runs/{runId}/cancel", async (
     heavyRunnerQueue.CancelRun(runId);
     prototypeCreationQueue.CancelRun(runId);
     assetRunnerQueue.CancelRun(runId);
+    webPreviewQueue.CancelRun(runId);
     return Results.Ok(new { runId, status = "cancel" });
 });
 
@@ -994,6 +1031,110 @@ app.MapPost("/api/projects/{projectId}/packages/{fileName}/download-ticket", asy
     {
         downloadUrl = $"/projects/{projectId}/packages/{Uri.EscapeDataString(fileName)}?ticket={Uri.EscapeDataString(tickets.CreateTicket(accountId, projectId, fileName))}"
     });
+});
+
+app.MapPost("/api/projects/{projectId}/packages/{fileName}/web-preview", async (
+    string projectId,
+    string fileName,
+    HttpContext context,
+    [FromServices] ProjectWebPreviewService previews,
+    CancellationToken cancellationToken) =>
+{
+    var accountId = CurrentAccountId(context);
+    var queued = await previews.QueuePreviewAsync(accountId, projectId, fileName, cancellationToken);
+    if (!string.Equals(queued.Status, "queued", StringComparison.Ordinal))
+    {
+        var statusCode = queued.FailureCode switch
+        {
+            "project_not_found" or "package_not_found" => StatusCodes.Status404NotFound,
+            "project_busy" => StatusCodes.Status423Locked,
+            "user_web_preview_concurrency_limit_exceeded" => StatusCodes.Status429TooManyRequests,
+            _ => StatusCodes.Status400BadRequest
+        };
+        return Results.Json(new
+        {
+            status = "failed",
+            failureCode = queued.FailureCode
+        }, statusCode: statusCode);
+    }
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            await previews.GenerateQueuedPreviewAsync(accountId, projectId, fileName, queued.RunId, CancellationToken.None);
+        }
+        catch (OperationCanceledException)
+        {
+            app.Logger.LogInformation(
+                "Web preview generation was cancelled. RunId={RunId} ProjectId={ProjectId} FileName={FileName}",
+                queued.RunId,
+                projectId,
+                fileName);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Web preview generation failed unexpectedly. RunId={RunId} ProjectId={ProjectId} FileName={FileName}",
+                queued.RunId,
+                projectId,
+                fileName);
+            await previews.RecordUnexpectedPreviewFailureAsync(queued.RunId, fileName, ex, CancellationToken.None);
+        }
+    }, CancellationToken.None);
+
+    await Task.CompletedTask;
+    return Results.Accepted($"/api/projects/{projectId}/packages", new
+    {
+        status = "queued",
+        runId = queued.RunId,
+        projectId,
+        fileName
+    });
+});
+
+app.MapGet("/api/system/godot3-web-preview-health", async (
+    [FromServices] ProjectWebPreviewService previews,
+    CancellationToken cancellationToken) =>
+{
+    var health = await previews.GetGodot3HealthAsync(cancellationToken);
+    return health.Status == "healthy" ? Results.Ok(health) : Results.Problem(
+        title: "Godot3 web preview environment is not healthy.",
+        statusCode: StatusCodes.Status503ServiceUnavailable,
+        extensions: new Dictionary<string, object?>
+        {
+            ["health"] = health
+        });
+});
+
+app.MapMethods("/projects/{projectId}/web-previews/{previewId}", ["GET", "HEAD"], async (
+    string projectId,
+    string previewId,
+    HttpContext context,
+    [FromServices] ProjectWebPreviewService previews,
+    CancellationToken cancellationToken) =>
+{
+    var result = await previews.ReadPreviewAsync(projectId, previewId, "index.html", cancellationToken);
+    ApplyWebPreviewCachePolicy(context, result);
+    return result is null
+        ? WebPreviewNotFound(context)
+        : Results.File(result.FilePath, result.ContentType, enableRangeProcessing: true);
+});
+
+app.MapMethods("/projects/{projectId}/web-previews/{previewId}/{**previewPath}", ["GET", "HEAD"], async (
+    string projectId,
+    string previewId,
+    string? previewPath,
+    HttpContext context,
+    [FromServices] ProjectWebPreviewService previews,
+    CancellationToken cancellationToken) =>
+{
+    var result = await previews.ReadPreviewAsync(projectId, previewId, previewPath, cancellationToken);
+    ApplyWebPreviewCachePolicy(context, result);
+    return result is null
+        ? WebPreviewNotFound(context)
+        : Results.File(result.FilePath, result.ContentType, enableRangeProcessing: true);
 });
 
 app.MapGet("/downloads", (
@@ -2353,6 +2494,87 @@ static IResult CancelledRunResult()
     return Results.Json(
         new { status = "cancel", error = "run_cancelled" },
         statusCode: 499);
+}
+
+static void ApplyNoStore(HttpContext context)
+{
+    context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+    context.Response.Headers.Pragma = "no-cache";
+    context.Response.Headers.Expires = "0";
+}
+
+static void ApplyWebPreviewCachePolicy(HttpContext context, ProjectWebPreviewReadResult? result)
+{
+    if (result is not null)
+    {
+        context.Response.Headers.AccessControlAllowOrigin = "*";
+        context.Response.Headers.XContentTypeOptions = "nosniff";
+        context.Response.Headers["Referrer-Policy"] = "no-referrer";
+        context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+        if (string.Equals(result.FileName, "index.html", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.Headers.ContentSecurityPolicy =
+                "sandbox allow-scripts allow-pointer-lock; " +
+                "default-src 'self' data: blob:; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; " +
+                "connect-src 'self'; " +
+                "img-src 'self' data: blob:; " +
+                "style-src 'self' 'unsafe-inline'; " +
+                "font-src 'self' data:; " +
+                "worker-src 'self' blob:; " +
+                "object-src 'none'; base-uri 'none'; form-action 'none'";
+        }
+    }
+
+    if (result is not null && ProjectWebPreviewService.IsImmutablePreviewAsset(result.FileName))
+    {
+        context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+        context.Response.Headers.Remove("Pragma");
+        context.Response.Headers.Remove("Expires");
+        return;
+    }
+
+    ApplyNoStore(context);
+}
+
+static IResult WebPreviewNotFound(HttpContext context)
+{
+    ApplyNoStore(context);
+    context.Response.Headers.XContentTypeOptions = "nosniff";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    if (HttpMethods.IsHead(context.Request.Method))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Content(
+        """
+        <!doctype html>
+        <html lang="zh-CN">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>试玩链接已失效</title>
+          <style>
+            body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; background: #f7f4ee; color: #1f2933; }
+            main { width: min(560px, calc(100vw - 32px)); border: 1px solid #d9d2c5; background: #fffaf2; padding: 28px; border-radius: 8px; box-shadow: 0 18px 45px rgba(31, 41, 51, 0.12); }
+            h1 { margin: 0 0 12px; font-size: 24px; }
+            p { margin: 0 0 16px; line-height: 1.7; color: #52606d; }
+            a { color: #8a4b12; font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>试玩链接已失效</h1>
+            <p>这个 Godot3 浏览器试玩链接不存在、已被清理，或不再匹配当前项目文件包。</p>
+            <p>请回到项目打包下载页面，重新生成浏览器试玩地址。</p>
+            <a href="/downloads">返回打包下载页面</a>
+          </main>
+        </body>
+        </html>
+        """,
+        "text/html; charset=utf-8",
+        statusCode: StatusCodes.Status404NotFound);
 }
 
 static string ResolveStaticWebRoot(string contentRootPath)

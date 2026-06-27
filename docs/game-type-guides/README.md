@@ -4,6 +4,8 @@ Source: `.agents/skills/gds-create-gdd/game-types/` and `.agents/skills/gds-crea
 
 These 24 guides are the extracted BMAD/GDS game-type templates used by the prototype lane and project-health metadata. They are docs-side reference material only; they do not replace the formal Chapter 3 through Chapter 7 workflow.
 
+For browser preview generation, use [Web Preview Conversion Contract](web-preview-conversion-contract.md). The converter consumes packaged download artifacts and publishes a guest-readable `web/preview-contract.json` for package-to-preview consistency checks.
+
 Each guide includes a `Module Matrix` section. A matrix is an optional planning convention for first-loop GDD ordering, module scoping, and later route/type-kit design. It is not an executable route contract, and it does not override a project-specific brief, GDD, prototype type kit, or route strategy.
 
 Authority order, highest first:

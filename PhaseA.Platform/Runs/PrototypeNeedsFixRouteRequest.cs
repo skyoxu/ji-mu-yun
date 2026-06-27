@@ -5,4 +5,5 @@ public sealed record PrototypeNeedsFixRouteRequest(
     string? Model = null,
     string? SkillActionId = null,
     string? GoalId = null,
-    int? GoalIndex = null);
+    int? GoalIndex = null,
+    string? SourceKind = null);

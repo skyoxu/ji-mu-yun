@@ -187,20 +187,23 @@ public sealed partial class PrototypeQuickFixService
             PrototypeGoalGodotSmokeValidationResult? preflightGodotSmokeFailure = null;
             var preflightResult = targetGoal is null || iterationDetails is null
                 ? null
-                : await TryCompleteAlreadySatisfiedGoalAsync(
-                    project,
-                    iterationDetails,
-                    targetGoal,
-                    runId,
-                    submittedRelativePath,
-                    resultRelativePath,
-                    resultAbsolutePath,
-                    codexOutputRelativePath,
-                    codexOutputAbsolutePath,
-                    skillAction,
-                    now,
-                    smokeFailure => preflightGodotSmokeFailure = smokeFailure,
-                    CancellationToken.None);
+                : ShouldAllowAlreadySatisfiedPreflight(request)
+                    ? await TryCompleteAlreadySatisfiedGoalAsync(
+                        project,
+                        iterationDetails,
+                        targetGoal,
+                        runId,
+                        submittedRelativePath,
+                        resultRelativePath,
+                        resultAbsolutePath,
+                        codexOutputRelativePath,
+                        codexOutputAbsolutePath,
+                        skillAction,
+                        request.SourceKind,
+                        now,
+                        smokeFailure => preflightGodotSmokeFailure = smokeFailure,
+                        CancellationToken.None)
+                    : null;
             if (preflightResult is not null)
             {
                 return preflightResult;
@@ -370,6 +373,7 @@ public sealed partial class PrototypeQuickFixService
                 prototype_contract_present = !string.IsNullOrWhiteSpace(prototypeContract.Json),
                 skill_action_id = skillAction?.ActionId,
                 skill_name = skillAction?.SkillName,
+                source_kind = request.SourceKind,
                 quick_fix = true,
                 goal_repair = targetGoal is not null,
                 goal_id = targetGoal?.GoalId,
@@ -566,6 +570,17 @@ public sealed partial class PrototypeQuickFixService
         return left >= right ? left : right;
     }
 
+    private static bool ShouldAllowAlreadySatisfiedPreflight(PrototypeFeedbackRequest request)
+    {
+        var sourceKind = request.SourceKind?.Trim();
+        if (string.Equals(sourceKind, "manual_feedback", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task<bool> HasSucceededPrototypeWorkflowAsync(string projectId, CancellationToken cancellationToken)
     {
         var runs = await _metadataStore.ListRunsForProjectAsync(projectId, cancellationToken);
@@ -583,6 +598,7 @@ public sealed partial class PrototypeQuickFixService
         string codexOutputRelativePath,
         string codexOutputAbsolutePath,
         SkillActionDefinition? skillAction,
+        string? sourceKind,
         string now,
         Action<PrototypeGoalGodotSmokeValidationResult>? onGodotSmokeFailure = null,
         CancellationToken cancellationToken = default)
@@ -681,6 +697,7 @@ public sealed partial class PrototypeQuickFixService
             source_boundary = "gdd_derived_contract_only_after_gdd_generation",
             skill_action_id = skillAction?.ActionId,
             skill_name = skillAction?.SkillName,
+            source_kind = sourceKind,
             quick_fix = true,
             goal_repair = true,
             goal_id = targetGoal.GoalId,

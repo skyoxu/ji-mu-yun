@@ -540,6 +540,47 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task ReconcileAbandonedRunsAsync_FailsQueuedWebPreviewFromPreviousProcess()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Preview Game", "manual", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "project-web-preview");
+        var processStartedUtc = DateTimeOffset.UtcNow;
+
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                UPDATE runs
+                SET created_utc = $old_utc,
+                    progress_updated_utc = $old_utc
+                WHERE id = $run_id;
+                """;
+            command.Parameters.AddWithValue("$old_utc", processStartedUtc.AddSeconds(-5).ToString("O"));
+            command.Parameters.AddWithValue("$run_id", runId);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        var recovered = await store.ReconcileAbandonedRunsAsync(
+            run => ProjectInitializationRecoveryService.SelectTimeoutForTesting(run, options, processStartedUtc),
+            run => ProjectInitializationRecoveryService.BuildFailureMessageForTesting(run, processStartedUtc));
+        var recoveredRun = await store.GetRunSnapshotAsync(runId);
+
+        recovered.Should().Be(1);
+        recoveredRun!.Status.Should().Be("failed");
+        recoveredRun.StderrText.Should().Contain("server restarted");
+    }
+
+    [Fact]
     public async Task HasActiveRunAsync_IgnoresRunningChatRuns()
     {
         using var database = TempSqliteDatabase.Create();
@@ -686,6 +727,31 @@ public sealed class SqliteMetadataSchemaTests
         run.StartedUtc.Should().BeNull();
         run.QueuePositionAtStart.Should().BeNull();
         (await store.HasRunnerLockAsync(project.ProjectId)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task TryMarkRunStartedAsync_ShouldNotReviveFailedQueuedRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(account.AccountId, new ProjectCreationRequest(null, "Failed Queue Game", "RPG", null, null, null, null));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
+        var runId = await store.CreateRunAsync(project!.ProjectId, project.WorkspaceId, "project-web-preview");
+        await store.CompleteRunAsync(runId, "failed", 500, "", "recovered", """{"failure_code":"abandoned_run_recovered"}""");
+
+        var started = await store.TryMarkRunStartedAsync(runId, 1);
+
+        started.Should().BeFalse();
+        var run = await store.GetRunSnapshotAsync(runId);
+        run!.Status.Should().Be("failed");
+        run.StartedUtc.Should().BeNull();
+        run.QueuePositionAtStart.Should().BeNull();
     }
 
     [Fact]

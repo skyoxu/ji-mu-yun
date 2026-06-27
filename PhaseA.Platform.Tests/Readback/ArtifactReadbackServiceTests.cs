@@ -1,7 +1,9 @@
 using FluentAssertions;
 using System.IO.Compression;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -42,6 +44,35 @@ public sealed class ArtifactReadbackServiceTests
         runs!.Runs.Should().ContainSingle(r => r.RunId == runId);
         artifact!.Content.Should().Be("artifact text");
         artifact.RelativePath.Should().Be("logs/ci/sample-artifact.txt");
+    }
+
+    [Fact]
+    public async Task MetadataStore_ListArtifactsForRunsAsync_ReturnsArtifactsForMultipleRuns()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var projectId = await CreateProjectAsync(store, options);
+        var firstRunId = await store.CreateRunAsync(projectId, null, "project-package");
+        var secondRunId = await store.CreateRunAsync(projectId, null, "project-package");
+        var ignoredRunId = await store.CreateRunAsync(projectId, null, "other-run");
+        await store.AddArtifactAsync(new ArtifactCreationCommand(firstRunId, projectId, "project-package", "exports/first.zip", "First package"));
+        await store.AddArtifactAsync(new ArtifactCreationCommand(firstRunId, projectId, "project-log", "logs/first.txt", "First log"));
+        await store.AddArtifactAsync(new ArtifactCreationCommand(secondRunId, projectId, "project-package", "exports/second.zip", "Second package"));
+        await store.AddArtifactAsync(new ArtifactCreationCommand(ignoredRunId, projectId, "project-package", "exports/ignored.zip", "Ignored package"));
+
+        var artifacts = await store.ListArtifactsForRunsAsync([secondRunId, firstRunId, secondRunId, ""]);
+        var empty = await store.ListArtifactsForRunsAsync([]);
+
+        artifacts.Should().HaveCount(3);
+        artifacts.Select(artifact => artifact.RelativePath).Should().BeEquivalentTo(
+            "exports/first.zip",
+            "logs/first.txt",
+            "exports/second.zip");
+        artifacts.Select(artifact => artifact.RunId).Should().OnlyContain(runId => runId == firstRunId || runId == secondRunId);
+        empty.Should().BeEmpty();
     }
 
     [Fact]
@@ -112,7 +143,7 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
-    public async Task Readback_IncludesDedicatedPrototypeAndAssetQueues()
+    public async Task Readback_IncludesDedicatedPrototypeAssetAndWebPreviewQueues()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -123,6 +154,7 @@ public sealed class ArtifactReadbackServiceTests
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
         var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
+        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
         await using var prototypeLease = await prototypeQueue.EnterAsync(
             "prototype-run",
             project!.AccountId,
@@ -133,6 +165,11 @@ public sealed class ArtifactReadbackServiceTests
             "other-account",
             "other-project",
             "asset-generation");
+        await using var webPreviewLease = await webPreviewQueue.EnterAsync(
+            "web-preview-current",
+            "other-account",
+            "other-project",
+            "project-web-preview");
         using var queuedAssetCancellation = new CancellationTokenSource();
         var queuedAssetRun = assetQueue.ExecuteAsync(
             "asset-run",
@@ -141,12 +178,21 @@ public sealed class ArtifactReadbackServiceTests
             "asset-generation",
             _ => Task.FromResult(true),
             queuedAssetCancellation.Token);
+        using var queuedWebPreviewCancellation = new CancellationTokenSource();
+        var queuedWebPreviewRun = webPreviewQueue.ExecuteAsync(
+            "web-preview-run",
+            project.AccountId,
+            project.ProjectId,
+            "project-web-preview",
+            _ => Task.FromResult(true),
+            queuedWebPreviewCancellation.Token);
         var service = new ArtifactReadbackService(
             store,
             options,
             new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
             prototypeQueue,
-            assetQueue);
+            assetQueue,
+            webPreviewQueue);
 
         var active = await service.GetActiveRunAsync(project.AccountId);
         var queue = service.GetHeavyRunnerQueue(project.AccountId, includeAll: false);
@@ -158,10 +204,13 @@ public sealed class ArtifactReadbackServiceTests
         queue.Current!.RunId.Should().Be("prototype-run");
         fullQueue.Running.Should().BeTrue();
         fullQueue.Items.Select(item => item.RunId).Should().Contain("asset-run");
+        fullQueue.Items.Select(item => item.RunId).Should().Contain("web-preview-run");
         fullQueue.CurrentAccountPosition.Should().Be(1);
 
         await queuedAssetCancellation.CancelAsync();
+        await queuedWebPreviewCancellation.CancelAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => queuedAssetRun);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => queuedWebPreviewRun);
     }
 
     [Fact]
@@ -699,6 +748,33 @@ public sealed class ArtifactReadbackServiceTests
     }
 
     [Fact]
+    public async Task ProjectPackage_ManifestIncludesResolvedWebPreviewGameType()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Tower Demo", "Tower Defense");
+        await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        await SeedPackagePrerequisitesAsync(store, accountId, projectId);
+        Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
+        var service = new ProjectPackageService(store, options);
+
+        var created = await service.CreatePackageAsync(accountId, projectId);
+        var download = await service.ReadPackageAsync(accountId, projectId, created.FileName);
+
+        download.Should().NotBeNull();
+        using var manifest = JsonDocument.Parse(ZipEntryText(download!.Content, "PACKAGE-MANIFEST.json"));
+        manifest.RootElement.GetProperty("game_type_source").GetString().Should().Be("Tower Defense");
+        manifest.RootElement.GetProperty("game_type_id").GetString().Should().Be("tower-defense");
+        manifest.RootElement.GetProperty("game_type_guide").GetString().Should().Be("docs/game-type-guides/tower-defense.md");
+    }
+
+    [Fact]
     public async Task ProjectPackage_WhenQueuedRunIsCancelled_ShouldReturnCancelNotPackageFailed()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1015,10 +1091,18 @@ public sealed class ArtifactReadbackServiceTests
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         var created = await service.CreatePackageAsync(accountId, projectId);
         var packages = await service.ListPackagesAsync(accountId, projectId);
+        var run = await store.GetRunSnapshotAsync(created.RunId);
 
         created.Status.Should().Be("succeeded");
         packages!.CanCreatePackage.Should().BeTrue();
         packages.DisabledReason.Should().BeNull();
+        packages.Packages.Should().ContainSingle();
+        var packagePath = Path.Combine(project.RepoPath, created.RelativePath.Replace('/', Path.DirectorySeparatorChar));
+        await using var packageStream = File.OpenRead(packagePath);
+        var expectedSha256 = Convert.ToHexString(SHA256.HashData(packageStream)).ToLowerInvariant();
+        packages.Packages[0].PackageSha256.Should().Be(expectedSha256);
+        run!.EvidenceJson.Should().Contain("\"package_sha256\"");
+        run.EvidenceJson.Should().Contain(expectedSha256);
     }
 
     [Fact]
@@ -2253,10 +2337,11 @@ public sealed class ArtifactReadbackServiceTests
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
         string accountId,
-        string gameName)
+        string gameName,
+        string gameTypeSource = "manual")
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, "manual", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return result.ProjectId!;
     }
 

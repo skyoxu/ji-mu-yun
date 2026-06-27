@@ -988,7 +988,7 @@ public sealed class GddMilestoneStepServiceTests
         returnedStep.ExecutionSummary.Should().NotContain("需要修复");
         persistedStep.Status.Should().Be("feedback_submitted");
         persistedStep.CanConfirm.Should().BeTrue();
-        persistedStep.CanSubmitFeedback.Should().BeFalse();
+        persistedStep.CanSubmitFeedback.Should().BeTrue();
         validation.Calls.Should().Be(1);
     }
 

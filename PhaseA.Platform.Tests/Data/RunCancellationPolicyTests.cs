@@ -11,6 +11,7 @@ public sealed class RunCancellationPolicyTests
     [InlineData("project-creation")]
     [InlineData("project-asset-generation")]
     [InlineData("asset-generation")]
+    [InlineData("project-web-preview")]
     public void IsCancellationBlocked_ShouldRejectCreationAndAssetRuns(string runType)
     {
         RunCancellationPolicy.IsCancellationBlocked(runType).Should().BeTrue();

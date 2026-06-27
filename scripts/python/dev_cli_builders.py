@@ -234,6 +234,18 @@ def build_phase_a_public_smoke_cmd(args) -> list[str]:
         cmd.append("--allow-http")
     if getattr(args, "create_project", False):
         cmd.append("--create-project")
+    if getattr(args, "web_preview_url", ""):
+        cmd += ["--web-preview-url", args.web_preview_url]
+    if getattr(args, "web_preview_preview_id", ""):
+        cmd += ["--web-preview-preview-id", args.web_preview_preview_id]
+    if getattr(args, "web_preview_project_id", ""):
+        cmd += ["--web-preview-project-id", args.web_preview_project_id]
+    if getattr(args, "web_preview_package_file", ""):
+        cmd += ["--web-preview-package-file", args.web_preview_package_file]
+    if getattr(args, "web_preview_package_sha256", ""):
+        cmd += ["--web-preview-package-sha256", args.web_preview_package_sha256]
+    if getattr(args, "require_web_preview", False):
+        cmd.append("--require-web-preview")
     timeout_seconds = float(getattr(args, "timeout_seconds", 0) or 0)
     if timeout_seconds > 0:
         cmd += ["--timeout-seconds", str(timeout_seconds)]

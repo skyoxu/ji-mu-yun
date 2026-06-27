@@ -4,7 +4,8 @@ public sealed record PrototypeFeedbackRequest(
     string? Feedback,
     string? Model = null,
     string? SkillActionId = null,
-    PrototypeGoalRepairContext? GoalRepair = null);
+    PrototypeGoalRepairContext? GoalRepair = null,
+    string? SourceKind = null);
 
 public sealed record PrototypeGoalRepairContext(
     string? SessionId,

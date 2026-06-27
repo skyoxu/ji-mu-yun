@@ -76,19 +76,22 @@ public sealed class ProjectPackageService
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
     private readonly IHostedProcessRunner _processRunner;
+    private readonly ProjectWebPreviewService? _webPreviews;
 
     public ProjectPackageService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         RunCancellationService? runCancellation = null,
-        IHostedProcessRunner? processRunner = null)
+        IHostedProcessRunner? processRunner = null,
+        ProjectWebPreviewService? webPreviews = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _runCancellation = runCancellation ?? new RunCancellationService();
         _processRunner = processRunner ?? new HostedProcessRunner();
+        _webPreviews = webPreviews;
     }
 
     public async Task<ProjectPackageResult> CreatePackageAsync(
@@ -169,6 +172,7 @@ public sealed class ProjectPackageService
             }
             var includedFileCount = CreateZip(projectRoot, packagePath, project, version, runToken);
             var sizeBytes = new FileInfo(packagePath).Length;
+            var packageSha256 = ComputeFileSha256(packagePath);
             var generatedUtc = DateTimeOffset.UtcNow.ToString("O");
             await _metadataStore.AddArtifactAsync(
                 new ArtifactCreationCommand(
@@ -186,6 +190,7 @@ public sealed class ProjectPackageService
                 generated_utc = generatedUtc,
                 file_name = fileName,
                 relative_path = relativePath,
+                package_sha256 = packageSha256,
                 size_bytes = sizeBytes,
                 included_file_count = includedFileCount,
                 applied_asset_selection_count = assetSelectionResult.AppliedCount,
@@ -256,10 +261,24 @@ public sealed class ProjectPackageService
         var disabledReason = isBusy ? "project_busy" : gate.DisabledReason;
 
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
-        var packages = new List<ProjectPackageListItem>();
-        foreach (var run in runs.Where(run => run.RunType == RunType && run.Status == "succeeded"))
+        var packageRuns = runs
+            .Where(run => run.RunType == RunType && run.Status == "succeeded")
+            .ToArray();
+        var packageArtifacts = await _metadataStore.ListArtifactsForRunsAsync(
+            packageRuns.Select(run => run.RunId).ToArray(),
+            cancellationToken);
+        var artifactsByRunId = packageArtifacts
+            .Where(artifact => !string.IsNullOrWhiteSpace(artifact.RunId))
+            .GroupBy(artifact => artifact.RunId!, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.ToArray(), StringComparer.Ordinal);
+        var packageRecords = new List<ProjectPackageRecord>();
+        foreach (var run in packageRuns)
         {
-            var artifacts = await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken);
+            if (!artifactsByRunId.TryGetValue(run.RunId, out var artifacts))
+            {
+                continue;
+            }
+
             foreach (var artifact in artifacts.Where(artifact => artifact.ArtifactType == PackageArtifactType))
             {
                 var fileName = Path.GetFileName(artifact.RelativePath);
@@ -269,15 +288,36 @@ public sealed class ProjectPackageService
                     continue;
                 }
 
-                packages.Add(new ProjectPackageListItem(
+                packageRecords.Add(new ProjectPackageRecord(
                     ExtractVersion(fileName),
                     fileName,
                     artifact.RelativePath,
-                    $"/projects/{project.ProjectId}/packages/{Uri.EscapeDataString(fileName)}",
                     new FileInfo(packagePath).Length,
+                    ReadPackageSha256(run.EvidenceJson) ?? ComputeFileSha256(packagePath),
                     ReadGeneratedUtc(run.EvidenceJson)));
             }
         }
+
+        var webPreviewStatuses = _webPreviews?.ResolvePreviewsForPackages(
+            project,
+            packageRecords.Select(package => package.FileName),
+            runs);
+        var packages = packageRecords.Select(package =>
+        {
+            var webPreviewStatus = webPreviewStatuses is not null &&
+                                   webPreviewStatuses.TryGetValue(package.FileName, out var status)
+                ? status
+                : new ProjectWebPreviewPackageStatus("not_generated", null, null, null, null);
+            return new ProjectPackageListItem(
+                package.Version,
+                package.FileName,
+                package.RelativePath,
+                $"/projects/{project.ProjectId}/packages/{Uri.EscapeDataString(package.FileName)}",
+                package.SizeBytes,
+                package.PackageSha256,
+                package.CreatedUtc,
+                webPreviewStatus);
+        });
 
         return new ProjectPackageListResult(
             project.ProjectId,
@@ -734,6 +774,12 @@ public sealed class ProjectPackageService
         return Convert.ToHexString(bytes, 0, 6).ToLowerInvariant();
     }
 
+    private static string ComputeFileSha256(string path)
+    {
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+    }
+
     private static string ResolveResPath(string projectRoot, string resourcePath)
     {
         if (!IsResPath(resourcePath))
@@ -773,6 +819,8 @@ public sealed class ProjectPackageService
     private static void AddManifest(ZipArchive archive, ProjectSnapshot project, string version)
     {
         var entry = archive.CreateEntry("PACKAGE-MANIFEST.json", CompressionLevel.Optimal);
+        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(project.GameTypeSource, project.GameName, project.Name);
+        var gameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);
         using var writer = new StreamWriter(entry.Open());
         writer.Write(JsonSerializer.Serialize(new
         {
@@ -782,6 +830,8 @@ public sealed class ProjectPackageService
             project_name = project.Name,
             game_name = project.GameName,
             game_type_source = project.GameTypeSource,
+            game_type_id = gameTypeId,
+            game_type_guide = gameTypeGuide,
             policy = "project-files-only"
         }, new JsonSerializerOptions { WriteIndented = true }));
     }
@@ -855,6 +905,36 @@ public sealed class ProjectPackageService
         }
     }
 
+    private static string? ReadPackageSha256(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(evidenceJson);
+            if (!doc.RootElement.TryGetProperty("package_sha256", out var packageSha256))
+            {
+                return null;
+            }
+
+            var value = packageSha256.GetString();
+            return IsSha256(value) ? value!.ToLowerInvariant() : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static bool IsSha256(string? value)
+    {
+        return value is { Length: 64 } &&
+               value.All(ch => ch is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F');
+    }
+
     private static string SafeFileName(string value)
     {
         var invalid = Path.GetInvalidFileNameChars().ToHashSet();
@@ -875,6 +955,14 @@ public sealed class ProjectPackageService
     private sealed record AssetSelectionApplyResult(
         int AppliedCount,
         IReadOnlyList<string> ScenePaths);
+
+    private sealed record ProjectPackageRecord(
+        string Version,
+        string FileName,
+        string RelativePath,
+        long SizeBytes,
+        string PackageSha256,
+        string CreatedUtc);
 
     private sealed record AssetReplacementSmokeResult(
         bool Ran,

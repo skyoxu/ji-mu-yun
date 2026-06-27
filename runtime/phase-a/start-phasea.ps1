@@ -9,6 +9,10 @@ if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS)) 
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT)) { $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT = '1' }
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_OTHER_RUNS)) { $env:PHASEA_MAX_CONCURRENT_OTHER_RUNS = '3' }
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS)) { $env:PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS = '2' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS)) { $env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS = '3' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT)) { $env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT = '1' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS)) { $env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS = '180' }
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS)) { $env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS = '45' }
 if ([string]::IsNullOrWhiteSpace($env:PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT)) { $env:PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT = '1' }
 $env:PHASEA_METADATA_DB_PATH = 'C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3'
 $env:PHASEA_REPOSITORY_ROOT = 'C:\jimuyun'
@@ -23,6 +27,7 @@ if ([string]::IsNullOrWhiteSpace($env:PHASEA_CODEX_COMMAND)) {
 Remove-Item Env:\PHASEA_CHAT_TEST_MODE -ErrorAction SilentlyContinue
 Remove-Item Env:\PHASEA_CHAT_BACKEND -ErrorAction SilentlyContinue
 $env:GODOT_BIN = 'C:\Godot\4.5.1-mono\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe'
+$env:PHASEA_GODOT3_BIN = 'C:\Godot\3.6.2\Godot_v3.6.2-stable_win64.exe'
 $env:DOTNET_ROOT = 'C:\jimuyun\.dotnet'
 Set-Location 'C:\jimuyun'
 $runtimeRoot = 'C:\jimuyun\logs\phase-a-innernet\runtime'
@@ -63,6 +68,31 @@ if ([string]::IsNullOrWhiteSpace($env:PHASEA_ADMIN_TOKEN_HASH)) {
   $env:PHASEA_ADMIN_TOKEN_HASH = $resolvedHash
 }
 
+if ([string]::IsNullOrWhiteSpace($env:PHASEA_TICKET_SIGNING_SECRET)) {
+  $resolvedTicketSigningSecret = Resolve-HostEnvironmentValue 'PHASEA_TICKET_SIGNING_SECRET'
+  if ([string]::IsNullOrWhiteSpace($resolvedTicketSigningSecret)) {
+    throw "phasea_ticket_signing_secret_missing"
+  }
+  $env:PHASEA_TICKET_SIGNING_SECRET = $resolvedTicketSigningSecret
+}
+
+$webPreviewSecretFile = 'C:\jimuyun\logs\phase-a-innernet\data\web-preview-signing-secret.txt'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $webPreviewSecretFile) | Out-Null
+$resolvedWebPreviewSecret = $null
+if (Test-Path $webPreviewSecretFile) {
+  $resolvedWebPreviewSecret = [System.IO.File]::ReadAllText($webPreviewSecretFile).Trim()
+}
+if ([string]::IsNullOrWhiteSpace($resolvedWebPreviewSecret)) {
+  $resolvedWebPreviewSecret = Resolve-HostEnvironmentValue 'PHASEA_WEB_PREVIEW_SIGNING_SECRET'
+  if ([string]::IsNullOrWhiteSpace($resolvedWebPreviewSecret)) {
+    $bytes = New-Object byte[] 32
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $resolvedWebPreviewSecret = [Convert]::ToBase64String($bytes)
+  }
+  [System.IO.File]::WriteAllText($webPreviewSecretFile, $resolvedWebPreviewSecret, [System.Text.UTF8Encoding]::new($false))
+}
+$env:PHASEA_WEB_PREVIEW_SIGNING_SECRET = $resolvedWebPreviewSecret
+
 foreach ($concurrencyName in @(
   'PHASEA_MAX_CONCURRENT_CHATS',
   'PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT',
@@ -70,6 +100,10 @@ foreach ($concurrencyName in @(
   'PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT',
   'PHASEA_MAX_CONCURRENT_OTHER_RUNS',
   'PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS',
+  'PHASEA_MAX_CONCURRENT_WEB_PREVIEWS',
+  'PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT',
+  'PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS',
+  'PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS',
   'PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT'
 )) {
   $hostValue = [System.Environment]::GetEnvironmentVariable($concurrencyName, 'User')
@@ -155,13 +189,20 @@ $psi.Environment['PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS'] = $env:PHASEA_MAX_CO
 $psi.Environment['PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT'] = $env:PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT
 $psi.Environment['PHASEA_MAX_CONCURRENT_OTHER_RUNS'] = $env:PHASEA_MAX_CONCURRENT_OTHER_RUNS
 $psi.Environment['PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS'] = $env:PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS
+$psi.Environment['PHASEA_MAX_CONCURRENT_WEB_PREVIEWS'] = $env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS
+$psi.Environment['PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT'] = $env:PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT
+$psi.Environment['PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS'] = $env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS
+$psi.Environment['PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS'] = $env:PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS
 $psi.Environment['PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT'] = $env:PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT
 $psi.Environment['PHASEA_METADATA_DB_PATH'] = $env:PHASEA_METADATA_DB_PATH
 $psi.Environment['PHASEA_REPOSITORY_ROOT'] = $env:PHASEA_REPOSITORY_ROOT
 $psi.Environment['PHASEA_ADMIN_TOKEN_HASH'] = $env:PHASEA_ADMIN_TOKEN_HASH
+$psi.Environment['PHASEA_TICKET_SIGNING_SECRET'] = $env:PHASEA_TICKET_SIGNING_SECRET
+$psi.Environment['PHASEA_WEB_PREVIEW_SIGNING_SECRET'] = $env:PHASEA_WEB_PREVIEW_SIGNING_SECRET
 $psi.Environment['PHASEA_CODEX_COMMAND'] = $env:PHASEA_CODEX_COMMAND
 $psi.Environment['PHASEA_RIPGREP_DIR'] = $env:PHASEA_RIPGREP_DIR
 $psi.Environment['GODOT_BIN'] = $env:GODOT_BIN
+$psi.Environment['PHASEA_GODOT3_BIN'] = $env:PHASEA_GODOT3_BIN
 $psi.Environment['DOTNET_ROOT'] = $env:DOTNET_ROOT
 if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BILLING_ENABLED)) { $psi.Environment['AICODEMIRROR_BILLING_ENABLED'] = $env:AICODEMIRROR_BILLING_ENABLED }
 if (![string]::IsNullOrWhiteSpace($env:AICODEMIRROR_BASE_URL)) { $psi.Environment['AICODEMIRROR_BASE_URL'] = $env:AICODEMIRROR_BASE_URL }

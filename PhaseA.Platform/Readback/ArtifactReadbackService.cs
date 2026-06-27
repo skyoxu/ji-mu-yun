@@ -17,19 +17,22 @@ public sealed class ArtifactReadbackService
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService _prototypeCreationQueue;
     private readonly HeavyRunnerQueueService _assetRunnerQueue;
+    private readonly HeavyRunnerQueueService _webPreviewQueue;
 
     public ArtifactReadbackService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
-        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null)
+        [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
+        [FromKeyedServices("web-preview")] HeavyRunnerQueueService? webPreviewQueue = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
         _prototypeCreationQueue = prototypeCreationQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(25), options.MaxConcurrentPrototypeCreations);
         _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
+        _webPreviewQueue = webPreviewQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(3), options.MaxConcurrentWebPreviews);
     }
 
     public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
@@ -81,7 +84,8 @@ public sealed class ArtifactReadbackService
         {
             _heavyRunnerQueue.GetReadback(accountId, includeAll),
             _prototypeCreationQueue.GetReadback(accountId, includeAll),
-            _assetRunnerQueue.GetReadback(accountId, includeAll)
+            _assetRunnerQueue.GetReadback(accountId, includeAll),
+            _webPreviewQueue.GetReadback(accountId, includeAll)
         };
         return MergeHeavyRunnerQueues(queues);
     }

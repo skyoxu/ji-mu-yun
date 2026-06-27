@@ -87,7 +87,8 @@ public sealed class PrototypeNeedsFixRouteService
                     goal.Title,
                     goal.Description,
                     goal.AcceptanceHint,
-                    BuildCompactSummary(goal.ResultSummary))),
+                    BuildCompactSummary(goal.ResultSummary)),
+                request.SourceKind),
             requireSucceededPrototypeRun: false,
             cancellationToken);
 

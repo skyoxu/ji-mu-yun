@@ -4,6 +4,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import subprocess
 import sys
 import urllib.error
 import urllib.parse
@@ -23,6 +24,12 @@ def main() -> int:
     parser.add_argument("--repository-root", default=str(Path.cwd()))
     parser.add_argument("--allow-http", action="store_true")
     parser.add_argument("--create-project", action="store_true")
+    parser.add_argument("--web-preview-url", default=os.environ.get("PHASEA_WEB_PREVIEW_SMOKE_URL", ""))
+    parser.add_argument("--web-preview-project-id", default=os.environ.get("PHASEA_WEB_PREVIEW_SMOKE_PROJECT_ID", ""))
+    parser.add_argument("--web-preview-preview-id", default=os.environ.get("PHASEA_WEB_PREVIEW_SMOKE_PREVIEW_ID", ""))
+    parser.add_argument("--web-preview-package-file", default=os.environ.get("PHASEA_WEB_PREVIEW_SMOKE_PACKAGE_FILE", ""))
+    parser.add_argument("--web-preview-package-sha256", default=os.environ.get("PHASEA_WEB_PREVIEW_SMOKE_PACKAGE_SHA256", ""))
+    parser.add_argument("--require-web-preview", action="store_true", default=os.environ.get("PHASEA_REQUIRE_WEB_PREVIEW_SMOKE", "") == "1")
     parser.add_argument("--timeout-seconds", type=float, default=15.0)
     args = parser.parse_args()
 
@@ -46,7 +53,7 @@ def main() -> int:
 
         status, payload = request_text("GET", f"{base_url}/", timeout=args.timeout_seconds)
         assert_status(status, 200, payload, "browser console")
-        if "Phase A Prototype Console" not in payload:
+        if "Game Ren" not in payload and "Phase A Prototype Console" not in payload:
             raise AssertionError("browser console did not include expected title")
         events.append({"event": "browser_console_ok", "status": status})
 
@@ -56,6 +63,7 @@ def main() -> int:
             raise AssertionError(f"expected authentication_required, got {payload}")
         events.append({"event": "unauthorized_rejected", "status": status})
 
+        project_list: list[dict[str, Any]] = []
         if args.admin_token:
             headers = {"Authorization": f"Bearer {args.admin_token}"}
             status, payload = request_json(
@@ -67,6 +75,7 @@ def main() -> int:
             assert_status(status, 200, payload, "authorized project list")
             if not isinstance(payload, list):
                 raise AssertionError(f"expected project list array, got {payload}")
+            project_list = [item for item in payload if isinstance(item, dict)]
             events.append({"event": "authorized_project_list_ok", "count": len(payload)})
 
             if args.create_project:
@@ -90,6 +99,67 @@ def main() -> int:
                 )
         else:
             events.append({"event": "authorized_checks_skipped", "reason": "admin token was not supplied"})
+
+        web_preview = {
+            "url": args.web_preview_url,
+            "preview_id": args.web_preview_preview_id,
+            "package_file": args.web_preview_package_file,
+            "package_sha256": args.web_preview_package_sha256,
+        }
+        if not web_preview["url"] and args.admin_token:
+            web_preview = discover_latest_web_preview(
+                base_url,
+                headers={"Authorization": f"Bearer {args.admin_token}"},
+                projects=project_list,
+                preferred_project_id=args.web_preview_project_id,
+                timeout=args.timeout_seconds,
+                events=events,
+            )
+
+        if web_preview["url"]:
+            web_preview_smoke = repository_root / "scripts" / "python" / "web_preview_playwright_smoke.py"
+            smoke_command = [
+                sys.executable,
+                str(web_preview_smoke),
+                web_preview["url"],
+                "--timeout-ms",
+                str(int(args.timeout_seconds * 1000)),
+                "--settle-ms",
+                str(int(min(max(args.timeout_seconds, 45), 60) * 1000)),
+                "--click-canvas",
+                "--mobile-check",
+            ]
+            if web_preview["preview_id"]:
+                smoke_command.extend(["--expect-preview-id", web_preview["preview_id"]])
+            if web_preview["package_file"]:
+                smoke_command.extend(["--expect-package-file", web_preview["package_file"]])
+            if web_preview["package_sha256"]:
+                smoke_command.extend(["--expect-package-sha256", web_preview["package_sha256"]])
+            result = subprocess.run(
+                smoke_command,
+                cwd=repository_root,
+                text=True,
+                capture_output=True,
+                timeout=max((args.timeout_seconds * 2.0) + 120.0, 180.0),
+                check=False,
+            )
+            (run_dir / "web-preview-smoke.stdout.txt").write_text(result.stdout, encoding="utf-8", newline="\n")
+            (run_dir / "web-preview-smoke.stderr.txt").write_text(result.stderr, encoding="utf-8", newline="\n")
+            events.append(
+                {
+                    "event": "web_preview_smoke",
+                    "exit_code": result.returncode,
+                    "url": web_preview["url"],
+                    "preview_id": web_preview["preview_id"],
+                    "package_file": web_preview["package_file"],
+                }
+            )
+            if result.returncode != 0:
+                raise AssertionError(f"web preview smoke failed with exit code {result.returncode}")
+        else:
+            events.append({"event": "web_preview_smoke_skipped", "reason": "web preview URL was not supplied"})
+            if args.require_web_preview:
+                raise AssertionError("web preview smoke was required but no web preview URL was supplied or discovered")
 
         exit_code = 0
         return 0
@@ -122,6 +192,72 @@ def validate_public_url(base_url: str, *, allow_http: bool) -> None:
     host = (parsed.hostname or "").lower()
     if parsed.scheme != "https" and not allow_http and host not in LOCAL_HOSTS:
         raise ValueError("public smoke requires HTTPS for non-localhost endpoints; pass --allow-http only for local checks")
+
+
+def discover_latest_web_preview(
+    base_url: str,
+    *,
+    headers: dict[str, str],
+    projects: list[dict[str, Any]],
+    preferred_project_id: str,
+    timeout: float,
+    events: list[dict[str, Any]],
+) -> dict[str, str]:
+    ordered_projects = projects
+    if preferred_project_id:
+        ordered_projects = sorted(
+            projects,
+            key=lambda item: 0 if str(item.get("projectId") or item.get("project_id") or "") == preferred_project_id else 1,
+        )
+
+    for project in ordered_projects:
+        project_id = str(project.get("projectId") or project.get("project_id") or "")
+        if not project_id:
+            continue
+        status, payload = request_json(
+            "GET",
+            f"{base_url}/api/projects/{urllib.parse.quote(project_id)}/packages",
+            headers=headers,
+            timeout=timeout,
+        )
+        if status != 200 or not isinstance(payload, dict):
+            events.append({"event": "web_preview_discovery_package_list_failed", "project_id": project_id, "status": status})
+            continue
+        packages = payload.get("packages")
+        if not isinstance(packages, list):
+            continue
+        ready = [
+            item
+            for item in packages
+            if isinstance(item, dict)
+            and isinstance(item.get("webPreview"), dict)
+            and item["webPreview"].get("status") == "ready"
+            and item["webPreview"].get("previewUrl")
+        ]
+        ready.sort(key=lambda item: str(item.get("webPreview", {}).get("createdUtc") or ""), reverse=True)
+        if ready:
+            preview = ready[0]["webPreview"]
+            url = str(preview["previewUrl"])
+            absolute_url = urllib.parse.urljoin(base_url + "/", url.lstrip("/"))
+            events.append(
+                {
+                    "event": "web_preview_discovered",
+                    "project_id": project_id,
+                    "file_name": ready[0].get("fileName", ""),
+                    "url": absolute_url,
+                    "mode": preview.get("mode", ""),
+                    "fidelity_tier": preview.get("fidelityTier", ""),
+                }
+            )
+            return {
+                "url": absolute_url,
+                "preview_id": str(preview.get("previewId") or ""),
+                "package_file": str(ready[0].get("fileName") or ""),
+                "package_sha256": str(ready[0].get("packageSha256") or ready[0].get("package_sha256") or ""),
+            }
+
+    events.append({"event": "web_preview_discovery_empty"})
+    return {"url": "", "preview_id": "", "package_file": "", "package_sha256": ""}
 
 
 def request_json(

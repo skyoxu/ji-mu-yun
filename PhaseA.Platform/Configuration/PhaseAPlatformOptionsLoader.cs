@@ -40,6 +40,7 @@ public static class PhaseAPlatformOptionsLoader
         var adminPasswordHash = GetOptionalString(get, "PHASEA_ADMIN_PASSWORD_HASH");
         var adminTokenHash = GetOptionalString(get, "PHASEA_ADMIN_TOKEN_HASH");
         var ticketSigningSecret = GetOptionalString(get, "PHASEA_TICKET_SIGNING_SECRET");
+        var webPreviewSigningSecret = GetOptionalString(get, "PHASEA_WEB_PREVIEW_SIGNING_SECRET");
         var maxConcurrentChats = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS", 8);
         var maxConcurrentChatsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT", 1);
         var maxConcurrentProjectCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS", 3);
@@ -47,6 +48,10 @@ public static class PhaseAPlatformOptionsLoader
         var maxConcurrentOtherRuns = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_OTHER_RUNS", 3);
         var maxConcurrentPrototypeCreations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS", 2);
         var maxConcurrentAssetGenerations = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS", 2);
+        var maxConcurrentWebPreviews = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_WEB_PREVIEWS", 3);
+        var maxConcurrentWebPreviewsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT", 1);
+        var godot3WebPreviewExportTimeoutSeconds = GetPositiveInt(get, "PHASEA_GODOT3_WEB_PREVIEW_EXPORT_TIMEOUT_SECONDS", 180);
+        var godot3WebPreviewExportInactivityTimeoutSeconds = GetPositiveInt(get, "PHASEA_GODOT3_WEB_PREVIEW_EXPORT_INACTIVITY_TIMEOUT_SECONDS", 45);
         var maxConcurrentAssetGenerationsPerAccount = GetPositiveInt(get, "PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT", 1);
         var aiCodeMirrorBillingEnabled = GetBool(get, "AICODEMIRROR_BILLING_ENABLED", false);
         var aiCodeMirrorBaseUrl = ValidateHttpsUrl(GetString(get, "AICODEMIRROR_BASE_URL", "https://www.aicodemirror.com"), "AICODEMIRROR_BASE_URL");
@@ -81,6 +86,7 @@ public static class PhaseAPlatformOptionsLoader
             adminPasswordHash,
             adminTokenHash,
             ticketSigningSecret,
+            webPreviewSigningSecret,
             maxConcurrentChats,
             maxConcurrentChatsPerAccount,
             maxConcurrentProjectCreations,
@@ -88,6 +94,10 @@ public static class PhaseAPlatformOptionsLoader
             maxConcurrentOtherRuns,
             maxConcurrentPrototypeCreations,
             maxConcurrentAssetGenerations,
+            maxConcurrentWebPreviews,
+            maxConcurrentWebPreviewsPerAccount,
+            godot3WebPreviewExportTimeoutSeconds,
+            godot3WebPreviewExportInactivityTimeoutSeconds,
             maxConcurrentAssetGenerationsPerAccount,
             aiCodeMirrorBillingEnabled,
             aiCodeMirrorBaseUrl,

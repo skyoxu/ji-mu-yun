@@ -2235,6 +2235,7 @@ public sealed class BrowserUiRenderer
                   <label>Access token <input id="token" type="password" autocomplete="off" placeholder="Paste the server-issued token"></label>
                   <button id="saveToken">验证并进入</button>
                   <p id="sessionStatus" class="muted">Token 只保存在当前浏览器 localStorage，不会写入仓库。</p>
+                  <p id="sessionDiagnostics" class="muted"></p>
                 </section>
                 <section id="createProjectPanel" class="stack hidden">
                   <h2 id="createProjectTitle">创建项目</h2>
@@ -2404,6 +2405,7 @@ public sealed class BrowserUiRenderer
                 let authEpoch = 0;
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
+                let startupSessionRestoreStarted = false;
                 const prototypeInputIds = ["protoSlug", "hypothesis", "corePlayerFantasy", "minimumPlayableLoop", "successCriteria", "gameFeature", "coreGameplayLoop", "winFailConditions"];
                 const projectStateCacheVersion = 2;
                 const chatStorageVersion = "v2";
@@ -2533,10 +2535,33 @@ public sealed class BrowserUiRenderer
                   if (clientErrorRecoveryInstalled) return;
                   clientErrorRecoveryInstalled = true;
                   window.addEventListener("error", event => {
+                    recordSessionProbe("window_error", {
+                      message: String(event.message || "").slice(0, 500),
+                      source: String(event.filename || "").slice(0, 300),
+                      line: event.lineno || 0,
+                      column: event.colno || 0,
+                      error: sanitizeSessionProbeError(event.error)
+                    });
                     recoverVisiblePageFromClientError(event.error || event.message);
                   });
                   window.addEventListener("unhandledrejection", event => {
+                    recordSessionProbe("unhandled_rejection", { error: sanitizeSessionProbeError(event.reason) });
                     recoverVisiblePageFromClientError(event.reason);
+                  });
+                }
+
+                function installSessionProbeEventListeners() {
+                  window.phaseASessionProbeDump = () => sessionProbeDump("console_dump");
+                  window.addEventListener("pageshow", event => {
+                    recordSessionProbe("pageshow", { persisted: !!event.persisted });
+                  });
+                  document.addEventListener("visibilitychange", () => {
+                    recordSessionProbe("visibilitychange", { visibilityState: document.visibilityState });
+                  });
+                  window.addEventListener("storage", event => {
+                    if (event.key === "phaseAAccessToken" || event.key === "phaseAAdminToken") {
+                      recordSessionProbe("storage_token_changed", { key: event.key, newLength: String(event.newValue || "").length });
+                    }
                   });
                 }
 
@@ -2590,6 +2615,111 @@ public sealed class BrowserUiRenderer
                 }
                 function persistAccessTokenFromInput() {
                   return persistAccessToken(rawTokenInput());
+                }
+                function sessionProbeStorageKey() {
+                  return "phaseASessionProbeLog";
+                }
+                function sanitizeSessionProbeError(error) {
+                  if (!error) return null;
+                  if (typeof error === "string") return { message: error.slice(0, 500) };
+                  const payload = error.payload || {};
+                  return {
+                    name: String(error.name || "").slice(0, 120),
+                    message: String(error.message || payload.message || payload.error || payload.status || "").slice(0, 500),
+                    status: error.status || payload.statusCode || payload.status || null,
+                    failureCode: payload.failureCode || payload.failure_code || payload.errorCode || "",
+                    stack: String(error.stack || "").split("\n").slice(0, 4).join("\n")
+                  };
+                }
+                function buildSessionProbeSnapshot(reason = "manual", extra = {}) {
+                  const visiblePanels = ["sessionPanel", "createProjectPanel", "adminPanel", "projectDetailPanel", "chatPanel", "initStatusPanel"]
+                    .filter(id => {
+                      const element = $(id);
+                      return element && !element.classList.contains("hidden");
+                    });
+                  const input = rawTokenInput();
+                  const stored = localStorage.getItem("phaseAAccessToken") || "";
+                  const cookie = readBrowserCookie("phaseAAccessToken") || "";
+                  const legacy = localStorage.getItem("phaseAAdminToken") || "";
+                  return {
+                    timestamp: new Date().toISOString(),
+                    reason,
+                    href: location.href,
+                    origin: location.origin,
+                    visibilityState: document.visibilityState,
+                    online: navigator.onLine,
+                    authEpoch,
+                    authenticated: !!state.authenticated,
+                    role: state.role || "",
+                    projectId: state.projectId || "",
+                    activeRunId: state.activeRun?.runId || "",
+                    tokenLengths: {
+                      input: input.length,
+                      stored: stored.length,
+                      cookie: cookie.length,
+                      legacy: legacy.length,
+                      effective: Math.max(input.length, stored.length, cookie.length, legacy.length)
+                    },
+                    sessionStatus: $("sessionStatus")?.textContent || "",
+                    visiblePanels,
+                    extra
+                  };
+                }
+                function recordSessionProbe(reason = "manual", extra = {}) {
+                  try {
+                    const entry = buildSessionProbeSnapshot(reason, extra);
+                    const existing = JSON.parse(localStorage.getItem(sessionProbeStorageKey()) || "[]");
+                    const entries = Array.isArray(existing) ? existing : [];
+                    entries.push(entry);
+                    localStorage.setItem(sessionProbeStorageKey(), JSON.stringify(entries.slice(-80)));
+                    console.info("[phasea-session-probe]", entry);
+                    return entry;
+                  } catch (error) {
+                    try { console.warn("[phasea-session-probe-failed]", error); } catch {}
+                    return null;
+                  }
+                }
+                function sessionProbeDump(reason = "manual_copy") {
+                  let entries = [];
+                  try {
+                    const parsed = JSON.parse(localStorage.getItem(sessionProbeStorageKey()) || "[]");
+                    entries = Array.isArray(parsed) ? parsed : [];
+                  } catch {}
+                  return {
+                    copiedAt: new Date().toISOString(),
+                    latest: buildSessionProbeSnapshot(reason),
+                    entries
+                  };
+                }
+                window.phaseASessionProbeDump = () => sessionProbeDump("console_dump");
+                function updateSessionDiagnostics(reason = "") {
+                  const element = $("sessionDiagnostics");
+                  if (!element) return;
+                  const stored = localStorage.getItem("phaseAAccessToken") || "";
+                  const cookie = readBrowserCookie("phaseAAccessToken") || "";
+                  const legacy = localStorage.getItem("phaseAAdminToken") || "";
+                  const input = rawTokenInput();
+                  element.textContent = `登录诊断：${location.origin} · ${reason || "ready"} · input=${input.length} · stored=${stored.length} · cookie=${cookie.length} · legacy=${legacy.length}`;
+                  recordSessionProbe(reason || "session_diagnostics");
+                }
+                function persistTokenInputFromBrowser(reason = "input") {
+                  const persisted = persistAccessTokenFromInput();
+                  updateSessionDiagnostics(reason);
+                  if (persisted && !state.authenticated) {
+                    $("sessionStatus").textContent = "Token 已保留。点击验证并进入，或等待页面自动恢复登录。";
+                  }
+                }
+                function scheduleAutofillTokenRecovery() {
+                  [250, 1000, 2500].forEach(delayMs => {
+                    window.setTimeout(() => {
+                      const before = storedAccessToken();
+                      if (rawTokenInput()) persistAccessTokenFromInput();
+                      updateSessionDiagnostics(before ? `autofill_check_${delayMs}` : `autofill_empty_${delayMs}`);
+                      if (!state.authenticated && token()) {
+                        void refreshProjects({ autoSelect: true });
+                      }
+                    }, delayMs);
+                  });
                 }
 
                 function callV2(name, ...args) {
@@ -3906,6 +4036,7 @@ public sealed class BrowserUiRenderer
                   state.prototypeSkeletonBannerIndex = 0;
                   state.prototypeSkeletonBannerTick = 0;
                   applyGlobalBusyState();
+                  updateSessionDiagnostics("logged_out");
                   $("sessionStatus").textContent = token()
                     ? "Token 已保留。连接失败或认证未通过时，请点击验证并进入重试。"
                     : "Please paste an access token to sign in.";
@@ -3937,6 +4068,7 @@ public sealed class BrowserUiRenderer
                     loadAdminLlmRuns();
                     loadAccountAudit();
                   }
+                  updateSessionDiagnostics("authenticated");
                   refreshActiveRun();
                 }
 
@@ -5169,6 +5301,10 @@ public sealed class BrowserUiRenderer
 
                 async function api(path, options = {}) {
                   const { timeoutMs, ...fetchOptions } = options;
+                  const shouldProbeApi = path === "/api/session" || path === "/api/projects";
+                  if (shouldProbeApi) {
+                    recordSessionProbe("api_start", { path, method: fetchOptions.method || "GET", timeoutMs: timeoutMs || 0 });
+                  }
                   const controller = timeoutMs ? new AbortController() : null;
                   const timeoutHandle = timeoutMs ? setTimeout(() => controller.abort(), timeoutMs) : null;
                   let response;
@@ -5179,6 +5315,9 @@ public sealed class BrowserUiRenderer
                       headers: { ...headers(), ...(options.headers || {}) }
                     });
                   } catch (error) {
+                    if (shouldProbeApi) {
+                      recordSessionProbe("api_fetch_error", { path, error: sanitizeSessionProbeError(error) });
+                    }
                     if (error?.name === "AbortError") {
                       throw { status: 408, payload: { status: "client_timeout", failureCode: "client_timeout", timeoutMs } };
                     }
@@ -5189,7 +5328,20 @@ public sealed class BrowserUiRenderer
                   const text = await response.text();
                   let payload = {};
                   try { payload = text ? JSON.parse(text) : {}; } catch { payload = { raw: text }; }
-                  if (!response.ok) throw { status: response.status, payload };
+                  if (!response.ok) {
+                    if (shouldProbeApi) {
+                      recordSessionProbe("api_response_error", {
+                        path,
+                        status: response.status,
+                        payloadStatus: payload.status || "",
+                        failureCode: payload.failureCode || payload.failure_code || ""
+                      });
+                    }
+                    throw { status: response.status, payload };
+                  }
+                  if (shouldProbeApi) {
+                    recordSessionProbe("api_success", { path, status: response.status });
+                  }
                   return payload;
                 }
 
@@ -5197,10 +5349,16 @@ public sealed class BrowserUiRenderer
                   const autoSelect = options.autoSelect !== false;
                   const requestAuthEpoch = authEpoch;
                   let sessionValidated = false;
+                  recordSessionProbe("refreshProjects_start", {
+                    autoSelect,
+                    retryOnAuthFailure: options.retryOnAuthFailure !== false,
+                    requestAuthEpoch
+                  });
                   try {
                     const session = await api("/api/session");
                     if (!isCurrentAuthRequest(requestAuthEpoch)) return;
                     sessionValidated = true;
+                    recordSessionProbe("refreshProjects_session_validated", { role: session.role || "user", requestAuthEpoch });
                     showAdminShell(session.role || "user");
                     if ((session.role || "user") === "admin") {
                       state.projects = [];
@@ -5264,12 +5422,28 @@ public sealed class BrowserUiRenderer
                       selectDefaultProject(visibleProjects);
                     }
                     out(projects);
+                    recordSessionProbe("refreshProjects_success", {
+                      projectCount: Array.isArray(projects) ? projects.length : 0,
+                      visibleProjectCount: visibleProjects.length,
+                      initializing
+                    });
                   } catch (error) {
                     if (!isCurrentAuthRequest(requestAuthEpoch)) return;
+                    recordSessionProbe("refreshProjects_error", {
+                      sessionValidated,
+                      retryOnAuthFailure: options.retryOnAuthFailure !== false,
+                      error: sanitizeSessionProbeError(error)
+                    });
                     if (!sessionValidated) {
-                      if (error?.status === 401 || error?.status === 403) {
-                        clearAccessTokenStorage();
-                        bumpAuthEpoch();
+                      if (token() && options.retryOnAuthFailure !== false && (!error?.status || error.status >= 500)) {
+                        $("sessionStatus").textContent = "Token 已保留。登录状态恢复失败，正在重试...";
+                        showUserLoadingFallback("正在恢复登录状态，请稍候...");
+                        window.setTimeout(() => {
+                          if (!state.authenticated && token() && isCurrentAuthRequest(requestAuthEpoch)) {
+                            void refreshProjects({ ...options, retryOnAuthFailure: false });
+                          }
+                        }, 1000);
+                        return;
                       }
                       showLoggedOut();
                     } else {
@@ -5277,6 +5451,43 @@ public sealed class BrowserUiRenderer
                       ensureProjectPageFallback(state.projects, false);
                     }
                     showError(error);
+                  }
+                }
+
+                function restoreSessionFromStoredToken() {
+                  const currentToken = token();
+                  recordSessionProbe("restoreSessionFromStoredToken_start", { hasToken: !!currentToken });
+                  if (!currentToken) {
+                    showLoggedOut();
+                    return;
+                  }
+
+                  persistAccessToken(currentToken);
+                  updateSessionDiagnostics("restore_stored_token");
+                  $("sessionStatus").textContent = "Token 已读取，正在恢复登录...";
+                  showUserLoadingFallback("正在恢复登录状态，请稍候...");
+                  void refreshProjects({ autoSelect: true });
+                }
+
+                function runStartupSessionRestore() {
+                  if (startupSessionRestoreStarted) return;
+                  startupSessionRestoreStarted = true;
+                  setTokenFromStorage();
+                  installSessionProbeEventListeners();
+                  recordSessionProbe("startup_before_restore");
+                  restoreSessionFromStoredToken();
+                  scheduleAutofillTokenRecovery();
+                }
+
+                function runStartupStep(name, action) {
+                  recordSessionProbe(`startup_${name}_before`);
+                  try {
+                    const result = action();
+                    recordSessionProbe(`startup_${name}_after`);
+                    return result;
+                  } catch (error) {
+                    recordSessionProbe(`startup_${name}_error`, { error: sanitizeSessionProbeError(error) });
+                    throw error;
                   }
                 }
 
@@ -6565,6 +6776,7 @@ public sealed class BrowserUiRenderer
                   if (!state.authenticated) return;
                   try {
                     const wasBusy = isGlobalBusy();
+                    const hadTrackedBusyRun = runIsBusy(state.activeRun) || hasPendingPrototypeSkeletonBannerRun();
                     const activeRun = await api("/api/account/active-run");
                     if (!activeRun?.runId) {
                       state.activeRun = null;
@@ -6572,6 +6784,9 @@ public sealed class BrowserUiRenderer
                         state.pendingPrototypeSkeletonRun = null;
                       }
                       applyGlobalBusyState();
+                      if (hadTrackedBusyRun && state.projectId) {
+                        await refreshCurrentProjectAfterActiveRunSettled();
+                      }
                       return;
                     }
                     if (state.cancelledActiveRunId && activeRun?.runId === state.cancelledActiveRunId) {
@@ -6612,9 +6827,7 @@ public sealed class BrowserUiRenderer
                       await loadRuns();
                     }
                     if (wasBusy && !runIsBusy(activeRun) && !hasPendingPrototypeSkeletonBannerRun() && state.projectId && runBelongsToCurrentProject(activeRun)) {
-                      await loadPrototypeProgress();
-                      await loadProjectPackages();
-                      await refreshAssetInventoryAvailability();
+                      await refreshCurrentProjectAfterActiveRunSettled();
                     }
                   } catch {
                     state.activeRun = null;
@@ -6624,6 +6837,31 @@ public sealed class BrowserUiRenderer
                     }
                     applyGlobalBusyState();
                   }
+                }
+
+                async function refreshCurrentProjectAfterActiveRunSettled() {
+                  if (!state.projectId) return;
+                  await Promise.allSettled([
+                    loadRuns(),
+                    loadGddMilestoneSteps(),
+                    loadIterationPlan(),
+                    loadPrototypeProgress(),
+                    loadProjectPackages(),
+                    refreshAssetInventoryAvailability(),
+                    refreshGddOutlineStatus()
+                  ]);
+                }
+
+                function scheduleActiveRunRefresh(attempts = 8, delayMs = 750) {
+                  let remaining = Math.max(1, attempts);
+                  const tick = async () => {
+                    await refreshActiveRun();
+                    remaining -= 1;
+                    if (remaining > 0 && state.authenticated && state.localBusy && !runIsBusy(state.activeRun)) {
+                      window.setTimeout(tick, delayMs);
+                    }
+                  };
+                  window.setTimeout(tick, delayMs);
                 }
 
                 function shouldAutoRefreshIterationPlan(activeRun) {
@@ -7110,11 +7348,12 @@ public sealed class BrowserUiRenderer
 
                 function applyGddMilestoneActionState(selected, active) {
                   const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
+                  const canSubmitFeedback = !!selected?.canSubmitFeedback || !!selected?.canConfirm;
                   setButtonDisabledState($("refreshGddMilestoneSteps"), !state.projectId || isGlobalBusy(), "选择项目后可以更新游戏模块内容。");
                   setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
                   setButtonDisabledState($("quickRepairCurrentMilestoneStep"), !(canUse && canQuickRepairGddMilestoneStep(selected)), selected ? "只有当前激活模块存在失败执行结果时可以快速修复。" : "没有可快速修复的当前模块。");
                   setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");
-                  setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && selected.canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
+                  setButtonDisabledState($("submitCurrentMilestoneFeedback"), !(canUse && canSubmitFeedback), selected ? "只有当前激活模块可以提交反馈。" : "没有可反馈的当前模块。");
                 }
 
                 function canQuickRepairGddMilestoneStep(step) {
@@ -7141,6 +7380,7 @@ public sealed class BrowserUiRenderer
                   const step = currentGddMilestoneStep();
                   if (!step) return out("当前没有可执行的游戏模块。");
                   setLocalBusy(true, "正在执行当前游戏模块。");
+                  scheduleActiveRunRefresh();
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/current/execute`, {
                       method: "POST",
@@ -7208,11 +7448,12 @@ public sealed class BrowserUiRenderer
                   if (!step) return out("当前没有可快速修复的游戏模块。");
                   if (!canQuickRepairGddMilestoneStep(step)) return out("当前模块没有失败执行结果，不能快速修复。");
                   setLocalBusy(true, "正在根据当前模块执行结果启动快速修复。");
+                  scheduleActiveRunRefresh();
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
-                      body: JSON.stringify({ feedback: buildQuickRepairFeedbackForMilestoneStep(step), model: $("globalModel").value || "gpt-5.5" })
+                      body: JSON.stringify({ feedback: buildQuickRepairFeedbackForMilestoneStep(step), model: $("globalModel").value || "gpt-5.5", sourceKind: "quick_repair" })
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
@@ -7241,6 +7482,7 @@ public sealed class BrowserUiRenderer
                   const context = projectRequestContext();
                   const projectId = context.projectId;
                   setLocalBusy(true, "正在确认当前模块并执行下一模块解锁前检查。");
+                  scheduleActiveRunRefresh();
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/confirm`, {
                       method: "POST",
@@ -7290,6 +7532,7 @@ public sealed class BrowserUiRenderer
                   const feedback = $("milestoneFeedbackInput").value || "";
                   if (!feedback?.trim()) return;
                   setLocalBusy(true, "正在提交当前模块的反馈修复。");
+                  scheduleActiveRunRefresh();
                   $("confirmMilestoneFeedback").disabled = true;
                   $("confirmMilestoneFeedback").textContent = "提交中...";
                   $("milestoneFeedbackHint").textContent = "正在根据当前模块反馈启动修复。";
@@ -7297,7 +7540,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/${encodeURIComponent(step.stepId)}/feedback-run`, {
                       method: "POST",
                       timeoutMs: longLlmTimeoutMs,
-                      body: JSON.stringify({ feedback, model: $("globalModel").value || "gpt-5.5" })
+                      body: JSON.stringify({ feedback, model: $("globalModel").value || "gpt-5.5", sourceKind: "manual_feedback" })
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
@@ -8009,27 +8252,39 @@ public sealed class BrowserUiRenderer
                 $("saveToken").onclick = () => {
                   const value = rawTokenInput();
                   bumpAuthEpoch();
+                  recordSessionProbe("save_token_clicked", { hasValue: !!value });
                   if (!value) {
                     clearAccessTokenStorage();
                     $("sessionStatus").textContent = "Token 已清空。";
+                    recordSessionProbe("token_cleared_from_empty_save");
                     showLoggedOut();
                     return;
                   }
                   persistAccessToken(value);
+                  updateSessionDiagnostics("save_token");
                   $("sessionStatus").textContent = "Token 验证中...";
                   refreshProjects();
                 };
-                $("token").addEventListener("input", bumpAuthEpoch);
-                $("token").addEventListener("change", bumpAuthEpoch);
+                $("token").addEventListener("input", () => {
+                  bumpAuthEpoch();
+                  persistTokenInputFromBrowser("input");
+                });
+                $("token").addEventListener("change", () => {
+                  bumpAuthEpoch();
+                  persistTokenInputFromBrowser("change");
+                });
                 $("logout").onclick = () => {
                   bumpAuthEpoch();
+                  recordSessionProbe("logout_clicked");
                   clearAccessTokenStorage();
                   $("token").value = "";
+                  updateSessionDiagnostics("logout");
                   state.projectId = "";
                   writeSelectedProjectId("");
                   state.projects = [];
                   showLoggedOut();
                 };
+                runStartupSessionRestore();
                 $("openCreateProjectPage").onclick = () => showCreateProjectPage();
                 $("openProjectListModal").onclick = async () => {
                   if (projectSwitchLocked() && state.projectId) return out("当前操作完成前不能切换项目。");
@@ -8082,7 +8337,7 @@ public sealed class BrowserUiRenderer
                 $("downloadChatHistory").onclick = downloadChatHistory;
                 $("chatAttachmentFiles").onchange = loadChatAttachmentFiles;
                 $("clearChatAttachments").onclick = clearChatAttachments;
-                renderChatAttachments();
+                runStartupStep("renderChatAttachments", renderChatAttachments);
                 $("evaluateIterationPlanFromChat").onclick = () => evaluateIterationPlan(true);
                 $("submitFormalFeedback").onclick = submitFormalFeedback;
                 $("createIterationPlan").onclick = createIterationPlan;
@@ -8122,8 +8377,8 @@ public sealed class BrowserUiRenderer
                     loadGddMilestoneSteps();
                   }
                 });
-                renderChatHistory();
-                restorePrototypeSkeletonBannerFromStorage();
+                runStartupStep("renderChatHistory", renderChatHistory);
+                runStartupStep("restorePrototypeSkeletonBannerFromStorage", restorePrototypeSkeletonBannerFromStorage);
                 void refreshActiveRun();
                 $("loadRuns").onclick = loadRuns;
                 $("createProjectPackage").onclick = createProjectPackage;
@@ -8141,14 +8396,7 @@ public sealed class BrowserUiRenderer
                   event.preventDefault();
                   runNeedsFixIterationGoal(button.dataset.needsFixGoal);
                 });
-                setTokenFromStorage();
-                if (token()) refreshProjects(); else showLoggedOut();
-                setTimeout(() => {
-                  const currentToken = token();
-                  if (currentToken) {
-                    if (!state.authenticated) refreshProjects();
-                  }
-                }, 250);
+                runStartupSessionRestore();
                 setInterval(refreshActiveRun, 5000);
                 setInterval(() => {
                   const skeletonRun = skeletonBannerRun();
@@ -9045,7 +9293,9 @@ public sealed class BrowserUiRenderer
                 .downloads-grid { display: grid; gap: 1rem; }
                 button { border: 0; border-radius: 0.75rem; padding: 0.75rem 1rem; background: var(--accent); color: white; font: inherit; font-weight: 700; cursor: pointer; }
                 button:disabled { cursor: not-allowed; opacity: 0.45; }
-                .toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+                .toolbar, .package-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+                .preview-button { background: #264a62; }
+                .preview-button.ready { background: #7a4d11; }
                 .danger { color: var(--danger); }
                 .muted { color: var(--muted); }
                 body.embedded main { max-width: none; padding: 0; }
@@ -9100,13 +9350,75 @@ public sealed class BrowserUiRenderer
                     <article class="package card">
                       <strong>${escapeHtml(item.version)}</strong>
                       <span class="muted">${escapeHtml(item.createdUtc || "未知时间")} · ${escapeHtml(item.fileName)} · ${item.sizeBytes} bytes</span>
-                      <button data-download-url="${escapeHtml(item.downloadUrl)}" data-file-name="${escapeHtml(item.fileName)}">下载此版本</button>
+                      <div class="package-actions">
+                        <button data-download-url="${escapeHtml(item.downloadUrl)}" data-file-name="${escapeHtml(item.fileName)}">下载此版本</button>
+                      </div>
+                      ${renderWebPreviewAction(item)}
                     </article>
                   `).join("") || "<p class='muted'>还没有已打包的项目文件。</p>";
                   document.querySelectorAll("[data-download-url]").forEach(button => {
                     button.onclick = () => downloadPackage(button, button.dataset.downloadUrl, button.dataset.fileName);
                   });
+                  document.querySelectorAll("[data-web-preview-file]").forEach(button => {
+                    button.onclick = () => handleWebPreviewBackground(button, button.dataset.webPreviewFile, button.dataset.webPreviewUrl);
+                  });
                   await loadGddDownload();
+                }
+                function renderWebPreviewAction(item) {
+                  const preview = item.webPreview || {};
+                  const ready = preview.status === "ready" && preview.previewUrl;
+                  const running = preview.status === "queued" || preview.status === "running";
+                  const failed = preview.status === "failed";
+                  const stale = preview.status === "stale";
+                  const readyFailure = ready && preview.failureCode
+                    ? ` · \u4e0a\u6b21\u91cd\u65b0\u751f\u6210\u5931\u8d25\uff1a${escapeHtml(disabledText(preview.failureCode))} (${escapeHtml(preview.failureCode)})`
+                    : "";
+                  const buttonText = ready
+                    ? "\u6253\u5f00\u6d4f\u89c8\u5668\u8bd5\u73a9\u5730\u5740"
+                      : running
+                        ? "\u8f6c\u6362\u4e2d..."
+                      : failed
+                        ? "\u91cd\u65b0\u751f\u6210\u6d4f\u89c8\u5668\u8bd5\u73a9"
+                        : stale
+                          ? "\u91cd\u65b0\u751f\u6210\u6d4f\u89c8\u5668\u8bd5\u73a9"
+                        : "\u751f\u6210\u6d4f\u89c8\u5668\u8bd5\u73a9";
+                  const failureCode = preview.failureCode || "web_preview_failed";
+                  const fidelity = preview.fidelityTier ? ` · ${escapeHtml(preview.fidelityTier)}` : "";
+                  const surface = preview.playableSurface ? ` · ${escapeHtml(preview.playableSurface)}` : "";
+                  const type = preview.gameTypeId ? ` · ${escapeHtml(preview.gameTypeId)}` : "";
+                  const meta = ready
+                    ? `${escapeHtml(preview.createdUtc || "\u672a\u77e5\u65f6\u95f4")} · ${escapeHtml(preview.mode || "preview")} · \u5305\u8f6c\u6362\u8bd5\u73a9\u7248${type}${fidelity}${surface}${readyFailure}`
+                    : failed
+                      ? `\u4e0a\u6b21\u751f\u6210\u5931\u8d25\uff1a${escapeHtml(disabledText(failureCode))} (${escapeHtml(failureCode)})`
+                      : stale
+                        ? "\u8f6c\u6362\u5668\u5df2\u5347\u7ea7\uff0c\u9700\u8981\u91cd\u65b0\u751f\u6210\u5305\u8f6c\u6362\u8bd5\u73a9\u7248\u3002"
+                      : running
+                        ? webPreviewQueueText(preview)
+                        : "guest \u6743\u9650\u516c\u5f00\u8bbf\u95ee\uff0c\u751f\u6210\u7684\u94fe\u63a5\u662f\u5305\u8f6c\u6362\u8bd5\u73a9\u7248\u3002";
+                  return `
+                    <div class="package-actions">
+                      <button class="preview-button ${ready ? "ready" : ""}" data-web-preview-file="${escapeHtml(item.fileName)}" data-web-preview-url="${escapeHtml(preview.previewUrl || "")}" ${running ? "disabled" : ""}>${buttonText}</button>
+                      <span class="muted">${meta}</span>
+                    </div>
+                  `;
+                }
+                function webPreviewQueueText(preview) {
+                  const seconds = Number(preview.estimatedWaitSeconds || 0);
+                  const position = Number(preview.queuePosition || 0);
+                  if (position > 0 && seconds > 0) {
+                    return `Godot3 \u6b63\u5728\u6392\u961f\uff0c\u961f\u5217\u4f4d\u7f6e ${position}\uff0c\u9884\u8ba1\u7b49\u5f85 ${formatDuration(seconds)}\u3002`;
+                  }
+                  if (preview.status === "running") {
+                    return "Godot3 \u6b63\u5728\u5bfc\u51fa\uff0c\u8bf7\u7a0d\u5019\u5237\u65b0\u6216\u7b49\u5f85\u81ea\u52a8\u6253\u5f00\u3002";
+                  }
+                  return "Godot3 \u6b63\u5728\u6392\u961f\uff0c\u8bf7\u7a0d\u5019\u5237\u65b0\u6216\u7b49\u5f85\u81ea\u52a8\u6253\u5f00\u3002";
+                }
+                function formatDuration(seconds) {
+                  const value = Math.max(0, Math.floor(Number(seconds) || 0));
+                  if (value < 60) return `${value}\u79d2`;
+                  const minutes = Math.floor(value / 60);
+                  const remainder = value % 60;
+                  return remainder ? `${minutes}\u5206${remainder}\u79d2` : `${minutes}\u5206\u949f`;
                 }
                 function renderCreatePackageAction(payload) {
                   const button = $("createPackage");
@@ -9162,6 +9474,21 @@ public sealed class BrowserUiRenderer
                   if (reason === "prototype_not_created") return "尚未成功运行原型创建，或没有创建有效的godot场景文件，暂不能打包项目文件。";
                   if (reason === "m1_not_completed") return "M1 游戏场景完成后才可以打包项目文件。";
                   if (reason === "project_busy") return "项目有后台任务正在执行。";
+                  if (reason === "project_not_found") return "项目不存在或当前账号无权访问。";
+                  if (reason === "package_not_found") return "没有找到这个项目文件包。";
+                  if (reason === "user_web_preview_concurrency_limit_exceeded") return "\u5f53\u524d\u8d26\u53f7\u5df2\u6709\u4e00\u4e2a\u6d4f\u89c8\u5668\u8bd5\u73a9\u751f\u6210\u4efb\u52a1\u5728\u6267\u884c\u3002";
+                  if (reason === "web_preview_signing_secret_missing") return "\u670d\u52a1\u5668\u672a\u914d\u7f6e\u6d4f\u89c8\u5668\u8bd5\u73a9\u7b7e\u540d\u5bc6\u94a5\u3002";
+                  if (reason === "godot3_shell_patch_failed") return "Godot3 HTML5 \u8f7d\u5165\u58f3\u8865\u4e01\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u5bfc\u51fa\u6a21\u677f\u7248\u672c\u3002";
+                  if (reason === "web_preview_background_failed") return "\u6d4f\u89c8\u5668\u8bd5\u73a9\u540e\u53f0\u4efb\u52a1\u5f02\u5e38\u4e2d\u65ad\u3002";
+                  if (reason === "abandoned_run_recovered") return "\u6d4f\u89c8\u5668\u8bd5\u73a9\u751f\u6210\u4efb\u52a1\u5728\u670d\u52a1\u5668\u91cd\u542f\u6216\u8d85\u65f6\u6062\u590d\u540e\u4e2d\u65ad\uff0c\u8bf7\u91cd\u65b0\u751f\u6210\u3002";
+                  if (reason === "godot3_bin_not_configured") return "服务器没有配置可用的 Godot3 执行文件。";
+                  if (reason === "unsupported_package_template") return "当前项目文件包缺少可生成浏览器试玩的 Godot 主场景或场景清单。";
+                  if (reason === "package_invalid_zip") return "\u9879\u76ee\u6587\u4ef6\u5305\u4e0d\u662f\u6709\u6548\u7684 zip \u6587\u4ef6\u3002";
+                  if (reason === "package_scan_budget_exceeded") return "\u9879\u76ee\u6587\u4ef6\u5305\u8d85\u8fc7\u6d4f\u89c8\u5668\u8bd5\u73a9\u626b\u63cf\u4e0a\u9650\u3002";
+                  if (reason === "web_preview_converter_fingerprint_mismatch") return "\u5f53\u524d\u9879\u76ee\u6587\u4ef6\u5305\u4e0e\u670d\u52a1\u5668\u7684\u4e13\u7528\u6d4f\u89c8\u5668\u8bd5\u73a9\u8f6c\u6362\u5668\u6307\u7eb9\u4e0d\u5339\u914d\uff0c\u5df2\u4fdd\u7559\u901a\u7528\u5305\u9884\u89c8\u515c\u5e95\u8def\u5f84\u3002";
+                  if (reason === "converter_schema_outdated") return "\u8f6c\u6362\u5668\u5df2\u5347\u7ea7\uff0c\u9700\u8981\u91cd\u65b0\u751f\u6210\u8bd5\u73a9\u7248\u3002";
+                  if (reason === "godot3_export_failed") return "Godot3 HTML5 导出失败，请查看后台运行记录。";
+                  if (reason === "web_preview_failed") return "项目文件包未能生成浏览器试玩地址。";
                   return "当前暂不能生成新的项目文件包。";
                 }
                 async function downloadPackage(button, downloadUrl, fileName) {
@@ -9200,6 +9527,93 @@ public sealed class BrowserUiRenderer
                     button.disabled = false;
                     button.textContent = originalText;
                   }
+                }
+                async function handleWebPreviewBackground(button, fileName, previewUrl) {
+                  if (previewUrl) {
+                    window.open(previewUrl, "_blank", "noopener");
+                    return;
+                  }
+
+                  const originalText = button.textContent;
+                  button.disabled = true;
+                  button.textContent = "\u751f\u6210\u4e2d...";
+                  $("status").textContent = "\u5df2\u63d0\u4ea4\u6d4f\u89c8\u5668\u8bd5\u73a9\u751f\u6210\u4efb\u52a1\uff0c\u6b63\u5728\u7b49\u5f85 Godot3 \u5bfc\u51fa\u3002";
+                  try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/packages/${encodeURIComponent(fileName)}/web-preview`, { method: "POST", headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json" }, cache: "no-store" });
+                    let payload = {};
+                    try { payload = await response.json(); } catch {}
+                    if (!response.ok && response.status !== 202) {
+                      const reason = publicErrorCode(payload.failureCode || payload.status || payload.error || "unknown_error");
+                      $("status").innerHTML = `<span class="danger">\u8bd5\u73a9\u5730\u5740\u751f\u6210\u5931\u8d25\uff1a${escapeHtml(disabledText(reason))} (${escapeHtml(reason)})</span>`;
+                      return;
+                    }
+
+                    const previewResult = await waitForWebPreview(fileName, button, payload.runId || "");
+                    if (previewResult.status === "failed") {
+                      const reason = publicErrorCode(previewResult.failureCode || "web_preview_failed");
+                      $("status").innerHTML = `<span class="danger">\u8bd5\u73a9\u5730\u5740\u751f\u6210\u5931\u8d25\uff1a${escapeHtml(disabledText(reason))} (${escapeHtml(reason)})</span>`;
+                      await loadPackages();
+                      return;
+                    }
+                    if (!previewResult.url) {
+                      $("status").innerHTML = "<span class='danger'>\u8bd5\u73a9\u5730\u5740\u8fd8\u672a\u751f\u6210\u5b8c\u6210\uff0c\u8bf7\u7a0d\u540e\u5237\u65b0\u4e0b\u8f7d\u9875\u67e5\u770b\u72b6\u6001\u3002</span>";
+                      return;
+                    }
+
+                    await loadPackages();
+                    $("status").innerHTML = `\u6d4f\u89c8\u5668\u8bd5\u73a9\u5730\u5740\u5df2\u751f\u6210\uff0c\u8bf7\u70b9\u51fb\u65b0\u7684\u201c\u6253\u5f00\u6d4f\u89c8\u5668\u8bd5\u73a9\u5730\u5740\u201d\u6309\u94ae\uff0c\u6216 <a href="${escapeHtml(previewResult.url)}" target="_blank" rel="noopener">\u76f4\u63a5\u6253\u5f00</a>\u3002`;
+                  } catch {
+                    $("status").innerHTML = "<span class='danger'>\u8bd5\u73a9\u5730\u5740\u751f\u6210\u5931\u8d25\uff1a\u6d4f\u89c8\u5668\u672a\u80fd\u53d1\u8d77\u751f\u6210\u8bf7\u6c42\u3002</span>";
+                  } finally {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                  }
+                }
+
+                function webPreviewFailureCodeFromRun(run) {
+                  if (!run) return "web_preview_failed";
+                  try {
+                    const evidence = JSON.parse(run.evidenceJson || "{}");
+                    return evidence.failure_code || "web_preview_failed";
+                  } catch {
+                    return "web_preview_failed";
+                  }
+                }
+
+                async function waitForWebPreview(fileName, button, runId) {
+                  const maxAttempts = 900;
+                  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+                    button.textContent = `\u8f6c\u6362\u4e2d ${attempt}/${maxAttempts}`;
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    if (runId) {
+                      const runResponse = await fetch(`/api/runs/${encodeURIComponent(runId)}`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
+                      if (runResponse.ok) {
+                        const runPayload = await runResponse.json();
+                        const run = runPayload.run || {};
+                        if (run.status === "failed" || run.status === "blocked" || run.status === "cancel") {
+                          return { status: "failed", url: "", failureCode: webPreviewFailureCodeFromRun(run) };
+                        }
+                      }
+                    }
+                    const response = await fetch(`/api/projects/${encodeURIComponent(projectId)}/packages`, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
+                    if (!response.ok) continue;
+                    const payload = await response.json();
+                    const item = (payload.packages || []).find(pkg => pkg.fileName === fileName);
+                    const preview = item?.webPreview || {};
+                    if (preview.status === "queued" && Number(preview.estimatedWaitSeconds || 0) > 0) {
+                      const position = Number(preview.queuePosition || 0);
+                      button.textContent = position > 0
+                        ? `\u6392\u961f\u4e2d ${position} · ${formatDuration(preview.estimatedWaitSeconds)}`
+                        : `\u6392\u961f\u4e2d · ${formatDuration(preview.estimatedWaitSeconds)}`;
+                    }
+                    if (preview.status === "ready" && preview.previewUrl) {
+                      return { status: "ready", url: preview.previewUrl };
+                    }
+                    if (preview.status === "failed") {
+                      return { status: "failed", url: "", failureCode: preview.failureCode || "web_preview_failed" };
+                    }
+                  }
+                  return { status: "timeout", url: "" };
                 }
                 async function downloadGddDocument(button) {
                   const originalText = button.textContent;

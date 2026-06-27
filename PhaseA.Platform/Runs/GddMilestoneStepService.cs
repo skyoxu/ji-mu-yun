@@ -224,7 +224,7 @@ public sealed class GddMilestoneStepService
         var result = await _needsFixRouteService.RunAsync(
             accountId,
             projectId,
-            new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex),
+            new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex, request.SourceKind),
             cancellationToken);
 
         var completed = result.Status is "completed" or "succeeded";
@@ -572,7 +572,7 @@ public sealed class GddMilestoneStepService
                 lastRepair = await _needsFixRouteService.RunAsync(
                     accountId,
                     project.ProjectId,
-                    new PrototypeNeedsFixRouteRequest(feedback, requestModel, null, goal.GoalId, goal.GoalIndex),
+                    new PrototypeNeedsFixRouteRequest(feedback, requestModel, null, goal.GoalId, goal.GoalIndex, "automatic_validation_repair"),
                     loopToken);
 
                 if (stopwatch.Elapsed >= TimeSpan.FromMinutes(20))
@@ -1700,7 +1700,7 @@ public sealed class GddMilestoneStepService
                 step.Locked,
                 outlineComplete && !step.Locked && (step.Status is "ready" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out"),
                 !step.Locked && (step.Status is "executed" or "feedback_submitted"),
-                !step.Locked && (step.Status is "executed" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out"),
+                !step.Locked && (step.Status is "executed" or "feedback_submitted" or "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out"),
                 step.ReviewSummary,
                 StepSpecRelativePath(step),
                 step.LatestEvidenceRelativePath,

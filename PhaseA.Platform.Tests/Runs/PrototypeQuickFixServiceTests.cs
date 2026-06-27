@@ -1004,6 +1004,50 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldNotPreflightManualFeedback_WhenCurrentValidationAlreadyPasses()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        EnsureRpgAcceptanceMarkers(project!.RepoPath);
+        EnsureRpgSmokeSceneFile(project.RepoPath);
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            prototype_completion = new
+            {
+                smoke_scene = @"res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn"
+            }
+        });
+        var planService = TestRpgIterationPlanServiceFactory.Create(store);
+        await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Repair playable feedback."));
+        var details = await store.GetLatestProjectIterationSessionAsync(projectId);
+        var targetGoal = details!.Goals.Single(goal => goal.GoalIndex == 1);
+        await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Player says the module still feels wrong.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
+        var runner = new FakeHostedProcessRunner();
+        var service = new PrototypeQuickFixService(store, options, runner);
+
+        var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
+            "Player says the module still feels wrong.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(details.Session.SessionId, targetGoal.GoalId, 1, targetGoal.Title, targetGoal.Description, targetGoal.AcceptanceHint, targetGoal.ResultSummary),
+            "manual_feedback"));
+        var run = await store.GetRunSnapshotAsync(result.RunId);
+
+        result.Status.Should().Be("completed");
+        runner.Commands.Should().Contain(command => command.Arguments.Any(arg => string.Equals(arg, "exec", StringComparison.Ordinal)));
+        run!.EvidenceJson.Should().NotContain("\"preflight\":true");
+        run.EvidenceJson.Should().Contain("\"source_kind\":\"manual_feedback\"");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldDiscoverProjectSlugSmokeScene_WhenPrototypeStateSceneIsMissing()
     {
         using var database = TempSqliteDatabase.Create();

@@ -42,7 +42,8 @@ public sealed record GddMilestoneStepConfirmRequest(
 
 public sealed record GddMilestoneStepFeedbackRequest(
     string? Feedback,
-    string? Model = null);
+    string? Model = null,
+    string? SourceKind = null);
 
 public sealed record GddMilestoneStepActionResult(
     string ProjectId,
