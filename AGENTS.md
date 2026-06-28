@@ -3,23 +3,34 @@
 This file is the repository map. It routes you to the right source document by task stage, problem type, and durable run state. Do not turn it back into a 600-line encyclopedia.
 
 ## Purpose
-- Windows-only Godot + C# game template.
+- Windows-only Godot + C# game template evolved into the Ji Mu Yun Phase A/B cloud prototype generation and hosting platform.
 - `AGENTS.md` is the routing layer.
-- `README.md` is the project-facing overview and startup entry.
+- `README.md` is the product-facing overview, phase status, stack summary, and startup entry.
 - `docs/agents/` holds agent workflow, recovery, and navigation docs.
 - `docs/architecture/**`, `docs/adr/**`, `docs/testing-framework.md`, and `DELIVERY_PROFILE.md` remain the deep source documents.
 
+## Phase Service Scope
+This AGENTS.md prioritizes Phase A/B platform service work before broader template or delivery-routing concerns. Treat the following as in-scope for Phase service changes:
+- `PhaseA.Platform/**` and `PhaseA.Platform.Tests/**`.
+- `runtime/phase-a/**`, including startup, recovery, watchdog, and Caddy configuration.
+- `scripts/python/phase_a_*.py`, `scripts/python/phase_b_*.py`, and Phase-facing smoke or drill scripts.
+- `logs/phase-a-innernet/**` as runtime state, live metadata, hosted workspaces, and evidence.
+- Account isolation, admin/user auth, token hashing, audit exports, hosted workspace/artifact readback, and browser/API behavior.
+- Phase browser-consumed prototype routes, including prototype creation, iteration, repair, GDD, asset, package, preview, and related route recovery state.
+- Shared LLM/Codex execution entrypoints used by Phase routes and scripts.
+
 ## Start Here
 
-1. [Agents Docs Index](docs/agents/00-index.md)
-2. [Session Recovery](docs/agents/01-session-recovery.md)
-3. [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
-4. [Repo Map](docs/agents/02-repo-map.md)
-5. [README](README.md)
-6. If a task-scoped run already exists, `logs/ci/active-tasks/task-<id>.active.md`
-7. Newest file in `execution-plans/`
-8. Newest file in `decision-logs/`
-9. If a local review pipeline already ran, `logs/ci/<date>/sc-review-pipeline-task-<task>/latest.json`
+1. For Phase service work, read `Phase Service Scope`, `Phase Service Change Contract`, and `Phase Runtime Recovery Order` in this file before editing.
+2. [Agents Docs Index](docs/agents/00-index.md)
+3. [Session Recovery](docs/agents/01-session-recovery.md)
+4. [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
+5. [Repo Map](docs/agents/02-repo-map.md)
+6. [README](README.md)
+7. If a task-scoped run already exists, `logs/ci/active-tasks/task-<id>.active.md`
+8. Newest file in `execution-plans/`
+9. Newest file in `decision-logs/`
+10. If a local review pipeline already ran, `logs/ci/<date>/sc-review-pipeline-task-<task>/latest.json`
 
 
 ## Game Project Metadata
@@ -143,6 +154,55 @@ This file is the repository map. It routes you to the right source document by t
 - For overlay work, prefer generated shard or index sources when present; otherwise use the current repo indexes and do not blind-scan `docs/`.
 - Ask before high-risk actions and never disable tests to get green.
 
+## Phase Service Change Contract
+
+### Change Matrix
+| Change area | Must update | Required validation |
+| --- | --- | --- |
+| Platform API | Server handler/DTO, browser caller, auth boundary, and public behavior docs when behavior changes. | `PhaseA.Platform.Tests/**` plus relevant `phase_a_*` or `phase_b_*` smoke. |
+| Metadata DB or persistence | Migration or recovery path, persistence tests, restore/drill docs, and runtime notes when DB paths or ownership change. | DB/persistence test, restore drill, or smoke evidence under `logs/`. |
+| Auth, token, account isolation, audit | Token hashing path, admin/user boundary behavior, audit output, and CSV/export callers. | Unauthorized and authorized checks, preferably `scripts/python/phase_b_account_smoke.py`. |
+| Runtime startup or watchdog | `runtime/phase-a/start-phasea.ps1`, `ensure-phasea.ps1`, `watch-phasea.ps1`, and runtime docs. | Local `/healthz`, `scripts/python/phase_a_ops_check.py`, and runtime log evidence. |
+| Caddy or public proxy | `runtime/phase-a/Caddyfile`, public URL docs, and recovery notes. | Validate local PhaseA health first, then public `:8080/healthz`. |
+| Hosted workspace, artifacts, packages, previews | Workspace boundary, artifact readback, cleanup/recovery behavior, and browser caller. | Integration or smoke evidence under `logs/`. |
+| Phase prototype routes | Route recovery inputs, latest state, repair ledger behavior, acceptance evidence, and browser-safe output. | Route-specific smoke/acceptance evidence and no completion based only on assistant text. |
+| LLM/Codex route execution | Shared route engine, command factory, script backend, and caller tests. | `CodexHostedProcessCommandFactoryTests`, `LlmRouteEngineTests`, `scripts/sc/tests/test_llm_backend.py`, plus route-specific tests. |
+
+### Protected Phase Paths
+Ask before modifying:
+- Live metadata or runtime state under `logs/phase-a-innernet/data/**` and hosted workspaces under `logs/phase-a-innernet/workspaces/**`.
+- `runtime/phase-a/start-phasea.ps1`, `runtime/phase-a/ensure-phasea.ps1`, `runtime/phase-a/watch-phasea.ps1`, and `runtime/phase-a/Caddyfile`.
+- Auth, token hashing, account isolation, and audit code in `PhaseA.Platform/**`.
+- Shared LLM/Codex execution entrypoints: `PhaseA.Platform/Llm/LlmRouteEngine.cs`, `PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs`, and `scripts/sc/_llm_backend.py`.
+- Delivery/security profile behavior, public deployment URLs, bind addresses, secret source-of-truth, or Caddy listener behavior.
+- Generated logs, runtime evidence, and failure artifacts when the intent is to rewrite or delete history instead of adding sidecar evidence.
+
+### Definition of Done
+A Phase service change is not done until:
+- Local behavior is validated, or the validation gap and required follow-up evidence are recorded.
+- API, auth, DB, runtime, Caddy, prototype-route, or LLM execution changes include targeted tests or smoke evidence.
+- Evidence is written under `logs/` when a run, smoke, drill, or recovery action occurs.
+- Live secrets and token material are not committed to git-tracked docs, scripts, config, logs, or test fixtures.
+- Public proxy issues are debugged in order: local PhaseA health first, then Caddy/public health.
+- Failures are preserved as evidence; add new sidecar files instead of rewriting generated history.
+
+### Database and API Compatibility
+- Do not manually mutate the live Phase A metadata DB unless the user explicitly authorizes it.
+- Schema changes must be backward-compatible by default, include a migration or recovery path, and preserve existing data unless an approved decision log says otherwise.
+- Public and browser-consumed APIs must remain backward-compatible by default. Do not remove or rename routes, fields, status codes, auth behavior, or artifact paths without explicit approval and a documented compatibility plan.
+
+### Prototype Route Recovery
+Phase service browser flows use prototype routes. For file-changing hosted game-project routes, consume the project-level recovery sources in authority order before editing:
+1. Parsed game-type route profile and selected route skill prompt block.
+2. `meta/project-execution-guide.md`.
+3. `routes/prototype-contract/latest.json`.
+4. Current route latest state, such as `meta/routes/prototype/latest.json`, `meta/routes/iteration-plan/latest.json`, or `meta/routes/execute-next-goal/latest.json`.
+5. Current goal, step, repair step, or session state.
+6. Repair ledger and failing acceptance or Godot diagnostic evidence for repair routes.
+7. Latest live platform acceptance blocker, which wins over old assistant summaries, route state, and repair ledger memory.
+
+Missing required recovery sources must fail closed. Route state and repair ledger are continuity memory, not current acceptance authority. Do not mark steps complete based only on assistant text.
+
 ## Template Reality Checks
 - Legacy references such as `architecture_base.index`, `prd_chunks.index`, `shards/flattened-*.xml`, and `tasks/tasks.json` may not exist in this template.
 - Current equivalents are routed by `docs/agents/13-rag-sources-and-session-ssot.md`.
@@ -171,6 +231,14 @@ This file is the repository map. It routes you to the right source document by t
 - Pure analysis or JSON-only decisions should remain read-only and schema/JSON parsed through the route engine or script backend. File-changing workflows must stay on explicit executable routes with `workspace-write` and existing acceptance/smoke validation.
 - If a new route needs model, reasoning effort, sandbox, output path, billing, credential, or retry behavior that the shared entrypoint cannot express, extend the shared entrypoint and its tests first; do not fork local subprocess logic.
 - Required regression coverage for protocol changes: `PhaseA.Platform.Tests/Runs/CodexHostedProcessCommandFactoryTests.cs`, `PhaseA.Platform.Tests/Llm/LlmRouteEngineTests.cs`, `scripts/sc/tests/test_llm_backend.py`, and the route-specific tests for the caller being changed.
+
+## Phase Runtime Recovery Order
+1. Check `http://127.0.0.1:18080/healthz`.
+2. If local app health is unhealthy, run `runtime/phase-a/ensure-phasea.ps1`.
+3. If local app health is healthy but public `:8080` health is unhealthy, inspect or restart Caddy after the app is healthy.
+4. Do not use ordinary `dotnet run` for the live server. Use `runtime/phase-a/start-phasea.ps1`.
+5. Do not manually edit the live metadata DB.
+6. Record recovery evidence under `logs/phase-a-innernet/runtime/`.
 
 ## Phase A Runtime Ops
 - Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
@@ -277,7 +345,7 @@ This file is the repository map. It routes you to the right source document by t
 ## Change Policy
 - Keep `summary.json` schema stable.
 - Add new recovery data as sidecar files.
-- Keep `AGENTS.md` as a routing map, not a duplicate rules catalog.
+- Keep `AGENTS.md` as a Phase-service-first routing map with concise non-negotiable change contracts, not a duplicate rules catalog.
 - Put detailed guidance into `docs/agents/`, `README.md`, or the relevant source doc.
 - Put durable intent in git-tracked markdown under `execution-plans/` and `decision-logs/`.
 - Store durable business-repo workflow rule feedback under `decision-logs/workflow-rule-feedback/`.

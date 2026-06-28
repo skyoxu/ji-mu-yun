@@ -6,6 +6,21 @@
 
 它的执行内核仍然是 Godot 4.5 + C#/.NET 8 游戏模板、仓库原生脚本、质量门禁、恢复 sidecar 和文档体系；云端层通过 `PhaseA.Platform` 把这些能力包装成浏览器可用的项目创建、原型生成、迭代、修复、GDD、资源、打包、聊天、审计和运行证据查看平台。
 
+## 一眼看懂
+
+| 问题 | 答案 |
+| --- | --- |
+| 产品解决什么问题 | 把 Godot 原型创建、迭代、修复、打包、审计和运行证据查看，从本地脚本流程包装成浏览器/API 可用的平台。 |
+| 用户是谁 | 平台管理员、原型创建者、AI/自动化 agent、维护这个 Godot+C# 模板和 Phase A/B 平台的开发者。 |
+| 核心模块 | Godot 模板内核、Phase A 云端平台层、Phase B 账号和运营层、仓库脚本与质量门禁、运行时恢复和证据体系。 |
+| 当前阶段 | Phase A 已成型；Phase B 账号隔离 / 运营审计切片已完成；完整生产多租户隔离仍在后续 Phase C 或预生产加固范围。 |
+| 主要技术栈 | Godot 4.5 .NET/mono、C#/.NET 8、ASP.NET Core 8、SQLite、Caddy、Python、PowerShell、xUnit、GdUnit4。 |
+| 本地入口 | `http://127.0.0.1:18080` |
+| 公网反代入口 | `http://47.86.160.138:8080` |
+| 快速启动 / 恢复 | `powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1` |
+| 继续了解 | 先读本 README，再按 `AGENTS.md`、`docs/agents/00-index.md`、`docs/PROJECT_DOCUMENTATION_INDEX.md` 进入细节。 |
+
+
 ## 当前阶段结论
 
 - Phase A 已成型：已具备单节点托管 runner、ASP.NET Core Web/API、SQLite 元数据、workspace 管理、项目创建、原型通道、浏览器 UI、Caddy 反代、运行证据和恢复链路。
@@ -13,7 +28,7 @@
 - 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。
 
 最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。
-`docs/workflows/phase-b-agf-godogen-absorption.md` ??? Phase B ?????????? Phase B ???????
+`docs/workflows/phase-b-agf-godogen-absorption.md` 记录 Phase B 对 AGF/GodoGen 能力吸收的阶段范围和后续边界。
 
 - `docs/workflows/phase-b-account-isolation.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
@@ -21,14 +36,6 @@
 - `docs/workflows/phase-a-security-hardening-plan.cn.md`
 - `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md`
 - `execution-plans/2026-05-11-phase-a-prototype-lane-implementation-backlog.md`
-
-## Highest Encoding Rule
-
-- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding="utf-8")` and `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
-- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.
-- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.
-- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.
-- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.
 
 ## 系统分层
 
@@ -71,6 +78,28 @@ Phase B 当前延期项：
 - OS 级 Windows runner 账户和 NTFS ACL 隔离。
 
 ## 运行入口
+
+### 快速启动 Phase A
+
+优先使用一键恢复脚本。它会先检查 `http://127.0.0.1:18080/healthz`，必要时调用 `runtime/phase-a/start-phasea.ps1` 启动 Phase A 服务，并把恢复证据写入 `logs/phase-a-innernet/runtime/`。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File runtime/phase-a/ensure-phasea.ps1
+```
+
+长期守护使用 watchdog；它会每 30 秒调用 `ensure-phasea.ps1`：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File runtime/phase-a/watch-phasea.ps1
+```
+
+Caddy 的稳定配置文件是 `runtime/phase-a/Caddyfile`。如果宿主未把 Caddy 作为服务常驻，可用同一配置启动或重启 Caddy；`ensure-phasea.ps1` 的 public health 检查会反映 `http://47.86.160.138:8080/healthz` 是否已通过反代恢复。
+
+```powershell
+caddy run --config runtime/phase-a/Caddyfile
+```
+
+### 地址和配置
 
 本地 Phase A 服务稳定绑定：
 
@@ -276,6 +305,16 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 - `docs/workflows/prototype-lane-playbook.md`
 - `docs/workflows/prototype-tdd.md`
 - `docs/TEMPLATE_GODOT_GETTING_STARTED.md`
+
+## 贡献者编码规则
+
+### Highest Encoding Rule
+
+- All Chinese text reads and writes must use Python with explicit UTF-8, for example `Path(path).read_text(encoding="utf-8")` and `Path(path).write_text(text, encoding="utf-8", newline="\n")`.
+- Do not use PowerShell, `Get-Content`, `Set-Content`, `Out-File`, `Add-Content`, `type`, `echo`, `copy con`, or other Windows-native text tools to read or write Chinese text.
+- If a command script must contain Chinese literals, write it as a Python file or use ASCII-only Python source with Unicode escapes, then write the target file as UTF-8.
+- This rule applies to `AGENTS.md`, `README.md`, `workflow.md`, `docs/**/*.md`, `.agents/skills/**/SKILL.md`, prototype records, and project-health documentation.
+- Code, tests, logs, and machine output remain English unless the file is explicitly user-facing documentation.
 
 ## Feature Flags
 
