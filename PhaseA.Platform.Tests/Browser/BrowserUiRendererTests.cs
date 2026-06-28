@@ -230,6 +230,7 @@ public sealed class BrowserUiRendererTests
             };
             const gddQuestionFormMessageBudget = 5500;
             const gddQuestionFormSchemaCacheTtlMs = 5 * 60 * 1000;
+            const gddQuestionFormFallbackCacheTtlMs = 30 * 1000;
             const gddQuestionFormSchemaTimeoutMs = 90 * 1000;
             const $ = id => elements.get(id) || null;
             function escapeHtml(value) {
@@ -277,6 +278,15 @@ public sealed class BrowserUiRendererTests
               await openPromise;
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
               assert.strictEqual(state.gddQuestionFormFields.length, 0);
+
+              const invalidRequiredOpenPromise = openGddQuestionFormModal();
+              await Promise.resolve();
+              resolveApi({ fields: fallbackGddQuestionFormFields().map(field => ({ ...field, required: false })), source: "agent" });
+              await invalidRequiredOpenPromise;
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
+              assert.strictEqual(state.gddQuestionFormSource, "fallback");
+              assert.ok(state.gddQuestionFormFields.filter(field => field.required).length >= 4);
+              closeGddQuestionFormModal();
 
               renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
               setModalVisible("gddQuestionFormModal", true);
@@ -327,7 +337,8 @@ public sealed class BrowserUiRendererTests
             const assert = require("assert");
             const elements = new Map([
               ["createGddDocument", { disabled: false, textContent: "创建策划大纲" }],
-              ["globalModel", { value: "gpt-test" }]
+              ["globalModel", { value: "gpt-test" }],
+              ["chatMessage", { value: "freeform note" }]
             ]);
             const state = {
               projectId: "p1",
@@ -338,6 +349,7 @@ public sealed class BrowserUiRendererTests
             };
             const calls = { api: [], loadHistory: 0, render: 0, save: 0, out: [], loadRuns: 0, loadPackages: 0, clear: 0, refresh: 0, errors: 0, busy: [] };
             let apiMode = "success";
+            let loadRunsMode = "failure";
             const $ = id => elements.get(id) || null;
             function guardGlobalAction() { return true; }
             function projectRequestContext() { return { projectId: state.projectId }; }
@@ -353,7 +365,7 @@ public sealed class BrowserUiRendererTests
             function renderChatHistory() { calls.render += 1; }
             function saveChatHistoryForProject() { calls.save += 1; }
             function out(message) { calls.out.push(message); }
-            async function loadRuns() { calls.loadRuns += 1; }
+            async function loadRuns() { calls.loadRuns += 1; if (loadRunsMode === "failure") throw new Error("runs failed"); }
             async function loadProjectPackages() { calls.loadPackages += 1; }
             function sanitizePublicChatContent(value) { return String(value || ""); }
             function showError() { calls.errors += 1; }
@@ -373,18 +385,23 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual(state.gddOutlineReady, true);
               assert.strictEqual(calls.clear, 1);
               assert.deepStrictEqual(state.chatAttachments, []);
+              assert.strictEqual(elements.get("chatMessage").value, "");
               assert.strictEqual(elements.get("createGddDocument").disabled, false);
               assert.strictEqual(elements.get("createGddDocument").textContent, "查阅策划大纲");
               assert.strictEqual(state.localBusy, false);
               assert.strictEqual(calls.refresh, 1);
+              assert.strictEqual(calls.errors, 0);
 
               state.gddOutlineReady = false;
               state.chatAttachments = [{ name: "brief.md", content: "raw" }];
+              elements.get("chatMessage").value = "retry note";
+              loadRunsMode = "success";
               apiMode = "failure";
               const failure = await startGddDocumentRoute("raw material");
               assert.strictEqual(failure, false);
               assert.strictEqual(calls.clear, 1);
               assert.deepStrictEqual(state.chatAttachments, [{ name: "brief.md", content: "raw" }]);
+              assert.strictEqual(elements.get("chatMessage").value, "retry note");
               assert.strictEqual(calls.errors, 1);
               assert.strictEqual(elements.get("createGddDocument").disabled, false);
               assert.strictEqual(elements.get("createGddDocument").textContent, "创建策划大纲");

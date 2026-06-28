@@ -114,6 +114,42 @@ public sealed class GameDesignDocumentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldNotOverwriteExistingGddOutline()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
+        Directory.CreateDirectory(gddDir);
+        var outlinePath = Path.Combine(gddDir, "gdd-outline.json");
+        var existingOutline = """{"title":"Existing","summary":"Keep","sections":[]}""";
+        await File.WriteAllTextAsync(outlinePath, existingOutline);
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
+
+        result.Status.Should().Be("failed");
+        result.FailureCode.Should().Be("gdd_already_exists");
+        runner.Commands.Should().BeEmpty();
+        (await File.ReadAllTextAsync(outlinePath)).Should().Be(existingOutline);
+    }
+
+    [Fact]
     public async Task CreateAsync_WhenModelAtCapacity_ShouldRetrySameModelBeforeSuccess()
     {
         using var workspace = new TempWorkspace();
@@ -378,7 +414,7 @@ public sealed class GameDesignDocumentServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_WhenCodexFails_ShouldNotReportSuccessFromStaleOutline()
+    public async Task CreateAsync_WhenExistingOutlineIsPresent_ShouldNotStartCodexFromStaleOutline()
     {
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
@@ -418,10 +454,9 @@ public sealed class GameDesignDocumentServiceTests
             new GameDesignDocumentRequest("Create a complete GDD.", "gpt-5.4", []));
 
         result.Status.Should().Be("failed");
-        result.FailureCode.Should().Be("codex_failed");
-        var run = await store.GetRunSnapshotAsync(result.RunId);
-        run!.Status.Should().Be("failed");
-        run.ExitCode.Should().Be(17);
+        result.FailureCode.Should().Be("gdd_already_exists");
+        result.RunId.Should().BeEmpty();
+        runner.Commands.Should().BeEmpty();
     }
 
     [Fact]

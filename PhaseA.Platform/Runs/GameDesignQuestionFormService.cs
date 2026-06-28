@@ -10,6 +10,8 @@ public sealed class GameDesignQuestionFormService
     private const string SchemaVersion = "gdd-question-form.v1";
     private const int MinFields = 8;
     private const int MaxFields = 12;
+    private const int MinRequiredFields = 4;
+    private const int MaxRequiredFields = 6;
     private const int DefaultMaxLength = 500;
     private const int MaxSchemaCacheEntries = 128;
     private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromMinutes(5);
@@ -66,7 +68,7 @@ public sealed class GameDesignQuestionFormService
             return cached;
         }
 
-        var schemaTask = GetOrStartSchemaTask(cacheKey, project, model, accountId);
+        var schemaTask = GetOrStartSchemaTask(cacheKey, project, model, accountId, cancellationToken);
         return await schemaTask.WaitAsync(cancellationToken);
     }
 
@@ -74,7 +76,8 @@ public sealed class GameDesignQuestionFormService
         string cacheKey,
         ProjectSnapshot project,
         string model,
-        string accountId)
+        string accountId,
+        CancellationToken cancellationToken)
     {
         lock (_cacheLock)
         {
@@ -88,7 +91,7 @@ public sealed class GameDesignQuestionFormService
                 return existing;
             }
 
-            var task = CreateAndCacheSchemaAsync(cacheKey, project, model, accountId);
+            var task = CreateAndCacheSchemaAsync(cacheKey, project, model, accountId, cancellationToken);
             _inFlightSchemas[cacheKey] = task;
             return task;
         }
@@ -98,11 +101,12 @@ public sealed class GameDesignQuestionFormService
         string cacheKey,
         ProjectSnapshot project,
         string model,
-        string accountId)
+        string accountId,
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await CreateAndCacheSchemaCoreAsync(cacheKey, project, model, accountId);
+            return await CreateAndCacheSchemaCoreAsync(cacheKey, project, model, accountId, cancellationToken);
         }
         finally
         {
@@ -117,9 +121,10 @@ public sealed class GameDesignQuestionFormService
         string cacheKey,
         ProjectSnapshot project,
         string model,
-        string accountId)
+        string accountId,
+        CancellationToken cancellationToken)
     {
-        var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId);
+        var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
         if (concurrency.Lease is null)
         {
             return RateLimited(project, concurrency.FailureCode ?? "gdd_question_form_concurrency_limit_exceeded");
@@ -127,6 +132,7 @@ public sealed class GameDesignQuestionFormService
 
         await using var lease = concurrency.Lease;
         using var timeout = new CancellationTokenSource(_schemaGenerationTimeout);
+        using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
         var prompt = BuildPrompt(project);
         LlmRouteResult completion;
         try
@@ -140,7 +146,7 @@ public sealed class GameDesignQuestionFormService
                     Options: new CodexChatClientOptions(ReasoningEffort: "low"),
                     BillingAccountId: accountId,
                     RequireJsonObject: true),
-                timeout.Token);
+                linkedCancellation.Token);
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
@@ -158,6 +164,12 @@ public sealed class GameDesignQuestionFormService
             if (fields.Count is < MinFields or > MaxFields)
             {
                 return Cache(cacheKey, Fallback(project, "invalid_field_count"), FallbackSchemaCacheTtl);
+            }
+
+            var requiredFieldCount = fields.Count(field => field.Required);
+            if (requiredFieldCount is < MinRequiredFields or > MaxRequiredFields)
+            {
+                return Cache(cacheKey, Fallback(project, "invalid_required_field_count"), FallbackSchemaCacheTtl);
             }
 
             return Cache(cacheKey, new GameDesignQuestionFormResult(
@@ -360,7 +372,7 @@ public sealed class GameDesignQuestionFormService
     {
         return string.Join(
             " ",
-            new[] { project.GameTypeSource, project.TemplateRuleId }
+            new[] { project.GameTypeSource, project.TemplateRuleId, project.GameName, project.Name }
                 .Where(item => !string.IsNullOrWhiteSpace(item)))
             .Trim();
     }

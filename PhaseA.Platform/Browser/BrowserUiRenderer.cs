@@ -4564,7 +4564,8 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return null;
                     const fields = normalizeGddQuestionFormFields(result?.fields);
-                    if (fields.length >= 8 && fields.length <= 12) {
+                    const requiredFieldCount = fields.filter(field => field.required).length;
+                    if (fields.length >= 8 && fields.length <= 12 && requiredFieldCount >= 4 && requiredFieldCount <= 6) {
                       const schema = { fields, source: result?.source || "agent", failureCode: result?.failureCode || "" };
                       writeGddQuestionFormSchemaCache(cacheKey, schema);
                       return schema;
@@ -4585,7 +4586,8 @@ public sealed class BrowserUiRenderer
                   const project = currentProjectSnapshot();
                   const fields = normalizeGddQuestionFormFields(schema?.fields);
                   const gameType = currentProjectGameTypeText() || "未指定游戏类型";
-                  state.gddQuestionFormFields = fields.length >= 8 && fields.length <= 12 ? fields : normalizeGddQuestionFormFields(fallbackGddQuestionFormFields());
+                  const requiredFieldCount = fields.filter(field => field.required).length;
+                  state.gddQuestionFormFields = fields.length >= 8 && fields.length <= 12 && requiredFieldCount >= 4 && requiredFieldCount <= 6 ? fields : normalizeGddQuestionFormFields(fallbackGddQuestionFormFields());
                   state.gddQuestionFormSource = schema?.source || "fallback";
                   $("gddQuestionForm").dataset.schema = "question-form";
                   $("gddQuestionForm").innerHTML = state.gddQuestionFormFields.map(field => `
@@ -4743,25 +4745,42 @@ public sealed class BrowserUiRenderer
                     };
                     const result = await api(`/api/projects/${projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
                     if (!isCurrentProjectContext(context)) return false;
-                    await loadServerChatHistoryForProject(projectId);
-                    if (!isCurrentProjectContext(context)) return false;
-                    state.chatHistory.push({
-                      role: "assistant",
-                      kind: "gdd-result",
-                      content: result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002",
-                      gddOutlineUrl: result.downloadUrl || ""
-                    });
-                    renderChatHistory();
-                    saveChatHistoryForProject();
+                    succeeded = true;
                     state.gddOutlineReady = true;
                     button.textContent = "\u67e5\u9605\u7b56\u5212\u5927\u7eb2";
                     out(result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002");
-                    await loadRuns();
-                    await loadProjectPackages();
-                    succeeded = true;
+                    await loadServerChatHistoryForProject(projectId);
+                    if (!isCurrentProjectContext(context)) return true;
+                    const resultSummary = result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002";
+                    const hasGddResult = state.chatHistory.some(item =>
+                      item?.role === "assistant" &&
+                      item.kind === "gdd-result" &&
+                      String(item.content || "").includes(resultSummary));
+                    if (!hasGddResult) {
+                      state.chatHistory.push({
+                        role: "assistant",
+                        kind: "gdd-result",
+                        content: resultSummary,
+                        gddOutlineUrl: result.downloadUrl || ""
+                      });
+                      renderChatHistory();
+                      saveChatHistoryForProject();
+                    }
+                    await Promise.allSettled([
+                      loadRuns(),
+                      loadProjectPackages()
+                    ]);
                     return true;
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return false;
+                    if ((error?.payload?.failureCode || error?.payload?.error) === "gdd_already_exists") {
+                      state.gddOutlineReady = true;
+                      button.textContent = "\u67e5\u9605\u7b56\u5212\u5927\u7eb2";
+                      out(error?.payload?.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u5b58\u5728\u3002");
+                      if (typeof closeGddQuestionFormModal === "function") closeGddQuestionFormModal();
+                      callV2("v2OpenGddOutlineTab");
+                      return false;
+                    }
                     const failureMessage = sanitizePublicChatContent(error?.payload?.summary || error?.payload?.error || error?.payload?.failureCode || "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002");
                     state.chatHistory.push({
                       role: "assistant",
@@ -4777,6 +4796,7 @@ public sealed class BrowserUiRenderer
                   } finally {
                     if (!isCurrentProjectContext(context)) return;
                     if (succeeded) clearChatAttachments();
+                    if (succeeded && $("chatMessage")) $("chatMessage").value = "";
                     try {
                       await refreshActiveRun();
                     } finally {

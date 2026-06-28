@@ -109,6 +109,13 @@ public sealed class GameDesignDocumentService
             throw new InvalidOperationException("Project repository path escaped the hosted workspace root.");
         }
 
+        var existingOutlinePath = ResolveUnderProject(projectRoot, OutlineRelativePath);
+        var existingGddPath = ResolveUnderProject(projectRoot, OutputRelativePath);
+        if (File.Exists(existingOutlinePath) || File.Exists(existingGddPath))
+        {
+            return Failure(project.ProjectId, "gdd_already_exists", "\u7b56\u5212\u5927\u7eb2\u5df2\u5b58\u5728\uff0c\u8bf7\u5148\u67e5\u9605\u6216\u5220\u9664\u540e\u518d\u91cd\u65b0\u521b\u5efa\u3002");
+        }
+
         _workspaceSeeder.EnsureSeeded(project.RepoPath);
         var runId = await _metadataStore.CreateRunAsync(project.ProjectId, project.WorkspaceId, RunType, cancellationToken);
         var locked = await _metadataStore.TryAcquireRunnerLockAsync(project.ProjectId, runId, cancellationToken);

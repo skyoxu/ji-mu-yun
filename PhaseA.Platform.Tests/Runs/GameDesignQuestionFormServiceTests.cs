@@ -69,6 +69,30 @@ public sealed class GameDesignQuestionFormServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldReturnFallbackSchema_WhenAgentRequiredFieldCountIsInvalid()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var service = new GameDesignQuestionFormService(
+            store,
+            options,
+            new FakeLlmRouteEngine(InvalidRequiredCountSchemaJson()));
+
+        var result = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest());
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("ready");
+        result.Source.Should().Be("fallback");
+        result.FailureCode.Should().Be("invalid_required_field_count");
+        result.Fields.Where(field => field.Required).Should().HaveCount(count => count >= 4 && count <= 6);
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldCacheSchemaForSameProjectAndModel()
     {
         using var workspace = new TempWorkspace();
@@ -177,6 +201,61 @@ public sealed class GameDesignQuestionFormServiceTests
         llm.CallCount.Should().Be(1);
     }
 
+    [Fact]
+    public async Task CreateAsync_ShouldReleaseQuestionFormLimit_WhenRequestIsCancelled()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var firstProjectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var secondProjectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
+        var limiter = new QuestionFormConcurrencyLimiter(maxConcurrentQuestionForms: 2, maxConcurrentQuestionFormsPerAccount: 1);
+        var service = new GameDesignQuestionFormService(store, options, llm, limiter);
+        using var cancellation = new CancellationTokenSource();
+
+        var first = service.CreateAsync(account.AccountId, firstProjectId, new GameDesignQuestionFormRequest(), cancellation.Token);
+        await Task.Delay(25);
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
+
+        var second = await service.CreateAsync(account.AccountId, secondProjectId, new GameDesignQuestionFormRequest());
+
+        second.Should().NotBeNull();
+        second!.Status.Should().Be("ready");
+        second.Source.Should().Be("agent");
+        llm.CallCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void BuildFallbackFields_ShouldUseProjectNameSignals_WhenExplicitGameTypeIsMissing()
+    {
+        var project = new ProjectSnapshot(
+            "p1",
+            "account-1",
+            "Tower Defense Prototype",
+            "Towerdemo2",
+            "",
+            "",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            "C:\\workspaces",
+            "C:\\workspaces\\p1",
+            "C:\\workspaces\\p1\\runtime",
+            "C:\\workspaces\\p1\\.phasea");
+
+        var fields = GameDesignQuestionFormService.BuildFallbackFields(project);
+
+        fields.Should().Contain(field => field.Id == "tower_map");
+        fields.Should().Contain(field => field.Id == "tower_loop");
+    }
+
     private static string ValidSchemaJson()
     {
         return """
@@ -188,8 +267,26 @@ public sealed class GameDesignQuestionFormServiceTests
             { "id": "first_dungeon", "label": "首个地牢", "placeholder": "地图、敌人、目标。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true },
             { "id": "controls_camera", "label": "操作视角", "placeholder": "移动、技能、镜头。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true },
             { "id": "pressure_fail", "label": "压力失败", "placeholder": "受压和失败条件。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true },
-            { "id": "loot_growth", "label": "掉落成长", "placeholder": "装备、技能、数值。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true },
-            { "id": "hud_feedback", "label": "HUD反馈", "placeholder": "血量、资源、掉落提示。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true }
+            { "id": "loot_growth", "label": "掉落成长", "placeholder": "装备、技能、数值。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "hud_feedback", "label": "HUD反馈", "placeholder": "血量、资源、掉落提示。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false }
+          ]
+        }
+        """;
+    }
+
+    private static string InvalidRequiredCountSchemaJson()
+    {
+        return """
+        {
+          "fields": [
+            { "id": "reference_signal", "label": "参考标杆", "placeholder": "参考对象和禁忌方向。", "inputType": "textarea", "rows": 2, "maxLength": 300, "required": false },
+            { "id": "player_fantasy", "label": "玩家幻想", "placeholder": "玩家第一分钟的感受。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "combat_loop", "label": "战斗循环", "placeholder": "进入、战斗、掉落、回城。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "first_dungeon", "label": "首个地牢", "placeholder": "地图、敌人、目标。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "controls_camera", "label": "操作视角", "placeholder": "移动、技能、镜头。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "pressure_fail", "label": "压力失败", "placeholder": "受压和失败条件。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "loot_growth", "label": "掉落成长", "placeholder": "装备、技能、数值。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false },
+            { "id": "hud_feedback", "label": "HUD反馈", "placeholder": "血量、资源、掉落提示。", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false }
           ]
         }
         """;
