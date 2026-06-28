@@ -139,6 +139,38 @@ public sealed class GameDesignQuestionFormServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldKeepSharedSchemaGenerationAlive_WhenOneWaiterIsCancelled()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
+        var service = new GameDesignQuestionFormService(store, options, llm);
+        using var firstCancellation = new CancellationTokenSource();
+
+        var first = service.CreateAsync(
+            account.AccountId,
+            projectId,
+            new GameDesignQuestionFormRequest("gpt-5.4"),
+            firstCancellation.Token);
+        var second = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        await Task.Delay(50);
+
+        firstCancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
+        var secondResult = await second;
+
+        secondResult.Should().NotBeNull();
+        secondResult!.Status.Should().Be("ready");
+        secondResult.Source.Should().Be("agent");
+        llm.CallCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldReturnRateLimited_WhenAccountQuestionFormLimitIsExceeded()
     {
         using var workspace = new TempWorkspace();

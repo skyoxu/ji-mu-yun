@@ -4724,6 +4724,21 @@ public sealed class BrowserUiRenderer
                   await openGddQuestionFormModal();
                 }
 
+                function scheduleGddPostSuccessRefreshes(projectId, context) {
+                  void (async () => {
+                    try {
+                      await loadServerChatHistoryForProject(projectId, context.authEpoch);
+                      if (!isCurrentProjectContext(context)) return;
+                      await Promise.allSettled([
+                        loadRuns(),
+                        loadProjectPackages()
+                      ]);
+                    } catch {
+                      // Success cleanup must not depend on best-effort UI refreshes.
+                    }
+                  })();
+                }
+
                 async function startGddDocumentRoute(message) {
                   if (!state.projectId) {
                     out("请先选择一个项目。");
@@ -4748,28 +4763,17 @@ public sealed class BrowserUiRenderer
                     succeeded = true;
                     state.gddOutlineReady = true;
                     button.textContent = "\u67e5\u9605\u7b56\u5212\u5927\u7eb2";
-                    out(result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002");
-                    await loadServerChatHistoryForProject(projectId);
-                    if (!isCurrentProjectContext(context)) return true;
                     const resultSummary = result.summary || "\u7b56\u5212\u5927\u7eb2\u5df2\u521b\u5efa\u3002";
-                    const hasGddResult = state.chatHistory.some(item =>
-                      item?.role === "assistant" &&
-                      item.kind === "gdd-result" &&
-                      String(item.content || "").includes(resultSummary));
-                    if (!hasGddResult) {
-                      state.chatHistory.push({
-                        role: "assistant",
-                        kind: "gdd-result",
-                        content: resultSummary,
-                        gddOutlineUrl: result.downloadUrl || ""
-                      });
-                      renderChatHistory();
-                      saveChatHistoryForProject();
-                    }
-                    await Promise.allSettled([
-                      loadRuns(),
-                      loadProjectPackages()
-                    ]);
+                    out(resultSummary);
+                    state.chatHistory.push({
+                      role: "assistant",
+                      kind: "gdd-result",
+                      content: resultSummary,
+                      gddOutlineUrl: result.downloadUrl || ""
+                    });
+                    renderChatHistory();
+                    saveChatHistoryForProject();
+                    scheduleGddPostSuccessRefreshes(projectId, context);
                     return true;
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return false;

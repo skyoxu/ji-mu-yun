@@ -533,6 +533,11 @@ app.MapPost("/api/projects/{projectId}/gdd", async (
             });
         }
 
+        if (result.FailureCode == "gdd_already_exists")
+        {
+            return Results.Conflict(result);
+        }
+
         var failureSummary = string.IsNullOrWhiteSpace(result.Summary)
             ? "\u521b\u5efa\u7b56\u5212\u5927\u7eb2\u5931\u8d25\u3002"
             : result.Summary;

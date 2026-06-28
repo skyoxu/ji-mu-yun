@@ -330,7 +330,7 @@ public sealed class BrowserUiRendererTests
         var source = File.ReadAllText(BrowserUiRendererSourcePath());
         var routeScript = ExtractJavaScriptRange(
             source,
-            "async function startGddDocumentRoute(message)",
+            "function scheduleGddPostSuccessRefreshes(projectId, context)",
             "function chatHistoryDownloadFileName(projectId = state.projectId)");
 
         var script = $$"""
@@ -361,7 +361,7 @@ public sealed class BrowserUiRendererTests
               if (apiMode === "failure") throw { payload: { failureCode: "route_failed" } };
               return { summary: "GDD ready", downloadUrl: "/gdd-outline?projectId=p1" };
             }
-            async function loadServerChatHistoryForProject() { calls.loadHistory += 1; }
+            async function loadServerChatHistoryForProject() { calls.loadHistory += 1; return new Promise(() => {}); }
             function renderChatHistory() { calls.render += 1; }
             function saveChatHistoryForProject() { calls.save += 1; }
             function out(message) { calls.out.push(message); }
@@ -390,6 +390,9 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual(elements.get("createGddDocument").textContent, "查阅策划大纲");
               assert.strictEqual(state.localBusy, false);
               assert.strictEqual(calls.refresh, 1);
+              assert.strictEqual(calls.loadHistory, 1);
+              assert.strictEqual(calls.loadRuns, 0);
+              assert.strictEqual(calls.loadPackages, 0);
               assert.strictEqual(calls.errors, 0);
 
               state.gddOutlineReady = false;
@@ -3626,6 +3629,32 @@ public sealed class BrowserUiRendererTests
         var endpointSource = source[routeIndex..nextRouteIndex];
         endpointSource.Should().Contain("result.Status == \"rate_limited\"");
         endpointSource.Should().Contain("StatusCodes.Status429TooManyRequests");
+    }
+
+    [Fact]
+    public void Program_GddEndpointReturnsConflictBeforeAppendingAlreadyExistsToChatHistory()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var routeIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd\"", StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/question-form\"", routeIndex, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        var endpointSource = source[routeIndex..nextRouteIndex];
+        var alreadyExistsIndex = endpointSource.IndexOf("result.FailureCode == \"gdd_already_exists\"", StringComparison.Ordinal);
+        var conflictIndex = endpointSource.IndexOf("return Results.Conflict(result);", StringComparison.Ordinal);
+        var failureAppendIndex = endpointSource.IndexOf("await chatHistory.AppendAsync(accountId, projectId, \"user\", request.Message, \"gdd-request\", cancellationToken);", endpointSource.IndexOf("var failureSummary", StringComparison.Ordinal), StringComparison.Ordinal);
+
+        alreadyExistsIndex.Should().BeGreaterThanOrEqualTo(0);
+        conflictIndex.Should().BeGreaterThan(alreadyExistsIndex);
+        failureAppendIndex.Should().BeGreaterThan(conflictIndex);
     }
 
     [Fact]
