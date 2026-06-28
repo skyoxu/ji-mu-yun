@@ -384,12 +384,26 @@ public sealed class BrowserUiRendererTests
             function sanitizePublicChatContent(value) { return String(value || ""); }
             function showError() { calls.errors += 1; }
             function clearChatAttachments() { calls.clear += 1; state.chatAttachments = []; }
-            async function refreshActiveRun() { calls.refresh += 1; }
+            async function refreshActiveRun() { calls.refresh += 1; return new Promise(() => {}); }
+            function withTimeout(promise, label) {
+              return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error(`${label} timed out`)), 500);
+                Promise.resolve(promise).then(
+                  value => {
+                    clearTimeout(timeout);
+                    resolve(value);
+                  },
+                  error => {
+                    clearTimeout(timeout);
+                    reject(error);
+                  });
+              });
+            }
 
             {{routeScript}}
 
             (async () => {
-              const success = await startGddDocumentRoute("raw material");
+              const success = await withTimeout(startGddDocumentRoute("raw material"), "success GDD route");
               assert.strictEqual(success, true);
               assert.strictEqual(calls.api[0].path, "/api/projects/p1/gdd");
               const payload = JSON.parse(calls.api[0].options.body);
@@ -414,7 +428,7 @@ public sealed class BrowserUiRendererTests
               elements.get("chatMessage").value = "retry note";
               loadRunsMode = "success";
               apiMode = "failure";
-              const failure = await startGddDocumentRoute("raw material");
+              const failure = await withTimeout(startGddDocumentRoute("raw material"), "failure GDD route");
               assert.strictEqual(failure, false);
               assert.strictEqual(calls.clear, 1);
               assert.deepStrictEqual(state.chatAttachments, [{ name: "brief.md", content: "raw" }]);
@@ -424,6 +438,7 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual(elements.get("createGddDocument").textContent, "创建策划大纲");
               assert.strictEqual(state.localBusy, false);
               assert.strictEqual(calls.refresh, 2);
+              assert.strictEqual(calls.loadHistory, 2);
             })().catch(error => {
               console.error(error);
               process.exit(1);

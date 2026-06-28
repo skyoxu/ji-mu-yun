@@ -4742,6 +4742,16 @@ public sealed class BrowserUiRenderer
                   })();
                 }
 
+                function scheduleGddPostFailureRefresh(projectId, context) {
+                  void (async () => {
+                    try {
+                      await loadServerChatHistoryForProject(projectId, context.authEpoch);
+                    } catch {
+                      // Failure cleanup must not depend on best-effort UI refreshes.
+                    }
+                  })();
+                }
+
                 async function startGddDocumentRoute(message) {
                   if (!state.projectId) {
                     out("请先选择一个项目。");
@@ -4797,20 +4807,17 @@ public sealed class BrowserUiRenderer
                     renderChatHistory();
                     saveChatHistoryForProject();
                     out(failureMessage);
-                    await loadServerChatHistoryForProject(projectId).catch(() => {});
+                    scheduleGddPostFailureRefresh(projectId, context);
                     showError(error);
                     return false;
                   } finally {
                     if (!isCurrentProjectContext(context)) return;
                     if (succeeded) clearChatAttachments();
                     if (succeeded && $("chatMessage")) $("chatMessage").value = "";
-                    try {
-                      await refreshActiveRun();
-                    } finally {
-                      setLocalBusy(false);
-                      button.disabled = false;
-                      button.textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
-                    }
+                    void refreshActiveRun();
+                    setLocalBusy(false);
+                    button.disabled = false;
+                    button.textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
                   }
                 }
 
