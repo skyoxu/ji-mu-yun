@@ -210,6 +210,7 @@ public sealed class BrowserUiRendererTests
               "gddQuestionFormMeta",
               "gddQuestionFormHint",
               "confirmGddQuestionForm",
+              "cancelGddQuestionForm",
               "createGddDocument",
               "chatMessage",
               "globalModel"
@@ -262,8 +263,14 @@ public sealed class BrowserUiRendererTests
 
             let routeCalls = [];
             let routeShouldSucceed = false;
+            let routeWaitForResolve = false;
+            let resolveRoute;
             async function startGddDocumentRoute(message) {
               routeCalls.push(message);
+              if (routeWaitForResolve) {
+                return await new Promise(resolve => { resolveRoute = () => resolve(routeShouldSucceed); });
+              }
+
               return routeShouldSucceed;
             }
 
@@ -309,9 +316,16 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual($("confirmGddQuestionForm").disabled, false);
 
               routeShouldSucceed = true;
-              await confirmGddQuestionForm();
+              routeWaitForResolve = true;
+              const confirmPromise = confirmGddQuestionForm();
+              await Promise.resolve();
+              assert.strictEqual($("confirmGddQuestionForm").disabled, true);
+              assert.strictEqual($("cancelGddQuestionForm").disabled, true);
+              resolveRoute();
+              await confirmPromise;
               assert.strictEqual(routeCalls.length, 2);
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
+              assert.strictEqual($("cancelGddQuestionForm").disabled, false);
               assert.ok(routeCalls[1].includes("GDD question-form raw material:"));
             })().catch(error => {
               console.error(error);

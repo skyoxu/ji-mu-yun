@@ -158,7 +158,7 @@ public sealed class GameDesignQuestionFormServiceTests
             new GameDesignQuestionFormRequest("gpt-5.4"),
             firstCancellation.Token);
         var second = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
-        await Task.Delay(50);
+        await WaitUntilAsync(() => llm.CallCount == 1 && second.Status == TaskStatus.WaitingForActivation);
 
         firstCancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
@@ -367,6 +367,15 @@ public sealed class GameDesignQuestionFormServiceTests
         }
 
         return full;
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (!condition())
+        {
+            await Task.Delay(10, timeout.Token);
+        }
     }
 
     private sealed class FakeLlmRouteEngine : ILlmRouteEngine

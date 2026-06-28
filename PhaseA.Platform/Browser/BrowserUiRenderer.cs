@@ -4709,13 +4709,16 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   const button = $("confirmGddQuestionForm");
+                  const cancelButton = $("cancelGddQuestionForm");
                   button.disabled = true;
+                  if (cancelButton) cancelButton.disabled = true;
                   button.textContent = "创建中...";
                   try {
                     const succeeded = await startGddDocumentRoute(message);
                     if (succeeded) closeGddQuestionFormModal();
                   } finally {
                     button.disabled = false;
+                    if (cancelButton) cancelButton.disabled = false;
                     button.textContent = "确认并创建策划大纲";
                   }
                 }

@@ -35,7 +35,7 @@ public sealed class GameDesignQuestionFormService
     {
         private int _waiterCount;
 
-        public InFlightQuestionFormSchema(Task<GameDesignQuestionFormResult> task, CancellationTokenSource cancellation)
+        public InFlightQuestionFormSchema(Task<GameDesignQuestionFormResult> task, CancellationTokenSource? cancellation)
         {
             Task = task;
             Cancellation = cancellation;
@@ -43,18 +43,43 @@ public sealed class GameDesignQuestionFormService
 
         public Task<GameDesignQuestionFormResult> Task { get; }
 
-        private CancellationTokenSource Cancellation { get; }
+        private CancellationTokenSource? Cancellation { get; }
 
-        public void AddWaiter()
+        public InFlightQuestionFormWaiter AddWaiter()
         {
             Interlocked.Increment(ref _waiterCount);
+            return new InFlightQuestionFormWaiter(this);
         }
 
-        public void ReleaseWaiter()
+        private void ReleaseWaiter()
         {
             if (Interlocked.Decrement(ref _waiterCount) == 0 && !Task.IsCompleted)
             {
-                Cancellation.Cancel();
+                Cancellation?.Cancel();
+            }
+        }
+
+        public sealed class InFlightQuestionFormWaiter : IDisposable
+        {
+            private InFlightQuestionFormSchema? _schema;
+
+            public InFlightQuestionFormWaiter(InFlightQuestionFormSchema schema)
+            {
+                _schema = schema;
+            }
+
+            public Task<GameDesignQuestionFormResult> Task
+            {
+                get
+                {
+                    ObjectDisposedException.ThrowIf(_schema is null, this);
+                    return _schema.Task;
+                }
+            }
+
+            public void Dispose()
+            {
+                Interlocked.Exchange(ref _schema, null)?.ReleaseWaiter();
             }
         }
     }
@@ -97,19 +122,18 @@ public sealed class GameDesignQuestionFormService
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var schema = GetOrStartSchemaTask(cacheKey, project, model, accountId);
-        schema.AddWaiter();
+        var schemaWaiter = GetOrStartSchemaWaiter(cacheKey, project, model, accountId);
         try
         {
-            return await schema.Task.WaitAsync(cancellationToken);
+            return await schemaWaiter.Task.WaitAsync(cancellationToken);
         }
         finally
         {
-            schema.ReleaseWaiter();
+            schemaWaiter.Dispose();
         }
     }
 
-    private InFlightQuestionFormSchema GetOrStartSchemaTask(
+    private InFlightQuestionFormSchema.InFlightQuestionFormWaiter GetOrStartSchemaWaiter(
         string cacheKey,
         ProjectSnapshot project,
         string model,
@@ -121,19 +145,19 @@ public sealed class GameDesignQuestionFormService
             {
                 return new InFlightQuestionFormSchema(
                     Task.FromResult(cached!),
-                    new CancellationTokenSource());
+                    null).AddWaiter();
             }
 
             if (_inFlightSchemas.TryGetValue(cacheKey, out var existing))
             {
-                return existing;
+                return existing.AddWaiter();
             }
 
             var cancellation = new CancellationTokenSource();
             var task = CreateAndCacheSchemaAsync(cacheKey, project, model, accountId, cancellation.Token);
             var schema = new InFlightQuestionFormSchema(task, cancellation);
             _inFlightSchemas[cacheKey] = schema;
-            return schema;
+            return schema.AddWaiter();
         }
     }
 
