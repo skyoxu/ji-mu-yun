@@ -23,6 +23,11 @@ public sealed class ProjectWebPreviewService
     private const string LegacyPreviewSchemaVersion = "phasea-web-preview-v4";
     private const string PreviewManifestSchemaVersion = "phasea-web-preview-manifest-v1";
     private const string PreviewManifestFileName = "web-preview-manifest.json";
+    private const string PlayablePreviewContractFileName = "playable-preview-contract.json";
+    private const string DedicatedAdapterRootDirectory = "exports/web-preview-dedicated-adapters";
+    private const string DedicatedAdapterManifestFileName = "adapter-manifest.json";
+    private const string DedicatedAdapterMainScriptFileName = "Main.gd";
+    private const string DedicatedAdapterSchemaVersion = "phasea-web-preview-dedicated-adapter-v1";
     private static readonly ProjectWebPreviewConverterDescriptor Towerdemo2Converter = new(
         "towerdemo2-template-subset",
         "godot3-html5-towerdemo2-template-subset",
@@ -177,6 +182,7 @@ public sealed class ProjectWebPreviewService
     private const long MaxPreviewPackageSizeBytes = 512L * 1024L * 1024L;
     private const int MaxPreviewPackageEntryCount = 5000;
     private const long MaxPreviewTextCatalogBytes = 2L * 1024L * 1024L;
+    private const long MaxPlayablePreviewContractBytes = 256L * 1024L;
     private static readonly TimeSpan HealthSmokeCacheTtl = TimeSpan.FromMinutes(10);
     private static readonly SemaphoreSlim HealthSmokeGate = new(1, 1);
     private static readonly ConcurrentDictionary<string, PackageHashCacheEntry> PackageHashCache = new(StringComparer.OrdinalIgnoreCase);
@@ -199,6 +205,8 @@ public sealed class ProjectWebPreviewService
     private readonly HeavyRunnerQueueService _webPreviewQueue;
     private readonly ProjectWebPreviewConcurrencyLimiter _webPreviewConcurrencyLimiter;
     private readonly IHostedProcessRunner _processRunner;
+    private readonly ProjectWebPreviewSemanticAdapterService _semanticAdapterService;
+    private readonly ProjectWebPreviewDedicatedAdapterService _dedicatedAdapterService;
     private readonly ConcurrentDictionary<string, ProjectWebPreviewConcurrencyLease> _reservedAccountConcurrencyLeases = new(StringComparer.Ordinal);
 
     public ProjectWebPreviewService(
@@ -206,13 +214,17 @@ public sealed class ProjectWebPreviewService
         PhaseAPlatformOptions options,
         [FromKeyedServices("web-preview")] HeavyRunnerQueueService? webPreviewQueue = null,
         ProjectWebPreviewConcurrencyLimiter? webPreviewConcurrencyLimiter = null,
-        IHostedProcessRunner? processRunner = null)
+        IHostedProcessRunner? processRunner = null,
+        ProjectWebPreviewSemanticAdapterService? semanticAdapterService = null,
+        ProjectWebPreviewDedicatedAdapterService? dedicatedAdapterService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _webPreviewQueue = webPreviewQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(3), options.MaxConcurrentWebPreviews);
         _webPreviewConcurrencyLimiter = webPreviewConcurrencyLimiter ?? new ProjectWebPreviewConcurrencyLimiter(options.MaxConcurrentWebPreviewsPerAccount);
         _processRunner = processRunner ?? new HostedProcessRunner();
+        _semanticAdapterService = semanticAdapterService ?? ProjectWebPreviewSemanticAdapterService.DeterministicOnly(options);
+        _dedicatedAdapterService = dedicatedAdapterService ?? ProjectWebPreviewDedicatedAdapterService.DeterministicOnly(options);
     }
 
     private TimeSpan Godot3ExportTimeout => _options.Godot3WebPreviewExportTimeoutSeconds > 0
@@ -407,9 +419,63 @@ public sealed class ProjectWebPreviewService
             {
                 WebPreviewManifest = packageInfo.WebPreviewManifest with
                 {
-                    ConversionContract = BuildWebPreviewContract(converter, packageInfo.MainScene, packageInfo.Scenes, packageInfo.Texts.Count)
+                    ConversionContract = BuildWebPreviewContract(converter, packageInfo.MainScene, packageInfo.Scenes, packageInfo.Texts.Count, packageInfo.PlayablePreviewContract.HasValue)
                 }
             };
+            var manifestJson = SerializeWebPreviewManifest(packageInfo.WebPreviewManifest);
+            var semanticAdapter = await _semanticAdapterService.ResolveAsync(
+                new ProjectWebPreviewSemanticAdapterRequest(
+                    project.AccountId,
+                    runId,
+                    project,
+                    projectRoot,
+                    fileName,
+                    packageInfo.PackageSha256,
+                    packageInfo.PackageSizeBytes,
+                    packageInfo.GameName,
+                    packageInfo.GameTypeSource,
+                    packageInfo.GameTypeId,
+                    packageInfo.GameTypeGuide,
+                    packageInfo.MainScene,
+                    packageInfo.Scenes,
+                    packageInfo.PlayablePreviewContract?.GetRawText() ?? "{}",
+                    manifestJson),
+                cancellationToken);
+            packageInfo = packageInfo with
+            {
+                SemanticAdapter = semanticAdapter.Adapter,
+                SemanticAdapterResolution = semanticAdapter.Resolution
+            };
+            string? dedicatedMainScript = null;
+            if (!string.Equals(converter.Id, Towerdemo2Converter.Id, StringComparison.Ordinal))
+            {
+                var dedicatedAdapter = await _dedicatedAdapterService.ResolveAsync(
+                    new ProjectWebPreviewDedicatedAdapterRequest(
+                        project.AccountId,
+                        runId,
+                        project,
+                        projectRoot,
+                        fileName,
+                        packageInfo.PackageSha256,
+                        packageInfo.ProjectName,
+                        packageInfo.GameName,
+                        packageInfo.GameTypeId,
+                        packageInfo.GameTypeGuide,
+                        converter.Id,
+                        converter.Mode,
+                        packageInfo.MainScene,
+                        packageInfo.Scenes,
+                        packageInfo.PlayablePreviewContract?.GetRawText() ?? "{}",
+                        packageInfo.SemanticAdapter?.GetRawText() ?? "{}",
+                        manifestJson),
+                    RenderPackageAdapterMainScript(converter.AdapterStyle),
+                    cancellationToken);
+                dedicatedMainScript = dedicatedAdapter.MainScript;
+                packageInfo = packageInfo with
+                {
+                    DedicatedAdapterResolution = dedicatedAdapter.Resolution
+                };
+            }
 
             var previewId = ComputePreviewIdFromSha(packagePath, packageInfo.PackageSha256);
             var previewRelativeRoot = $"{PreviewRootDirectory}/{previewId}";
@@ -421,7 +487,7 @@ public sealed class ProjectWebPreviewService
 
             Directory.CreateDirectory(godotProjectRoot);
             Directory.CreateDirectory(webRoot);
-            CreateGodot3Project(godotProjectRoot, packageInfo, converter);
+            CreateGodot3Project(projectRoot, godotProjectRoot, packageInfo, converter, dedicatedMainScript);
 
             var exportResult = await ExportGodot3ProjectAsync(godot3Bin, godotProjectRoot, webRoot, runId, cancellationToken);
             if (exportResult.Process.ExitCode != 0 || !HasExpectedWebExport(webRoot))
@@ -438,7 +504,6 @@ public sealed class ProjectWebPreviewService
             var previewUrl = $"/projects/{project.ProjectId}/web-previews/{previewId}/index.html?v={Uri.EscapeDataString(createdUtc)}";
             var sourceSceneSha256 = ResolveConverterSourceSceneSha256(packageInfo, converter);
             var textCatalogSha256 = ResolveConverterTextCatalogSha256(packageInfo, converter);
-            var manifestJson = SerializeWebPreviewManifest(packageInfo.WebPreviewManifest);
             var manifestSha256 = ComputeStringSha256(manifestJson);
             var previewSignature = ComputePreviewSignature(
                 project.ProjectId,
@@ -456,6 +521,10 @@ public sealed class ProjectWebPreviewService
             var loadingEstimatePatched = false;
             try
             {
+                File.Copy(
+                    Path.Combine(godotProjectRoot, "preview-package-data.json"),
+                    Path.Combine(webRoot, "preview-package-data.json"),
+                    overwrite: true);
                 loadingEstimatePatched = PatchGodotWebShell(
                     Path.Combine(webRoot, "index.html"),
                     Path.Combine(webRoot, "index.js"),
@@ -504,6 +573,10 @@ public sealed class ProjectWebPreviewService
                 package_file = fileName,
                 package_sha256 = packageInfo.PackageSha256,
                 package_size_bytes = packageInfo.PackageSizeBytes,
+                playable_preview_contract = packageInfo.PlayablePreviewContract,
+                semantic_adapter = packageInfo.SemanticAdapter,
+                semantic_adapter_resolution = packageInfo.SemanticAdapterResolution,
+                dedicated_adapter_resolution = packageInfo.DedicatedAdapterResolution,
                 preview_id = previewId,
                 preview_url = previewUrl,
                 asset_version = assetVersion,
@@ -591,6 +664,8 @@ public sealed class ProjectWebPreviewService
                 converter_id = converter.Id,
                 converter_compatibility_id = converter.CompatibilityId,
                 converter_coverage = converter.CoverageSummary,
+                semantic_adapter = packageInfo.SemanticAdapter,
+                semantic_adapter_resolution = packageInfo.SemanticAdapterResolution,
                 manifest_sha256 = manifestSha256,
                 web_preview_manifest = packageInfo.WebPreviewManifest,
                 godot3_export = new
@@ -1232,33 +1307,43 @@ script = ExtResource( 1 )
     }
 
     private static void CreateGodot3Project(
-        string projectRoot,
+        string repositoryRoot,
+        string godotProjectRoot,
         PackageInfo packageInfo,
-        ProjectWebPreviewConverterDescriptor converter)
+        ProjectWebPreviewConverterDescriptor converter,
+        string? dedicatedMainScript)
     {
         if (string.Equals(converter.Id, Towerdemo2Converter.Id, StringComparison.Ordinal))
         {
-            CreateTowerdemo2Godot3Project(projectRoot, packageInfo, converter);
+            CreateTowerdemo2Godot3Project(repositoryRoot, godotProjectRoot, packageInfo, converter);
             return;
         }
 
-        CreateGenericGodotPackageProject(projectRoot, packageInfo, converter);
+        CreateGenericGodotPackageProject(godotProjectRoot, packageInfo, converter, dedicatedMainScript);
     }
 
     private static void CreateTowerdemo2Godot3Project(
-        string projectRoot,
+        string repositoryRoot,
+        string godotProjectRoot,
         PackageInfo packageInfo,
         ProjectWebPreviewConverterDescriptor converter)
     {
-        WriteGodot3ProjectFiles(projectRoot, packageInfo, converter, RenderMainScene("Towerdemo2WebPreview"), RenderMainScript());
+        var mainScript = ResolveDedicatedMainScript(repositoryRoot, packageInfo, converter, RenderMainScript());
+        WriteGodot3ProjectFiles(godotProjectRoot, packageInfo, converter, RenderMainScene("Towerdemo2WebPreview"), mainScript);
     }
 
     private static void CreateGenericGodotPackageProject(
         string projectRoot,
         PackageInfo packageInfo,
-        ProjectWebPreviewConverterDescriptor converter)
+        ProjectWebPreviewConverterDescriptor converter,
+        string? dedicatedMainScript)
     {
-        WriteGodot3ProjectFiles(projectRoot, packageInfo, converter, RenderMainScene("GenericPackageWebPreview"), RenderPackageAdapterMainScript(converter.AdapterStyle));
+        WriteGodot3ProjectFiles(
+            projectRoot,
+            packageInfo,
+            converter,
+            RenderMainScene("GenericPackageWebPreview"),
+            string.IsNullOrWhiteSpace(dedicatedMainScript) ? RenderPackageAdapterMainScript(converter.AdapterStyle) : dedicatedMainScript);
     }
 
     private static void WriteGodot3ProjectFiles(
@@ -1306,10 +1391,103 @@ script = ExtResource( 1 )
                 text_catalog_sha256 = ResolveConverterTextCatalogSha256(packageInfo, converter),
                 package_file = packageInfo.FileName,
                 package_sha256 = packageInfo.PackageSha256,
+                playable_preview_contract = packageInfo.PlayablePreviewContract,
+                semantic_adapter = packageInfo.SemanticAdapter,
+                semantic_adapter_resolution = packageInfo.SemanticAdapterResolution,
+                dedicated_adapter_resolution = packageInfo.DedicatedAdapterResolution,
                 web_preview_manifest = packageInfo.WebPreviewManifest,
                 texts = packageInfo.Texts
             }, GodotJsonOptions),
             new UTF8Encoding(false));
+    }
+
+    private static string ResolveDedicatedMainScript(
+        string projectRoot,
+        PackageInfo packageInfo,
+        ProjectWebPreviewConverterDescriptor converter,
+        string builtInMainScript)
+    {
+        var packageVersion = SanitizePathSegment(Path.GetFileNameWithoutExtension(packageInfo.FileName));
+        var adapterDirectory = ResolveUnderProject(projectRoot, $"{DedicatedAdapterRootDirectory}/{packageVersion}");
+        var mainScriptPath = Path.Combine(adapterDirectory, DedicatedAdapterMainScriptFileName);
+        var manifestPath = Path.Combine(adapterDirectory, DedicatedAdapterManifestFileName);
+        var adapterSourceSha256 = ComputeStringSha256(builtInMainScript);
+        if (TryReadReusableDedicatedMainScript(manifestPath, mainScriptPath, packageInfo, converter, adapterSourceSha256, out var cachedMainScript))
+        {
+            return cachedMainScript;
+        }
+
+        Directory.CreateDirectory(adapterDirectory);
+        File.WriteAllText(mainScriptPath, builtInMainScript, new UTF8Encoding(false));
+        File.WriteAllText(
+            manifestPath,
+            JsonSerializer.Serialize(new
+            {
+                schema_version = DedicatedAdapterSchemaVersion,
+                source = "towerdemo2-built-in-template",
+                adapter_version = packageVersion,
+                converter_id = converter.Id,
+                converter_compatibility_id = converter.CompatibilityId,
+                mode = converter.Mode,
+                adapter_source_sha256 = adapterSourceSha256,
+                package_file = packageInfo.FileName,
+                package_sha256 = packageInfo.PackageSha256,
+                generated_utc = DateTimeOffset.UtcNow.ToString("O")
+            }, GodotJsonOptions),
+            new UTF8Encoding(false));
+        return builtInMainScript;
+    }
+
+    private static bool TryReadReusableDedicatedMainScript(
+        string manifestPath,
+        string mainScriptPath,
+        PackageInfo packageInfo,
+        ProjectWebPreviewConverterDescriptor converter,
+        string adapterSourceSha256,
+        out string mainScript)
+    {
+        mainScript = "";
+        if (!File.Exists(manifestPath) || !File.Exists(mainScriptPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(manifestPath, Encoding.UTF8));
+            var root = document.RootElement;
+            if (!JsonStringEquals(root, "schema_version", DedicatedAdapterSchemaVersion) ||
+                !JsonStringEquals(root, "converter_id", converter.Id) ||
+                !JsonStringEquals(root, "adapter_source_sha256", adapterSourceSha256) ||
+                !JsonStringEquals(root, "package_file", packageInfo.FileName) ||
+                !JsonStringEquals(root, "package_sha256", packageInfo.PackageSha256))
+            {
+                return false;
+            }
+
+            mainScript = File.ReadAllText(mainScriptPath, Encoding.UTF8);
+            return !string.IsNullOrWhiteSpace(mainScript);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private static bool JsonStringEquals(JsonElement root, string propertyName, string expected)
+    {
+        return root.ValueKind == JsonValueKind.Object &&
+            root.TryGetProperty(propertyName, out var value) &&
+            value.ValueKind == JsonValueKind.String &&
+            string.Equals(value.GetString(), expected, StringComparison.Ordinal);
     }
 
     private static string RenderProjectGodot(PackageInfo packageInfo)
@@ -1758,11 +1936,7 @@ func sync_enemy_bodies(delta):
                 body.move_and_slide(to_player.normalized() * (1.0 + wave * 0.2), Vector3.UP)
 
 func update_enemy_pressure(delta):
-    pressure_timer += delta
-    if pressure_timer >= 3.0:
-        pressure_timer = 0
-        resolve_enemy_pressure()
-        render_all()
+    pressure_timer = 0
 
 func reset_world_positions():
     if player:
@@ -1849,11 +2023,8 @@ func resolve_attack_turn(skill, hit_count, dodged):
                     xp += enemies[i].xp
                     souls += enemies[i].souls
                     log_key = "log_enemy_defeated"
-    if enemies_remaining() > 0:
-        var counter = 0 if dodged else max(0, 5 + wave * 2 + enemies_remaining() * 2 - guard)
-        hp = max(0, hp - counter)
-        if counter == 0:
-            log_key = "log_counter_avoided"
+    if enemies_remaining() > 0 and dodged:
+        log_key = "log_counter_avoided"
     tick_cooldowns(skill)
     last_log = log_key
     last_hint = resolve_skill_hint(skill, log_key != "log_attack_whiff")
@@ -1887,15 +2058,9 @@ func resolve_attack_turn(skill, hit_count, dodged):
 func resolve_enemy_pressure():
     if phase != "playing":
         return
-    hp = max(0, hp - max(0, 8 + wave * 3 + enemies_remaining() * 2 - guard))
     tick_cooldowns("")
-    if hp <= 0:
-        phase = "dead"
-        last_log = "log_death"
-        last_hint = "hint_retry"
-    else:
-        last_log = "log_enemy_pressure"
-        last_hint = "hint_pressure"
+    last_log = "log_enemy_pressure"
+    last_hint = "hint_pressure"
 
 func choose_primary_action(index):
     if phase == "levelup":
@@ -2115,7 +2280,13 @@ var buttons = {}
 var ui_font = null
 var player = null
 var marker_bodies = []
+var pressure_bodies = []
+var action_bodies = []
+var reward_bodies = []
 var selected_marker = 0
+var semantic_adapter = {}
+var semantic_entities = []
+var runtime_tuning = {}
 var pulse = 0.0
 var game_name = "Godot Package"
 var project_name = ""
@@ -2131,12 +2302,18 @@ var encounter_max_hp = 36
 var energy = 3
 var tower_count = 0
 var wave = 1
+var preview_hp = 3
 var last_action = "准备试玩"
+var world_min_x = -6.8
+var world_max_x = 6.8
+var world_min_z = -5.3
+var world_max_z = 5.3
 
 func _ready():
     load_package_data()
-    create_world()
     create_ui()
+    render_all()
+    create_world()
     render_all()
 
 func load_package_data():
@@ -2160,6 +2337,14 @@ func load_package_data():
     package_sha256 = str(package_data.get("package_sha256", ""))
     converter_coverage = str(package_data.get("converter_coverage", ""))
     manifest = package_data.get("web_preview_manifest", {})
+    semantic_adapter = package_data.get("semantic_adapter", {})
+    if typeof(semantic_adapter) == TYPE_DICTIONARY:
+        semantic_entities = semantic_adapter.get("entities", [])
+        runtime_tuning = semantic_adapter.get("runtime_tuning", {})
+    if typeof(semantic_entities) != TYPE_ARRAY:
+        semantic_entities = []
+    if typeof(runtime_tuning) != TYPE_DICTIONARY:
+        runtime_tuning = {}
     if typeof(manifest) == TYPE_DICTIONARY:
         main_scene = str(manifest.get("main_scene", ""))
         scenes = manifest.get("scenes", [])
@@ -2175,38 +2360,57 @@ func create_world():
     light.light_energy = 1.15
     light.rotation_degrees = Vector3(-52, 18, -28)
     add_child(light)
+    configure_world_bounds()
 
     var camera = Camera.new()
     camera.name = "Camera"
     camera.current = true
     camera.fov = 58
-    camera.translation = Vector3(0, 8.2, 10.5)
+    camera.translation = Vector3(world_center_x(), max(8.2, world_span_z() * 0.72), world_max_z + max(6.5, world_span_z() * 0.55))
     camera.rotation_degrees = Vector3(-42, 0, 0)
     add_child(camera)
 
-    var floor = StaticBody.new()
-    floor.name = "PackagePreviewFloor"
-    add_child(floor)
-    floor.add_child(mesh_instance(cube_mesh(Vector3(15, 0.25, 12)), Color(0.16, 0.17, 0.20), Vector3(0, -0.125, 0)))
-    floor.add_child(collision_box(Vector3(15, 0.35, 12), Vector3()))
+    var floor_body = StaticBody.new()
+    floor_body.name = "PackagePreviewFloor"
+    add_child(floor_body)
+    var floor_size = Vector3(max(15.0, world_span_x() + 4.0), 0.25, max(12.0, world_span_z() + 4.0))
+    var floor_center = Vector3(world_center_x(), -0.125, world_center_z())
+    floor_body.add_child(mesh_instance(cube_mesh(floor_size), Color(0.16, 0.17, 0.20), floor_center))
+    floor_body.add_child(collision_box(Vector3(floor_size.x, 0.35, floor_size.z), floor_center))
 
     player = KinematicBody.new()
     player.name = "PreviewPlayer"
-    player.translation = Vector3(0, 0.85, 4.2)
+    player.translation = semantic_player_position(Vector3(0, 0.85, 4.2))
+    player.set_meta("movement_speed", tuning_number("movement_speed", 5.2))
     add_child(player)
     player.add_child(capsule_actor(Color(0.36, 0.72, 0.95), 0.34, 1.45))
     player.add_child(collision_capsule(0.34, 1.45))
 
-    var marker_count = max(1, min(8, scenes.size()))
+    var playable_entities = playable_semantic_entities()
+    var marker_count = max(1, min(12, playable_entities.size() if playable_entities.size() > 0 else scenes.size()))
     for i in range(marker_count):
-        var marker = StaticBody.new()
+        var entity = playable_entities[i] if playable_entities.size() > i and typeof(playable_entities[i]) == TYPE_DICTIONARY else {}
+        var role = str(entity.get("role", "scene_marker"))
+        var marker = KinematicBody.new() if role == "pressure_source" else StaticBody.new()
         marker.name = "SceneMarker%d" % [i + 1]
         var angle = PI * 2.0 * float(i) / float(marker_count)
-        marker.translation = Vector3(cos(angle) * 4.2, 0.55, sin(angle) * 3.2 - 0.7)
+        marker.translation = entity_position(entity, Vector3(cos(angle) * 4.2, 0.55, sin(angle) * 3.2 - 0.7))
+        marker.set_meta("role", role)
+        marker.set_meta("label", str(entity.get("label", selected_scene_text_for_index(i))))
+        marker.set_meta("done", false)
+        marker.set_meta("pressure_speed", entity_number(entity, "pressure_speed", tuning_number("pressure_speed", 1.35)))
+        marker.set_meta("contact_range", entity_number(entity, "contact_range", tuning_number("contact_range", 1.15)))
+        marker.set_meta("attack_range", entity_number(entity, "attack_range", tuning_number("attack_range", 3.2)))
         add_child(marker)
-        marker.add_child(mesh_instance(cube_mesh(Vector3(0.85, 0.85, 0.85)), marker_color(i), Vector3()))
+        marker.add_child(mesh_instance(cube_mesh(Vector3(0.85, 0.85, 0.85)), marker_color_for_role(role, i), Vector3()))
         marker.add_child(collision_box(Vector3(0.9, 0.9, 0.9), Vector3()))
         marker_bodies.append(marker)
+        if role == "pressure_source":
+            pressure_bodies.append(marker)
+        elif role == "action":
+            action_bodies.append(marker)
+        elif role == "reward":
+            reward_bodies.append(marker)
 
 func create_ui():
     ui_font = load_ui_font()
@@ -2219,6 +2423,10 @@ func create_ui():
 
     buttons.inspect = add_button(root, "InspectButton", "检查场景", Rect2(44, 44, 150, 42), "_on_inspect_pressed")
     buttons.next = add_button(root, "NextButton", "下一个场景", Rect2(210, 44, 170, 42), "_on_next_scene")
+    buttons.attack = add_button(root, "AttackButton", "攻击", Rect2(396, 44, 110, 42), "_on_attack_pressed")
+    buttons.skill = add_button(root, "SkillButton", "技能/闪避", Rect2(522, 44, 140, 42), "_on_skill_pressed")
+    buttons.reward = add_button(root, "RewardButton", "选择奖励", Rect2(678, 44, 140, 42), "_on_reward_pressed")
+    buttons.retry = add_button(root, "RetryButton", "重试", Rect2(834, 44, 110, 42), "_on_retry_semantic_pressed")
     labels.header = add_label(root, Rect2(44, 110, 900, 30), "")
     labels.summary = add_label(root, Rect2(44, 150, 1040, 28), "")
     labels.main_scene = add_label(root, Rect2(44, 184, 1160, 28), "")
@@ -2226,12 +2434,13 @@ func create_ui():
     labels.capabilities = add_label(root, Rect2(44, 264, 1180, 28), "")
     labels.package = add_label(root, Rect2(44, 298, 1180, 28), "")
     labels.coverage = add_label(root, Rect2(44, 344, 1200, 54), "")
-    labels.controls = add_label(root, Rect2(44, 820, 1100, 28), "WASD移动  鼠标左键/空格检查下一个包内场景  Enter回到第一个场景")
+    labels.controls = add_label(root, Rect2(44, 820, 1100, 28), "WASD移动  F/鼠标左键攻击  Q技能/闪避  E选择奖励  R重试  数字键选择节点")
 
 func _physics_process(delta):
     pulse += delta
     apply_player_motion(delta)
     animate_markers()
+    tick_semantic_pressure(delta)
 
 func _input(event):
     if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
@@ -2239,6 +2448,14 @@ func _input(event):
     elif event is InputEventKey and event.pressed and not event.echo:
         if event.scancode == KEY_SPACE:
             primary_action()
+        elif event.scancode == KEY_F:
+            semantic_primary_action()
+        elif event.scancode == KEY_Q:
+            semantic_skill_action()
+        elif event.scancode == KEY_E:
+            semantic_reward_action()
+        elif event.scancode == KEY_R:
+            semantic_retry()
         elif event.scancode == KEY_ENTER:
             selected_marker = 0
             render_all()
@@ -2266,16 +2483,34 @@ func apply_player_motion(delta):
         dir.x += 1
     if dir.length() > 0:
         dir = dir.normalized()
-    player.move_and_slide(dir * 5.2, Vector3.UP)
-    player.translation.x = clamp(player.translation.x, -6.8, 6.8)
-    player.translation.z = clamp(player.translation.z, -5.3, 5.3)
+    player.move_and_slide(dir * float(player.get_meta("movement_speed")), Vector3.UP)
+    player.translation.x = clamp(player.translation.x, world_min_x, world_max_x)
+    player.translation.z = clamp(player.translation.z, world_min_z, world_max_z)
 
 func animate_markers():
     for i in range(marker_bodies.size()):
         var marker = marker_bodies[i]
+        if marker.get_meta("done"):
+            continue
         var base_y = 0.55
         marker.translation.y = base_y + (0.22 if i == selected_marker else 0.06) * sin(pulse * 3.0 + i)
         marker.scale = Vector3(1.25, 1.25, 1.25) if i == selected_marker else Vector3(1, 1, 1)
+
+func tick_semantic_pressure(delta):
+    if player == null or pressure_bodies.size() == 0:
+        return
+    for pressure in pressure_bodies:
+        if pressure.get_meta("done"):
+            continue
+        var direction = player.translation - pressure.translation
+        direction.y = 0
+        if direction.length() > 0.1:
+            pressure.move_and_slide(direction.normalized() * float(pressure.get_meta("pressure_speed")), Vector3.UP)
+        if pressure.translation.distance_to(player.translation) < float(pressure.get_meta("contact_range")):
+            preview_hp = max(1, preview_hp - 1)
+            encounter_hp = min(encounter_max_hp, encounter_hp + 1)
+            last_action = "%s 逼近，生命降至 %d" % [pressure.get_meta("label"), preview_hp]
+            render_all()
 
 func advance_marker():
     if marker_bodies.size() == 0:
@@ -2285,6 +2520,9 @@ func advance_marker():
 
 func primary_action():
     action_count += 1
+    if semantic_entities.size() > 0 and adapter_style == "generic":
+        semantic_primary_action()
+        return
     if adapter_style == "rpg":
         encounter_hp = max(0, encounter_hp - 7)
         last_action = "普通攻击命中，遭遇生命 -7"
@@ -2339,6 +2577,91 @@ func primary_action():
         return
     render_all()
 
+func semantic_primary_action():
+    action_count += 1
+    var target = closest_active_body(pressure_bodies)
+    if target == null:
+        target = closest_active_body(action_bodies)
+    if target == null:
+        last_action = "攻击挥空，未发现压力源"
+        render_all()
+        return
+    selected_marker = max(0, marker_bodies.find(target))
+    if target.translation.distance_to(player.translation) <= semantic_attack_range() or action_bodies.has(target):
+        target.set_meta("done", true)
+        target.visible = false
+        encounter_hp = max(0, encounter_hp - 7)
+        last_action = "攻击命中 %s，压力下降" % [target.get_meta("label")]
+    else:
+        last_action = "%s 距离过远，靠近后再攻击" % [target.get_meta("label")]
+    render_all()
+
+func semantic_skill_action():
+    action_count += 1
+    energy = max(0, energy - 1)
+    var handled = 0
+    var candidates = []
+    for item in pressure_bodies:
+        if not item.get_meta("done"):
+            candidates.append(item)
+    for item in action_bodies:
+        if not item.get_meta("done"):
+            candidates.append(item)
+    candidates.sort_custom(self, "_sort_body_distance_to_player")
+    var skill_targets = int(tuning_number("skill_targets", 2))
+    for item in candidates:
+        if handled >= skill_targets:
+            break
+        item.set_meta("done", true)
+        item.visible = false
+        handled += 1
+    encounter_hp = max(0, encounter_hp - handled * 5)
+    last_action = "技能/闪避处理 %d 个压力节点，能量 %d/3" % [handled, energy]
+    render_all()
+
+func semantic_reward_action():
+    action_count += 1
+    var reward = closest_active_body(reward_bodies)
+    if reward == null:
+        last_action = "没有可领取的奖励"
+        render_all()
+        return
+    reward.set_meta("done", true)
+    reward.visible = false
+    tower_count += 1
+    wave += 1
+    energy = 3
+    encounter_hp = encounter_max_hp + wave * 4
+    last_action = "选择奖励 %s，进入波次 %d" % [reward.get_meta("label"), wave]
+    render_all()
+
+func semantic_retry():
+    for body in marker_bodies:
+        body.set_meta("done", false)
+        body.visible = true
+    preview_hp = 3
+    energy = 3
+    wave = 1
+    encounter_hp = encounter_max_hp
+    selected_marker = 0
+    last_action = "重试：生命、能量和压力已重置"
+    render_all()
+
+func closest_active_body(values):
+    var best = null
+    var best_distance = 99999.0
+    for body in values:
+        if body.get_meta("done"):
+            continue
+        var distance = body.translation.distance_to(player.translation)
+        if distance < best_distance:
+            best = body
+            best_distance = distance
+    return best
+
+func _sort_body_distance_to_player(a, b):
+    return a.translation.distance_to(player.translation) < b.translation.distance_to(player.translation)
+
 func render_all():
     labels.header.text = "%s 浏览器试玩预览" % [game_name]
     labels.summary.text = "项目 %s  类型 %s  文本键 %d  场景 %d" % [empty_text(project_name), empty_text(game_type_source), text_key_count, scenes.size()]
@@ -2349,6 +2672,8 @@ func render_all():
     labels.coverage.text = "%s\n%s" % [converter_coverage, adapter_status_text()]
 
 func adapter_status_text():
+    if semantic_entities.size() > 0:
+        return "语义物理试玩：生命 %d/3  能量 %d/3  波次 %d  压力节点 %d  最近动作：%s" % [preview_hp, energy, wave, pressure_bodies.size(), last_action]
     if adapter_style == "rpg":
         return "RPG 试玩：遭遇生命 %d/%d  段落 %d  最近动作：%s" % [encounter_hp, encounter_max_hp, wave, last_action]
     if adapter_style == "survivorslike":
@@ -2361,11 +2686,151 @@ func adapter_status_text():
         return "塔防试玩：防御塔 %d  波次 %d  敌军生命 %d  最近动作：%s" % [tower_count, wave, encounter_hp, last_action]
     return "通用试玩：左键/空格检查包内场景，最近动作：%s" % [last_action]
 
+func playable_semantic_entities():
+    var result = []
+    for entity in semantic_entities:
+        if typeof(entity) != TYPE_DICTIONARY:
+            continue
+        var role = str(entity.get("role", ""))
+        if role == "player_start" or role == "feedback" or role == "play_space" or role == "ui_action":
+            continue
+        if is_pressure_container_entity(entity):
+            continue
+        result.append(entity)
+    if result.size() == 0:
+        for entity in semantic_entities:
+            if typeof(entity) == TYPE_DICTIONARY and str(entity.get("role", "")) != "player_start":
+                result.append(entity)
+    return result
+
+func is_pressure_container_entity(entity):
+    if str(entity.get("role", "")) != "pressure_source":
+        return false
+    var node_type = str(entity.get("node_type", "")).to_lower()
+    if node_type.find("body") >= 0 or node_type.find("area") >= 0:
+        return false
+    var node_path = str(entity.get("node_path", ""))
+    if node_path == "":
+        return false
+    for other in semantic_entities:
+        if typeof(other) != TYPE_DICTIONARY or other == entity:
+            continue
+        if str(other.get("role", "")) != "pressure_source":
+            continue
+        var other_path = str(other.get("node_path", ""))
+        if other_path.begins_with(node_path + "/"):
+            return true
+    return false
+
+func configure_world_bounds():
+    var found = false
+    var min_x = 0.0
+    var max_x = 0.0
+    var min_z = 0.0
+    var max_z = 0.0
+    for entity in semantic_entities:
+        if typeof(entity) != TYPE_DICTIONARY:
+            continue
+        var role = str(entity.get("role", ""))
+        if role == "feedback" or role == "ui_action":
+            continue
+        if not entity_has_position(entity):
+            continue
+        var pos = entity_position(entity, Vector3())
+        if not found:
+            min_x = pos.x
+            max_x = pos.x
+            min_z = pos.z
+            max_z = pos.z
+            found = true
+        else:
+            min_x = min(min_x, pos.x)
+            max_x = max(max_x, pos.x)
+            min_z = min(min_z, pos.z)
+            max_z = max(max_z, pos.z)
+    if found:
+        world_min_x = min(world_min_x, min_x - 2.0)
+        world_max_x = max(world_max_x, max_x + 2.0)
+        world_min_z = min(world_min_z, min_z - 2.0)
+        world_max_z = max(world_max_z, max_z + 2.0)
+
+func entity_has_position(entity):
+    if typeof(entity) != TYPE_DICTIONARY:
+        return false
+    var world_position = entity.get("world_position", {})
+    if typeof(world_position) == TYPE_DICTIONARY and world_position.has("x") and world_position.has("z"):
+        return true
+    var local_position = entity.get("local_position", {})
+    return typeof(local_position) == TYPE_DICTIONARY and local_position.has("x") and local_position.has("z")
+
+func world_center_x():
+    return (world_min_x + world_max_x) * 0.5
+
+func world_center_z():
+    return (world_min_z + world_max_z) * 0.5
+
+func world_span_x():
+    return max(1.0, world_max_x - world_min_x)
+
+func world_span_z():
+    return max(1.0, world_max_z - world_min_z)
+
+func semantic_player_position(fallback):
+    for entity in semantic_entities:
+        if typeof(entity) == TYPE_DICTIONARY and str(entity.get("role", "")) == "player_start":
+            return entity_position(entity, fallback)
+    return fallback
+
+func entity_position(entity, fallback):
+    var world_position = entity.get("world_position", {})
+    if typeof(world_position) == TYPE_DICTIONARY:
+        return vector_from_dictionary(world_position, fallback)
+    var local_position = entity.get("local_position", {})
+    if typeof(local_position) == TYPE_DICTIONARY:
+        return vector_from_dictionary(local_position, fallback)
+    return fallback
+
+func vector_from_dictionary(value, fallback):
+    if typeof(value) != TYPE_DICTIONARY:
+        return fallback
+    if not value.has("x") or not value.has("z"):
+        return fallback
+    return Vector3(float(value.get("x", fallback.x)), float(value.get("y", fallback.y)), float(value.get("z", fallback.z)))
+
+func tuning_number(key, fallback):
+    if typeof(runtime_tuning) == TYPE_DICTIONARY and runtime_tuning.has(key):
+        return float(runtime_tuning.get(key, fallback))
+    return fallback
+
+func entity_number(entity, key, fallback):
+    if typeof(entity) != TYPE_DICTIONARY:
+        return fallback
+    var runtime_profile = entity.get("runtime_profile", {})
+    if typeof(runtime_profile) == TYPE_DICTIONARY and runtime_profile.has(key):
+        return float(runtime_profile.get(key, fallback))
+    var movement_profile = entity.get("movement_profile", {})
+    if typeof(movement_profile) == TYPE_DICTIONARY and movement_profile.has(key):
+        return float(movement_profile.get(key, fallback))
+    if entity.has(key):
+        return float(entity.get(key, fallback))
+    return fallback
+
+func semantic_attack_range():
+    var value = tuning_number("attack_range", 3.2)
+    for action in action_bodies:
+        value = max(value, float(action.get_meta("attack_range")))
+    return value
+
 func selected_scene_text():
     if scenes.size() == 0:
         return "未在文件包中发现 .tscn 场景"
     var index = int(clamp(selected_marker, 0, scenes.size() - 1))
     return str(scenes[index])
+
+func selected_scene_text_for_index(index):
+    if scenes.size() == 0:
+        return "Entity %d" % [index + 1]
+    return str(scenes[int(clamp(index, 0, scenes.size() - 1))])
 
 func join_first(values, limit):
     if values.size() == 0:
@@ -2391,6 +2856,18 @@ func _on_inspect_pressed():
 
 func _on_next_scene():
     advance_marker()
+
+func _on_attack_pressed():
+    semantic_primary_action()
+
+func _on_skill_pressed():
+    semantic_skill_action()
+
+func _on_reward_pressed():
+    semantic_reward_action()
+
+func _on_retry_semantic_pressed():
+    semantic_retry()
 
 func add_label(parent, rect, text):
     var label = Label.new()
@@ -2434,6 +2911,17 @@ func marker_color(index):
         Color(0.82, 0.40, 0.48)
     ]
     return colors[index % colors.size()]
+
+func marker_color_for_role(role, index):
+    if role == "pressure_source":
+        return Color(0.88, 0.22, 0.22)
+    if role == "action":
+        return Color(0.55, 0.35, 0.95)
+    if role == "reward":
+        return Color(0.12, 0.72, 0.42)
+    if role == "ui_action":
+        return Color(0.10, 0.62, 0.58)
+    return marker_color(index)
 
 func material(color):
     var mat = SpatialMaterial.new()
@@ -2488,6 +2976,7 @@ func collision_capsule(radius, height):
         var towerdemo2SourceSceneSha256 = "";
         var towerdemo2TextCatalogSha256 = "";
         var sourceFingerprints = new List<PackageWebPreviewSourceFingerprint>();
+        JsonElement? playablePreviewContract = null;
 
         using var archive = ZipFile.OpenRead(packagePath);
         var packageManifestEntry = archive.GetEntry("PACKAGE-MANIFEST.json");
@@ -2583,14 +3072,36 @@ func collision_capsule(radius, height):
             }
         }
 
+        var playablePreviewContractEntry = archive.GetEntry(PlayablePreviewContractFileName);
+        if (playablePreviewContractEntry is not null)
+        {
+            if (playablePreviewContractEntry.Length > MaxPlayablePreviewContractBytes)
+            {
+                throw new InvalidOperationException("Package playable preview contract exceeds the web preview scan budget.");
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(playablePreviewContractEntry.Open());
+                playablePreviewContract = document.RootElement.Clone();
+            }
+            catch (JsonException)
+            {
+                playablePreviewContract = null;
+            }
+        }
+
         var packageSizeBytes = new FileInfo(packagePath).Length;
         var packageSha256 = ComputeFileSha256(packagePath);
         gameTypeId = FirstNonEmpty(
             ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(gameTypeId, gameTypeGuide, gameTypeSource, gameName, projectName),
-            isTowerdemo2 ? "tower-defense" : "",
             ProjectWebPreviewGameTypeCatalog.NormalizeGameTypeToken(gameTypeId));
         var catalogGameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);
         gameTypeGuide = FirstNonEmpty(catalogGameTypeGuide, gameTypeGuide);
+        var hasSupportedTowerdemo2Template = HasSupportedTowerdemo2Template(
+            isTowerdemo2,
+            towerdemo2SourceSceneSha256,
+            towerdemo2TextCatalogSha256);
         var manifest = BuildWebPreviewManifest(
             project,
             fileName,
@@ -2605,7 +3116,8 @@ func collision_capsule(radius, height):
             scenes.Take(80).ToArray(),
             sourceFingerprints.OrderBy(item => item.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
             texts.Count,
-            isTowerdemo2);
+            hasSupportedTowerdemo2Template,
+            playablePreviewContract.HasValue);
 
         return new PackageInfo(
             fileName,
@@ -2622,6 +3134,7 @@ func collision_capsule(radius, height):
             towerdemo2TextCatalogSha256,
             packageSizeBytes,
             packageSha256,
+            playablePreviewContract,
             manifest);
     }
 
@@ -2675,7 +3188,8 @@ func collision_capsule(radius, height):
         IReadOnlyList<string> scenes,
         IReadOnlyList<PackageWebPreviewSourceFingerprint> sourceFingerprints,
         int textKeyCount,
-        bool isTowerdemo2)
+        bool isTowerdemo2,
+        bool hasPlayablePreviewContract)
     {
         var detectedTemplates = new List<string>();
         var detectedCapabilities = new List<string>
@@ -2705,7 +3219,12 @@ func collision_capsule(radius, height):
             detectedCapabilities.Add("towerdemo2_template_subset");
         }
 
-        var contract = BuildWebPreviewContract(isTowerdemo2 ? Towerdemo2Converter : GenericGodotPackageConverter, mainScene, scenes, textKeyCount);
+        if (hasPlayablePreviewContract)
+        {
+            detectedCapabilities.Add("playable_preview_contract");
+        }
+
+        var contract = BuildWebPreviewContract(isTowerdemo2 ? Towerdemo2Converter : GenericGodotPackageConverter, mainScene, scenes, textKeyCount, hasPlayablePreviewContract);
 
         return new PackageWebPreviewManifest(
             PreviewManifestSchemaVersion,
@@ -2732,7 +3251,8 @@ func collision_capsule(radius, height):
         ProjectWebPreviewConverterDescriptor converter,
         string? mainScene,
         IReadOnlyList<string> scenes,
-        int textKeyCount)
+        int textKeyCount,
+        bool hasPlayablePreviewContract)
     {
         var dataSources = new List<string>
         {
@@ -2752,6 +3272,11 @@ func collision_capsule(radius, height):
         if (textKeyCount > 0)
         {
             dataSources.Add(Towerdemo2Converter.TextCatalogPath);
+        }
+
+        if (hasPlayablePreviewContract)
+        {
+            dataSources.Add(PlayablePreviewContractFileName);
         }
 
         if (string.Equals(converter.Id, Towerdemo2Converter.Id, StringComparison.Ordinal))
@@ -3078,8 +3603,7 @@ func collision_capsule(radius, height):
                 converter is null ||
                 !string.Equals(converterId, converter.Id, StringComparison.Ordinal) ||
                 !string.Equals(converterCompatibilityId, converter.CompatibilityId, StringComparison.Ordinal) ||
-                !string.Equals(sourceSceneSha256, converter.SourceSceneSha256, StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(textCatalogSha256, converter.TextCatalogSha256, StringComparison.OrdinalIgnoreCase))
+                !IsPreviewFingerprintCompatible(converter, sourceSceneSha256, textCatalogSha256, isLegacyPreview))
             {
                 return false;
             }
@@ -3148,6 +3672,24 @@ func collision_capsule(radius, height):
         }
     }
 
+    private static bool IsPreviewFingerprintCompatible(
+        ProjectWebPreviewConverterDescriptor converter,
+        string sourceSceneSha256,
+        string textCatalogSha256,
+        bool isLegacyPreview)
+    {
+        if (!isLegacyPreview &&
+            string.Equals(converter.Id, Towerdemo2Converter.Id, StringComparison.Ordinal) &&
+            !string.IsNullOrWhiteSpace(sourceSceneSha256) &&
+            !string.IsNullOrWhiteSpace(textCatalogSha256))
+        {
+            return true;
+        }
+
+        return string.Equals(sourceSceneSha256, converter.SourceSceneSha256, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(textCatalogSha256, converter.TextCatalogSha256, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool HasExpectedWebExport(string webRoot)
     {
         return File.Exists(Path.Combine(webRoot, "index.html")) &&
@@ -3196,9 +3738,655 @@ func collision_capsule(radius, height):
                     html,
                     "(\\n\\s*)var\\s+engine\\s*=\\s*new\\s+Engine\\(GODOT_CONFIG\\);",
                     $"$1window.__PHASEA_WEB_PREVIEW_ASSET_VERSION = '{assetVersion}';$1var engine = new Engine(GODOT_CONFIG);",
-                    RegexOptions.None,
-                    TimeSpan.FromSeconds(1));
+                RegexOptions.None,
+                TimeSpan.FromSeconds(1));
             }
+        }
+
+        if (!html.Contains("phasea-preview-fallback", StringComparison.Ordinal))
+        {
+            html = html.Replace(
+                "</body>",
+                $$$"""
+	<div id="phasea-preview-fallback" aria-live="polite">
+		<style>
+			#phasea-preview-fallback{display:none;position:fixed;inset:0;z-index:10000;background:#0b1020;color:#f8fafc;font-family:'Microsoft YaHei','Segoe UI',sans-serif}
+			#phasea-preview-fallback *{box-sizing:border-box}
+			#phasea-preview-fallback .phasea-shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) 320px;background:radial-gradient(circle at 30% 20%,rgba(57,120,255,.22),transparent 28%),linear-gradient(145deg,#101827,#0b1020 58%,#152018)}
+			#phasea-preview-fallback .phasea-stage{position:relative;min-height:100vh;overflow:hidden;border-right:1px solid rgba(255,255,255,.12)}
+			#phasea-preview-fallback .phasea-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:64px 64px;opacity:.36}
+			#phasea-preview-fallback .phasea-node{position:absolute;width:40px;height:40px;border-radius:50%;border:2px solid #93c5fd;background:#1d4ed8;color:white;cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 0 24px rgba(96,165,250,.38)}
+			#phasea-preview-fallback .phasea-node.role-pressure_source{background:#b91c1c;border-color:#fecaca;box-shadow:0 0 24px rgba(248,113,113,.48)}
+			#phasea-preview-fallback .phasea-node.role-action{background:#7c3aed;border-color:#ddd6fe;box-shadow:0 0 24px rgba(167,139,250,.46)}
+			#phasea-preview-fallback .phasea-node.role-reward{background:#047857;border-color:#a7f3d0;box-shadow:0 0 24px rgba(52,211,153,.46)}
+			#phasea-preview-fallback .phasea-node.role-ui_action{background:#0f766e;border-color:#99f6e4}
+			#phasea-preview-fallback .phasea-node.active{border-color:#fbbf24;background:#b45309;box-shadow:0 0 28px rgba(251,191,36,.55)}
+			#phasea-preview-fallback .phasea-node.done{border-color:#86efac;background:#15803d}
+			#phasea-preview-fallback .phasea-player{position:absolute;width:34px;height:34px;border-radius:50%;background:#67e8f9;border:3px solid #ecfeff;transform:translate(-50%,-50%);box-shadow:0 0 28px rgba(103,232,249,.9);transition:left .08s linear,top .08s linear}
+			#phasea-preview-fallback .phasea-player:after{content:'';position:absolute;left:9px;top:6px;width:10px;height:10px;border-radius:50%;background:#0f172a}
+			#phasea-preview-fallback .phasea-hud{position:absolute;left:24px;top:22px;right:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+			#phasea-preview-fallback .phasea-pill{border:1px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(15,23,42,.76);padding:8px 10px;font-size:13px;line-height:1.25}
+			#phasea-preview-fallback .phasea-side{padding:20px;background:rgba(15,23,42,.88);display:flex;flex-direction:column;gap:14px;overflow:auto}
+			#phasea-preview-fallback h1{margin:0;font-size:20px;line-height:1.25}
+			#phasea-preview-fallback p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.55}
+			#phasea-preview-fallback .phasea-meter{height:10px;border-radius:8px;background:#1f2937;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+			#phasea-preview-fallback .phasea-meter span{display:block;height:100%;background:#22c55e;width:0}
+			#phasea-preview-fallback .phasea-action-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+			#phasea-preview-fallback .phasea-action-list:empty{display:none}
+			#phasea-preview-fallback .phasea-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+			#phasea-preview-fallback button.phasea-btn{height:38px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#2563eb;color:white;cursor:pointer;font-size:13px}
+			#phasea-preview-fallback button.phasea-btn.secondary{background:rgba(255,255,255,.06)}
+			#phasea-preview-fallback .phasea-pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,40px);gap:6px;align-self:center}
+			#phasea-preview-fallback .phasea-pad button{border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:white;cursor:pointer}
+			#phasea-preview-fallback .phasea-log{min-height:88px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(2,6,23,.55);padding:10px;color:#dbeafe;font-size:12px;line-height:1.5}
+			#phasea-preview-fallback.minimized{inset:auto 18px 18px auto;width:270px;height:auto;border:1px solid rgba(255,255,255,.2);border-radius:8px;overflow:hidden}
+			#phasea-preview-fallback.minimized .phasea-stage,#phasea-preview-fallback.minimized .phasea-meter,#phasea-preview-fallback.minimized .phasea-pad,#phasea-preview-fallback.minimized .phasea-log,#phasea-preview-fallback.minimized .phasea-actions .secondary{display:none}
+			#phasea-preview-fallback.minimized .phasea-shell{min-height:auto;display:block}
+			#phasea-preview-fallback.minimized .phasea-side{padding:14px}
+			@media (max-width: 820px){#phasea-preview-fallback .phasea-shell{grid-template-columns:1fr;grid-template-rows:minmax(360px,58vh) auto}#phasea-preview-fallback .phasea-stage{min-height:360px;border-right:0;border-bottom:1px solid rgba(255,255,255,.12)}}
+		</style>
+		<div class="phasea-shell">
+			<div id="phasea-preview-stage" class="phasea-stage">
+				<div class="phasea-grid"></div>
+				<div class="phasea-hud">
+					<div id="phasea-preview-title" class="phasea-pill">通用浏览器试玩</div>
+					<div id="phasea-preview-objective" class="phasea-pill">读取包数据中...</div>
+					<div id="phasea-preview-stats" class="phasea-pill">进度 0%</div>
+				</div>
+			</div>
+			<aside class="phasea-side">
+				<h1 id="phasea-preview-name">通用浏览器试玩</h1>
+				<p id="phasea-preview-summary">正在读取文件包信息...</p>
+				<div class="phasea-meter"><span id="phasea-preview-meter"></span></div>
+				<div id="phasea-preview-action-list" class="phasea-action-list"></div>
+				<div class="phasea-actions">
+					<button id="phasea-preview-interact" class="phasea-btn">互动</button>
+					<button id="phasea-preview-next" class="phasea-btn secondary">下一个场景</button>
+					<button id="phasea-preview-reset" class="phasea-btn secondary">重置</button>
+					<button id="phasea-preview-minimize" class="phasea-btn secondary">缩小</button>
+				</div>
+				<div class="phasea-pad" aria-label="Movement controls">
+					<span></span><button data-phasea-move="0,-1">W</button><span></span>
+					<button data-phasea-move="-1,0">A</button><button data-phasea-action="interact">●</button><button data-phasea-move="1,0">D</button>
+					<span></span><button data-phasea-move="0,1">S</button><span></span>
+				</div>
+				<p>WASD 移动，鼠标点击地面移动，空格/互动键检查最近场景节点。数字 1/2/3 可快速选择包内场景。</p>
+				<div id="phasea-preview-log" class="phasea-log">等待包数据...</div>
+			</aside>
+		</div>
+	</div>
+	<script>
+	(function () {
+		const version = "{{{assetVersion}}}";
+		const panel = document.getElementById("phasea-preview-fallback");
+		const stage = document.getElementById("phasea-preview-stage");
+		const title = document.getElementById("phasea-preview-title");
+		const name = document.getElementById("phasea-preview-name");
+		const summary = document.getElementById("phasea-preview-summary");
+		const objective = document.getElementById("phasea-preview-objective");
+		const stats = document.getElementById("phasea-preview-stats");
+		const meter = document.getElementById("phasea-preview-meter");
+		const log = document.getElementById("phasea-preview-log");
+		const actionList = document.getElementById("phasea-preview-action-list");
+		const interactButton = document.getElementById("phasea-preview-interact");
+		const nextButton = document.getElementById("phasea-preview-next");
+		const resetButton = document.getElementById("phasea-preview-reset");
+		const minimizeButton = document.getElementById("phasea-preview-minimize");
+		let scenes = [];
+		let nodes = [];
+		let selected = 0;
+		let dataLoaded = null;
+		let previewContract = null;
+		let previewSemanticAdapter = null;
+		let roleInteractions = {};
+		let stateBounds = {};
+		let player = { x: 50, y: 64 };
+		let progress = 0;
+		let energy = 3;
+		let actions = 0;
+		let phase = 1;
+		let runState = { score: 0, pressure: 0, rewards: 0, hp: 3 };
+		let semanticActions = [];
+		let lastAction = "inspect";
+		let started = false;
+		let wave = 1;
+		let lastPressureTick = 0;
+		let message = "移动到发光节点并互动，验证这个包的可试玩路径。";
+		function esc(value) {
+			return String(value || "").replace(/[&<>"']/g, function (ch) {
+				return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch];
+			});
+		}
+		function clamp(value, min, max) {
+			return Math.max(min, Math.min(max, value));
+		}
+		function distanceToPlayer(node) {
+			const dx = node.x - player.x;
+			const dy = node.y - player.y;
+			return Math.sqrt(dx * dx + dy * dy);
+		}
+		function sceneLabel(path, index) {
+			const raw = String(path || "Scene " + (index + 1));
+			const file = raw.split("/").pop() || raw;
+			return file.replace(/\.tscn$/i, "") || ("Scene " + (index + 1));
+		}
+		function makeNodes() {
+			const adapterEntities = previewSemanticAdapter && Array.isArray(previewSemanticAdapter.entities) ? previewSemanticAdapter.entities : [];
+			const contractEntities = previewContract && Array.isArray(previewContract.entities) ? previewContract.entities : [];
+			const sourceEntities = adapterEntities.length ? adapterEntities : contractEntities;
+			const source = sourceEntities.length
+				? sourceEntities.slice(0, 12)
+				: (scenes.length ? scenes.slice(0, 8) : ["Package Root", "Main Scene", "Interaction Loop"]);
+			nodes = source.map(function (item, index) {
+				const scene = typeof item === "string" ? item : (item.scene || item.path || item.id || ("Scene " + (index + 1)));
+				const angle = (Math.PI * 2 * index / source.length) - Math.PI / 2;
+				const ring = index % 2 === 0 ? 31 : 22;
+				return {
+					scene: scene,
+					label: typeof item === "string" ? sceneLabel(scene, index) : (item.label || sceneLabel(scene, index)),
+					role: typeof item === "string" ? "scene_marker" : (item.role || "contract_entity"),
+					objective: typeof item === "string" ? "Inspect this package scene." : (item.objective || "Inspect this contract entity."),
+					x: typeof item === "string" ? clamp(50 + Math.cos(angle) * ring, 12, 88) : clamp(Number(item.x || (50 + Math.cos(angle) * ring)), 12, 88),
+					y: typeof item === "string" ? clamp(50 + Math.sin(angle) * ring, 18, 82) : clamp(Number(item.y || (50 + Math.sin(angle) * ring)), 18, 82),
+					done: false
+				};
+			});
+		}
+		function formatActionLabel(action) {
+			const value = String(action || "");
+			if (value === "basic_attack") return "攻击";
+			if (value === "skill_or_roll") return "技能/闪避";
+			if (value === "choice") return "选择奖励";
+			if (value === "start") return "开始";
+			if (value === "retry") return "重试";
+			if (value === "interact") return "互动";
+			if (value === "select_scene") return "选择场景";
+			return value.replace(/_/g, " ") || "动作";
+		}
+		function initializeSemanticActions(adapter, contract) {
+			actionList.innerHTML = "";
+			const adapterActions = adapter && Array.isArray(adapter.input_actions) ? adapter.input_actions : [];
+			const contractActions = contract && Array.isArray(contract.input_actions) ? contract.input_actions : [];
+			const source = adapterActions.length ? adapterActions : contractActions;
+			const seen = {};
+			semanticActions = source.filter(function (item) {
+				if (!item || !item.action || seen[item.action] || item.action === "move") return false;
+				seen[item.action] = true;
+				return true;
+			}).slice(0, 6);
+			semanticActions.forEach(function (item) {
+				const button = document.createElement("button");
+				button.className = "phasea-btn";
+				button.textContent = formatActionLabel(item.action);
+				button.title = Array.isArray(item.inputs) ? item.inputs.join(" / ") : item.action;
+				button.onclick = function () { semanticAction(item.action); };
+				actionList.appendChild(button);
+			});
+		}
+		function findNodeForAction(action) {
+			const normalized = String(action || "").toLowerCase();
+			const byRole = function (role) { return nodes.find(function (node) { return node.role === role && !node.done; }) || nodes.find(function (node) { return node.role === role; }); };
+			const byLabel = function (pattern) { return nodes.find(function (node) { return pattern.test(String(node.label || "")); }); };
+			if (normalized === "basic_attack") return byLabel(/attack|weapon|hit|slash|shoot/i) || byRole("action") || byRole("pressure_source");
+			if (normalized === "skill_or_roll") return byLabel(/skill|cast|roll|dash|dodge/i) || byRole("action");
+			if (normalized === "choice") return byRole("reward") || byLabel(/reward|choice|door|shop|chest/i);
+			if (normalized === "start") return byLabel(/start|begin|play/i) || byRole("ui_action") || byRole("entry_scene");
+			if (normalized === "retry") return byLabel(/retry|restart/i) || byRole("ui_action");
+			if (normalized === "select_scene") return nodes[(selected + 1) % Math.max(1, nodes.length)];
+			return byRole("action") || byRole("ui_action") || nodes[selected];
+		}
+		function findClosestNode(predicate) {
+			let best = null;
+			let bestDistance = Number.MAX_VALUE;
+			nodes.forEach(function (node) {
+				if (predicate && !predicate(node)) return;
+				const distance = distanceToPlayer(node);
+				if (distance < bestDistance) {
+					best = node;
+					bestDistance = distance;
+				}
+			});
+			return best ? { node: best, distance: bestDistance } : null;
+		}
+		function initializeContractRules(contract, adapter) {
+			roleInteractions = {};
+			stateBounds = {};
+			const stateModel = adapter && Array.isArray(adapter.state_model) && adapter.state_model.length ? adapter.state_model : (contract && Array.isArray(contract.state_model) ? contract.state_model : []);
+			const interactions = adapter && Array.isArray(adapter.role_interactions) && adapter.role_interactions.length ? adapter.role_interactions : (contract && Array.isArray(contract.role_interactions) ? contract.role_interactions : []);
+			if (Array.isArray(stateModel)) {
+				stateModel.forEach(function (field) {
+					if (!field || !field.id) return;
+					stateBounds[field.id] = { min: Number(field.min || 0), max: Number(field.max || 999) };
+					const initial = Number(field.initial || 0);
+					if (field.id === "energy") energy = initial;
+					else if (field.id === "phase") phase = initial;
+					else runState[field.id] = initial;
+				});
+			}
+			if (Array.isArray(interactions)) {
+				interactions.forEach(function (rule) {
+					if (rule && rule.role) roleInteractions[rule.role] = rule;
+				});
+			}
+		}
+		function nearestNode() {
+			if (!nodes.length) return null;
+			let best = nodes[0];
+			let bestDistance = Number.MAX_VALUE;
+			nodes.forEach(function (node, index) {
+				const dx = node.x - player.x;
+				const dy = node.y - player.y;
+				const distance = Math.sqrt(dx * dx + dy * dy);
+				if (distance < bestDistance) {
+					best = node;
+					bestDistance = distance;
+					selected = index;
+				}
+			});
+			return { node: best, distance: bestDistance };
+		}
+		function render() {
+			if (!dataLoaded) return;
+			document.querySelectorAll("#phasea-preview-fallback .phasea-node,#phasea-preview-fallback .phasea-player").forEach(function (item) { item.remove(); });
+			nodes.forEach(function (node, index) {
+				const button = document.createElement("button");
+				button.className = "phasea-node role-" + String(node.role || "entity").replace(/[^a-z0-9_-]/gi, "_") + (index === selected ? " active" : "") + (node.done ? " done" : "");
+				button.style.left = node.x + "%";
+				button.style.top = node.y + "%";
+				button.title = node.scene;
+				button.textContent = String(index + 1);
+				button.onclick = function () {
+					selected = index;
+					player.x = clamp(node.x - 5, 8, 92);
+					player.y = clamp(node.y + 4, 12, 88);
+					message = "已接近 " + node.label + "，点击互动继续。";
+					render();
+				};
+				stage.appendChild(button);
+			});
+			const avatar = document.createElement("div");
+			avatar.className = "phasea-player";
+			avatar.style.left = player.x + "%";
+			avatar.style.top = player.y + "%";
+			stage.appendChild(avatar);
+			const doneCount = nodes.filter(function (node) { return node.done; }).length;
+			const percent = nodes.length ? Math.round(doneCount / nodes.length * 100) : progress;
+			title.textContent = (dataLoaded.game_name || dataLoaded.project_name || "Godot Package") + " · 语义试玩层";
+			objective.textContent = doneCount >= nodes.length ? "目标完成：所有场景节点已验证" : "目标：移动并互动 " + doneCount + "/" + nodes.length;
+			stats.textContent = "进度 " + percent + "% · 波次 " + wave + " · 动作 " + formatActionLabel(lastAction) + " · 能量 " + energy + " · 压力 " + runState.pressure + " · 生命 " + runState.hp + " · 奖励 " + runState.rewards + " · 分数 " + runState.score;
+			meter.style.width = percent + "%";
+			log.innerHTML = esc(message) + "<br>当前节点：" + esc(nodes[selected] ? nodes[selected].label : "package root") + "<br>节点角色：" + esc(nodes[selected] ? nodes[selected].role : "none") + "<br>操作次数：" + actions;
+		}
+		function initialize(data) {
+			dataLoaded = data;
+			const manifest = data.web_preview_manifest || {};
+			previewContract = data.playable_preview_contract || null;
+			previewSemanticAdapter = data.semantic_adapter || null;
+			initializeContractRules(previewContract, previewSemanticAdapter);
+			scenes = Array.isArray(manifest.scenes) ? manifest.scenes : [];
+			makeNodes();
+			initializeSemanticActions(previewSemanticAdapter, previewContract);
+			const semanticProfile = previewSemanticAdapter && previewSemanticAdapter.semantic_profile ? previewSemanticAdapter.semantic_profile : {};
+			name.textContent = semanticProfile.gameplay_label || data.game_name || data.project_name || "Godot Package";
+			const objectives = previewContract && Array.isArray(previewContract.objectives) ? previewContract.objectives : [];
+			if (semanticProfile.first_loop_path && semanticProfile.first_loop_path.length) {
+				message = "语义试玩路径：" + semanticProfile.first_loop_path.map(function (step) { return step.label || step.role || step.action; }).slice(0, 5).join(" → ");
+			} else if (objectives.length && objectives[0].label) {
+				message = objectives[0].label;
+			}
+			summary.textContent = previewSemanticAdapter
+				? "这是通用试玩基座叠加项目语义适配器生成的浏览器试玩层；不依赖项目名称硬编码。"
+				: previewContract
+				? "这是基于 playable-preview-contract.json 生成的通用试玩层；不依赖项目名称，也不使用专用游戏转换器。"
+				: "这是基于包 manifest 和场景清单生成的通用试玩层；不依赖项目名称，也不使用专用游戏转换器。";
+			panel.style.display = "block";
+			render();
+		}
+		function move(dx, dy) {
+			player.x = clamp(player.x + dx * 5.5, 7, 93);
+			player.y = clamp(player.y + dy * 5.5, 10, 90);
+			const near = nearestNode();
+			message = near && near.distance < 13 ? "靠近 " + near.node.label + "，可以互动。" : "移动中：寻找下一个可检查节点。";
+			render();
+		}
+		function interact() {
+			if (!nodes.length) return;
+			const near = nearestNode();
+			actions += 1;
+			lastAction = "interact";
+			if (near && near.distance <= 16) {
+				near.node.done = true;
+				progress += 1;
+				if (!roleInteractions[near.node.role]) {
+					energy = Math.max(0, energy - 1);
+				}
+				message = applyRoleInteraction(near.node);
+				if (energy === 0) {
+					energy = 3;
+					phase += 1;
+					message += " 能量恢复，进入下一阶段。";
+				}
+			} else {
+				message = "距离场景节点太远，先移动到发光节点附近。";
+			}
+			if (nodes.every(function (node) { return node.done; })) {
+				message = "试玩闭环完成：移动、选择场景、互动和进度反馈均可用。";
+			}
+			render();
+		}
+		function semanticAction(action) {
+			if (!nodes.length) return;
+			const normalized = String(action || "").toLowerCase();
+			if (normalized === "basic_attack") {
+				resolveBasicAttack();
+				return;
+			}
+			if (normalized === "skill_or_roll") {
+				resolveSkillOrRoll();
+				return;
+			}
+			if (normalized === "choice") {
+				resolveChoice();
+				return;
+			}
+			if (normalized === "start" || normalized === "retry") {
+				resolveStartOrRetry(normalized);
+				return;
+			}
+			const node = findNodeForAction(action);
+			if (!node) {
+				message = "没有找到可匹配的语义动作节点：" + formatActionLabel(action) + "。";
+				render();
+				return;
+			}
+			selected = Math.max(0, nodes.indexOf(node));
+			player.x = clamp(node.x - 4, 8, 92);
+			player.y = clamp(node.y + 3, 12, 88);
+			node.done = true;
+			actions += 1;
+			lastAction = action;
+			message = formatActionLabel(action) + " → " + applyRoleInteraction(node);
+			if (nodes.every(function (item) { return item.done; })) {
+				message += " 试玩闭环完成。";
+			}
+			render();
+		}
+		function resolveBasicAttack() {
+			const target = findClosestNode(function (node) { return !node.done && (node.role === "pressure_source" || node.role === "challenge"); }) ||
+				findClosestNode(function (node) { return !node.done && node.role === "action"; });
+			actions += 1;
+			lastAction = "basic_attack";
+			if (!target) {
+				message = "攻击挥空：当前没有可处理的压力源。";
+				render();
+				return;
+			}
+			selected = Math.max(0, nodes.indexOf(target.node));
+			player.x = clamp(target.node.x - 6, 8, 92);
+			player.y = clamp(target.node.y + 4, 12, 88);
+			if (target.distance <= 28 || target.node.role === "action") {
+				target.node.done = true;
+				runState.score += 3;
+				runState.pressure = Math.max(0, runState.pressure - 1);
+				message = "攻击命中 " + target.node.label + "，压力下降。";
+			} else {
+				runState.pressure += 1;
+				message = "攻击距离不足，" + target.node.label + " 继续逼近。";
+			}
+			render();
+		}
+		function resolveSkillOrRoll() {
+			actions += 1;
+			lastAction = "skill_or_roll";
+			energy = Math.max(0, energy - 1);
+			const targets = nodes
+				.filter(function (node) { return !node.done && (node.role === "pressure_source" || node.role === "challenge" || node.role === "action"); })
+				.sort(function (a, b) { return distanceToPlayer(a) - distanceToPlayer(b); })
+				.slice(0, energy > 0 ? 2 : 1);
+			if (!targets.length) {
+				player.x = clamp(player.x + 8, 7, 93);
+				message = "技能/闪避调整站位，当前没有可命中的压力源。";
+				render();
+				return;
+			}
+			targets.forEach(function (node) {
+				node.done = true;
+				runState.score += 2;
+			});
+			runState.pressure = Math.max(0, runState.pressure - targets.length);
+			selected = Math.max(0, nodes.indexOf(targets[0]));
+			message = "技能/闪避处理 " + targets.map(function (node) { return node.label; }).join("、") + "，压力被压低。";
+			render();
+		}
+		function resolveChoice() {
+			const reward = findClosestNode(function (node) { return !node.done && node.role === "reward"; }) || findClosestNode(function (node) { return !node.done && /reward|door|choice|chest/i.test(node.label); });
+			actions += 1;
+			lastAction = "choice";
+			if (!reward) {
+				message = "当前没有可领取的奖励选择。";
+				render();
+				return;
+			}
+			reward.node.done = true;
+			selected = Math.max(0, nodes.indexOf(reward.node));
+			runState.rewards += 1;
+			runState.score += 4;
+			energy = 3;
+			phase += 1;
+			wave += 1;
+			message = "选择奖励 " + reward.node.label + "，能量恢复并进入波次 " + wave + "。";
+			render();
+		}
+		function resolveStartOrRetry(action) {
+			actions += 1;
+			lastAction = action;
+			if (action === "retry") {
+				reset();
+				started = true;
+				message = "重试后重新开始，压力和生命已恢复。";
+				render();
+				return;
+			}
+			started = true;
+			const startNode = findNodeForAction("start");
+			if (startNode) {
+				startNode.done = true;
+				selected = Math.max(0, nodes.indexOf(startNode));
+			}
+			message = "开始试玩：压力源会推进，使用攻击、技能/闪避和奖励选择完成闭环。";
+			render();
+		}
+		function tickPressureSources() {
+			if (!dataLoaded || panel.style.display === "none" || panel.classList.contains("minimized")) return;
+			if (!started) return;
+			const now = Date.now();
+			if (now - lastPressureTick < 1100) return;
+			lastPressureTick = now;
+			let active = 0;
+			nodes.forEach(function (node) {
+				if (node.done || node.role !== "pressure_source") return;
+				active += 1;
+				const dx = player.x - node.x;
+				const dy = player.y - node.y;
+				const length = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+				node.x = clamp(node.x + dx / length * 1.8, 8, 92);
+				node.y = clamp(node.y + dy / length * 1.8, 12, 88);
+				if (distanceToPlayer(node) < 12) {
+					runState.pressure += 1;
+					runState.hp = Math.max(1, runState.hp - 1);
+					message = node.label + " 逼近造成压力，使用攻击或技能处理。";
+				}
+			});
+			if (active > 0) {
+				runState.pressure = clamp(runState.pressure + 0.15, 0, 9);
+				render();
+			}
+		}
+		function applyStateDelta(delta) {
+			if (!delta) return;
+			Object.keys(delta).forEach(function (key) {
+				const amount = Number(delta[key] || 0);
+				const bounds = stateBounds[key] || { min: 0, max: 999 };
+				if (key === "energy") {
+					energy = clamp(energy + amount, bounds.min, bounds.max);
+				} else if (key === "phase") {
+					phase = clamp(phase + amount, bounds.min, bounds.max);
+				} else {
+					runState[key] = clamp(Number(runState[key] || 0) + amount, bounds.min, bounds.max);
+				}
+			});
+			if (runState.pressure >= 3 && runState.hp > 1) {
+				runState.hp -= 1;
+			}
+		}
+		function formatContractFeedback(template, node) {
+			return String(template || "已执行 " + node.role + "：" + node.label)
+				.replace(/\{label\}/g, node.label || "节点")
+				.replace(/\{role\}/g, node.role || "entity")
+				.replace(/\{phase\}/g, String(phase))
+				.replace(/\{hp\}/g, String(runState.hp));
+		}
+		function applyRoleInteraction(node) {
+			const label = node.label || "节点";
+			const contractRule = roleInteractions[node.role];
+			if (contractRule) {
+				applyStateDelta(contractRule.state_delta || {});
+				return formatContractFeedback(contractRule.feedback, node);
+			}
+			if (node.role === "player_start") {
+				runState.score += 1;
+				return "已定位可控角色 " + label + "，移动与交互链路就绪。";
+			}
+			if (node.role === "pressure_source" || node.role === "challenge") {
+				runState.pressure += 1;
+				runState.score += 2;
+				if (runState.pressure >= 3) {
+					runState.hp = Math.max(1, runState.hp - 1);
+					return "处理压力源 " + label + "，压力升高但仍可继续；当前生命 " + runState.hp + "。";
+				}
+				return "遭遇 " + label + "，完成一次通用战斗/压力验证。";
+			}
+			if (node.role === "action") {
+				runState.score += 2;
+				runState.pressure = Math.max(0, runState.pressure - 1);
+				return "触发动作节点 " + label + "，压力下降并获得反馈。";
+			}
+			if (node.role === "reward") {
+				runState.rewards += 1;
+				runState.score += 3;
+				energy = 3;
+				phase += 1;
+				return "领取奖励 " + label + "，能量恢复并进入阶段 " + phase + "。";
+			}
+			if (node.role === "ui_action") {
+				runState.score += 1;
+				if (label.toLowerCase().indexOf("retry") >= 0) {
+					runState.hp = 3;
+					runState.pressure = 0;
+					return "触发重试入口 " + label + "，生命和压力已重置。";
+				}
+				return "触发界面动作 " + label + "，流程按钮可响应。";
+			}
+			if (node.role === "feedback") {
+				return "读取反馈节点 " + label + "，HUD/日志信息可追踪。";
+			}
+			if (node.role === "transition") {
+				phase += 1;
+				return "通过转场节点 " + label + "，进入阶段 " + phase + "。";
+			}
+			if (node.role === "play_space") {
+				return "确认可导航空间 " + label + "，移动区域可验证。";
+			}
+			if (node.role === "buildable_unit") {
+				runState.score += 1;
+				return "检查可构筑/防御单位 " + label + "，构筑类节点可被通用契约表达。";
+			}
+			runState.score += 1;
+			return "已完成 " + label + " 的通用互动验证：" + node.objective;
+		}
+		function selectNode(index) {
+			if (!nodes.length) return;
+			selected = clamp(index, 0, nodes.length - 1);
+			player.x = clamp(nodes[selected].x - 5, 8, 92);
+			player.y = clamp(nodes[selected].y + 4, 12, 88);
+			message = "已选择 " + nodes[selected].label + "。";
+			render();
+		}
+		function reset() {
+			player = { x: 50, y: 64 };
+			progress = 0;
+			energy = 3;
+			actions = 0;
+			phase = 1;
+			runState = { score: 0, pressure: 0, rewards: 0, hp: 3 };
+			lastAction = "reset";
+			started = false;
+			wave = 1;
+			lastPressureTick = 0;
+			initializeContractRules(previewContract, previewSemanticAdapter);
+			selected = 0;
+			nodes.forEach(function (node) { node.done = false; });
+			message = "已重置，移动到发光节点并互动。";
+			render();
+		}
+		stage.addEventListener("click", function (event) {
+			if (event.target.classList.contains("phasea-node")) return;
+			const rect = stage.getBoundingClientRect();
+			player.x = clamp((event.clientX - rect.left) / rect.width * 100, 7, 93);
+			player.y = clamp((event.clientY - rect.top) / rect.height * 100, 10, 90);
+			const near = nearestNode();
+			message = near && near.distance < 13 ? "已移动到 " + near.node.label + " 附近。" : "已移动到目标位置。";
+			render();
+		});
+		interactButton.onclick = interact;
+		nextButton.onclick = function () { selectNode((selected + 1) % Math.max(1, nodes.length)); };
+		resetButton.onclick = reset;
+		minimizeButton.onclick = function () {
+			panel.classList.toggle("minimized");
+			minimizeButton.textContent = panel.classList.contains("minimized") ? "展开" : "缩小";
+		};
+		document.querySelectorAll("[data-phasea-move]").forEach(function (button) {
+			const parts = button.getAttribute("data-phasea-move").split(",").map(Number);
+			button.onclick = function () { move(parts[0], parts[1]); };
+		});
+		document.querySelectorAll("[data-phasea-action='interact']").forEach(function (button) {
+			button.onclick = interact;
+		});
+		document.addEventListener("keydown", function (event) {
+			if (panel.style.display === "none") return;
+			const key = event.key.toLowerCase();
+			if (["w", "a", "s", "d", "q", "e", "r", "f", " ", "enter", "1", "2", "3"].indexOf(key) >= 0) {
+				event.preventDefault();
+			}
+			if (key === "w") move(0, -1);
+			else if (key === "s") move(0, 1);
+			else if (key === "a") move(-1, 0);
+			else if (key === "d") move(1, 0);
+			else if (key === " " || key === "enter") interact();
+			else if (key === "f") semanticAction("basic_attack");
+			else if (key === "q") semanticAction("skill_or_roll");
+			else if (key === "e") semanticAction("choice");
+			else if (key === "r") semanticAction("retry");
+			else if (key === "1") selectNode(0);
+			else if (key === "2") selectNode(1);
+			else if (key === "3") selectNode(2);
+		});
+		setInterval(tickPressureSources, 250);
+		setTimeout(function () {
+			fetch("preview-package-data.json?v=" + encodeURIComponent(version), { cache: "no-store" })
+				.then(function (response) { return response.ok ? response.json() : null; })
+				.then(function (data) {
+					if (!data || !data.converter_id || data.converter_id.indexOf("godot-package-") !== 0) return;
+					if (data.semantic_adapter) return;
+					initialize(data);
+				})
+				.catch(function () {});
+		}, 1200);
+	}());
+	</script>
+</body>
+""",
+                StringComparison.Ordinal);
         }
 
         if (!html.Contains($"index.js?v={assetVersion}", StringComparison.Ordinal) ||
@@ -3257,10 +4445,43 @@ const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-
                 StringComparison.Ordinal);
         }
 
+        if (!script.Contains("phaseAGetServiceWorker", StringComparison.Ordinal) &&
+            (script.Contains("navigator.serviceWorker", StringComparison.Ordinal) ||
+             script.Contains("\"serviceWorker\"in navigator", StringComparison.Ordinal)))
+        {
+            script = script.Replace(
+                "var GodotPWA=",
+                """
+function phaseAGetServiceWorker() {
+	try {
+		return ("serviceWorker" in navigator) ? navigator.serviceWorker : null;
+	} catch (e) {
+		return null;
+	}
+}
+var GodotPWA=
+""",
+                StringComparison.Ordinal);
+            script = script.Replace(
+                "function _godot_js_pwa_cb(p_update_cb){if(\"serviceWorker\"in navigator){const cb=GodotRuntime.get_func(p_update_cb);navigator.serviceWorker.getRegistration().then(GodotPWA.updateState.bind(null,cb))}}",
+                "function _godot_js_pwa_cb(p_update_cb){const phaseAServiceWorker=phaseAGetServiceWorker();if(phaseAServiceWorker){const cb=GodotRuntime.get_func(p_update_cb);phaseAServiceWorker.getRegistration().then(GodotPWA.updateState.bind(null,cb))}}",
+                StringComparison.Ordinal);
+            script = script.Replace(
+                "function _godot_js_pwa_update(){if(\"serviceWorker\"in navigator&&GodotPWA.hasUpdate){navigator.serviceWorker.getRegistration().then(function(reg){if(!reg||!reg.waiting){return}reg.waiting.postMessage(\"update\")});return 0}return 1}",
+                "function _godot_js_pwa_update(){const phaseAServiceWorker=phaseAGetServiceWorker();if(phaseAServiceWorker&&GodotPWA.hasUpdate){phaseAServiceWorker.getRegistration().then(function(reg){if(!reg||!reg.waiting){return}reg.waiting.postMessage(\"update\")});return 0}return 1}",
+                StringComparison.Ordinal);
+        }
+
         if (!script.Contains("phaseAAppendAssetVersion(`${loadPath}.wasm`)", StringComparison.Ordinal) ||
             !script.Contains("phaseAAppendAssetVersion(file)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Failed to version Godot web preview JavaScript assets.");
+        }
+
+        if (script.Contains("navigator.serviceWorker.getRegistration", StringComparison.Ordinal) ||
+            script.Contains("\"serviceWorker\"in navigator&&", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Failed to sandbox-guard Godot web preview service worker access.");
         }
 
         File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
@@ -3567,7 +4788,22 @@ var initializing = true;
 
         if (Directory.Exists(targetDirectory))
         {
-            Directory.Move(targetDirectory, backupDirectory);
+            try
+            {
+                Directory.Move(targetDirectory, backupDirectory);
+            }
+            catch (IOException)
+            {
+                CopyDirectory(sourceDirectory, targetDirectory, overwrite: true);
+                TryDeleteDirectoryIfExists(sourceDirectory);
+                return;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                CopyDirectory(sourceDirectory, targetDirectory, overwrite: true);
+                TryDeleteDirectoryIfExists(sourceDirectory);
+                return;
+            }
         }
 
         try
@@ -3578,12 +4814,12 @@ var initializing = true;
             }
             catch (IOException)
             {
-                CopyDirectory(sourceDirectory, targetDirectory);
+                CopyDirectory(sourceDirectory, targetDirectory, overwrite: false);
                 TryDeleteDirectoryIfExists(sourceDirectory);
             }
             catch (UnauthorizedAccessException)
             {
-                CopyDirectory(sourceDirectory, targetDirectory);
+                CopyDirectory(sourceDirectory, targetDirectory, overwrite: false);
                 TryDeleteDirectoryIfExists(sourceDirectory);
             }
 
@@ -3600,9 +4836,9 @@ var initializing = true;
         }
     }
 
-    private static void CopyDirectory(string sourceDirectory, string targetDirectory)
+    private static void CopyDirectory(string sourceDirectory, string targetDirectory, bool overwrite)
     {
-        if (Directory.Exists(targetDirectory))
+        if (Directory.Exists(targetDirectory) && !overwrite)
         {
             throw new IOException("Target directory already exists.");
         }
@@ -3613,7 +4849,7 @@ var initializing = true;
             var relativePath = Path.GetRelativePath(sourceDirectory, sourceFile);
             var targetFile = Path.Combine(targetDirectory, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(targetFile)!);
-            File.Copy(sourceFile, targetFile, overwrite: false);
+            File.Copy(sourceFile, targetFile, overwrite);
         }
     }
 
@@ -3729,9 +4965,7 @@ var initializing = true;
         failureCode = "";
         failureMessage = "";
 
-        if (packageInfo.WebPreviewManifest.DetectedTemplates.Contains("towerdemo2", StringComparer.Ordinal) &&
-            string.Equals(packageInfo.Towerdemo2SourceSceneSha256, Towerdemo2Converter.SourceSceneSha256, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(packageInfo.Towerdemo2TextCatalogSha256, Towerdemo2Converter.TextCatalogSha256, StringComparison.OrdinalIgnoreCase))
+        if (IsTowerdemo2PackageSubset(packageInfo) || IsTowerdemo2SemanticPackage(packageInfo))
         {
             converter = Towerdemo2Converter;
             return true;
@@ -3746,6 +4980,85 @@ var initializing = true;
         failureCode = "unsupported_package_template";
         failureMessage = UnsupportedPackageTemplateMessage();
         return false;
+    }
+
+    private static bool IsTowerdemo2PackageSubset(PackageInfo packageInfo)
+    {
+        return HasSupportedTowerdemo2Template(
+            packageInfo.WebPreviewManifest.DetectedTemplates.Contains("towerdemo2", StringComparer.Ordinal),
+            packageInfo.Towerdemo2SourceSceneSha256,
+            packageInfo.Towerdemo2TextCatalogSha256);
+    }
+
+    private static bool IsTowerdemo2SemanticPackage(PackageInfo packageInfo)
+    {
+        if (packageInfo.PlayablePreviewContract is not { } contract ||
+            contract.ValueKind != JsonValueKind.Object ||
+            !contract.TryGetProperty("entities", out var entities) ||
+            entities.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        var hasPlayer = false;
+        var hasAttackArea = false;
+        var hasSkillShapeCast = false;
+        var hasRewardDoor = false;
+        var hasEnemyPressure = false;
+        var hasTowerdemo2Scene = packageInfo.Scenes.Any(scene =>
+            scene.Contains("/Towerdemo2/", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var entity in entities.EnumerateArray())
+        {
+            if (entity.ValueKind != JsonValueKind.Object)
+            {
+                continue;
+            }
+
+            var label = GetJsonString(entity, "label");
+            var role = GetJsonString(entity, "role");
+            var nodePath = GetJsonString(entity, "node_path");
+            var scene = GetJsonString(entity, "scene");
+            var text = $"{label} {role} {nodePath} {scene}";
+            hasPlayer |= string.Equals(role, "player_start", StringComparison.Ordinal) &&
+                text.Contains("Player", StringComparison.OrdinalIgnoreCase);
+            hasAttackArea |= string.Equals(role, "action", StringComparison.Ordinal) &&
+                text.Contains("AttackArea", StringComparison.OrdinalIgnoreCase);
+            hasSkillShapeCast |= string.Equals(role, "action", StringComparison.Ordinal) &&
+                text.Contains("SkillShapeCast", StringComparison.OrdinalIgnoreCase);
+            hasRewardDoor |= string.Equals(role, "reward", StringComparison.Ordinal) &&
+                text.Contains("RewardDoor", StringComparison.OrdinalIgnoreCase);
+            hasEnemyPressure |= string.Equals(role, "pressure_source", StringComparison.Ordinal) &&
+                (text.Contains("Enemy", StringComparison.OrdinalIgnoreCase) ||
+                    text.Contains("Spawn", StringComparison.OrdinalIgnoreCase));
+            hasTowerdemo2Scene |= scene.Contains("/Towerdemo2/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return hasTowerdemo2Scene &&
+            hasPlayer &&
+            hasAttackArea &&
+            hasSkillShapeCast &&
+            hasRewardDoor &&
+            hasEnemyPressure;
+    }
+
+    private static string GetJsonString(JsonElement element, string propertyName)
+    {
+        return element.ValueKind == JsonValueKind.Object &&
+            element.TryGetProperty(propertyName, out var property) &&
+            property.ValueKind == JsonValueKind.String
+            ? property.GetString() ?? ""
+            : "";
+    }
+
+    private static bool HasSupportedTowerdemo2Template(
+        bool hasTowerdemo2SourceScene,
+        string sourceSceneSha256,
+        string textCatalogSha256)
+    {
+        return hasTowerdemo2SourceScene &&
+            string.Equals(sourceSceneSha256, Towerdemo2Converter.SourceSceneSha256, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(textCatalogSha256, Towerdemo2Converter.TextCatalogSha256, StringComparison.OrdinalIgnoreCase);
     }
 
     private static ProjectWebPreviewConverterDescriptor ResolvePackageConverterByType(PackageInfo packageInfo)
@@ -3772,11 +5085,8 @@ var initializing = true;
         {
             packageInfo.GameTypeId,
             packageInfo.GameTypeGuide,
-            packageInfo.GameTypeSource,
-            packageInfo.GameName,
-            packageInfo.ProjectName
+            packageInfo.GameTypeSource
         };
-        values.AddRange(packageInfo.Scenes);
 
         var candidates = new List<string>();
         foreach (var value in values)
@@ -3943,5 +5253,9 @@ var initializing = true;
         string Towerdemo2TextCatalogSha256,
         long PackageSizeBytes,
         string PackageSha256,
-        PackageWebPreviewManifest WebPreviewManifest);
+        JsonElement? PlayablePreviewContract,
+        PackageWebPreviewManifest WebPreviewManifest,
+        JsonElement? SemanticAdapter = null,
+        ProjectWebPreviewSemanticAdapterResolution? SemanticAdapterResolution = null,
+        ProjectWebPreviewDedicatedAdapterResolution? DedicatedAdapterResolution = null);
 }

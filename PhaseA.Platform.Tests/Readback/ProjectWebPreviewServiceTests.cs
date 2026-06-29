@@ -101,12 +101,22 @@ public sealed class ProjectWebPreviewServiceTests
         source.Should().Contain(Towerdemo2SceneSha256);
         source.Should().Contain(Towerdemo2TextCatalogSha256);
         source.Should().Contain("BuildWebPreviewManifest(");
+        source.Should().Contain("IsTowerdemo2PackageSubset(packageInfo)");
         source.Should().Contain("packageInfo.WebPreviewManifest.DetectedTemplates.Contains(\"towerdemo2\"");
         source.Should().Contain("converter = ResolvePackageConverterByType(packageInfo)");
         source.Should().Contain("!string.IsNullOrWhiteSpace(packageInfo.MainScene) || packageInfo.Scenes.Count > 0");
         source.Should().Contain("CreateGenericGodotPackageProject(");
         source.Should().Contain("RenderPackageAdapterMainScript(converter.AdapterStyle)");
         source.Should().Contain("func _input(event):");
+        source.Should().Contain("func playable_semantic_entities():");
+        source.Should().Contain("func entity_position(entity, fallback):");
+        source.Should().Contain("func configure_world_bounds():");
+        source.Should().Contain("func is_pressure_container_entity(entity):");
+        source.Should().Contain("runtime_tuning = semantic_adapter.get(\"runtime_tuning\", {})");
+        source.Should().Contain("var floor_body = StaticBody.new()");
+        source.Should().NotContain("var floor = StaticBody.new()");
+        source.Should().NotContain("hp = max(0, hp - counter)");
+        source.Should().NotContain("hp = max(0, hp - max(0, 8 + wave * 3 + enemies_remaining() * 2 - guard))");
         source.Should().NotContain("func _unhandled_input(event):");
         source.Should().Contain("ui_font.tres");
         source.Should().Contain("load(\"res://Fonts/ui_font.tres\")");
@@ -176,6 +186,9 @@ const Preloader = function () {
 	this.preload = function (pathOrBuffer, destPath, fileSize) {};
 	this.loadPromise = function (file, fileSize, raw = false) {};
 };
+var GodotPWA={hasUpdate:false,updateState:function(cb,reg){}};
+function _godot_js_pwa_cb(p_update_cb){if("serviceWorker"in navigator){const cb=GodotRuntime.get_func(p_update_cb);navigator.serviceWorker.getRegistration().then(GodotPWA.updateState.bind(null,cb))}}
+function _godot_js_pwa_update(){if("serviceWorker"in navigator&&GodotPWA.hasUpdate){navigator.serviceWorker.getRegistration().then(function(reg){if(!reg||!reg.waiting){return}reg.waiting.postMessage("update")});return 0}return 1}
 const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-vars
 };
 Config.prototype.getModuleConfig = function (loadPath, response) {
@@ -221,10 +234,31 @@ const Engine = (function () {
 
         html.Should().Contain("src='index.js?v=abc123'");
         html.Should().Contain("window.__PHASEA_WEB_PREVIEW_ASSET_VERSION = 'abc123'");
+        html.Should().Contain("phasea-preview-stage");
+        html.Should().Contain("phasea-preview-interact");
+        html.Should().Contain("phasea-preview-action-list");
+        html.Should().Contain("preview-package-data.json?v=");
+        html.Should().Contain("通用试玩层");
+        html.Should().Contain("试玩闭环完成");
+        html.Should().Contain("WASD");
+        html.Should().Contain("applyRoleInteraction");
+        html.Should().Contain("semanticAction");
+        html.Should().Contain("resolveBasicAttack");
+        html.Should().Contain("tickPressureSources");
+        html.Should().Contain("basic_attack");
+        html.Should().Contain("skill_or_roll");
+        html.Should().Contain("initializeContractRules");
+        html.Should().Contain("roleInteractions");
+        html.Should().Contain("压力源");
+        html.Should().Contain("领取奖励");
         script.Should().Contain("function phaseAAppendAssetVersion(file)");
         script.Should().Contain("phaseAAppendAssetVersion(`${loadPath}.wasm`)");
         script.Should().Contain("phaseAAppendAssetVersion(file)");
         script.Should().Contain("this.config.fileSizes[file] || this.config.fileSizes[path]");
+        script.Should().Contain("function phaseAGetServiceWorker()");
+        script.Should().Contain("phaseAServiceWorker.getRegistration()");
+        script.Should().NotContain("navigator.serviceWorker.getRegistration");
+        script.Should().NotContain("\"serviceWorker\"in navigator&&");
     }
 
     [Fact]
@@ -687,10 +721,12 @@ const Engine = (function () {
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             var manifestPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "web-preview-manifest.json");
             var previewContractPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "web", "preview-contract.json");
+            var previewPackageDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "web", "preview-package-data.json");
             var read = await service.ReadPreviewAsync(project.ProjectId, result.PreviewId, "index.html");
             var contractRead = await service.ReadPreviewAsync(project.ProjectId, result.PreviewId, "preview-contract.json");
             var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
+            using var previewPackageData = JsonDocument.Parse(await File.ReadAllTextAsync(previewPackageDataPath, Encoding.UTF8));
             using var previewContract = JsonDocument.Parse(await File.ReadAllTextAsync(previewContractPath, Encoding.UTF8));
             var manifestSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(await File.ReadAllTextAsync(manifestPath, Encoding.UTF8)))).ToLowerInvariant();
 
@@ -705,8 +741,27 @@ const Engine = (function () {
             previewData.RootElement.GetProperty("manifest_sha256").GetString().Should().Be(manifestSha256);
             previewData.RootElement.GetProperty("godot3_export_mode").GetString().Should().Be("release");
             previewData.RootElement.GetProperty("converter_id").GetString().Should().Be("godot-package-generic-playable-preview");
+            previewData.RootElement.GetProperty("playable_preview_contract").GetProperty("schema_version").GetString().Should().Be("phasea-playable-preview-contract-v1");
+            previewPackageData.RootElement.GetProperty("playable_preview_contract").GetProperty("entities").EnumerateArray().Should().Contain(entity =>
+                entity.GetProperty("label").GetString() == "StartNode" &&
+                entity.GetProperty("role").GetString() == "entry_scene");
             previewData.RootElement.GetProperty("game_type_id").GetString().Should().BeEmpty();
             previewData.RootElement.GetProperty("game_type_guide").GetString().Should().BeEmpty();
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("detected_capabilities")
+                .EnumerateArray()
+                .Select(item => item.GetString())
+                .Should()
+                .Contain("playable_preview_contract");
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("conversion_contract")
+                .GetProperty("data_sources")
+                .EnumerateArray()
+                .Select(item => item.GetString())
+                .Should()
+                .Contain("playable-preview-contract.json");
             previewData.RootElement
                 .GetProperty("web_preview_manifest")
                 .GetProperty("conversion_contract")
@@ -741,7 +796,204 @@ const Engine = (function () {
     }
 
     [Fact]
-    public async Task GeneratePreviewAsync_BackfillsTowerDefenseTypeForLegacyTowerdemoPackage()
+    public async Task GeneratePreviewAsync_UsesGeneratedDedicatedAdapterForNonTowerdemoPackage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-repo");
+        using var godotRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-godot3-bin");
+        var fakeGodot = Path.Combine(godotRoot.Path, "Godot_v3.6.2-stable_win64.exe");
+        await File.WriteAllTextAsync(fakeGodot, "fake godot", Encoding.UTF8);
+        var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+        Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+        try
+        {
+            var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var account = await store.CreateUserAccountAsync("web-preview-generic-dedicated-user", 1);
+            var projectId = await CreateProjectAsync(store, options, account.AccountId);
+            var project = (await store.GetProjectSnapshotAsync(projectId))!;
+            var packageFile = "GenericAdventure-v0.1.20260628.006.zip";
+            WriteGenericGodotPackage(project.RepoPath, packageFile, "GenericAdventure");
+            var godotRunner = new FakeGodot3WebExportRunner();
+            var dedicatedRunner = new DedicatedAdapterRunner("""
+            extends Control
+
+            func _ready():
+                print("codex dedicated adapter")
+            """);
+            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner);
+            var service = new ProjectWebPreviewService(
+                store,
+                options,
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
+                godotRunner,
+                dedicatedAdapterService: dedicatedService);
+
+            var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
+            var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
+            var dedicatedMainScriptPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "Main.gd");
+            var dedicatedManifestPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "adapter-manifest.json");
+            using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
+            using var dedicatedManifest = JsonDocument.Parse(await File.ReadAllTextAsync(dedicatedManifestPath, Encoding.UTF8));
+            var resolution = previewData.RootElement.GetProperty("dedicated_adapter_resolution");
+
+            result.Status.Should().Be("succeeded");
+            result.Mode.Should().NotBe("godot3-html5-towerdemo2-template-subset");
+            dedicatedRunner.Commands.Should().HaveCount(1);
+            dedicatedRunner.Commands[0].Arguments.Should().Contain("workspace-write");
+            dedicatedRunner.Commands[0].Arguments.Should().NotContain("--json");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("Write a complete GDScript file only");
+            godotRunner.MainScripts.Should().ContainSingle(script => script.Contains("codex dedicated adapter", StringComparison.Ordinal));
+            File.Exists(dedicatedMainScriptPath).Should().BeTrue();
+            resolution.GetProperty("status").GetString().Should().Be("generated_by_codex");
+            resolution.GetProperty("codex_invoked").GetBoolean().Should().BeTrue();
+            dedicatedManifest.RootElement.GetProperty("schema_version").GetString().Should().Be("phasea-web-preview-dedicated-adapter-v1");
+            dedicatedManifest.RootElement.GetProperty("generator_version").GetString().Should().Be("phasea-project-dedicated-godot3-adapter-v1");
+            dedicatedManifest.RootElement.GetProperty("source").GetString().Should().Be("codex-dedicated-adapter");
+            dedicatedManifest.RootElement.GetProperty("package_file").GetString().Should().Be(packageFile);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot);
+        }
+    }
+
+    [Fact]
+    public async Task GeneratePreviewAsync_UsesTowerdemo2DedicatedAdapterWhenSemanticSignatureMatches()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-changed-scene-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-changed-scene-repo");
+        using var godotRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-changed-scene-godot3-bin");
+        var fakeGodot = Path.Combine(godotRoot.Path, "Godot_v3.6.2-stable_win64.exe");
+        await File.WriteAllTextAsync(fakeGodot, "fake godot", Encoding.UTF8);
+        var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+        Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+        try
+        {
+            var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var account = await store.CreateUserAccountAsync("web-preview-towerdemo2-changed-scene-user", 1);
+            var projectId = await CreateProjectAsync(store, options, account.AccountId);
+            var project = (await store.GetProjectSnapshotAsync(projectId))!;
+            var packageFile = "Towerdemo2-v0.1.20260628.004.zip";
+            WriteTowerdemo2PackageWithChangedScene(project.RepoPath, packageFile);
+            var runner = new FakeGodot3WebExportRunner();
+            var service = new ProjectWebPreviewService(
+                store,
+                options,
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
+                runner);
+
+            var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
+            var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
+            var dedicatedAdapterRoot = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion);
+            var dedicatedMainScriptPath = Path.Combine(dedicatedAdapterRoot, "Main.gd");
+            var dedicatedManifestPath = Path.Combine(dedicatedAdapterRoot, "adapter-manifest.json");
+            using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
+            using var dedicatedManifest = JsonDocument.Parse(await File.ReadAllTextAsync(dedicatedManifestPath, Encoding.UTF8));
+            var manifest = previewData.RootElement.GetProperty("web_preview_manifest");
+            var contract = manifest.GetProperty("conversion_contract");
+            var detectedTemplates = manifest
+                .GetProperty("detected_templates")
+                .EnumerateArray()
+                .Select(item => item.GetString())
+                .ToArray();
+            var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
+
+            result.Status.Should().Be("succeeded");
+            result.Mode.Should().Be("godot3-html5-towerdemo2-template-subset");
+            previewData.RootElement.GetProperty("converter_id").GetString().Should().Be("towerdemo2-template-subset");
+            previewData.RootElement.GetProperty("source_scene_sha256").GetString().Should().NotBeEmpty();
+            previewData.RootElement.GetProperty("text_catalog_sha256").GetString().Should().NotBeEmpty();
+            previewData.RootElement.GetProperty("game_type_id").GetString().Should().BeEmpty();
+            previewData.RootElement.GetProperty("game_type_guide").GetString().Should().BeEmpty();
+            detectedTemplates.Should().NotContain("towerdemo2");
+            contract.GetProperty("fidelity_tier").GetString().Should().Be("template_high_fidelity");
+            contract.GetProperty("playable_surface").GetString().Should().Be("towerdemo2_high_fidelity_subset");
+            status.Status.Should().Be("ready");
+            status.FidelityTier.Should().Be("template_high_fidelity");
+            status.PlayableSurface.Should().Be("towerdemo2_high_fidelity_subset");
+            status.GameTypeId.Should().BeEmpty();
+            status.GameTypeGuide.Should().BeEmpty();
+            File.Exists(dedicatedMainScriptPath).Should().BeTrue();
+            dedicatedManifest.RootElement.GetProperty("schema_version").GetString().Should().Be("phasea-web-preview-dedicated-adapter-v1");
+            dedicatedManifest.RootElement.GetProperty("source").GetString().Should().Be("towerdemo2-built-in-template");
+            dedicatedManifest.RootElement.GetProperty("adapter_version").GetString().Should().Be(adapterVersion);
+            dedicatedManifest.RootElement.GetProperty("converter_id").GetString().Should().Be("towerdemo2-template-subset");
+            dedicatedManifest.RootElement.GetProperty("adapter_source_sha256").GetString().Should().NotBeNullOrWhiteSpace();
+            dedicatedManifest.RootElement.GetProperty("package_file").GetString().Should().Be(packageFile);
+            dedicatedManifest.RootElement.GetProperty("package_sha256").GetString().Should().Be(previewData.RootElement.GetProperty("package_sha256").GetString());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot);
+        }
+    }
+
+    [Fact]
+    public async Task GeneratePreviewAsync_ReusesTowerdemo2DedicatedAdapterForSamePackage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-adapter-reuse-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-adapter-reuse-repo");
+        using var godotRoot = TempDirectory.Create("phase-a-web-preview-towerdemo2-adapter-reuse-godot3-bin");
+        var fakeGodot = Path.Combine(godotRoot.Path, "Godot_v3.6.2-stable_win64.exe");
+        await File.WriteAllTextAsync(fakeGodot, "fake godot", Encoding.UTF8);
+        var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+        Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+        try
+        {
+            var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var account = await store.CreateUserAccountAsync("web-preview-towerdemo2-adapter-reuse-user", 1);
+            var projectId = await CreateProjectAsync(store, options, account.AccountId);
+            var project = (await store.GetProjectSnapshotAsync(projectId))!;
+            var packageFile = "Towerdemo2-v0.1.20260628.005.zip";
+            WriteTowerdemo2PackageWithChangedScene(project.RepoPath, packageFile);
+            var runner = new FakeGodot3WebExportRunner();
+            var service = new ProjectWebPreviewService(
+                store,
+                options,
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
+                runner);
+
+            var first = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
+            var dedicatedMainScriptPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "Main.gd");
+            var cachedScript = """
+            extends Control
+
+            func _ready():
+                print("cached dedicated adapter")
+            """;
+            await File.WriteAllTextAsync(dedicatedMainScriptPath, cachedScript, new UTF8Encoding(false));
+
+            var second = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            var generatedMainScript = runner.MainScripts.Last();
+
+            first.Status.Should().Be("succeeded");
+            second.Status.Should().Be("succeeded");
+            runner.Commands.Should().HaveCount(2);
+            generatedMainScript.Should().Be(cachedScript);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot);
+        }
+    }
+
+    [Fact]
+    public async Task GeneratePreviewAsync_DoesNotBackfillTowerDefenseTypeForLegacyTowerdemoPackage()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-legacy-tower-type-workspaces");
@@ -774,9 +1026,11 @@ const Engine = (function () {
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
 
             result.Status.Should().Be("succeeded");
-            previewData.RootElement.GetProperty("game_type_id").GetString().Should().Be("tower-defense");
-            previewData.RootElement.GetProperty("game_type_guide").GetString().Should().Be("docs/game-type-guides/tower-defense.md");
-            previewData.RootElement.GetProperty("web_preview_manifest").GetProperty("game_type_id").GetString().Should().Be("tower-defense");
+            result.Mode.Should().Be("godot3-html5-generic-package-preview");
+            previewData.RootElement.GetProperty("game_type_id").GetString().Should().BeEmpty();
+            previewData.RootElement.GetProperty("game_type_guide").GetString().Should().BeEmpty();
+            previewData.RootElement.GetProperty("web_preview_manifest").GetProperty("game_type_id").GetString().Should().BeEmpty();
+            previewData.RootElement.GetProperty("web_preview_manifest").GetProperty("game_type_guide").GetString().Should().BeEmpty();
         }
         finally
         {
@@ -1009,6 +1263,38 @@ const Engine = (function () {
 
         [node name="GenericAdventurePrototype" type="Node2D"]
         """);
+        AddZipEntry(archive, "playable-preview-contract.json", $$"""
+        {
+          "schema_version": "phasea-playable-preview-contract-v1",
+          "source": "project-package-service",
+          "project_name": "{{gameName}}",
+          "game_name": "{{gameName}}",
+          "main_scene": "res://Game.Godot/Prototypes/{{gameName}}/{{gameName}}Prototype.tscn",
+          "objectives": [
+            {
+              "id": "first_playable_loop",
+              "label": "Move to the start node and interact.",
+              "success": "The preview loop reports progress."
+            }
+          ],
+          "entities": [
+            {
+              "id": "start",
+              "label": "StartNode",
+              "role": "entry_scene",
+              "scene": "res://Game.Godot/Prototypes/{{gameName}}/{{gameName}}Prototype.tscn",
+              "objective": "Start the generic contract route."
+            }
+          ],
+          "input_actions": [
+            {
+              "action": "interact",
+              "inputs": ["Space"],
+              "behavior": "Activate the selected contract node."
+            }
+          ]
+        }
+        """);
     }
 
     private static void WriteRpgGodotPackage(string projectRoot, string packageFile)
@@ -1057,9 +1343,7 @@ const Engine = (function () {
           "package_version": "v0.1.20260627.001",
           "project_name": "Towerdemo2",
           "game_name": "Towerdemo2",
-          "game_type_source": "Tower Defense",
-          "game_type_id": "tower-defense",
-          "game_type_guide": "docs/game-type-guides/tower-defense.md"
+          "game_type_source": "Phantom Tower"
         }
         """);
         AddZipEntry(archive, "project.godot", """
@@ -1096,6 +1380,73 @@ const Engine = (function () {
         [gd_scene format=3]
 
         [node name="Towerdemo2Prototype" type="Node2D"]
+        """);
+    }
+
+    private static void WriteTowerdemo2PackageWithChangedScene(string projectRoot, string packageFile)
+    {
+        var packagePath = Path.Combine(projectRoot, "exports", packageFile);
+        Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
+        using var stream = File.Create(packagePath);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
+        AddZipEntry(archive, "PACKAGE-MANIFEST.json", """
+        {
+          "package_version": "v0.1.20260628.004",
+          "project_name": "Towerdemo2",
+          "game_name": "Towerdemo2",
+          "game_type_source": "Phantom Tower"
+        }
+        """);
+        AddZipEntry(archive, "project.godot", """
+        config_version=5
+
+        [application]
+        config/name="Towerdemo2"
+        run/main_scene="res://Game.Godot/Scenes/Main.tscn"
+        """);
+        AddZipEntry(archive, "Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", """
+        [gd_scene format=3]
+
+        [node name="Towerdemo2Prototype" type="Node2D"]
+        position = Vector2(12, 18)
+
+        [node name="Player" type="CharacterBody3D" parent="MapScene"]
+        transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 4)
+
+        [node name="AttackArea" type="Area3D" parent="MapScene/Player"]
+
+        [node name="SkillShapeCast" type="ShapeCast3D" parent="MapScene/Player"]
+
+        [node name="EnemySpawnA" type="Node3D" parent="MapScene"]
+
+        [node name="EnemyShadeA" type="CharacterBody3D" parent="MapScene/EnemySpawnA"]
+
+        [node name="RewardDoor" type="Node3D" parent="MapScene"]
+        """);
+        AddZipEntry(archive, "Game.Godot/Prototypes/Towerdemo2/Scripts/Data/PrototypeTextCatalog.cs", """
+        namespace Game.Godot.Prototypes.Towerdemo2.Scripts.Data;
+
+        public static class PrototypeTextCatalog
+        {
+            public static readonly System.Collections.Generic.Dictionary<string, string> Text = new()
+            {
+                ["hud.header"] = "Towerdemo2 Web Preview"
+            };
+        }
+        """);
+        AddZipEntry(archive, "playable-preview-contract.json", """
+        {
+          "schema_version": "phasea-playable-preview-contract-v1",
+          "source": "project-package-service",
+          "main_scene": "res://Game.Godot/Scenes/Main.tscn",
+          "entities": [
+            { "id": "player", "label": "Player", "role": "player_start", "scene": "res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", "node_path": "MapScene/Player", "objective": "Move." },
+            { "id": "attack", "label": "AttackArea", "role": "action", "scene": "res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", "node_path": "MapScene/Player/AttackArea", "objective": "Attack." },
+            { "id": "skill", "label": "SkillShapeCast", "role": "action", "scene": "res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", "node_path": "MapScene/Player/SkillShapeCast", "objective": "Skill." },
+            { "id": "enemy", "label": "EnemyShadeA", "role": "pressure_source", "scene": "res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", "node_path": "MapScene/EnemySpawnA/EnemyShadeA", "objective": "Enemy pressure." },
+            { "id": "reward", "label": "RewardDoor", "role": "reward", "scene": "res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn", "node_path": "MapScene/RewardDoor", "objective": "Reward." }
+          ]
+        }
         """);
     }
 
@@ -1161,10 +1512,12 @@ const Engine = (function () {
     private sealed class FakeGodot3WebExportRunner : IHostedProcessRunner
     {
         public List<HostedProcessCommand> Commands { get; } = [];
+        public List<string> MainScripts { get; } = [];
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
+            MainScripts.Add(File.ReadAllText(Path.Combine(command.WorkingDirectory, "Main.gd"), Encoding.UTF8));
             var outputPath = command.Arguments.Last();
             var webRoot = Path.GetDirectoryName(outputPath)!;
             Directory.CreateDirectory(webRoot);
@@ -1249,6 +1602,20 @@ const Engine = (function () {
             File.WriteAllBytes(Path.Combine(webRoot, "index.wasm"), [0]);
             File.WriteAllBytes(Path.Combine(webRoot, "index.pck"), [0]);
             return Task.FromResult(new HostedProcessResult(0, "fake export ok", ""));
+        }
+    }
+
+    private sealed class DedicatedAdapterRunner(string script) : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            var outputPath = command.Arguments.SkipWhile(argument => argument != "-o").Skip(1).First();
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            File.WriteAllText(outputPath, script, new UTF8Encoding(false));
+            return Task.FromResult(new HostedProcessResult(0, script, ""));
         }
     }
 

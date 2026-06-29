@@ -1502,6 +1502,34 @@ namespace Xunit
     }
 
     [Fact]
+    public async Task SubmitAsync_GoalRepair_ShouldRecoverProtectedPrototypeCompletionState_FromNeedsFixCompletionEvidenceSidecar()
+    {
+        using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
+            completedThroughDay: 7,
+            includeRepairSteps: false,
+            includeActiveState: false,
+            evidenceRecoveryGoal: false);
+        WriteNeedsFixCompletionEvidenceSidecar(scenario.Project, scenario.TargetGoal.GoalIndex);
+        var runner = new CompletionRecoveryNeedsFixRunner();
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+
+        var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
+            "Repair current M8 goal.",
+            "gpt-5.4",
+            "normal",
+            new PrototypeGoalRepairContext(scenario.Details.Session.SessionId, scenario.TargetGoal.GoalId, scenario.TargetGoal.GoalIndex, scenario.TargetGoal.Title, scenario.TargetGoal.Description, scenario.TargetGoal.AcceptanceHint, scenario.TargetGoal.ResultSummary)));
+        var refreshed = await scenario.Store.GetLatestProjectIterationSessionAsync(scenario.ProjectId, "repair_plan");
+        var recoveredPrototypeState = scenario.Writer.ReadLatestPrototypeState(scenario.Project);
+
+        result.Status.Should().Be("completed");
+        result.IterationGoalStatus.Should().Be("succeeded");
+        refreshed!.Goals[0].Status.Should().Be("succeeded");
+        File.Exists(Path.Combine(scenario.Project.RepoPath, "logs", "ci", "active-prototypes", "Towerdemo.active.json")).Should().BeTrue();
+        recoveredPrototypeState.Should().Contain("\"status\": \"succeeded\"");
+        recoveredPrototypeState.Should().Contain("recovered_from_prototype_repair_state");
+    }
+
+    [Fact]
     public async Task SubmitAsync_GoalRepair_ShouldKeepNeedsFix_WhenProtectedRecoveryAlsoViolatesMutationGuard()
     {
         using var scenario = await CreateProtectedCompletionRecoveryScenarioAsync(
@@ -4307,7 +4335,8 @@ public static class PrototypeCatalog
         string? activeStatePrototypeRecord = null,
         string? activeStatePrototypeSpec = null,
         string? activeStateSmokeScene = null,
-        bool includeSecondGoal = false)
+        bool includeSecondGoal = false,
+        bool evidenceRecoveryGoal = true)
     {
         var database = TempSqliteDatabase.Create();
         var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -4372,9 +4401,9 @@ public static class PrototypeCatalog
                 ? [
                     new ProjectIterationGoalCreateCommand(
                         1,
-                        "恢复原型运行证据",
-                        "恢复路由完成证据，并消除 prototype_completion_state_missing。",
-                        "最新失败原因已经消除，并且原型路由可以生成完成证据。"),
+                        evidenceRecoveryGoal ? "恢复原型运行证据" : "M8：可试玩包与调参",
+                        evidenceRecoveryGoal ? "恢复路由完成证据，并消除 prototype_completion_state_missing。" : "Complete the playable package and tuning goal.",
+                        evidenceRecoveryGoal ? "最新失败原因已经消除，并且原型路由可以生成完成证据。" : "The current module can continue after platform validation."),
                     new ProjectIterationGoalCreateCommand(
                         2,
                         "修复通用原型合同缺口",
@@ -4384,15 +4413,56 @@ public static class PrototypeCatalog
                 : [
                     new ProjectIterationGoalCreateCommand(
                         1,
-                        "恢复原型运行证据",
-                        "恢复路由完成证据，并消除 prototype_completion_state_missing。",
-                        "最新失败原因已经消除，并且原型路由可以生成完成证据。")
+                        evidenceRecoveryGoal ? "恢复原型运行证据" : "M8：可试玩包与调参",
+                        evidenceRecoveryGoal ? "恢复路由完成证据，并消除 prototype_completion_state_missing。" : "Complete the playable package and tuning goal.",
+                        evidenceRecoveryGoal ? "最新失败原因已经消除，并且原型路由可以生成完成证据。" : "The current module can continue after platform validation.")
                 ]);
         await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs repair.");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         var targetGoal = details!.Goals[0];
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "prototype_completion_state_missing", null);
         return new ProtectedCompletionRecoveryScenario(database, workspaceRoot, repoRoot, options, store, accountId, projectId, project, writer, details, targetGoal);
+    }
+
+    private static void WriteNeedsFixCompletionEvidenceSidecar(ProjectSnapshot project, int goalIndex)
+    {
+        var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
+        var directory = Path.Combine(project.RepoPath, "meta", "routes", "needs-fix", step);
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "m8-completion-evidence.goal-repair-test.json"), """
+{
+  "canonical_completion_state_write": "blocked_permission_denied",
+  "blocked_target": "meta/routes/prototype/latest.json",
+  "blocked_reason": "Current repair workspace cannot overwrite the canonical prototype state copy; the file still reports prototype_completion_state_missing.",
+  "route": "prototype-7day-playable",
+  "slug": "Towerdemo",
+  "status": "succeeded",
+  "prototype_record": "docs/prototypes/2026-06-22-Towerdemo.md",
+  "prototype_contract": "routes/prototype-contract/latest.json",
+  "prototype_completion": {
+    "succeeded": true,
+    "status": "completed",
+    "completed_through_day": 8,
+    "error": null,
+    "smoke_scene": "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn",
+    "completion_summary": "M8 playable package and tuning slice is complete.",
+    "next_step_source": "current_m8_module_needs_fix",
+    "next_step_evaluation": "current_module_ready_for_platform_smoke",
+    "next_step_evaluation_reason": "Completion evidence is available in the current needs-fix sidecar."
+  },
+  "completion_evidence": {
+    "completed_through_day": 8,
+    "day_1": { "status": "completed", "reason": "Recovered day 1.", "record": "docs/prototypes/2026-06-22-Towerdemo.md", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_2": { "status": "completed", "reason": "Recovered day 2.", "record": "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_3": { "status": "completed", "reason": "Recovered day 3.", "record": "Game.Core/Prototypes/TowerdemoPrototypeLoop.cs", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_4": { "status": "completed", "reason": "Recovered day 4.", "record": "Game.Core/Prototypes/TowerdemoPrototypeLoop.cs", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_5": { "status": "completed", "reason": "Recovered day 5.", "record": "Tests.Godot/tests/Prototype/Towerdemo/test_towerdemo_m5_smoke.gd", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_6": { "status": "completed", "reason": "Recovered day 6.", "record": "res://Game.Godot/Prototypes/Towerdemo/TowerdemoPrototype.tscn", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_7": { "status": "completed", "reason": "Recovered day 7.", "record": "Tests.Godot/tests/Prototype/Towerdemo/test_towerdemo_m7_smoke.gd", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" },
+    "day_8": { "status": "completed", "reason": "Recovered day 8.", "record": "Tests.Godot/tests/Prototype/Towerdemo/test_towerdemo_m8_smoke.gd", "prototype_spec": "docs/prototypes/Towerdemo.prototype.json" }
+  }
+}
+""");
     }
 
     private static void WriteRecoveredActivePrototypeState(

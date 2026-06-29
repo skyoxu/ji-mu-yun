@@ -278,6 +278,10 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 
 ### 云端平台
 
+- Phase service architecture rationale: `docs/architecture/phase-service/_index.md`
+- Phase service ADR index: `docs/architecture/ADR_INDEX_PHASE.md`
+- Standards index: `docs/standards/_index.md`
+- Phase service standards: `docs/standards/phase-service.md`
 - `docs/workflows/phase-b-account-isolation.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `docs/workflows/cloud-platform-evolution-plan.cn.md`

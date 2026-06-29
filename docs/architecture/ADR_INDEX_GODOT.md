@@ -27,3 +27,7 @@
 
 - Evaluate security decisions as a bundle: `ADR-0019` + `ADR-0031` + `ADR-0005`.
 - Default posture is `host-safe`; `strict` is phase-based and explicit.
+
+## Phase Service ADRs
+
+Phase service ADRs are tracked separately in `docs/architecture/ADR_INDEX_PHASE.md`.

@@ -18,10 +18,14 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Account isolation, admin/user auth, token hashing, audit exports, hosted workspace/artifact readback, and browser/API behavior.
 - Phase browser-consumed prototype routes, including prototype creation, iteration, repair, GDD, asset, package, preview, and related route recovery state.
 - Shared LLM/Codex execution entrypoints used by Phase routes and scripts.
+- Phase service architecture rationale lives in `docs/architecture/phase-service/_index.md`; read it before changing Phase service boundaries.
+- Phase service ADRs live in `docs/architecture/ADR_INDEX_PHASE.md`; read them before changing Phase service decisions.
+- Phase service standards index lives in `docs/standards/_index.md`.
+- Phase service standards live in `docs/standards/phase-service.md`; read them before changing API, DB, errors, logs, security, tests, or readback status contracts.
 
 ## Start Here
 
-1. For Phase service work, read `Phase Service Scope`, `Phase Service Change Contract`, and `Phase Runtime Recovery Order` in this file before editing.
+1. For Phase service work, read `Phase Service Scope`, `Phase Service Change Contract`, `Phase Runtime Recovery Order`, `docs/standards/_index.md`, and `docs/standards/phase-service.md` before editing.
 2. [Agents Docs Index](docs/agents/00-index.md)
 3. [Session Recovery](docs/agents/01-session-recovery.md)
 4. [RAG Sources And Session SSoT](docs/agents/13-rag-sources-and-session-ssot.md)
@@ -59,6 +63,11 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
   - [Startup, Stack, And Template Structure](docs/agents/14-startup-stack-and-template-structure.md)
   - [README](README.md)
   - [Project Documentation Index](docs/PROJECT_DOCUMENTATION_INDEX.md)
+- Implement a Phase service feature or touch Phase service contracts:
+  - [Standards Index](docs/standards/_index.md)
+  - [Phase Service Standards](docs/standards/phase-service.md)
+  - [Phase ADR Index](docs/architecture/ADR_INDEX_PHASE.md)
+  - [Phase Service Architecture](docs/architecture/phase-service/_index.md)
 - Implement a feature or touch architecture:
   - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
   - [Architecture Guardrails](docs/agents/05-architecture-guardrails.md)
@@ -107,6 +116,9 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
   - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
   - [Architecture Guardrails](docs/agents/05-architecture-guardrails.md)
   - [Template Customization](docs/agents/10-template-customization.md)
+- Need Phase service API, DB, errors, logs, security, tests, or status standards:
+  - [Standards Index](docs/standards/_index.md)
+  - [Phase Service Standards](docs/standards/phase-service.md)
 - Need security posture, release health, logs, or runtime ops rules:
   - [Security, Release Health, And Runtime Ops Rules](docs/agents/15-security-release-health-and-runtime-ops.md)
 - [Template Upgrade Protocol](docs/workflows/template-upgrade-protocol.md)
@@ -187,6 +199,7 @@ A Phase service change is not done until:
 - Failures are preserved as evidence; add new sidecar files instead of rewriting generated history.
 
 ### Database and API Compatibility
+- Detailed Phase service API, DB, error, logging, security, testing, and status standards live in `docs/standards/phase-service.md`; the standards index is `docs/standards/_index.md`.
 - Do not manually mutate the live Phase A metadata DB unless the user explicitly authorizes it.
 - Schema changes must be backward-compatible by default, include a migration or recovery path, and preserve existing data unless an approved decision log says otherwise.
 - Public and browser-consumed APIs must remain backward-compatible by default. Do not remove or rename routes, fields, status codes, auth behavior, or artifact paths without explicit approval and a documented compatibility plan.
@@ -242,7 +255,11 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 
 ## Phase A Runtime Ops
 - Stable local app bind for the live Phase A console is `http://127.0.0.1:18080`.
-- Stable public reverse-proxy entry is `http://47.86.160.138:8080`.
+- Canonical external `PUBLIC_BASE_URL` is `https://47.86.160.138:8080`; platform config and `phase_a_ops_check.py` require an absolute HTTPS URL.
+- Current direct public health probe for the Caddy listener is `http://47.86.160.138:8080/healthz`. Do not replace `PUBLIC_BASE_URL` with this HTTP health-probe URL.
+- Current IP-only deployment validation may pass HTTP direct public smoke while HTTPS public smoke is still failing. Do not claim public HTTPS reachability until `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080` passes without `--allow-http`.
+- Current direct HTTP public smoke command: `py -3 scripts/python/phase_a_public_smoke.py --base-url http://47.86.160.138:8080 --allow-http`.
+- HTTPS public closure smoke command: `py -3 scripts/python/phase_a_public_smoke.py --base-url https://47.86.160.138:8080`.
 - Canonical Phase A runtime config file is `runtime/phase-a/start-phasea.ps1`.
 - Canonical Caddy config file is `runtime/phase-a/Caddyfile`.
 - Important runtime configuration files must not live under `log/` or `logs/`. Logs stay under `logs/`; checked-in startup/config files stay under a stable source directory such as `runtime/phase-a/`.
@@ -251,7 +268,7 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 - The startup script must keep build outputs outside the repo source tree. Current stable build root is `C:\Users\Administrator\.codex\memories\phasea-runtime-build`.
 - The startup script must explicitly set both `APP_BIND_URL` and `ASPNETCORE_URLS` to `http://127.0.0.1:18080` before starting `PhaseA.Platform.exe`.
 - Repo-wide MSBuild default item excludes must keep generated `logs/**`, `obj/**`, and `bin/**` content out of compile inputs. This prevents duplicate assembly attribute failures during live server recovery.
-- Recovery-grade runtime variable map for the live server:
+- Recovery-grade runtime variable map for the live server. `runtime/phase-a/start-phasea.ps1` is the operational source of truth; keep this map aligned with that script:
   - `APP_BIND_URL=http://127.0.0.1:18080`
   - `ASPNETCORE_URLS=http://127.0.0.1:18080`
   - `HTTPS_TERMINATION=caddy`
@@ -259,12 +276,16 @@ Missing required recovery sources must fail closed. Route state and repair ledge
   - `HOSTED_WORKSPACE_ROOT=C:\jimuyun\logs\phase-a-innernet\workspaces`
   - `HOSTED_PROJECT_LIMIT=2`
   - `PHASEA_MAX_CONCURRENT_CHATS=8`
-  - `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=2`
+  - `PHASEA_MAX_CONCURRENT_CHATS_PER_ACCOUNT=1`
   - `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS=4`
   - `PHASEA_MAX_CONCURRENT_GDD_QUESTION_FORMS_PER_ACCOUNT=1`
   - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS=3`
   - `PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS_PER_ACCOUNT=1`
-  - `PHASEA_MAX_CONCURRENT_OTHER_RUNS=1`
+  - `PHASEA_MAX_CONCURRENT_OTHER_RUNS=3`
+  - `PHASEA_MAX_CONCURRENT_PROTOTYPE_CREATIONS=2`
+  - `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS=3`
+  - `PHASEA_MAX_CONCURRENT_WEB_PREVIEWS_PER_ACCOUNT=1`
+  - `PHASEA_MAX_CONCURRENT_ASSET_GENERATIONS_PER_ACCOUNT=1`
   - `PHASEA_METADATA_DB_PATH=C:\jimuyun\logs\phase-a-innernet\data\phase-a-platform.sqlite3`
   - `PHASEA_REPOSITORY_ROOT=C:\jimuyun`
   - `PHASEA_CODEX_COMMAND=C:\Windows\System32\config\systemprofile\AppData\Roaming\npm\codex.cmd`
@@ -328,6 +349,8 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 - [README](README.md)
 - [Project Documentation Index](docs/PROJECT_DOCUMENTATION_INDEX.md)
 - [Testing Framework](docs/testing-framework.md)
+- [Standards Index](docs/standards/_index.md)
+- [Phase Service Standards](docs/standards/phase-service.md)
 - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
 - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
 - [Agents Docs Index](docs/agents/00-index.md)

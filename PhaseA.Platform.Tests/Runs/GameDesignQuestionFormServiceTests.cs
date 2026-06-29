@@ -93,7 +93,7 @@ public sealed class GameDesignQuestionFormServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldCacheSchemaForSameProjectAndModel()
+    public async Task CreateAsync_ShouldAskLlmBeforeReusingCachedSchema()
     {
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
@@ -111,7 +111,38 @@ public sealed class GameDesignQuestionFormServiceTests
         first.Should().NotBeNull();
         second.Should().NotBeNull();
         first!.Fields.Should().Equal(second!.Fields);
-        llm.CallCount.Should().Be(1);
+        llm.CallCount.Should().Be(2);
+        llm.LastRequest!.Purpose.Should().Be("gdd-question-form-cache-decision");
+        llm.LastRequest.Prompt.Should().Contain("Prefer reusing the cached form");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldRebuildCachedSchema_WhenLlmRequestsRebuild()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new FakeLlmRouteEngine(new[]
+        {
+            ValidSchemaJson(),
+            """{ "rebuild": true, "reason": "cached schema no longer fits" }""",
+            AlternateSchemaJson()
+        });
+        var service = new GameDesignQuestionFormService(store, options, llm);
+
+        var first = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+        var second = await service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest("gpt-5.4"));
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        llm.CallCount.Should().Be(3);
+        llm.LastRequest!.Purpose.Should().Be("gdd-question-form");
+        first!.Fields.Should().NotEqual(second!.Fields);
+        second.Fields[0].Id.Should().Be("reference_signal_v2");
     }
 
     [Fact]
@@ -324,6 +355,13 @@ public sealed class GameDesignQuestionFormServiceTests
         """;
     }
 
+    private static string AlternateSchemaJson()
+    {
+        return ValidSchemaJson()
+            .Replace("\"reference_signal\"", "\"reference_signal_v2\"", StringComparison.Ordinal)
+            .Replace("\"参考标杆\"", "\"新版参考标杆\"", StringComparison.Ordinal);
+    }
+
     private static async Task<string> CreateProjectAsync(
         PhaseAMetadataStore store,
         PhaseAPlatformOptions options,
@@ -380,7 +418,7 @@ public sealed class GameDesignQuestionFormServiceTests
 
     private sealed class FakeLlmRouteEngine : ILlmRouteEngine
     {
-        private readonly string _json;
+        private readonly Queue<string> _jsonResponses;
         private readonly bool _succeeded;
         private readonly string? _failureCode;
         private readonly TimeSpan _completionDelay;
@@ -391,8 +429,17 @@ public sealed class GameDesignQuestionFormServiceTests
             bool succeeded = true,
             string? failureCode = null,
             TimeSpan completionDelay = default)
+            : this(new[] { json }, succeeded, failureCode, completionDelay)
         {
-            _json = json;
+        }
+
+        public FakeLlmRouteEngine(
+            IEnumerable<string> jsonResponses,
+            bool succeeded = true,
+            string? failureCode = null,
+            TimeSpan completionDelay = default)
+        {
+            _jsonResponses = new Queue<string>(jsonResponses);
             _succeeded = succeeded;
             _failureCode = failureCode;
             _completionDelay = completionDelay;
@@ -410,10 +457,14 @@ public sealed class GameDesignQuestionFormServiceTests
                 await Task.Delay(_completionDelay, cancellationToken);
             }
 
+            var json = _jsonResponses.Count > 1
+                ? _jsonResponses.Dequeue()
+                : _jsonResponses.Peek();
+
             return new LlmRouteResult(
                 _succeeded,
-                _json,
-                _succeeded ? _json : null,
+                json,
+                _succeeded ? json : null,
                 request.Model,
                 _failureCode,
                 null,

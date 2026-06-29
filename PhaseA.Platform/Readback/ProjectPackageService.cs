@@ -1,7 +1,9 @@
 using System.IO.Compression;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -15,6 +17,8 @@ public sealed class ProjectPackageService
     private const string RunType = "project-package";
     private const string PackageArtifactType = "project-package-zip";
     private const string PackageRootDirectory = "exports";
+    private const string PlayablePreviewContractFileName = "playable-preview-contract.json";
+    private const string PlayablePreviewContractSchemaVersion = "phasea-playable-preview-contract-v1";
 
     private static readonly string[] IncludedRoots =
     [
@@ -482,6 +486,7 @@ public sealed class ProjectPackageService
         using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
         var included = 0;
         AddManifest(archive, project, version);
+        AddPlayablePreviewContract(archive, projectRoot, project, version);
 
         foreach (var root in IncludedRoots)
         {
@@ -835,6 +840,557 @@ public sealed class ProjectPackageService
             policy = "project-files-only"
         }, new JsonSerializerOptions { WriteIndented = true }));
     }
+
+    private static void AddPlayablePreviewContract(ZipArchive archive, string projectRoot, ProjectSnapshot project, string version)
+    {
+        var entry = archive.CreateEntry(PlayablePreviewContractFileName, CompressionLevel.Optimal);
+        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(project.GameTypeSource, project.GameName, project.Name);
+        var gameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);
+        var mainScene = TryReadMainScene(projectRoot);
+        var scenes = DiscoverSceneResourcePaths(projectRoot, mainScene, project);
+        var sceneEntities = scenes
+            .Take(12)
+            .Select((scene, index) => new
+            {
+                id = $"scene_{index + 1}",
+                label = SceneLabel(scene, index),
+                role = index == 0 ? "entry_scene" : "scene_marker",
+                scene,
+                objective = index == 0 ? "Enter the playable route." : "Inspect this package scene."
+            })
+            .ToArray();
+        var nodeEntities = DiscoverContractNodeEntities(projectRoot, scenes.Take(6).ToArray())
+            .OrderBy(NodeEntityPriority)
+            .ThenBy(entity => entity.Scene, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(entity => entity.Label, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var entities = nodeEntities
+            .Cast<object>()
+            .Concat(sceneEntities)
+            .Take(40)
+            .ToArray();
+        var mechanicHints = nodeEntities
+            .Select(entity => entity.Role)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(role => role, StringComparer.Ordinal)
+            .ToArray();
+
+        using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
+        writer.Write(JsonSerializer.Serialize(new
+        {
+            schema_version = PlayablePreviewContractSchemaVersion,
+            source = "project-package-service",
+            package_version = version,
+            generated_utc = DateTimeOffset.UtcNow.ToString("O"),
+            project_id = project.ProjectId,
+            project_name = project.Name,
+            game_name = project.GameName,
+            game_type_source = project.GameTypeSource,
+            game_type_id = gameTypeId,
+            game_type_guide = gameTypeGuide,
+            main_scene = mainScene,
+            objectives = new[]
+            {
+                new
+                {
+                    id = "first_playable_loop",
+                    label = "Move, inspect scene nodes, and complete the first browser preview loop.",
+                    success = "The player can move, select a scene node, interact, and see progress feedback."
+                }
+            },
+            entities,
+            mechanic_hints = mechanicHints,
+            state_model = BuildPreviewStateModel(),
+            role_interactions = BuildRoleInteractions(mechanicHints),
+            win_conditions = new[]
+            {
+                new
+                {
+                    id = "priority_roles_complete",
+                    label = "Complete interactions with the player, pressure, action, reward, and UI roles that exist in the contract."
+                }
+            },
+            loss_conditions = new[]
+            {
+                new
+                {
+                    id = "pressure_overflow_retryable",
+                    label = "Pressure can reduce preview HP, but the browser preview remains retryable."
+                }
+            },
+            input_actions = new[]
+            {
+                new { action = "move", inputs = new[] { "W", "A", "S", "D", "MouseLeft" }, behavior = "Move the preview avatar through the package-derived play space." },
+                new { action = "interact", inputs = new[] { "Space", "Enter", "MouseLeft" }, behavior = "Inspect or activate the nearest contract entity." },
+                new { action = "select_scene", inputs = new[] { "1", "2", "3" }, behavior = "Jump to a contract scene node." }
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private static string TryReadMainScene(string projectRoot)
+    {
+        var projectGodot = Path.Combine(projectRoot, "project.godot");
+        if (!File.Exists(projectGodot))
+        {
+            return "";
+        }
+
+        foreach (var line in File.ReadLines(projectGodot, Encoding.UTF8))
+        {
+            if (line.StartsWith("run/main_scene=", StringComparison.Ordinal))
+            {
+                return line.Split('=', 2)[1].Trim().Trim('"');
+            }
+        }
+
+        return "";
+    }
+
+    private static IReadOnlyList<string> DiscoverSceneResourcePaths(string projectRoot, string mainScene, ProjectSnapshot project)
+    {
+        var godotRoot = Path.Combine(projectRoot, "Game.Godot");
+        if (!Directory.Exists(godotRoot))
+        {
+            return [];
+        }
+
+        var projectTokens = new[]
+            {
+                project.Name,
+                project.GameName
+            }
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(NormalizeToken)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return Directory
+            .EnumerateFiles(godotRoot, "*.tscn", SearchOption.AllDirectories)
+            .Select(path => $"res://{Path.GetRelativePath(projectRoot, path).Replace('\\', '/')}")
+            .OrderBy(path => ScenePriority(path, mainScene, projectTokens))
+            .ThenBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .Take(80)
+            .ToArray();
+    }
+
+    private static int ScenePriority(string scenePath, string mainScene, IReadOnlyList<string> projectTokens)
+    {
+        if (!string.IsNullOrWhiteSpace(mainScene) && string.Equals(scenePath, mainScene, StringComparison.OrdinalIgnoreCase))
+        {
+            return 0;
+        }
+
+        var normalized = NormalizeToken(scenePath);
+        if (projectTokens.Any(token => normalized.Contains(token, StringComparison.Ordinal)))
+        {
+            return 1;
+        }
+
+        if (scenePath.Contains("/Prototypes/", StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+
+        if (scenePath.Contains("/Examples/", StringComparison.OrdinalIgnoreCase) ||
+            scenePath.Contains("/Tests.", StringComparison.OrdinalIgnoreCase) ||
+            scenePath.Contains("DefaultRpgTemplate", StringComparison.OrdinalIgnoreCase))
+        {
+            return 9;
+        }
+
+        return 4;
+    }
+
+    private static IReadOnlyList<PreviewContractNodeEntity> DiscoverContractNodeEntities(
+        string projectRoot,
+        IReadOnlyList<string> sceneResourcePaths)
+    {
+        var entities = new List<PreviewContractNodeEntity>();
+        var seenRoles = new HashSet<string>(StringComparer.Ordinal);
+        var sequence = 1;
+        foreach (var sceneResourcePath in sceneResourcePaths)
+        {
+            var sceneFile = ResolveOptionalResPath(projectRoot, sceneResourcePath);
+            if (sceneFile is null || !File.Exists(sceneFile))
+            {
+                continue;
+            }
+
+            foreach (var entity in ParseSceneNodeEntities(sceneResourcePath, sceneFile))
+            {
+                var roleKey = $"{entity.Role}:{entity.Label}";
+                if (!seenRoles.Add(roleKey))
+                {
+                    continue;
+                }
+
+                entities.Add(entity with { Id = $"entity_{sequence++}" });
+                if (entities.Count >= 28)
+                {
+                    return entities;
+                }
+            }
+        }
+
+        return entities;
+    }
+
+    private static IEnumerable<PreviewContractNodeEntity> ParseSceneNodeEntities(string sceneResourcePath, string sceneFile)
+    {
+        var nodes = ParseSceneNodes(sceneFile);
+        foreach (var node in nodes.Values)
+        {
+            var role = ClassifyContractNodeRole(node.Name, node.Type, node.Parent);
+            if (role is null)
+            {
+                continue;
+            }
+
+            yield return new PreviewContractNodeEntity(
+                "",
+                node.Name,
+                role,
+                sceneResourcePath,
+                NodeObjective(role, node.Name),
+                node.Type,
+                node.Path,
+                node.LocalPosition,
+                ResolveWorldPosition(node, nodes),
+                node.TargetPosition,
+                node.TargetPosition is null ? null : Math.Round(VectorLength(node.TargetPosition), 2));
+        }
+    }
+
+    private static IReadOnlyDictionary<string, PreviewSceneNode> ParseSceneNodes(string sceneFile)
+    {
+        var nodes = new Dictionary<string, PreviewSceneNode>(StringComparer.Ordinal);
+        PreviewSceneNode? current = null;
+        foreach (var line in File.ReadLines(sceneFile, Encoding.UTF8))
+        {
+            var nodeMatch = Regex.Match(line, "^\\[node\\s+.*name=\"(?<name>[^\"]+)\"\\s+type=\"(?<type>[^\"]+)\"(?:\\s+parent=\"(?<parent>[^\"]+)\")?.*\\]$");
+            if (nodeMatch.Success)
+            {
+                var name = nodeMatch.Groups["name"].Value;
+                var type = nodeMatch.Groups["type"].Value;
+                var parent = nodeMatch.Groups["parent"].Value;
+                var path = string.IsNullOrWhiteSpace(parent) ? name : $"{parent}/{name}";
+                current = new PreviewSceneNode(name, type, parent, path);
+                nodes[path] = current;
+                continue;
+            }
+
+            if (current is null)
+            {
+                continue;
+            }
+
+            if (line.StartsWith("transform = ", StringComparison.Ordinal))
+            {
+                current.LocalPosition = ParseTransformPosition(line);
+            }
+            else if (line.StartsWith("position = ", StringComparison.Ordinal) ||
+                line.StartsWith("translation = ", StringComparison.Ordinal))
+            {
+                current.LocalPosition = ParseVectorPosition(line);
+            }
+            else if (line.StartsWith("target_position = ", StringComparison.Ordinal))
+            {
+                current.TargetPosition = ParseVectorPosition(line);
+            }
+        }
+
+        return nodes;
+    }
+
+    private static PreviewVector3? ResolveWorldPosition(
+        PreviewSceneNode node,
+        IReadOnlyDictionary<string, PreviewSceneNode> nodes)
+    {
+        if (node.WorldPosition is not null)
+        {
+            return node.WorldPosition;
+        }
+
+        var local = node.LocalPosition ?? new PreviewVector3(0, 0, 0);
+        if (!string.IsNullOrWhiteSpace(node.Parent) &&
+            nodes.TryGetValue(node.Parent, out var parent) &&
+            !ReferenceEquals(parent, node))
+        {
+            var parentWorld = ResolveWorldPosition(parent, nodes) ?? new PreviewVector3(0, 0, 0);
+            node.WorldPosition = new PreviewVector3(
+                Math.Round(parentWorld.X + local.X, 3),
+                Math.Round(parentWorld.Y + local.Y, 3),
+                Math.Round(parentWorld.Z + local.Z, 3));
+            return node.WorldPosition;
+        }
+
+        node.WorldPosition = local;
+        return node.WorldPosition;
+    }
+
+    private static PreviewVector3? ParseTransformPosition(string line)
+    {
+        var values = ParseNumbers(line);
+        if (values.Count < 12)
+        {
+            return null;
+        }
+
+        return new PreviewVector3(
+            Math.Round(values[^3], 3),
+            Math.Round(values[^2], 3),
+            Math.Round(values[^1], 3));
+    }
+
+    private static PreviewVector3? ParseVectorPosition(string line)
+    {
+        var values = ParseNumbers(line);
+        if (values.Count < 2)
+        {
+            return null;
+        }
+
+        if (values.Count == 2)
+        {
+            return new PreviewVector3(Math.Round(values[0], 3), 0, Math.Round(values[1], 3));
+        }
+
+        return new PreviewVector3(
+            Math.Round(values[0], 3),
+            Math.Round(values[1], 3),
+            Math.Round(values[2], 3));
+    }
+
+    private static IReadOnlyList<double> ParseNumbers(string line)
+    {
+        var start = line.IndexOf('(', StringComparison.Ordinal);
+        var end = line.LastIndexOf(')');
+        var valueText = start >= 0 && end > start
+            ? line.Substring(start + 1, end - start - 1)
+            : line;
+        return Regex.Matches(valueText, "-?\\d+(?:\\.\\d+)?")
+            .Select(match => double.Parse(match.Value, CultureInfo.InvariantCulture))
+            .ToArray();
+    }
+
+    private static double VectorLength(PreviewVector3 vector)
+    {
+        return Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y + vector.Z * vector.Z);
+    }
+
+    private static string? ClassifyContractNodeRole(string nodeName, string nodeType, string parent)
+    {
+        var text = $"{nodeName} {nodeType} {parent}".ToLowerInvariant();
+        if (ContainsAny(text, "mesh", "collision", "light", "shadow"))
+        {
+            return null;
+        }
+
+        if (ContainsAny(text, "spawn", "wave"))
+        {
+            return "pressure_source";
+        }
+
+        if (ContainsAny(text, "attack", "skill", "cast"))
+        {
+            return "action";
+        }
+
+        if (ContainsAny(text, "player", "hero", "avatar"))
+        {
+            return "player_start";
+        }
+
+        if (ContainsAny(text, "enemy", "monster", "boss", "opponent"))
+        {
+            return "challenge";
+        }
+
+        if (ContainsAny(text, "reward", "loot", "upgrade", "choice", "levelup"))
+        {
+            return "reward";
+        }
+
+        if (ContainsAny(text, "startbutton", "retrybutton", "continuebutton", "button"))
+        {
+            return "ui_action";
+        }
+
+        if (ContainsAny(text, "objective", "status", "hud", "label", "log"))
+        {
+            return "feedback";
+        }
+
+        if (ContainsAny(text, "door", "portal", "exit", "route"))
+        {
+            return "transition";
+        }
+
+        if (ContainsAny(text, "map", "room", "path", "floor"))
+        {
+            return "play_space";
+        }
+
+        if (ContainsAny(text, "tower", "turret", "defense"))
+        {
+            return "buildable_unit";
+        }
+
+        return null;
+    }
+
+    private static string NodeObjective(string role, string nodeName)
+    {
+        return role switch
+        {
+            "player_start" => $"Use {nodeName} as the controllable avatar anchor.",
+            "challenge" => $"Resolve or inspect the challenge represented by {nodeName}.",
+            "pressure_source" => $"Advance pressure from {nodeName}.",
+            "reward" => $"Claim or inspect the reward state from {nodeName}.",
+            "ui_action" => $"Trigger the UI action {nodeName}.",
+            "feedback" => $"Read feedback from {nodeName}.",
+            "transition" => $"Move through the transition {nodeName}.",
+            "action" => $"Use the action affordance {nodeName}.",
+            "play_space" => $"Navigate the play space {nodeName}.",
+            "buildable_unit" => $"Inspect the buildable or defensive unit {nodeName}.",
+            _ => $"Inspect {nodeName}."
+        };
+    }
+
+    private static int NodeEntityPriority(PreviewContractNodeEntity entity)
+    {
+        return entity.Role switch
+        {
+            "player_start" => 0,
+            "challenge" => 1,
+            "pressure_source" => 2,
+            "reward" => 3,
+            "transition" => 4,
+            "action" => 5,
+            "ui_action" => 6,
+            "feedback" => 7,
+            "buildable_unit" => 8,
+            "play_space" => 9,
+            _ => 20
+        };
+    }
+
+    private static IReadOnlyList<PreviewStateField> BuildPreviewStateModel()
+    {
+        return
+        [
+            new PreviewStateField("score", "Score", 0, 0, 999),
+            new PreviewStateField("pressure", "Pressure", 0, 0, 9),
+            new PreviewStateField("rewards", "Rewards", 0, 0, 9),
+            new PreviewStateField("hp", "HP", 3, 0, 3),
+            new PreviewStateField("phase", "Phase", 1, 1, 9),
+            new PreviewStateField("energy", "Energy", 3, 0, 3)
+        ];
+    }
+
+    private static IReadOnlyList<PreviewRoleInteraction> BuildRoleInteractions(IReadOnlyList<string> mechanicHints)
+    {
+        var roles = mechanicHints.Count == 0
+            ? new HashSet<string>(["player_start", "pressure_source", "action", "reward", "ui_action"], StringComparer.Ordinal)
+            : new HashSet<string>(mechanicHints, StringComparer.Ordinal);
+        var interactions = new List<PreviewRoleInteraction>();
+        AddInteraction(interactions, roles, "player_start", new Dictionary<string, int> { ["score"] = 1 }, "已定位可控角色 {label}，移动与交互链路就绪。");
+        AddInteraction(interactions, roles, "pressure_source", new Dictionary<string, int> { ["pressure"] = 1, ["score"] = 2 }, "处理压力源 {label}，压力升高但仍可继续。");
+        AddInteraction(interactions, roles, "challenge", new Dictionary<string, int> { ["pressure"] = 1, ["score"] = 2 }, "遭遇 {label}，完成一次通用挑战验证。");
+        AddInteraction(interactions, roles, "action", new Dictionary<string, int> { ["pressure"] = -1, ["score"] = 2, ["energy"] = -1 }, "触发动作节点 {label}，压力下降并获得反馈。");
+        AddInteraction(interactions, roles, "reward", new Dictionary<string, int> { ["rewards"] = 1, ["score"] = 3, ["energy"] = 3, ["phase"] = 1 }, "领取奖励 {label}，能量恢复并推进阶段。");
+        AddInteraction(interactions, roles, "ui_action", new Dictionary<string, int> { ["score"] = 1 }, "触发界面动作 {label}，流程按钮可响应。");
+        AddInteraction(interactions, roles, "feedback", new Dictionary<string, int>(), "读取反馈节点 {label}，HUD/日志信息可追踪。");
+        AddInteraction(interactions, roles, "transition", new Dictionary<string, int> { ["phase"] = 1 }, "通过转场节点 {label}，进入下一阶段。");
+        AddInteraction(interactions, roles, "play_space", new Dictionary<string, int>(), "确认可导航空间 {label}，移动区域可验证。");
+        AddInteraction(interactions, roles, "buildable_unit", new Dictionary<string, int> { ["score"] = 1 }, "检查可构筑/防御单位 {label}，构筑类节点可被通用契约表达。");
+        return interactions;
+    }
+
+    private static void AddInteraction(
+        List<PreviewRoleInteraction> interactions,
+        HashSet<string> roles,
+        string role,
+        IReadOnlyDictionary<string, int> stateDelta,
+        string feedback)
+    {
+        if (!roles.Contains(role))
+        {
+            return;
+        }
+
+        interactions.Add(new PreviewRoleInteraction(role, stateDelta, feedback));
+    }
+
+    private static string? ResolveOptionalResPath(string projectRoot, string resourcePath)
+    {
+        if (!resourcePath.StartsWith("res://", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var relativePath = resourcePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(projectRoot, relativePath));
+        return WorkspacePathPolicy.IsUnderRoot(projectRoot, fullPath) ? fullPath : null;
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        return needles.Any(needle => text.Contains(needle, StringComparison.Ordinal));
+    }
+
+    private static string NormalizeToken(string value)
+    {
+        return Regex.Replace(value.ToLowerInvariant(), "[^a-z0-9]+", "", RegexOptions.CultureInvariant);
+    }
+
+    private static string SceneLabel(string scene, int index)
+    {
+        var fileName = scene.Split('/').LastOrDefault() ?? $"Scene {index + 1}";
+        return Regex.Replace(fileName, "\\.tscn$", "", RegexOptions.IgnoreCase);
+    }
+
+    private sealed record PreviewContractNodeEntity(
+        [property: JsonPropertyName("id")] string Id,
+        [property: JsonPropertyName("label")] string Label,
+        [property: JsonPropertyName("role")] string Role,
+        [property: JsonPropertyName("scene")] string Scene,
+        [property: JsonPropertyName("objective")] string Objective,
+        [property: JsonPropertyName("node_type")] string NodeType,
+        [property: JsonPropertyName("node_path")] string NodePath,
+        [property: JsonPropertyName("local_position")] PreviewVector3? LocalPosition = null,
+        [property: JsonPropertyName("world_position")] PreviewVector3? WorldPosition = null,
+        [property: JsonPropertyName("target_position")] PreviewVector3? TargetPosition = null,
+        [property: JsonPropertyName("range_hint")] double? RangeHint = null);
+
+    private sealed class PreviewSceneNode(string name, string type, string parent, string path)
+    {
+        public string Name { get; } = name;
+        public string Type { get; } = type;
+        public string Parent { get; } = parent;
+        public string Path { get; } = path;
+        public PreviewVector3? LocalPosition { get; set; }
+        public PreviewVector3? WorldPosition { get; set; }
+        public PreviewVector3? TargetPosition { get; set; }
+    }
+
+    private sealed record PreviewVector3(
+        [property: JsonPropertyName("x")] double X,
+        [property: JsonPropertyName("y")] double Y,
+        [property: JsonPropertyName("z")] double Z);
+
+    private sealed record PreviewStateField(
+        [property: JsonPropertyName("id")] string Id,
+        [property: JsonPropertyName("label")] string Label,
+        [property: JsonPropertyName("initial")] int Initial,
+        [property: JsonPropertyName("min")] int Min,
+        [property: JsonPropertyName("max")] int Max);
+
+    private sealed record PreviewRoleInteraction(
+        [property: JsonPropertyName("role")] string Role,
+        [property: JsonPropertyName("state_delta")] IReadOnlyDictionary<string, int> StateDelta,
+        [property: JsonPropertyName("feedback")] string Feedback);
 
     private static void AddFile(ZipArchive archive, string projectRoot, string absoluteFile)
     {

@@ -712,7 +712,23 @@ public sealed class ArtifactReadbackServiceTests
         await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.RepoPath, "Game.Core/Domain/Combat.cs", "public sealed class Combat {}");
-        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
+        Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", """
+        [gd_scene]
+
+        [node name="Player" type="CharacterBody3D"]
+        transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 4)
+
+        [node name="EnemySpawnA" type="Node3D"]
+        transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -2)
+
+        [node name="EnemyShadeA" type="CharacterBody3D" parent="EnemySpawnA"]
+        transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+
+        [node name="AttackArea" type="Area3D" parent="Player"]
+        target_position = Vector3(0, 0, -4.5)
+
+        [node name="StartButton" type="Button"]
+        """);
         Write(project.RepoPath, "docs/prototypes/demo.md", "prototype");
         Write(project.RepoPath, "PhaseA.Platform/Program.cs", "platform");
         Write(project.RepoPath, "scripts/python/dev_cli.py", "script");
@@ -738,6 +754,7 @@ public sealed class ArtifactReadbackServiceTests
         (await store.HasRunnerLockAsync(projectId)).Should().BeFalse();
         var names = ZipEntryNames(download.Content);
         names.Should().Contain("PACKAGE-MANIFEST.json");
+        names.Should().Contain("playable-preview-contract.json");
         names.Should().Contain("Game.Core/Domain/Combat.cs");
         names.Should().Contain("Game.Godot/Scenes/Main.tscn");
         names.Should().Contain("docs/prototypes/demo.md");
@@ -745,6 +762,29 @@ public sealed class ArtifactReadbackServiceTests
         names.Should().NotContain(name => name.StartsWith("scripts/", StringComparison.OrdinalIgnoreCase));
         names.Should().NotContain(name => name.StartsWith("logs/", StringComparison.OrdinalIgnoreCase));
         names.Should().NotContain(name => name.StartsWith(".agents/", StringComparison.OrdinalIgnoreCase));
+        using var contract = JsonDocument.Parse(ZipEntryText(download.Content, "playable-preview-contract.json"));
+        contract.RootElement.GetProperty("schema_version").GetString().Should().Be("phasea-playable-preview-contract-v1");
+        contract.RootElement.GetProperty("source").GetString().Should().Be("project-package-service");
+        contract.RootElement.GetProperty("entities").EnumerateArray().Should().Contain(entity =>
+            entity.GetProperty("scene").GetString() == "res://Game.Godot/Scenes/Main.tscn" &&
+            entity.GetProperty("role").GetString() == "entry_scene");
+        var entities = contract.RootElement.GetProperty("entities").EnumerateArray().ToArray();
+        entities.Should().Contain(entity =>
+            entity.GetProperty("label").GetString() == "Player" &&
+            Math.Abs(entity.GetProperty("world_position").GetProperty("z").GetDouble() - 4) < 0.001);
+        entities.Should().Contain(entity =>
+            entity.GetProperty("label").GetString() == "EnemyShadeA" &&
+            Math.Abs(entity.GetProperty("world_position").GetProperty("x").GetDouble() + 3) < 0.001 &&
+            Math.Abs(entity.GetProperty("world_position").GetProperty("y").GetDouble() - 0.9) < 0.001);
+        entities.Should().Contain(entity =>
+            entity.GetProperty("label").GetString() == "AttackArea" &&
+            Math.Abs(entity.GetProperty("range_hint").GetDouble() - 4.5) < 0.001);
+        contract.RootElement.GetProperty("input_actions").EnumerateArray().Should().Contain(action =>
+            action.GetProperty("action").GetString() == "interact");
+        contract.RootElement.GetProperty("state_model").EnumerateArray().Should().Contain(field =>
+            field.GetProperty("id").GetString() == "pressure");
+        contract.RootElement.GetProperty("role_interactions").EnumerateArray().Should().Contain(rule =>
+            rule.GetProperty("role").GetString() == "ui_action");
     }
 
     [Fact]

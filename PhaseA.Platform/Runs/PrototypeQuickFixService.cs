@@ -1551,28 +1551,23 @@ public sealed partial class PrototypeQuickFixService
     {
         assistantMessage = "";
         recoveryEvidence = "";
-        if (!IsCompletionEvidenceRecoveryGoal(goal))
-        {
-            return false;
-        }
-
-        var repairState = _stateWriter.ReadLatestPrototypeRepairState(project);
+        var repairState = IsCompletionEvidenceRecoveryGoal(goal)
+            ? _stateWriter.ReadLatestPrototypeRepairState(project)
+            : "";
         if (string.IsNullOrWhiteSpace(repairState))
         {
-            return false;
+            repairState = ReadLatestNeedsFixCompletionEvidenceState(project, goal.GoalIndex);
+            if (string.IsNullOrWhiteSpace(repairState))
+            {
+                return false;
+            }
         }
 
         try
         {
             using var document = JsonDocument.Parse(repairState);
             var root = document.RootElement;
-            var repairStatus = TryReadString(root, "status");
-            if (!string.Equals(repairStatus, "completed_with_protected_latest_blocker", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (!JsonArrayContains(root, "fixed_intent", "prototype_completion_state_missing"))
+            if (!IsProtectedCompletionRecoveryState(root))
             {
                 return false;
             }
@@ -1760,6 +1755,73 @@ public sealed partial class PrototypeQuickFixService
     private static PrototypeContractSnapshot MissingPrototypeContract()
     {
         return new PrototypeContractSnapshot("routes/prototype-contract/latest.json", "");
+    }
+
+    private static string ReadLatestNeedsFixCompletionEvidenceState(ProjectSnapshot project, int goalIndex)
+    {
+        var step = goalIndex <= 0 ? "step-unknown" : $"step-{goalIndex:00}";
+        var candidateRoots = new[]
+        {
+            Path.Combine(project.RepoPath, "meta", "routes", "needs-fix", step),
+            Path.Combine(project.MetaPath, "routes", "needs-fix", step)
+        };
+
+        foreach (var directory in candidateRoots.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var candidate = Directory
+                .EnumerateFiles(directory, "*.json", SearchOption.TopDirectoryOnly)
+                .Select(path => new FileInfo(path))
+                .Where(file => file.Name.Contains("completion-evidence", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(file => file.LastWriteTimeUtc)
+                .FirstOrDefault(file => IsNeedsFixCompletionEvidenceState(file.FullName));
+            if (candidate is not null)
+            {
+                return File.ReadAllText(candidate.FullName, Encoding.UTF8);
+            }
+        }
+
+        return "";
+    }
+
+    private static bool IsNeedsFixCompletionEvidenceState(string path)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            return IsProtectedCompletionRecoveryState(document.RootElement);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsProtectedCompletionRecoveryState(JsonElement root)
+    {
+        var repairStatus = TryReadString(root, "status");
+        if (string.Equals(repairStatus, "completed_with_protected_latest_blocker", StringComparison.OrdinalIgnoreCase) &&
+            JsonArrayContains(root, "fixed_intent", "prototype_completion_state_missing"))
+        {
+            return true;
+        }
+
+        if (!string.Equals(repairStatus, "succeeded", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var canonicalWrite = TryReadString(root, "canonical_completion_state_write");
+        var blockedTarget = TryReadString(root, "blocked_target");
+        var blockedReason = TryReadString(root, "blocked_reason") ?? "";
+        return string.Equals(canonicalWrite, "blocked_permission_denied", StringComparison.OrdinalIgnoreCase) &&
+               SameSlashPath(blockedTarget, "meta/routes/prototype/latest.json") &&
+               (blockedReason.Contains("canonical", StringComparison.OrdinalIgnoreCase) ||
+                blockedReason.Contains("prototype_completion_state_missing", StringComparison.OrdinalIgnoreCase) ||
+                blockedReason.Contains("completion state", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string BuildGoalRepairPrompt(
@@ -3097,6 +3159,11 @@ public sealed partial class PrototypeQuickFixService
             return true;
         }
 
+        if (TryReadRecoveredWorkflowStepsFromCompletionEvidence(root, out steps))
+        {
+            return true;
+        }
+
         return TryReadRecoveredWorkflowStepsFromActiveState(
             repositoryRoot,
             normalizedSlug,
@@ -3116,6 +3183,45 @@ public sealed partial class PrototypeQuickFixService
         }
 
         return TryNormalizeRecoveredWorkflowSteps(stepsElement, out steps);
+    }
+
+    private static bool TryReadRecoveredWorkflowStepsFromCompletionEvidence(JsonElement root, out object[] steps)
+    {
+        steps = [];
+        if (!root.TryGetProperty("completion_evidence", out var evidence) ||
+            evidence.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        var recoveredSteps = new List<object>();
+        for (var day = 1; day <= RecoveredWorkflowMaxDay; day++)
+        {
+            if (!evidence.TryGetProperty($"day_{day}", out var step) ||
+                step.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var status = TryReadString(step, "status") ?? "";
+            if (!IsAcceptableRecoveredWorkflowStep(day, status, step))
+            {
+                return false;
+            }
+
+            recoveredSteps.Add(new
+            {
+                day,
+                title = FirstNonEmpty(TryReadString(step, "title"), $"Recovered workflow step {day:00}"),
+                status,
+                reason = TryReadString(step, "reason"),
+                record = TryReadString(step, "record"),
+                prototype_spec = TryReadString(step, "prototype_spec")
+            });
+        }
+
+        steps = recoveredSteps.ToArray();
+        return true;
     }
 
     private static bool TryReadRecoveredWorkflowStepsFromActiveState(
@@ -3331,6 +3437,12 @@ public sealed partial class PrototypeQuickFixService
     private static bool IsAcceptableRecoveredWorkflowStep(int day, string status, JsonElement step)
     {
         if (string.Equals(status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

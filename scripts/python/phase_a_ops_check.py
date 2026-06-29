@@ -10,6 +10,8 @@ import urllib.parse
 from pathlib import Path
 from typing import Any
 
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check Phase A deployment operations prerequisites.")
@@ -35,6 +37,7 @@ def main() -> int:
         checks.append({"name": "godot_bin", "status": "warn", "message": "GODOT_BIN is not set; Day 5/GdUnit checks must remain disabled."})
     checks.append(check_app_bind(args.app_bind_url, args.https_termination))
     checks.append(check_public_base_url(args.public_base_url))
+    checks.append(check_public_smoke_followup(args.public_base_url))
 
     status = "ok"
     if any(item["status"] == "fail" for item in checks):
@@ -123,6 +126,25 @@ def check_public_base_url(value: str) -> dict[str, str]:
     if parsed.scheme != "https" or not parsed.hostname:
         return {"name": "public_base_url", "status": "fail", "message": "PUBLIC_BASE_URL must be absolute HTTPS"}
     return {"name": "public_base_url", "status": "ok", "message": value}
+
+
+def check_public_smoke_followup(value: str) -> dict[str, str]:
+    if not value:
+        return {"name": "public_smoke_followup", "status": "ok", "message": "PUBLIC_BASE_URL is not set"}
+    parsed = urllib.parse.urlparse(value)
+    if not parsed.hostname:
+        return {"name": "public_smoke_followup", "status": "ok", "message": "PUBLIC_BASE_URL is invalid; syntax check reports the failure"}
+    if parsed.hostname.lower() in LOCAL_HOSTS:
+        return {"name": "public_smoke_followup", "status": "ok", "message": "local PUBLIC_BASE_URL does not require public smoke"}
+    return {
+        "name": "public_smoke_followup",
+        "status": "warn",
+        "message": (
+            "syntax only; run "
+            f"py -3 scripts/python/phase_a_public_smoke.py --base-url {value} "
+            "before claiming public HTTPS reachability"
+        ),
+    }
 
 
 if __name__ == "__main__":

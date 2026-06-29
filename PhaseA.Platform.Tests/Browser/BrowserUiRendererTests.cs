@@ -159,6 +159,7 @@ public sealed class BrowserUiRendererTests
                 this.maxLength = 0;
                 this.placeholder = "";
                 this.required = false;
+                this.style = {};
                 this.attributes = new Map();
                 this.classList = new ClassList();
                 this._innerHTML = "";
@@ -167,16 +168,32 @@ public sealed class BrowserUiRendererTests
                 this._innerHTML = value;
                 if (this.id !== "gddQuestionForm") return;
                 document.inputs.clear();
-                const textareaPattern = /<textarea\b([^>]*)><\/textarea>/g;
+                document.progressElement = null;
+                if (value.includes("gdd-question-progress")) {
+                  const progress = new Element("gddQuestionFormProgress");
+                  progress.classList.add("gdd-question-progress");
+                  elements.set("gddQuestionFormProgress", progress);
+                  document.progressElement = progress;
+                }
+                if (value.includes("gddQuestionFormProgressBar")) {
+                  elements.set("gddQuestionFormProgressBar", new Element("gddQuestionFormProgressBar"));
+                }
+                if (value.includes("gddQuestionFormProgressValue")) {
+                  const progressValue = new Element("gddQuestionFormProgressValue");
+                  progressValue.textContent = "0%";
+                  elements.set("gddQuestionFormProgressValue", progressValue);
+                }
+                const textareaPattern = /<textarea\b([^>]*)>([\s\S]*?)<\/textarea>/g;
                 let match;
                 while ((match = textareaPattern.exec(value)) !== null) {
                   const attrs = match[1];
+                  const body = match[2] || "";
                   const id = /data-gdd-question-input="([^"]+)"/.exec(attrs)?.[1] || "";
                   const input = new Element(id);
                   input.dataset.gddQuestionInput = id;
+                  input.value = body;
                   input.rows = Number(/rows="([^"]+)"/.exec(attrs)?.[1] || 0);
                   input.maxLength = Number(/maxlength="([^"]+)"/.exec(attrs)?.[1] || 0);
-                  input.placeholder = /placeholder="([^"]*)"/.exec(attrs)?.[1] || "";
                   input.required = /\srequired(?:\s|>|$)/.test(attrs);
                   if (/aria-required="true"/.test(attrs)) input.attributes.set("aria-required", "true");
                   document.inputs.set(id, input);
@@ -184,6 +201,7 @@ public sealed class BrowserUiRendererTests
               }
               get innerHTML() { return this._innerHTML; }
               getAttribute(name) { return this.attributes.get(name) || null; }
+              setAttribute(name, value) { this.attributes.set(name, String(value)); }
               focus() { focusedElement = this; }
             }
 
@@ -196,7 +214,9 @@ public sealed class BrowserUiRendererTests
 
             const document = {
               inputs: new Map(),
+              progressElement: null,
               querySelector(selector) {
+                if (selector === ".gdd-question-progress") return this.progressElement;
                 const match = /^\[data-gdd-question-input="([^"]+)"\]$/.exec(selector);
                 return match ? this.inputs.get(match[1]) || null : null;
               }
@@ -225,14 +245,19 @@ public sealed class BrowserUiRendererTests
               gddQuestionFormSource: "",
               gddQuestionFormRequestToken: 0,
               gddQuestionFormAbortController: null,
+              gddQuestionFormProgressTimer: null,
+              gddQuestionFormProgressStartedAtMs: 0,
+              gddQuestionFormCurrentSchemaSignature: "",
+              gddQuestionFormDraftCache: new Map(),
               gddQuestionFormSchemaCache: new Map(),
               gddOutlineReady: false,
               localBusy: false
             };
             const gddQuestionFormMessageBudget = 5500;
-            const gddQuestionFormSchemaCacheTtlMs = 5 * 60 * 1000;
-            const gddQuestionFormFallbackCacheTtlMs = 30 * 1000;
+            const gddQuestionFormSchemaCacheTtlMs = 24 * 60 * 60 * 1000;
+            const gddQuestionFormFallbackCacheTtlMs = 5 * 60 * 1000;
             const gddQuestionFormSchemaTimeoutMs = 90 * 1000;
+            const gddQuestionFormProgressDurationMs = 20 * 1000;
             const $ = id => elements.get(id) || null;
             function escapeHtml(value) {
               return String(value ?? "")
@@ -279,7 +304,14 @@ public sealed class BrowserUiRendererTests
               await Promise.resolve();
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
               assert.strictEqual(apiCalls.length, 1);
+              assert.strictEqual($("gddQuestionFormProgressValue").textContent, "0%");
+              assert.strictEqual(document.progressElement.getAttribute("aria-valuenow"), "0");
+              assert.ok(state.gddQuestionFormProgressTimer);
+              updateGddQuestionFormProgress(99.9);
+              assert.strictEqual($("gddQuestionFormProgressValue").textContent, "99%");
+              assert.strictEqual($("gddQuestionFormProgressBar").style.width, "99%");
               closeGddQuestionFormModal();
+              assert.strictEqual(state.gddQuestionFormProgressTimer, null);
               assert.strictEqual(apiCalls[0].options.signal.aborted, true);
               resolveApi({ fields: fallbackGddQuestionFormFields(), source: "agent" });
               await openPromise;
@@ -292,41 +324,58 @@ public sealed class BrowserUiRendererTests
               await invalidRequiredOpenPromise;
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
               assert.strictEqual(state.gddQuestionFormSource, "fallback");
+              assert.strictEqual(state.gddQuestionFormProgressTimer, null);
               assert.ok(state.gddQuestionFormFields.filter(field => field.required).length >= 4);
+              closeGddQuestionFormModal();
+
+              const apiCountBeforeCachedOpen = apiCalls.length;
+              await openGddQuestionFormModal();
+              assert.strictEqual(apiCalls.length, apiCountBeforeCachedOpen);
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
+              assert.strictEqual(state.gddQuestionFormProgressTimer, null);
               closeGddQuestionFormModal();
 
               renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
               setModalVisible("gddQuestionFormModal", true);
               assert.strictEqual(document.inputs.get("reference_signal").required, true);
               assert.strictEqual(document.inputs.get("reference_signal").getAttribute("aria-required"), "true");
+              assert.strictEqual(document.inputs.get("reference_signal").value, "Towerdemo2 的参考对象、体验目标和禁忌方向。");
 
+              document.inputs.get("reference_signal").value = "";
               await confirmGddQuestionForm();
               assert.strictEqual(routeCalls.length, 0);
               assert.ok($("gddQuestionFormHint").textContent.includes("请先填写必填问题"));
               assert.strictEqual(focusedElement, document.inputs.get("reference_signal"));
 
-              for (const field of state.gddQuestionFormFields.filter(field => field.required).slice(0, 4)) {
-                document.inputs.get(field.id).value = `${field.label} answer`;
-              }
+              document.inputs.get("reference_signal").value = "玩家修改后的参考标杆";
               routeShouldSucceed = false;
               await confirmGddQuestionForm();
               assert.strictEqual(routeCalls.length, 1);
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
-              assert.strictEqual(document.inputs.get("reference_signal").value, "参考游戏或体验标杆 answer");
+              assert.strictEqual(document.inputs.get("reference_signal").value, "玩家修改后的参考标杆");
               assert.strictEqual($("confirmGddQuestionForm").disabled, false);
+
+              document.inputs.get("reference_signal").value = "关闭前已经填写一半";
+              closeGddQuestionFormModal();
+              assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
+              renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              setModalVisible("gddQuestionFormModal", true);
+              assert.strictEqual(document.inputs.get("reference_signal").value, "关闭前已经填写一半");
 
               routeShouldSucceed = true;
               routeWaitForResolve = true;
               const confirmPromise = confirmGddQuestionForm();
               await Promise.resolve();
               assert.strictEqual($("confirmGddQuestionForm").disabled, true);
-              assert.strictEqual($("cancelGddQuestionForm").disabled, true);
+              assert.strictEqual($("cancelGddQuestionForm").disabled, false);
               resolveRoute();
               await confirmPromise;
               assert.strictEqual(routeCalls.length, 2);
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
               assert.strictEqual($("cancelGddQuestionForm").disabled, false);
               assert.ok(routeCalls[1].includes("GDD question-form raw material:"));
+              renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              assert.strictEqual(document.inputs.get("reference_signal").value, "Towerdemo2 的参考对象、体验目标和禁忌方向。");
             })().catch(error => {
               console.error(error);
               process.exit(1);
@@ -2719,7 +2768,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("/api/account/active-run");
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
-        html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750)");
+        html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750, requireLocalBusy = true)");
         html.Should().Contain("runBelongsToCurrentProject(run)");
         html.Should().Contain("function runIsBusy(run)");
         html.Should().Contain("game-design-gdd-section-batch");
@@ -2814,6 +2863,11 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("data-global-action");
         html.Should().Contain("删除中...");
         html.Should().Contain("setInterval(refreshActiveRun, 5000)");
+        html.Should().Contain("phasea:active-run-refresh");
+        html.Should().Contain("void refreshActiveRun();");
+        html.Should().Contain("scheduleActiveRunRefresh(8, 750, false);");
+        html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750, requireLocalBusy = true)");
+        html.Should().Contain("(!requireLocalBusy || state.localBusy)");
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
         html.Should().Contain("gddQuestionFormModal");
@@ -2829,6 +2883,16 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("gddQuestionFormRequestToken");
         html.Should().Contain("gddQuestionFormAbortController");
         html.Should().Contain("gddQuestionFormSchemaCache");
+        html.Should().Contain("gddQuestionFormDraftCache");
+        html.Should().Contain("function saveGddQuestionFormDraft()");
+        html.Should().Contain("function readGddQuestionFormDraft(signature)");
+        html.Should().Contain("function clearGddQuestionFormDraft()");
+        html.Should().Contain("gddQuestionFormProgressTimer");
+        html.Should().Contain("gddQuestionFormProgressDurationMs");
+        html.Should().Contain("function updateGddQuestionFormProgress(percent)");
+        html.Should().Contain("function stopGddQuestionFormProgress()");
+        html.Should().Contain("aria-valuemax=\"99\"");
+        html.Should().Contain("gddQuestionFormProgressValue");
         html.Should().Contain("maxlength=");
         html.Should().Contain("gddQuestionFormMessageBudget");
         html.Should().Contain("gddQuestionFormFallbackCacheTtlMs");
@@ -3564,6 +3628,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("attempt < 1800");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/sections/complete-missing");
+        html.Should().Contain("function notifyActiveRunRefresh(runId = \"\")");
+        html.Should().Contain("notifyActiveRunRefresh(result.runId);");
+        html.Should().Contain("[\"queued\", \"running\"].includes(String(result.status || \"\").toLowerCase())");
         html.Should().Contain("data-quick-complete-section");
         html.Should().Contain("section-actions");
         html.Should().Contain("editorSkeleton");

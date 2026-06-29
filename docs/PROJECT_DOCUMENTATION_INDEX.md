@@ -6,27 +6,30 @@ This file is the top-level navigation for project docs.
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/agents/00-index.md`
-4. `docs/agents/01-session-recovery.md`
-5. `docs/PROJECT_DOCUMENTATION_INDEX.md`
-6. `docs/agents/13-rag-sources-and-session-ssot.md`
-7. `DELIVERY_PROFILE.md`
-8. `docs/testing-framework.md`
-9. `docs/agents/16-directory-responsibilities.md`
-10. `docs/workflows/prototype-lane.md`
-11. `docs/workflows/prototype-lane-playbook.md`
-12. `docs/workflows/prototype-tdd.md`
-13. Newest file in `execution-plans/`
-14. Newest file in `decision-logs/`
-15. If available: `logs/ci/<date>/sc-review-pipeline-task-<task-id>/latest.json`
+3. `docs/standards/_index.md`
+4. `docs/agents/00-index.md`
+5. `docs/agents/01-session-recovery.md`
+6. `docs/PROJECT_DOCUMENTATION_INDEX.md`
+7. `docs/agents/13-rag-sources-and-session-ssot.md`
+8. `DELIVERY_PROFILE.md`
+9. `docs/testing-framework.md`
+10. `docs/agents/16-directory-responsibilities.md`
+11. `docs/workflows/prototype-lane.md`
+12. `docs/workflows/prototype-lane-playbook.md`
+13. `docs/workflows/prototype-tdd.md`
+14. Newest file in `execution-plans/`
+15. Newest file in `decision-logs/`
+16. If available: `logs/ci/<date>/sc-review-pipeline-task-<task-id>/latest.json`
 
 ## Authoritative Sources
 
 - Taskmaster triplet: `.taskmaster/tasks/tasks.json`, `.taskmaster/tasks/tasks_back.json`, `.taskmaster/tasks/tasks_gameplay.json`
 - PRD: `docs/prd/**`
-- ADR: `docs/adr/ADR-*.md`, `docs/architecture/ADR_INDEX_GODOT.md`
+- ADR: `docs/adr/ADR-*.md`, `docs/architecture/ADR_INDEX_GODOT.md`, `docs/architecture/ADR_INDEX_PHASE.md`
 - Base architecture: `docs/architecture/base/**`
 - Overlay slices: `docs/architecture/overlays/**`
+- Phase service architecture rationale: `docs/architecture/phase-service/_index.md`
+- Standards: `docs/standards/_index.md`, `docs/standards/phase-service.md`
 - Testing rules: `docs/testing-framework.md`
 - Delivery/run protocol: `DELIVERY_PROFILE.md`, `docs/workflows/run-protocol.md`, `docs/workflows/local-hard-checks.md`
 

@@ -14,8 +14,8 @@ public sealed class GameDesignQuestionFormService
     private const int MaxRequiredFields = 6;
     private const int DefaultMaxLength = 500;
     private const int MaxSchemaCacheEntries = 128;
-    private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan FallbackSchemaCacheTtl = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromHours(24);
+    private static readonly TimeSpan FallbackSchemaCacheTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan DefaultSchemaGenerationTimeout = TimeSpan.FromSeconds(120);
 
     private readonly PhaseAMetadataStore _metadataStore;
@@ -115,10 +115,16 @@ public sealed class GameDesignQuestionFormService
         }
 
         var model = PrototypeModelPolicy.Normalize(request.Model);
-        var cacheKey = CacheKey(project, model);
+        var cacheKey = CacheKey(project);
         if (TryReadCache(cacheKey, out var cached))
         {
-            return cached;
+            if (!string.Equals(cached!.Source, "agent", StringComparison.Ordinal) ||
+                await ShouldReuseCachedSchemaAsync(project, model, cached, accountId, cancellationToken))
+            {
+                return cached;
+            }
+
+            RemoveCache(cacheKey);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -251,6 +257,54 @@ public sealed class GameDesignQuestionFormService
         }
     }
 
+    private async Task<bool> ShouldReuseCachedSchemaAsync(
+        ProjectSnapshot project,
+        string model,
+        GameDesignQuestionFormResult cached,
+        string accountId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var completion = await _llmRouteEngine.CompleteAsync(
+                new LlmRouteRequest(
+                    WorkspaceRoot: ResolveLlmWorkspace(project),
+                    Purpose: "gdd-question-form-cache-decision",
+                    Model: model,
+                    Prompt: BuildCacheDecisionPrompt(project, cached),
+                    Options: new CodexChatClientOptions(ReasoningEffort: "low"),
+                    BillingAccountId: accountId,
+                    RequireJsonObject: true),
+                cancellationToken);
+
+            if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
+            {
+                return true;
+            }
+
+            using var document = JsonDocument.Parse(completion.JsonObjectText);
+            if (document.RootElement.TryGetProperty("rebuild", out var rebuild) &&
+                rebuild.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                return !rebuild.GetBoolean();
+            }
+
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (JsonException)
+        {
+            return true;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
     private GameDesignQuestionFormResult Fallback(ProjectSnapshot project, string failureCode)
     {
         return new GameDesignQuestionFormResult(
@@ -322,6 +376,35 @@ public sealed class GameDesignQuestionFormService
         - Use unique ASCII snake_case ids.
         - Mark 4 to 6 essential fields as required=true. Mark the remaining useful but optional fields as required=false.
         - Keep labels under 32 characters and placeholders under 120 characters.
+        """;
+    }
+
+    private static string BuildCacheDecisionPrompt(ProjectSnapshot project, GameDesignQuestionFormResult cached)
+    {
+        var fieldsJson = JsonSerializer.Serialize(cached.Fields);
+        return $$"""
+        Return JSON object only. Decide whether the cached GDD question-form should be rebuilt.
+
+        Prefer reusing the cached form. Rebuild only when the cached fields clearly do not fit the current project type or are structurally unusable.
+
+        Current project:
+        - Project id: {{project.ProjectId}}
+        - Game name: {{project.GameName}}
+        - Project name: {{project.Name}}
+        - Game type source: {{project.GameTypeSource}}
+        - Template rule id: {{project.TemplateRuleId}}
+
+        Cached form:
+        - Schema version: {{cached.SchemaVersion}}
+        - Source: {{cached.Source}}
+        - Game type: {{cached.GameType}}
+        - Fields JSON: {{fieldsJson}}
+
+        Return:
+        {
+          "rebuild": false,
+          "reason": "short reason"
+        }
         """;
     }
 
@@ -518,6 +601,15 @@ public sealed class GameDesignQuestionFormService
         }
     }
 
+    private void RemoveCache(string cacheKey)
+    {
+        lock (_cacheLock)
+        {
+            _schemaCache.Remove(cacheKey);
+            _inFlightSchemas.Remove(cacheKey);
+        }
+    }
+
     private bool TryReadCacheLocked(
         string cacheKey,
         DateTimeOffset now,
@@ -574,13 +666,12 @@ public sealed class GameDesignQuestionFormService
         }
     }
 
-    private static string CacheKey(ProjectSnapshot project, string model)
+    private static string CacheKey(ProjectSnapshot project)
     {
         return string.Join(
             "|",
             project.AccountId,
             project.ProjectId,
-            model,
             project.GameName,
             project.GameTypeSource,
             project.TemplateRuleId);

@@ -2137,6 +2137,29 @@ public sealed class BrowserUiRenderer
                 .modal-card > .stack { min-height: 0; max-height: calc(min(90vh, 54rem) - 2rem); overflow-y: auto; overscroll-behavior: contain; padding-right: 0.25rem; }
                 #iterationPlanUpdateModal .modal-card > .stack { max-height: calc(100vh - 4rem); }
                 .modal-scroll { max-height: min(70vh, 42rem); overflow-y: auto; padding-right: 0.25rem; }
+                .gdd-question-loading { display: grid; gap: 0.55rem; align-content: start; }
+                .gdd-question-progress {
+                  position: relative;
+                  width: 100%;
+                  height: 0.7rem;
+                  border: 1px solid var(--line);
+                  border-radius: 999px;
+                  background: #f3ead9;
+                  overflow: hidden;
+                }
+                .gdd-question-progress-bar {
+                  width: 0%;
+                  height: 100%;
+                  border-radius: inherit;
+                  background: var(--accent);
+                  transition: width 120ms linear;
+                }
+                .gdd-question-progress-value {
+                  font-size: 0.9rem;
+                  font-weight: 800;
+                  color: var(--accent);
+                  text-align: right;
+                }
                 .login-shell { max-width: 34rem; justify-self: center; width: 100%; }
                 .token-box {
                   min-height: 7rem;
@@ -2415,7 +2438,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddQuestionFormFields: [], gddQuestionFormSource: "", gddQuestionFormRequestToken: 0, gddQuestionFormAbortController: null, gddQuestionFormSchemaCache: new Map(), gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddQuestionFormFields: [], gddQuestionFormSource: "", gddQuestionFormRequestToken: 0, gddQuestionFormAbortController: null, gddQuestionFormProgressTimer: null, gddQuestionFormProgressStartedAtMs: 0, gddQuestionFormCurrentSchemaSignature: "", gddQuestionFormDraftCache: new Map(), gddQuestionFormSchemaCache: new Map(), gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
                 let authEpoch = 0;
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
@@ -2425,9 +2448,10 @@ public sealed class BrowserUiRenderer
                 const chatStorageVersion = "v2";
                 const maxStoredChatMessages = 30;
                 const gddQuestionFormMessageBudget = 5500;
-                const gddQuestionFormSchemaCacheTtlMs = 5 * 60 * 1000;
-                const gddQuestionFormFallbackCacheTtlMs = 30 * 1000;
+                const gddQuestionFormSchemaCacheTtlMs = 24 * 60 * 60 * 1000;
+                const gddQuestionFormFallbackCacheTtlMs = 5 * 60 * 1000;
                 const gddQuestionFormSchemaTimeoutMs = 90 * 1000;
+                const gddQuestionFormProgressDurationMs = 20 * 1000;
                 const chatThinkingPrompts = [
                   "正在理解你的问题...",
                   "正在结合当前项目上下文...",
@@ -4508,10 +4532,46 @@ public sealed class BrowserUiRenderer
                   state.gddQuestionFormFields = [];
                   state.gddQuestionFormSource = "";
                   $("gddQuestionForm").dataset.schema = "question-form";
-                  $("gddQuestionForm").innerHTML = `<p class="muted">正在根据当前游戏类型规划问题...</p>`;
+                  $("gddQuestionForm").innerHTML = `
+                    <div class="gdd-question-loading">
+                      <p class="muted">正在根据当前游戏类型规划问题，请稍候。</p>
+                      <div class="gdd-question-progress" role="progressbar" aria-label="策划问题准备进度" aria-valuemin="0" aria-valuemax="99" aria-valuenow="0">
+                        <div id="gddQuestionFormProgressBar" class="gdd-question-progress-bar"></div>
+                      </div>
+                      <div id="gddQuestionFormProgressValue" class="gdd-question-progress-value">0%</div>
+                    </div>`;
                   $("gddQuestionFormMeta").textContent = "正在准备策划大纲问题";
                   $("gddQuestionFormHint").textContent = "";
                   $("confirmGddQuestionForm").disabled = true;
+                  startGddQuestionFormProgress();
+                }
+
+                function updateGddQuestionFormProgress(percent) {
+                  const safePercent = Math.min(99, Math.max(0, Math.floor(Number(percent) || 0)));
+                  const progress = document.querySelector(".gdd-question-progress");
+                  const bar = $("gddQuestionFormProgressBar");
+                  const value = $("gddQuestionFormProgressValue");
+                  if (progress) progress.setAttribute("aria-valuenow", String(safePercent));
+                  if (bar) bar.style.width = `${safePercent}%`;
+                  if (value) value.textContent = `${safePercent}%`;
+                }
+
+                function startGddQuestionFormProgress() {
+                  stopGddQuestionFormProgress();
+                  state.gddQuestionFormProgressStartedAtMs = Date.now();
+                  updateGddQuestionFormProgress(0);
+                  state.gddQuestionFormProgressTimer = setInterval(() => {
+                    const elapsedMs = Date.now() - state.gddQuestionFormProgressStartedAtMs;
+                    updateGddQuestionFormProgress((elapsedMs / gddQuestionFormProgressDurationMs) * 99);
+                  }, 100);
+                }
+
+                function stopGddQuestionFormProgress() {
+                  if (state.gddQuestionFormProgressTimer) {
+                    clearInterval(state.gddQuestionFormProgressTimer);
+                    state.gddQuestionFormProgressTimer = null;
+                  }
+                  state.gddQuestionFormProgressStartedAtMs = 0;
                 }
 
                 function gddQuestionFormCacheKey(projectId = state.projectId) {
@@ -4541,6 +4601,40 @@ public sealed class BrowserUiRenderer
                   });
                 }
 
+                function gddQuestionFormSchemaSignature(fields) {
+                  return JSON.stringify((fields || []).map(field => [
+                    field.id,
+                    field.label,
+                    field.placeholder || "",
+                    field.rows || 3,
+                    field.maxLength || 500,
+                    !!field.required
+                  ]));
+                }
+
+                function saveGddQuestionFormDraft() {
+                  if (!state.gddQuestionFormFields.length || !state.gddQuestionFormCurrentSchemaSignature) return;
+                  const values = {};
+                  state.gddQuestionFormFields.forEach(field => {
+                    values[field.id] = (document.querySelector(`[data-gdd-question-input="${field.id}"]`)?.value || "").trim();
+                  });
+                  state.gddQuestionFormDraftCache.set(gddQuestionFormCacheKey(), {
+                    signature: state.gddQuestionFormCurrentSchemaSignature,
+                    values
+                  });
+                }
+
+                function readGddQuestionFormDraft(signature) {
+                  const draft = state.gddQuestionFormDraftCache.get(gddQuestionFormCacheKey());
+                  if (!draft || draft.signature !== signature) return null;
+                  return draft.values || null;
+                }
+
+                function clearGddQuestionFormDraft() {
+                  state.gddQuestionFormDraftCache.delete(gddQuestionFormCacheKey());
+                  state.gddQuestionFormCurrentSchemaSignature = "";
+                }
+
                 function isGddQuestionFormModalOpen() {
                   return !$("gddQuestionFormModal").classList.contains("hidden");
                 }
@@ -4553,8 +4647,6 @@ public sealed class BrowserUiRenderer
 
                 async function loadGddQuestionFormSchema(projectId, requestToken, signal) {
                   const cacheKey = gddQuestionFormCacheKey(projectId);
-                  const cached = readGddQuestionFormSchemaCache(cacheKey);
-                  if (cached) return cached;
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd/question-form`, {
                       method: "POST",
@@ -4583,16 +4675,19 @@ public sealed class BrowserUiRenderer
                 }
 
                 function renderGddQuestionForm(schema) {
+                  stopGddQuestionFormProgress();
                   const project = currentProjectSnapshot();
                   const fields = normalizeGddQuestionFormFields(schema?.fields);
                   const gameType = currentProjectGameTypeText() || "未指定游戏类型";
                   const requiredFieldCount = fields.filter(field => field.required).length;
                   state.gddQuestionFormFields = fields.length >= 8 && fields.length <= 12 && requiredFieldCount >= 4 && requiredFieldCount <= 6 ? fields : normalizeGddQuestionFormFields(fallbackGddQuestionFormFields());
                   state.gddQuestionFormSource = schema?.source || "fallback";
+                  state.gddQuestionFormCurrentSchemaSignature = gddQuestionFormSchemaSignature(state.gddQuestionFormFields);
+                  const draftValues = readGddQuestionFormDraft(state.gddQuestionFormCurrentSchemaSignature);
                   $("gddQuestionForm").dataset.schema = "question-form";
                   $("gddQuestionForm").innerHTML = state.gddQuestionFormFields.map(field => `
                     <label data-gdd-question="${escapeHtml(field.id)}">${escapeHtml(field.label)}${field.required ? " *" : ""}
-                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" placeholder="${escapeHtml(field.placeholder || "")}" ${field.required ? "required aria-required=\"true\"" : ""}></textarea>
+                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" ${field.required ? "required aria-required=\"true\"" : ""}>${escapeHtml(draftValues?.[field.id] ?? field.placeholder ?? "")}</textarea>
                     </label>
                   `).join("");
                   $("gddQuestionFormMeta").textContent = `${project?.gameName || project?.name || "当前项目"} · ${gameType}`;
@@ -4616,6 +4711,14 @@ public sealed class BrowserUiRenderer
                   const abortController = new AbortController();
                   state.gddQuestionFormAbortController = abortController;
                   const button = $("createGddDocument");
+                  const cacheKey = gddQuestionFormCacheKey(projectId);
+                  const cachedSchema = readGddQuestionFormSchemaCache(cacheKey);
+                  if (cachedSchema) {
+                    renderGddQuestionForm(cachedSchema);
+                    setModalVisible("gddQuestionFormModal", true);
+                    state.gddQuestionFormAbortController = null;
+                    return;
+                  }
                   button.disabled = true;
                   button.textContent = "规划中...";
                   setGddQuestionFormLoading();
@@ -4630,7 +4733,7 @@ public sealed class BrowserUiRenderer
                     renderGddQuestionForm(schema);
                   } catch (error) {
                     if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return;
-                    closeGddQuestionFormModal();
+                    closeGddQuestionFormModal({ preserveDraft: false });
                     out(error?.payload?.error || error?.payload?.failureCode || "策划大纲问题加载失败，请刷新项目后重试。");
                     showError(error);
                   } finally {
@@ -4644,8 +4747,12 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                function closeGddQuestionFormModal() {
+                function closeGddQuestionFormModal(options = {}) {
                   state.gddQuestionFormRequestToken += 1;
+                  if (options?.preserveDraft !== false) {
+                    saveGddQuestionFormDraft();
+                  }
+                  stopGddQuestionFormProgress();
                   if (state.gddQuestionFormAbortController) {
                     state.gddQuestionFormAbortController.abort();
                     state.gddQuestionFormAbortController = null;
@@ -4709,16 +4816,16 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   const button = $("confirmGddQuestionForm");
-                  const cancelButton = $("cancelGddQuestionForm");
                   button.disabled = true;
-                  if (cancelButton) cancelButton.disabled = true;
                   button.textContent = "创建中...";
                   try {
                     const succeeded = await startGddDocumentRoute(message);
-                    if (succeeded) closeGddQuestionFormModal();
+                    if (succeeded) {
+                      clearGddQuestionFormDraft();
+                      closeGddQuestionFormModal({ preserveDraft: false });
+                    }
                   } finally {
                     button.disabled = false;
-                    if (cancelButton) cancelButton.disabled = false;
                     button.textContent = "确认并创建策划大纲";
                   }
                 }
@@ -7224,12 +7331,12 @@ public sealed class BrowserUiRenderer
                   ]);
                 }
 
-                function scheduleActiveRunRefresh(attempts = 8, delayMs = 750) {
+                function scheduleActiveRunRefresh(attempts = 8, delayMs = 750, requireLocalBusy = true) {
                   let remaining = Math.max(1, attempts);
                   const tick = async () => {
                     await refreshActiveRun();
                     remaining -= 1;
-                    if (remaining > 0 && state.authenticated && state.localBusy && !runIsBusy(state.activeRun)) {
+                    if (remaining > 0 && state.authenticated && (!requireLocalBusy || state.localBusy) && !runIsBusy(state.activeRun)) {
                       window.setTimeout(tick, delayMs);
                     }
                   };
@@ -8749,6 +8856,11 @@ public sealed class BrowserUiRenderer
                   }
                   if (event.data?.type === "phasea:gdd-modules-refresh") {
                     loadGddMilestoneSteps();
+                    return;
+                  }
+                  if (event.data?.type === "phasea:active-run-refresh") {
+                    void refreshActiveRun();
+                    scheduleActiveRunRefresh(8, 750, false);
                   }
                 });
                 runStartupStep("renderChatHistory", renderChatHistory);
@@ -9463,6 +9575,11 @@ public sealed class BrowserUiRenderer
                     window.parent?.postMessage?.({ type: "phasea:gdd-modules-refresh", projectId }, location.origin);
                   } catch {}
                 }
+                function notifyActiveRunRefresh(runId = "") {
+                  try {
+                    window.parent?.postMessage?.({ type: "phasea:active-run-refresh", projectId, runId }, location.origin);
+                  } catch {}
+                }
                 function openAddSectionDialog() {
                   $("addSectionMessage").value = "";
                   $("addSectionDialog").showModal();
@@ -9556,7 +9673,8 @@ public sealed class BrowserUiRenderer
                   $("meta").textContent = `\u6b63\u5728\u8865\u5168 ${pendingSections.length} \u4e2a\u5927\u7eb2\u6761\u76ee\u3002`;
                   try {
                     const result = await api(`/api/projects/${projectId}/gdd/outline/sections/complete-missing`, { method:"POST", body: JSON.stringify({ message: "", model: localStorage.getItem("phaseASelectedModel") || null }) });
-                    if (result.runId && result.status === "queued") {
+                    if (result.runId && ["queued", "running"].includes(String(result.status || "").toLowerCase())) {
+                      notifyActiveRunRefresh(result.runId);
                       const run = await waitForBatchOutlineRun(result.runId, pendingSections.length);
                       outline = await api(`/api/projects/${projectId}/gdd/outline`);
                       renderOutline();

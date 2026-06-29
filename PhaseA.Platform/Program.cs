@@ -65,6 +65,8 @@ builder.Services.AddKeyedSingleton("web-preview", new HeavyRunnerQueueService(
     options.MaxConcurrentWebPreviews));
 builder.Services.AddSingleton(new ProjectWebPreviewConcurrencyLimiter(
     options.MaxConcurrentWebPreviewsPerAccount));
+builder.Services.AddSingleton<ProjectWebPreviewSemanticAdapterService>();
+builder.Services.AddSingleton<ProjectWebPreviewDedicatedAdapterService>();
 builder.Services.AddSingleton(new AssetGenerationConcurrencyLimiter(
     options.MaxConcurrentAssetGenerationsPerAccount));
 builder.Services.AddSingleton<PrototypeRecordWriter>();
