@@ -5789,6 +5789,7 @@ public sealed class BrowserUiRenderer
                   try {
                     response = await fetch(path, {
                       ...fetchOptions,
+                      cache: fetchOptions.cache || "no-store",
                       signal: controller?.signal,
                       headers: { ...headers(), ...(options.headers || {}) }
                     });
@@ -9467,6 +9468,8 @@ public sealed class BrowserUiRenderer
                 const escapeHtml = value => String(value || "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[ch]));
                 let outline = null;
                 let selectedSection = null;
+                let batchOutlinePollTimer = null;
+                let batchOutlinePollRunId = "";
                 async function api(path, options = {}) {
                   const response = await fetch(path, { ...options, headers: { "Authorization": `Bearer ${token()}`, "Content-Type": "application/json", ...(options.headers || {}) }, cache: "no-store" });
                   const text = await response.text();
@@ -9624,13 +9627,55 @@ public sealed class BrowserUiRenderer
                     ? `\u7b56\u5212\u5927\u7eb2\u6279\u91cf\u8865\u5168\u4e2d\uff1a${label}`
                     : `\u7b56\u5212\u5927\u7eb2\u6279\u91cf\u8865\u5168\u4e2d\uff0c\u5171 ${fallbackCount || 0} \u4e2a\u6761\u76ee\u3002`;
                 }
+                function stopBatchOutlinePolling(runId = "") {
+                  if (runId && batchOutlinePollRunId && runId !== batchOutlinePollRunId) return;
+                  if (batchOutlinePollTimer) {
+                    clearInterval(batchOutlinePollTimer);
+                    batchOutlinePollTimer = null;
+                  }
+                  batchOutlinePollRunId = "";
+                }
+                async function refreshBatchOutlineRun(runId, fallbackCount = 0) {
+                  if (!runId) return null;
+                  const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
+                  const run = result.run || {};
+                  $("meta").textContent = formatBatchRunProgress(run, fallbackCount);
+                  notifyActiveRunRefresh(runId);
+                  if (run.finishedUtc || isTerminalRunStatus(run.status)) {
+                    stopBatchOutlinePolling(runId);
+                    try {
+                      outline = await api(`/api/projects/${projectId}/gdd/outline`);
+                      renderOutline();
+                    } catch {}
+                  }
+                  return run;
+                }
+                function startBatchOutlinePolling(runId, fallbackCount = 0) {
+                  if (!runId) return;
+                  if (batchOutlinePollRunId === runId && batchOutlinePollTimer) return;
+                  stopBatchOutlinePolling();
+                  batchOutlinePollRunId = runId;
+                  void refreshBatchOutlineRun(runId, fallbackCount).catch(() => {});
+                  batchOutlinePollTimer = setInterval(() => {
+                    void refreshBatchOutlineRun(runId, fallbackCount).catch(() => {});
+                  }, 2000);
+                }
+                async function attachActiveBatchOutlineRun() {
+                  if (!projectId || !token()) return;
+                  try {
+                    const run = await api("/api/account/active-run");
+                    const runType = String(run?.runType || "").trim().toLowerCase();
+                    if (run?.busy && run?.runId && run?.projectId === projectId && runType === "game-design-gdd-section-batch") {
+                      const fallbackCount = (outline?.sections || []).filter(section => !String(section.content || "").trim()).length;
+                      startBatchOutlinePolling(run.runId, fallbackCount);
+                    }
+                  } catch {}
+                }
                 async function waitForBatchOutlineRun(runId, fallbackCount) {
                   if (!runId) return null;
                   for (let attempt = 0; attempt < 1800; attempt++) {
                     await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 800 : 2000));
-                    const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
-                    const run = result.run || {};
-                    $("meta").textContent = formatBatchRunProgress(run, fallbackCount);
+                    const run = await refreshBatchOutlineRun(runId, fallbackCount);
                     if (run.finishedUtc || isTerminalRunStatus(run.status)) return run;
                   }
                   return null;
@@ -9675,6 +9720,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/gdd/outline/sections/complete-missing`, { method:"POST", body: JSON.stringify({ message: "", model: localStorage.getItem("phaseASelectedModel") || null }) });
                     if (result.runId && ["queued", "running"].includes(String(result.status || "").toLowerCase())) {
                       notifyActiveRunRefresh(result.runId);
+                      startBatchOutlinePolling(result.runId, pendingSections.length);
                       const run = await waitForBatchOutlineRun(result.runId, pendingSections.length);
                       outline = await api(`/api/projects/${projectId}/gdd/outline`);
                       renderOutline();
@@ -9758,7 +9804,7 @@ public sealed class BrowserUiRenderer
                 $("completeAllSections").onclick = completeAllSections;
                 $("exportGddMarkdown").onclick = exportGddMarkdown;
                 $("deleteGddOutline").onclick = deleteGddOutline;
-                loadOutline();
+                loadOutline().then(() => attachActiveBatchOutlineRun()).catch(() => {});
               </script>
             </body>
             </html>

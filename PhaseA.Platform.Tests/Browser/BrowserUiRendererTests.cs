@@ -2766,6 +2766,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("white-space: nowrap;");
         html.Should().Contain("role=\"status\" aria-live=\"polite\"");
         html.Should().Contain("/api/account/active-run");
+        html.Should().Contain("cache: fetchOptions.cache || \"no-store\"");
         html.Should().Contain("cancelActiveRun");
         html.Should().Contain("function canCancelActiveRun(run)");
         html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750, requireLocalBusy = true)");
@@ -3624,12 +3625,19 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("quickCompleteSection");
         html.Should().Contain("generateSectionContent");
         html.Should().Contain("waitForBatchOutlineRun");
+        html.Should().Contain("startBatchOutlinePolling");
+        html.Should().Contain("attachActiveBatchOutlineRun");
+        html.Should().Contain("refreshBatchOutlineRun");
+        html.Should().Contain("batchOutlinePollTimer");
         html.Should().Contain("formatBatchRunProgress");
         html.Should().Contain("attempt < 1800");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
         html.Should().Contain("/api/projects/${projectId}/gdd/outline/sections/complete-missing");
         html.Should().Contain("function notifyActiveRunRefresh(runId = \"\")");
         html.Should().Contain("notifyActiveRunRefresh(result.runId);");
+        html.Should().Contain("startBatchOutlinePolling(result.runId, pendingSections.length);");
+        html.Should().Contain("loadOutline().then(() => attachActiveBatchOutlineRun()).catch(() => {});");
+        html.Should().Contain("api(\"/api/account/active-run\")");
         html.Should().Contain("[\"queued\", \"running\"].includes(String(result.status || \"\").toLowerCase())");
         html.Should().Contain("data-quick-complete-section");
         html.Should().Contain("section-actions");
