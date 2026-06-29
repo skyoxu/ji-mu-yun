@@ -3054,6 +3054,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("下一个模块");
         html.Should().Contain("gdd-milestone-steps/latest");
         html.Should().Contain("gdd-milestone-steps/current/execute");
+        html.Should().Contain("gddMilestoneActionRunId");
+        html.Should().Contain("startGddMilestoneRunPolling");
+        html.Should().Contain("refreshGddMilestoneRun");
+        html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
+        html.Should().Contain("gddMilestoneRunPollTimer = window.setInterval");
+        html.Should().Contain("}, 2000);");
+        html.Should().Contain("await refreshCurrentProjectAfterActiveRunSettled();");
+        html.Should().Contain("const actionRunId = gddMilestoneActionRunId(result, step);");
         html.Should().Contain("loadGddMilestoneSteps");
         html.Should().Contain("请先创建策划大纲");
         html.Should().Contain("draftFile");

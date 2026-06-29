@@ -7344,6 +7344,70 @@ public sealed class BrowserUiRenderer
                   window.setTimeout(tick, delayMs);
                 }
 
+                let gddMilestoneRunPollTimer = null;
+                let gddMilestoneRunPollId = "";
+
+                function stopGddMilestoneRunPolling(runId = "") {
+                  if (runId && gddMilestoneRunPollId && runId !== gddMilestoneRunPollId) return;
+                  if (gddMilestoneRunPollTimer) window.clearInterval(gddMilestoneRunPollTimer);
+                  gddMilestoneRunPollTimer = null;
+                  gddMilestoneRunPollId = "";
+                }
+
+                async function refreshGddMilestoneRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  if (!runId || !projectId) return null;
+                  if (state.cancelledActiveRunId === runId) return null;
+                  try {
+                    const result = await api(`/api/runs/${encodeURIComponent(runId)}`);
+                    const run = result?.run || null;
+                    if (!run) return null;
+                    const actualProjectId = runProjectId(run) || projectId;
+                    if (actualProjectId !== projectId || !isCurrentProjectRequest(projectId, requestAuthEpoch)) return run;
+                    state.activeRun = run;
+                    if (isPrototypeSkeletonCreationRun(run) && runBelongsToCurrentProject(run)) {
+                      state.pendingPrototypeSkeletonRun = {
+                        runId: run.runId,
+                        projectId: actualProjectId,
+                        busy: runIsBusy(run),
+                        runType: run.runType,
+                        status: run.status,
+                        progressStep: run.progressStep,
+                        progressLabel: run.progressLabel,
+                        progressUpdatedUtc: run.progressUpdatedUtc
+                      };
+                      ensurePrototypeSkeletonBannerRun(state.pendingPrototypeSkeletonRun);
+                    }
+                    applyGlobalBusyState();
+                    if (shouldAutoRefreshIterationPlan(run)) {
+                      await loadIterationPlan();
+                      await loadRuns();
+                    }
+                    if (!runIsBusy(run)) {
+                      stopGddMilestoneRunPolling(runId);
+                      if (isPrototypeSkeletonCreationRun(run)) {
+                        state.pendingPrototypeSkeletonRun = null;
+                        resetPrototypeSkeletonBannerState(true);
+                      }
+                      applyGlobalBusyState();
+                      await refreshCurrentProjectAfterActiveRunSettled();
+                    }
+                    return run;
+                  } catch {
+                    return null;
+                  }
+                }
+
+                function startGddMilestoneRunPolling(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  if (!runId || !projectId) return;
+                  if (gddMilestoneRunPollId === runId && gddMilestoneRunPollTimer) return;
+                  stopGddMilestoneRunPolling();
+                  gddMilestoneRunPollId = runId;
+                  void refreshGddMilestoneRun(runId, projectId, requestAuthEpoch);
+                  gddMilestoneRunPollTimer = window.setInterval(() => {
+                    void refreshGddMilestoneRun(runId, projectId, requestAuthEpoch);
+                  }, 2000);
+                }
+
                 function shouldAutoRefreshIterationPlan(activeRun) {
                   return !!(
                     state.projectId &&
@@ -7852,6 +7916,16 @@ public sealed class BrowserUiRenderer
                   return activeGddMilestoneStep(steps, plan);
                 }
 
+                function gddMilestoneActionRunId(result, fallbackStep = null) {
+                  const directRunId = result?.stepExecution?.runId || result?.needsFixRun?.runId || result?.feedbackRun?.runId || "";
+                  if (directRunId) return directRunId;
+                  const stepId = String(result?.stepId || fallbackStep?.stepId || "").trim();
+                  const steps = Array.isArray(result?.plan?.steps) ? result.plan.steps : [];
+                  const matched = steps.find(step => stepId && String(step?.stepId || "").trim() === stepId) ||
+                    steps.find(step => step?.executionRunId || step?.feedbackRunId);
+                  return matched?.executionRunId || matched?.feedbackRunId || "";
+                }
+
                 async function executeCurrentMilestoneStep() {
                   if (!guardGlobalAction()) return;
                   if (!state.projectId) return out("请先选择一个项目。");
@@ -7869,6 +7943,11 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    const actionRunId = gddMilestoneActionRunId(result, step);
+                    if (actionRunId) {
+                      await refreshGddMilestoneRun(actionRunId, projectId, context.authEpoch);
+                      startGddMilestoneRunPolling(actionRunId, projectId, context.authEpoch);
+                    }
                     if (result.stepExecution) {
                       await loadIterationPlan();
                     }
