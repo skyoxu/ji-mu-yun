@@ -3055,13 +3055,22 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("gdd-milestone-steps/latest");
         html.Should().Contain("gdd-milestone-steps/current/execute");
         html.Should().Contain("gddMilestoneActionRunId");
+        html.Should().Contain("resultRunId");
+        html.Should().Contain("trackProjectRunFromResult");
+        html.Should().Contain("startProjectRunPolling");
         html.Should().Contain("startGddMilestoneRunPolling");
         html.Should().Contain("refreshGddMilestoneRun");
         html.Should().Contain("/api/runs/${encodeURIComponent(runId)}");
-        html.Should().Contain("gddMilestoneRunPollTimer = window.setInterval");
+        html.Should().Contain("projectRunPollTimer = window.setInterval");
         html.Should().Contain("}, 2000);");
         html.Should().Contain("await refreshCurrentProjectAfterActiveRunSettled();");
         html.Should().Contain("const actionRunId = gddMilestoneActionRunId(result, step);");
+        html.Should().Contain("await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);");
+        html.Should().Contain("await trackProjectRunFromResult(result, projectId, context.authEpoch);");
+        var quickRepairSource = html.IndexOf("sourceKind: \"quick_repair\"", StringComparison.Ordinal);
+        quickRepairSource.Should().BeGreaterThan(-1);
+        html.IndexOf("await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);", quickRepairSource, StringComparison.Ordinal)
+            .Should().BeLessThan(html.IndexOf("state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;", quickRepairSource, StringComparison.Ordinal));
         html.Should().Contain("loadGddMilestoneSteps");
         html.Should().Contain("请先创建策划大纲");
         html.Should().Contain("draftFile");

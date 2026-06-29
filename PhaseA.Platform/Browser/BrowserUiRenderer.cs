@@ -1093,6 +1093,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/prototype-7day-playable/validate-skeleton`, { method: "POST" });
                     if (!isCurrentProjectContext(context)) return null;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                     await loadPrototypeProgress();
                     if (result.status === "failed") {
@@ -3526,6 +3527,7 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentProjectRequest(projectId, requestAuthEpoch)) return;
                     const evaluation = response?.evaluation || response;
+                    await trackProjectRunFromResult(response, projectId, requestAuthEpoch);
                     const latestPlan = latestIterationPlanForAction();
                     if (actionSessionId && latestPlan?.session?.sessionId !== actionSessionId) return out("游戏模块已变化，本次评估结果已丢弃。");
                     if (latestPlan) {
@@ -3613,6 +3615,7 @@ public sealed class BrowserUiRenderer
                     state.iterationPlanFailure = "";
                     renderIterationPlan();
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     return result;
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return null;
@@ -3698,6 +3701,7 @@ public sealed class BrowserUiRenderer
                     await loadServerChatHistoryForProject(projectId, context.authEpoch);
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return;
                     await loadServerChatHistoryForProject(projectId, context.authEpoch);
@@ -3758,6 +3762,7 @@ public sealed class BrowserUiRenderer
                     await loadServerChatHistoryForProject(projectId, context.authEpoch);
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return;
                     await loadServerChatHistoryForProject(projectId, context.authEpoch);
@@ -5602,6 +5607,7 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                     updateContinueSuggestionFromText(result.assistantMessage);
                   } catch (error) {
@@ -5699,6 +5705,7 @@ public sealed class BrowserUiRenderer
                     const goalStatus = String(result.iterationGoalStatus || "").trim().toLowerCase();
                     const needsMoreFix = goalStatus === "needs_fix" || goalStatus === "failed" || routeStatus === "needs_fix" || routeStatus === "failed";
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     $("iterationNeedsFixStatus").className = needsMoreFix ? "card" : "card muted";
                     $("iterationNeedsFixStatus").textContent = result.summary || (needsMoreFix ? "需要修复路由已执行，但当前任务仍需继续修复。" : "需要修复路由已完成。");
                     await loadRuns();
@@ -7344,17 +7351,26 @@ public sealed class BrowserUiRenderer
                   window.setTimeout(tick, delayMs);
                 }
 
-                let gddMilestoneRunPollTimer = null;
-                let gddMilestoneRunPollId = "";
+                let projectRunPollTimer = null;
+                let projectRunPollId = "";
 
-                function stopGddMilestoneRunPolling(runId = "") {
-                  if (runId && gddMilestoneRunPollId && runId !== gddMilestoneRunPollId) return;
-                  if (gddMilestoneRunPollTimer) window.clearInterval(gddMilestoneRunPollTimer);
-                  gddMilestoneRunPollTimer = null;
-                  gddMilestoneRunPollId = "";
+                function resultRunId(result) {
+                  return result?.runId ||
+                    result?.run?.runId ||
+                    result?.stepExecution?.runId ||
+                    result?.needsFixRun?.runId ||
+                    result?.feedbackRun?.runId ||
+                    "";
                 }
 
-                async function refreshGddMilestoneRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                function stopProjectRunPolling(runId = "") {
+                  if (runId && projectRunPollId && runId !== projectRunPollId) return;
+                  if (projectRunPollTimer) window.clearInterval(projectRunPollTimer);
+                  projectRunPollTimer = null;
+                  projectRunPollId = "";
+                }
+
+                async function refreshProjectRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
                   if (!runId || !projectId) return null;
                   if (state.cancelledActiveRunId === runId) return null;
                   try {
@@ -7383,7 +7399,7 @@ public sealed class BrowserUiRenderer
                       await loadRuns();
                     }
                     if (!runIsBusy(run)) {
-                      stopGddMilestoneRunPolling(runId);
+                      stopProjectRunPolling(runId);
                       if (isPrototypeSkeletonCreationRun(run)) {
                         state.pendingPrototypeSkeletonRun = null;
                         resetPrototypeSkeletonBannerState(true);
@@ -7397,15 +7413,36 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
-                function startGddMilestoneRunPolling(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                function startProjectRunPolling(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
                   if (!runId || !projectId) return;
-                  if (gddMilestoneRunPollId === runId && gddMilestoneRunPollTimer) return;
-                  stopGddMilestoneRunPolling();
-                  gddMilestoneRunPollId = runId;
-                  void refreshGddMilestoneRun(runId, projectId, requestAuthEpoch);
-                  gddMilestoneRunPollTimer = window.setInterval(() => {
-                    void refreshGddMilestoneRun(runId, projectId, requestAuthEpoch);
+                  if (projectRunPollId === runId && projectRunPollTimer) return;
+                  stopProjectRunPolling();
+                  projectRunPollId = runId;
+                  void refreshProjectRun(runId, projectId, requestAuthEpoch);
+                  projectRunPollTimer = window.setInterval(() => {
+                    void refreshProjectRun(runId, projectId, requestAuthEpoch);
                   }, 2000);
+                }
+
+                async function trackProjectRunFromResult(result, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  const runId = resultRunId(result);
+                  if (!runId) return "";
+                  const run = await refreshProjectRun(runId, projectId, requestAuthEpoch);
+                  if (run && !runIsBusy(run)) return runId;
+                  startProjectRunPolling(runId, projectId, requestAuthEpoch);
+                  return runId;
+                }
+
+                function stopGddMilestoneRunPolling(runId = "") {
+                  stopProjectRunPolling(runId);
+                }
+
+                async function refreshGddMilestoneRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  return await refreshProjectRun(runId, projectId, requestAuthEpoch);
+                }
+
+                function startGddMilestoneRunPolling(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
+                  startProjectRunPolling(runId, projectId, requestAuthEpoch);
                 }
 
                 function shouldAutoRefreshIterationPlan(activeRun) {
@@ -7536,6 +7573,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/packages`, { method: "POST" });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                     await loadProjectPackages();
                   } catch (error) {
@@ -7945,8 +7983,7 @@ public sealed class BrowserUiRenderer
                     out(result);
                     const actionRunId = gddMilestoneActionRunId(result, step);
                     if (actionRunId) {
-                      await refreshGddMilestoneRun(actionRunId, projectId, context.authEpoch);
-                      startGddMilestoneRunPolling(actionRunId, projectId, context.authEpoch);
+                      await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);
                     }
                     if (result.stepExecution) {
                       await loadIterationPlan();
@@ -8016,6 +8053,10 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    const actionRunId = gddMilestoneActionRunId(result, step);
+                    if (actionRunId) {
+                      await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);
+                    }
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
                     renderGddMilestoneSteps();
                     await loadGddMilestoneSteps();
@@ -8103,6 +8144,10 @@ public sealed class BrowserUiRenderer
                     });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    const actionRunId = gddMilestoneActionRunId(result, step);
+                    if (actionRunId) {
+                      await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);
+                    }
                     state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
                     setModalVisible("milestoneFeedbackModal", false);
                     renderGddMilestoneSteps();
@@ -8452,6 +8497,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/prototype-7day-playable/validate`, { method: "POST" });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                     await loadPrototypeProgress();
                     await loadProjectPackages();
@@ -8747,6 +8793,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/prototype-tdd`, { method: "POST", body: JSON.stringify(payload) });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return;
@@ -8785,6 +8832,7 @@ public sealed class BrowserUiRenderer
                     const result = await api(`/api/projects/${projectId}/prototype-scene`, { method: "POST", body: JSON.stringify(payload) });
                     if (!isCurrentProjectContext(context)) return;
                     out(result);
+                    await trackProjectRunFromResult(result, projectId, context.authEpoch);
                     await loadRuns();
                   } catch (error) {
                     if (!isCurrentProjectContext(context)) return;
