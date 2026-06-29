@@ -374,6 +374,52 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task ExecuteCurrentStepAsync_QueuesPrototypeCreation_WhenFirstStepHasNoPrototypeState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, seedPrototypeBaseline: false);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # New Project GDD
+
+        M1: First playable scene and controls.
+        M2: Core loop validation.
+        """);
+        var prototypeWorkflow = new FakePrototypeFromGddWorkflow(new PrototypeWorkflowResult(
+            "prototype-run-1",
+            "queued",
+            202,
+            "docs/prototypes/new-project.prototype.json",
+            "",
+            "",
+            [],
+            []));
+        var service = Service(store, options, prototypeWorkflow: prototypeWorkflow);
+
+        var result = await service.ExecuteCurrentStepAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("queued");
+        result.FailureCode.Should().BeNull();
+        result.StepExecution.Should().BeNull();
+        prototypeWorkflow.Calls.Should().Be(1);
+        prototypeWorkflow.LastAccountId.Should().Be(accountId);
+        prototypeWorkflow.LastProjectId.Should().Be(projectId);
+        var firstStep = result.Plan!.Steps.Single(step => step.StepId == "M1");
+        result.Plan.Status.Should().Be("running");
+        firstStep.Status.Should().Be("running");
+        firstStep.ExecutionRunId.Should().Be("prototype-run-1");
+        firstStep.ExecutionSummary.Should().Contain("M1");
+        firstStep.LatestEvidenceRelativePath.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
     public async Task GetOrCreateLatestAsync_ExtractsChineseHeadingMilestones_AndReplacesUnstartedFallbackState()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1229,7 +1275,8 @@ public sealed class GddMilestoneStepServiceTests
         REMAINING: none
         """,
         IPrototypeLightweightValidationService? validationService = null,
-        FakeHostedProcessRunner? runner = null)
+        FakeHostedProcessRunner? runner = null,
+        IPrototypeFromGddWorkflow? prototypeWorkflow = null)
     {
         runner ??= new FakeHostedProcessRunner(runnerOutput);
         return new GddMilestoneStepService(
@@ -1237,7 +1284,8 @@ public sealed class GddMilestoneStepServiceTests
             new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter()),
             new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter()),
             llmRouteEngine,
-            validationService);
+            validationService,
+            prototypeWorkflowService: prototypeWorkflow);
     }
 
     private static PrototypeWorkflowResult ValidationResult(string runId, string status, int exitCode, string stdout = "", string stderr = "")
@@ -1245,13 +1293,25 @@ public sealed class GddMilestoneStepServiceTests
         return new PrototypeWorkflowResult(runId, status, exitCode, "docs/prototypes/demo.md", stdout, stderr, [], []);
     }
 
-    private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
+    private static async Task<string> CreateProjectAsync(
+        PhaseAMetadataStore store,
+        PhaseAPlatformOptions options,
+        string accountId,
+        bool seedPrototypeBaseline = true)
     {
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "Action Roguelike", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
-        SeedPrototypeBaseline(project!);
+        if (seedPrototypeBaseline)
+        {
+            SeedPrototypeBaseline(project!);
+        }
+        else
+        {
+            SeedRouteSkill(project!);
+        }
+
         return result.ProjectId!;
     }
 
@@ -1561,7 +1621,7 @@ public sealed class GddMilestoneStepServiceTests
                 smoke_scene = "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn"
             }
         });
-        WriteText(project.RepoPath, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "# skill\n");
+        SeedRouteSkill(project);
         WriteText(project.RepoPath, "Game.Core/Prototypes/DemoPrototypeLoop.cs", """
 public sealed class DemoPrototypeLoop
 {
@@ -1592,6 +1652,11 @@ public sealed class DemoPrototype
 
 [node name="DemoPrototype" type="Node"]
 """);
+    }
+
+    private static void SeedRouteSkill(ProjectSnapshot project)
+    {
+        WriteText(project.RepoPath, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "# skill\n");
     }
 
     private static void WriteText(string repoPath, string relativePath, string text)
@@ -1634,6 +1699,34 @@ public sealed class DemoPrototype
             }
 
             return Task.FromResult(new HostedProcessResult(0, _output, ""));
+        }
+    }
+
+    private sealed class FakePrototypeFromGddWorkflow : IPrototypeFromGddWorkflow
+    {
+        private readonly PrototypeWorkflowResult _result;
+
+        public FakePrototypeFromGddWorkflow(PrototypeWorkflowResult result)
+        {
+            _result = result;
+        }
+
+        public int Calls { get; private set; }
+
+        public string? LastAccountId { get; private set; }
+
+        public string? LastProjectId { get; private set; }
+
+        public Task<PrototypeWorkflowResult> QueueFromGddAsync(
+            string accountId,
+            string projectId,
+            PrototypeFromGddRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            LastAccountId = accountId;
+            LastProjectId = projectId;
+            return Task.FromResult(_result);
         }
     }
 

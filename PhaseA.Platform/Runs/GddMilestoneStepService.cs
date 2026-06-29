@@ -19,8 +19,10 @@ public sealed class GddMilestoneStepService
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeIterationGoalService _iterationGoalService;
+    private readonly IPrototypeFromGddWorkflow? _prototypeWorkflowService;
     private readonly PrototypeNeedsFixRouteService _needsFixRouteService;
     private readonly PrototypeEngineeringClosureService _engineeringClosure;
+    private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly IPrototypeLightweightValidationService? _lightweightValidationService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
 
@@ -30,12 +32,16 @@ public sealed class GddMilestoneStepService
         PrototypeNeedsFixRouteService needsFixRouteService,
         ILlmRouteEngine? llmRouteEngine = null,
         IPrototypeLightweightValidationService? lightweightValidationService = null,
-        PrototypeEngineeringClosureService? engineeringClosure = null)
+        PrototypeEngineeringClosureService? engineeringClosure = null,
+        IPrototypeFromGddWorkflow? prototypeWorkflowService = null,
+        PrototypeRouteStateWriter? routeStateWriter = null)
     {
         _metadataStore = metadataStore;
         _iterationGoalService = iterationGoalService;
+        _prototypeWorkflowService = prototypeWorkflowService;
         _needsFixRouteService = needsFixRouteService;
         _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
+        _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _lightweightValidationService = lightweightValidationService;
         _llmRouteEngine = llmRouteEngine;
     }
@@ -326,6 +332,40 @@ public sealed class GddMilestoneStepService
         var session = await CreateStepSessionAsync(project, state, step, index, cancellationToken);
         await WriteStateAsync(project, state, CancellationToken.None);
         await WriteSpecFilesAsync(project, state, CancellationToken.None);
+
+        if (index == 0 && string.IsNullOrWhiteSpace(_routeStateWriter.ReadLatestPrototypeState(project)))
+        {
+            var prototypeResult = _prototypeWorkflowService is null
+                ? new PrototypeWorkflowResult("", "prototype_required", 424, "", "", "Prototype workflow service is not available.", [], [])
+                : await _prototypeWorkflowService.QueueFromGddAsync(accountId, project.ProjectId, new PrototypeFromGddRequest(), cancellationToken);
+            var m1Queued = string.Equals(prototypeResult.Status, "queued", StringComparison.OrdinalIgnoreCase);
+            var m1Status = m1Queued ? "running" : "needs_fix";
+            var summary = m1Queued
+                ? "M1 游戏场景创建已提交后台执行，请等待黄色任务浮框完成。"
+                : string.IsNullOrWhiteSpace(prototypeResult.Stderr) ? "M1 游戏场景创建未能启动。" : prototypeResult.Stderr;
+            var executionEvidencePath = string.IsNullOrWhiteSpace(prototypeResult.RunId)
+                ? state.Steps[index].LatestEvidenceRelativePath
+                : (await WriteStepEvidenceAsync(project, prototypeResult.RunId, "prototype-7day-playable", m1Status, step.StepId, 0, null, cancellationToken)).RelativePath;
+            state.Steps[index] = state.Steps[index] with
+            {
+                Status = m1Status,
+                IterationSessionId = session.Session.SessionId,
+                ExecutionRunId = string.IsNullOrWhiteSpace(prototypeResult.RunId) ? state.Steps[index].ExecutionRunId : prototypeResult.RunId,
+                ExecutionSummary = summary,
+                LatestEvidenceRelativePath = executionEvidencePath
+            };
+            state.Status = m1Queued ? "running" : "needs_fix";
+            state.Summary = summary;
+            await WriteStateAsync(project, state, CancellationToken.None);
+            await WriteSpecFilesAsync(project, state, CancellationToken.None);
+            return new GddMilestoneStepActionResult(
+                project.ProjectId,
+                step.StepId,
+                prototypeResult.Status,
+                summary,
+                ToResult(project.ProjectId, state),
+                FailureCode: m1Queued ? null : prototypeResult.Status);
+        }
 
         var execution = await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken);
         var succeeded = await IsMilestoneStepExecutionCompleteAsync(project, execution, cancellationToken);
@@ -1923,7 +1963,7 @@ public sealed class GddMilestoneStepService
 
     private static bool IsTransientStepStatus(string status)
     {
-        return status is "running" or "executing" or "validating" or "auto_repairing" or "repairing" or "feedback_running";
+        return status is "executing" or "validating" or "auto_repairing" or "repairing" or "feedback_running";
     }
 
     private static bool ContainsAny(string value, params string[] needles)

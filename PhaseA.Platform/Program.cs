@@ -76,6 +76,7 @@ builder.Services.AddSingleton<PrototypeArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeRouteStateWriter>();
 builder.Services.AddSingleton<PrototypeEngineeringClosureService>();
 builder.Services.AddSingleton<PrototypeWorkflowService>();
+builder.Services.AddSingleton<IPrototypeFromGddWorkflow>(sp => sp.GetRequiredService<PrototypeWorkflowService>());
 builder.Services.AddSingleton<IPrototypeLightweightValidationService, PrototypeLightweightValidationService>();
 builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
 builder.Services.AddSingleton<PrototypeQuickFixService>();

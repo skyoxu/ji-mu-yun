@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PhaseA.Platform.Runs;
 
-public sealed class PrototypeWorkflowService
+public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
 {
     private const string RunType = "prototype-7day-playable";
     private const string GddRelativePath = "docs/gdd/GDD.md";
