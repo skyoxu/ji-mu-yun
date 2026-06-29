@@ -1363,16 +1363,21 @@ public sealed class GddMilestoneStepService
         if (!string.Equals(first.StepId, "M1", StringComparison.OrdinalIgnoreCase) ||
             first.Locked ||
             first.Status is "executed" or "feedback_submitted" or "confirmed" ||
-            !string.IsNullOrWhiteSpace(first.IterationSessionId) ||
             !string.IsNullOrWhiteSpace(first.FeedbackRunId))
         {
             return;
         }
 
         var runs = await _metadataStore.ListRunsForProjectAsync(project.ProjectId, cancellationToken);
+        var currentExecutionRun = runs.FirstOrDefault(run => string.Equals(run.RunId, first.ExecutionRunId, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(first.IterationSessionId) &&
+            (currentExecutionRun is null || !IsPrototypeSkeletonCreationRun(currentExecutionRun)))
+        {
+            return;
+        }
+
         var successfulSkeletonRun = runs.FirstOrDefault(run =>
-            string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
-            !PrototypeRunIsValidationOnly(run.EvidenceJson) &&
+            IsPrototypeSkeletonCreationRun(run) &&
             string.Equals(run.Status, "succeeded", StringComparison.OrdinalIgnoreCase) &&
             PrototypeCompletionSucceeded(run.EvidenceJson));
         if (successfulSkeletonRun is not null)
@@ -1392,8 +1397,7 @@ public sealed class GddMilestoneStepService
         }
 
         var failedSkeletonRun = runs.FirstOrDefault(run =>
-            string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
-            !PrototypeRunIsValidationOnly(run.EvidenceJson) &&
+            IsPrototypeSkeletonCreationRun(run) &&
             string.Equals(run.Status, "failed", StringComparison.OrdinalIgnoreCase) &&
             PrototypeCompletionFailed(run.EvidenceJson));
         if (failedSkeletonRun is null)
@@ -1421,6 +1425,12 @@ public sealed class GddMilestoneStepService
         };
         state.CurrentStepId = first.StepId;
         state.Summary = failedSummary;
+    }
+
+    private static bool IsPrototypeSkeletonCreationRun(RunSnapshot run)
+    {
+        return string.Equals(run.RunType, "prototype-7day-playable", StringComparison.OrdinalIgnoreCase) &&
+               !PrototypeRunIsValidationOnly(run.EvidenceJson);
     }
 
     private static bool PrototypeCompletionSucceeded(string? evidenceJson)

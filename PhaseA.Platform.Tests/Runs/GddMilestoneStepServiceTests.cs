@@ -420,6 +420,54 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task GetOrCreateLatestAsync_ReconcilesFailedM1PrototypeCreation_WhenStepHasIterationSession()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, seedPrototypeBaseline: false);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # New Project GDD
+
+        M1: First playable scene and controls.
+        M2: Core loop validation.
+        """);
+        var runId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-7day-playable");
+        await store.CompleteRunAsync(
+            runId,
+            "failed",
+            1,
+            "generation output",
+            "",
+            """
+            {
+              "run_type": "prototype-7day-playable",
+              "prototype_completion": {
+                "succeeded": false,
+                "error": "prototype_workflow_failed"
+              }
+            }
+            """);
+        WriteRunningSkeletonStepState(project.MetaPath, project.RepoPath, runId);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("needs_fix");
+        var firstStep = result.Steps.Single(step => step.StepId == "M1");
+        firstStep.Status.Should().Be("needs_fix");
+        firstStep.CanSubmitFeedback.Should().BeTrue();
+        firstStep.ExecutionRunId.Should().Be(runId);
+        firstStep.ExecutionSummary.Should().Contain("M1 游戏场景创建未通过");
+    }
+
+    [Fact]
     public async Task GetOrCreateLatestAsync_ExtractsChineseHeadingMilestones_AndReplacesUnstartedFallbackState()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1597,6 +1645,59 @@ public sealed class GddMilestoneStepServiceTests
       "locked": false,
       "iterationSessionId": "interrupted-session-1",
       "executionRunId": "interrupted-run-1"
+    }
+  ]
+}
+""";
+        foreach (var root in new[] { metaPath, Path.Combine(repoPath, "meta") })
+        {
+            var path = Path.Combine(root, "routes", "gdd-milestones", "latest.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, payload);
+        }
+    }
+
+    private static void WriteRunningSkeletonStepState(string metaPath, string repoPath, string runId)
+    {
+        var payload = $$"""
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "running",
+  "summary": "M1 scene creation queued.",
+  "currentStepId": "M1",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable scene and controls.",
+      "description": "First playable scene and controls.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "running",
+      "locked": false,
+      "iterationSessionId": "m1-scene-session",
+      "executionRunId": "{{runId}}",
+      "executionSummary": "M1 scene creation queued."
+    },
+    {
+      "stepId": "M2",
+      "stepIndex": 2,
+      "title": "M2: Core loop validation.",
+      "description": "Core loop validation.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "locked",
+      "locked": true
     }
   ]
 }
