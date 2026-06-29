@@ -1929,6 +1929,10 @@ namespace Xunit
         runner.LastPrompt.Should().Contain("remove any MSBuildProjectExtensionsPath assignment from .csproj files");
         runner.LastPrompt.Should().Contain("Directory.Build.props");
         runner.LastPrompt.Should().Contain("Do not add late MSBuildProjectExtensionsPath properties");
+        runner.LastPrompt.Should().Contain("PYTHONIOENCODING=utf-8");
+        runner.LastPrompt.Should().Contain("rg --files -g \"*.cs\" Game.Godot");
+        runner.LastPrompt.Should().Contain("Godot build callback");
+        runner.LastPrompt.Should().Contain("不要输出 STATUS: completed");
     }
 
     [Fact]

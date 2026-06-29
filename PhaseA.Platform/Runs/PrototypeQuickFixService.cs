@@ -1501,6 +1501,9 @@ public sealed partial class PrototypeQuickFixService
             - 如果 Godot stderr 指向 `.tscn:1 - Parse Error: Expected '['`，检查对应场景文件是否以 UTF-8 BOM 开头；Godot 文本场景必须以 `[` 作为第一个字节级字符。
             - 如果 Godot stderr 指向 `Nodes with non-equal opposite anchors` 和 C# backtrace，修复 backtrace 中的脚本行，不要在 `_Ready()` 直接给非等锚点 Control 设置 `Size`。
             - 如果 Godot stderr 指向 `This control can't grab focus` 和 C# backtrace，修复 backtrace 中的脚本行：不要对不可聚焦的容器直接调用 `GrabFocus()`，或先配置合适的 focus mode。
+            - Windows/UTF-8 约束：读取包含中文文件名或中文内容的文件时，使用 Python `Path(...).read_text(encoding="utf-8-sig")` 或 `encoding="utf-8"`；需要打印中文或 BOM 内容时先设置 `PYTHONIOENCODING=utf-8`。不要用会把中文路径变成问号的 PowerShell 文本管道读取这些文件。
+            - Windows 路径约束：不要在 PowerShell 下把 `Game.Godot/**/*.cs` 这类 Unix glob 直接传给 `rg`；用 `rg --files -g "*.cs" Game.Godot` 或明确文件路径。
+            - 如果最新平台阻塞是 Godot smoke、Godot build callback、`--build-solutions` 或 C# 编译失败，必须优先修复平台 stderr 指出的具体阻塞；如果无法读取、无法定位或只做了静态猜测，输出 STATUS: needs_fix，不要输出 STATUS: completed。
             - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
             - 如果问题超出小修范围，不要展开大工程，只输出简短结论，说明应改走正式反馈。
             - 输出必须面向浏览器用户，不要包含路径、命令、脚本名、日志名、环境变量。
@@ -1883,6 +1886,9 @@ public sealed partial class PrototypeQuickFixService
             - Main.tscn SOP：原型相关修复必须保持根级 VBox、Overlays、ScreenRoot 默认 visible = false；final/full-playable 目标必须修到这一点通过。
             - Godot stderr 属于当前任务验收信号：`.tscn:1 - Parse Error: Expected '['` 必须修到对应场景文件首字符就是 `[`；`Nodes with non-equal opposite anchors` 必须修到 backtrace 指向的脚本不再触发该 warning。
             - `This control can't grab focus` 也属于当前任务验收信号：必须移除对不可聚焦容器的 `GrabFocus()`，或先配置正确 focus mode。
+            - Windows/UTF-8 约束：读取包含中文文件名或中文内容的文件时，使用 Python `Path(...).read_text(encoding="utf-8-sig")` 或 `encoding="utf-8"`；需要打印中文或 BOM 内容时先设置 `PYTHONIOENCODING=utf-8`。不要用会把中文路径变成问号的 PowerShell 文本管道读取这些文件。
+            - Windows 路径约束：不要在 PowerShell 下把 `Game.Godot/**/*.cs` 这类 Unix glob 直接传给 `rg`；用 `rg --files -g "*.cs" Game.Godot` 或明确文件路径。
+            - 如果最新平台阻塞是 Godot smoke、Godot build callback、`--build-solutions` 或 C# 编译失败，必须优先修复平台 stderr 指出的具体阻塞；如果无法读取、无法定位或只做了静态猜测，输出 STATUS: needs_fix，不要输出 STATUS: completed。
             - Godot 运行验证只能使用仓库内已有的统一 smoke 入口；不要自行直接启动 Godot headless 长进程，不要自行指定 `user://logs` 日志路径。平台会在修复后独立执行统一 smoke 复验。
             - 不要自行运行 dotnet build、dotnet test、Godot prewarm 或 GdUnit；这些验证由平台在隔离输出目录中执行。
             - 对玩法/Godot/RPG 任务，只有实际修复并验证对应玩法验收，才能输出 STATUS: completed。

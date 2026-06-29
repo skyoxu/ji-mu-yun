@@ -2787,6 +2787,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("writeProjectStateCache({ prototypeProgress: cancelledPrototypeProgressSnapshot() }, runProjectId);");
         html.Should().Contain("state.v2PrototypeCreationStatus = \"idle\";");
         html.Should().Contain("if (!activeRun?.runId)");
+        html.Should().Contain("if (hadTrackedBusyRun && state.localBusy)");
         html.Should().Contain("function hideActiveRunBanner()");
         html.Should().Contain("function setButtonVisualState(button, enabled)");
         html.Should().Contain("function setButtonBaseClass(button, baseClassName)");
@@ -2833,9 +2834,16 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("const skeletonRun = skeletonBannerRun();");
         html.Should().NotContain("const skeletonRun = skeletonBannerRun() || state.pendingPrototypeSkeletonRun;");
         html.Should().Contain("hasPendingPrototypeSkeletonBannerRun()");
+        html.Should().Contain("runIsBusy(state.pendingPrototypeSkeletonRun)");
+        html.Should().Contain("if (state.pendingPrototypeSkeletonRun?.runId)");
+        html.Should().Contain("activeRun.runId !== pendingRunId");
         html.Should().Contain("state.pendingPrototypeSkeletonRun.status = state.pendingPrototypeSkeletonRun.status || \"running\";");
+        html.Should().Contain("if (runIsBusy(state.activeRun) && !isInlineOnlyRun(state.activeRun) && runBelongsToCurrentProject(state.activeRun))");
+        html.Should().Contain("const observedProjectId = runProjectId(state.activeRun) || state.projectId;");
+        html.Should().Contain("startProjectRunPolling(state.activeRun.runId, observedProjectId, authEpoch);");
         html.Should().Contain("busy: runIsBusy(run)");
         html.Should().Contain("if (!runIsBusy(run))");
+        html.Should().Contain("if (state.localBusy) state.localBusy = false;");
         html.Should().Contain("runBelongsToCurrentProject(activeRun)");
         html.Should().Contain("async function refreshPrototypeSkeletonRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch)");
         html.Should().Contain("const actualProjectId = runProjectId(run) || projectId;");
@@ -2865,10 +2873,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("删除中...");
         html.Should().Contain("setInterval(refreshActiveRun, 5000)");
         html.Should().Contain("phasea:active-run-refresh");
+        html.Should().Contain("const eventRunId = String(event.data?.runId || \"\").trim();");
+        html.Should().Contain("startProjectRunPolling(eventRunId, eventProjectId, authEpoch);");
         html.Should().Contain("void refreshActiveRun();");
         html.Should().Contain("scheduleActiveRunRefresh(8, 750, false);");
         html.Should().Contain("function scheduleActiveRunRefresh(attempts = 8, delayMs = 750, requireLocalBusy = true)");
-        html.Should().Contain("(!requireLocalBusy || state.localBusy)");
+        html.Should().Contain("(!requireLocalBusy || state.localBusy || runIsBusy(state.activeRun) || hasPendingPrototypeSkeletonBannerRun())");
         html.Should().Contain("Access token");
         html.Should().Contain("phaseAAccessToken");
         html.Should().Contain("gddQuestionFormModal");

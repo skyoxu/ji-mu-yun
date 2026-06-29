@@ -173,6 +173,62 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task GetOrCreateLatestAsync_ReconcilesLatestGddMilestoneSession_WhenStepStateHasStaleRepairRun()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Action Roguelike GDD
+
+        M1: First playable room.
+        M2: Skill pressure.
+        M3: Run upgrade loop.
+        """);
+        var session = await store.CreateProjectIterationSessionAsync(
+            accountId,
+            projectId,
+            "gdd_milestone_step",
+            "M3 session",
+            "M3 - Run upgrade loop",
+            [new ProjectIterationGoalCreateCommand(3, "M3: Run upgrade loop", "Implement M3.", "Validate M3.")]);
+        var details = await store.GetProjectIterationSessionAsync(projectId, session.SessionId);
+        var goal = details!.Goals.Single();
+        var executionRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-iteration-goal");
+        await store.CompleteRunAsync(executionRunId, "completed", 0, "execution stdout", "", "{\"goal_index\":3}", CancellationToken.None);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, goal.GoalId, executionRunId, "prototype-iteration-goal");
+        var staleRepairRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-quick-fix");
+        await store.CompleteRunAsync(staleRepairRunId, "completed", 0, "stale repair stdout", "", "{\"goal_index\":3}", CancellationToken.None);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, goal.GoalId, staleRepairRunId, "prototype-iteration-goal-repair");
+        WriteM3StaleRepairStepState(project.MetaPath, project.RepoPath, executionRunId, staleRepairRunId);
+        await Task.Delay(5);
+        var latestRepairRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "prototype-quick-fix");
+        await store.CompleteRunAsync(latestRepairRunId, "completed", 0, "latest repair stdout", "", "{\"goal_index\":3}", CancellationToken.None);
+        await store.LinkProjectIterationGoalRunAsync(session.SessionId, goal.GoalId, latestRepairRunId, "prototype-iteration-goal-repair");
+        await store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", "M3 acceptance passed after latest repair.", null);
+        await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "completed", 3, "Task 3 acceptance passed.", null, null);
+        var service = Service(store, options);
+
+        var result = await service.GetOrCreateLatestAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        var step = result!.Steps.Single(candidate => candidate.StepId == "M3");
+        step.Status.Should().Be("feedback_submitted");
+        step.ExecutionRunId.Should().Be(executionRunId);
+        step.FeedbackRunId.Should().Be(latestRepairRunId);
+        step.FeedbackRunId.Should().NotBe(staleRepairRunId);
+        step.FeedbackSummary.Should().Contain("M3 acceptance passed after latest repair.");
+        step.FeedbackSummary.Should().NotContain("stale");
+        step.LatestEvidenceRelativePath.Should().NotBe("logs/prototype-evidence/stale-repair.json");
+    }
+
+    [Fact]
     public async Task GetOrCreateLatestAsync_PreservesConfirmedStep_WhenHistoricalResultStillNeedsFix()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1489,6 +1545,74 @@ public sealed class GddMilestoneStepServiceTests
       "nextStepReview": "",
       "status": "ready",
       "locked": false
+    }
+  ]
+}
+""";
+        WriteStepState(metaPath, repoPath, payload);
+    }
+
+    private static void WriteM3StaleRepairStepState(string metaPath, string repoPath, string executionRunId, string staleRepairRunId)
+    {
+        var payload = $$"""
+{
+  "schema": "phase-a.gdd-milestone-steps.v2",
+  "status": "ready",
+  "summary": "stale state",
+  "currentStepId": "M3",
+  "steps": [
+    {
+      "stepId": "M1",
+      "stepIndex": 1,
+      "title": "M1: First playable room.",
+      "description": "First playable room.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:00:00Z"
+    },
+    {
+      "stepId": "M2",
+      "stepIndex": 2,
+      "title": "M2: Skill pressure.",
+      "description": "Skill pressure.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "confirmed",
+      "locked": false,
+      "confirmedUtc": "2026-06-24T00:05:00Z"
+    },
+    {
+      "stepId": "M3",
+      "stepIndex": 3,
+      "title": "M3: Run upgrade loop.",
+      "description": "Run upgrade loop.",
+      "acceptance": "",
+      "scopeIn": "",
+      "scopeOut": "",
+      "godotSlice": "",
+      "packagingValidation": "",
+      "feedbackGuidance": "",
+      "nextStepReview": "",
+      "status": "feedback_submitted",
+      "locked": false,
+      "iterationSessionId": "stale-session",
+      "executionRunId": "{{executionRunId}}",
+      "executionSummary": "M3 old execution summary.",
+      "feedbackRunId": "{{staleRepairRunId}}",
+      "feedbackSummary": "stale repair still says Godot smoke failed.",
+      "latestEvidenceRelativePath": "logs/prototype-evidence/stale-repair.json"
     }
   ]
 }

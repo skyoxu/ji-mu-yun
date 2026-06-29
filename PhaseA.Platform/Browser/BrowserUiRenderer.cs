@@ -6697,6 +6697,7 @@ public sealed class BrowserUiRenderer
 
                 function hasPendingPrototypeSkeletonBannerRun() {
                   return !!state.pendingPrototypeSkeletonRun?.runId &&
+                    runIsBusy(state.pendingPrototypeSkeletonRun) &&
                     isPrototypeSkeletonCreationRun(state.pendingPrototypeSkeletonRun) &&
                     runBelongsToCurrentProject(state.pendingPrototypeSkeletonRun);
                 }
@@ -7267,8 +7268,12 @@ public sealed class BrowserUiRenderer
                     const activeRun = await api("/api/account/active-run");
                     if (!activeRun?.runId) {
                       state.activeRun = null;
-                      if (!hasPendingPrototypeSkeletonBannerRun()) {
+                      if (state.pendingPrototypeSkeletonRun?.runId) {
                         state.pendingPrototypeSkeletonRun = null;
+                        resetPrototypeSkeletonBannerState(true);
+                      }
+                      if (hadTrackedBusyRun && state.localBusy) {
+                        state.localBusy = false;
                       }
                       applyGlobalBusyState();
                       if (hadTrackedBusyRun && state.projectId) {
@@ -7297,7 +7302,7 @@ public sealed class BrowserUiRenderer
                       ensurePrototypeSkeletonBannerRun(state.activeRun);
                     } else if (hasPendingPrototypeSkeletonBannerRun()) {
                       const pendingRunId = state.pendingPrototypeSkeletonRun?.runId || "";
-                      if (activeRun?.runId && pendingRunId && activeRun.runId === pendingRunId && !runIsBusy(activeRun)) {
+                      if (!activeRun?.runId || (pendingRunId && activeRun.runId !== pendingRunId) || !runIsBusy(activeRun)) {
                         state.pendingPrototypeSkeletonRun = null;
                         resetPrototypeSkeletonBannerState(true);
                       } else {
@@ -7307,6 +7312,10 @@ public sealed class BrowserUiRenderer
                       }
                     } else {
                       state.pendingPrototypeSkeletonRun = null;
+                    }
+                    if (runIsBusy(state.activeRun) && !isInlineOnlyRun(state.activeRun) && runBelongsToCurrentProject(state.activeRun)) {
+                      const observedProjectId = runProjectId(state.activeRun) || state.projectId;
+                      startProjectRunPolling(state.activeRun.runId, observedProjectId, authEpoch);
                     }
                     applyGlobalBusyState();
                     if (state.projectId && shouldAutoRefreshIterationPlan(activeRun)) {
@@ -7344,7 +7353,7 @@ public sealed class BrowserUiRenderer
                   const tick = async () => {
                     await refreshActiveRun();
                     remaining -= 1;
-                    if (remaining > 0 && state.authenticated && (!requireLocalBusy || state.localBusy) && !runIsBusy(state.activeRun)) {
+                    if (remaining > 0 && state.authenticated && (!requireLocalBusy || state.localBusy || runIsBusy(state.activeRun) || hasPendingPrototypeSkeletonBannerRun())) {
                       window.setTimeout(tick, delayMs);
                     }
                   };
@@ -7353,6 +7362,8 @@ public sealed class BrowserUiRenderer
 
                 let projectRunPollTimer = null;
                 let projectRunPollId = "";
+                let projectRunPollProjectId = "";
+                let projectRunPollAuthEpoch = 0;
 
                 function resultRunId(result) {
                   return result?.runId ||
@@ -7368,6 +7379,8 @@ public sealed class BrowserUiRenderer
                   if (projectRunPollTimer) window.clearInterval(projectRunPollTimer);
                   projectRunPollTimer = null;
                   projectRunPollId = "";
+                  projectRunPollProjectId = "";
+                  projectRunPollAuthEpoch = 0;
                 }
 
                 async function refreshProjectRun(runId, projectId = state.projectId, requestAuthEpoch = authEpoch) {
@@ -7401,6 +7414,7 @@ public sealed class BrowserUiRenderer
                     if (!runIsBusy(run)) {
                       stopProjectRunPolling(runId);
                       if (state.activeRun?.runId === runId) state.activeRun = null;
+                      if (state.localBusy) state.localBusy = false;
                       if (isPrototypeSkeletonCreationRun(run)) {
                         state.pendingPrototypeSkeletonRun = null;
                         resetPrototypeSkeletonBannerState(true);
@@ -7419,6 +7433,8 @@ public sealed class BrowserUiRenderer
                   if (projectRunPollId === runId && projectRunPollTimer) return;
                   stopProjectRunPolling();
                   projectRunPollId = runId;
+                  projectRunPollProjectId = projectId;
+                  projectRunPollAuthEpoch = requestAuthEpoch;
                   void refreshProjectRun(runId, projectId, requestAuthEpoch);
                   projectRunPollTimer = window.setInterval(() => {
                     void refreshProjectRun(runId, projectId, requestAuthEpoch);
@@ -8989,6 +9005,11 @@ public sealed class BrowserUiRenderer
                     return;
                   }
                   if (event.data?.type === "phasea:active-run-refresh") {
+                    const eventRunId = String(event.data?.runId || "").trim();
+                    const eventProjectId = String(event.data?.projectId || state.projectId || "").trim();
+                    if (eventRunId && eventProjectId) {
+                      startProjectRunPolling(eventRunId, eventProjectId, authEpoch);
+                    }
                     void refreshActiveRun();
                     scheduleActiveRunRefresh(8, 750, false);
                   }

@@ -1322,11 +1322,11 @@ public sealed class GddMilestoneStepService
             Locked = false,
             Status = status,
             IterationSessionId = details.Session.SessionId,
-            ExecutionRunId = FirstNonEmpty(step.ExecutionRunId, executionRun?.RunId),
-            ExecutionSummary = FirstNonEmpty(step.ExecutionSummary, goal.ResultSummary, details.Session.LatestSummary),
-            FeedbackRunId = FirstNonEmpty(step.FeedbackRunId, repairRun?.RunId),
-            FeedbackSummary = FirstNonEmpty(step.FeedbackSummary, repairRun is null ? null : goal.ResultSummary),
-            LatestEvidenceRelativePath = FirstNonEmpty(step.LatestEvidenceRelativePath, evidence?.RelativePath)
+            ExecutionRunId = FirstNonEmpty(executionRun?.RunId, step.ExecutionRunId),
+            ExecutionSummary = FirstNonEmpty(goal.ResultSummary, details.Session.LatestSummary, step.ExecutionSummary),
+            FeedbackRunId = FirstNonEmpty(repairRun?.RunId, step.FeedbackRunId),
+            FeedbackSummary = FirstNonEmpty(repairRun is null ? null : goal.ResultSummary, step.FeedbackSummary),
+            LatestEvidenceRelativePath = FirstNonEmpty(evidence?.RelativePath, step.LatestEvidenceRelativePath)
         };
         state.CurrentStepId = status == "executed"
             ? step.StepId
