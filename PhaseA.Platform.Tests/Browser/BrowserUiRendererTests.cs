@@ -3071,6 +3071,7 @@ public sealed class BrowserUiRendererTests
         quickRepairSource.Should().BeGreaterThan(-1);
         html.IndexOf("await trackProjectRunFromResult({ runId: actionRunId }, projectId, context.authEpoch);", quickRepairSource, StringComparison.Ordinal)
             .Should().BeLessThan(html.IndexOf("state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;", quickRepairSource, StringComparison.Ordinal));
+        html.Should().Contain("if (state.activeRun?.runId === runId) state.activeRun = null;");
         html.Should().Contain("loadGddMilestoneSteps");
         html.Should().Contain("请先创建策划大纲");
         html.Should().Contain("draftFile");

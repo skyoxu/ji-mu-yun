@@ -7400,6 +7400,7 @@ public sealed class BrowserUiRenderer
                     }
                     if (!runIsBusy(run)) {
                       stopProjectRunPolling(runId);
+                      if (state.activeRun?.runId === runId) state.activeRun = null;
                       if (isPrototypeSkeletonCreationRun(run)) {
                         state.pendingPrototypeSkeletonRun = null;
                         resetPrototypeSkeletonBannerState(true);
@@ -8405,6 +8406,7 @@ public sealed class BrowserUiRenderer
                     state.activeRun = run;
                     applyGlobalBusyState();
                     if (!runIsBusy(run)) {
+                      if (state.activeRun?.runId === runId) state.activeRun = null;
                       state.pendingPrototypeSkeletonRun = null;
                       resetPrototypeSkeletonBannerState(true);
                       applyGlobalBusyState();
