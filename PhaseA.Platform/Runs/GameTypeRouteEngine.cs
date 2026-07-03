@@ -178,7 +178,7 @@ public static class GameTypeRouteProfiles
 {
     private static readonly AsyncLocal<bool?> GenericPrototypeRouteOnlyOverride = new();
 
-    public static bool UseGenericPrototypeRouteOnly => GenericPrototypeRouteOnlyOverride.Value ?? true;
+    public static bool UseGenericPrototypeRouteOnly => GenericPrototypeRouteOnlyOverride.Value ?? false;
 
     public static IDisposable UseGenericPrototypeRouteOnlyForTesting(bool value)
     {

@@ -430,7 +430,7 @@ git diff --check
 
 ## 14. 卡牌构筑类型的参考起点
 
-如果下一个类型是卡牌构筑，请以 `docs/prototype-type-kits/deckbuilder.md` 作为正式输入源，`docs/game-type-guides/card-game.md` 只作为通用术语参考，不要把 card-game 目录里的常见系统全部自动升级为默认验收。`deckbuilder` 当前只是 type kit / 文档输入，还没有注册可执行 route profile。
+如果下一个类型是卡牌构筑，请以 `docs/prototype-type-kits/deckbuilder.md` 作为正式输入源，`docs/game-type-guides/card-game.md` 只作为通用术语参考，不要把 card-game 目录里的常见系统全部自动升级为默认验收。`deckbuilder` 已注册为可执行 route profile，默认使用 `godot-deckbuilder-v1` 和 `prototype-deckbuilder-godot-zh`。
 
 Deckbuilder capability graph 的最小输入如下：
 

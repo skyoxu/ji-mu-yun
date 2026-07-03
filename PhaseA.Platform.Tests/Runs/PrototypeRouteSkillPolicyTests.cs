@@ -10,6 +10,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void Resolve_ShouldUseGenericSkill_WhenGameTypeRoutingIsDisabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo26",
             gameName: "rpgdemo26",
@@ -41,7 +42,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForRpgProject()
+    public void ResolveProfile_ShouldExposeRpgRouteProtocol_ForRpgProject()
     {
         var project = Project(
             name: "rpgdemo26",
@@ -51,18 +52,18 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
-        profile.GameTypeId.Should().Be("default");
-        profile.ProfileId.Should().Be("godot-playable-default-v1");
-        profile.RouteSetId.Should().Be("default-prototype-routes-v1");
-        profile.PlannerId.Should().Be("default-iteration-planner-v1");
-        profile.EvaluatorId.Should().Be("default-plan-evaluator-v1");
-        profile.ExecutorId.Should().Be("default-goal-executor-v1");
-        profile.NeedsFixId.Should().Be("default-needs-fix-v1");
-        profile.FinalAcceptanceId.Should().Be("default-final-acceptance-v1");
+        profile.GameTypeId.Should().Be("rpg");
+        profile.ProfileId.Should().Be("godot-rpg-v1");
+        profile.RouteSetId.Should().Be("rpg-prototype-routes-v1");
+        profile.PlannerId.Should().Be("rpg-iteration-planner-v1");
+        profile.EvaluatorId.Should().Be("rpg-plan-evaluator-v1");
+        profile.ExecutorId.Should().Be("rpg-goal-executor-v1");
+        profile.NeedsFixId.Should().Be("rpg-needs-fix-v1");
+        profile.FinalAcceptanceId.Should().Be("rpg-final-acceptance-v1");
     }
 
     [Fact]
-    public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForSurvivorsLikeProject()
+    public void ResolveProfile_ShouldExposeSurvivorsLikeRouteProtocol_ForSurvivorsLikeProject()
     {
         var project = Project(
             name: "vampire-demo",
@@ -73,25 +74,25 @@ public sealed class PrototypeRouteSkillPolicyTests
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var prompt = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
 
-        profile.GameTypeId.Should().Be("default");
-        profile.ProfileId.Should().Be("godot-playable-default-v1");
-        profile.RouteSetId.Should().Be("default-prototype-routes-v1");
-        profile.PlannerId.Should().Be("default-iteration-planner-v1");
-        profile.EvaluatorId.Should().Be("default-plan-evaluator-v1");
-        profile.ExecutorId.Should().Be("default-goal-executor-v1");
-        profile.NeedsFixId.Should().Be("default-needs-fix-v1");
-        profile.FinalAcceptanceId.Should().Be("default-final-acceptance-v1");
-        profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
-        profile.RouteSkill.ContractRelativePath.Should().BeNull();
+        profile.GameTypeId.Should().Be("survivorslike");
+        profile.ProfileId.Should().Be("godot-survivorslike-v1");
+        profile.RouteSetId.Should().Be("survivorslike-prototype-routes-v1");
+        profile.PlannerId.Should().Be("survivorslike-iteration-planner-v1");
+        profile.EvaluatorId.Should().Be("survivorslike-plan-evaluator-v1");
+        profile.ExecutorId.Should().Be("survivorslike-goal-executor-v1");
+        profile.NeedsFixId.Should().Be("survivorslike-needs-fix-v1");
+        profile.FinalAcceptanceId.Should().Be("survivorslike-final-acceptance-v1");
+        profile.RouteSkill.RouteSkillId.Should().Be("prototype-survivorslike-godot-zh");
+        profile.RouteSkill.ContractRelativePath.Should().Be(".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md");
         prompt.Should().Contain("Downstream source boundary");
         prompt.Should().Contain("do not read docs/game-type-guides");
         prompt.Should().NotContain("MandatorySkillEntry");
-        prompt.Should().Contain("GameTypeId: default");
+        prompt.Should().Contain("GameTypeId: survivorslike");
         prompt.Should().Contain("Player-visible text rule");
     }
 
     [Fact]
-    public void ResolveProfile_ShouldExposeDefaultRouteProtocol_ForDeckbuilderProject()
+    public void ResolveProfile_ShouldExposeDeckbuilderRouteProtocol_ForDeckbuilderProject()
     {
         var project = Project(
             name: "deck-demo",
@@ -102,20 +103,20 @@ public sealed class PrototypeRouteSkillPolicyTests
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var prompt = PrototypeRouteSkillPolicy.BuildPromptBlock(project);
 
-        profile.GameTypeId.Should().Be("default");
-        profile.ProfileId.Should().Be("godot-playable-default-v1");
-        profile.RouteSetId.Should().Be("default-prototype-routes-v1");
-        profile.PlannerId.Should().Be("default-iteration-planner-v1");
-        profile.EvaluatorId.Should().Be("default-plan-evaluator-v1");
-        profile.ExecutorId.Should().Be("default-goal-executor-v1");
-        profile.NeedsFixId.Should().Be("default-needs-fix-v1");
-        profile.FinalAcceptanceId.Should().Be("default-final-acceptance-v1");
-        profile.RouteSkill.RouteSkillId.Should().Be("prototype-7day-playable-godot-zh");
-        profile.RouteSkill.ContractRelativePath.Should().BeNull();
+        profile.GameTypeId.Should().Be("deckbuilder");
+        profile.ProfileId.Should().Be("godot-deckbuilder-v1");
+        profile.RouteSetId.Should().Be("deckbuilder-prototype-routes-v1");
+        profile.PlannerId.Should().Be("deckbuilder-iteration-planner-v1");
+        profile.EvaluatorId.Should().Be("deckbuilder-plan-evaluator-v1");
+        profile.ExecutorId.Should().Be("deckbuilder-goal-executor-v1");
+        profile.NeedsFixId.Should().Be("deckbuilder-needs-fix-v1");
+        profile.FinalAcceptanceId.Should().Be("deckbuilder-final-acceptance-v1");
+        profile.RouteSkill.RouteSkillId.Should().Be("prototype-deckbuilder-godot-zh");
+        profile.RouteSkill.ContractRelativePath.Should().Be(".agents/skills/prototype-deckbuilder-godot-zh/references/deckbuilder-prototype-contract.md");
         prompt.Should().Contain("Downstream source boundary");
         prompt.Should().Contain("do not read docs/game-type-guides");
         prompt.Should().NotContain("MandatorySkillEntry");
-        prompt.Should().Contain("GameTypeId: default");
+        prompt.Should().Contain("GameTypeId: deckbuilder");
         prompt.Should().Contain("Player-visible text rule");
     }
 
@@ -146,7 +147,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [InlineData("\u90aa\u6076\u51a5\u523b")]
     [InlineData("\u5c0f\u4e11\u724c")]
     [InlineData("\u6708\u5706\u4e4b\u591c")]
-    public void ResolveProfile_ShouldUseDefaultRoute_ForDeckbuilderAliases(string gameTypeSource)
+    public void ResolveProfile_ShouldUseDeckbuilderRoute_ForDeckbuilderAliases(string gameTypeSource)
     {
         var project = Project(
             name: "deck-demo",
@@ -156,7 +157,7 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
-        profile.GameTypeId.Should().Be("default");
+        profile.GameTypeId.Should().Be("deckbuilder");
     }
 
     [Fact]
@@ -196,7 +197,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void ResolveProfile_ShouldUseDefaultRoute_WhenProjectNameContainsRpgAndSurvivorsLike()
+    public void ResolveProfile_ShouldPreferSurvivorsLikeRoute_WhenProjectNameContainsRpgAndSurvivorsLike()
     {
         var project = Project(
             name: "rpg-survivors-demo",
@@ -206,7 +207,7 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
-        profile.GameTypeId.Should().Be("default");
+        profile.GameTypeId.Should().Be("survivorslike");
     }
 
     [Theory]
@@ -215,7 +216,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [InlineData("Arena Survival")]
     [InlineData("Horde Survival")]
     [InlineData("\u5e78\u5b58\u8005\u7c7b")]
-    public void ResolveProfile_ShouldUseDefaultRoute_ForSurvivorsLikeAliases(string gameTypeSource)
+    public void ResolveProfile_ShouldUseSurvivorsLikeRoute_ForSurvivorsLikeAliases(string gameTypeSource)
     {
         var project = Project(
             name: "arena-demo",
@@ -225,14 +226,15 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         var profile = PrototypeRouteSkillPolicy.ResolveProfile(project);
 
-        profile.GameTypeId.Should().Be("default");
+        profile.GameTypeId.Should().Be("survivorslike");
     }
 
     [Fact]
-    public void CheckAvailable_ShouldPass_WhenDefaultSkillExists_ForSurvivorsLikeProject()
+    public void CheckAvailable_ShouldPass_WhenSurvivorsLikeSkillAndContractExist()
     {
         using var temp = TempDirectory.Create();
-        Write(temp.Path, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "name: prototype-7day-playable-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-survivorslike-godot-zh/SKILL.md", "name: prototype-survivorslike-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-survivorslike-godot-zh/references/survivorslike-prototype-contract.md", "# Contract\n");
         var project = Project(
             name: "vampire-demo",
             gameName: "Vampire Demo",
@@ -246,10 +248,11 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void CheckAvailable_ShouldPass_WhenDefaultSkillExists_ForDeckbuilderProject()
+    public void CheckAvailable_ShouldPass_WhenDeckbuilderSkillAndContractExist()
     {
         using var temp = TempDirectory.Create();
-        Write(temp.Path, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "name: prototype-7day-playable-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-deckbuilder-godot-zh/SKILL.md", "name: prototype-deckbuilder-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-deckbuilder-godot-zh/references/deckbuilder-prototype-contract.md", "# Contract\n");
         var project = Project(
             name: "deck-demo",
             gameName: "Deck Demo",
@@ -263,7 +266,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     }
 
     [Fact]
-    public void EnsureAvailable_ShouldSeedDefaultSkillFromHostRepository_ForSurvivorsLikeProject()
+    public void EnsureAvailable_ShouldSeedSurvivorsLikeSkillFromHostRepository_ForSurvivorsLikeProject()
     {
         using var temp = TempDirectory.Create();
         var project = Project(
@@ -275,12 +278,14 @@ public sealed class PrototypeRouteSkillPolicyTests
         var availability = PrototypeRouteSkillPolicy.EnsureAvailable(project);
 
         availability.IsAvailable.Should().BeTrue();
-        File.Exists(Path.Combine(temp.Path, ".agents", "skills", "prototype-7day-playable-godot-zh", "SKILL.md")).Should().BeTrue();
+        File.Exists(Path.Combine(temp.Path, ".agents", "skills", "prototype-survivorslike-godot-zh", "SKILL.md")).Should().BeTrue();
+        File.Exists(Path.Combine(temp.Path, ".agents", "skills", "prototype-survivorslike-godot-zh", "references", "survivorslike-prototype-contract.md")).Should().BeTrue();
     }
 
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldNotExposeSurvivorsLikeHardAcceptance_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "vampire-demo",
             gameName: "Vampire Demo",
@@ -308,6 +313,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldNotExposeDeckbuilderHardAcceptance_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "deck-demo",
             gameName: "Deck Demo",
@@ -335,6 +341,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldNotExposeRpgSceneSwitchingAcceptance_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -364,6 +371,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldNotExposeJrpgFieldNavigationAcceptance_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -392,6 +400,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldNotExposeRpgRewardPrompt_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -419,6 +428,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void GoalAcceptancePromptBuilder_ShouldExposeDefaultRpgHardAcceptance_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -492,6 +502,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void RouteStrategy_ShouldUseDefaultRpgFinalAcceptanceContract_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -520,6 +531,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void RouteStrategy_ShouldNotUseRpgAssetUsageContract_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpgdemo",
             gameName: "rpgdemo",
@@ -566,6 +578,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldRequireMovementMarker_ForRpgMapMovementFallback()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -594,6 +607,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldRequireBattleAcceptance_ForRpgBattleChallengeFallback()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -623,6 +637,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldPreferBattleFallback_WhenGoalAlsoMentionsObjective()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -650,6 +665,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldPreferBattleChallengeFallback_WhenGoalAlsoMentionsMovement()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -679,6 +695,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldPreferRpgMapMovementFallback_WhenLoopTextAlsoAppears()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -706,6 +723,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldRequireMainSceneHostAcceptance_ForRpgFinalFallback()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -735,6 +753,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldUseFullFinalContract_WhenRpgFinalMentionsBattleAndReward()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -771,6 +790,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void DefaultRouteStrategy_ShouldPreferFinalFallback_WhenGoalAlsoMentionsObjective()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         var project = Project(
             name: "rpg-demo",
             gameName: "RPG Demo",
@@ -868,14 +888,15 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         availability.IsAvailable.Should().BeFalse();
         availability.FailureCode.Should().Be("route_skill_required");
-        availability.FailureMessage.Should().Contain(".agents/skills/prototype-7day-playable-godot-zh/SKILL.md");
+        availability.FailureMessage.Should().Contain(".agents/skills/prototype-rpg-godot-zh/SKILL.md");
     }
 
     [Fact]
     public void CheckAvailable_ShouldPass_WhenRequiredSkillAndContractExist()
     {
         using var temp = TempDirectory.Create();
-        Write(temp.Path, ".agents/skills/prototype-7day-playable-godot-zh/SKILL.md", "name: prototype-7day-playable-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-rpg-godot-zh/SKILL.md", "name: prototype-rpg-godot-zh\n");
+        Write(temp.Path, ".agents/skills/prototype-rpg-godot-zh/references/rpg-prototype-contract.md", "# Contract\n");
         var project = Project(
             name: "rpgdemo26",
             gameName: "rpgdemo26",
@@ -891,6 +912,7 @@ public sealed class PrototypeRouteSkillPolicyTests
     [Fact]
     public void MutationGuard_ShouldNotRunSpecializedGuard_WhenGenericRoutingIsEnabled()
     {
+        using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var temp = TempDirectory.Create();
         var testsRoot = Path.Combine(temp.Path, "Game.Core.Tests", "Prototypes");
         Directory.CreateDirectory(testsRoot);

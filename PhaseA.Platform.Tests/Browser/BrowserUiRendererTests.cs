@@ -3027,6 +3027,12 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("快速修复");
         html.Should().Contain("quickRepairCurrentMilestoneStep");
         html.Should().Contain("更新游戏模块内容");
+        html.Should().Contain("createNewGddMilestoneRound");
+        html.Should().Contain("创建新一轮游戏模块");
+        html.Should().Contain("panel.querySelector(\"#createNewGddMilestoneRound\")?.addEventListener(\"click\", () => openIterationPlanUpdateModal(\"new\"))");
+        html.Should().Contain("有任务正在执行，请等待当前任务完成后再创建新一轮。");
+        html.Should().Contain("将基于这里输入的新目标创建独立的新一轮计划，不会更新当前轮游戏模块。");
+        html.Should().NotContain("当前游戏模块全部完成后可以创建新一轮。");
         html.Should().Contain("完成当前模块并激活下一模块");
         html.Should().Contain("建议先打包下载试玩验证");
         html.Should().Contain("提交反馈并修正模块");

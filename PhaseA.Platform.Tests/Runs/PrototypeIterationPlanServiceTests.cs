@@ -2446,7 +2446,7 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldBlockNewIterationPlan_WhenPreviousPlanIsNotComplete()
+    public async Task CreateAsync_ShouldCreateNewIterationPlan_WhenPreviousPlanIsNotComplete()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -2469,9 +2469,12 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
         var rounds = await service.ListAsync(accountId, projectId);
 
         first.Status.Should().Be("ready");
-        second.Status.Should().Be("iteration_plan_update_blocked");
-        second.Summary.Should().Contain("需要先完成当前游戏模块");
-        rounds.Should().HaveCount(1);
+        second.Status.Should().Be("ready");
+        second.SessionId.Should().NotBe(first.SessionId);
+        rounds.Should().HaveCount(2);
+        rounds[0].Session.SessionId.Should().Be(first.SessionId);
+        rounds[1].Session.SessionId.Should().Be(second.SessionId);
+        rounds[1].Session.SourceKind.Should().Be("new_iteration_plan");
     }
 
     [Fact]

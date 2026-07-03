@@ -3435,7 +3435,7 @@ public sealed class BrowserUiRenderer
                     : "输入本次更新计划的补充要求；留空时会优先使用评估结果中的重拆建议。";
                   $("confirmIterationPlanUpdate").textContent = isNewPlan ? "创建新的游戏模块" : "更新游戏模块";
                   $("iterationPlanUpdateHint").textContent = isNewPlan
-                    ? "当前游戏模块已完成，将基于这里输入的新目标创建下一轮计划。"
+                    ? "将基于这里输入的新目标创建独立的新一轮计划，不会更新当前轮游戏模块。"
                     : "更新时会优先参考输入框信息，其次参考当前评估结果。";
                   setModalVisible("iterationPlanUpdateModal", true);
                   autoGrowTextarea($("iterationPlanUpdateInput"));
@@ -7763,6 +7763,7 @@ public sealed class BrowserUiRenderer
                         <div class="milestone-progress-actions">
                           <span class="muted">共 ${escapeHtml(String(steps.length))} 个模块 · 完成 ${escapeHtml(String(completedCount))} 个 · 当前 ${escapeHtml(active ? `模块 ${activeIndex + 1}` : "全部完成")}</span>
                           <button id="refreshGddMilestoneSteps" type="button" class="ghost" data-global-action="true">更新游戏模块内容</button>
+                          <button id="createNewGddMilestoneRound" type="button" class="secondary" data-global-action="true">创建新一轮游戏模块</button>
                         </div>
                       </div>
                       <div class="milestone-progress-track">
@@ -7778,6 +7779,7 @@ public sealed class BrowserUiRenderer
                   panel.querySelector("[data-gdd-milestone-nav='previous']")?.addEventListener("click", () => selectGddMilestoneByOffset(-1));
                   panel.querySelector("[data-gdd-milestone-nav='next']")?.addEventListener("click", () => selectGddMilestoneByOffset(1));
                   panel.querySelector("#refreshGddMilestoneSteps")?.addEventListener("click", refreshGddMilestoneSteps);
+                  panel.querySelector("#createNewGddMilestoneRound")?.addEventListener("click", () => openIterationPlanUpdateModal("new"));
                   applyGddMilestoneActionState(selected, active);
                 }
 
@@ -7948,7 +7950,9 @@ public sealed class BrowserUiRenderer
                 function applyGddMilestoneActionState(selected, active) {
                   const canUse = !!state.projectId && !!selected && !!active && selected.stepId === active.stepId && !selected.locked && !isGlobalBusy();
                   const canSubmitFeedback = !!selected?.canSubmitFeedback || !!selected?.canConfirm;
+                  const canCreateNewRound = !!state.projectId && !isGlobalBusy();
                   setButtonDisabledState($("refreshGddMilestoneSteps"), !state.projectId || isGlobalBusy(), "选择项目后可以更新游戏模块内容。");
+                  setButtonDisabledState($("createNewGddMilestoneRound"), !canCreateNewRound, state.projectId ? "有任务正在执行，请等待当前任务完成后再创建新一轮。" : "请先选择项目。");
                   setButtonDisabledState($("executeCurrentMilestoneStep"), !(canUse && selected.canExecute), selected ? "只有当前激活模块可以执行。" : "没有可执行的当前模块。");
                   setButtonDisabledState($("quickRepairCurrentMilestoneStep"), !(canUse && canQuickRepairGddMilestoneStep(selected)), selected ? "只有当前激活模块存在失败执行结果时可以快速修复。" : "没有可快速修复的当前模块。");
                   setButtonDisabledState($("confirmCurrentMilestoneStep"), !(canUse && selected.canConfirm), selected ? "只有当前激活模块完成执行后可以确认。" : "没有可确认的当前模块。");

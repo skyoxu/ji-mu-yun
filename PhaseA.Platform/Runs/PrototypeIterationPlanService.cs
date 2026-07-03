@@ -113,19 +113,8 @@ public sealed class PrototypeIterationPlanService
         var routeStrategy = GameTypeRouteStrategies.Resolve(project, routeProfile);
 
         var previousIterationPlan = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
-        if (string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase) &&
-            (previousIterationPlan is null || !IsIterationPlanComplete(previousIterationPlan.Goals)))
-        {
-            return new PrototypeIterationPlanResult(
-                "",
-                "iteration_plan_update_blocked",
-                "创建新一轮游戏模块前，需要先完成当前游戏模块的所有目标。",
-                [],
-                null,
-                previousIterationPlan?.LatestEvaluation);
-        }
-
         if (previousIterationPlan is not null &&
+            !string.Equals(sourceKind, "new_iteration_plan", StringComparison.OrdinalIgnoreCase) &&
             IsIterationPlanStarted(previousIterationPlan) &&
             !IsIterationPlanComplete(previousIterationPlan.Goals))
         {
