@@ -45,6 +45,10 @@ public sealed record GddMilestoneStepFeedbackRequest(
     string? Model = null,
     string? SourceKind = null);
 
+public sealed record GddMilestoneNewRoundRequest(
+    string? Goal,
+    string? Model = null);
+
 public sealed record GddMilestoneStepActionResult(
     string ProjectId,
     string StepId,

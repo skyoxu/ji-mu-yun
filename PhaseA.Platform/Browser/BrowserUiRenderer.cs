@@ -3424,9 +3424,13 @@ public sealed class BrowserUiRenderer
                 function openIterationPlanUpdateModal(mode, initialValue = "") {
                   state.iterationPlanUpdateMode = mode;
                   const isNewPlan = mode === "new";
+                  const isNewGddMilestone = mode === "new-gdd-milestone";
                   $("iterationPlanUpdateTitle").textContent = isNewPlan ? "创建新的游戏模块" : "重新生成游戏模块";
-                  $("iterationPlanUpdateEvaluation").className = isNewPlan ? "card muted hidden" : "card";
-                  $("iterationPlanUpdateEvaluation").innerHTML = isNewPlan
+                  $("iterationPlanUpdateEvaluation").className = isNewPlan || isNewGddMilestone ? "card muted hidden" : "card";
+                  if (isNewGddMilestone) {
+                    $("iterationPlanUpdateTitle").textContent = "Create next GDD module";
+                  }
+                  $("iterationPlanUpdateEvaluation").innerHTML = isNewPlan || isNewGddMilestone
                     ? ""
                     : iterationPlanEvaluationHtml(state.iterationPlanEvaluation);
                   $("iterationPlanUpdateInput").value = initialValue || "";
@@ -3437,6 +3441,11 @@ public sealed class BrowserUiRenderer
                   $("iterationPlanUpdateHint").textContent = isNewPlan
                     ? "将基于这里输入的新目标创建独立的新一轮计划，不会更新当前轮游戏模块。"
                     : "更新时会优先参考输入框信息，其次参考当前评估结果。";
+                  if (isNewGddMilestone) {
+                    $("iterationPlanUpdateInput").placeholder = "Describe the next GDD module goal, such as M12.";
+                    $("confirmIterationPlanUpdate").textContent = "Create module";
+                    $("iterationPlanUpdateHint").textContent = "Create the next GDD module, such as M12, from this goal.";
+                  }
                   setModalVisible("iterationPlanUpdateModal", true);
                   autoGrowTextarea($("iterationPlanUpdateInput"));
                   $("iterationPlanUpdateInput").focus();
@@ -3460,15 +3469,20 @@ public sealed class BrowserUiRenderer
                   if (!state.projectId) return out("请先选择一个项目。");
                   const mode = state.iterationPlanUpdateMode || "update";
                   const actionPlan = mode === "new" ? latestIterationPlanForAction() : selectLatestIterationPlanForAction();
-                  if (mode !== "new" && isIterationPlanStarted(actionPlan)) {
+                  if (mode !== "new" && mode !== "new-gdd-milestone" && isIterationPlanStarted(actionPlan)) {
                     out("当前游戏模块已经开始执行，不允许更新游戏模块。");
                     return;
                   }
                   const typedMessage = $("iterationPlanUpdateInput").value.trim();
-                  if (mode === "new" && !typedMessage) {
+                  if ((mode === "new" || mode === "new-gdd-milestone") && !typedMessage) {
                     $("iterationPlanUpdateHint").textContent = "请输入第二轮游戏模块目标。";
                     $("iterationPlanUpdateInput").classList.add("field-invalid");
                     $("iterationPlanUpdateInput").focus();
+                    return;
+                  }
+                  if (mode === "new-gdd-milestone") {
+                    setModalVisible("iterationPlanUpdateModal", false);
+                    await createNewGddMilestoneRound(typedMessage);
                     return;
                   }
                   const actionEvaluation = latestIterationPlanEvaluationForAction();
@@ -3480,6 +3494,35 @@ public sealed class BrowserUiRenderer
                   const sourceKind = mode === "new" ? "new_iteration_plan" : typedMessage ? "iteration_plan_update" : "completion_suggestion";
                   setModalVisible("iterationPlanUpdateModal", false);
                   await submitIterationPlanFromFeedback(message, mode === "new" ? "正在创建新的游戏模块..." : "正在更新游戏模块...", sourceKind);
+                }
+
+                async function createNewGddMilestoneRound(goal) {
+                  const context = projectRequestContext();
+                  const projectId = context.projectId;
+                  setLocalBusy(true, "Creating next GDD module...");
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd-milestone-steps/new-round`, {
+                      method: "POST",
+                      body: JSON.stringify({ goal, model: $("globalModel").value || "gpt-5.5" })
+                    });
+                    if (!isCurrentProjectContext(context)) return;
+                    out(result);
+                    state.gddMilestoneSteps = result.plan || state.gddMilestoneSteps;
+                    state.selectedGddMilestoneStepId = result.stepId || result.plan?.currentStepId || "";
+                    state.gddMilestoneManualSelection = false;
+                    renderGddMilestoneSteps();
+                    await loadGddMilestoneSteps();
+                  } catch (error) {
+                    if (!isCurrentProjectContext(context)) return;
+                    showError(error);
+                  } finally {
+                    if (!isCurrentProjectContext(context)) return;
+                    try {
+                      await refreshActiveRun();
+                    } finally {
+                      setLocalBusy(false);
+                    }
+                  }
                 }
 
                 async function createIterationPlan() {
@@ -7779,7 +7822,7 @@ public sealed class BrowserUiRenderer
                   panel.querySelector("[data-gdd-milestone-nav='previous']")?.addEventListener("click", () => selectGddMilestoneByOffset(-1));
                   panel.querySelector("[data-gdd-milestone-nav='next']")?.addEventListener("click", () => selectGddMilestoneByOffset(1));
                   panel.querySelector("#refreshGddMilestoneSteps")?.addEventListener("click", refreshGddMilestoneSteps);
-                  panel.querySelector("#createNewGddMilestoneRound")?.addEventListener("click", () => openIterationPlanUpdateModal("new"));
+                  panel.querySelector("#createNewGddMilestoneRound")?.addEventListener("click", () => openIterationPlanUpdateModal("new-gdd-milestone"));
                   applyGddMilestoneActionState(selected, active);
                 }
 

@@ -187,7 +187,7 @@ public sealed partial class PrototypeQuickFixService
             PrototypeGoalGodotSmokeValidationResult? preflightGodotSmokeFailure = null;
             var preflightResult = targetGoal is null || iterationDetails is null
                 ? null
-                : ShouldAllowAlreadySatisfiedPreflight(request)
+                : ShouldAllowAlreadySatisfiedPreflight(request, targetGoal)
                     ? await TryCompleteAlreadySatisfiedGoalAsync(
                         project,
                         iterationDetails,
@@ -570,15 +570,47 @@ public sealed partial class PrototypeQuickFixService
         return left >= right ? left : right;
     }
 
-    private static bool ShouldAllowAlreadySatisfiedPreflight(PrototypeFeedbackRequest request)
+    private static bool ShouldAllowAlreadySatisfiedPreflight(PrototypeFeedbackRequest request, ProjectIterationGoalSnapshot targetGoal)
     {
         var sourceKind = request.SourceKind?.Trim();
-        if (string.Equals(sourceKind, "manual_feedback", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(sourceKind, "manual_feedback", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(sourceKind, "feedback_submitted", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(sourceKind, "automatic_validation_repair", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(sourceKind, "module_execute", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (IsExperienceModuleGoal(targetGoal) && !IsCompletionEvidenceRecoveryGoal(targetGoal))
         {
             return false;
         }
 
         return true;
+    }
+
+    internal static bool ShouldAllowAlreadySatisfiedPreflightForTesting(PrototypeFeedbackRequest request, ProjectIterationGoalSnapshot targetGoal)
+    {
+        return ShouldAllowAlreadySatisfiedPreflight(request, targetGoal);
+    }
+
+    private static bool IsExperienceModuleGoal(ProjectIterationGoalSnapshot goal)
+    {
+        if (goal.GoalIndex >= 8)
+        {
+            return true;
+        }
+
+        var combined = string.Join(
+            "\n",
+            new[] { goal.Title, goal.Description, goal.AcceptanceHint, goal.ResultSummary }
+                .Where(static value => !string.IsNullOrWhiteSpace(value)));
+        return Regex.IsMatch(combined, @"\bM(?:[8-9]|[1-9][0-9]+)\b", RegexOptions.IgnoreCase) ||
+               combined.Contains("试玩", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("体验", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("手感", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("playable experience", StringComparison.OrdinalIgnoreCase) ||
+               combined.Contains("game feel", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> HasSucceededPrototypeWorkflowAsync(string projectId, CancellationToken cancellationToken)

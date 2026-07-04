@@ -2163,7 +2163,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("openIterationPlanUpdateModal");
         html.Should().Contain("confirmIterationPlanUpdate");
         html.Should().Contain("请输入第二轮游戏模块目标。");
-        html.Should().Contain("mode === \"new\" && !typedMessage");
+        html.Should().Contain("(mode === \"new\" || mode === \"new-gdd-milestone\") && !typedMessage");
         html.Should().Contain("v2IterationRoundTabs");
         html.Should().Contain("v2-round-tab");
         html.Should().Contain("/iteration-plans");
@@ -3029,7 +3029,8 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("更新游戏模块内容");
         html.Should().Contain("createNewGddMilestoneRound");
         html.Should().Contain("创建新一轮游戏模块");
-        html.Should().Contain("panel.querySelector(\"#createNewGddMilestoneRound\")?.addEventListener(\"click\", () => openIterationPlanUpdateModal(\"new\"))");
+        html.Should().Contain("panel.querySelector(\"#createNewGddMilestoneRound\")?.addEventListener(\"click\", () => openIterationPlanUpdateModal(\"new-gdd-milestone\"))");
+        html.Should().Contain("/gdd-milestone-steps/new-round");
         html.Should().Contain("有任务正在执行，请等待当前任务完成后再创建新一轮。");
         html.Should().Contain("将基于这里输入的新目标创建独立的新一轮计划，不会更新当前轮游戏模块。");
         html.Should().NotContain("当前游戏模块全部完成后可以创建新一轮。");

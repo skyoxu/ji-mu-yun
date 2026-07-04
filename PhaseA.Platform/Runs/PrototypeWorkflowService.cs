@@ -2326,6 +2326,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
                 return PrototypeCompletionValidation.Failure(sceneError);
             }
 
+            var expectedEntryScene = BuildExpectedProjectEntryScene(slug);
+            if (!string.Equals(smokeScene, expectedEntryScene, StringComparison.OrdinalIgnoreCase))
+            {
+                return PrototypeCompletionValidation.Failure($"prototype_project_entry_scene_mismatch:expected={expectedEntryScene};actual={smokeScene}");
+            }
+
             if (completedThroughDay >= 6)
             {
                 var packagingSummaryPath = Path.Combine(
@@ -2652,6 +2658,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         }
 
         return false;
+    }
+
+    private static string BuildExpectedProjectEntryScene(string slug)
+    {
+        var normalizedSlug = PrototypeRecordWriter.SanitizeSlug(slug);
+        return $"res://Game.Godot/Prototypes/{normalizedSlug}/{ToPascalCase(normalizedSlug)}Prototype.tscn";
     }
 
     private static bool IsLlmScoring(string? scoreEngine)

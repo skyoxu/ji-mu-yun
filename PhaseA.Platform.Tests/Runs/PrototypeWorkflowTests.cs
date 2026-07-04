@@ -612,6 +612,38 @@ public sealed class PrototypeWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task QueueAsync_FailsCompletion_WhenSmokeSceneIsNotProjectSpecificEntryScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
+        var wrongEntryScene = "res://Game.Godot/Prototypes/demo-prototype/GenericPrototype.tscn";
+        var expectedEntryScene = "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn";
+        var runner = new FakeHostedProcessRunner(prototypeSceneOverride: wrongEntryScene);
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueAsync(accountId, projectId, ValidRequest(confirm: true));
+        await WaitForAtLeastCommandsAsync(runner, 1);
+        var run = await WaitForRunStatusAsync(store, result.RunId, "failed", "failed");
+
+        run!.Status.Should().Be("failed");
+        run.StderrText.Should().Contain("prototype_project_entry_scene_mismatch");
+        run.StderrText.Should().Contain(expectedEntryScene);
+        using var stateDocument = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            (await store.GetProjectSnapshotAsync(projectId))!.RepoPath,
+            "meta",
+            "routes",
+            "prototype",
+            "latest.json")));
+        stateDocument.RootElement.GetProperty("status").GetString().Should().Be("failed");
+        stateDocument.RootElement.GetProperty("prototype_completion").GetProperty("error").GetString()
+            .Should().Contain("prototype_project_entry_scene_mismatch");
+    }
+
+    [Fact]
     public async Task QueueAsync_TimesOutInactivePrototypeCreationCodexAndReleasesProjectLock()
     {
         using var database = TempSqliteDatabase.Create();

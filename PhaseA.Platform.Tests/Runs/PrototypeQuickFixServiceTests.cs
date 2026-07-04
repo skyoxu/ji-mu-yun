@@ -172,6 +172,58 @@ REMAINING: none
     }
 
     [Fact]
+    public void AlreadySatisfiedPreflight_ShouldRejectExperienceModuleFeedback()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            11,
+            "M11 playable feel tuning",
+            "Improve the local playable experience and game feel.",
+            "The player can feel the improved loop in the local prototype.",
+            "needs_fix",
+            "Needs better playable experience.",
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var request = new PrototypeFeedbackRequest(
+            "Player feedback says the module still feels wrong.",
+            "gpt-5.4",
+            "normal",
+            null,
+            "feedback_submitted");
+
+        var allowed = PrototypeQuickFixService.ShouldAllowAlreadySatisfiedPreflightForTesting(request, goal);
+
+        allowed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AlreadySatisfiedPreflight_ShouldAllowCompletionEvidenceRecoveryGoal()
+    {
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            8,
+            "Recover prototype run completion evidence",
+            "Restore route completion evidence and clear prototype_completion_state_missing.",
+            "The prototype route can generate completion evidence.",
+            "needs_fix",
+            "prototype_completion_state_missing",
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+        var request = new PrototypeFeedbackRequest(
+            "Repair protected completion evidence.",
+            "gpt-5.4",
+            "normal");
+
+        var allowed = PrototypeQuickFixService.ShouldAllowAlreadySatisfiedPreflightForTesting(request, goal);
+
+        allowed.Should().BeTrue();
+    }
+
+    [Fact]
     public void ExtractGdUnitPromptSummaryForTesting_ShouldCaptureDynamicPrototypeSuiteFailureDetails()
     {
         var lines = PrototypeQuickFixService.ExtractGdUnitPromptSummaryForTesting(

@@ -390,6 +390,58 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public async Task CreateNewRoundStepAsync_AppendsM12ToGddMilestoneState()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # SDC GDD
+
+        ## Milestones
+        M1: Module 1.
+        M2: Module 2.
+        M3: Module 3.
+        M4: Module 4.
+        M5: Module 5.
+        M6: Module 6.
+        M7: Module 7.
+        M8: Module 8.
+        M9: Module 9.
+        M10: Module 10.
+        M11: Module 11.
+
+        ## Additional Game Modules
+        """);
+        WriteAllConfirmedStepState(project.MetaPath, project.RepoPath, 11);
+        var service = Service(store, options);
+
+        var result = await service.CreateNewRoundStepAsync(
+            accountId,
+            projectId,
+            new GddMilestoneNewRoundRequest("SDC local playtest alignment with real physics and extraction loop."));
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("created");
+        result.StepId.Should().Be("M12");
+        result.Plan!.CurrentStepId.Should().Be("M12");
+        result.Plan.Status.Should().Be("ready");
+        var m12 = result.Plan.Steps.Single(step => step.StepId == "M12");
+        m12.Locked.Should().BeFalse();
+        m12.CanExecute.Should().BeTrue();
+        m12.Title.Should().Contain("SDC local playtest");
+        var gdd = File.ReadAllText(Path.Combine(project.RepoPath, "docs", "gdd", "GDD.md"));
+        gdd.Should().Contain("M12: SDC local playtest alignment");
+        (gdd.Split("## Additional Game Modules").Length - 1).Should().Be(1);
+    }
+
+    [Fact]
     public async Task ExecuteCurrentStepAsync_Blocks_WhenGddOutlineHasIncompleteSections()
     {
         using var database = TempSqliteDatabase.Create();
@@ -1269,6 +1321,38 @@ public sealed class GddMilestoneStepServiceTests
     }
 
     [Fact]
+    public void LocalEntryContractValidator_Fails_WhenDefaultSceneDoesNotMatchProjectContract()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", "[gd_scene format=3]\n");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/GenericPrototype.tscn", "[gd_scene format=3]\n");
+        WriteText(repoRoot.Path, "meta/routes/prototype-contract/latest.json", """
+        {
+          "local_entry_contract": {
+            "expected_entry_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn"
+          }
+        }
+        """);
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/GenericPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/GenericPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/GenericPrototype.tscn",
+          "local_entry_contract": {
+            "status": "ready",
+            "entry_scene_instances_playable_scene": false
+          }
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeFalse();
+        result.Status.Should().Be("local_entry_project_specific_scene_mismatch");
+        result.Summary.Should().Contain("expected=res://Game.Godot/Prototypes/demo/DemoPrototype.tscn");
+    }
+
+    [Fact]
     public void LocalEntryContractValidator_Fails_WhenContractIsMissing()
     {
         using var repoRoot = TempDirectory.Create("phase-a-repo");
@@ -1864,6 +1948,38 @@ public sealed class GddMilestoneStepServiceTests
   ]
 }
 """;
+        WriteStepState(metaPath, repoPath, payload);
+    }
+
+    private static void WriteAllConfirmedStepState(string metaPath, string repoPath, int count)
+    {
+        var steps = Enumerable.Range(1, count)
+            .Select(index => new
+            {
+                stepId = $"M{index}",
+                stepIndex = index,
+                title = $"M{index}: Module {index}.",
+                description = $"Module {index}.",
+                acceptance = "",
+                scopeIn = "",
+                scopeOut = "",
+                godotSlice = "",
+                packagingValidation = "",
+                feedbackGuidance = "",
+                nextStepReview = "",
+                status = "confirmed",
+                locked = false,
+                confirmedUtc = $"2026-06-24T00:{index:00}:00Z"
+            })
+            .ToArray();
+        var payload = JsonSerializer.Serialize(new
+        {
+            schema = "phase-a.gdd-milestone-steps.v2",
+            status = "completed",
+            summary = "all completed",
+            currentStepId = (string?)null,
+            steps
+        });
         WriteStepState(metaPath, repoPath, payload);
     }
 

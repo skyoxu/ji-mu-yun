@@ -73,6 +73,7 @@ public sealed class GddMilestoneStepService
         await ReconcileUnstartedStateWithGddAsync(project, state, cancellationToken);
         await ReconcileAdditionalStepsFromGddAsync(project, state, cancellationToken);
         await RefreshOutlineCompletionAsync(project, state, cancellationToken);
+        await ReconcileAdditionalStepsFromGddAsync(project, state, cancellationToken);
         NormalizeState(state);
         await ReconcilePrototypeSkeletonM1Async(project, state, cancellationToken);
         await ReconcileLatestGddMilestoneSessionAsync(project, state, cancellationToken);
@@ -270,6 +271,63 @@ public sealed class GddMilestoneStepService
         await WriteSpecFilesAsync(project, state, CancellationToken.None);
 
         return new GddMilestoneStepActionResult(project.ProjectId, step.StepId, result.Status, state.Summary, ToResult(project.ProjectId, state), NeedsFixRun: outcome.LastRepairRun ?? result);
+    }
+
+    public async Task<GddMilestoneStepActionResult?> CreateNewRoundStepAsync(
+        string accountId,
+        string projectId,
+        GddMilestoneNewRoundRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var project = await GetProjectAsync(accountId, projectId, cancellationToken);
+        if (project is null)
+        {
+            return null;
+        }
+
+        var goal = request.Goal?.Trim();
+        var state = await ReadStateAsync(project, cancellationToken) ??
+                    await CreateStateFromGddAsync(project, cancellationToken);
+        if (state is null)
+        {
+            return new GddMilestoneStepActionResult(project.ProjectId, "", "gdd_not_found", "Please create the GDD first.", FailureCode: "gdd_not_found");
+        }
+
+        NormalizeState(state);
+        if (string.IsNullOrWhiteSpace(goal))
+        {
+            return new GddMilestoneStepActionResult(project.ProjectId, "", "missing_goal", "Please enter the new game module goal.", ToResult(project.ProjectId, state), FailureCode: "missing_goal");
+        }
+
+        if (state.Steps.Any(step => !string.Equals(step.Status, "confirmed", StringComparison.OrdinalIgnoreCase)))
+        {
+            await WriteStateAsync(project, state, cancellationToken);
+            await WriteSpecFilesAsync(project, state, cancellationToken);
+            return new GddMilestoneStepActionResult(project.ProjectId, state.CurrentStepId ?? "", "current_round_not_completed", "Confirm the current game module round before creating a new one.", ToResult(project.ProjectId, state), FailureCode: "current_round_not_completed");
+        }
+
+        var nextNumber = NextMilestoneNumber(state.Steps);
+        var stepId = $"M{nextNumber}";
+        if (state.Steps.Any(step => string.Equals(step.StepId, stepId, StringComparison.OrdinalIgnoreCase)))
+        {
+            return new GddMilestoneStepActionResult(project.ProjectId, stepId, "step_already_exists", $"{stepId} already exists. Refresh and try again.", ToResult(project.ProjectId, state), FailureCode: "step_already_exists");
+        }
+
+        await AppendMilestoneToGddAsync(project, stepId, goal, cancellationToken);
+        var newStep = CreateStepState(
+            stepId,
+            state.Steps.Count + 1,
+            BuildNewRoundStepTitle(stepId, goal),
+            goal,
+            "ready",
+            false);
+        state.Steps.Add(newStep);
+        state.CurrentStepId = stepId;
+        state.Status = "ready";
+        state.Summary = $"Created new game module {stepId}.";
+        await WriteStateAsync(project, state, cancellationToken);
+        await WriteSpecFilesAsync(project, state, cancellationToken);
+        return new GddMilestoneStepActionResult(project.ProjectId, stepId, "created", state.Summary, ToResult(project.ProjectId, state));
     }
 
     public Task<GddMilestoneStepActionResult?> CreateIterationPlanForCurrentStepAsync(
@@ -1082,6 +1140,64 @@ public sealed class GddMilestoneStepService
             spec.NextStepReview,
             status,
             locked);
+    }
+
+    private static int NextMilestoneNumber(IEnumerable<GddMilestoneStepState> steps)
+    {
+        return steps
+            .Select(step => Regex.Match(step.StepId, @"^M(?<number>\d+)", RegexOptions.IgnoreCase))
+            .Where(match => match.Success)
+            .Select(match => int.TryParse(match.Groups["number"].Value, out var number) ? number : 0)
+            .DefaultIfEmpty(0)
+            .Max() + 1;
+    }
+
+    private static string BuildNewRoundStepTitle(string stepId, string goal)
+    {
+        var compact = Compact(Regex.Replace(goal, @"^\s*M\d+\s*[:：\-.]?\s*", "", RegexOptions.IgnoreCase));
+        var firstSentence = Regex.Split(compact, @"[。.!?\r\n]+")
+            .Select(item => item.Trim())
+            .FirstOrDefault(item => !string.IsNullOrWhiteSpace(item));
+        return $"{stepId}: {Trim(FirstNonEmpty(firstSentence, compact, "New game module"), 80)}";
+    }
+
+    private static async Task AppendMilestoneToGddAsync(
+        ProjectSnapshot project,
+        string stepId,
+        string goal,
+        CancellationToken cancellationToken)
+    {
+        var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(gddPath)!);
+        var existing = File.Exists(gddPath)
+            ? await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken)
+            : $"# {FirstNonEmpty(project.GameName, project.Name, "Game Design Document")}\n";
+        var normalized = existing.Replace("\r\n", "\n").TrimEnd();
+        var entry = $"{stepId}: {Compact(goal)}";
+        var existingHeading = Regex.Match(normalized, @"(?im)^##\s+Additional Game Modules\s*$");
+        if (existingHeading.Success)
+        {
+            var searchStart = existingHeading.Index + existingHeading.Length;
+            var afterHeading = normalized[searchStart..];
+            var nextHeading = Regex.Match(afterHeading, @"(?im)^##\s+");
+            var insertAt = nextHeading.Success ? searchStart + nextHeading.Index : normalized.Length;
+            var prefix = normalized[..insertAt].TrimEnd();
+            var suffix = normalized[insertAt..].TrimStart('\n');
+            var updated = string.IsNullOrWhiteSpace(suffix)
+                ? $"{prefix}\n\n{entry}\n"
+                : $"{prefix}\n\n{entry}\n\n{suffix.TrimEnd()}\n";
+            await File.WriteAllTextAsync(gddPath, updated, Encoding.UTF8, cancellationToken);
+            return;
+        }
+
+        var appendix = $"""
+
+
+            ## Additional Game Modules
+
+            {entry}
+            """;
+        await File.WriteAllTextAsync(gddPath, normalized + appendix + "\n", Encoding.UTF8, cancellationToken);
     }
 
     private static GddMilestoneStepSpec BuildStepSpec(string id, string title, string description)

@@ -85,6 +85,18 @@ internal static class PrototypeLocalEntryContractValidator
             smokeScene = smokeSceneResult.DefaultScene!;
             playableScene = playableSceneResult.DefaultScene!;
 
+            var expectedEntryScene = ReadExpectedEntryScene(projectRepoPath);
+            if (!string.IsNullOrWhiteSpace(expectedEntryScene) &&
+                !string.Equals(defaultScene, expectedEntryScene, StringComparison.OrdinalIgnoreCase))
+            {
+                return PrototypeLocalEntryValidationResult.Failed(
+                    "local_entry_project_specific_scene_mismatch",
+                    $"Prototype default scene must match the project-specific entry scene from prototype contract: expected={expectedEntryScene}; actual={defaultScene}.",
+                    defaultScene,
+                    smokeScene,
+                    playableScene);
+            }
+
             if (!string.Equals(defaultScene, playableScene, StringComparison.OrdinalIgnoreCase))
             {
                 var contractDeclaresInstance = localEntryContract.TryGetProperty("entry_scene_instances_playable_scene", out var instanceFlag) &&
@@ -126,6 +138,49 @@ internal static class PrototypeLocalEntryContractValidator
                 "local_entry_scene_invalid",
                 $"Prototype local entry contract has an invalid {fieldName}: {scene}.")
             : PrototypeLocalEntryValidationResult.Pass(resolved, null, null);
+    }
+
+    private static string ReadExpectedEntryScene(string projectRepoPath)
+    {
+        foreach (var relativePath in new[]
+                 {
+                     Path.Combine("meta", "routes", "prototype-contract", "latest.json"),
+                     Path.Combine("routes", "prototype-contract", "latest.json")
+                 })
+        {
+            var path = Path.Combine(projectRepoPath, relativePath);
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(path, System.Text.Encoding.UTF8));
+                var root = document.RootElement;
+                if (!root.TryGetProperty("local_entry_contract", out var contract) ||
+                    contract.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var expected = ReadString(contract, "expected_entry_scene");
+                if (!string.IsNullOrWhiteSpace(expected))
+                {
+                    return expected;
+                }
+            }
+            catch (JsonException)
+            {
+                continue;
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+        }
+
+        return "";
     }
 
     private static string ReadString(JsonElement root, string propertyName)

@@ -1851,6 +1851,26 @@ app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/current/execute", asy
             : Results.BadRequest(result);
 });
 
+app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/new-round", async (
+    string projectId,
+    GddMilestoneNewRoundRequest request,
+    HttpContext context,
+    [FromServices] GddMilestoneStepService milestoneSteps,
+    CancellationToken cancellationToken) =>
+{
+    var result = await milestoneSteps.CreateNewRoundStepAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return result.Status == "created"
+        ? Results.Ok(result)
+        : result.Status == "gdd_not_found"
+            ? Results.Json(result, statusCode: StatusCodes.Status404NotFound)
+            : Results.BadRequest(result);
+});
+
 app.MapPost("/api/projects/{projectId}/gdd-milestone-steps/{stepId}/confirm", async (
     string projectId,
     string stepId,
