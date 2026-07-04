@@ -56,8 +56,8 @@ public sealed class PrototypeCommandService
             accountId,
             projectId,
             $"prototype-tdd-{request.Stage!.ToLowerInvariant()}",
-            PrototypeRecordWriter.SanitizeSlug(request.Slug!),
-            project => _commandBuilder.BuildTdd(request, project.RepoPath),
+            project => ResolveProjectCommandSlug(project, request.Slug),
+            (project, slug) => _commandBuilder.BuildTdd(request with { Slug = slug }, project.RepoPath),
             cancellationToken);
     }
 
@@ -74,8 +74,8 @@ public sealed class PrototypeCommandService
             accountId,
             projectId,
             "prototype-scene",
-            PrototypeRecordWriter.SanitizeSlug(request.Slug!),
-            project => _commandBuilder.BuildScene(request, project.RepoPath),
+            project => ResolveProjectCommandSlug(project, request.Slug),
+            (project, slug) => _commandBuilder.BuildScene(request with { Slug = slug }, project.RepoPath),
             cancellationToken);
     }
 
@@ -83,8 +83,8 @@ public sealed class PrototypeCommandService
         string accountId,
         string projectId,
         string runType,
-        string slug,
-        Func<ProjectSnapshot, HostedProcessCommand> commandFactory,
+        Func<ProjectSnapshot, string> slugFactory,
+        Func<ProjectSnapshot, string, HostedProcessCommand> commandFactory,
         CancellationToken cancellationToken)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
@@ -107,7 +107,8 @@ public sealed class PrototypeCommandService
             await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, cancellationToken);
             _workspaceSeeder.EnsureSeeded(project.RepoPath);
 
-            var command = commandFactory(project);
+            var slug = slugFactory(project);
+            var command = commandFactory(project, slug);
             var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
             var normalizedProcess = NormalizeProcessResult(runType, process);
             var status = normalizedProcess.ExitCode == 0 ? "succeeded" : "failed";
@@ -132,6 +133,15 @@ public sealed class PrototypeCommandService
         {
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, cancellationToken);
         }
+    }
+
+    private static string ResolveProjectCommandSlug(ProjectSnapshot project, string? requestedSlug)
+    {
+        return PrototypeRecordWriter.ResolveProjectSlug(
+            requestedSlug,
+            project.ProjectId,
+            project.GameName,
+            project.Name);
     }
 
     private static HostedProcessResult NormalizeProcessResult(string runType, HostedProcessResult process)

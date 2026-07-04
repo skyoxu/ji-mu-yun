@@ -45,6 +45,33 @@ public sealed class PrototypePhysicsRequirementPolicyTests
         result.RecommendedEngine.Should().Contain("GodotPhysics");
     }
 
+    [Fact]
+    public void Evaluate_Requires2DPhysics_ForExtractionShooterVocabulary()
+    {
+        var project = Project("SDC", "逃离鸭科夫");
+
+        var result = PrototypePhysicsRequirementPolicy.Evaluate(project, "俯视角搜打撤：WASD 移动、鼠标瞄准射击、搜刮箱子、敌人追击、撤离点胜利。");
+
+        result.RequiresPhysics.Should().BeTrue();
+        result.Dimension.Should().Be("2d");
+        result.RecommendedEngine.Should().Be("GodotPhysics2D");
+        result.NodeContract.Should().Contain("CharacterBody2D");
+        result.MatchedTerms.Should().Contain(term => term.Contains("搜打撤", StringComparison.OrdinalIgnoreCase) || term.Contains("逃离鸭科夫", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void BuildPromptBlock_ForPhysicsRequired_ShouldRejectUiOnlyStateMachineCompletion()
+    {
+        var project = Project("SDC", "extraction shooter");
+
+        var prompt = PrototypePhysicsRequirementPolicy.BuildPromptBlock(project, "top-down shooter with loot extraction and enemy chase.");
+
+        prompt.Should().Contain("StateMachineGuard");
+        prompt.Should().Contain("must not be completed mainly by button panels");
+        prompt.Should().Contain("continuous input");
+        prompt.Should().Contain("loot or interaction contact");
+    }
+
     private static ProjectSnapshot Project(string gameName, string gameType)
     {
         var root = Path.Combine(Path.GetTempPath(), $"phase-a-physics-{Guid.NewGuid():N}");

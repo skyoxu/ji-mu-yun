@@ -1483,6 +1483,7 @@ public sealed partial class PrototypeQuickFixService
             : $"能力模式：{skillAction.Label}。执行时使用 ${skillAction.SkillName} 的方法。";
         var contractBlock = PrototypeContractService.BuildPromptBlock(prototypeContract ?? MissingPrototypeContract());
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
+        var physicsPolicyBlock = PrototypePhysicsRequirementPolicy.BuildPromptBlock(project, feedback);
         var feedbackForPrompt = TrimForPromptExcerpt(feedback, QuickFixFeedbackPromptMaxChars);
 
         return $"""
@@ -1490,6 +1491,7 @@ public sealed partial class PrototypeQuickFixService
             {PrototypeRouteSkillPolicy.BuildPromptBlock(project)}
             {contractBlock}
             {godotDiagnosticBlock}
+            {physicsPolicyBlock}
             {skillInstruction}
 
             硬约束：
@@ -1858,6 +1860,7 @@ public sealed partial class PrototypeQuickFixService
         var platformAcceptanceScopeOverrideBlock = BuildPlatformAcceptanceScopeOverrideBlock(currentAcceptanceValidation);
         var godotDiagnosticBlock = GodotFailureDiagnosticService.BuildPromptBlock(godotDiagnostic ?? GodotFailureDiagnostic.None(), godotCleanup);
         var rpgGdUnitContextBlock = BuildRpgGdUnitRepairContextBlock(project, goal);
+        var physicsPolicyBlock = PrototypePhysicsRequirementPolicy.BuildPromptBlock(project, string.Join("\n", goal.Title, goal.Description, goal.AcceptanceHint, feedback));
         var feedbackForPrompt = TrimForPromptExcerpt(feedback, GoalRepairFeedbackPromptMaxChars);
 
         return $"""
@@ -1867,6 +1870,7 @@ public sealed partial class PrototypeQuickFixService
             {contractBlock}
             {godotDiagnosticBlock}
             {rpgGdUnitContextBlock}
+            {physicsPolicyBlock}
             Mandatory rules:
             - Do not define or shadow xUnit types. Never add `namespace Xunit`, `FactAttribute`, `TheoryAttribute`, `InlineDataAttribute`, or `Assert` classes in project tests. Use the existing `using Xunit;` and package references.
             - 这次只处理当前任务，不要顺手扩展到后续任务。

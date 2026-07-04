@@ -119,6 +119,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
         }
         request = EnrichRequestFromProject(project, request);
+        request = NormalizePrototypeSlug(project, request);
         EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
         if (missing.Count > 0)
@@ -285,6 +286,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             request = await EnrichRequestFromLatestDraftAsync(project.ProjectId, request, cancellationToken);
         }
         request = EnrichRequestFromProject(project, request);
+        request = NormalizePrototypeSlug(project, request);
         EnsureTemplateManifestExistsForGameType(request);
         var missing = PrototypeWorkflowValidation.MissingRequiredFields(request);
         if (missing.Count > 0)
@@ -2868,6 +2870,18 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         };
     }
 
+    private static PrototypeWorkflowRequest NormalizePrototypeSlug(ProjectSnapshot project, PrototypeWorkflowRequest request)
+    {
+        var slug = PrototypeRecordWriter.ResolveProjectSlug(
+            request.Slug,
+            project.ProjectId,
+            request.GameName,
+            project.GameName,
+            project.Name);
+
+        return request with { Slug = slug };
+    }
+
     private static string? PreferDraftSlug(string? current, string? draft)
     {
         var candidate = PreferDraftText(current, draft);
@@ -2922,7 +2936,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         var title = FirstMarkdownHeading(gddText) ?? FirstNonEmpty(project.GameName, project.Name, "prototype");
         var compact = CompactText(RemoveMarkdownNoise(gddText));
         var summary = TrimText(compact, 1800);
-        var slug = PrototypeRecordWriter.SanitizeSlug(FirstNonEmpty(project.GameName, project.Name, title, "prototype"));
+        var slug = PrototypeRecordWriter.ResolveProjectSlug(
+            FirstNonEmpty(project.GameName, project.Name, title, "prototype"),
+            project.ProjectId,
+            project.GameName,
+            project.Name,
+            title);
         var loop = ExtractSection(gddText, "核心玩法", "核心循环", "玩法循环", "Core Loop", "Gameplay Loop", "Minimum Playable Loop");
         var controls = ExtractSection(gddText, "键盘", "鼠标", "操作", "Controls", "Input");
         var scenes = ExtractSection(gddText, "场景", "关卡", "地城", "地图", "World", "Level", "Scene");
@@ -3167,6 +3186,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         PrototypeGodotSmokeResult smoke,
         PrototypeRpgGdUnitValidationResult? rpgGdUnitValidation = null)
     {
+        var localEntry = BuildLocalEntryContract(project.RepoPath, slug, validation);
         _routeStateWriter.WritePrototypeState(project, new
         {
             route = RunType,
@@ -3178,6 +3198,10 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             prototype_record = prototypeRecordPath,
             prototype_contract = prototypeContractPath,
             slug,
+            default_scene = localEntry.DefaultScene,
+            smoke_scene = localEntry.SmokeScene,
+            playable_scene = localEntry.PlayableScene,
+            local_entry_contract = localEntry.ToEvidence(),
             prototype_completion = validation.ToEvidence(),
             godot_smoke = smoke.ToEvidence(),
             rpg_gdunit_validation = rpgGdUnitValidation?.ToEvidence(),
@@ -3190,7 +3214,38 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             slug,
             RunType,
             runId,
-            status);
+            status,
+            localEntry.DefaultScene,
+            localEntry.PlayableScene,
+            localEntry.SmokeScene);
+    }
+
+    private static PrototypeLocalEntryContract BuildLocalEntryContract(
+        string repositoryRoot,
+        string slug,
+        PrototypeCompletionValidation validation)
+    {
+        var defaultScene = string.IsNullOrWhiteSpace(validation.SmokeScene) ? null : validation.SmokeScene.Trim();
+        var smokeScene = defaultScene;
+        var playableScene = defaultScene;
+        var entryInstancesPlayable = false;
+        string? status = string.IsNullOrWhiteSpace(defaultScene) ? "missing_default_scene" : "ready";
+        string? error = string.IsNullOrWhiteSpace(defaultScene) ? "prototype_smoke_scene_missing" : null;
+
+        if (!string.IsNullOrWhiteSpace(defaultScene) &&
+            PrototypeSceneReferenceInspector.TryFindFirstInstancedPrototypeScene(repositoryRoot, defaultScene, slug, out var instancedPlayableScene))
+        {
+            playableScene = instancedPlayableScene;
+            entryInstancesPlayable = !string.Equals(defaultScene, instancedPlayableScene, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return new PrototypeLocalEntryContract(
+            defaultScene,
+            smokeScene,
+            playableScene,
+            entryInstancesPlayable,
+            status,
+            error);
     }
 
     private void EnsureGameTypeTemplateBaseline(string projectRepoPath, PrototypeWorkflowRequest request)
@@ -3330,6 +3385,28 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
                 next_step_source = NextStepSource,
                 next_step_evaluation = NextStepEvaluation,
                 next_step_evaluation_reason = NextStepEvaluationReason
+            };
+        }
+    }
+
+    private sealed record PrototypeLocalEntryContract(
+        string? DefaultScene,
+        string? SmokeScene,
+        string? PlayableScene,
+        bool EntrySceneInstancesPlayableScene,
+        string Status,
+        string? Error)
+    {
+        public object ToEvidence()
+        {
+            return new
+            {
+                status = Status,
+                default_scene = DefaultScene,
+                smoke_scene = SmokeScene,
+                playable_scene = PlayableScene,
+                entry_scene_instances_playable_scene = EntrySceneInstancesPlayableScene,
+                error = Error
             };
         }
     }

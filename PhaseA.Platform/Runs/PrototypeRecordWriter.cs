@@ -31,9 +31,54 @@ public sealed class PrototypeRecordWriter
 
     public static string SanitizeSlug(string value)
     {
+        return TrySanitizeSlug(value) ?? "prototype";
+    }
+
+    public static string ResolveProjectSlug(string? requestedSlug, string projectId, params string?[] fallbackNames)
+    {
+        // ADR-0036: route recovery needs a stable slug, but new user projects should not fall through to the generic prototype root.
+        var requested = TrySanitizeSlug(requestedSlug);
+        if (!IsGenericPrototypeSlug(requested))
+        {
+            return requested!;
+        }
+
+        foreach (var fallbackName in fallbackNames)
+        {
+            var fallback = TrySanitizeSlug(fallbackName);
+            if (!IsGenericPrototypeSlug(fallback))
+            {
+                return fallback!;
+            }
+        }
+
+        var compactProjectId = Regex.Replace(projectId.Trim(), "[^A-Za-z0-9]+", "").ToLowerInvariant();
+        if (compactProjectId.Length > 8)
+        {
+            compactProjectId = compactProjectId[..8];
+        }
+
+        return string.IsNullOrWhiteSpace(compactProjectId)
+            ? "project-prototype"
+            : $"project-{compactProjectId}";
+    }
+
+    private static string? TrySanitizeSlug(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
         var cleaned = Regex.Replace(value.Trim(), "[^A-Za-z0-9_-]+", "-");
         cleaned = Regex.Replace(cleaned, "-{2,}", "-").Trim('-', '_');
-        return string.IsNullOrWhiteSpace(cleaned) ? "prototype" : cleaned;
+        return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;
+    }
+
+    private static bool IsGenericPrototypeSlug(string? slug)
+    {
+        return string.IsNullOrWhiteSpace(slug) ||
+            string.Equals(slug, "prototype", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string BuildMarkdown(PrototypeWorkflowRequest request, string slug)

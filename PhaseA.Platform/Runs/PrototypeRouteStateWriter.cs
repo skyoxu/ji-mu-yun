@@ -109,7 +109,10 @@ public sealed class PrototypeRouteStateWriter
         string slug,
         string latestRoute,
         string latestRunId,
-        string latestStatus)
+        string latestStatus,
+        string? defaultScene = null,
+        string? playableScene = null,
+        string? smokeScene = null)
     {
         ArgumentNullException.ThrowIfNull(project);
 
@@ -117,7 +120,7 @@ public sealed class PrototypeRouteStateWriter
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(
             path,
-            BuildProjectExecutionGuide(project, prototypeContract, prototypeRecordPath, slug, latestRoute, latestRunId, latestStatus),
+            BuildProjectExecutionGuide(project, prototypeContract, prototypeRecordPath, slug, latestRoute, latestRunId, latestStatus, defaultScene, playableScene, smokeScene),
             Utf8NoBom);
     }
 
@@ -155,7 +158,10 @@ public sealed class PrototypeRouteStateWriter
             snapshot.Slug,
             string.IsNullOrWhiteSpace(snapshot.Route) ? "prototype-7day-playable" : snapshot.Route,
             snapshot.RunId,
-            snapshot.Status);
+            snapshot.Status,
+            snapshot.DefaultScene,
+            snapshot.PlayableScene,
+            snapshot.SmokeScene);
         return ReadProjectExecutionGuide(project);
     }
 
@@ -313,7 +319,10 @@ public sealed class PrototypeRouteStateWriter
         string slug,
         string latestRoute,
         string latestRunId,
-        string latestStatus)
+        string latestStatus,
+        string? defaultScene,
+        string? playableScene,
+        string? smokeScene)
     {
         var routeProfile = PrototypeRouteSkillPolicy.ResolveProfile(project);
         var normalizedSlug = string.IsNullOrWhiteSpace(slug) ? "<prototype-slug>" : PrototypeRecordWriter.SanitizeSlug(slug.Trim());
@@ -373,6 +382,9 @@ public sealed class PrototypeRouteStateWriter
             - Buildable C# project: GodotGame.csproj
             - Runtime Godot content root: Game.Godot/
             - Runtime prototype root: {prototypeRoot}/
+            - Local prototype entry scene: {EmptyAsMissing(defaultScene)}
+            - Local playable scene: {EmptyAsMissing(playableScene)}
+            - Local smoke scene: {EmptyAsMissing(smokeScene)}
             - Core gameplay logic root: Game.Core/
             - Core test root: Game.Core.Tests/
             - Godot test root: Tests.Godot/
@@ -390,6 +402,7 @@ public sealed class PrototypeRouteStateWriter
             - Treat components as Godot Node/scene responsibility boundaries, not ECS. Do not introduce ECS, EntityComponent, IComponent, or a new framework.
             - Prefer exported NodePath bindings or one local binding method for stable scene references instead of repeating long GetNode("CanvasLayer/...") strings.
             - Prefer direct calls, Godot signals, or C# events inside one prototype. Use EventBus only for true global notifications or promotion candidates.
+            - If the local prototype entry scene is a shell and the playable scene is different, validate both the menu-to-entry path and the entry-to-playable instancing path before reporting a module as complete.
 
             ## Route Recovery Protocol
 
@@ -432,7 +445,7 @@ public sealed class PrototypeRouteStateWriter
     {
         if (string.IsNullOrWhiteSpace(prototypeState))
         {
-            return new PrototypeGuideStateSnapshot("", "", "", "", "");
+            return new PrototypeGuideStateSnapshot("", "", "", "", "", "", "", "");
         }
 
         try
@@ -444,11 +457,14 @@ public sealed class PrototypeRouteStateWriter
                 ReadString(root, "run_id"),
                 ReadString(root, "status"),
                 ReadString(root, "prototype_record"),
-                ReadString(root, "slug"));
+                ReadString(root, "slug"),
+                ReadString(root, "default_scene"),
+                ReadString(root, "playable_scene"),
+                ReadString(root, "smoke_scene"));
         }
         catch (JsonException)
         {
-            return new PrototypeGuideStateSnapshot("", "", "", "", "");
+            return new PrototypeGuideStateSnapshot("", "", "", "", "", "", "", "");
         }
     }
 
@@ -466,5 +482,8 @@ public sealed class PrototypeRouteStateWriter
         string RunId,
         string Status,
         string PrototypeRecord,
-        string Slug);
+        string Slug,
+        string DefaultScene,
+        string PlayableScene,
+        string SmokeScene);
 }

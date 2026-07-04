@@ -59,8 +59,10 @@ public sealed class PrototypeContractService
                 "When the form is ambiguous, preserve the ambiguity in the result and mark the related goal as needs_fix instead of silently guessing.",
                 "Every route must verify the current work against this contract before reporting succeeded.",
                 "Every non-empty input field must be traceable to gameplay, UI, scene flow, asset choice, test coverage, or an explicit needs_fix blocker.",
-                "If a field cannot be implemented in the current route, keep it in the traceability notes and produce a concrete follow-up or needs_fix reason."
+                "If a field cannot be implemented in the current route, keep it in the traceability notes and produce a concrete follow-up or needs_fix reason.",
+                "ADR-0036: local playability is not complete until the main menu can enter the prototype entry scene and, when that entry is a shell, the shell visibly instances the playable scene."
             },
+            local_entry_contract = BuildLocalEntryContract(slug),
             form_fields = new
             {
                 slug,
@@ -191,7 +193,7 @@ public sealed class PrototypeContractService
             using var document = JsonDocument.Parse(value);
             var root = document.RootElement;
             var compact = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-            foreach (var propertyName in new[] { "form_fields", "input_traceability", "game_type_profile", "source_boundary" })
+            foreach (var propertyName in new[] { "form_fields", "input_traceability", "local_entry_contract", "game_type_profile", "source_boundary" })
             {
                 if (root.TryGetProperty(propertyName, out var property))
                 {
@@ -213,6 +215,29 @@ public sealed class PrototypeContractService
     {
         var trimmed = value.Trim();
         return trimmed.Length <= 3500 ? trimmed : trimmed[..3500];
+    }
+
+    private static object BuildLocalEntryContract(string slug)
+    {
+        var normalizedSlug = PrototypeRecordWriter.SanitizeSlug(slug);
+        var sceneStem = ToPascalCase(normalizedSlug);
+        return new
+        {
+            prototype_root = $"Game.Godot/Prototypes/{normalizedSlug}/",
+            expected_entry_scene = $"res://Game.Godot/Prototypes/{normalizedSlug}/{sceneStem}Prototype.tscn",
+            default_scene_field = "meta/routes/prototype/latest.json:default_scene",
+            smoke_scene_field = "meta/routes/prototype/latest.json:smoke_scene",
+            playable_scene_field = "meta/routes/prototype/latest.json:playable_scene",
+            route_rule = "The prototype route must write the validated entry scene, smoke scene, and playable scene. Module routes must preserve and validate the menu-to-entry-to-playable chain."
+        };
+    }
+
+    private static string ToPascalCase(string slug)
+    {
+        var parts = slug.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0
+            ? "Prototype"
+            : string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
     }
 }
 

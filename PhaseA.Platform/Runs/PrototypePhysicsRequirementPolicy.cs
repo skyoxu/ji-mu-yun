@@ -16,7 +16,9 @@ public static class PrototypePhysicsRequirementPolicy
         "platformer", "平台跳跃", "metroidvania", "类银河恶魔城",
         "roguelike action", "action roguelike", "动作 roguelike", "动作肉鸽",
         "survivors", "幸存者", "割草", "arena survival",
-        "shooter", "射击", "bullet hell", "弹幕", "beat em up", "清版动作",
+        "shooter", "射击", "top-down shooter", "俯视角射击", "bullet hell", "弹幕", "beat em up", "清版动作",
+        "extraction shooter", "loot extraction", "raid extraction", "extraction raid",
+        "搜打撤", "搜打撤离", "撤离射击", "撤离搜刮", "搜刮撤离", "逃离鸭科夫",
         "fighting", "格斗", "racing", "竞速", "sports", "体育",
         "physics", "物理", "collision", "碰撞", "hitbox", "hurtbox", "命中", "受击",
         "dodge", "roll", "翻滚", "dash", "冲刺", "knockback", "击退",
@@ -69,6 +71,7 @@ public static class PrototypePhysicsRequirementPolicy
                 Physics embodiment policy:
                 - RequiresPhysics: false
                 - Rule: If the current milestone adds player-operated movement, collision, hit detection, traversal, or enemy chasing, re-evaluate and use the matching Godot physics nodes instead of UI-only state changes.
+                - StateMachineGuard: UI/HUD may report game state, but it must not become the playable authority for action, shooter, traversal, or extraction loops if those loops appear later in the GDD or module spec.
                 """;
         }
 
@@ -80,6 +83,8 @@ public static class PrototypePhysicsRequirementPolicy
             - MatchedTerms: {string.Join(", ", result.MatchedTerms)}
             - NodeContract: {result.NodeContract}
             - Rule: playable milestones must embody movement, collision, hit detection, traversal, or enemy pressure in scene/runtime objects when the GDD asks for them; UI text may explain state but must not replace player-operated gameplay.
+            - StateMachineGuard: controllers may store state, but action/shooter/extraction gameplay must not be completed mainly by button panels, labels, scripted state transitions, or abstract timers. The player's core loop must be driven by continuous input, scene objects, physics/collision areas, and visible feedback.
+            - LocalPlaytestContract: for shooter/extraction/action loops, acceptance must cover player-operated movement, aim or facing, primary action, enemy pressure, loot or interaction contact, win/fail/extraction conditions, and HUD feedback as one local playable loop.
             """;
     }
 

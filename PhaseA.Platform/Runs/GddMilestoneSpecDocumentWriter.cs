@@ -184,8 +184,11 @@ public static class GddMilestoneSpecDocumentWriter
         if (physicsPolicy.RequiresPhysics)
         {
             scopeIn += " 词库判定本项目需要物理表达，玩家移动、碰撞、命中、受击、追踪、阻挡或房间穿行不能只用 UI 文本或状态机模拟。";
+            scopeIn += " 实时试玩强约束：核心循环必须由玩家连续输入和场景对象驱动，UI/HUD 只负责反馈，不得成为动作、射击、搜刮或撤离玩法的主要权威。";
             godotSlice += $" 物理要求：{physicsPolicy.NodeContract}";
+            godotSlice += " 如果使用控制器或状态机保存流程状态，也必须把移动、瞄准/朝向、命中、交互接触、敌人压力和胜负/撤离触发落到场景节点、碰撞区域或物理查询上。";
             acceptance += $" 必须使用匹配维度的 Godot 物理节点和碰撞形状；推荐：{physicsPolicy.RecommendedEngine}。";
+            acceptance += " State-machine-only 或 UI-panel-only 的完成方式不算通过；玩家必须能在本地试玩中通过连续输入完成当前模块的核心循环。";
         }
 
         if (isAssetStep)
@@ -217,6 +220,7 @@ public static class GddMilestoneSpecDocumentWriter
             ? $"""
                 - Physics is required by project/reference/GDD vocabulary. Dimension: {physicsPolicy.Dimension}; recommended engine: {physicsPolicy.RecommendedEngine}.
                 - Runtime milestones must use scene objects and matching Godot physics nodes for movement, collision, hit detection, traversal, and enemy pressure when present.
+                - State-machine-only or UI-panel-only completion is not acceptable for action/shooter/extraction loops; UI reports state but scene/input/physics drive the loop.
                 """
             : "- Physics is not forced by the current vocabulary, but any milestone adding movement/collision/hit detection must re-evaluate and use matching Godot physics nodes.";
         return $"""
@@ -257,6 +261,7 @@ public static class GddMilestoneSpecDocumentWriter
                 - Recommended engine: {physicsPolicy.RecommendedEngine}
                 - Matched terms: {string.Join(", ", physicsPolicy.MatchedTerms)}
                 - Node contract: {physicsPolicy.NodeContract}
+                - State-machine guard: UI/HUD may report state, but action/shooter/extraction play must be driven by continuous input, scene objects, and collision/physics checks.
                 """
             : "- Physics required: no forced requirement yet; re-evaluate if this module adds movement, collision, hit detection, traversal, or enemy pressure.";
         return $"""

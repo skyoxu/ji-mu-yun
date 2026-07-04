@@ -251,6 +251,34 @@ public sealed class PrototypeCommandTests
     }
 
     [Fact]
+    public async Task RunTddAndCreateSceneAsync_UseProjectScopedSlug_WhenRequestedSlugIsChineseOrGeneric()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug("搜打撤的测试", projectId, project!.GameName, project.Name);
+        var runner = new FakeHostedProcessRunner(expectedSlug);
+        var service = Service(store, options, runner);
+
+        var tdd = await service.RunTddAsync(accountId, projectId, new PrototypeTddRequest("搜打撤的测试", "green"));
+        var scene = await service.CreateSceneAsync(accountId, projectId, new PrototypeSceneRequest("prototype"));
+        var tddRun = await store.GetRunSnapshotAsync(tdd.RunId);
+        var sceneRun = await store.GetRunSnapshotAsync(scene.RunId);
+
+        tdd.Status.Should().Be("succeeded");
+        scene.Status.Should().Be("succeeded");
+        runner.Commands.Should().HaveCount(2);
+        runner.Commands[0].Arguments.Should().ContainInOrder("--slug", expectedSlug);
+        runner.Commands[1].Arguments.Should().ContainInOrder("--slug", expectedSlug);
+        tddRun!.EvidenceJson.Should().Contain($"\"slug\":\"{expectedSlug}\"");
+        sceneRun!.EvidenceJson.Should().Contain($"\"slug\":\"{expectedSlug}\"");
+    }
+
+    [Fact]
     public async Task CreateSceneAsync_TreatsExistingScaffoldRefreshAsSucceeded()
     {
         using var database = TempSqliteDatabase.Create();
@@ -306,11 +334,15 @@ public sealed class PrototypeCommandTests
         return store;
     }
 
-    private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
+    private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(
+        PhaseAMetadataStore store,
+        PhaseAPlatformOptions options,
+        string gameName = "Demo Game",
+        string gameTypeSource = "manual")
     {
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
+        var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return (accountId, result.ProjectId!);
     }
 
@@ -352,8 +384,11 @@ public sealed class PrototypeCommandTests
             _slug = slug;
         }
 
+        public List<HostedProcessCommand> Commands { get; } = [];
+
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
+            Commands.Add(command);
             var tddDir = Path.Combine(command.WorkingDirectory, "logs", "ci", "2026-05-11", $"prototype-tdd-{_slug}-green");
             Directory.CreateDirectory(tddDir);
             File.WriteAllText(Path.Combine(tddDir, "summary.json"), "{}");

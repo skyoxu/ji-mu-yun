@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
@@ -36,6 +37,19 @@ public sealed class PrototypeWorkflowTests : IDisposable
             "game_feature",
             "core_gameplay_loop",
             "win_fail_conditions");
+    }
+
+    [Fact]
+    public void RecordWriter_ResolvesChineseOrGenericSlugToProjectScopedFallback()
+    {
+        PrototypeRecordWriter.ResolveProjectSlug("Towerdemo2", "abc123", "塔楼测试")
+            .Should().Be("Towerdemo2");
+        PrototypeRecordWriter.ResolveProjectSlug("prototype", "85d4fccdf6ca4980", "搜打撤的测试")
+            .Should().Be("project-85d4fccd");
+        PrototypeRecordWriter.ResolveProjectSlug("搜打撤的测试", "85d4fccdf6ca4980", "搜打撤的测试")
+            .Should().Be("project-85d4fccd");
+        PrototypeRecordWriter.ResolveProjectSlug("", "85d4fccdf6ca4980", "SDC 搜打撤")
+            .Should().Be("SDC");
     }
 
     [Fact]
@@ -280,6 +294,40 @@ public sealed class PrototypeWorkflowTests : IDisposable
     }
 
     [Fact]
+    public async Task RunAsync_UsesProjectScopedSlug_WhenRequestedSlugWouldFallbackToPrototype()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug("搜打撤的测试", projectId, "搜打撤的测试", project!.Name);
+        var expectedScene = $"res://Game.Godot/Prototypes/{expectedSlug}/{ToPascalSlugForTest(expectedSlug)}Prototype.tscn";
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.RunAsync(accountId, projectId, ValidRequest(confirm: false) with
+        {
+            Slug = "搜打撤的测试",
+            GameName = "搜打撤的测试",
+            GameType = "逃离鸭科夫",
+            GameTypeSource = "逃离鸭科夫"
+        });
+
+        result.Status.Should().Be("succeeded");
+        expectedSlug.Should().NotBe("prototype");
+        result.PrototypeRecordPath.Should().Contain(expectedSlug);
+        var record = File.ReadAllText(Path.Combine(project.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar)));
+        record.Should().Contain($"# Prototype: {expectedSlug}");
+        record.Should().Contain($"| slug | {expectedSlug} |");
+        runner.Commands[1].Arguments.Should().Contain(expectedScene);
+        runner.Commands[2].Arguments.Should().Contain(expectedScene);
+        File.Exists(Path.Combine(project.RepoPath, "logs", "ci", "active-prototypes", $"{expectedSlug}.active.json")).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task RunAsync_AllowsNavigationPassAfterDirectSceneWarning()
     {
         using var database = TempSqliteDatabase.Create();
@@ -474,6 +522,93 @@ public sealed class PrototypeWorkflowTests : IDisposable
         File.Exists(Path.Combine(project.RepoPath, "docs", "prototype", "ASSETS.md")).Should().BeTrue();
         Directory.EnumerateFiles(Path.Combine(project.RepoPath, "logs", "prototype-evidence", project.ProjectId), "evidence.json", SearchOption.AllDirectories)
             .Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task QueueFromGddAsync_UsesProjectScopedSlug_WhenProjectNameIsChinese()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
+        # 搜打撤的测试
+
+        ## Core Loop
+        进入 raid，移动射击，搜箱，拾取核心物，撤离。
+
+        ## Scenes
+        首个场景包含玩家、障碍、普通箱、核心箱、敌人和撤离点。
+        """);
+        var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug(project.GameName, projectId, project.GameName, project.Name);
+        var expectedScene = $"res://Game.Godot/Prototypes/{expectedSlug}/{ToPascalSlugForTest(expectedSlug)}Prototype.tscn";
+        var runner = new FakeHostedProcessRunner();
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest(Model: "gpt-5.5"));
+        await WaitForAtLeastCommandsAsync(runner, 1);
+        var run = await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        result.Status.Should().Be("queued");
+        run.Status.Should().Be("succeeded");
+        expectedSlug.Should().NotBe("prototype");
+        result.PrototypeRecordPath.Should().Contain(expectedSlug);
+        var record = File.ReadAllText(Path.Combine(project.RepoPath, result.PrototypeRecordPath.Replace('/', Path.DirectorySeparatorChar)));
+        record.Should().Contain($"# Prototype: {expectedSlug}");
+        runner.Commands[1].Arguments.Should().Contain(expectedScene);
+        runner.Commands[2].Arguments.Should().Contain(expectedScene);
+        using var contractDocument = JsonDocument.Parse(File.ReadAllText(Path.Combine(project.RepoPath, "meta", "routes", "prototype-contract", "latest.json")));
+        contractDocument.RootElement.GetProperty("local_entry_contract").GetProperty("expected_entry_scene").GetString()
+            .Should().Be(expectedScene);
+        using var stateDocument = JsonDocument.Parse(File.ReadAllText(Path.Combine(project.RepoPath, "meta", "routes", "prototype", "latest.json")));
+        stateDocument.RootElement.GetProperty("default_scene").GetString().Should().Be(expectedScene);
+        stateDocument.RootElement.GetProperty("smoke_scene").GetString().Should().Be(expectedScene);
+        stateDocument.RootElement.GetProperty("playable_scene").GetString().Should().Be(expectedScene);
+        stateDocument.RootElement.GetProperty("local_entry_contract").GetProperty("status").GetString().Should().Be("ready");
+        File.ReadAllText(Path.Combine(project.RepoPath, "meta", "project-execution-guide.md"))
+            .Should().Contain($"Local prototype entry scene: {expectedScene}")
+            .And.Contain($"Local playable scene: {expectedScene}");
+    }
+
+    [Fact]
+    public async Task QueueFromGddAsync_WritesPlayableScene_WhenEntrySceneInstancesInnerScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "Shell Demo", "Action Roguelike");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
+        # Shell Demo
+
+        ## Core Loop
+        Start from the local menu, enter a shell scene, then play the first raid scene.
+        """);
+        var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug(project.GameName, projectId, project.GameName, project.Name);
+        var entryScene = $"res://Game.Godot/Prototypes/{expectedSlug}/{ToPascalSlugForTest(expectedSlug)}Prototype.tscn";
+        var playableScene = $"res://Game.Godot/Prototypes/{expectedSlug}/FirstPlayableRaid.tscn";
+        var runner = new FakeHostedProcessRunner(
+            prototypeSceneOverride: entryScene,
+            instancedPlayableSceneOverride: playableScene);
+        var service = Service(store, options, runner);
+
+        var result = await service.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest(Model: "gpt-5.5"));
+        await WaitForAtLeastCommandsAsync(runner, 1);
+        await WaitForRunStatusAsync(store, result.RunId, "succeeded", "succeeded");
+
+        using var stateDocument = JsonDocument.Parse(File.ReadAllText(Path.Combine(project.RepoPath, "meta", "routes", "prototype", "latest.json")));
+        stateDocument.RootElement.GetProperty("default_scene").GetString().Should().Be(entryScene);
+        stateDocument.RootElement.GetProperty("smoke_scene").GetString().Should().Be(entryScene);
+        stateDocument.RootElement.GetProperty("playable_scene").GetString().Should().Be(playableScene);
+        stateDocument.RootElement.GetProperty("local_entry_contract").GetProperty("entry_scene_instances_playable_scene").GetBoolean().Should().BeTrue();
+        File.ReadAllText(Path.Combine(project.RepoPath, "meta", "project-execution-guide.md"))
+            .Should().Contain($"Local prototype entry scene: {entryScene}")
+            .And.Contain($"Local playable scene: {playableScene}");
     }
 
     [Fact]
@@ -1892,6 +2027,12 @@ public sealed class PrototypeWorkflowTests : IDisposable
             Confirm: confirm);
     }
 
+    private static string ToPascalSlugForTest(string slug)
+    {
+        var parts = slug.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(parts.Select(part => char.ToUpperInvariant(part[0]) + part[1..]));
+    }
+
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
         await SqliteMetadataSchema.InitializeAsync(connectionString);
@@ -2119,6 +2260,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         private readonly HashSet<int> _skippedDays;
         private readonly bool _writePrototypeScene;
         private readonly string? _prototypeSceneOverride;
+        private readonly string? _instancedPlayableSceneOverride;
         private readonly int _smokeExitCode;
         private readonly bool _writePackagingArtifacts;
         private readonly string? _smokeStdoutOverride;
@@ -2142,6 +2284,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             IEnumerable<int>? skippedDays = null,
             bool writePrototypeScene = true,
             string? prototypeSceneOverride = null,
+            string? instancedPlayableSceneOverride = null,
             int smokeExitCode = 0,
             bool writePackagingArtifacts = true,
             string? smokeStdoutOverride = null,
@@ -2164,6 +2307,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             _skippedDays = skippedDays is null ? [] : new HashSet<int>(skippedDays);
             _writePrototypeScene = writePrototypeScene;
             _prototypeSceneOverride = prototypeSceneOverride;
+            _instancedPlayableSceneOverride = instancedPlayableSceneOverride;
             _smokeExitCode = smokeExitCode;
             _writePackagingArtifacts = writePackagingArtifacts;
             _smokeStdoutOverride = smokeStdoutOverride;
@@ -2291,7 +2435,25 @@ public sealed class PrototypeWorkflowTests : IDisposable
                 """);
             if (_writePrototypeScene)
             {
-                Write(scenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
+                if (string.IsNullOrWhiteSpace(_instancedPlayableSceneOverride))
+                {
+                    Write(scenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
+                }
+                else
+                {
+                    Write(scenePath["res://".Length..].Replace('/', Path.DirectorySeparatorChar), $$"""
+                    [gd_scene load_steps=2 format=3]
+
+                    [ext_resource type="PackedScene" path="{{_instancedPlayableSceneOverride}}" id="1"]
+
+                    [node name="ShellPrototype" type="Node2D"]
+
+                    [node name="PrototypeLoop" type="Node2D" parent="."]
+
+                    [node name="FirstPlayableRaid" parent="PrototypeLoop" instance=ExtResource("1")]
+                    """);
+                    Write(_instancedPlayableSceneOverride["res://".Length..].Replace('/', Path.DirectorySeparatorChar), "[gd_scene format=3]\n");
+                }
             }
             Write($"Tests.Godot/tests/Prototype/{ToPascalCase(slug)}/test_{slug.Replace('-', '_')}_prototype_scene.gd", "extends Node\n");
             if (_writePackagingArtifacts)

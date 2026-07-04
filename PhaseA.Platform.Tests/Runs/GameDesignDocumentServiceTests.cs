@@ -97,6 +97,8 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("Each milestone item must be implementation-facing enough to become a SPEC");
         runner.Commands[0].StandardInput.Should().Contain("M1 must be the first playable skeleton module");
         runner.Commands[0].StandardInput.Should().Contain("matching Godot physics nodes and collision validation");
+        runner.Commands[0].StandardInput.Should().Contain("extraction shooter / 搜打撤");
+        runner.Commands[0].StandardInput.Should().Contain("State-machine-only or UI-panel-only completion is not acceptable");
         runner.Commands[0].StandardInput.Should().Contain("exactly one authoritative milestone list");
         runner.Commands[0].StandardInput.Should().Contain("Do not add a second simplified summary");
         var outlineJson = await File.ReadAllTextAsync(Path.Combine(project!.RepoPath, "docs", "gdd", "gdd-outline.json"));
@@ -1369,6 +1371,8 @@ public sealed class GameDesignDocumentServiceTests
         spec.Should().Contain("## Godot Slice\n\nCharacterBody3D、CollisionShape3D、Area3D 命中、HudView");
         spec.Should().Contain("## Acceptance\n\n能进入场景、移动顺滑、翻滚可避险并能清掉第一波");
         spec.Should().Contain("## Player Validation\n\n包体或编辑器运行、碰撞层可视检查、键鼠冒烟");
+        spec.Should().Contain("State-machine-only 或 UI-panel-only 的完成方式不算通过");
+        spec.Should().Contain("UI/HUD may report state");
         spec.Should().NotContain("只实现 M1 当前模块所需的可玩功能：M1 首个可玩战斗房");
     }
 

@@ -224,6 +224,8 @@ public sealed class GddMilestoneStepService
 
             {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
+            {BuildStepPhysicsPromptBlock(project, step)}
+
             Player feedback:
             {feedback}
             """;
@@ -421,14 +423,14 @@ public sealed class GddMilestoneStepService
             project.AccountId,
             project.ProjectId,
             "gdd_milestone_step",
-            BuildStepSourceMessage(step),
+            BuildStepSourceMessage(project, step),
             $"{step.StepId} - {step.Title}",
             [
                 new ProjectIterationGoalCreateCommand(
                     step.StepIndex <= 0 ? stepIndex + 1 : step.StepIndex,
                     step.Title,
-                    BuildStepGoalDescription(step),
-                    BuildStepAcceptanceHint(step))
+                    BuildStepGoalDescription(project, step),
+                    BuildStepAcceptanceHint(project, step))
             ],
             cancellationToken);
 
@@ -441,9 +443,11 @@ public sealed class GddMilestoneStepService
                ?? throw new InvalidOperationException("Created GDD milestone step session could not be loaded.");
     }
 
-    private static string BuildStepSourceMessage(GddMilestoneStepState step)
+    private static string BuildStepSourceMessage(ProjectSnapshot project, GddMilestoneStepState step)
     {
         var specPath = StepSpecRelativePath(step);
+        var physicsPolicy = BuildStepPhysicsPromptBlock(project, step);
+        var localEntryContract = BuildLocalEntryPromptBlock(project);
         return $"""
             GDD milestone step execution.
 
@@ -471,6 +475,10 @@ public sealed class GddMilestoneStepService
 
             {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
 
+            {physicsPolicy}
+
+            {localEntryContract}
+
             Feedback Improvement Run:
             {step.FeedbackGuidance}
 
@@ -480,18 +488,21 @@ public sealed class GddMilestoneStepService
             Required context:
             - Read docs/gdd/GDD.md.
             - Read docs/prototype-v1-plan.md when it exists.
+            - Read meta/routes/prototype/latest.json and keep default_scene, smoke_scene, and playable_scene as the local entry contract for this module.
             - Read {specPath} as the current step's implementation contract.
             - Read docs/prototype/STRUCTURE.md, docs/prototype/MEMORY.md, and docs/prototype/ASSETS.md before editing. Update them only when the current module changes stable scene/script/input/collision/asset facts.
             - Read docs/prototypes/ records for earlier completed milestone notes when relevant.
 
             Implement only this current milestone step as one playable milestone. Do not split it into multiple player-visible tasks and do not advance later locked steps.
-            Add or update a current-module smoke/assertion path that proves the module's playable contract, and make the route evidence able to point at that check.
+            Add or update a current-module smoke/assertion path that proves the module's playable contract from the local entry scene into the playable scene, and make the route evidence able to point at that check.
             """;
     }
 
-    private static string BuildStepGoalDescription(GddMilestoneStepState step)
+    private static string BuildStepGoalDescription(ProjectSnapshot project, GddMilestoneStepState step)
     {
         var specPath = StepSpecRelativePath(step);
+        var physicsPolicy = BuildStepPhysicsPromptBlock(project, step);
+        var localEntryContract = BuildLocalEntryPromptBlock(project);
         return $"""
             Implement {step.StepId} as one diablolike-style playable milestone.
 
@@ -511,12 +522,18 @@ public sealed class GddMilestoneStepService
             {step.GodotSlice}
 
             Before editing, read the current milestone spec file and treat it as authoritative over generic prototype-route defaults.
-            Required module smoke: add or update a focused smoke/assertion for {step.StepId} that covers the player-visible contract, and keep it scoped to this module.
+            Required local entry smoke: add or update a focused smoke/assertion for {step.StepId} that covers the player-visible contract through meta/routes/prototype/latest.json default_scene -> playable_scene, and keep it scoped to this module.
+
+            {physicsPolicy}
+
+            {localEntryContract}
             """;
     }
 
-    private static string BuildStepAcceptanceHint(GddMilestoneStepState step)
+    private static string BuildStepAcceptanceHint(ProjectSnapshot project, GddMilestoneStepState step)
     {
+        var physicsPolicy = BuildStepPhysicsPromptBlock(project, step);
+        var localEntryContract = BuildLocalEntryPromptBlock(project);
         return $"""
             Acceptance:
             {step.Acceptance}
@@ -525,10 +542,81 @@ public sealed class GddMilestoneStepService
             {step.PackagingValidation}
 
             Module smoke evidence:
-            Add or update one focused current-module smoke/assertion and keep its path stable enough for logs/prototype-evidence to reference it.
+            Add or update one focused current-module smoke/assertion that starts from the local entry scene and proves the playable scene target. Keep its path stable enough for logs/prototype-evidence to reference it.
+
+            {physicsPolicy}
+
+            {localEntryContract}
 
             After implementation, the browser should recommend that the player package, download, and validate this module before confirming completion. Do not require package download as a completion gate.
             """;
+    }
+
+    private static string BuildLocalEntryPromptBlock(ProjectSnapshot project)
+    {
+        var routeState = ReadPrototypeRouteStateForPrompt(project);
+        return $"""
+            Local prototype entry contract:
+            - ADR-0036 recovery authority requires module completion to be validated through the current local entry chain, not just by editing an arbitrary scene.
+            - Read meta/project-execution-guide.md and meta/routes/prototype/latest.json before editing.
+            - Required state fields: default_scene, smoke_scene, playable_scene, local_entry_contract.
+            - If default_scene and playable_scene differ, default_scene is the entry shell and playable_scene is the gameplay authority; preserve and test the shell-to-playable instance path.
+            - If these fields are missing, repair route state or report needs_fix instead of claiming the module is complete.
+            - Current prototype route state excerpt: {routeState}
+            """;
+    }
+
+    private static string ReadPrototypeRouteStateForPrompt(ProjectSnapshot project)
+    {
+        var relative = Path.Combine("routes", "prototype", "latest.json");
+        var candidates = new[]
+        {
+            Path.Combine(project.MetaPath, relative),
+            Path.Combine(project.RepoPath, "meta", relative)
+        };
+
+        var path = candidates.FirstOrDefault(File.Exists);
+        if (path is null)
+        {
+            return "missing";
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            var root = document.RootElement;
+            var payload = new
+            {
+                slug = ReadString(root, "slug"),
+                default_scene = ReadString(root, "default_scene"),
+                smoke_scene = ReadString(root, "smoke_scene"),
+                playable_scene = ReadString(root, "playable_scene"),
+                status = ReadString(root, "status")
+            };
+            return JsonSerializer.Serialize(payload);
+        }
+        catch (JsonException)
+        {
+            return "invalid_json";
+        }
+        catch (IOException)
+        {
+            return "unreadable";
+        }
+    }
+
+    private static string BuildStepPhysicsPromptBlock(ProjectSnapshot project, GddMilestoneStepState step)
+    {
+        return PrototypePhysicsRequirementPolicy.BuildPromptBlock(
+            project,
+            string.Join(
+                "\n",
+                step.Title,
+                step.Description,
+                step.ScopeIn,
+                step.GodotSlice,
+                step.Acceptance,
+                step.PackagingValidation));
     }
 
     private async Task<bool> IsMilestoneStepExecutionCompleteAsync(
@@ -584,7 +672,7 @@ public sealed class GddMilestoneStepService
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var validation = await _lightweightValidationService.ValidateAsync(accountId, project.ProjectId, loopToken);
+            var validation = await ValidateLightweightAndLocalEntryAsync(accountId, project, loopToken);
             if (IsLightweightValidationPassed(validation))
             {
                 return new GddMilestoneLightweightValidationResult(true, $"{step.StepId} 轻量验收已通过。", null, validation);
@@ -620,7 +708,7 @@ public sealed class GddMilestoneStepService
                     break;
                 }
 
-                validation = await _lightweightValidationService.ValidateAsync(accountId, project.ProjectId, loopToken);
+                validation = await ValidateLightweightAndLocalEntryAsync(accountId, project, loopToken);
                 if (IsLightweightValidationPassed(validation))
                 {
                     return new GddMilestoneLightweightValidationResult(true, $"{step.StepId} 轻量验收在自动修复第 {attempt} 次后通过。", lastRepair, validation);
@@ -636,6 +724,37 @@ public sealed class GddMilestoneStepService
         {
             return new GddMilestoneLightweightValidationResult(false, $"{step.StepId} 轻量验收自动修复已达到 20 分钟上限。请使用“提交反馈并修正模块”继续修复。", null, null);
         }
+    }
+
+    private async Task<PrototypeWorkflowResult> ValidateLightweightAndLocalEntryAsync(
+        string accountId,
+        ProjectSnapshot project,
+        CancellationToken cancellationToken)
+    {
+        var validation = await _lightweightValidationService!.ValidateAsync(accountId, project.ProjectId, cancellationToken);
+        if (!IsLightweightValidationPassed(validation))
+        {
+            return validation;
+        }
+
+        var localEntryValidation = PrototypeLocalEntryContractValidator.Validate(
+            project.RepoPath,
+            _routeStateWriter.ReadLatestPrototypeState(project));
+        if (localEntryValidation.Passed)
+        {
+            return validation;
+        }
+
+        return new PrototypeWorkflowResult(
+            "local-entry-contract",
+            "failed",
+            1,
+            validation.PrototypeRecordPath,
+            validation.Stdout,
+            $"local_entry_contract_failed: {localEntryValidation.Status}; {localEntryValidation.Summary}",
+            validation.Artifacts,
+            validation.MissingRequiredFields,
+            validation.Progress);
     }
 
     private static bool IsLightweightValidationPassed(PrototypeWorkflowResult validation)
@@ -1777,6 +1896,7 @@ public sealed class GddMilestoneStepService
         var checkStatus = status is "executed" or "feedback_submitted" ? "passed" :
             status is "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out" ? "failed" : "skipped";
         var check = BuildLightweightEvidenceCheck(checkStatus, status, lightweightValidationRun);
+        var localEntryContractCheck = BuildLocalEntryContractEvidenceCheck(checkStatus, status, lightweightValidationRun);
         return _engineeringClosure.WriteEvidenceAsync(
             project,
             new PrototypeEngineeringEvidence(
@@ -1789,6 +1909,7 @@ public sealed class GddMilestoneStepService
                 GodotImport: check,
                 HeadlessLoad: check,
                 MilestoneSmoke: check,
+                LocalEntryContract: localEntryContractCheck,
                 AssetValidation: PrototypeEngineeringCheckResult.Skipped("not an asset-library route"),
                 FrameCheck: PrototypeEngineeringCheckResult.Skipped("not required for this module route"),
                 FailureSummary: checkStatus == "failed" ? [status] : []),
@@ -1817,6 +1938,28 @@ public sealed class GddMilestoneStepService
         }
 
         return PrototypeEngineeringCheckResult.Failed(log, Trim(BuildValidationFailureSummary(lightweightValidationRun), 300));
+    }
+
+    private static PrototypeEngineeringCheckResult BuildLocalEntryContractEvidenceCheck(
+        string checkStatus,
+        string status,
+        PrototypeWorkflowResult? lightweightValidationRun)
+    {
+        if (lightweightValidationRun is null)
+        {
+            return PrototypeEngineeringCheckResult.Skipped(status);
+        }
+
+        var log = $"run={lightweightValidationRun.RunId}; exitCode={lightweightValidationRun.ExitCode}";
+        var summary = BuildValidationFailureSummary(lightweightValidationRun);
+        if (summary.Contains("local_entry_contract_failed", StringComparison.Ordinal))
+        {
+            return PrototypeEngineeringCheckResult.Failed(log, Trim(summary, 300));
+        }
+
+        return checkStatus == "passed"
+            ? PrototypeEngineeringCheckResult.Passed(log)
+            : PrototypeEngineeringCheckResult.Skipped("local entry contract was not the failing check");
     }
 
     private static async Task WriteSpecFilesAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)

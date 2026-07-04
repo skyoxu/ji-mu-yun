@@ -88,6 +88,7 @@ public sealed class PrototypeEngineeringClosureService
                 godotImport = evidence.GodotImport,
                 headlessLoad = evidence.HeadlessLoad,
                 milestoneSmoke = evidence.MilestoneSmoke,
+                localEntryContract = evidence.LocalEntryContract,
                 assetValidation = evidence.AssetValidation,
                 frameCheck = evidence.FrameCheck
             },
@@ -416,6 +417,7 @@ public sealed record PrototypeEngineeringEvidence(
     PrototypeEngineeringCheckResult? GodotImport = null,
     PrototypeEngineeringCheckResult? HeadlessLoad = null,
     PrototypeEngineeringCheckResult? MilestoneSmoke = null,
+    PrototypeEngineeringCheckResult? LocalEntryContract = null,
     PrototypeEngineeringCheckResult? AssetValidation = null,
     PrototypeEngineeringCheckResult? FrameCheck = null,
     IReadOnlyList<string>? RiskItems = null,

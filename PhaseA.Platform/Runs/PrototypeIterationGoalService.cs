@@ -511,6 +511,7 @@ public sealed class PrototypeIterationGoalService
         string iterationPlanState)
     {
         var platformAcceptanceBlock = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+        var physicsPolicyBlock = BuildGoalPhysicsPromptBlock(project, session, goal);
 
         return $"""
             You are running the Phase A execute-next-goal top-level route.
@@ -548,6 +549,8 @@ public sealed class PrototypeIterationGoalService
             - Browser-facing output must be Simplified Chinese. Keep only machine protocol tokens such as STATUS: completed|needs_fix in English.
 
             {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
+            {physicsPolicyBlock}
 
             Project:
             - ProjectId: {project.ProjectId}
@@ -617,6 +620,10 @@ public sealed class PrototypeIterationGoalService
 
             {goal.AcceptanceHint}
 
+            ## Physics Embodiment Policy
+
+            {BuildGoalPhysicsPromptBlock(null, session, goal)}
+
             ## Project README
 
             {TrimForPrompt(projectReadme)}
@@ -641,6 +648,7 @@ public sealed class PrototypeIterationGoalService
 
     private static string BuildPrompt(ProjectSnapshot project, ProjectIterationSessionSnapshot session, ProjectIterationGoalSnapshot goal)
     {
+        var physicsPolicyBlock = BuildGoalPhysicsPromptBlock(project, session, goal);
         return $"""
             你正在执行积木云 Phase A 的单目标迭代任务。
 
@@ -659,6 +667,8 @@ public sealed class PrototypeIterationGoalService
             - 面向浏览器用户的 SUMMARY/CHANGED/VERIFY/REMAINING 必须使用中文；只有 STATUS: completed|needs_fix 这类机器协议值保持英文。
 
             {PrototypeGameplayPromptGuards.BuildCombatPressureGuardPromptBlock()}
+
+            {physicsPolicyBlock}
 
             项目：
             - ProjectId: {project.ProjectId}
@@ -684,6 +694,33 @@ public sealed class PrototypeIterationGoalService
             VERIFY: 用 1-3 行说明如何验证
             REMAINING: 若未完全完成，写出剩余问题；若已完成，写 none
             """;
+    }
+
+    private static string BuildGoalPhysicsPromptBlock(ProjectSnapshot? project, ProjectIterationSessionSnapshot session, ProjectIterationGoalSnapshot goal)
+    {
+        var source = string.Join("\n", session.OverallGoal, goal.Title, goal.Description, goal.AcceptanceHint);
+        if (project is not null)
+        {
+            return PrototypePhysicsRequirementPolicy.BuildPromptBlock(project, source);
+        }
+
+        var syntheticProject = new ProjectSnapshot(
+            ProjectId: "",
+            AccountId: "",
+            Name: "",
+            GameName: "",
+            GameTypeSource: "",
+            TemplateRuleId: "",
+            LlmBindingRequired: false,
+            AllowedWorkflowsJson: "[]",
+            BootstrapStatus: "",
+            BootstrapError: null,
+            WorkspaceId: "",
+            WorkspaceRootPath: "",
+            RepoPath: "",
+            RuntimePath: "",
+            MetaPath: "");
+        return PrototypePhysicsRequirementPolicy.BuildPromptBlock(syntheticProject, source);
     }
 
     private static string BuildGoalInput(ProjectIterationSessionSnapshot session, ProjectIterationGoalSnapshot goal, string now)

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -1215,8 +1216,8 @@ public sealed class GddMilestoneStepServiceTests
 
         result.Should().NotBeNull();
         result!.StepExecution.Should().NotBeNull();
-        result.StepExecution!.Status.Should().Be("needs_fix");
-        result.StepExecution.SessionStatus.Should().Be("needs_fix");
+        result.StepExecution!.Status.Should().Be("completed");
+        result.StepExecution.SessionStatus.Should().Be("completed");
         result.Plan!.Steps.Single(step => step.StepId == "M1").Status.Should().Be("executed");
         result.Plan.Steps.Single(step => step.StepId == "M1").CanConfirm.Should().BeTrue();
         result.Plan.Steps.Single(step => step.StepId == "M1").CanSubmitFeedback.Should().BeTrue();
@@ -1225,6 +1226,221 @@ public sealed class GddMilestoneStepServiceTests
         run.ProgressLabel.Should().Contain("M1 已执行完成");
         runner.StandardInputs.Should().Contain(input => input.Contains("Combat pressure interpretation guard", StringComparison.Ordinal));
         runner.StandardInputs.Should().Contain(input => input.Contains("standing-still damage", StringComparison.Ordinal));
+        runner.StandardInputs.Should().Contain(input => input.Contains("Physics embodiment policy", StringComparison.Ordinal));
+        runner.StandardInputs.Should().Contain(input => input.Contains("Local prototype entry contract", StringComparison.Ordinal));
+        runner.StandardInputs.Should().Contain(input => input.Contains("default_scene", StringComparison.Ordinal) &&
+                                                        input.Contains("smoke_scene", StringComparison.Ordinal) &&
+                                                        input.Contains("playable_scene", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void LocalEntryContractValidator_Passes_WhenEntrySceneInstancesPlayableScene()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", """
+        [gd_scene load_steps=2 format=3]
+
+        [ext_resource id="1" path="res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn" type="PackedScene"]
+
+        [node name="DemoPrototype" type="Node2D"]
+
+        [node name="PrototypeLoop" type="Node2D" parent="."]
+
+        [node name="FirstPlayableRaid" parent="PrototypeLoop" instance=ExtResource("1")]
+        """);
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn", "[gd_scene format=3]\n");
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn",
+          "local_entry_contract": {
+            "status": "ready",
+            "entry_scene_instances_playable_scene": true
+          }
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeTrue();
+        result.DefaultScene.Should().Be("res://Game.Godot/Prototypes/demo/DemoPrototype.tscn");
+        result.PlayableScene.Should().Be("res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn");
+    }
+
+    [Fact]
+    public void LocalEntryContractValidator_Fails_WhenContractIsMissing()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", "[gd_scene format=3]\n");
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn"
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeFalse();
+        result.Status.Should().Be("local_entry_contract_missing_fields");
+        result.Summary.Should().Contain("local_entry_contract");
+    }
+
+    [Fact]
+    public void LocalEntryContractValidator_Fails_WhenInstanceFlagIsFalseAndScenesDiffer()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", """
+        [gd_scene load_steps=2 format=3]
+
+        [ext_resource id="1" path="res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn" type="PackedScene"]
+
+        [node name="DemoPrototype" type="Node2D"]
+
+        [node name="FirstPlayableRaid" parent="." instance=ExtResource("1")]
+        """);
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn", "[gd_scene format=3]\n");
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn",
+          "local_entry_contract": {
+            "status": "ready",
+            "entry_scene_instances_playable_scene": false
+          }
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeFalse();
+        result.Status.Should().Be("local_entry_contract_instance_flag_missing");
+    }
+
+    [Fact]
+    public void LocalEntryContractValidator_Fails_WhenPlayableSceneIsMissing()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", "[gd_scene format=3]\n");
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/MissingPlayable.tscn",
+          "local_entry_contract": {
+            "status": "ready",
+            "entry_scene_instances_playable_scene": true
+          }
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeFalse();
+        result.Status.Should().Be("local_entry_scene_invalid");
+        result.Summary.Should().Contain("playable_scene");
+    }
+
+    [Fact]
+    public void LocalEntryContractValidator_Passes_WhenPackedSceneAttributesAreOutOfOrder()
+    {
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/DemoPrototype.tscn", """
+        [gd_scene load_steps=2 format=3]
+
+        [ext_resource uid="uid://demo" type="PackedScene" path="res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn" id="raid"]
+
+        [node name="DemoPrototype" type="Node2D"]
+
+        [node name="FirstPlayableRaid" parent="." instance=ExtResource("raid")]
+        """);
+        WriteText(repoRoot.Path, "Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn", "[gd_scene format=3]\n");
+        var state = """
+        {
+          "default_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "smoke_scene": "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+          "playable_scene": "res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn",
+          "local_entry_contract": {
+            "status": "ready",
+            "entry_scene_instances_playable_scene": true
+          }
+        }
+        """;
+
+        var result = PrototypeLocalEntryContractValidator.Validate(repoRoot.Path, state);
+
+        result.Passed.Should().BeTrue();
+        result.PlayableScene.Should().Be("res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn");
+    }
+
+    [Fact]
+    public async Task ExecuteCurrentStepAsync_Fails_WhenLocalEntryDoesNotInstancePlayableScene()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId);
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        WriteGdd(project!.RepoPath, """
+        # Single Step GDD
+
+        M1: First playable scene and controls.
+        """);
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/ShellPrototype.tscn", """
+        [gd_scene format=3]
+
+        [node name="ShellPrototype" type="Node2D"]
+        """);
+        WriteText(project.RepoPath, "Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn", "[gd_scene format=3]\n");
+        new PrototypeRouteStateWriter().WritePrototypeState(project, new
+        {
+            route = "prototype-7day-playable",
+            slug = "demo",
+            default_scene = "res://Game.Godot/Prototypes/demo/ShellPrototype.tscn",
+            smoke_scene = "res://Game.Godot/Prototypes/demo/ShellPrototype.tscn",
+            playable_scene = "res://Game.Godot/Prototypes/demo/FirstPlayableRaid.tscn",
+            local_entry_contract = new
+            {
+                status = "ready",
+                entry_scene_instances_playable_scene = true
+            },
+            prototype_completion = new
+            {
+                succeeded = true,
+                smoke_scene = "res://Game.Godot/Prototypes/demo/ShellPrototype.tscn"
+            }
+        });
+        var validation = new FakeLightweightValidationService(
+            ValidationResult("validation-1", "succeeded", 0),
+            ValidationResult("validation-2", "succeeded", 0),
+            ValidationResult("validation-3", "succeeded", 0),
+            ValidationResult("validation-4", "succeeded", 0));
+        var service = Service(store, options, validationService: validation);
+
+        var result = await service.ExecuteCurrentStepAsync(accountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.NeedsFixRun.Should().NotBeNull();
+        var step = result.Plan!.Steps.Single(step => step.StepId == "M1");
+        step.Status.Should().Be("needs_fix");
+        step.ExecutionSummary.Should().Contain("local_entry_contract_failed");
+        step.CanConfirm.Should().BeFalse();
+        step.CanSubmitFeedback.Should().BeTrue();
+        step.LatestEvidenceRelativePath.Should().NotBeNullOrWhiteSpace();
+        var evidencePath = Path.Combine(project.RepoPath, step.LatestEvidenceRelativePath!.Replace('/', Path.DirectorySeparatorChar));
+        var evidence = File.ReadAllText(evidencePath);
+        using var evidenceJson = JsonDocument.Parse(evidence);
+        var localEntryContract = evidenceJson.RootElement.GetProperty("checks").GetProperty("localEntryContract");
+        localEntryContract.GetProperty("status").GetString().Should().Be("failed");
+        localEntryContract.GetProperty("reason").GetString().Should().Contain("local_entry_contract_failed");
+        validation.Calls.Should().Be(4);
     }
 
     [Fact]
@@ -1840,6 +2056,15 @@ public sealed class GddMilestoneStepServiceTests
         {
             route = "prototype-7day-playable",
             marker = "prototype-baseline",
+            slug = "demo",
+            default_scene = "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+            smoke_scene = "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+            playable_scene = "res://Game.Godot/Prototypes/demo/DemoPrototype.tscn",
+            local_entry_contract = new
+            {
+                status = "ready",
+                entry_scene_instances_playable_scene = false
+            },
             prototype_completion = new
             {
                 succeeded = true,
