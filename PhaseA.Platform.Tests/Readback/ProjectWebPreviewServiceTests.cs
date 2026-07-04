@@ -754,6 +754,47 @@ const Engine = (function () {
                 .Select(item => item.GetString())
                 .Should()
                 .Contain("playable_preview_contract");
+            var detectedCapabilities = previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("detected_capabilities")
+                .EnumerateArray()
+                .Select(item => item.GetString())
+                .ToArray();
+            detectedCapabilities.Should().Contain("visual_asset_hints");
+            detectedCapabilities.Should().Contain("input_map_hints");
+            detectedCapabilities.Should().Contain("script_behavior_hints");
+            detectedCapabilities.Should().Contain("scene_graph_hints");
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("visual_asset_hints")
+                .EnumerateArray()
+                .Should()
+                .Contain(item => item.GetProperty("preview_resource_path").GetString() == "res://PreviewAssets/Game.Godot-Prototypes-ExperimentalPreview-Art-player.png");
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("input_map_hints")
+                .EnumerateArray()
+                .Should()
+                .Contain(item => item.GetProperty("action").GetString() == "dash");
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("script_behavior_hints")
+                .EnumerateArray()
+                .Should()
+                .Contain(item => item.GetProperty("path").GetString() == "Game.Godot/Prototypes/ExperimentalPreview/PlayerController.gd");
+            previewData.RootElement
+                .GetProperty("web_preview_manifest")
+                .GetProperty("scene_graph_hints")
+                .EnumerateArray()
+                .Should()
+                .Contain(item =>
+                    item.GetProperty("path").GetString() == "Game.Godot/Prototypes/ExperimentalPreview/ExperimentalPreviewPrototype.tscn" &&
+                    item.GetProperty("root_node_type").GetString() == "Node2D" &&
+                    item.GetProperty("script_paths").EnumerateArray().Any(script => script.GetString() == "res://Game.Godot/Prototypes/ExperimentalPreview/PlayerController.gd") &&
+                    item.GetProperty("texture_paths").EnumerateArray().Any(texture => texture.GetString() == "res://Game.Godot/Prototypes/ExperimentalPreview/Art/player.png"));
+            File.Exists(Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "godot3-project", "PreviewAssets", "Game.Godot-Prototypes-ExperimentalPreview-Art-player.png")).Should().BeTrue();
+            var exportPresets = await File.ReadAllTextAsync(Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "godot3-project", "export_presets.cfg"), Encoding.UTF8);
+            exportPresets.Should().Contain("PreviewAssets/*.png");
             previewData.RootElement
                 .GetProperty("web_preview_manifest")
                 .GetProperty("conversion_contract")
@@ -818,10 +859,17 @@ const Engine = (function () {
             WriteGenericGodotPackage(project.RepoPath, packageFile, "GenericAdventure");
             var godotRunner = new FakeGodot3WebExportRunner();
             var dedicatedRunner = new DedicatedAdapterRunner("""
-            extends Control
+            extends KinematicBody2D
+
+            var velocity = Vector2.ZERO
 
             func _ready():
+                var floor = ColorRect.new()
+                floor.name = "Floor"
                 print("codex dedicated adapter")
+
+            func _physics_process(delta):
+                velocity = move_and_slide(velocity)
             """);
             var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner);
             var service = new ProjectWebPreviewService(
@@ -847,14 +895,92 @@ const Engine = (function () {
             dedicatedRunner.Commands[0].Arguments.Should().Contain("workspace-write");
             dedicatedRunner.Commands[0].Arguments.Should().NotContain("--json");
             dedicatedRunner.Commands[0].StandardInput.Should().Contain("Write a complete GDScript file only");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("Prefer `extends Node2D`");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("child `KinematicBody2D` player");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("CollisionShape2D");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("move_and_slide");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("Avoid GDScript built-in function names");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("visual_asset_hints");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("input_map_hints");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("script_behavior_hints");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("scene_graph_hints");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("ImageTexture");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("call_deferred");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("get_parent().add_child");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("do not implement click-to-move");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("Mouse left should fire/attack");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("Do not add numbered selection shortcuts");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("must not contain KEY_1");
+            dedicatedRunner.Commands[0].StandardInput.Should().Contain("visibly reduce HP/armor");
             godotRunner.MainScripts.Should().ContainSingle(script => script.Contains("codex dedicated adapter", StringComparison.Ordinal));
+            godotRunner.MainScripts.Single().Should().Contain("var floor_node = ColorRect.new()");
+            godotRunner.MainScripts.Single().Should().NotContain("var floor =");
+            godotRunner.MainScenes.Should().ContainSingle(scene => scene.Contains("type=\"KinematicBody2D\"", StringComparison.Ordinal));
             File.Exists(dedicatedMainScriptPath).Should().BeTrue();
             resolution.GetProperty("status").GetString().Should().Be("generated_by_codex");
             resolution.GetProperty("codex_invoked").GetBoolean().Should().BeTrue();
             dedicatedManifest.RootElement.GetProperty("schema_version").GetString().Should().Be("phasea-web-preview-dedicated-adapter-v1");
-            dedicatedManifest.RootElement.GetProperty("generator_version").GetString().Should().Be("phasea-project-dedicated-godot3-adapter-v1");
+            dedicatedManifest.RootElement.GetProperty("generator_version").GetString().Should().Be("phasea-project-dedicated-godot3-adapter-v8");
             dedicatedManifest.RootElement.GetProperty("source").GetString().Should().Be("codex-dedicated-adapter");
             dedicatedManifest.RootElement.GetProperty("package_file").GetString().Should().Be(packageFile);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot);
+        }
+    }
+
+    [Fact]
+    public async Task GeneratePreviewAsync_DoesNotCacheDedicatedFallbackForNonTowerdemoPackage()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-fallback-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-fallback-repo");
+        using var godotRoot = TempDirectory.Create("phase-a-web-preview-generic-dedicated-fallback-godot3-bin");
+        var fakeGodot = Path.Combine(godotRoot.Path, "Godot_v3.6.2-stable_win64.exe");
+        await File.WriteAllTextAsync(fakeGodot, "fake godot", Encoding.UTF8);
+        var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+        Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+        try
+        {
+            var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
+            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            var account = await store.CreateUserAccountAsync("web-preview-generic-dedicated-fallback-user", 1);
+            var projectId = await CreateProjectAsync(store, options, account.AccountId);
+            var project = (await store.GetProjectSnapshotAsync(projectId))!;
+            var packageFile = "PlainDemo-v0.1.20260628.007.zip";
+            WriteGenericGodotPackage(project.RepoPath, packageFile, "PlainDemo");
+            var godotRunner = new FakeGodot3WebExportRunner();
+            var dedicatedRunner = new FailingDedicatedAdapterRunner();
+            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner);
+            var service = new ProjectWebPreviewService(
+                store,
+                options,
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
+                godotRunner,
+                dedicatedAdapterService: dedicatedService);
+
+            var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
+            var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
+            var dedicatedMainScriptPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "Main.gd");
+            var dedicatedManifestPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "adapter-manifest.json");
+            using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
+            var resolution = previewData.RootElement.GetProperty("dedicated_adapter_resolution");
+            var generatedScript = godotRunner.MainScripts.Single();
+
+            result.Status.Should().Be("succeeded");
+            dedicatedRunner.Commands.Should().HaveCount(1);
+            dedicatedRunner.Commands[0].TotalTimeout.Should().Be(TimeSpan.FromMinutes(15));
+            dedicatedRunner.Commands[0].InactivityTimeout.Should().Be(TimeSpan.FromMinutes(8));
+            File.Exists(dedicatedMainScriptPath).Should().BeFalse();
+            File.Exists(dedicatedManifestPath).Should().BeFalse();
+            resolution.GetProperty("status").GetString().Should().Be("generated_by_fallback");
+            resolution.GetProperty("adapter_path").GetString().Should().BeEmpty();
+            generatedScript.Should().NotContain("塔防试玩");
+            generatedScript.Should().NotContain("放置防御塔");
         }
         finally
         {
@@ -1257,12 +1383,43 @@ const Engine = (function () {
         [application]
         config/name="{{gameName}}"
         run/main_scene="res://Game.Godot/Prototypes/{{gameName}}/{{gameName}}Prototype.tscn"
+
+        [input]
+        dash={
+        "deadzone": 0.5,
+        "events": [Object(InputEventKey,"physical_keycode":4194321)]
+        }
         """);
-        AddZipEntry(archive, $"Game.Godot/Prototypes/{gameName}/{gameName}Prototype.tscn", """
-        [gd_scene format=3]
+        AddZipEntry(archive, $"Game.Godot/Prototypes/{gameName}/{gameName}Prototype.tscn", $$"""
+        [gd_scene load_steps=3 format=3]
+
+        [ext_resource type="Script" path="res://Game.Godot/Prototypes/{{gameName}}/PlayerController.gd" id="1"]
+        [ext_resource type="Texture2D" path="res://Game.Godot/Prototypes/{{gameName}}/Art/player.png" id="2"]
 
         [node name="GenericAdventurePrototype" type="Node2D"]
+
+        [node name="Player" type="CharacterBody2D" parent="."]
+        script = ExtResource("1")
+
+        [node name="PlayerSprite" type="Sprite2D" parent="Player"]
+        texture = ExtResource("2")
         """);
+        AddZipEntry(archive, $"Game.Godot/Prototypes/{gameName}/PlayerController.gd", """
+        extends CharacterBody2D
+
+        func _physics_process(delta):
+            var direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+            velocity = direction * 240
+            move_and_slide()
+
+        func _input(event):
+            if Input.is_action_just_pressed("dash"):
+                attack()
+
+        func attack():
+            pass
+        """);
+        AddZipEntry(archive, $"Game.Godot/Prototypes/{gameName}/Art/player.png", "fake image");
         AddZipEntry(archive, "playable-preview-contract.json", $$"""
         {
           "schema_version": "phasea-playable-preview-contract-v1",
@@ -1513,11 +1670,13 @@ const Engine = (function () {
     {
         public List<HostedProcessCommand> Commands { get; } = [];
         public List<string> MainScripts { get; } = [];
+        public List<string> MainScenes { get; } = [];
 
         public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
         {
             Commands.Add(command);
             MainScripts.Add(File.ReadAllText(Path.Combine(command.WorkingDirectory, "Main.gd"), Encoding.UTF8));
+            MainScenes.Add(File.ReadAllText(Path.Combine(command.WorkingDirectory, "Main.tscn"), Encoding.UTF8));
             var outputPath = command.Arguments.Last();
             var webRoot = Path.GetDirectoryName(outputPath)!;
             Directory.CreateDirectory(webRoot);
@@ -1616,6 +1775,17 @@ const Engine = (function () {
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
             File.WriteAllText(outputPath, script, new UTF8Encoding(false));
             return Task.FromResult(new HostedProcessResult(0, script, ""));
+        }
+    }
+
+    private sealed class FailingDedicatedAdapterRunner : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            return Task.FromResult(new HostedProcessResult(408, "", "timeout"));
         }
     }
 

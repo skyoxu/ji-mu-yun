@@ -17,7 +17,7 @@ namespace PhaseA.Platform.Readback;
 public sealed class ProjectWebPreviewSemanticAdapterService
 {
     public const string SchemaVersion = "phasea-playable-preview-semantic-adapter-v1";
-    public const string CompatibilityId = "phasea-generic-web-preview-semantic-adapter-v1";
+    public const string CompatibilityId = "phasea-generic-web-preview-semantic-adapter-v2";
     public const string AdapterFileName = "playable-preview-semantic-adapter.json";
 
     private const string AdapterRootRelativePath = "exports/web-preview-semantic-adapters";
@@ -650,7 +650,11 @@ public sealed class ProjectWebPreviewSemanticAdapterService
             - Do not infer "tower-defense" from the project name or file name.
             - Do not emit executable code.
             - Keep roles project-semantic and generic: player_start, pressure_source, action, reward, ui_action, feedback, play_space, buildable_unit, entry_scene, scene_marker.
-            - input_actions may use project-semantic action IDs derived from package entity labels, such as basic_attack, skill_or_roll, choice, start, retry. Do not derive these from the project name.
+            - Use web_preview_manifest.scene_graph_hints and script_behavior_hints to identify the first playable loop. Prefer scenes and scripts that match the project/game/prototype path over generic template, settings, demo, menu, or test scenes.
+            - For movement/combat/extraction/shooter packages, do not promote Button, VBoxContainer, Settings, MainMenu, Publish, SaveLoad, Log, AddScore, LoseHp, or other menu/debug UI nodes into gameplay entities unless those nodes are in the selected playable scene. Keep such UI nodes in semantic_profile.ui_hud_mapping or warnings instead.
+            - input_actions should use project action IDs from web_preview_manifest.input_map_hints and script_behavior_hints.input_actions whenever available. If action IDs include move/fire/shoot/reload/interact/dash/use semantics, map them to common browser controls: WASD/arrows movement, mouse/primary fire, R reload, E or Space interact, Shift dash.
+            - Do not invent click-to-move, numbered selection shortcuts, or menu buttons for movement/combat/extraction/shooter packages unless the package scripts explicitly contain that interaction.
+            - input_actions may use project-semantic action IDs derived from package entity labels only when the package does not expose input-map or script action IDs. Do not derive these from the project name.
             - Use world_position from the package contract for spawn/layout whenever present. If you add runtime_profile, keep it data-only: shape, movement_speed, pressure_speed, attack_range, contact_range, hp, damage.
             - Prefer the package contract over filename guessing.
             - The adapter must make the generic browser preview feel closer to the packaged Godot prototype by selecting the right first loop, HUD concepts, roles, and feedback.

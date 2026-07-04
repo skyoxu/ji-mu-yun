@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using PhaseA.Platform.Configuration;
@@ -28,6 +29,13 @@ public sealed class ProjectWebPreviewService
     private const string DedicatedAdapterManifestFileName = "adapter-manifest.json";
     private const string DedicatedAdapterMainScriptFileName = "Main.gd";
     private const string DedicatedAdapterSchemaVersion = "phasea-web-preview-dedicated-adapter-v1";
+    private const int MaxVisualAssetHints = 24;
+    private const int MaxInputMapHints = 24;
+    private const int MaxScriptBehaviorHints = 24;
+    private const int MaxSceneGraphHints = 16;
+    private const int MaxSceneGraphNodeHints = 32;
+    private const long MaxPreviewCopiedAssetBytes = 512 * 1024;
+    private const long MaxPreviewSceneGraphBytes = 512 * 1024;
     private static readonly ProjectWebPreviewConverterDescriptor Towerdemo2Converter = new(
         "towerdemo2-template-subset",
         "godot3-html5-towerdemo2-template-subset",
@@ -443,7 +451,7 @@ public sealed class ProjectWebPreviewService
                 cancellationToken);
             packageInfo = packageInfo with
             {
-                SemanticAdapter = semanticAdapter.Adapter,
+                SemanticAdapter = FilterSemanticAdapterForPreview(packageInfo.WebPreviewManifest, semanticAdapter.Adapter),
                 SemanticAdapterResolution = semanticAdapter.Resolution
             };
             string? dedicatedMainScript = null;
@@ -1338,12 +1346,15 @@ script = ExtResource( 1 )
         ProjectWebPreviewConverterDescriptor converter,
         string? dedicatedMainScript)
     {
+        var mainScript = string.IsNullOrWhiteSpace(dedicatedMainScript)
+            ? RenderPackageAdapterMainScript(converter.AdapterStyle)
+            : dedicatedMainScript;
         WriteGodot3ProjectFiles(
             projectRoot,
             packageInfo,
             converter,
-            RenderMainScene("GenericPackageWebPreview"),
-            string.IsNullOrWhiteSpace(dedicatedMainScript) ? RenderPackageAdapterMainScript(converter.AdapterStyle) : dedicatedMainScript);
+            RenderMainScene("GenericPackageWebPreview", SelectMainSceneNodeType(mainScript)),
+            mainScript);
     }
 
     private static void WriteGodot3ProjectFiles(
@@ -1356,6 +1367,7 @@ script = ExtResource( 1 )
         Directory.CreateDirectory(projectRoot);
         Directory.CreateDirectory(Path.Combine(projectRoot, "web"));
         Directory.CreateDirectory(Path.Combine(projectRoot, "Fonts"));
+        CopyPreviewVisualAssets(packageInfo, Path.Combine(projectRoot, "PreviewAssets"));
         var godotTextEncoding = new UTF8Encoding(false);
         var cjkFontPath = ResolveCjkFontPath();
         if (cjkFontPath is not null)
@@ -1490,6 +1502,557 @@ script = ExtResource( 1 )
             string.Equals(value.GetString(), expected, StringComparison.Ordinal);
     }
 
+    private static JsonElement FilterSemanticAdapterForPreview(PackageWebPreviewManifest manifest, JsonElement adapter)
+    {
+        if (adapter.ValueKind != JsonValueKind.Object || !HasActionGameplayHints(manifest))
+        {
+            return adapter.Clone();
+        }
+
+        JsonObject? root;
+        try
+        {
+            root = JsonNode.Parse(adapter.GetRawText()) as JsonObject;
+        }
+        catch (JsonException)
+        {
+            return adapter.Clone();
+        }
+
+        if (root is null || root["entities"] is not JsonArray entities)
+        {
+            return adapter.Clone();
+        }
+
+        var allowedScenes = BuildAllowedSemanticEntityScenes(manifest);
+        if (allowedScenes.Count == 0)
+        {
+            return adapter.Clone();
+        }
+
+        var filtered = new JsonArray();
+        foreach (var entity in entities)
+        {
+            if (entity is not JsonObject entityObject)
+            {
+                continue;
+            }
+
+            var scene = NormalizeResourcePath(entityObject["scene"]?.GetValue<string>() ?? "");
+            var nodeType = entityObject["node_type"]?.GetValue<string>() ?? "";
+            var label = entityObject["label"]?.GetValue<string>() ?? "";
+            if (allowedScenes.Contains(scene) && !IsMenuOrDebugUiEntity(nodeType, label))
+            {
+                filtered.Add(entityObject.DeepClone());
+            }
+        }
+
+        root["entities"] = filtered;
+        using var document = JsonDocument.Parse(root.ToJsonString(JsonOptions));
+        return document.RootElement.Clone();
+    }
+
+    private static bool HasActionGameplayHints(PackageWebPreviewManifest manifest)
+    {
+        return manifest.ScriptBehaviorHints.Any(hint =>
+            hint.Roles.Contains("movement", StringComparer.Ordinal) ||
+            hint.Roles.Contains("combat", StringComparer.Ordinal) ||
+            hint.Roles.Contains("physics", StringComparer.Ordinal) ||
+            hint.Roles.Contains("interaction", StringComparer.Ordinal));
+    }
+
+    private static HashSet<string> BuildAllowedSemanticEntityScenes(PackageWebPreviewManifest manifest)
+    {
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var firstNonControlScene = manifest.SceneGraphHints
+            .Where(hint => !string.Equals(hint.RootNodeType, "Control", StringComparison.Ordinal))
+            .Take(1)
+            .ToArray();
+        foreach (var hint in firstNonControlScene.Length > 0 ? firstNonControlScene : manifest.SceneGraphHints.Take(1))
+        {
+            allowed.Add(NormalizeResourcePath(hint.Path));
+        }
+
+        return allowed;
+    }
+
+    private static string NormalizeResourcePath(string path)
+    {
+        return path.Replace('\\', '/').Replace("res://", "", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsMenuOrDebugUiEntity(string nodeType, string label)
+    {
+        if (string.Equals(nodeType, "Button", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(nodeType, "VBoxContainer", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(nodeType, "HBoxContainer", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(nodeType, "MarginContainer", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return ContainsAny(label, "settings", "mainmenu", "publish", "saveload", "logbtn", "addscore", "losehp", "quit", "debug");
+    }
+
+    private static bool IsPreviewVisualAsset(string path)
+    {
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        return extension is ".png" or ".jpg" or ".jpeg" or ".webp" or ".svg";
+    }
+
+    private static bool IsPreviewScriptAsset(string path)
+    {
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        return extension is ".gd" or ".cs";
+    }
+
+    private static bool IsPreviewRuntimePath(string path)
+    {
+        var normalized = path.Replace('\\', '/');
+        var lower = normalized.ToLowerInvariant();
+        if (lower.StartsWith("tests.", StringComparison.Ordinal) ||
+            lower.StartsWith("tests/", StringComparison.Ordinal) ||
+            lower.Contains("/tests/", StringComparison.Ordinal) ||
+            lower.Contains("/addons/", StringComparison.Ordinal) ||
+            lower.Contains("/bin/", StringComparison.Ordinal) ||
+            lower.Contains("/obj/", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsPreviewRuntimeScriptPath(string path)
+    {
+        if (!IsPreviewRuntimePath(path))
+        {
+            return false;
+        }
+
+        var lower = path.Replace('\\', '/').ToLowerInvariant();
+        if (lower.Contains(".tests/", StringComparison.Ordinal) ||
+            lower.Contains(".tests.", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return lower.StartsWith("game.godot/", StringComparison.Ordinal) ||
+            lower.StartsWith("game.core/", StringComparison.Ordinal) ||
+            lower.Contains("/scripts/", StringComparison.Ordinal) ||
+            lower.Contains("/prototypes/", StringComparison.Ordinal) ||
+            lower.Contains("/scenes/", StringComparison.Ordinal);
+    }
+
+    private static string SanitizePreviewAssetName(string sourcePath)
+    {
+        var withoutPrefix = sourcePath
+            .Replace('\\', '/')
+            .Replace("res://", "", StringComparison.OrdinalIgnoreCase);
+        var sanitized = Regex.Replace(withoutPrefix, @"[^A-Za-z0-9._-]+", "-", RegexOptions.CultureInvariant).Trim('-', '.', '_');
+        return string.IsNullOrWhiteSpace(sanitized) ? "asset" + Path.GetExtension(sourcePath) : sanitized;
+    }
+
+    private static string ClassifyVisualAssetRole(string sourcePath)
+    {
+        var text = sourcePath.ToLowerInvariant();
+        if (ContainsAny(text, "player", "hero", "character", "avatar", "actor"))
+        {
+            return "player_sprite";
+        }
+
+        if (ContainsAny(text, "enemy", "monster", "mob", "boss", "threat"))
+        {
+            return "threat_sprite";
+        }
+
+        if (ContainsAny(text, "item", "loot", "pickup", "reward", "weapon", "inventory"))
+        {
+            return "item_sprite";
+        }
+
+        if (ContainsAny(text, "tile", "terrain", "floor", "wall", "map", "level", "background"))
+        {
+            return "environment_sprite";
+        }
+
+        if (ContainsAny(text, "ui", "hud", "button", "icon", "panel"))
+        {
+            return "ui_sprite";
+        }
+
+        return "visual_asset";
+    }
+
+    private static int ScorePathRelevance(string path, string projectName, string gameName, string? mainScene)
+    {
+        var normalizedPath = NormalizeSearchToken(path);
+        var score = 0;
+        foreach (var token in BuildRelevanceTokens(projectName, gameName, mainScene))
+        {
+            if (normalizedPath.Contains(token, StringComparison.Ordinal))
+            {
+                score += 100;
+            }
+        }
+
+        if (normalizedPath.Contains("prototype", StringComparison.Ordinal))
+        {
+            score += 15;
+        }
+
+        if (normalizedPath.Contains("gamegodot", StringComparison.Ordinal))
+        {
+            score += 10;
+        }
+
+        if (normalizedPath.Contains("gamecore", StringComparison.Ordinal))
+        {
+            score += 5;
+        }
+
+        return score;
+    }
+
+    private static IReadOnlyList<string> BuildRelevanceTokens(string projectName, string gameName, string? mainScene)
+    {
+        var tokens = new List<string>();
+        foreach (var value in new[] { projectName, gameName, mainScene ?? "" })
+        {
+            var token = NormalizeSearchToken(value);
+            if (token.Length >= 4 && !tokens.Contains(token, StringComparer.Ordinal))
+            {
+                tokens.Add(token);
+            }
+
+            foreach (var part in Regex.Split(value, @"[^A-Za-z0-9]+"))
+            {
+                var partToken = NormalizeSearchToken(part);
+                if (partToken.Length >= 3 && !tokens.Contains(partToken, StringComparer.Ordinal))
+                {
+                    tokens.Add(partToken);
+                }
+            }
+        }
+
+        return tokens;
+    }
+
+    private static string NormalizeSearchToken(string value)
+    {
+        return Regex.Replace(value.ToLowerInvariant(), @"[^a-z0-9]+", "", RegexOptions.CultureInvariant);
+    }
+
+    private static int ScoreVisualRole(string role)
+    {
+        return role switch
+        {
+            "player_sprite" => 50,
+            "threat_sprite" => 45,
+            "item_sprite" => 35,
+            "environment_sprite" => 25,
+            "ui_sprite" => 10,
+            _ => 0
+        };
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        return needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<PackageWebPreviewInputMapHint> ExtractInputMapHints(string projectConfigText)
+    {
+        var hints = new List<PackageWebPreviewInputMapHint>();
+        var inInputSection = false;
+        using var reader = new StringReader(projectConfigText);
+        while (reader.ReadLine() is { } line)
+        {
+            var trimmed = line.Trim();
+            if (trimmed.StartsWith("[", StringComparison.Ordinal) && trimmed.EndsWith("]", StringComparison.Ordinal))
+            {
+                inInputSection = string.Equals(trimmed, "[input]", StringComparison.OrdinalIgnoreCase);
+                continue;
+            }
+
+            if (!inInputSection || string.IsNullOrWhiteSpace(trimmed) || !trimmed.Contains('=', StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var parts = trimmed.Split('=', 2);
+            var action = parts[0].Trim().Trim('"');
+            if (string.IsNullOrWhiteSpace(action))
+            {
+                continue;
+            }
+
+            hints.Add(new PackageWebPreviewInputMapHint(action, ExtractInputTokens(parts[1]), TrimForManifest(parts[1], 260)));
+            if (hints.Count >= MaxInputMapHints)
+            {
+                break;
+            }
+        }
+
+        return hints;
+    }
+
+    private static IReadOnlyList<string> ExtractInputTokens(string raw)
+    {
+        var tokens = new List<string>();
+        foreach (Match match in Regex.Matches(raw, "\"(?<value>[A-Za-z0-9_+ .-]{1,48})\""))
+        {
+            var value = match.Groups["value"].Value.Trim();
+            if (!string.IsNullOrWhiteSpace(value) && !tokens.Contains(value, StringComparer.OrdinalIgnoreCase))
+            {
+                tokens.Add(value);
+            }
+        }
+
+        foreach (Match match in Regex.Matches(raw, @"(?:physical_keycode|keycode|button_index|axis)\s*:\s*(?<value>-?\d+)"))
+        {
+            var value = match.Groups["value"].Value.Trim();
+            if (!tokens.Contains(value, StringComparer.OrdinalIgnoreCase))
+            {
+                tokens.Add(value);
+            }
+        }
+
+        return tokens.Take(12).ToArray();
+    }
+
+    private static PackageWebPreviewScriptBehaviorHint BuildScriptBehaviorHint(string path, ZipArchiveEntry entry)
+    {
+        string text;
+        using (var reader = new StreamReader(entry.Open(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+        {
+            text = reader.ReadToEnd();
+        }
+
+        var roles = new List<string>();
+        AddRoleIf(text, roles, "input", "Input.", "_input", "_unhandled_input");
+        AddRoleIf(text, roles, "physics", "_physics_process", "move_and_slide", "move_and_collide", "RigidBody", "CharacterBody", "KinematicBody");
+        AddRoleIf(text, roles, "movement", "velocity", "speed", "direction", "move_");
+        AddRoleIf(text, roles, "combat", "attack", "damage", "weapon", "shoot", "hit");
+        AddRoleIf(text, roles, "interaction", "interact", "pickup", "loot", "use_", "collect");
+        AddRoleIf(text, roles, "animation", "AnimatedSprite", "AnimationPlayer", "play(");
+        AddRoleIf(text, roles, "camera", "Camera2D", "Camera3D", "camera");
+        AddRoleIf(text, roles, "sprite", "Sprite", "Texture", "texture");
+
+        var inputActions = ExtractScriptInputActions(text)
+            .Distinct(StringComparer.Ordinal)
+            .Take(16)
+            .ToArray();
+        var nodeRefs = Regex.Matches(text, @"\b(?<node>AnimatedSprite2D|AnimatedSprite|Sprite2D|Sprite3D|Sprite|TextureRect|AnimationPlayer|Camera2D|Camera3D|Area2D|CollisionShape2D|CharacterBody2D|KinematicBody2D|RigidBody2D|StaticBody2D)\b")
+            .Select(match => match.Groups["node"].Value)
+            .Distinct(StringComparer.Ordinal)
+            .Take(16)
+            .ToArray();
+
+        return new PackageWebPreviewScriptBehaviorHint(
+            path,
+            Path.GetExtension(path).Equals(".cs", StringComparison.OrdinalIgnoreCase) ? "csharp" : "gdscript",
+            roles.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
+            inputActions,
+            nodeRefs,
+            ExtractScriptExcerpt(text));
+    }
+
+    private static IReadOnlyList<string> ExtractScriptInputActions(string text)
+    {
+        var actions = new List<string>();
+        foreach (Match match in Regex.Matches(text, @"Input\.(?:is_action_pressed|is_action_just_pressed|is_action_just_released|get_action_strength)\(\s*[""'](?<action>[^""']+)[""']"))
+        {
+            AddDistinct(actions, match.Groups["action"].Value);
+        }
+
+        foreach (Match match in Regex.Matches(text, @"(?m)\b(?:private|public|protected|internal)?\s*(?:const|static\s+readonly)\s+string\s+(?<name>[A-Za-z0-9_]*?(?:Action|Move|Fire|Shoot|Reload|Interact|Dash|Use)[A-Za-z0-9_]*)\s*=\s*""(?<action>[^""]+)"""))
+        {
+            AddDistinct(actions, match.Groups["action"].Value);
+        }
+
+        return actions;
+    }
+
+    private static void AddDistinct(List<string> values, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value) && !values.Contains(value, StringComparer.Ordinal))
+        {
+            values.Add(value);
+        }
+    }
+
+    private static PackageWebPreviewSceneGraphHint BuildSceneGraphHint(string path, ZipArchiveEntry entry)
+    {
+        string text;
+        using (var reader = new StreamReader(entry.Open(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+        {
+            text = reader.ReadToEnd();
+        }
+
+        var extResources = ParseTscnExtResources(text);
+        var nodes = new List<PackageWebPreviewSceneNodeHint>();
+        var nodeMatches = Regex.Matches(text, @"(?m)^\[node\s+(?<attrs>[^\]]+)\]\s*(?<body>.*?)(?=^\[|\z)", RegexOptions.Singleline);
+        foreach (Match match in nodeMatches)
+        {
+            var attrs = ParseTscnAttributes(match.Groups["attrs"].Value);
+            var body = match.Groups["body"].Value;
+            var name = attrs.GetValueOrDefault("name", "");
+            var type = attrs.GetValueOrDefault("type", "");
+            var parent = attrs.GetValueOrDefault("parent", "");
+            var scriptPath = ResolveTscnResourcePath(body, "script", extResources);
+            var texturePath = ResolveTscnResourcePath(body, "texture", extResources);
+            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(type))
+            {
+                continue;
+            }
+
+            nodes.Add(new PackageWebPreviewSceneNodeHint(name, type, parent, scriptPath, texturePath));
+            if (nodes.Count >= MaxSceneGraphNodeHints)
+            {
+                break;
+            }
+        }
+
+        var root = nodes.FirstOrDefault();
+        var scriptPaths = nodes
+            .Select(node => node.ScriptPath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(16)
+            .ToArray();
+        var texturePaths = nodes
+            .Select(node => node.TexturePath)
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(16)
+            .ToArray();
+        var physicsNodeTypes = nodes
+            .Select(node => node.Type)
+            .Where(IsPhysicsNodeType)
+            .Distinct(StringComparer.Ordinal)
+            .Take(16)
+            .ToArray();
+
+        return new PackageWebPreviewSceneGraphHint(
+            path,
+            root?.Name ?? "",
+            root?.Type ?? "",
+            nodes,
+            scriptPaths,
+            texturePaths,
+            physicsNodeTypes);
+    }
+
+    private static IReadOnlyDictionary<string, string> ParseTscnExtResources(string text)
+    {
+        var resources = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (Match match in Regex.Matches(text, @"(?m)^\[ext_resource\s+(?<attrs>[^\]]+)\]"))
+        {
+            var attrs = ParseTscnAttributes(match.Groups["attrs"].Value);
+            if (attrs.TryGetValue("id", out var id) &&
+                attrs.TryGetValue("path", out var path) &&
+                !string.IsNullOrWhiteSpace(id) &&
+                !string.IsNullOrWhiteSpace(path))
+            {
+                resources[id] = path;
+            }
+        }
+
+        return resources;
+    }
+
+    private static IReadOnlyDictionary<string, string> ParseTscnAttributes(string attrs)
+    {
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (Match match in Regex.Matches(attrs, @"(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?:""(?<quoted>[^""]*)""|(?<bare>[^\s]+))"))
+        {
+            values[match.Groups["key"].Value] = match.Groups["quoted"].Success
+                ? match.Groups["quoted"].Value
+                : match.Groups["bare"].Value;
+        }
+
+        return values;
+    }
+
+    private static string ResolveTscnResourcePath(
+        string nodeBody,
+        string propertyName,
+        IReadOnlyDictionary<string, string> extResources)
+    {
+        var pattern = @"(?m)^\s*" + Regex.Escape(propertyName) + @"\s*=\s*ExtResource\(\s*(?:""(?<quoted>[^""]+)""|(?<bare>[^)\s]+))\s*\)";
+        var match = Regex.Match(nodeBody, pattern);
+        if (!match.Success)
+        {
+            return "";
+        }
+
+        var id = match.Groups["quoted"].Success ? match.Groups["quoted"].Value : match.Groups["bare"].Value;
+        return extResources.TryGetValue(id, out var path) ? path : "";
+    }
+
+    private static bool IsPhysicsNodeType(string nodeType)
+    {
+        return nodeType is "Area2D" or "CollisionShape2D" or "CollisionPolygon2D" or "KinematicBody2D" or
+            "CharacterBody2D" or "RigidBody2D" or "StaticBody2D" or "RayCast2D";
+    }
+
+    private static void AddRoleIf(string text, List<string> roles, string role, params string[] needles)
+    {
+        if (needles.Any(needle => text.Contains(needle, StringComparison.OrdinalIgnoreCase)))
+        {
+            roles.Add(role);
+        }
+    }
+
+    private static IReadOnlyList<string> ExtractScriptExcerpt(string text)
+    {
+        var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0)
+            .Where(line => ContainsAny(line.ToLowerInvariant(), "input", "physics_process", "move_and", "velocity", "attack", "damage", "interact", "sprite", "animation", "camera"))
+            .Select(line => TrimForManifest(line, 180))
+            .Distinct(StringComparer.Ordinal)
+            .Take(10)
+            .ToArray();
+        return lines;
+    }
+
+    private static string TrimForManifest(string value, int maxChars)
+    {
+        return value.Length <= maxChars ? value : value[..maxChars] + "...";
+    }
+
+    private static void CopyPreviewVisualAssets(PackageInfo packageInfo, string targetDirectory)
+    {
+        var hints = packageInfo.WebPreviewManifest.VisualAssetHints;
+        if (hints.Count == 0 || !File.Exists(packageInfo.PackagePath))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(targetDirectory);
+        var fullTargetDirectory = Path.GetFullPath(targetDirectory);
+        using var archive = ZipFile.OpenRead(packageInfo.PackagePath);
+        foreach (var hint in hints)
+        {
+            var entry = archive.GetEntry(hint.SourcePath);
+            if (entry is null || entry.Length <= 0 || entry.Length > MaxPreviewCopiedAssetBytes)
+            {
+                continue;
+            }
+
+            var targetPath = Path.Combine(targetDirectory, SanitizePreviewAssetName(hint.SourcePath));
+            var fullTargetPath = Path.GetFullPath(targetPath);
+            if (!WorkspacePathPolicy.IsUnderRoot(fullTargetDirectory, fullTargetPath))
+            {
+                continue;
+            }
+
+            entry.ExtractToFile(fullTargetPath, overwrite: true);
+        }
+    }
+
     private static string RenderProjectGodot(PackageInfo packageInfo)
     {
         var gameName = EscapeGodotString(string.IsNullOrWhiteSpace(packageInfo.GameName) ? "Godot Package" : packageInfo.GameName);
@@ -1540,7 +2103,7 @@ platform="HTML5"
 runnable=true
 custom_features=""
 export_filter="all_resources"
-include_filter="preview-package-data.json,web-preview-manifest.json,Fonts/*.ttf,Fonts/*.tres"
+include_filter="preview-package-data.json,web-preview-manifest.json,Fonts/*.ttf,Fonts/*.tres,PreviewAssets/*.png,PreviewAssets/*.jpg,PreviewAssets/*.jpeg,PreviewAssets/*.webp,PreviewAssets/*.svg"
 exclude_filter=""
 export_path="web/index.html"
 script_export_mode=1
@@ -1563,7 +2126,7 @@ progressive_web_app/enabled=false
 """;
     }
 
-    private static string RenderMainScene(string nodeName)
+    private static string RenderMainScene(string nodeName, string nodeType = "Spatial")
     {
         var safeNodeName = EscapeGodotString(string.IsNullOrWhiteSpace(nodeName) ? "WebPreview" : nodeName);
         return $$"""
@@ -1571,9 +2134,38 @@ progressive_web_app/enabled=false
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 
-[node name="{{safeNodeName}}" type="Spatial"]
+[node name="{{safeNodeName}}" type="{{nodeType}}"]
 script = ExtResource( 1 )
 """;
+    }
+
+    private static string SelectMainSceneNodeType(string mainScript)
+    {
+        using var reader = new StringReader(mainScript);
+        while (reader.ReadLine() is { } line)
+        {
+            var trimmed = line.Trim();
+            if (!trimmed.StartsWith("extends ", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var nodeType = trimmed["extends ".Length..].Trim().Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return nodeType switch
+            {
+                "Control" => "Control",
+                "Spatial" => "Spatial",
+                "Node2D" => "Node2D",
+                "KinematicBody2D" => "KinematicBody2D",
+                "Area2D" => "Area2D",
+                "RigidBody2D" => "RigidBody2D",
+                "StaticBody2D" => "StaticBody2D",
+                "Node" => "Node",
+                _ => "Spatial"
+            };
+        }
+
+        return "Spatial";
     }
 
     private static string RenderMainScript()
@@ -2976,6 +3568,10 @@ func collision_capsule(radius, height):
         var towerdemo2SourceSceneSha256 = "";
         var towerdemo2TextCatalogSha256 = "";
         var sourceFingerprints = new List<PackageWebPreviewSourceFingerprint>();
+        var visualAssetHints = new List<PackageWebPreviewVisualAssetHint>();
+        var scriptBehaviorHints = new List<PackageWebPreviewScriptBehaviorHint>();
+        var sceneGraphHints = new List<PackageWebPreviewSceneGraphHint>();
+        IReadOnlyList<PackageWebPreviewInputMapHint> inputMapHints = [];
         JsonElement? playablePreviewContract = null;
 
         using var archive = ZipFile.OpenRead(packagePath);
@@ -3020,7 +3616,11 @@ func collision_capsule(radius, height):
         var projectConfig = archive.GetEntry("project.godot");
         if (projectConfig is not null)
         {
-            using var reader = new StreamReader(projectConfig.Open(), Encoding.UTF8);
+            using var stream = projectConfig.Open();
+            using var memory = new MemoryStream();
+            stream.CopyTo(memory);
+            var projectConfigText = Encoding.UTF8.GetString(memory.ToArray());
+            using var reader = new StringReader(projectConfigText);
             while (reader.ReadLine() is { } line)
             {
                 if (line.StartsWith("run/main_scene=", StringComparison.Ordinal))
@@ -3029,6 +3629,8 @@ func collision_capsule(radius, height):
                     break;
                 }
             }
+
+            inputMapHints = ExtractInputMapHints(projectConfigText);
         }
 
         foreach (var entry in archive.Entries.OrderBy(entry => entry.FullName, StringComparer.OrdinalIgnoreCase))
@@ -3037,6 +3639,33 @@ func collision_capsule(radius, height):
             if (normalized.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase))
             {
                 scenes.Add(normalized);
+                if (entry.Length > 0 &&
+                    entry.Length <= MaxPreviewSceneGraphBytes &&
+                    IsPreviewRuntimePath(normalized))
+                {
+                    sceneGraphHints.Add(BuildSceneGraphHint(normalized, entry));
+                }
+            }
+
+            if (IsPreviewVisualAsset(normalized) &&
+                entry.Length > 0 &&
+                entry.Length <= MaxPreviewCopiedAssetBytes &&
+                IsPreviewRuntimePath(normalized))
+            {
+                visualAssetHints.Add(new PackageWebPreviewVisualAssetHint(
+                    normalized,
+                    $"res://PreviewAssets/{SanitizePreviewAssetName(normalized)}",
+                    ClassifyVisualAssetRole(normalized),
+                    Path.GetFileName(normalized),
+                    entry.Length));
+            }
+
+            if (IsPreviewScriptAsset(normalized) &&
+                entry.Length > 0 &&
+                entry.Length <= MaxPreviewCopiedAssetBytes &&
+                IsPreviewRuntimeScriptPath(normalized))
+            {
+                scriptBehaviorHints.Add(BuildScriptBehaviorHint(normalized, entry));
             }
 
             if (string.Equals(normalized, Towerdemo2Converter.SourceScenePath, StringComparison.OrdinalIgnoreCase))
@@ -3115,6 +3744,26 @@ func collision_capsule(radius, height):
             mainScene,
             scenes.Take(80).ToArray(),
             sourceFingerprints.OrderBy(item => item.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
+            visualAssetHints
+                .OrderByDescending(item => ScorePathRelevance(item.SourcePath, projectName, gameName, mainScene))
+                .ThenByDescending(item => ScoreVisualRole(item.Role))
+                .ThenBy(item => item.SourcePath, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxVisualAssetHints)
+                .ToArray(),
+            inputMapHints,
+            scriptBehaviorHints
+                .OrderByDescending(item => ScorePathRelevance(item.Path, projectName, gameName, mainScene))
+                .ThenByDescending(item => item.Roles.Count)
+                .ThenBy(item => item.Path, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxScriptBehaviorHints)
+                .ToArray(),
+            sceneGraphHints
+                .OrderByDescending(item => ScorePathRelevance(item.Path, projectName, gameName, mainScene))
+                .ThenByDescending(item => item.PhysicsNodeTypes.Count)
+                .ThenByDescending(item => item.ScriptPaths.Count)
+                .ThenBy(item => item.Path, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxSceneGraphHints)
+                .ToArray(),
             texts.Count,
             hasSupportedTowerdemo2Template,
             playablePreviewContract.HasValue);
@@ -3129,6 +3778,7 @@ func collision_capsule(radius, height):
             mainScene,
             scenes.Take(80).ToArray(),
             texts,
+            packagePath,
             isTowerdemo2,
             towerdemo2SourceSceneSha256,
             towerdemo2TextCatalogSha256,
@@ -3187,6 +3837,10 @@ func collision_capsule(radius, height):
         string? mainScene,
         IReadOnlyList<string> scenes,
         IReadOnlyList<PackageWebPreviewSourceFingerprint> sourceFingerprints,
+        IReadOnlyList<PackageWebPreviewVisualAssetHint> visualAssetHints,
+        IReadOnlyList<PackageWebPreviewInputMapHint> inputMapHints,
+        IReadOnlyList<PackageWebPreviewScriptBehaviorHint> scriptBehaviorHints,
+        IReadOnlyList<PackageWebPreviewSceneGraphHint> sceneGraphHints,
         int textKeyCount,
         bool isTowerdemo2,
         bool hasPlayablePreviewContract)
@@ -3224,6 +3878,26 @@ func collision_capsule(radius, height):
             detectedCapabilities.Add("playable_preview_contract");
         }
 
+        if (visualAssetHints.Count > 0)
+        {
+            detectedCapabilities.Add("visual_asset_hints");
+        }
+
+        if (inputMapHints.Count > 0)
+        {
+            detectedCapabilities.Add("input_map_hints");
+        }
+
+        if (scriptBehaviorHints.Count > 0)
+        {
+            detectedCapabilities.Add("script_behavior_hints");
+        }
+
+        if (sceneGraphHints.Count > 0)
+        {
+            detectedCapabilities.Add("scene_graph_hints");
+        }
+
         var contract = BuildWebPreviewContract(isTowerdemo2 ? Towerdemo2Converter : GenericGodotPackageConverter, mainScene, scenes, textKeyCount, hasPlayablePreviewContract);
 
         return new PackageWebPreviewManifest(
@@ -3241,6 +3915,10 @@ func collision_capsule(radius, height):
             mainScene ?? "",
             scenes,
             sourceFingerprints,
+            visualAssetHints,
+            inputMapHints,
+            scriptBehaviorHints,
+            sceneGraphHints,
             textKeyCount,
             detectedTemplates.Order(StringComparer.Ordinal).ToArray(),
             detectedCapabilities.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
@@ -5216,6 +5894,10 @@ var initializing = true;
         [property: JsonPropertyName("main_scene")] string MainScene,
         [property: JsonPropertyName("scenes")] IReadOnlyList<string> Scenes,
         [property: JsonPropertyName("source_fingerprints")] IReadOnlyList<PackageWebPreviewSourceFingerprint> SourceFingerprints,
+        [property: JsonPropertyName("visual_asset_hints")] IReadOnlyList<PackageWebPreviewVisualAssetHint> VisualAssetHints,
+        [property: JsonPropertyName("input_map_hints")] IReadOnlyList<PackageWebPreviewInputMapHint> InputMapHints,
+        [property: JsonPropertyName("script_behavior_hints")] IReadOnlyList<PackageWebPreviewScriptBehaviorHint> ScriptBehaviorHints,
+        [property: JsonPropertyName("scene_graph_hints")] IReadOnlyList<PackageWebPreviewSceneGraphHint> SceneGraphHints,
         [property: JsonPropertyName("text_key_count")] int TextKeyCount,
         [property: JsonPropertyName("detected_templates")] IReadOnlyList<string> DetectedTemplates,
         [property: JsonPropertyName("detected_capabilities")] IReadOnlyList<string> DetectedCapabilities,
@@ -5238,6 +5920,42 @@ var initializing = true;
         [property: JsonPropertyName("role")] string Role,
         [property: JsonPropertyName("sha256")] string Sha256);
 
+    private sealed record PackageWebPreviewVisualAssetHint(
+        [property: JsonPropertyName("source_path")] string SourcePath,
+        [property: JsonPropertyName("preview_resource_path")] string PreviewResourcePath,
+        [property: JsonPropertyName("role")] string Role,
+        [property: JsonPropertyName("file_name")] string FileName,
+        [property: JsonPropertyName("size_bytes")] long SizeBytes);
+
+    private sealed record PackageWebPreviewInputMapHint(
+        [property: JsonPropertyName("action")] string Action,
+        [property: JsonPropertyName("tokens")] IReadOnlyList<string> Tokens,
+        [property: JsonPropertyName("raw")] string Raw);
+
+    private sealed record PackageWebPreviewScriptBehaviorHint(
+        [property: JsonPropertyName("path")] string Path,
+        [property: JsonPropertyName("language")] string Language,
+        [property: JsonPropertyName("roles")] IReadOnlyList<string> Roles,
+        [property: JsonPropertyName("input_actions")] IReadOnlyList<string> InputActions,
+        [property: JsonPropertyName("node_refs")] IReadOnlyList<string> NodeRefs,
+        [property: JsonPropertyName("excerpt")] IReadOnlyList<string> Excerpt);
+
+    private sealed record PackageWebPreviewSceneGraphHint(
+        [property: JsonPropertyName("path")] string Path,
+        [property: JsonPropertyName("root_node_name")] string RootNodeName,
+        [property: JsonPropertyName("root_node_type")] string RootNodeType,
+        [property: JsonPropertyName("nodes")] IReadOnlyList<PackageWebPreviewSceneNodeHint> Nodes,
+        [property: JsonPropertyName("script_paths")] IReadOnlyList<string> ScriptPaths,
+        [property: JsonPropertyName("texture_paths")] IReadOnlyList<string> TexturePaths,
+        [property: JsonPropertyName("physics_node_types")] IReadOnlyList<string> PhysicsNodeTypes);
+
+    private sealed record PackageWebPreviewSceneNodeHint(
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("type")] string Type,
+        [property: JsonPropertyName("parent")] string Parent,
+        [property: JsonPropertyName("script_path")] string ScriptPath,
+        [property: JsonPropertyName("texture_path")] string TexturePath);
+
     private sealed record PackageInfo(
         string FileName,
         string ProjectName,
@@ -5248,6 +5966,7 @@ var initializing = true;
         string? MainScene,
         IReadOnlyList<string> Scenes,
         IReadOnlyDictionary<string, string> Texts,
+        string PackagePath,
         bool IsTowerdemo2,
         string Towerdemo2SourceSceneSha256,
         string Towerdemo2TextCatalogSha256,

@@ -16,7 +16,7 @@ namespace PhaseA.Platform.Readback;
 public sealed class ProjectWebPreviewDedicatedAdapterService
 {
     public const string SchemaVersion = "phasea-web-preview-dedicated-adapter-v1";
-    public const string GeneratorVersion = "phasea-project-dedicated-godot3-adapter-v1";
+    public const string GeneratorVersion = "phasea-project-dedicated-godot3-adapter-v8";
     public const string MainScriptFileName = "Main.gd";
     public const string ManifestFileName = "adapter-manifest.json";
 
@@ -25,6 +25,8 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
     private const int MaxPromptJsonChars = 80_000;
     private const int MaxReferenceScriptChars = 50_000;
     private const string ReasoningEffort = "medium";
+    private static readonly TimeSpan CodexAdapterTotalTimeout = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan CodexAdapterInactivityTimeout = TimeSpan.FromMinutes(8);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -128,42 +130,34 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
             }
 
             var reason = validationError ?? $"Codex exited with {codexRun.ExitCode}.";
-            await WriteAdapterAsync(
-                targetPath,
-                manifestPath,
-                fallbackMainScript,
-                BuildManifest(request, version, "generic-fallback-adapter", fallbackSha256, fallbackSha256, codexInvoked: true, "generated_by_fallback", reason),
-                cancellationToken);
+            var fallback = BuildTransientFallbackScript(request, fallbackMainScript);
+            var transientFallbackSha256 = ComputeStringSha256(fallback);
             return new ProjectWebPreviewDedicatedAdapterResult(
-                fallbackMainScript,
-                targetPath,
+                fallback,
+                "",
                 new ProjectWebPreviewDedicatedAdapterResolution(
                     "generated_by_fallback",
                     reason,
                     version,
                     request.PackageSha256,
-                    targetPath,
-                    fallbackSha256,
+                    "",
+                    transientFallbackSha256,
                     true,
                     codexRun.RawOutputTail));
         }
 
-        await WriteAdapterAsync(
-            targetPath,
-            manifestPath,
-            fallbackMainScript,
-            BuildManifest(request, version, "deterministic-generic-fallback-adapter", fallbackSha256, fallbackSha256, codexInvoked: false, "generated_deterministic", "Codex dedicated adapter generation is disabled."),
-            cancellationToken);
+        var deterministicFallback = BuildTransientFallbackScript(request, fallbackMainScript);
+        var deterministicFallbackSha256 = ComputeStringSha256(deterministicFallback);
         return new ProjectWebPreviewDedicatedAdapterResult(
-            fallbackMainScript,
-            targetPath,
+            deterministicFallback,
+            "",
             new ProjectWebPreviewDedicatedAdapterResolution(
                 "generated_deterministic",
                 "Codex dedicated adapter generation is disabled.",
                 version,
                 request.PackageSha256,
-                targetPath,
-                fallbackSha256,
+                "",
+                deterministicFallbackSha256,
                 false,
                 ""));
     }
@@ -191,7 +185,7 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
         var result = await _processRunner!.RunAsync(
             CodexHostedProcessCommandFactory.ApplyRuntime(command, credential)
                 .WithRunId(request.RunId)
-                .WithTimeouts(TimeSpan.FromMinutes(8), TimeSpan.FromMinutes(3)),
+                .WithTimeouts(CodexAdapterTotalTimeout, CodexAdapterInactivityTimeout),
             cancellationToken);
         var raw = ReadOutputText(outputPath, result);
         return new CodexAdapterRun(result.ExitCode, raw, Tail(raw, 2000));
@@ -228,6 +222,8 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
             var root = document.RootElement;
             if (!JsonStringEquals(root, "schema_version", SchemaVersion) ||
                 !JsonStringEquals(root, "generator_version", GeneratorVersion) ||
+                !JsonStringEquals(root, "source", "codex-dedicated-adapter") ||
+                !JsonStringEquals(root, "resolution_status", "generated_by_codex") ||
                 !JsonStringEquals(root, "package_file", request.PackageFile) ||
                 !JsonStringEquals(root, "package_sha256", request.PackageSha256))
             {
@@ -272,7 +268,7 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
     private static bool TryReadGeneratedScript(string outputPath, string rawOutput, out string script, out string? validationError)
     {
         script = File.Exists(outputPath) ? File.ReadAllText(outputPath, Encoding.UTF8) : rawOutput;
-        script = StripMarkdownFence(script).Trim();
+        script = NormalizeGodot3Compatibility(StripMarkdownFence(script).Trim());
         if (!IsUsableGdScript(script, out validationError))
         {
             return false;
@@ -306,11 +302,36 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
         return true;
     }
 
+    private static string BuildTransientFallbackScript(ProjectWebPreviewDedicatedAdapterRequest request, string fallbackMainScript)
+    {
+        if (!fallbackMainScript.Contains("var adapter_style = \"generic\"", StringComparison.Ordinal))
+        {
+            return fallbackMainScript;
+        }
+
+        return fallbackMainScript
+            .Replace("elif adapter_style == \"tower-defense\":", "elif false:", StringComparison.Ordinal)
+            .Replace("if adapter_style == \"tower-defense\":", "if false:", StringComparison.Ordinal)
+            .Replace("last_action = \"放置防御塔，当前火力提升\"", "last_action = \"执行项目动作，当前进度提升\"", StringComparison.Ordinal)
+            .Replace("last_action = \"下一波敌人开始推进\"", "last_action = \"下一阶段开始推进\"", StringComparison.Ordinal)
+            .Replace("return \"塔防试玩：防御塔 %d  波次 %d  敌军生命 %d  最近动作：%s\" % [tower_count, wave, encounter_hp, last_action]", "return \"项目试玩：进度 %d  阶段 %d  挑战值 %d  最近动作：%s\" % [tower_count, wave, encounter_hp, last_action]", StringComparison.Ordinal);
+    }
+
     private static string StripMarkdownFence(string value)
     {
         var trimmed = value.Trim();
         var match = Regex.Match(trimmed, @"\A```(?:gdscript|gd)?\s*(.*?)\s*```\z", RegexOptions.Singleline | RegexOptions.IgnoreCase);
         return match.Success ? match.Groups[1].Value : trimmed;
+    }
+
+    private static string NormalizeGodot3Compatibility(string script)
+    {
+        if (!Regex.IsMatch(script, @"(?m)^\s*var\s+floor\s*="))
+        {
+            return script;
+        }
+
+        return Regex.Replace(script, @"\bfloor\b", "floor_node");
     }
 
     private static object BuildManifest(
@@ -366,18 +387,42 @@ public sealed class ProjectWebPreviewDedicatedAdapterService
 
         Hard requirements:
         - Godot 3.6 compatible GDScript.
-        - The script is attached to a `Control` root scene created by Phase A.
+        - The script is attached to a root scene created by Phase A. Phase A will choose the root node type from your `extends` line.
         - It must load `res://preview-package-data.json` in `_ready()`.
         - It must produce an immediately playable browser preview using the package contract and semantic adapter data below.
         - It must preserve sandbox compatibility: no external network calls, no filesystem writes, no dynamic code loading.
         - It must expose keyboard/mouse interaction, clear visual state, and a playable loop derived from the package data.
         - Use the reference adapter as a structural fallback, but specialize labels, roles, loop state, interactions, camera/world layout, and feedback for this package.
+        - For action, shooter, extraction, survival, RPG exploration, or movement/combat previews, use Godot physics instead of hand-rolled position-only simulation:
+          - Prefer `extends Node2D` for the adapter scene root and create a child `KinematicBody2D` player. This mirrors package scenes whose root owns a world loop, HUD, player, enemies, loot, and extraction zones.
+          - Use `extends KinematicBody2D` as the scene root only for very simple player-only previews with no sibling world, enemies, walls, or zones.
+          - Create `CollisionShape2D` children for the player and important interactable/threat entities.
+          - Use `_physics_process(delta)` for movement and `move_and_slide` or `move_and_collide` on KinematicBody2D nodes.
+          - Use `Area2D` plus `CollisionShape2D`, `overlaps_body`, or distance-gated physics bodies for pickup, interact, attack, and threat zones.
+          - Keep UI in a `CanvasLayer`/`Control` child instead of making the whole adapter a `Control`.
+          - Do not create physics bodies under a parent that is only attached with `call_deferred("add_child", ...)` and then move them in the same frame; attach physics roots synchronously before running movement/collision logic.
+          - Do not use `get_parent().add_child(...)` to create sibling physics bodies from the adapter root. Keep world, enemies, walls, loot, extraction, and projectiles under nodes owned by the adapter root so every moving body is inside the same active 2D world.
+          - Before calling `move_and_slide` or `move_and_collide` on any non-root KinematicBody2D, guard that the body is still valid and `is_inside_tree()`.
+        - Use `extends Control` only for packages that are clearly menu/card/dialogue-only and do not need movement, collision, combat, or spatial interaction.
+        - Avoid GDScript built-in function names such as `floor`, `round`, `min`, `max`, `range`, `load`, and `print` as variable names.
+        - If `web_preview_manifest.visual_asset_hints` contains `preview_resource_path` values, create Sprite or TextureRect nodes so the preview resembles the package art instead of abstract shapes.
+        - Godot 3 HTML5 exports include PreviewAssets as raw image files. For `res://PreviewAssets/...` paths, do not rely only on `load(path)`. Use a reusable texture helper that first tries `load(path)`, then falls back to `Image.new().load(path)` plus `ImageTexture.new().create_from_image(image)` so raw PNG/JPG/WebP assets work in browser exports without console loader errors.
+        - If `web_preview_manifest.input_map_hints` or `script_behavior_hints.input_actions` contain project action names, mirror those controls in `_input`/`_physics_process` and HUD text instead of inventing unrelated controls.
+        - For movement/combat/extraction/shooter packages, do not implement click-to-move unless script_behavior_hints or input_map_hints explicitly show click/touch movement. Mouse left should fire/attack when the project has fire/shoot/attack behavior; right mouse may aim/secondary action only if useful.
+        - For movement/combat/extraction/shooter packages, use WASD/arrow movement, mouse aim, primary fire, reload, interact, and dash mappings inferred from project action names and script excerpts. Do not add numbered selection shortcuts or visible command buttons unless the selected playable scene is menu/card/dialogue-only.
+        - For movement/combat/extraction/shooter packages, the generated script must not contain KEY_1, KEY_2, KEY_3, focus_scene_marker, select_marker, Button.new(), or click-to-select/focus mechanics. Those are menu/debug affordances, not gameplay controls.
+        - Treat semantic_adapter.entities as lower priority than scene_graph_hints and script_behavior_hints. Ignore semantic entities that come from unrelated template, settings, demo, menu, or debug UI scenes when a more relevant project/prototype scene exists.
+        - Do not turn Button, VBoxContainer, Settings, MainMenu, Publish, SaveLoad, Log, AddScore, LoseHp, or generic HUD/debug nodes into world targets for action previews. Keep HUD as status/progress only.
+        - Threat/enemy entities in action previews must actively chase or pressure the player and visibly reduce HP/armor when in range, using cooldowns and clear feedback. Avoid passive markers that only react when clicked.
+        - If `web_preview_manifest.script_behavior_hints` mention movement, combat, interaction, animation, camera, or sprite behavior, use those hints as the primary behavior model before falling back to generic exploration.
+        - If `web_preview_manifest.scene_graph_hints` exists, mirror the package's scene root type, important node names, script-bound entities, physics node types, and texture-bound visual nodes before inventing your own entity model.
         - Avoid hard-coding Towerdemo2 behavior unless the package data explicitly contains those nodes.
         - Return only the final `Main.gd` content.
 
         Package:
         - project_name: {{request.ProjectName}}
         - game_name: {{request.GameName}}
+        - game_type_source: {{request.Project.GameTypeSource}}
         - game_type_id: {{request.GameTypeId}}
         - game_type_guide: {{request.GameTypeGuide}}
         - converter_id: {{request.ConverterId}}
