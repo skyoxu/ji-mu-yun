@@ -3,6 +3,7 @@ using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
 using Xunit;
@@ -52,6 +53,85 @@ public sealed class ProjectCreationServiceTests
         File.ReadAllText(readme).Should().Contain("ProjectId: " + result.ProjectId);
         File.ReadAllText(readme).Should().Contain("GameTypeSource: manual");
         File.ReadAllBytes(readme).Take(3).Should().NotEqual([0xEF, 0xBB, 0xBF]);
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_StoresGameTypeMatchEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FixedGameTypeMatchService("rpg"));
+
+        var result = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        result.Succeeded.Should().BeTrue();
+        var snapshot = await store.GetProjectSnapshotAsync(result.ProjectId!);
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(snapshot!.GameTypeMatchJson);
+        evidence.Status.Should().Be("matched");
+        evidence.MatchedGameTypeId.Should().Be("rpg");
+        evidence.MatchedGuidePath.Should().Be("docs/game-type-guides/rpg.md");
+        (await store.ListProjectGameTypeMatchFailuresForAdminAsync(20)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_RecordsGameTypeMatchFailureForAdminMaintenance()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FixedGameTypeMatchService(""));
+
+        var result = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        result.Succeeded.Should().BeTrue();
+        var failures = await store.ListProjectGameTypeMatchFailuresForAdminAsync(20);
+        failures.Should().ContainSingle();
+        failures[0].ProjectId.Should().Be(result.ProjectId);
+        failures[0].MatchStatus.Should().Be("no_match");
+        failures[0].StatusReason.Should().Be("test_no_match");
+        failures[0].CandidateScoresJson.Should().Contain("card-game");
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_WhenGameTypeMatchFailureMaintenanceWriteFails_StillCreatesProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new InvalidFailureGameTypeMatchService());
+
+        var result = await service.CreateProjectAsync(accountId, Request("Game One"));
+
+        result.Succeeded.Should().BeTrue();
+        var snapshot = await store.GetProjectSnapshotAsync(result.ProjectId!);
+        snapshot.Should().NotBeNull();
+        Directory.Exists(snapshot!.RepoPath).Should().BeTrue();
+        (await store.ListProjectGameTypeMatchFailuresForAdminAsync(20)).Should().BeEmpty();
     }
 
     [Fact]
@@ -522,6 +602,70 @@ public sealed class ProjectCreationServiceTests
         public void EnsureSeeded(string projectRepoPath)
         {
             throw new IOException("seed failed");
+        }
+    }
+
+    private sealed class FixedGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        private readonly string _matchedGameTypeId;
+
+        public FixedGameTypeMatchService(string matchedGameTypeId)
+        {
+            _matchedGameTypeId = matchedGameTypeId;
+        }
+
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var matched = !string.IsNullOrWhiteSpace(_matchedGameTypeId);
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                matched ? "matched" : "no_match",
+                matched ? "matched_by_test_genre_tags" : "test_no_match",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                matched ? ["RPG"] : ["Unknown Tag"],
+                [],
+                matched ? ["RPG"] : [],
+                matched ? ["rpg"] : ["unknown-tag"],
+                _matchedGameTypeId,
+                matched ? $"docs/game-type-guides/{_matchedGameTypeId}.md" : "",
+                matched ? 20 : 0,
+                matched ? [] : [new GameTypeGuideCandidate("card-game", "docs/game-type-guides/card-game.md", 4, ["card"], false)],
+                "",
+                "test",
+                now,
+                now));
+        }
+    }
+
+    private sealed class InvalidFailureGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                null!,
+                "test_invalid_status",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                ["Unknown Tag"],
+                [],
+                [],
+                ["unknown-tag"],
+                "",
+                "",
+                0,
+                [],
+                "",
+                "test",
+                now,
+                now));
         }
     }
 }

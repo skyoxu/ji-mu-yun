@@ -824,7 +824,7 @@ public sealed class ProjectPackageService
     private static void AddManifest(ZipArchive archive, ProjectSnapshot project, string version)
     {
         var entry = archive.CreateEntry("PACKAGE-MANIFEST.json", CompressionLevel.Optimal);
-        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(project.GameTypeSource, project.GameName, project.Name);
+        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveProjectGameTypeId(project);
         var gameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);
         using var writer = new StreamWriter(entry.Open());
         writer.Write(JsonSerializer.Serialize(new
@@ -844,7 +844,7 @@ public sealed class ProjectPackageService
     private static void AddPlayablePreviewContract(ZipArchive archive, string projectRoot, ProjectSnapshot project, string version)
     {
         var entry = archive.CreateEntry(PlayablePreviewContractFileName, CompressionLevel.Optimal);
-        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(project.GameTypeSource, project.GameName, project.Name);
+        var gameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveProjectGameTypeId(project);
         var gameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);
         var mainScene = TryReadMainScene(projectRoot);
         var scenes = DiscoverSceneResourcePaths(projectRoot, mainScene, project);

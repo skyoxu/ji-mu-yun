@@ -1,5 +1,6 @@
 using FluentAssertions;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using Xunit;
 
@@ -969,7 +970,67 @@ namespace Xunit
             WorkspaceRootPath: repoPath,
             RepoPath: repoPath,
             RuntimePath: Path.Combine(repoPath, ".runtime"),
-            MetaPath: Path.Combine(repoPath, ".phasea"));
+            MetaPath: Path.Combine(repoPath, ".phasea"),
+            GameTypeMatchJson: BuildGameTypeMatchJson(name, gameName, gameTypeSource));
+    }
+
+    private static string BuildGameTypeMatchJson(string name, string gameName, string gameTypeSource)
+    {
+        var text = string.Join(" ", name, gameName, gameTypeSource).ToLowerInvariant();
+        string matched;
+        string[] tags;
+        if (ContainsAny(text, "survivors", "survivor", "vampire", "arena survival", "horde survival", "\u5e78\u5b58\u8005", "\u5272\u8349"))
+        {
+            matched = "survivorslike";
+            tags = ["survivorslike", "vampire-survivors", "bullet-heaven", "arena-survival"];
+        }
+        else if (ContainsAny(text, "ccg", "tcg", "collectible", "trading card", "hearthstone", "duel", "card game", "\u96c6\u6362", "\u6536\u85cf", "\u5361\u724c\u5bf9\u6218"))
+        {
+            matched = "card-game";
+            tags = ["card", "card-game"];
+        }
+        else if (ContainsAny(text, "deck", "card battler", "card roguelike", "slay the spire", "monster train", "inscryption", "balatro", "wildfrost", "griftlands", "obelisk", "roguebook", "cobalt core", "dicey dungeons", "night of full moon", "\u5361\u724c\u6784\u7b51", "\u5361\u724c\u6784\u5efa", "\u8089\u9e3d\u5361\u724c", "\u5361\u724c\u8089\u9e3d", "\u6740\u622e\u5c16\u5854", "\u602a\u7269\u706b\u8f66", "\u5c0f\u4e11\u724c", "\u6708\u5706\u4e4b\u591c", "\u90aa\u6076\u51a5\u523b"))
+        {
+            matched = "card-game";
+            tags = ["card", "deck-building", "deckbuilder", "roguelike"];
+        }
+        else if (ContainsAny(text, "rpg", "dragon quest", "\u89d2\u8272\u626e\u6f14", "\u52c7\u8005\u6597\u6076\u9f99"))
+        {
+            matched = "rpg";
+            tags = ["rpg", "role-playing", "jrpg"];
+        }
+        else
+        {
+            matched = "";
+            tags = [];
+        }
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        return new ProjectGameTypeMatchEvidence(
+            1,
+            string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
+            string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
+            "steam",
+            gameTypeSource,
+            "1",
+            "Test App",
+            tags,
+            [],
+            tags,
+            tags,
+            matched,
+            string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
+            string.IsNullOrWhiteSpace(matched) ? 0 : 20,
+            [],
+            "",
+            "test",
+            now,
+            now).ToJson();
+    }
+
+    private static bool ContainsAny(string text, params string[] needles)
+    {
+        return needles.Any(needle => text.Contains(needle, StringComparison.Ordinal));
     }
 
     private static ProjectIterationGoalSnapshot Goal(int index, string title)

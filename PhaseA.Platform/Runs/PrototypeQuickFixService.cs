@@ -2515,8 +2515,7 @@ public sealed partial class PrototypeQuickFixService
 
     private static bool IsRpgFirstEncounterGoal(ProjectSnapshot project, ProjectIterationGoalSnapshot goal)
     {
-        var projectType = string.Join(" ", project.GameTypeSource, project.TemplateRuleId).ToLowerInvariant();
-        if (!projectType.Contains("rpg", StringComparison.Ordinal))
+        if (!GameTypeRouteProfiles.IsRpgProject(project))
         {
             return false;
         }

@@ -1,4 +1,5 @@
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 
 namespace PhaseA.Platform.Runs;
 
@@ -216,109 +217,38 @@ public static class GameTypeRouteProfiles
     public static bool IsRpgProject(ProjectSnapshot project)
     {
         ArgumentNullException.ThrowIfNull(project);
-        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
-        return text.Contains("rpg", StringComparison.Ordinal) ||
-               text.Contains("dragon quest", StringComparison.Ordinal) ||
-               text.Contains("角色扮演", StringComparison.Ordinal) ||
-               text.Contains("勇者斗恶龙", StringComparison.Ordinal);
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        return string.Equals(evidence.MatchedGameTypeId, "rpg", StringComparison.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("rpg", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("role-playing", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("jrpg", StringComparer.Ordinal);
     }
 
     public static bool IsSurvivorsLikeProject(ProjectSnapshot project)
     {
         ArgumentNullException.ThrowIfNull(project);
-        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
-        return text.Contains("vampire survivors", StringComparison.Ordinal) ||
-               text.Contains("survivors like", StringComparison.Ordinal) ||
-               text.Contains("survivors-like", StringComparison.Ordinal) ||
-               text.Contains("survivor like", StringComparison.Ordinal) ||
-               text.Contains("survivor-like", StringComparison.Ordinal) ||
-               text.Contains("survivorslike", StringComparison.Ordinal) ||
-               text.Contains("bullet heaven", StringComparison.Ordinal) ||
-               text.Contains("auto shooter", StringComparison.Ordinal) ||
-               text.Contains("arena survival", StringComparison.Ordinal) ||
-               text.Contains("horde survival", StringComparison.Ordinal) ||
-               text.Contains("\u5438\u8840\u9b3c\u5e78\u5b58\u8005", StringComparison.Ordinal) ||
-               text.Contains("\u5e78\u5b58\u8005like", StringComparison.Ordinal) ||
-               text.Contains("\u5e78\u5b58\u8005\u7c7b", StringComparison.Ordinal) ||
-               text.Contains("\u5272\u8349", StringComparison.Ordinal) ||
-               text.Contains("\u8089\u9e3d\u5272\u8349", StringComparison.Ordinal);
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        return string.Equals(evidence.MatchedGameTypeId, "survivorslike", StringComparison.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("survivorslike", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("vampire-survivors", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("bullet-heaven", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("auto-shooter", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("arena-survival", StringComparer.Ordinal) ||
+               evidence.NormalizedGenreTags.Contains("horde-survival", StringComparer.Ordinal);
     }
 
     public static bool IsDeckbuilderProject(ProjectSnapshot project)
     {
         ArgumentNullException.ThrowIfNull(project);
-        var text = string.Join(" ", project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName).ToLowerInvariant();
-        var explicitDeckbuilder =
-            text.Contains("deckbuilder", StringComparison.Ordinal) ||
-            text.Contains("deck builder", StringComparison.Ordinal) ||
-            text.Contains("deck-building", StringComparison.Ordinal) ||
-            text.Contains("deck building", StringComparison.Ordinal) ||
-            text.Contains("deckbuilding", StringComparison.Ordinal) ||
-            text.Contains("deck-building roguelike", StringComparison.Ordinal) ||
-            text.Contains("deckbuilding roguelike", StringComparison.Ordinal) ||
-            text.Contains("roguelike deckbuilder", StringComparison.Ordinal) ||
-            text.Contains("roguelite deckbuilder", StringComparison.Ordinal) ||
-            text.Contains("card battler", StringComparison.Ordinal) ||
-            text.Contains("card builder", StringComparison.Ordinal) ||
-            text.Contains("card roguelike", StringComparison.Ordinal) ||
-            text.Contains("card roguelite", StringComparison.Ordinal) ||
-            text.Contains("slay the spire", StringComparison.Ordinal) ||
-            text.Contains("monster train", StringComparison.Ordinal) ||
-            text.Contains("inscryption", StringComparison.Ordinal) ||
-            text.Contains("balatro", StringComparison.Ordinal) ||
-            text.Contains("wildfrost", StringComparison.Ordinal) ||
-            text.Contains("griftlands", StringComparison.Ordinal) ||
-            text.Contains("across the obelisk", StringComparison.Ordinal) ||
-            text.Contains("vault of the void", StringComparison.Ordinal) ||
-            text.Contains("roguebook", StringComparison.Ordinal) ||
-            text.Contains("cobalt core", StringComparison.Ordinal) ||
-            text.Contains("dicey dungeons", StringComparison.Ordinal) ||
-            text.Contains("night of full moon", StringComparison.Ordinal) ||
-            text.Contains("\u5361\u724c\u6784\u7b51", StringComparison.Ordinal) ||
-            text.Contains("\u5361\u724c\u6784\u5efa", StringComparison.Ordinal) ||
-            text.Contains("\u6784\u7b51\u5361\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u7b51", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u5efa", StringComparison.Ordinal) ||
-            text.Contains("\u6784\u5efa\u724c\u7ec4", StringComparison.Ordinal) ||
-            text.Contains("\u6784\u7b51\u724c\u7ec4", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u5efa\u5f0f", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u7b51\u5f0f", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u5efa\u5f0f\u7c7brogue", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4\u6784\u7b51\u5f0f\u7c7brogue", StringComparison.Ordinal) ||
-            text.Contains("\u8089\u9e3d\u5361\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u5361\u724c\u8089\u9e3d", StringComparison.Ordinal) ||
-            text.Contains("\u5361\u724c\u7c7brogue", StringComparison.Ordinal) ||
-            text.Contains("\u722c\u5854\u5361\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u6740\u622e\u5c16\u5854", StringComparison.Ordinal) ||
-            text.Contains("\u602a\u7269\u706b\u8f66", StringComparison.Ordinal) ||
-            text.Contains("\u90aa\u6076\u51a5\u523b", StringComparison.Ordinal) ||
-            text.Contains("\u5c0f\u4e11\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u6708\u5706\u4e4b\u591c", StringComparison.Ordinal) ||
-            text.Contains("\u5938\u8d8a\u65b9\u5c16\u7891", StringComparison.Ordinal);
-        if (explicitDeckbuilder)
-        {
-            return true;
-        }
-
-        var cardGameTaxonomy =
-            text.Contains("card-game", StringComparison.Ordinal) ||
-            text.Contains("card game", StringComparison.Ordinal) ||
-            text.Contains("\u5361\u724c\u6e38\u620f", StringComparison.Ordinal);
-        var deckbuildingContext =
-            text.Contains("deck", StringComparison.Ordinal) ||
-            text.Contains("draft", StringComparison.Ordinal) ||
-            text.Contains("hand", StringComparison.Ordinal) ||
-            text.Contains("discard", StringComparison.Ordinal) ||
-            text.Contains("draw pile", StringComparison.Ordinal) ||
-            text.Contains("roguelike", StringComparison.Ordinal) ||
-            text.Contains("roguelite", StringComparison.Ordinal) ||
-            text.Contains("\u724c\u7ec4", StringComparison.Ordinal) ||
-            text.Contains("\u624b\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u5f03\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u62bd\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u9009\u724c", StringComparison.Ordinal) ||
-            text.Contains("\u6784\u7b51", StringComparison.Ordinal);
-        return cardGameTaxonomy && deckbuildingContext;
+        var tags = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).NormalizedGenreTags;
+        return tags.Contains("deckbuilder", StringComparer.Ordinal) ||
+               tags.Contains("deck-building", StringComparer.Ordinal) ||
+               tags.Contains("deckbuilding", StringComparer.Ordinal) ||
+               tags.Contains("deck-builder", StringComparer.Ordinal) ||
+               tags.Contains("roguelike-deckbuilder", StringComparer.Ordinal) ||
+               tags.Contains("card-battler", StringComparer.Ordinal) ||
+               tags.Contains("card-roguelike", StringComparer.Ordinal) ||
+               (tags.Contains("card", StringComparer.Ordinal) && tags.Contains("roguelike", StringComparer.Ordinal));
     }
 
     public static readonly GameTypeRouteProfile Rpg = new(

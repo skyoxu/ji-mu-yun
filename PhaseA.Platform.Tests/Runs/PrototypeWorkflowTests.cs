@@ -2076,7 +2076,12 @@ public sealed class PrototypeWorkflowTests : IDisposable
     private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return (accountId, result.ProjectId!);
     }
@@ -2114,9 +2119,82 @@ public sealed class PrototypeWorkflowTests : IDisposable
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string gameName = "Demo Game", string gameTypeSource = "勇者斗恶龙")
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return result.ProjectId!;
+    }
+
+    private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var matched = ResolveMatchedGameType(gameTypeSource);
+            var tags = TagsFor(matched);
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
+                string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                tags,
+                [],
+                tags,
+                tags,
+                matched,
+                string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
+                string.IsNullOrWhiteSpace(matched) ? 0 : 20,
+                [],
+                "",
+                "test",
+                now,
+                now));
+        }
+
+        private static string ResolveMatchedGameType(string gameTypeSource)
+        {
+            var text = gameTypeSource.ToLowerInvariant();
+            if (ContainsAny(text, "survivors", "vampire", "bullet heaven", "arena survival", "horde survival"))
+            {
+                return "survivorslike";
+            }
+
+            if (ContainsAny(text, "card", "deck", "tcg", "ccg", "slay the spire", "balatro"))
+            {
+                return "card-game";
+            }
+
+            if (ContainsAny(text, "roguelike", "roguelite", "procedural", "permadeath"))
+            {
+                return "roguelike";
+            }
+
+            return "rpg";
+        }
+
+        private static string[] TagsFor(string matched)
+        {
+            return matched switch
+            {
+                "survivorslike" => ["survivorslike", "vampire-survivors", "bullet-heaven", "arena-survival"],
+                "card-game" => ["card", "deck-building", "card-game", "roguelike"],
+                "roguelike" => ["roguelike", "roguelite", "procedural", "permadeath"],
+                "rpg" => ["rpg", "role-playing", "jrpg"],
+                _ => []
+            };
+        }
+
+        private static bool ContainsAny(string text, params string[] needles)
+        {
+            return needles.Any(needle => text.Contains(needle, StringComparison.Ordinal));
+        }
     }
 
     private static void SeedRepoRpgTemplate(string repoRoot)

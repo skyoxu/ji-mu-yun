@@ -1,7 +1,10 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace PhaseA.Platform.Projects;
 
@@ -13,12 +16,14 @@ public sealed class ProjectCreationService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly ProjectCreationConcurrencyLimiter _creationConcurrencyLimiter;
+    private readonly IProjectGameTypeMatchService _gameTypeMatchService;
+    private readonly ILogger<ProjectCreationService>? _logger;
 
     public ProjectCreationService(
         PhaseAMetadataStore metadataStore,
         PhaseAPlatformOptions options,
         ProjectRuleCatalog ruleCatalog)
-        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new ProjectCreationConcurrencyLimiter())
+        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new ProjectCreationConcurrencyLimiter(), ProjectGameTypeMatchService.Offline(options))
     {
     }
 
@@ -28,7 +33,9 @@ public sealed class ProjectCreationService
         ProjectRuleCatalog ruleCatalog,
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? routeStateWriter = null,
-        ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null)
+        ProjectCreationConcurrencyLimiter? creationConcurrencyLimiter = null,
+        IProjectGameTypeMatchService? gameTypeMatchService = null,
+        ILogger<ProjectCreationService>? logger = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -36,6 +43,8 @@ public sealed class ProjectCreationService
         _workspaceSeeder = workspaceSeeder;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _creationConcurrencyLimiter = creationConcurrencyLimiter ?? new ProjectCreationConcurrencyLimiter();
+        _gameTypeMatchService = gameTypeMatchService ?? ProjectGameTypeMatchService.Offline(options);
+        _logger = logger;
     }
 
     public async Task<ProjectCreationResult> CreateProjectAsync(
@@ -69,8 +78,16 @@ public sealed class ProjectCreationService
             return ProjectCreationResult.Failure("unknown_project_rule");
         }
 
+        var concurrency = await _creationConcurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
+        if (concurrency.Lease is null)
+        {
+            return ProjectCreationResult.Failure(concurrency.FailureCode ?? "project_creation_concurrency_limit_exceeded");
+        }
+
+        await using var lease = concurrency.Lease;
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(_options.HostedWorkspaceRoot, accountId, projectId);
+        var gameTypeMatch = await ResolveGameTypeMatchAsync(request.GameTypeSource.Trim(), cancellationToken);
 
         var command = new ProjectCreationCommand(
             projectId,
@@ -78,6 +95,7 @@ public sealed class ProjectCreationService
             ProjectName: string.IsNullOrWhiteSpace(request.ProjectName) ? request.GameName.Trim() : request.ProjectName.Trim(),
             GameName: request.GameName.Trim(),
             GameTypeSource: request.GameTypeSource.Trim(),
+            GameTypeMatchJson: gameTypeMatch.ToJson(),
             TemplateRuleId: rule.Id,
             LlmBindingRequired: rule.LlmBindingRequired,
             AllowedWorkflows: rule.AllowedWorkflows,
@@ -86,13 +104,6 @@ public sealed class ProjectCreationService
             RuntimePath: layout.RuntimePath,
             MetaPath: layout.MetaPath);
 
-        var concurrency = await _creationConcurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
-        if (concurrency.Lease is null)
-        {
-            return ProjectCreationResult.Failure(concurrency.FailureCode ?? "project_creation_concurrency_limit_exceeded");
-        }
-
-        await using var lease = concurrency.Lease;
         var result = await _metadataStore.CreateProjectAsync(command, cancellationToken);
         if (!result.Succeeded)
         {
@@ -131,7 +142,56 @@ public sealed class ProjectCreationService
             return ProjectCreationResult.Failure("project_creation_failed");
         }
 
+        if (!gameTypeMatch.IsMatched)
+        {
+            await RecordGameTypeMatchFailureBestEffortAsync(new ProjectGameTypeMatchFailureCommand(
+                accountId,
+                projectId,
+                command.ProjectName,
+                command.GameName,
+                command.GameTypeSource,
+                gameTypeMatch.Status,
+                gameTypeMatch.StatusReason,
+                gameTypeMatch.ReferenceQuery,
+                JsonSerializer.Serialize(gameTypeMatch.NormalizedGenreTags, ProjectGameTypeMatchEvidence.JsonOptions),
+                JsonSerializer.Serialize(gameTypeMatch.CandidateScores, ProjectGameTypeMatchEvidence.JsonOptions),
+                gameTypeMatch.MissingGuidePath), cancellationToken);
+        }
+
         return result;
+    }
+
+    private async Task RecordGameTypeMatchFailureBestEffortAsync(
+        ProjectGameTypeMatchFailureCommand failure,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _metadataStore.RecordProjectGameTypeMatchFailureAsync(failure, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(
+                ex,
+                "Failed to record game type match failure for project {ProjectId}.",
+                failure.ProjectId);
+        }
+    }
+
+    private async Task<ProjectGameTypeMatchEvidence> ResolveGameTypeMatchAsync(string gameTypeSource, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _gameTypeMatchService.ResolveAsync(gameTypeSource, cancellationToken);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return ProjectGameTypeMatchEvidence.Empty("game_type_match_cancelled");
+        }
+        catch (Exception)
+        {
+            return ProjectGameTypeMatchEvidence.Empty("game_type_match_failed");
+        }
     }
 
     public async Task<ProjectDeletionResult> DeleteProjectAsync(

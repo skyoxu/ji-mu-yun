@@ -2,6 +2,7 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 
 namespace PhaseA.Platform.Runs;
 
@@ -253,7 +254,10 @@ public sealed class GameDesignSceneRouteService
         - Project id: {{project.ProjectId}}
         - Game name: {{project.GameName}}
         - Project name: {{project.Name}}
-        - Game type source: {{project.GameTypeSource}}
+        - Game type source (raw user input, do not use for game-types.csv matching): {{project.GameTypeSource}}
+        - Matched game type id: {{ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).MatchedGameTypeId}}
+        - Normalized Steam genre tags: {{string.Join(", ", ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).NormalizedGenreTags)}}
+        - Matched guide path: {{ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).MatchedGuidePath}}
         - Template rule id: {{project.TemplateRuleId}}
 
         User GDD raw material:
@@ -263,7 +267,7 @@ public sealed class GameDesignSceneRouteService
         {{FormatAnswers(answers)}}
 
         Requirements:
-        - Infer only from the project game type/reference direction and the user's GDD form answers.
+        - Infer from the matched game type evidence, Steam English genre tags, and the user's GDD form answers.
         - Distinguish player-facing experience states from Godot .tscn files. Do not force one .tscn per state.
         - Prefer a multi-scene route when the genre commonly needs map/combat/reward, route/combat/reward, build/wave/reward, arena/upgrade/summary, or hub/mission/summary states.
         - Keep M1 tight: mark only the scenes required for the first playable loop as m1Required=true.
@@ -656,9 +660,10 @@ public sealed class GameDesignSceneRouteService
 
     private static string GameType(ProjectSnapshot project)
     {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
         return string.Join(
             " ",
-            new[] { project.GameTypeSource, project.TemplateRuleId, project.Name, project.GameName }
+            new[] { evidence.MatchedGameTypeId, string.Join(" ", evidence.NormalizedGenreTags), project.TemplateRuleId }
                 .Where(value => !string.IsNullOrWhiteSpace(value)));
     }
 

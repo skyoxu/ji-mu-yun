@@ -1286,7 +1286,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         var repairRequest = new PrototypeWorkflowRequest(
             Slug: effectiveSlug,
             GameName: project.GameName,
-            GameType: NormalizeGameType(project.GameTypeSource),
+            GameType: ResolveCanonicalGameType(project),
             GameTypeSource: project.GameTypeSource,
             Hypothesis: "Repair previous failed prototype workflow.",
             CorePlayerFantasy: "Repair previous failed prototype workflow.",
@@ -2873,11 +2873,11 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(request);
 
-        var normalizedGameType = NormalizeGameType(project.GameTypeSource);
+        var normalizedGameType = ResolveCanonicalGameType(project);
         return request with
         {
             GameName = PreferProjectText(request.GameName, project.GameName),
-            GameType = PreferProjectText(request.GameType, normalizedGameType),
+            GameType = FirstNonEmpty(normalizedGameType, NormalizeGameType(request.GameType)),
             GameTypeSource = PreferProjectText(request.GameTypeSource, project.GameTypeSource)
         };
     }
@@ -2966,7 +2966,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         return new PrototypeWorkflowRequest(
             Slug: slug,
             GameName: FirstNonEmpty(project.GameName, title),
-            GameType: NormalizeGameType(project.GameTypeSource),
+            GameType: ResolveCanonicalGameType(project),
             GameTypeSource: project.GameTypeSource,
             Hypothesis: $"以当前项目 GDD 和 M1 spec 为设计来源，完成 M1 首个可玩模块；这一步同时承担游戏场景创建，验证 {FirstNonEmpty(title, project.GameName, project.Name)} 的基本操作、场景和首轮手感。",
             CorePlayerFantasy: TrimText(FirstNonEmpty(ExtractSection(gddText, "玩家幻想", "体验", "风格", "参考游戏", "Player Fantasy"), summary), 700),
@@ -3155,6 +3155,12 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         }
     }
 
+    private static string ResolveCanonicalGameType(ProjectSnapshot project)
+    {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        return NormalizeGameType(evidence.MatchedGameTypeId) ?? "";
+    }
+
     private static string? NormalizeGameType(string? gameTypeSource)
     {
         if (string.IsNullOrWhiteSpace(gameTypeSource))
@@ -3162,13 +3168,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             return null;
         }
 
-        var lowered = gameTypeSource.Trim().ToLowerInvariant();
-        if (lowered.Contains("rpg", StringComparison.Ordinal) || lowered.Contains("角色扮演", StringComparison.Ordinal) || lowered.Contains("勇者斗恶龙", StringComparison.Ordinal))
-        {
-            return "rpg";
-        }
-
-        return null;
+        var lowered = Regex.Replace(gameTypeSource.Trim().ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+        return string.IsNullOrWhiteSpace(lowered) ? null : lowered;
     }
 
     private void EnsureTemplateManifestExistsForGameType(PrototypeWorkflowRequest request)

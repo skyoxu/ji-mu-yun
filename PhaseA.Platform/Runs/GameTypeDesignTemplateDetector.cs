@@ -83,6 +83,10 @@ internal static class GameTypeDesignTemplateDetector
 
     private static readonly IReadOnlyList<ExplicitGameplayTemplateRule> ExplicitGameplayTemplateRules =
     [
+        new("survivorslike",
+            ["survivorslike", "survivor-like", "vampire survivors", "bullet heaven", "bullet-heaven", "auto shooter", "auto-shooter", "arena survival", "horde survival"],
+            ["survivorslike"],
+            [["survivor", "like"], ["vampire", "survivors"], ["bullet", "heaven"], ["auto", "shooter"], ["arena", "survival"], ["horde", "survival"]]),
         new("roguelike",
             ["随机地城", "随机地下城", "肉鸽", "类rogue", "死亡保留", "死亡重来", "roguelike", "roguelite"],
             ["roguelike", "roguelite"],

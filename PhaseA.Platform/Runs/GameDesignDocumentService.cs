@@ -1523,13 +1523,14 @@ public sealed class GameDesignDocumentService
         IReadOnlyList<TextAttachment> historicalAttachments)
     {
         var catalog = new BmadGameTypeDesignCatalog(_options);
-        var direct = catalog.Find(project.GameTypeSource);
+        var matchEvidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        var direct = catalog.Find(matchEvidence.MatchedGameTypeId);
         if (direct is not null)
         {
             return new SelectedGameTypeDesignTemplate(
                 direct,
-                "project.game_type_source",
-                $"Project game type '{project.GameTypeSource}' matched template '{direct.Id}'.");
+                "project.game_type_match",
+                $"Project game type evidence matched template '{direct.Id}' from Steam genre tags.");
         }
 
         var gameplayText = BuildGameplayTemplateMatchText(project, message, memorySummary, chatMessages, currentAttachments, historicalAttachments);
@@ -1569,8 +1570,8 @@ public sealed class GameDesignDocumentService
 
         return new SelectedGameTypeDesignTemplate(
             best.Entry,
-            "project_context_keyword_match",
-            $"Project input and references matched template '{best.Entry.Id}' with score {best.Score}.");
+            "gdd_content_keyword_match",
+            $"GDD input and references matched template '{best.Entry.Id}' with score {best.Score}.");
     }
 
     private static string BuildTemplateMatchText(

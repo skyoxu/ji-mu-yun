@@ -1169,6 +1169,7 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(create.ProjectName);
         ArgumentException.ThrowIfNullOrWhiteSpace(create.GameName);
         ArgumentException.ThrowIfNullOrWhiteSpace(create.GameTypeSource);
+        ArgumentException.ThrowIfNullOrWhiteSpace(create.GameTypeMatchJson);
         ArgumentException.ThrowIfNullOrWhiteSpace(create.TemplateRuleId);
         ArgumentException.ThrowIfNullOrWhiteSpace(create.WorkspaceRootPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(create.RepoPath);
@@ -1209,6 +1210,7 @@ public sealed class PhaseAMetadataStore
                     allowed_workflows_json,
                     bootstrap_status,
                     bootstrap_error,
+                    game_type_match_json,
                     created_utc,
                     last_activity_utc)
                 VALUES (
@@ -1222,6 +1224,7 @@ public sealed class PhaseAMetadataStore
                     $allowed_workflows_json,
                     'running',
                     NULL,
+                    $game_type_match_json,
                     $created_utc,
                     $created_utc);
                 """;
@@ -1233,6 +1236,7 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$template_rule_id", create.TemplateRuleId);
             command.Parameters.AddWithValue("$llm_binding_required", create.LlmBindingRequired ? 1 : 0);
             command.Parameters.AddWithValue("$allowed_workflows_json", allowedWorkflowsJson);
+            command.Parameters.AddWithValue("$game_type_match_json", create.GameTypeMatchJson);
             command.Parameters.AddWithValue("$created_utc", createdUtc);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
@@ -1283,6 +1287,7 @@ public sealed class PhaseAMetadataStore
                 p.allowed_workflows_json,
                 p.bootstrap_status,
                 p.bootstrap_error,
+                p.game_type_match_json,
                 w.id,
                 w.root_path,
                 w.repo_path,
@@ -1311,11 +1316,12 @@ public sealed class PhaseAMetadataStore
             reader.GetString(7),
             reader.GetString(8),
             reader.IsDBNull(9) ? null : reader.GetString(9),
-            reader.GetString(10),
             reader.GetString(11),
             reader.GetString(12),
             reader.GetString(13),
-            reader.GetString(14));
+            reader.GetString(14),
+            reader.GetString(15),
+            reader.GetString(10));
     }
 
     public async Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
@@ -1337,7 +1343,8 @@ public sealed class PhaseAMetadataStore
                 p.bootstrap_error,
                 w.root_path,
                 p.created_utc,
-                COALESCE(p.last_activity_utc, p.created_utc) AS last_activity_utc
+                COALESCE(p.last_activity_utc, p.created_utc) AS last_activity_utc,
+                p.game_type_match_json
             FROM projects p
             INNER JOIN workspaces w ON w.project_id = p.id
             WHERE p.account_id = $account_id
@@ -1360,7 +1367,8 @@ public sealed class PhaseAMetadataStore
                 reader.IsDBNull(7) ? null : reader.GetString(7),
                 reader.GetString(8),
                 reader.GetString(9),
-                reader.GetString(10)));
+                reader.GetString(10),
+                reader.GetString(11)));
         }
 
         return projects;
@@ -1383,6 +1391,7 @@ public sealed class PhaseAMetadataStore
                 p.allowed_workflows_json,
                 p.bootstrap_status,
                 p.bootstrap_error,
+                p.game_type_match_json,
                 w.id,
                 w.root_path,
                 w.repo_path,
@@ -1408,11 +1417,12 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(7),
                 reader.GetString(8),
                 reader.IsDBNull(9) ? null : reader.GetString(9),
-                reader.GetString(10),
                 reader.GetString(11),
                 reader.GetString(12),
                 reader.GetString(13),
-                reader.GetString(14)));
+                reader.GetString(14),
+                reader.GetString(15),
+                reader.GetString(10)));
         }
 
         return projects;
@@ -1656,6 +1666,119 @@ public sealed class PhaseAMetadataStore
             reader.GetString(7),
             reader.GetString(8),
             reader.GetString(9));
+    }
+
+    public async Task RecordProjectGameTypeMatchFailureAsync(
+        ProjectGameTypeMatchFailureCommand failure,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(failure);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.AccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.ProjectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.ProjectName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.GameName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.MatchStatus);
+        ArgumentException.ThrowIfNullOrWhiteSpace(failure.StatusReason);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_game_type_match_failures (
+                id,
+                account_id,
+                project_id,
+                project_name,
+                game_name,
+                game_type_source,
+                match_status,
+                status_reason,
+                reference_query,
+                normalized_genre_tags_json,
+                candidate_scores_json,
+                missing_guide_path,
+                created_utc)
+            VALUES (
+                $id,
+                $account_id,
+                $project_id,
+                $project_name,
+                $game_name,
+                $game_type_source,
+                $match_status,
+                $status_reason,
+                $reference_query,
+                $normalized_genre_tags_json,
+                $candidate_scores_json,
+                $missing_guide_path,
+                $created_utc);
+            """;
+        command.Parameters.AddWithValue("$id", NewId());
+        command.Parameters.AddWithValue("$account_id", failure.AccountId);
+        command.Parameters.AddWithValue("$project_id", failure.ProjectId);
+        command.Parameters.AddWithValue("$project_name", failure.ProjectName);
+        command.Parameters.AddWithValue("$game_name", failure.GameName);
+        command.Parameters.AddWithValue("$game_type_source", failure.GameTypeSource);
+        command.Parameters.AddWithValue("$match_status", failure.MatchStatus);
+        command.Parameters.AddWithValue("$status_reason", failure.StatusReason);
+        command.Parameters.AddWithValue("$reference_query", failure.ReferenceQuery);
+        command.Parameters.AddWithValue("$normalized_genre_tags_json", failure.NormalizedGenreTagsJson);
+        command.Parameters.AddWithValue("$candidate_scores_json", failure.CandidateScoresJson);
+        command.Parameters.AddWithValue("$missing_guide_path", failure.MissingGuidePath);
+        command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchFailuresForAdminAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+                id,
+                account_id,
+                project_id,
+                project_name,
+                game_name,
+                game_type_source,
+                match_status,
+                status_reason,
+                reference_query,
+                normalized_genre_tags_json,
+                candidate_scores_json,
+                missing_guide_path,
+                created_utc
+            FROM project_game_type_match_failures
+            ORDER BY created_utc DESC, rowid DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$limit", boundedLimit);
+
+        var failures = new List<ProjectGameTypeMatchFailureSnapshot>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            failures.Add(new ProjectGameTypeMatchFailureSnapshot(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.GetString(9),
+                reader.GetString(10),
+                reader.GetString(11),
+                reader.GetString(12)));
+        }
+
+        return failures;
     }
 
     public async Task<string> CreateRunAsync(

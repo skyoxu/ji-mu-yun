@@ -2193,6 +2193,7 @@ public sealed class BrowserUiRenderer
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
                     <button id="openAdminRunDurationMetrics" class="ghost admin-only-action hidden">普通用户Run耗时</button>
                     <button id="openAdminChatAverageMetrics" class="ghost admin-only-action hidden">聊天平均响应</button>
+                    <button id="openAdminGameTypeMatchFailures" class="ghost admin-only-action hidden">类型匹配失败</button>
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
                 </div>
@@ -5490,6 +5491,11 @@ public sealed class BrowserUiRenderer
                 function openAdminChatAverageMetrics() {
                   if (state.role !== "admin") return;
                   location.href = "/admin/chat-average-metrics";
+                }
+
+                function openAdminGameTypeMatchFailures() {
+                  if (state.role !== "admin") return;
+                  location.href = "/admin/game-type-match-failures";
                 }
 
                 async function downloadAdminLlmUsageCsv() {
@@ -9210,6 +9216,7 @@ public sealed class BrowserUiRenderer
                 $("loadAdminRunMetrics").onclick = loadAdminRunMetrics;
                 $("openAdminRunDurationMetrics").onclick = openAdminRunDurationMetrics;
                 $("openAdminChatAverageMetrics").onclick = openAdminChatAverageMetrics;
+                $("openAdminGameTypeMatchFailures").onclick = openAdminGameTypeMatchFailures;
                 $("loadAccountAudit").onclick = loadAccountAudit;
                 $("downloadAccountAuditCsv").onclick = downloadAccountAuditCsv;
                 $("importDraft").onclick = importDraft;
@@ -11444,6 +11451,128 @@ public sealed class BrowserUiRenderer
             "chat",
             "普通用户聊天平均响应时长",
             "按普通用户聚合聊天 run，查看平均排队时长和平均响应时长。");
+    }
+
+    public string RenderAdminGameTypeMatchFailures()
+    {
+        return """
+            <!doctype html>
+            <html lang="zh-CN">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>类型匹配失败</title>
+              <style>
+                :root { --ink:#17211b; --muted:#66736b; --paper:#f7f2e8; --panel:#fffdf8; --line:#ded4c4; --accent:#0f6b57; --danger:#a2342f; }
+                body { margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink); background:linear-gradient(135deg,#fbf7ef,#efe5d3); }
+                main { max-width:92rem; margin:0 auto; padding:2rem 1rem 4rem; display:grid; gap:1rem; }
+                h1 { margin:0; font-size:clamp(2rem,5vw,4rem); letter-spacing:0; }
+                .card { background:var(--panel); border:1px solid var(--line); border-radius:1rem; padding:1rem; box-shadow:0 1rem 2.4rem rgba(57,43,24,.1); }
+                .toolbar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:end; }
+                label { display:grid; gap:.3rem; font-weight:700; }
+                input { border:1px solid var(--line); border-radius:.75rem; padding:.65rem .75rem; font:inherit; background:white; width:8rem; }
+                button { border:0; border-radius:.75rem; padding:.75rem 1rem; background:var(--accent); color:white; font:inherit; font-weight:700; cursor:pointer; }
+                button.secondary { background:#445049; }
+                table { width:100%; border-collapse:collapse; background:var(--panel); border-radius:1rem; overflow:hidden; }
+                th,td { text-align:left; padding:.7rem; border-bottom:1px solid var(--line); vertical-align:top; }
+                th { background:#efe5d3; white-space:nowrap; }
+                td { overflow-wrap:anywhere; }
+                code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.9em; }
+                .muted { color:var(--muted); }
+                .danger { color:var(--danger); }
+              </style>
+            </head>
+            <body>
+              <main>
+                <header>
+                  <h1>类型匹配失败</h1>
+                  <p class="muted">项目级 Steam 英文标签到 game-types.csv genre_tags 的匹配失败记录，用于维护 genre_tags 和新增 guide md。</p>
+                </header>
+                <section class="card toolbar">
+                  <label>数量上限
+                    <input id="limit" type="number" min="1" max="500" value="100">
+                  </label>
+                  <button id="load">加载</button>
+                  <button id="back" type="button" class="secondary">返回控制台</button>
+                </section>
+                <section id="summary" class="card muted">尚未加载。</section>
+                <section class="card">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>时间</th>
+                        <th>项目</th>
+                        <th>原始输入</th>
+                        <th>状态</th>
+                        <th>英文标签</th>
+                        <th>候选</th>
+                        <th>缺失文件</th>
+                      </tr>
+                    </thead>
+                    <tbody id="rows"><tr><td colspan="7" class="muted">暂无数据。</td></tr></tbody>
+                  </table>
+                </section>
+              </main>
+              <script>
+                const $ = id => document.getElementById(id);
+                const readBrowserCookie = name => {
+                  const prefix = `${encodeURIComponent(name)}=`;
+                  return document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(prefix))?.slice(prefix.length) || "";
+                };
+                const token = () => localStorage.getItem("phaseAAccessToken") || decodeURIComponent(readBrowserCookie("phaseAAccessToken") || "") || localStorage.getItem("phaseAAdminToken") || window.parent?.document?.getElementById?.("token")?.value?.trim?.() || "";
+                const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[ch]));
+                const parseJsonArray = value => {
+                  try {
+                    const parsed = JSON.parse(value || "[]");
+                    return Array.isArray(parsed) ? parsed : [];
+                  } catch {
+                    return [];
+                  }
+                };
+                async function api(path) {
+                  if (!token()) throw new Error("missing_token");
+                  const response = await fetch(path, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
+                  const payload = await response.json();
+                  if (!response.ok) throw new Error(payload.error || "request_failed");
+                  return payload;
+                }
+                function render(failures) {
+                  $("summary").className = "card";
+                  $("summary").innerHTML = `<strong>${escapeHtml(failures.length)}</strong> 条维护记录`;
+                  $("rows").innerHTML = failures.length ? failures.map(item => {
+                    const tags = parseJsonArray(item.normalizedGenreTagsJson).join(", ");
+                    const candidates = parseJsonArray(item.candidateScoresJson).map(candidate => `${candidate.gameTypeId || ""}:${candidate.score || 0} [${(candidate.matchedTags || []).join(", ")}]`).join("; ");
+                    return `
+                      <tr>
+                        <td>${escapeHtml(item.createdUtc)}</td>
+                        <td><strong>${escapeHtml(item.projectName)}</strong><br><span class="muted">${escapeHtml(item.gameName)} · ${escapeHtml(item.projectId)}</span></td>
+                        <td>${escapeHtml(item.gameTypeSource)}</td>
+                        <td><code>${escapeHtml(item.matchStatus)}</code><br><span class="muted">${escapeHtml(item.statusReason)}</span></td>
+                        <td>${escapeHtml(tags || "-")}</td>
+                        <td>${escapeHtml(candidates || "-")}</td>
+                        <td>${escapeHtml(item.missingGuidePath || "-")}</td>
+                      </tr>`;
+                  }).join("") : `<tr><td colspan="7" class="muted">暂无失败记录。</td></tr>`;
+                }
+                async function load() {
+                  try {
+                    $("summary").className = "card muted";
+                    $("summary").textContent = "加载中...";
+                    const limit = Math.max(1, Math.min(500, Number($("limit").value || 100)));
+                    const result = await api(`/api/admin/game-type-match-failures?limit=${encodeURIComponent(limit)}`);
+                    render(result.failures || []);
+                  } catch (error) {
+                    $("summary").className = "card danger";
+                    $("summary").textContent = error.message === "missing_token" ? "当前浏览器没有 token，请先回控制台登录。" : error.message;
+                  }
+                }
+                $("load").onclick = load;
+                $("back").onclick = () => { location.href = "/"; };
+                load();
+              </script>
+            </body>
+            </html>
+            """;
     }
 
     private static string RenderAdminRunMetricsPage(string mode, string title, string description)

@@ -34,8 +34,14 @@ builder.Services.AddSingleton(options);
 builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
 builder.Services.AddSingleton<ProjectRuleCatalog>();
 builder.Services.AddSingleton<GameTypeTemplateCatalog>();
+builder.Services.AddSingleton<GameTypeGuideCatalog>();
 builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
 builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
+builder.Services.AddHttpClient<ISteamGameTypeMetadataProvider, SteamGameTypeMetadataProvider>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(3);
+});
+builder.Services.AddSingleton<IProjectGameTypeMatchService, ProjectGameTypeMatchService>();
 builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
     options.MaxConcurrentProjectCreations,
     options.MaxConcurrentProjectCreationsPerAccount));
@@ -186,6 +192,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/admin/llm-usage" ||
         context.Request.Path == "/admin/run-duration-metrics" ||
         context.Request.Path == "/admin/chat-average-metrics" ||
+        context.Request.Path == "/admin/game-type-match-failures" ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/asset-preview", StringComparison.Ordinal) == true &&
          context.Request.Query.ContainsKey("ticket")) ||
@@ -439,6 +446,20 @@ app.MapGet("/api/admin/run-metrics", async (
     }
 
     return Results.Ok(await readback.GetAdminRunMetricsAsync(accountId, runType, limit ?? 500, cancellationToken));
+});
+
+app.MapGet("/api/admin/game-type-match-failures", async (
+    int? limit,
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await readback.GetAdminGameTypeMatchFailuresAsync(limit ?? 100, cancellationToken));
 });
 
 app.MapGet("/api/projects/{projectId}/runs", async (
@@ -1214,6 +1235,12 @@ app.MapGet("/admin/chat-average-metrics", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderAdminChatAverageMetrics(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/admin/game-type-match-failures", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminGameTypeMatchFailures(), "text/html; charset=utf-8");
 });
 
 app.MapGet("/projects/{projectId}", async (

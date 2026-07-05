@@ -838,11 +838,7 @@ public sealed class PrototypeUiOptimizationService
 
     private static string ResolveTemplateName(ProjectSnapshot project)
     {
-        var source = $"{project.GameTypeSource} {project.GameName} {project.Name}";
-        return source.Contains("rpg", StringComparison.OrdinalIgnoreCase) ||
-               source.Contains("jrpg", StringComparison.OrdinalIgnoreCase) ||
-               source.Contains("dragon quest", StringComparison.OrdinalIgnoreCase) ||
-               source.Contains("he-is-coming", StringComparison.OrdinalIgnoreCase)
+        return GameTypeRouteProfiles.IsRpgProject(project)
             ? "He-is-Coming"
             : "game-type-template";
     }

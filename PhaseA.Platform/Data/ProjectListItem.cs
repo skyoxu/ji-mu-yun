@@ -11,4 +11,5 @@ public sealed record ProjectListItem(
     string? BootstrapError,
     string WorkspaceRootPath,
     string CreatedUtc,
-    string LastActivityUtc);
+    string LastActivityUtc,
+    string GameTypeMatchJson = "{}");

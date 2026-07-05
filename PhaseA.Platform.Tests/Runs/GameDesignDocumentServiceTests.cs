@@ -395,6 +395,7 @@ public sealed class GameDesignDocumentServiceTests
     [InlineData("survival horror inventory pressure", "horror")]
     [InlineData("idle incremental offline income", "idle-incremental")]
     [InlineData("deck building card game", "card-game")]
+    [InlineData("vampire survivors bullet heaven arena survival", "survivorslike")]
     [InlineData("tower defense lane planning", "tower-defense")]
     [InlineData("metroidvania ability gates", "metroidvania")]
     [InlineData("visual novel branching dialogue", "visual-novel")]
@@ -1407,10 +1408,51 @@ public sealed class GameDesignDocumentServiceTests
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameType)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FakeGameTypeMatchService(gameType));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
+    }
+
+    private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        private readonly string _gameType;
+
+        public FakeGameTypeMatchService(string gameType)
+        {
+            _gameType = gameType;
+        }
+
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var matched = _gameType.Equals("RPG", StringComparison.OrdinalIgnoreCase) ? "rpg" : "";
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
+                string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                matched == "rpg" ? ["RPG", "JRPG"] : [],
+                [],
+                matched == "rpg" ? ["RPG"] : [],
+                matched == "rpg" ? ["rpg", "jrpg"] : [],
+                matched,
+                string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
+                string.IsNullOrWhiteSpace(matched) ? 0 : 20,
+                [],
+                "",
+                "test",
+                now,
+                now));
+        }
     }
 
     private static async Task<RunSnapshot> WaitForRunFinishedAsync(

@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 
 namespace PhaseA.Platform.Readback;
 
@@ -45,6 +47,12 @@ internal static class ProjectWebPreviewGameTypeCatalog
         }
 
         return "";
+    }
+
+    public static string ResolveProjectGameTypeId(ProjectSnapshot project)
+    {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        return ResolveKnownGameTypeId(evidence.MatchedGameTypeId);
     }
 
     public static string ResolveGameTypeGuide(string? gameTypeId)

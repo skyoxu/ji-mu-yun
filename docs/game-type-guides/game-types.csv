@@ -1,12 +1,12 @@
 id,name,description,genre_tags,fragment_file
 action-platformer,Action Platformer,"Side-scrolling or 3D platforming with combat mechanics","action,platformer,combat,movement",action-platformer.md
 puzzle,Puzzle,"Logic-based challenges and problem-solving","puzzle,logic,cerebral",puzzle.md
-rpg,RPG,"Character progression, stats, inventory, quests","rpg,stats,inventory,quests,narrative",rpg.md
+rpg,RPG,"Character progression, stats, inventory, quests","rpg,role-playing,jrpg,party-based,stats,inventory,quests,narrative",rpg.md
 strategy,Strategy,"Resource management, tactical decisions, long-term planning","strategy,tactics,resources,planning",strategy.md
 shooter,Shooter,"Projectile combat, aiming mechanics, arena/level design","shooter,combat,aiming,fps,tps",shooter.md
 adventure,Adventure,"Story-driven exploration and narrative","adventure,narrative,exploration,story",adventure.md
 simulation,Simulation,"Realistic systems, management, building","simulation,management,sandbox,systems",simulation.md
-roguelike,Roguelike,"Procedural generation, permadeath, run-based progression","roguelike,procedural,permadeath,runs",roguelike.md
+roguelike,Roguelike,"Procedural generation, permadeath, run-based progression","roguelike,roguelite,procedural,permadeath,runs",roguelike.md
 moba,MOBA,"Multiplayer team battles, hero/champion selection, lanes","moba,multiplayer,pvp,heroes,lanes",moba.md
 fighting,Fighting,"1v1 combat, combos, frame data, competitive","fighting,combat,competitive,combos,pvp",fighting.md
 racing,Racing,"Vehicle control, tracks, speed, lap times","racing,vehicles,tracks,speed",racing.md
@@ -14,8 +14,9 @@ sports,Sports,"Team-based or individual sports simulation","sports,teams,realist
 survival,Survival,"Resource gathering, crafting, persistent threats","survival,crafting,resources,danger",survival.md
 horror,Horror,"Atmosphere, tension, limited resources, fear mechanics","horror,atmosphere,tension,fear",horror.md
 idle-incremental,Idle/Incremental,"Passive progression, upgrades, automation","idle,incremental,automation,progression",idle-incremental.md
-card-game,Card Game,"Deck building, card mechanics, turn-based strategy","card,deck-building,strategy,turns",card-game.md
+card-game,Card Game,"Deck building, card mechanics, turn-based strategy","card,card-game,deck-building,deckbuilder,deckbuilding,card-battler,card-roguelike,strategy,turns",card-game.md
 tower-defense,Tower Defense,"Wave-based defense, tower placement, resource management","tower-defense,waves,placement,strategy",tower-defense.md
+survivorslike,Survivorslike,"Arena survival with auto-attacks, horde pressure, upgrades, and run summaries","survivorslike,vampire-survivors,bullet-heaven,auto-shooter,arena-survival,horde-survival,roguelike,roguelite",survivorslike.md
 metroidvania,Metroidvania,"Interconnected world, ability gating, exploration","metroidvania,exploration,abilities,interconnected",metroidvania.md
 visual-novel,Visual Novel,"Narrative choices, branching story, dialogue","visual-novel,narrative,choices,story",visual-novel.md
 rhythm,Rhythm,"Music synchronization, timing-based gameplay","rhythm,music,timing,beats",rhythm.md

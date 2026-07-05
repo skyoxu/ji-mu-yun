@@ -3722,7 +3722,10 @@ func collision_capsule(radius, height):
 
         var packageSizeBytes = new FileInfo(packagePath).Length;
         var packageSha256 = ComputeFileSha256(packagePath);
+        var projectGameTypeId = ProjectWebPreviewGameTypeCatalog.ResolveProjectGameTypeId(project);
         gameTypeId = FirstNonEmpty(
+            ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(gameTypeId, gameTypeGuide),
+            projectGameTypeId,
             ProjectWebPreviewGameTypeCatalog.ResolveGameTypeId(gameTypeId, gameTypeGuide, gameTypeSource, gameName, projectName),
             ProjectWebPreviewGameTypeCatalog.NormalizeGameTypeToken(gameTypeId));
         var catalogGameTypeGuide = ProjectWebPreviewGameTypeCatalog.ResolveGameTypeGuide(gameTypeId);

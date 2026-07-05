@@ -340,7 +340,7 @@ public sealed class PrototypeIterationPlanService
         var draft = await _metadataStore.GetProjectPrototypeDraftAsync(project.ProjectId, cancellationToken);
         var prototypeState = _routeStateWriter.ReadLatestPrototypeState(project);
         var projectExecutionGuide = _routeStateWriter.ReadOrCreateProjectExecutionGuide(project, prototypeContract);
-        var template = _templateCatalog?.Find(NormalizeGameType(project.GameTypeSource));
+        var template = _templateCatalog?.Find(ResolveCanonicalGameType(project));
 
         var deterministicFieldCoverage = BuildDeterministicFieldCoverage(draft);
         var fallback = new IterationPlanningContext(
@@ -1323,6 +1323,12 @@ public sealed class PrototypeIterationPlanService
     private static bool IsKnownJrpgCapability(string capabilityId)
     {
         return JrpgFirstLoopCapabilityIds.Contains(capabilityId);
+    }
+
+    private static string? ResolveCanonicalGameType(ProjectSnapshot project)
+    {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        return NormalizeGameType(evidence.MatchedGameTypeId);
     }
 
     private static string? NormalizeGameType(string? gameTypeSource)

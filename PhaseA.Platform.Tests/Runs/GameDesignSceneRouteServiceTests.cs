@@ -4,8 +4,10 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workspaces;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -242,10 +244,65 @@ public sealed class GameDesignSceneRouteServiceTests
         string accountId,
         string gameType)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FakeGameTypeMatchService(gameType));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
+    }
+
+    private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        private readonly string _source;
+
+        public FakeGameTypeMatchService(string source)
+        {
+            _source = source;
+        }
+
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var lower = _source.ToLowerInvariant();
+            var matched = lower.Contains("tower", StringComparison.Ordinal)
+                ? "tower-defense"
+                : lower.Contains("card", StringComparison.Ordinal) || lower.Contains("卡", StringComparison.Ordinal)
+                    ? "card-game"
+                    : lower.Contains("rpg", StringComparison.Ordinal)
+                        ? "rpg"
+                        : "";
+            var tags = matched switch
+            {
+                "tower-defense" => new[] { "tower-defense", "waves", "placement" },
+                "card-game" => new[] { "card", "deck-building", "roguelike" },
+                "rpg" => new[] { "rpg", "role-playing" },
+                _ => []
+            };
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
+                string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                tags,
+                [],
+                tags,
+                tags,
+                matched,
+                string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
+                string.IsNullOrWhiteSpace(matched) ? 0 : 20,
+                [],
+                "",
+                "test",
+                now,
+                now));
+        }
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)

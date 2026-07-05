@@ -15,4 +15,5 @@ public sealed record ProjectSnapshot(
     string WorkspaceRootPath,
     string RepoPath,
     string RuntimePath,
-    string MetaPath);
+    string MetaPath,
+    string GameTypeMatchJson = "{}");

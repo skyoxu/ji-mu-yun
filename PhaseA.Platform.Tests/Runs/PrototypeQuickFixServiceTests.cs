@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Skills;
@@ -3938,7 +3939,12 @@ public sealed class DqRpgPrototype
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, bool prototypeSucceeded, string gameTypeSource = "RPG")
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(
+            store,
+            options,
+            new ProjectRuleCatalog(),
+            new ProjectWorkspaceSeeder(options),
+            gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         if (prototypeSucceeded)
@@ -3955,6 +3961,73 @@ public sealed class DqRpgPrototype
         }
 
         return result.ProjectId!;
+    }
+
+    private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            var matched = ResolveMatchedGameType(gameTypeSource);
+            var tags = TagsFor(matched);
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+                1,
+                string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
+                string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
+                "steam",
+                gameTypeSource,
+                "1",
+                "Test App",
+                tags,
+                [],
+                tags,
+                tags,
+                matched,
+                string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
+                string.IsNullOrWhiteSpace(matched) ? 0 : 20,
+                [],
+                "",
+                "test",
+                now,
+                now));
+        }
+
+        private static string ResolveMatchedGameType(string gameTypeSource)
+        {
+            var text = gameTypeSource.ToLowerInvariant();
+            if (ContainsAny(text, "survivors", "vampire", "bullet heaven", "arena survival", "horde survival"))
+            {
+                return "survivorslike";
+            }
+
+            if (ContainsAny(text, "deck", "card", "slay the spire", "balatro"))
+            {
+                return "card-game";
+            }
+
+            if (ContainsAny(text, "rpg", "jrpg", "diablo", "dragon quest", "\u52c7\u8005\u6597\u6076\u9f99"))
+            {
+                return "rpg";
+            }
+
+            return "";
+        }
+
+        private static string[] TagsFor(string matched)
+        {
+            return matched switch
+            {
+                "survivorslike" => ["survivorslike", "vampire-survivors", "bullet-heaven", "arena-survival"],
+                "card-game" => ["card", "deck-building", "deckbuilder", "card-roguelike", "roguelike"],
+                "rpg" => ["rpg", "role-playing", "jrpg"],
+                _ => []
+            };
+        }
+
+        private static bool ContainsAny(string text, params string[] needles)
+        {
+            return needles.Any(needle => text.Contains(needle, StringComparison.Ordinal));
+        }
     }
 
     private static async Task CreateSucceededPrototypeRunAsync(PhaseAMetadataStore store, ProjectSnapshot project, string smokeScene)

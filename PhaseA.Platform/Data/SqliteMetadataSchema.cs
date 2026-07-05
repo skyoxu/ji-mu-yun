@@ -108,6 +108,13 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "projects",
+            "game_type_match_json",
+            "ALTER TABLE projects ADD COLUMN game_type_match_json TEXT NOT NULL DEFAULT '{}';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "runs",
             "exit_code",
             "ALTER TABLE runs ADD COLUMN exit_code INTEGER NULL;",
@@ -493,7 +500,27 @@ public static class SqliteMetadataSchema
             bootstrap_error TEXT NULL,
             created_utc TEXT NOT NULL,
             last_activity_utc TEXT NULL,
+            game_type_match_json TEXT NOT NULL DEFAULT '{}',
             FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_game_type_match_failures (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            project_name TEXT NOT NULL,
+            game_name TEXT NOT NULL,
+            game_type_source TEXT NOT NULL,
+            match_status TEXT NOT NULL,
+            status_reason TEXT NOT NULL,
+            reference_query TEXT NOT NULL,
+            normalized_genre_tags_json TEXT NOT NULL DEFAULT '[]',
+            candidate_scores_json TEXT NOT NULL DEFAULT '[]',
+            missing_guide_path TEXT NOT NULL DEFAULT '',
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
         );
         """,
         """
@@ -786,6 +813,8 @@ public static class SqliteMetadataSchema
         """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_projects_account_last_activity ON projects(account_id, last_activity_utc DESC, created_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_game_type_match_failures_created ON project_game_type_match_failures(created_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_game_type_match_failures_project ON project_game_type_match_failures(project_id, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_creation_failures_account_id ON project_creation_failures(account_id, created_utc);",
         "CREATE INDEX IF NOT EXISTS ix_runs_project_id_status ON runs(project_id, status);",
         "CREATE INDEX IF NOT EXISTS ix_runs_created_utc ON runs(created_utc);",
