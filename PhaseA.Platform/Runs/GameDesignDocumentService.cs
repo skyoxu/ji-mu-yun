@@ -152,7 +152,8 @@ public sealed class GameDesignDocumentService
             var persistedAttachments = await PersistAttachmentsAsync(projectRoot, runId, attachments, CancellationToken.None);
             var historicalAttachments = LoadHistoricalAttachments(projectRoot, persistedAttachments);
             var designTemplate = SelectGameTypeDesignTemplate(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments);
-            var prompt = BuildPrompt(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, designTemplate, now, outlineDraftRelativePath);
+            var sceneRoute = GameDesignSceneRouteService.NormalizeSubmittedSceneRoute(request.SceneRoute);
+            var prompt = BuildPrompt(project, message, sceneRoute, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, designTemplate, now, outlineDraftRelativePath);
             await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
 
             using var timeout = new CancellationTokenSource();
@@ -254,6 +255,7 @@ public sealed class GameDesignDocumentService
                 attachment_count = persistedAttachments.Count,
                 historical_attachment_count = historicalAttachments.Count,
                 chat_message_count = chatMessages.Count,
+                scene_route_scene_count = sceneRoute?.Scenes.Count ?? 0,
                 game_type_design_template = designTemplate is null
                     ? null
                     : new
@@ -1212,6 +1214,7 @@ public sealed class GameDesignDocumentService
     private static string BuildPrompt(
         ProjectSnapshot project,
         string message,
+        GameDesignSceneRouteDocument? sceneRoute,
         string? memorySummary,
         IReadOnlyList<ProjectChatMessageSnapshot> chatMessages,
         IReadOnlyList<TextAttachment> currentAttachments,
@@ -1239,10 +1242,11 @@ public sealed class GameDesignDocumentService
 
             Priority and conflict rules:
             1. Current user input has the highest priority.
-            2. Current uploaded TXT references have the next priority.
-            3. Historical uploaded TXT references have medium priority.
-            4. The 24-type game design template baseline is a low-priority scaffold used only to fill missing GDD dimensions.
-            5. Project memory, server chat history, and implicit LLM context have low priority.
+            2. User-confirmed scene route has the same high priority for scene count, scene roles, transitions, return paths, and state carried between scenes.
+            3. Current uploaded TXT references have the next priority.
+            4. Historical uploaded TXT references have medium priority.
+            5. The 24-type game design template baseline is a low-priority scaffold used only to fill missing GDD dimensions.
+            6. Project memory, server chat history, and implicit LLM context have low priority.
             If sources conflict, keep the higher-priority source and discard or ignore conflicting lower-priority details.
             Lay down the selected template baseline first only as reusable genre scaffolding; current user input and uploaded references below must override it.
 
@@ -1257,6 +1261,7 @@ public sealed class GameDesignDocumentService
             - Before using any game-type template signal, verify the reference game's likely public genre/tag signals from the provided context and your BMAD game design knowledge. Do not infer genre from title words alone. For example, a game named with "Tower" is not tower defense unless the gameplay/tag evidence says tower defense.
             - If reference-game title words conflict with the user's explicit gameplay genre, mechanics, controls, or loop, follow the user's explicit gameplay. Do not expose an incorrect template name or template rationale in user-facing title, summary, skeleton, or content.
             - The outline must include scene creation content: first playable scene, important rooms/boards/encounters, and how the player enters the scene.
+            - If a user-confirmed scene route is provided, the outline must preserve that route as the authoritative scene topology. Include scene count intent, entry scene, required M1 scenes, transitions, return paths, and state carried. Do not collapse a confirmed multi-scene route into one generic scene.
             - The outline must include keyboard and mouse basics when the target platform is PC, covering movement, aiming/selection, primary action, cancel/dodge/back, and skill/action hotkeys where relevant.
             - The outline must include the basic gameplay loop that the prototype skeleton should materialize first.
             - The outline must include lightweight UI/UX pre-design sufficient to guide feature development, not polished visual design: screen inventory, core player flow map, HUD information priority, input model, key UI states, rough layout/wireframe notes, localization baseline, and accessibility baseline.
@@ -1288,6 +1293,9 @@ public sealed class GameDesignDocumentService
 
             Current user input, highest priority:
             {{EmptyAsNone(message)}}
+
+            User-confirmed scene route, highest priority for scene topology:
+            {{FormatSceneRoute(sceneRoute)}}
 
             Current uploaded TXT references, second priority:
             {{FormatAttachments(currentAttachments)}}
@@ -1761,6 +1769,57 @@ public sealed class GameDesignDocumentService
             builder.AppendLine($"[{message.CreatedUtc}] {message.Role} ({message.Kind ?? "chat"}):");
             builder.AppendLine(TrimForPrompt(PublicChatSanitizer.Sanitize(message.Content), 3000));
             builder.AppendLine();
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private static string FormatSceneRoute(GameDesignSceneRouteDocument? sceneRoute)
+    {
+        if (sceneRoute is null || (sceneRoute.Scenes?.Count ?? 0) == 0)
+        {
+            return "(none)";
+        }
+
+        var builder = new StringBuilder();
+        builder.AppendLine($"SchemaVersion: {sceneRoute.SchemaVersion}");
+        builder.AppendLine($"SceneCountIntent: {sceneRoute.SceneCountIntent}");
+        builder.AppendLine($"EntryScene: {sceneRoute.EntryScene}");
+        builder.AppendLine("Scenes:");
+        foreach (var scene in (sceneRoute.Scenes ?? []).Take(12))
+        {
+            builder.AppendLine($"- {scene.Id}: {scene.Name}; role={scene.Role}; m1Required={scene.M1Required}; playerGoal={TrimForPrompt(scene.PlayerGoal, 240)}");
+        }
+
+        builder.AppendLine("Transitions:");
+        var transitions = sceneRoute.Transitions ?? [];
+        if (transitions.Count == 0)
+        {
+            builder.AppendLine("- (none)");
+        }
+        else
+        {
+            foreach (var transition in transitions.Take(24))
+            {
+                var returnsTo = string.IsNullOrWhiteSpace(transition.ReturnsTo) ? "none" : transition.ReturnsTo;
+                var stateCarriedValues = transition.StateCarried ?? [];
+                var stateCarried = stateCarriedValues.Count == 0
+                    ? "none"
+                    : string.Join(", ", stateCarriedValues.Take(12));
+                builder.AppendLine($"- {transition.From} -> {transition.To}; trigger={TrimForPrompt(transition.Trigger, 180)}; returnsTo={returnsTo}; stateCarried={stateCarried}");
+            }
+        }
+
+        var confirmation = sceneRoute.SingleSceneConfirmation ?? new GameDesignSingleSceneConfirmation(false, "");
+        builder.AppendLine($"SingleSceneConfirmation: allowed={confirmation.Allowed}; reason={TrimForPrompt(confirmation.Reason, 240)}");
+        var notes = sceneRoute.Notes ?? [];
+        if (notes.Count > 0)
+        {
+            builder.AppendLine("Notes:");
+            foreach (var note in notes.Take(8))
+            {
+                builder.AppendLine($"- {TrimForPrompt(note, 180)}");
+            }
         }
 
         return builder.ToString().Trim();

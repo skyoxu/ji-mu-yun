@@ -131,7 +131,7 @@ public sealed class BrowserUiRendererTests
         var gddQuestionFormScript = ExtractJavaScriptRange(
             source,
             "function currentProjectSnapshot(projectId = state.projectId)",
-            "async function startGddDocumentRoute(message)");
+            "async function startGddDocumentRoute(message, sceneRoute = null)");
 
         var script = $$"""
             const assert = require("assert");
@@ -198,6 +198,19 @@ public sealed class BrowserUiRendererTests
                   if (/aria-required="true"/.test(attrs)) input.attributes.set("aria-required", "true");
                   document.inputs.set(id, input);
                 }
+                const sceneRoutePattern = /<textarea\b([^>]*)>([\s\S]*?)<\/textarea>/g;
+                while ((match = sceneRoutePattern.exec(value)) !== null) {
+                  const attrs = match[1];
+                  if (!/data-gdd-scene-route-json="true"/.test(attrs)) continue;
+                  const input = new Element("sceneRouteJson");
+                  input.dataset.gddSceneRouteJson = "true";
+                  input.value = (match[2] || "")
+                    .replaceAll("&quot;", '"')
+                    .replaceAll("&lt;", "<")
+                    .replaceAll("&gt;", ">")
+                    .replaceAll("&amp;", "&");
+                  document.sceneRouteInput = input;
+                }
               }
               get innerHTML() { return this._innerHTML; }
               getAttribute(name) { return this.attributes.get(name) || null; }
@@ -214,9 +227,11 @@ public sealed class BrowserUiRendererTests
 
             const document = {
               inputs: new Map(),
+              sceneRouteInput: null,
               progressElement: null,
               querySelector(selector) {
                 if (selector === ".gdd-question-progress") return this.progressElement;
+                if (selector === `[data-gdd-scene-route-json="true"]`) return this.sceneRouteInput;
                 const match = /^\[data-gdd-question-input="([^"]+)"\]$/.exec(selector);
                 return match ? this.inputs.get(match[1]) || null : null;
               }
@@ -243,6 +258,9 @@ public sealed class BrowserUiRendererTests
               projects: [{ projectId: "p1", gameName: "Towerdemo2", name: "Tower Demo", gameTypeSource: "塔防", templateRuleId: "tower-defense" }],
               gddQuestionFormFields: [],
               gddQuestionFormSource: "",
+              gddQuestionFormAnswers: [],
+              gddQuestionFormMessage: "",
+              gddSceneRoute: null,
               gddQuestionFormRequestToken: 0,
               gddQuestionFormAbortController: null,
               gddQuestionFormProgressTimer: null,
@@ -271,6 +289,8 @@ public sealed class BrowserUiRendererTests
               if (visible) element.classList.remove("hidden");
               else element.classList.add("hidden");
             }
+            function projectRequestContext(projectId = state.projectId) { return { projectId, authEpoch: 0 }; }
+            function isCurrentProjectContext(context) { return context?.projectId === state.projectId; }
             function guardGlobalAction() { return true; }
             function callV2() {}
             function out(message) { global.lastOut = message; }
@@ -286,12 +306,14 @@ public sealed class BrowserUiRendererTests
 
             {{gddQuestionFormScript}}
 
+            loadGddSceneRouteDraft = async () => fallbackGddSceneRoute();
+
             let routeCalls = [];
             let routeShouldSucceed = false;
             let routeWaitForResolve = false;
             let resolveRoute;
-            async function startGddDocumentRoute(message) {
-              routeCalls.push(message);
+            async function startGddDocumentRoute(message, sceneRoute = null) {
+              routeCalls.push({ message, sceneRoute });
               if (routeWaitForResolve) {
                 return await new Promise(resolve => { resolveRoute = () => resolve(routeShouldSucceed); });
               }
@@ -347,15 +369,36 @@ public sealed class BrowserUiRendererTests
               assert.ok($("gddQuestionFormHint").textContent.includes("请先填写必填问题"));
               assert.strictEqual(focusedElement, document.inputs.get("reference_signal"));
 
+              document.inputs.get("reference_signal").value = "过期请求不会切换表单";
+              const originalSceneRouteLoader = loadGddSceneRouteDraft;
+              loadGddSceneRouteDraft = async () => {
+                state.projectId = "p2";
+                return fallbackGddSceneRoute();
+              };
+              await confirmGddQuestionForm();
+              assert.strictEqual($("gddQuestionForm").dataset.schema, "question-form");
+              assert.strictEqual(routeCalls.length, 0);
+              state.projectId = "p1";
+              loadGddSceneRouteDraft = originalSceneRouteLoader;
+              renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              setModalVisible("gddQuestionFormModal", true);
+
               document.inputs.get("reference_signal").value = "玩家修改后的参考标杆";
               routeShouldSucceed = false;
               await confirmGddQuestionForm();
+              assert.strictEqual(routeCalls.length, 0);
+              assert.strictEqual($("gddQuestionForm").dataset.schema, "scene-route");
+              assert.ok(document.sceneRouteInput.value.includes("build_phase"));
+              await confirmGddQuestionForm();
               assert.strictEqual(routeCalls.length, 1);
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
-              assert.strictEqual(document.inputs.get("reference_signal").value, "玩家修改后的参考标杆");
               assert.strictEqual($("confirmGddQuestionForm").disabled, false);
 
+              renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
+              setModalVisible("gddQuestionFormModal", true);
               document.inputs.get("reference_signal").value = "关闭前已经填写一半";
+              await confirmGddQuestionForm();
+              assert.strictEqual($("gddQuestionForm").dataset.schema, "scene-route");
               closeGddQuestionFormModal();
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
               renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
@@ -364,6 +407,8 @@ public sealed class BrowserUiRendererTests
 
               routeShouldSucceed = true;
               routeWaitForResolve = true;
+              await confirmGddQuestionForm();
+              assert.strictEqual($("gddQuestionForm").dataset.schema, "scene-route");
               const confirmPromise = confirmGddQuestionForm();
               await Promise.resolve();
               assert.strictEqual($("confirmGddQuestionForm").disabled, true);
@@ -373,7 +418,9 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual(routeCalls.length, 2);
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), true);
               assert.strictEqual($("cancelGddQuestionForm").disabled, false);
-              assert.ok(routeCalls[1].includes("GDD question-form raw material:"));
+              assert.ok(routeCalls[1].message.includes("GDD question-form raw material:"));
+              assert.strictEqual(routeCalls[1].sceneRoute.sceneCountIntent, "multi");
+              assert.strictEqual(routeCalls[1].sceneRoute.entryScene, "build_phase");
               renderGddQuestionForm({ fields: fallbackGddQuestionFormFields(), source: "agent" });
               assert.strictEqual(document.inputs.get("reference_signal").value, "Towerdemo2 的参考对象、体验目标和禁忌方向。");
             })().catch(error => {
@@ -2888,9 +2935,14 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("async function loadGddQuestionFormSchema(projectId, requestToken, signal)");
         html.Should().Contain("function openGddQuestionFormModal()");
         html.Should().Contain("function confirmGddQuestionForm()");
-        html.Should().Contain("function startGddDocumentRoute(message)");
+        html.Should().Contain("function startGddDocumentRoute(message, sceneRoute = null)");
         html.Should().Contain("/gdd/question-form");
+        html.Should().Contain("/gdd/scene-route");
+        html.Should().Contain("data-gdd-scene-route-json");
+        html.Should().Contain("state.gddSceneRoute");
+        html.Should().Contain("sceneRoute");
         html.Should().Contain("state.gddQuestionFormFields");
+        html.Should().Contain("state.gddQuestionFormAnswers");
         html.Should().Contain("gddQuestionFormRequestToken");
         html.Should().Contain("gddQuestionFormAbortController");
         html.Should().Contain("gddQuestionFormSchemaCache");
@@ -2914,6 +2966,7 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("writeGddQuestionFormSchemaCache");
         html.Should().Contain("GDD question-form raw material:");
         html.Should().Contain("Use these answers as authoritative raw material");
+        html.Should().Contain("确认场景路由并创建策划大纲");
         html.Should().Contain("missingRequired");
         html.Should().Contain("请先填写必填问题");
         html.Should().Contain("至少填写 4 个关键问题");
@@ -3766,6 +3819,28 @@ public sealed class BrowserUiRendererTests
         var nextRouteIndex = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/gdd\"", routeIndex, StringComparison.Ordinal);
         nextRouteIndex.Should().BeGreaterThan(routeIndex);
         var endpointSource = source[routeIndex..nextRouteIndex];
+        endpointSource.Should().Contain("result.Status == \"rate_limited\"");
+        endpointSource.Should().Contain("StatusCodes.Status429TooManyRequests");
+    }
+
+    [Fact]
+    public void Program_GddSceneRouteEndpointTranslatesConcurrencyLimit()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var routeIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/scene-route\"", StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/gdd\"", routeIndex, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        var endpointSource = source[routeIndex..nextRouteIndex];
+        endpointSource.Should().Contain("Results.NotFound(new { error = \"project_not_found\" })");
         endpointSource.Should().Contain("result.Status == \"rate_limited\"");
         endpointSource.Should().Contain("StatusCodes.Status429TooManyRequests");
     }

@@ -54,6 +54,7 @@
 - `runtime/phase-a/`：稳定启动、恢复、watchdog 和 Caddy 配置。
 - `logs/phase-a-innernet/`：本地运行时数据库、workspace、watchdog 和 runtime 证据；该目录是运行时生成证据，不是源码或稳定配置目录。
 - `scripts/python/phase_a_*.py`：Phase A ops、runtime、public、restore、prototype E2E 和 token drill 脚本。
+- GDD 创建流程先收集用户策划表单，再生成并让用户确认场景路由草案，最后把两份输入一起交给 GDD 路由生成大纲。
 
 Phase A 的原则是：平台负责 hosting、workspace、runner、artifact readback、browser/API 和恢复；仓库脚本继续拥有 workflow decision authority。
 

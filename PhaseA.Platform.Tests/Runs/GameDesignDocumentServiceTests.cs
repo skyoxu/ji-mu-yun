@@ -42,7 +42,8 @@ public sealed class GameDesignDocumentServiceTests
             new GameDesignDocumentRequest(
                 "Create a complete GDD.",
                 "gpt-5.4",
-                [new TextAttachment("reference.txt", "Reference file says the village hub matters.")]));
+                [new TextAttachment("reference.txt", "Reference file says the village hub matters.")],
+                ConfirmedSceneRoute()));
 
         result.Status.Should().Be("succeeded");
         result.RelativePath.Should().Be("docs/gdd/GDD.md");
@@ -61,6 +62,10 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("mandatory");
         runner.Commands[0].StandardInput.Should().Contain("reference game");
         runner.Commands[0].StandardInput.Should().Contain("scene creation content");
+        runner.Commands[0].StandardInput.Should().Contain("User-confirmed scene route");
+        runner.Commands[0].StandardInput.Should().Contain("SceneCountIntent: multi");
+        runner.Commands[0].StandardInput.Should().Contain("map -> combat");
+        runner.Commands[0].StandardInput.Should().Contain("Do not collapse a confirmed multi-scene route");
         runner.Commands[0].StandardInput.Should().Contain("keyboard and mouse basics");
         runner.Commands[0].StandardInput.Should().Contain("raw JSON draft file must be ASCII-only");
         runner.Commands[0].StandardInput.Should().Contain("json.dumps(..., ensure_ascii=True, indent=2)");
@@ -1379,6 +1384,25 @@ public sealed class GameDesignDocumentServiceTests
     private static Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
         return CreateProjectAsync(store, options, accountId, "RPG");
+    }
+
+    private static GameDesignSceneRouteDocument ConfirmedSceneRoute()
+    {
+        return new GameDesignSceneRouteDocument(
+            "gdd-scene-route.v1",
+            "multi",
+            "map",
+            [
+                new GameDesignSceneRouteScene("map", "探索地图", "hub", true, "选择遭遇并推进路线。"),
+                new GameDesignSceneRouteScene("combat", "战斗场景", "combat", true, "击败敌人并获得奖励。"),
+                new GameDesignSceneRouteScene("reward", "奖励结算", "reward", true, "选择奖励并返回地图。")
+            ],
+            [
+                new GameDesignSceneRouteTransition("map", "combat", "点击敌人节点", "reward", ["hp", "gold"]),
+                new GameDesignSceneRouteTransition("combat", "reward", "胜利", "map", ["hp", "loot"])
+            ],
+            new GameDesignSingleSceneConfirmation(false, "该类型需要地图、战斗和奖励状态。"),
+            ["用户已确认首版采用多场景体验状态。"]);
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameType)

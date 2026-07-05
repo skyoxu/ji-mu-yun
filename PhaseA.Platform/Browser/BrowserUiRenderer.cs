@@ -2439,7 +2439,7 @@ public sealed class BrowserUiRenderer
                 </div>
               </main>
               <script>
-                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddQuestionFormFields: [], gddQuestionFormSource: "", gddQuestionFormRequestToken: 0, gddQuestionFormAbortController: null, gddQuestionFormProgressTimer: null, gddQuestionFormProgressStartedAtMs: 0, gddQuestionFormCurrentSchemaSignature: "", gddQuestionFormDraftCache: new Map(), gddQuestionFormSchemaCache: new Map(), gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
+                const state = { projectId: "", projects: [], runs: [], packageList: null, assetInventory: null, assetInventoryExpanded: false, gddMilestoneSteps: null, gddMilestoneEvidence: {}, selectedGddMilestoneStepId: "", gddMilestoneManualSelection: false, chatHistory: [], chatAttachments: [], skillActions: [], authenticated: false, prototypeReadyForFeedback: false, activeRun: null, localBusy: false, chatBusy: false, workflowRouteBusy: false, nextSuggestedFeedback: "", draftAnalysisRunning: false, prototypeFailure: "", v2PrototypeStatus: "", v2PrototypeAcceptanceStatus: "", v2PrototypeCreationStatus: "", iterationPlan: null, iterationPlans: [], selectedIterationSessionId: "", iterationPlanEvaluation: null, iterationPlanFailure: "", iterationPlanUpdateMode: "update", iterationPlanEvaluationRunning: false, gddQuestionFormFields: [], gddQuestionFormSource: "", gddQuestionFormAnswers: [], gddQuestionFormMessage: "", gddSceneRoute: null, gddQuestionFormRequestToken: 0, gddQuestionFormAbortController: null, gddQuestionFormProgressTimer: null, gddQuestionFormProgressStartedAtMs: 0, gddQuestionFormCurrentSchemaSignature: "", gddQuestionFormDraftCache: new Map(), gddQuestionFormSchemaCache: new Map(), gddOutlineReady: false, workflowRouteActionToken: "", workflowRouteActionConsumed: false, projectAnalysisMode: false, prototypeSkeletonBannerExpanded: false, prototypeSkeletonBannerIndex: 0, prototypeSkeletonBannerTick: 0, prototypeSkeletonBannerRunId: "", prototypeSkeletonBannerDisplayedCount: 0, prototypeSkeletonBannerStartedAtMs: 0, pendingPrototypeSkeletonRun: null, prototypeSkeletonBannerStickyUntil: 0, cancelledActiveRunId: "", cancelledActiveRunProjectId: "" };
                 let authEpoch = 0;
                 let clientErrorRecoveryInstalled = false;
                 let clientErrorRecoveryRefreshing = false;
@@ -4743,6 +4743,7 @@ public sealed class BrowserUiRenderer
                     ? "请补充关键原始资料。"
                     : "已使用保底问题，请补充关键原始资料。";
                   $("confirmGddQuestionForm").disabled = false;
+                  $("confirmGddQuestionForm").textContent = "确认并创建策划大纲";
                 }
 
                 async function openGddQuestionFormModal() {
@@ -4798,7 +4799,7 @@ public sealed class BrowserUiRenderer
                 function closeGddQuestionFormModal(options = {}) {
                   state.gddQuestionFormRequestToken += 1;
                   if (options?.preserveDraft !== false) {
-                    saveGddQuestionFormDraft();
+                    if ($("gddQuestionForm").dataset.schema === "question-form") saveGddQuestionFormDraft();
                   }
                   stopGddQuestionFormProgress();
                   if (state.gddQuestionFormAbortController) {
@@ -4808,6 +4809,7 @@ public sealed class BrowserUiRenderer
                   setModalVisible("gddQuestionFormModal", false);
                   $("gddQuestionFormHint").textContent = "";
                   $("confirmGddQuestionForm").disabled = false;
+                  $("confirmGddQuestionForm").textContent = "确认并创建策划大纲";
                   if (!state.localBusy && $("createGddDocument")) {
                     $("createGddDocument").disabled = false;
                     $("createGddDocument").textContent = state.gddOutlineReady ? "\u67e5\u9605\u7b56\u5212\u5927\u7eb2" : "\u521b\u5efa\u7b56\u5212\u5927\u7eb2";
@@ -4845,7 +4847,206 @@ public sealed class BrowserUiRenderer
                   return lines.join("\n");
                 }
 
+                function normalizeGddSceneRoute(route) {
+                  const scenes = Array.isArray(route?.scenes) ? route.scenes : [];
+                  const normalizedScenes = scenes.map((scene, index) => {
+                    const id = String(scene?.id || `scene_${index + 1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || `scene_${index + 1}`;
+                    return {
+                      id,
+                      name: String(scene?.name || `场景 ${index + 1}`).trim().slice(0, 40),
+                      role: String(scene?.role || "gameplay").trim().toLowerCase(),
+                      m1Required: scene?.m1Required !== false,
+                      playerGoal: String(scene?.playerGoal || "").trim().slice(0, 240)
+                    };
+                  }).slice(0, 8);
+                  const sceneIds = new Set(normalizedScenes.map(scene => scene.id));
+                  const transitions = (Array.isArray(route?.transitions) ? route.transitions : []).map(transition => {
+                    const from = String(transition?.from || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                    const to = String(transition?.to || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                    const returnsTo = String(transition?.returnsTo || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                    if (!sceneIds.has(from) || !sceneIds.has(to)) return null;
+                    return {
+                      from,
+                      to,
+                      trigger: String(transition?.trigger || "").trim().slice(0, 180),
+                      returnsTo: sceneIds.has(returnsTo) ? returnsTo : "",
+                      stateCarried: (Array.isArray(transition?.stateCarried) ? transition.stateCarried : [])
+                        .map(item => String(item || "").trim().slice(0, 40))
+                        .filter(Boolean)
+                        .slice(0, 10)
+                    };
+                  }).filter(Boolean).slice(0, 16);
+                  const requestedEntryScene = String(route?.entryScene || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+                  const entryScene = sceneIds.has(requestedEntryScene) ? requestedEntryScene : normalizedScenes[0]?.id || "";
+                  const intent = ["single", "multi", "unsure"].includes(String(route?.sceneCountIntent || "").trim().toLowerCase())
+                    ? String(route.sceneCountIntent).trim().toLowerCase()
+                    : (normalizedScenes.length > 1 ? "multi" : "unsure");
+                  return {
+                    schemaVersion: route?.schemaVersion || "gdd-scene-route.v1",
+                    sceneCountIntent: intent,
+                    entryScene,
+                    scenes: normalizedScenes.length ? normalizedScenes : [{ id: "first_playable", name: "首个可玩场景", role: "gameplay", m1Required: true, playerGoal: "承载第一轮核心操作、反馈和验收。" }],
+                    transitions,
+                    singleSceneConfirmation: {
+                      allowed: route?.singleSceneConfirmation?.allowed === true,
+                      reason: String(route?.singleSceneConfirmation?.reason || "请确认首版原型的场景数量和切换关系。").trim().slice(0, 240)
+                    },
+                    notes: (Array.isArray(route?.notes) ? route.notes : [])
+                      .map(item => String(item || "").trim().slice(0, 180))
+                      .filter(Boolean)
+                      .slice(0, 8)
+                  };
+                }
+
+                function fallbackGddSceneRoute() {
+                  const text = currentProjectGameTypeText().toLowerCase();
+                  if (/rpg|role|jrpg|crpg|arpg|diablo|dungeon/.test(text)) {
+                    return normalizeGddSceneRoute({
+                      sceneCountIntent: "multi",
+                      entryScene: "exploration",
+                      scenes: [
+                        { id: "exploration", name: "探索地图", role: "hub", m1Required: true, playerGoal: "移动、发现目标并触发遭遇。" },
+                        { id: "combat", name: "战斗遭遇", role: "combat", m1Required: true, playerGoal: "处理敌人压力、技能和胜负反馈。" },
+                        { id: "reward", name: "结算反馈", role: "reward", m1Required: false, playerGoal: "展示奖励、成长或剧情推进。" }
+                      ],
+                      transitions: [
+                        { from: "exploration", to: "combat", trigger: "接触敌人、事件或入口", returnsTo: "exploration", stateCarried: ["hp", "inventory", "quest_progress"] },
+                        { from: "combat", to: "reward", trigger: "战斗胜利或事件完成", returnsTo: "exploration", stateCarried: ["hp", "loot", "quest_progress"] },
+                        { from: "reward", to: "exploration", trigger: "确认结算", returnsTo: "", stateCarried: ["hp", "inventory", "quest_progress"] }
+                      ],
+                      singleSceneConfirmation: { allowed: false, reason: "RPG/ARPG 原型通常至少需要探索和遭遇之间的状态交接。" },
+                      notes: ["请确认 M1 是否需要奖励结算独立呈现。"]
+                    });
+                  }
+                  if (/deck|card|牌|卡/.test(text)) {
+                    return normalizeGddSceneRoute({
+                      sceneCountIntent: "multi",
+                      entryScene: "route_map",
+                      scenes: [
+                        { id: "route_map", name: "路线地图", role: "hub", m1Required: true, playerGoal: "选择下一场遭遇或奖励节点。" },
+                        { id: "combat", name: "牌局战斗", role: "combat", m1Required: true, playerGoal: "通过抽牌、出牌和资源管理击败敌人。" },
+                        { id: "reward", name: "战斗奖励", role: "reward", m1Required: true, playerGoal: "选择卡牌、资源或构筑奖励后回到路线。" }
+                      ],
+                      transitions: [
+                        { from: "route_map", to: "combat", trigger: "选择敌人节点", returnsTo: "reward", stateCarried: ["hp", "deck", "gold"] },
+                        { from: "combat", to: "reward", trigger: "战斗胜利", returnsTo: "route_map", stateCarried: ["hp", "deck", "gold"] }
+                      ],
+                      singleSceneConfirmation: { allowed: false, reason: "卡牌构筑原型通常至少需要路线、战斗和奖励状态。" },
+                      notes: ["请确认 M1 是否同时包含路线、战斗和奖励。"]
+                    });
+                  }
+                  if (/survivor|arena|吸血鬼|割草|幸存/.test(text)) {
+                    return normalizeGddSceneRoute({
+                      sceneCountIntent: "multi",
+                      entryScene: "arena",
+                      scenes: [
+                        { id: "arena", name: "生存战斗场", role: "gameplay", m1Required: true, playerGoal: "移动、攻击、拾取经验并承受敌潮压力。" },
+                        { id: "level_up", name: "升级选择", role: "reward", m1Required: true, playerGoal: "暂停战斗并选择升级奖励。" },
+                        { id: "summary", name: "结算", role: "ending", m1Required: false, playerGoal: "显示坚持时间、击杀、构筑和失败原因。" }
+                      ],
+                      transitions: [
+                        { from: "arena", to: "level_up", trigger: "经验达到升级阈值", returnsTo: "arena", stateCarried: ["hp", "weapons", "level", "elapsed_time"] },
+                        { from: "level_up", to: "arena", trigger: "确认升级", returnsTo: "", stateCarried: ["hp", "weapons", "level", "elapsed_time"] },
+                        { from: "arena", to: "summary", trigger: "死亡、撤离或计时结束", returnsTo: "", stateCarried: ["elapsed_time", "kills", "build"] }
+                      ],
+                      singleSceneConfirmation: { allowed: false, reason: "幸存者类可以用单个 Godot 场景实现，但体验状态仍需要区分战斗、升级选择和结算。" },
+                      notes: ["请确认升级选择是弹层状态还是独立屏幕。"]
+                    });
+                  }
+                  if (/tower|defen|塔防/.test(text)) {
+                    return normalizeGddSceneRoute({
+                      sceneCountIntent: "multi",
+                      entryScene: "build_phase",
+                      scenes: [
+                        { id: "build_phase", name: "布防阶段", role: "gameplay", m1Required: true, playerGoal: "查看路径、放置或升级防御。" },
+                        { id: "wave_phase", name: "波次战斗", role: "combat", m1Required: true, playerGoal: "敌人沿路径进攻，防御自动或半自动输出。" },
+                        { id: "wave_reward", name: "波次结算", role: "reward", m1Required: false, playerGoal: "显示收益、损失和下一波准备。" }
+                      ],
+                      transitions: [
+                        { from: "build_phase", to: "wave_phase", trigger: "开始波次", returnsTo: "build_phase", stateCarried: ["gold", "towers", "base_hp", "wave_index"] },
+                        { from: "wave_phase", to: "wave_reward", trigger: "波次清空或基地失败", returnsTo: "build_phase", stateCarried: ["gold", "towers", "base_hp", "wave_index"] },
+                        { from: "wave_reward", to: "build_phase", trigger: "确认结算", returnsTo: "", stateCarried: ["gold", "towers", "base_hp", "wave_index"] }
+                      ],
+                      singleSceneConfirmation: { allowed: false, reason: "塔防原型至少需要布防、波次战斗和结算/下一波的路由关系。" },
+                      notes: ["请确认 M1 是否包含波次结算。"]
+                    });
+                  }
+                  return normalizeGddSceneRoute({
+                    sceneCountIntent: "unsure",
+                    entryScene: "first_playable",
+                    scenes: [{ id: "first_playable", name: "首个可玩场景", role: "gameplay", m1Required: true, playerGoal: "承载第一轮核心操作、反馈和验收。" }],
+                    transitions: [],
+                    singleSceneConfirmation: { allowed: false, reason: "请确认首版原型是否真的只有一个体验状态。" },
+                    notes: ["如果需要地图、战斗、奖励、商店或结算，请在这里补充场景和 transitions。"]
+                  });
+                }
+
+                async function loadGddSceneRouteDraft(projectId, message, answers) {
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd/scene-route`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        message,
+                        answers,
+                        model: $("globalModel").value || null
+                      })
+                    });
+                    return normalizeGddSceneRoute(result?.sceneRoute);
+                  } catch (error) {
+                    if (error?.status === 401 || error?.status === 403 || error?.status === 404) throw error;
+                    return fallbackGddSceneRoute();
+                  }
+                }
+
+                function renderGddSceneRouteForm(sceneRoute) {
+                  const normalized = normalizeGddSceneRoute(sceneRoute);
+                  state.gddSceneRoute = normalized;
+                  $("gddQuestionForm").dataset.schema = "scene-route";
+                  $("gddQuestionForm").innerHTML = `
+                    <label>场景路由草案 *
+                      <textarea data-gdd-scene-route-json="true" rows="16" maxlength="6000">${escapeHtml(JSON.stringify(normalized, null, 2))}</textarea>
+                    </label>`;
+                  $("gddQuestionFormMeta").textContent = "确认场景数量、入口、转场和状态交接";
+                  $("gddQuestionFormHint").textContent = "确认后会结合前一份 GDD 表单和这份场景路由创建策划大纲。";
+                  $("confirmGddQuestionForm").disabled = false;
+                  $("confirmGddQuestionForm").textContent = "确认场景路由并创建策划大纲";
+                }
+
+                function collectGddSceneRouteForm() {
+                  const input = document.querySelector(`[data-gdd-scene-route-json="true"]`);
+                  if (!input) throw new Error("scene_route_missing");
+                  return normalizeGddSceneRoute(JSON.parse(input.value || "{}"));
+                }
+
                 async function confirmGddQuestionForm() {
+                  if ($("gddQuestionForm").dataset.schema === "scene-route") {
+                    let sceneRoute;
+                    try {
+                      sceneRoute = collectGddSceneRouteForm();
+                    } catch {
+                      $("gddQuestionFormHint").textContent = "场景路由 JSON 无法解析，请修正后再确认。";
+                      return;
+                    }
+                    if (!sceneRoute.scenes.length || !sceneRoute.entryScene) {
+                      $("gddQuestionFormHint").textContent = "请至少保留一个入口场景。";
+                      return;
+                    }
+                    const button = $("confirmGddQuestionForm");
+                    button.disabled = true;
+                    button.textContent = "创建中...";
+                    try {
+                      const succeeded = await startGddDocumentRoute(state.gddQuestionFormMessage, sceneRoute);
+                      if (succeeded) {
+                        clearGddQuestionFormDraft();
+                        closeGddQuestionFormModal({ preserveDraft: false });
+                      }
+                    } finally {
+                      button.disabled = false;
+                      button.textContent = "确认场景路由并创建策划大纲";
+                    }
+                    return;
+                  }
+
                   const answers = collectGddQuestionFormAnswers();
                   const answeredCount = answers.filter(item => item.answer).length;
                   const missingRequired = answers.filter(item => item.required && !item.answer);
@@ -4865,16 +5066,25 @@ public sealed class BrowserUiRenderer
                   }
                   const button = $("confirmGddQuestionForm");
                   button.disabled = true;
-                  button.textContent = "创建中...";
+                  button.textContent = "分析场景...";
+                  const sceneRouteProjectId = state.projectId;
+                  const sceneRouteRequestToken = state.gddQuestionFormRequestToken;
+                  const sceneRouteContext = projectRequestContext(sceneRouteProjectId);
                   try {
-                    const succeeded = await startGddDocumentRoute(message);
-                    if (succeeded) {
-                      clearGddQuestionFormDraft();
-                      closeGddQuestionFormModal({ preserveDraft: false });
+                    state.gddQuestionFormAnswers = answers;
+                    state.gddQuestionFormMessage = message;
+                    saveGddQuestionFormDraft();
+                    const sceneRoute = await loadGddSceneRouteDraft(sceneRouteProjectId, message, answers);
+                    if (!isCurrentProjectContext(sceneRouteContext) ||
+                        !isCurrentGddQuestionFormRequest(sceneRouteRequestToken, sceneRouteProjectId)) {
+                      return;
                     }
+                    renderGddSceneRouteForm(sceneRoute);
                   } finally {
                     button.disabled = false;
-                    button.textContent = "确认并创建策划大纲";
+                    if ($("gddQuestionForm").dataset.schema !== "scene-route") {
+                      button.textContent = "确认并创建策划大纲";
+                    }
                   }
                 }
 
@@ -4907,7 +5117,7 @@ public sealed class BrowserUiRenderer
                   })();
                 }
 
-                async function startGddDocumentRoute(message) {
+                async function startGddDocumentRoute(message, sceneRoute = null) {
                   if (!state.projectId) {
                     out("请先选择一个项目。");
                     return false;
@@ -4924,7 +5134,8 @@ public sealed class BrowserUiRenderer
                     const payload = {
                       message,
                       model: $("globalModel").value || null,
-                      attachments: currentChatAttachmentsForRun()
+                      attachments: currentChatAttachmentsForRun(),
+                      sceneRoute
                     };
                     const result = await api(`/api/projects/${projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
                     if (!isCurrentProjectContext(context)) return false;
