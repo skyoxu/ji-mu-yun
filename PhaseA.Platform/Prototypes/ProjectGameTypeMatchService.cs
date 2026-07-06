@@ -52,7 +52,10 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
                 "",
                 _catalog.CatalogHash,
                 now,
-                now);
+                now)
+            {
+                SteamAttemptedQueries = string.IsNullOrWhiteSpace(gameTypeSource) ? [] : [gameTypeSource.Trim()]
+            };
         }
 
         var steam = await _steamProvider.ResolveAsync(gameTypeSource, cancellationToken);
@@ -77,7 +80,11 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
                 "",
                 _catalog.CatalogHash,
                 now,
-                now);
+                now)
+            {
+                SteamResolvedQuery = steam.ResolvedQuery,
+                SteamAttemptedQueries = steam.AttemptedQueries
+            };
         }
 
         var normalizedTags = GameTypeGuideCatalog.NormalizeTags(steam.Tags.Concat(steam.Categories).Concat(steam.Genres).ToArray());
@@ -101,7 +108,11 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
             match.MissingGuidePath,
             _catalog.CatalogHash,
             now,
-            now);
+            now)
+        {
+            SteamResolvedQuery = steam.ResolvedQuery,
+            SteamAttemptedQueries = steam.AttemptedQueries
+        };
     }
 
     private static string SteamFailureStatus(string statusReason)

@@ -20,3 +20,15 @@ public sealed record GameDesignQuestionFormResult(
     IReadOnlyList<GameDesignQuestionFormField> Fields,
     string Source,
     string? FailureCode = null);
+
+public sealed record GameDesignQuestionFormRestoreAnswer(
+    int Index,
+    string Label,
+    string Answer);
+
+public sealed record GameDesignQuestionFormRestoreResult(
+    string Status,
+    string ProjectId,
+    string SourceRunId,
+    IReadOnlyList<GameDesignQuestionFormRestoreAnswer> Answers,
+    string? FailureCode = null);

@@ -1498,6 +1498,29 @@ public sealed class PhaseAMetadataStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task UpdateProjectGameTypeMatchAsync(
+        string projectId,
+        string gameTypeMatchJson,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(gameTypeMatchJson);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE projects
+            SET game_type_match_json = $game_type_match_json,
+                last_activity_utc = $updated_utc
+            WHERE id = $project_id;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$game_type_match_json", gameTypeMatchJson);
+        command.Parameters.AddWithValue("$updated_utc", DateTimeOffset.UtcNow.ToString("O"));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<ProjectUiStateSnapshot?> GetProjectUiStateAsync(
         string accountId,
         string projectId,
@@ -1697,6 +1720,12 @@ public sealed class PhaseAMetadataStore
                 normalized_genre_tags_json,
                 candidate_scores_json,
                 missing_guide_path,
+                matched_game_type_id,
+                matched_guide_path,
+                steam_app_id,
+                steam_name,
+                steam_resolved_query,
+                steam_attempted_queries_json,
                 created_utc)
             VALUES (
                 $id,
@@ -1711,6 +1740,12 @@ public sealed class PhaseAMetadataStore
                 $normalized_genre_tags_json,
                 $candidate_scores_json,
                 $missing_guide_path,
+                $matched_game_type_id,
+                $matched_guide_path,
+                $steam_app_id,
+                $steam_name,
+                $steam_resolved_query,
+                $steam_attempted_queries_json,
                 $created_utc);
             """;
         command.Parameters.AddWithValue("$id", NewId());
@@ -1725,6 +1760,12 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$normalized_genre_tags_json", failure.NormalizedGenreTagsJson);
         command.Parameters.AddWithValue("$candidate_scores_json", failure.CandidateScoresJson);
         command.Parameters.AddWithValue("$missing_guide_path", failure.MissingGuidePath);
+        command.Parameters.AddWithValue("$matched_game_type_id", failure.MatchedGameTypeId);
+        command.Parameters.AddWithValue("$matched_guide_path", failure.MatchedGuidePath);
+        command.Parameters.AddWithValue("$steam_app_id", failure.SteamAppId);
+        command.Parameters.AddWithValue("$steam_name", failure.SteamName);
+        command.Parameters.AddWithValue("$steam_resolved_query", failure.SteamResolvedQuery);
+        command.Parameters.AddWithValue("$steam_attempted_queries_json", failure.SteamAttemptedQueriesJson);
         command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -1732,6 +1773,21 @@ public sealed class PhaseAMetadataStore
     public async Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchFailuresForAdminAsync(
         int limit,
         CancellationToken cancellationToken = default)
+    {
+        return await ListProjectGameTypeMatchRecordsForAdminAsync(limit, includeMatched: false, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchRecordsForAdminAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        return await ListProjectGameTypeMatchRecordsForAdminAsync(limit, includeMatched: true, cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchRecordsForAdminAsync(
+        int limit,
+        bool includeMatched,
+        CancellationToken cancellationToken)
     {
         var boundedLimit = Math.Clamp(limit, 1, 500);
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -1751,18 +1807,26 @@ public sealed class PhaseAMetadataStore
                 normalized_genre_tags_json,
                 candidate_scores_json,
                 missing_guide_path,
+                matched_game_type_id,
+                matched_guide_path,
+                steam_app_id,
+                steam_name,
+                steam_resolved_query,
+                steam_attempted_queries_json,
                 created_utc
             FROM project_game_type_match_failures
+            WHERE $include_matched = 1 OR match_status <> 'matched'
             ORDER BY created_utc DESC, rowid DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$limit", boundedLimit);
+        command.Parameters.AddWithValue("$include_matched", includeMatched ? 1 : 0);
 
-        var failures = new List<ProjectGameTypeMatchFailureSnapshot>();
+        var records = new List<ProjectGameTypeMatchFailureSnapshot>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            failures.Add(new ProjectGameTypeMatchFailureSnapshot(
+            records.Add(new ProjectGameTypeMatchFailureSnapshot(
                 reader.GetString(0),
                 reader.GetString(1),
                 reader.GetString(2),
@@ -1775,10 +1839,16 @@ public sealed class PhaseAMetadataStore
                 reader.GetString(9),
                 reader.GetString(10),
                 reader.GetString(11),
-                reader.GetString(12)));
+                reader.GetString(12),
+                reader.GetString(13),
+                reader.GetString(14),
+                reader.GetString(15),
+                reader.GetString(16),
+                reader.GetString(17),
+                reader.GetString(18)));
         }
 
-        return failures;
+        return records;
     }
 
     public async Task<string> CreateRunAsync(

@@ -2193,7 +2193,7 @@ public sealed class BrowserUiRenderer
                     <button id="openProjectListModal" class="ghost user-only-action">项目列表</button>
                     <button id="openAdminRunDurationMetrics" class="ghost admin-only-action hidden">普通用户Run耗时</button>
                     <button id="openAdminChatAverageMetrics" class="ghost admin-only-action hidden">聊天平均响应</button>
-                    <button id="openAdminGameTypeMatchFailures" class="ghost admin-only-action hidden">类型匹配失败</button>
+                    <button id="openAdminGameTypeMatchFailures" class="ghost admin-only-action hidden">类型匹配记录</button>
                     <button id="logout" class="danger-button">退出登录</button>
                   </div>
                 </div>
@@ -2219,6 +2219,7 @@ public sealed class BrowserUiRenderer
                       <button id="closeProjectListModal" class="ghost">关闭</button>
                     </div>
                     <div id="projects" class="card-list modal-scroll"></div>
+                    <p id="projectListStatus" class="muted"></p>
                   </section>
                 </div>
               </div>
@@ -2502,6 +2503,12 @@ public sealed class BrowserUiRenderer
 
                 function setModalVisible(id, visible) {
                   $(id).classList.toggle("hidden", !visible);
+                }
+                function setProjectListStatus(message, danger = false) {
+                  const status = $("projectListStatus");
+                  if (!status) return;
+                  status.textContent = message || "";
+                  status.className = danger ? "danger" : "muted";
                 }
 
                 function closeUserModals() {
@@ -4738,6 +4745,52 @@ public sealed class BrowserUiRenderer
                   }
                 }
 
+                async function loadGddQuestionFormRestoreDraft(projectId) {
+                  try {
+                    const result = await api(`/api/projects/${projectId}/gdd/question-form/restore-latest`);
+                    return Array.isArray(result?.answers) && result.answers.length ? result : null;
+                  } catch (error) {
+                    if ([401, 403].includes(Number(error?.status))) throw error;
+                    return null;
+                  }
+                }
+
+                function normalizeGddQuestionLabel(value) {
+                  return String(value || "")
+                    .replace(/[：:*＊\s]/g, "")
+                    .trim()
+                    .toLowerCase();
+                }
+
+                function restoreValuesForGddQuestionForm(restoreDraft, fields) {
+                  const answers = Array.isArray(restoreDraft?.answers) ? restoreDraft.answers : [];
+                  if (!answers.length) return { values: null, count: 0 };
+                  const byLabel = new Map();
+                  answers.forEach(item => {
+                    const label = normalizeGddQuestionLabel(item?.label);
+                    const answer = String(item?.answer || "").trim();
+                    if (label && answer && !byLabel.has(label)) byLabel.set(label, answer);
+                  });
+                  const values = {};
+                  let count = 0;
+                  fields.forEach(field => {
+                    const answer = byLabel.get(normalizeGddQuestionLabel(field.label));
+                    if (answer) {
+                      values[field.id] = answer;
+                      count += 1;
+                    }
+                  });
+                  fields.forEach((field, index) => {
+                    if (values[field.id]) return;
+                    const answer = String(answers[index]?.answer || "").trim();
+                    if (answer) {
+                      values[field.id] = answer;
+                      count += 1;
+                    }
+                  });
+                  return { values: count ? values : null, count };
+                }
+
                 function renderGddQuestionForm(schema) {
                   stopGddQuestionFormProgress();
                   const project = currentProjectSnapshot();
@@ -4748,14 +4801,17 @@ public sealed class BrowserUiRenderer
                   state.gddQuestionFormSource = schema?.source || "fallback";
                   state.gddQuestionFormCurrentSchemaSignature = gddQuestionFormSchemaSignature(state.gddQuestionFormFields);
                   const draftValues = readGddQuestionFormDraft(state.gddQuestionFormCurrentSchemaSignature);
+                  const restoreDraft = draftValues ? { values: null, count: 0 } : restoreValuesForGddQuestionForm(schema?.restoreDraft, state.gddQuestionFormFields);
                   $("gddQuestionForm").dataset.schema = "question-form";
                   $("gddQuestionForm").innerHTML = state.gddQuestionFormFields.map(field => `
                     <label data-gdd-question="${escapeHtml(field.id)}">${escapeHtml(field.label)}${field.required ? " *" : ""}
-                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" ${field.required ? "required aria-required=\"true\"" : ""}>${escapeHtml(draftValues?.[field.id] ?? field.placeholder ?? "")}</textarea>
+                      <textarea data-gdd-question-input="${escapeHtml(field.id)}" rows="${field.rows || 3}" maxlength="${field.maxLength || 500}" ${field.required ? "required aria-required=\"true\"" : ""}>${escapeHtml(draftValues?.[field.id] ?? restoreDraft.values?.[field.id] ?? field.placeholder ?? "")}</textarea>
                     </label>
                   `).join("");
                   $("gddQuestionFormMeta").textContent = `${project?.gameName || project?.name || "当前项目"} · ${gameType}`;
-                  $("gddQuestionFormHint").textContent = state.gddQuestionFormSource === "agent"
+                  $("gddQuestionFormHint").textContent = restoreDraft.count
+                    ? `已导入上一次填写的 ${restoreDraft.count} 项答案，请检查后确认。`
+                    : state.gddQuestionFormSource === "agent"
                     ? "请补充关键原始资料。"
                     : "已使用保底问题，请补充关键原始资料。";
                   $("confirmGddQuestionForm").disabled = false;
@@ -4779,7 +4835,8 @@ public sealed class BrowserUiRenderer
                   const cacheKey = gddQuestionFormCacheKey(projectId);
                   const cachedSchema = readGddQuestionFormSchemaCache(cacheKey);
                   if (cachedSchema) {
-                    renderGddQuestionForm(cachedSchema);
+                    const restoreDraft = await loadGddQuestionFormRestoreDraft(projectId);
+                    renderGddQuestionForm({ ...cachedSchema, restoreDraft });
                     setModalVisible("gddQuestionFormModal", true);
                     state.gddQuestionFormAbortController = null;
                     return;
@@ -4795,7 +4852,9 @@ public sealed class BrowserUiRenderer
                     if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return;
                     const schema = await loadGddQuestionFormSchema(projectId, requestToken, abortController.signal);
                     if (!schema || !isCurrentGddQuestionFormRequest(requestToken, projectId)) return;
-                    renderGddQuestionForm(schema);
+                    const restoreDraft = await loadGddQuestionFormRestoreDraft(projectId);
+                    if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return;
+                    renderGddQuestionForm({ ...schema, restoreDraft });
                   } catch (error) {
                     if (!isCurrentGddQuestionFormRequest(requestToken, projectId)) return;
                     closeGddQuestionFormModal({ preserveDraft: false });
@@ -5138,6 +5197,16 @@ public sealed class BrowserUiRenderer
                     out("请先选择一个项目。");
                     return false;
                   }
+                  const confirmedSceneRoute = normalizeGddSceneRoute(sceneRoute);
+                  if (!confirmedSceneRoute.scenes.length || !confirmedSceneRoute.entryScene) {
+                    out("请先确认场景路由后再创建策划大纲。");
+                    if (!state.gddOutlineReady && typeof openGddQuestionFormModal === "function" && !isGddQuestionFormModalOpen()) {
+                      await openGddQuestionFormModal();
+                    } else if (state.gddOutlineReady) {
+                      callV2("v2OpenGddOutlineTab");
+                    }
+                    return false;
+                  }
                   if (!guardGlobalAction()) return false;
                   const context = projectRequestContext();
                   const projectId = context.projectId;
@@ -5151,7 +5220,7 @@ public sealed class BrowserUiRenderer
                       message,
                       model: $("globalModel").value || null,
                       attachments: currentChatAttachmentsForRun(),
-                      sceneRoute
+                      sceneRoute: confirmedSceneRoute
                     };
                     const result = await api(`/api/projects/${projectId}/gdd`, { method: "POST", body: JSON.stringify(payload) });
                     if (!isCurrentProjectContext(context)) return false;
@@ -5510,7 +5579,7 @@ public sealed class BrowserUiRenderer
 
                 function openAdminGameTypeMatchFailures() {
                   if (state.role !== "admin") return;
-                  location.href = "/admin/game-type-match-failures";
+                  location.href = "/admin/game-type-match-records";
                 }
 
                 async function downloadAdminLlmUsageCsv() {
@@ -6147,7 +6216,7 @@ public sealed class BrowserUiRenderer
                       .sort((a, b) => (projectTimestamp(b) || 0) - (projectTimestamp(a) || 0) || String(b.projectId || "").localeCompare(String(a.projectId || "")));
                     $("projects").innerHTML = sortedVisibleProjects.map(p => `
                       <div class="card">
-                        <button class="ghost ${p.projectId === state.projectId ? "current" : ""}" data-project="${p.projectId}">
+                        <button type="button" class="ghost ${p.projectId === state.projectId ? "current" : ""}" data-project="${p.projectId}">
                         <strong>${escapeHtml(p.name)}</strong>
                         <span class="muted">${escapeHtml(p.gameName)} · ${escapeHtml(p.templateRuleId)} · ${escapeHtml(p.bootstrapStatus)}</span>
                         ${p.bootstrapStatus === "failed" ? `<span class="danger">初始化失败：${escapeHtml(sanitizePublicFailureContent(p.bootstrapError || "未知错误"))}</span>` : ""}
@@ -6156,11 +6225,9 @@ public sealed class BrowserUiRenderer
                           <label>删除确认 1 <input data-delete-one="${p.projectId}" placeholder="输入 delete"></label>
                           <label>删除确认 2 <input data-delete-two="${p.projectId}" placeholder="再次输入 delete"></label>
                         </div>
-                        <button class="danger-button" data-delete-project="${p.projectId}" data-global-action="true">删除项目</button>
+                        <button type="button" class="danger-button" data-delete-project="${p.projectId}">删除项目</button>
                       </div>
                     `).join("");
-                    document.querySelectorAll("[data-project]").forEach(button => button.onclick = () => selectProject(button.dataset.project));
-                    document.querySelectorAll("[data-delete-project]").forEach(button => button.onclick = () => deleteProject(button.dataset.deleteProject));
                     updateProjectSwitchAvailability();
                     callV2("v2RenderLeftProjectList");
                     if (projectSwitchLocked() && state.projectId) {
@@ -6606,10 +6673,19 @@ public sealed class BrowserUiRenderer
                 }
 
                 async function deleteProject(projectId) {
-                  if (!guardGlobalAction()) return;
+                  if (state.localBusy) {
+                    const message = "当前已有本地操作进行中，请稍后再试。";
+                    setProjectListStatus(message, true);
+                    return out(message);
+                  }
+                  if (!projectId) {
+                    setProjectListStatus("删除项目失败：project_id_missing", true);
+                    return out("删除项目失败：project_id_missing");
+                  }
                   const confirmOne = document.querySelector(`[data-delete-one="${projectId}"]`)?.value.trim() || "";
                   const confirmTwo = document.querySelector(`[data-delete-two="${projectId}"]`)?.value.trim() || "";
                   if (confirmOne !== "delete" || confirmTwo !== "delete") {
+                    setProjectListStatus("删除项目需要在两个确认框都输入 delete。", true);
                     out("删除项目需要在两个确认框都输入 delete。");
                     return;
                   }
@@ -6620,6 +6696,8 @@ public sealed class BrowserUiRenderer
                     deleteButton.textContent = "删除中...";
                   }
                   try {
+                    setProjectListStatus("正在调用删除 API...");
+                    out("正在调用删除 API...");
                     const result = await api(`/api/projects/${projectId}`, {
                       method: "DELETE",
                       body: JSON.stringify({ confirmOne, confirmTwo })
@@ -6629,9 +6707,18 @@ public sealed class BrowserUiRenderer
                       writeSelectedProjectId("");
                       $("projectDetailPanel").classList.add("hidden");
                     }
-                    out(result);
+                    const successMessage = result?.warningCode === "workspace_delete_failed"
+                      ? "项目记录已删除，项目名额已释放；但工作区目录清理失败，系统保留目录以便后续清理。"
+                      : "项目已删除。";
+                    setProjectListStatus(successMessage);
+                    out(successMessage);
                     await refreshProjects();
-                  } catch (error) { showError(error); }
+                  } catch (error) {
+                    const code = publicErrorCode(error?.payload?.failureCode || error?.payload?.error || error?.status || "unknown_error");
+                    const failureMessage = `删除项目失败：${code}${error?.status ? `（HTTP ${error.status}）` : ""}`;
+                    setProjectListStatus(failureMessage, true);
+                    out(failureMessage);
+                  }
                   finally {
                     try {
                       await refreshActiveRun();
@@ -9195,6 +9282,22 @@ public sealed class BrowserUiRenderer
                   setModalVisible("projectListModal", true);
                   await refreshProjects({ autoSelect: false });
                 };
+                $("projects").addEventListener("click", event => {
+                  const deleteButton = event.target?.closest?.("[data-delete-project]");
+                  if (deleteButton && $("projects").contains(deleteButton)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void deleteProject(deleteButton.dataset.deleteProject || "");
+                    return;
+                  }
+
+                  const projectButton = event.target?.closest?.("[data-project]");
+                  if (projectButton && $("projects").contains(projectButton)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    void selectProject(projectButton.dataset.project || "");
+                  }
+                });
                 $("closeProjectListModal").onclick = () => setModalVisible("projectListModal", false);
                 $("refreshProjects").onclick = () => {
                   if (projectSwitchLocked() && state.projectId) return out("当前操作完成前不能切换项目。");
@@ -11476,7 +11579,7 @@ public sealed class BrowserUiRenderer
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1">
-              <title>类型匹配失败</title>
+              <title>类型匹配记录</title>
               <style>
                 :root { --ink:#17211b; --muted:#66736b; --paper:#f7f2e8; --panel:#fffdf8; --line:#ded4c4; --accent:#0f6b57; --danger:#a2342f; }
                 body { margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink); background:linear-gradient(135deg,#fbf7ef,#efe5d3); }
@@ -11500,8 +11603,8 @@ public sealed class BrowserUiRenderer
             <body>
               <main>
                 <header>
-                  <h1>类型匹配失败</h1>
-                  <p class="muted">项目级 Steam 英文标签到 game-types.csv genre_tags 的匹配失败记录，用于维护 genre_tags 和新增 guide md。</p>
+                  <h1>类型匹配记录</h1>
+                  <p class="muted">项目级 Steam 英文标签到 game-types.csv genre_tags 的匹配结果，用于维护 genre_tags、查询别名、匹配算法和新增 guide md。</p>
                 </header>
                 <section class="card toolbar">
                   <label>数量上限
@@ -11519,12 +11622,15 @@ public sealed class BrowserUiRenderer
                         <th>项目</th>
                         <th>原始输入</th>
                         <th>状态</th>
+                        <th>匹配类型</th>
+                        <th>Steam</th>
+                        <th>查询</th>
                         <th>英文标签</th>
                         <th>候选</th>
                         <th>缺失文件</th>
                       </tr>
                     </thead>
-                    <tbody id="rows"><tr><td colspan="7" class="muted">暂无数据。</td></tr></tbody>
+                    <tbody id="rows"><tr><td colspan="10" class="muted">暂无数据。</td></tr></tbody>
                   </table>
                 </section>
               </main>
@@ -11556,6 +11662,7 @@ public sealed class BrowserUiRenderer
                   $("summary").innerHTML = `<strong>${escapeHtml(failures.length)}</strong> 条维护记录`;
                   $("rows").innerHTML = failures.length ? failures.map(item => {
                     const tags = parseJsonArray(item.normalizedGenreTagsJson).join(", ");
+                    const attempts = parseJsonArray(item.steamAttemptedQueriesJson).join(", ");
                     const candidates = parseJsonArray(item.candidateScoresJson).map(candidate => `${candidate.gameTypeId || ""}:${candidate.score || 0} [${(candidate.matchedTags || []).join(", ")}]`).join("; ");
                     return `
                       <tr>
@@ -11563,19 +11670,22 @@ public sealed class BrowserUiRenderer
                         <td><strong>${escapeHtml(item.projectName)}</strong><br><span class="muted">${escapeHtml(item.gameName)} · ${escapeHtml(item.projectId)}</span></td>
                         <td>${escapeHtml(item.gameTypeSource)}</td>
                         <td><code>${escapeHtml(item.matchStatus)}</code><br><span class="muted">${escapeHtml(item.statusReason)}</span></td>
+                        <td><code>${escapeHtml(item.matchedGameTypeId || "-")}</code><br><span class="muted">${escapeHtml(item.matchedGuidePath || "-")}</span></td>
+                        <td>${escapeHtml(item.steamName || "-")}<br><span class="muted">${escapeHtml(item.steamAppId || "-")}</span></td>
+                        <td>${escapeHtml(item.steamResolvedQuery || item.referenceQuery || "-")}<br><span class="muted">${escapeHtml(attempts || "-")}</span></td>
                         <td>${escapeHtml(tags || "-")}</td>
                         <td>${escapeHtml(candidates || "-")}</td>
                         <td>${escapeHtml(item.missingGuidePath || "-")}</td>
                       </tr>`;
-                  }).join("") : `<tr><td colspan="7" class="muted">暂无失败记录。</td></tr>`;
+                  }).join("") : `<tr><td colspan="10" class="muted">暂无匹配记录。</td></tr>`;
                 }
                 async function load() {
                   try {
                     $("summary").className = "card muted";
                     $("summary").textContent = "加载中...";
                     const limit = Math.max(1, Math.min(500, Number($("limit").value || 100)));
-                    const result = await api(`/api/admin/game-type-match-failures?limit=${encodeURIComponent(limit)}`);
-                    render(result.failures || []);
+                    const result = await api(`/api/admin/game-type-match-records?limit=${encodeURIComponent(limit)}`);
+                    render(result.records || result.failures || []);
                   } catch (error) {
                     $("summary").className = "card danger";
                     $("summary").textContent = error.message === "missing_token" ? "当前浏览器没有 token，请先回控制台登录。" : error.message;

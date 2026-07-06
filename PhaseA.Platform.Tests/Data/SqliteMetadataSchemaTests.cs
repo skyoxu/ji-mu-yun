@@ -73,6 +73,68 @@ public sealed class SqliteMetadataSchemaTests
     }
 
     [Fact]
+    public async Task InitializeAsync_MigratesLegacyGameTypeMatchFailureTableToRecordsShape()
+    {
+        using var database = TempSqliteDatabase.Create();
+        await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection(database.ConnectionString))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                """
+                CREATE TABLE project_game_type_match_failures (
+                    id TEXT PRIMARY KEY,
+                    account_id TEXT NOT NULL,
+                    project_id TEXT NOT NULL,
+                    project_name TEXT NOT NULL,
+                    game_name TEXT NOT NULL,
+                    game_type_source TEXT NOT NULL,
+                    match_status TEXT NOT NULL,
+                    status_reason TEXT NOT NULL,
+                    reference_query TEXT NOT NULL,
+                    normalized_genre_tags_json TEXT NOT NULL DEFAULT '[]',
+                    candidate_scores_json TEXT NOT NULL DEFAULT '[]',
+                    missing_guide_path TEXT NOT NULL DEFAULT '',
+                    created_utc TEXT NOT NULL
+                );
+                """;
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        await store.RecordProjectGameTypeMatchFailureAsync(new ProjectGameTypeMatchFailureCommand(
+            "account-one",
+            "project-one",
+            "Project One",
+            "Game One",
+            "manual",
+            "matched",
+            "matched_by_genre_tags",
+            "manual",
+            """["deckbuilding"]""",
+            """[]""",
+            "",
+            "card-game",
+            "docs/game-type-guides/card-game.md",
+            "646570",
+            "Slay the Spire",
+            "Slay the Spire",
+            """["manual","Slay the Spire"]"""));
+
+        var records = await store.ListProjectGameTypeMatchRecordsForAdminAsync(10);
+
+        records.Should().ContainSingle();
+        records[0].MatchedGameTypeId.Should().Be("card-game");
+        records[0].MatchedGuidePath.Should().Be("docs/game-type-guides/card-game.md");
+        records[0].SteamAppId.Should().Be("646570");
+        records[0].SteamName.Should().Be("Slay the Spire");
+        records[0].SteamResolvedQuery.Should().Be("Slay the Spire");
+        records[0].SteamAttemptedQueriesJson.Should().Contain("Slay the Spire");
+    }
+
+    [Fact]
     public async Task EnsureSingleAdminAsync_BootstrapsAdminWithDefaultProjectLimit()
     {
         using var database = TempSqliteDatabase.Create();

@@ -80,6 +80,16 @@ public sealed class ProjectCreationServiceTests
         evidence.MatchedGameTypeId.Should().Be("rpg");
         evidence.MatchedGuidePath.Should().Be("docs/game-type-guides/rpg.md");
         (await store.ListProjectGameTypeMatchFailuresForAdminAsync(20)).Should().BeEmpty();
+        var records = await store.ListProjectGameTypeMatchRecordsForAdminAsync(20);
+        records.Should().ContainSingle();
+        records[0].ProjectId.Should().Be(result.ProjectId);
+        records[0].MatchStatus.Should().Be("matched");
+        records[0].MatchedGameTypeId.Should().Be("rpg");
+        records[0].MatchedGuidePath.Should().Be("docs/game-type-guides/rpg.md");
+        records[0].SteamAppId.Should().Be("1");
+        records[0].SteamName.Should().Be("Test App");
+        records[0].SteamResolvedQuery.Should().Be("Test App");
+        records[0].SteamAttemptedQueriesJson.Should().Contain("manual");
     }
 
     [Fact]
@@ -107,6 +117,159 @@ public sealed class ProjectCreationServiceTests
         failures[0].MatchStatus.Should().Be("no_match");
         failures[0].StatusReason.Should().Be("test_no_match");
         failures[0].CandidateScoresJson.Should().Contain("card-game");
+        failures[0].MatchedGameTypeId.Should().BeEmpty();
+        failures[0].SteamAppId.Should().Be("1");
+    }
+
+    [Fact]
+    public async Task GameTypeMatchBackfill_ShouldUpdateLegacyEmptyProjectEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
+        await store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId,
+            accountId,
+            "Deck Demo",
+            "Deck Demo",
+            "Slay the Spire",
+            "godot-prototype-default",
+            true,
+            ["chapter2-bootstrap"],
+            layout.RootPath,
+            layout.RepoPath,
+            layout.RuntimePath,
+            layout.MetaPath));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        project!.GameTypeMatchJson.Should().Be("{}");
+        var backfill = new ProjectGameTypeMatchBackfillService(store, new FixedGameTypeMatchService("card-game"));
+
+        var resolved = await backfill.EnsureResolvedAsync(project);
+        var refreshed = await store.GetProjectSnapshotAsync(projectId);
+
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(resolved.GameTypeMatchJson);
+        evidence.Status.Should().Be("matched");
+        evidence.MatchedGameTypeId.Should().Be("card-game");
+        ProjectGameTypeMatchEvidence.FromJson(refreshed!.GameTypeMatchJson).MatchedGameTypeId.Should().Be("card-game");
+    }
+
+    [Fact]
+    public async Task GameTypeMatchBackfill_ShouldRetrySteamAppNotFoundEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var initialEvidence = new ProjectGameTypeMatchEvidence(
+            1,
+            "steam_not_found",
+            "steam_app_not_found",
+            "steam",
+            "\u6740\u622e\u5c16\u5854",
+            "",
+            "",
+            [],
+            [],
+            [],
+            [],
+            "",
+            "",
+            0,
+            [],
+            "",
+            "old-hash",
+            now,
+            now).ToJson();
+        await store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId,
+            accountId,
+            "Deck Demo",
+            "Deck Demo",
+            "\u6740\u622e\u5c16\u5854",
+            "godot-prototype-default",
+            true,
+            ["chapter2-bootstrap"],
+            layout.RootPath,
+            layout.RepoPath,
+            layout.RuntimePath,
+            layout.MetaPath,
+            initialEvidence));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var backfill = new ProjectGameTypeMatchBackfillService(store, new FixedGameTypeMatchService("card-game"));
+
+        var resolved = await backfill.EnsureResolvedAsync(project!);
+        var refreshed = await store.GetProjectSnapshotAsync(projectId);
+
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(resolved.GameTypeMatchJson);
+        evidence.Status.Should().Be("matched");
+        evidence.MatchedGameTypeId.Should().Be("card-game");
+        ProjectGameTypeMatchEvidence.FromJson(refreshed!.GameTypeMatchJson).MatchedGameTypeId.Should().Be("card-game");
+    }
+
+    [Fact]
+    public async Task GameTypeMatchBackfill_ShouldRetryAmbiguousEvidence()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var initialEvidence = new ProjectGameTypeMatchEvidence(
+            1,
+            "ambiguous",
+            "multiple_game_types_have_close_scores",
+            "steam",
+            "\u6740\u622e\u5c16\u5854",
+            "2868840",
+            "Slay the Spire 2",
+            ["Deckbuilding", "Roguelike Deckbuilder", "Card Battler"],
+            [],
+            ["Strategy"],
+            ["card-battler", "deckbuilding", "roguelike-deckbuilder", "strategy"],
+            "",
+            "",
+            71,
+            [],
+            "",
+            "old-hash",
+            now,
+            now).ToJson();
+        await store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId,
+            accountId,
+            "Deck Demo",
+            "Deck Demo",
+            "\u6740\u622e\u5c16\u5854",
+            "godot-prototype-default",
+            true,
+            ["chapter2-bootstrap"],
+            layout.RootPath,
+            layout.RepoPath,
+            layout.RuntimePath,
+            layout.MetaPath,
+            initialEvidence));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var backfill = new ProjectGameTypeMatchBackfillService(store, new FixedGameTypeMatchService("card-game"));
+
+        var resolved = await backfill.EnsureResolvedAsync(project!);
+
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(resolved.GameTypeMatchJson);
+        evidence.Status.Should().Be("matched");
+        evidence.MatchedGameTypeId.Should().Be("card-game");
     }
 
     [Fact]
@@ -127,11 +290,11 @@ public sealed class ProjectCreationServiceTests
 
         var result = await service.CreateProjectAsync(accountId, Request("Game One"));
 
-        result.Succeeded.Should().BeTrue();
-        var snapshot = await store.GetProjectSnapshotAsync(result.ProjectId!);
-        snapshot.Should().NotBeNull();
-        Directory.Exists(snapshot!.RepoPath).Should().BeTrue();
-        (await store.ListProjectGameTypeMatchFailuresForAdminAsync(20)).Should().BeEmpty();
+            result.Succeeded.Should().BeTrue();
+            var snapshot = await store.GetProjectSnapshotAsync(result.ProjectId!);
+            snapshot.Should().NotBeNull();
+            Directory.Exists(snapshot!.RepoPath).Should().BeTrue();
+            (await store.ListProjectGameTypeMatchFailuresForAdminAsync(20)).Should().BeEmpty();
     }
 
     [Fact]
@@ -337,6 +500,29 @@ public sealed class ProjectCreationServiceTests
         deleted.Succeeded.Should().BeFalse();
         deleted.FailureCode.Should().Be("project_not_found");
         (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_AllowsAdminToDeleteOtherAccountProject()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var admin = await store.EnsureSingleAdminAsync();
+        var owner = await store.CreateUserAccountAsync("phaseb-delete-owned", 1);
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var created = await service.CreateProjectAsync(owner.AccountId, Request("Owner Game"));
+        await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
+
+        var deleted = await service.DeleteProjectAsync(admin, isAdmin: true, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
+
+        deleted.Succeeded.Should().BeTrue();
+        deleted.ProjectId.Should().Be(created.ProjectId);
+        (await store.GetProjectSnapshotAsync(created.ProjectId!)).Should().BeNull();
+        Directory.Exists(snapshot!.WorkspaceRootPath).Should().BeFalse();
     }
 
     [Fact]
@@ -637,7 +823,11 @@ public sealed class ProjectCreationServiceTests
                 "",
                 "test",
                 now,
-                now));
+                now)
+            {
+                SteamResolvedQuery = "Test App",
+                SteamAttemptedQueries = [gameTypeSource]
+            });
         }
     }
 

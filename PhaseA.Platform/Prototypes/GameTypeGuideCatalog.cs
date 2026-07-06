@@ -158,7 +158,27 @@ public sealed class GameTypeGuideCatalog
             }
         }
 
+        if (string.Equals(entry.Id, "card-game", StringComparison.Ordinal) &&
+            HasDeckbuilderDominanceSignal(normalizedTags))
+        {
+            score += 8;
+        }
+
         return new GameTypeGuideCandidate(entry.Id, entry.FragmentRelativePath, score, matched.Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray(), !entry.GuideExists);
+    }
+
+    private static bool HasDeckbuilderDominanceSignal(IReadOnlyList<string> normalizedTags)
+    {
+        var hasDeckbuilder = normalizedTags.Any(tag => HighConfidenceDeckbuilderTags.Contains(tag));
+        if (!hasDeckbuilder)
+        {
+            return false;
+        }
+
+        return normalizedTags.Any(tag =>
+            string.Equals(tag, "card-game", StringComparison.Ordinal) ||
+            string.Equals(tag, "card-battler", StringComparison.Ordinal) ||
+            string.Equals(tag, "turn-based-card-game", StringComparison.Ordinal));
     }
 
     private static bool IsHighConfidenceSingleTag(string entryId, string tag)

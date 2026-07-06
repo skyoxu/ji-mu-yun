@@ -13,6 +13,69 @@ namespace PhaseA.Platform.Tests.Runs;
 public sealed class GameDesignQuestionFormServiceTests
 {
     [Fact]
+    public void ParseQuestionFormAnswers_ShouldPreserveMultilineAnswers()
+    {
+        const string prompt = """
+        GDD question-form raw material:
+        Project: deckdemo99
+
+        Question-form answers:
+        1. 参考信号: 杀戮尖塔路线选择
+        2. 首个可玩场景: 职业选择场景，地图路线选择场景
+         玩家进入 3 场普通战斗 + 1 场精英战斗。
+        3. 战斗规则重点: 每回合 3 点能量、5 张卡牌。
+
+        Use these answers as authoritative raw material.
+        """;
+
+        var answers = GameDesignQuestionFormRestoreService.ParseQuestionFormAnswers(prompt);
+
+        answers.Should().HaveCount(3);
+        answers[0].Label.Should().Be("参考信号");
+        answers[0].Answer.Should().Be("杀戮尖塔路线选择");
+        answers[1].Answer.Should().Contain("职业选择场景");
+        answers[1].Answer.Should().Contain("玩家进入 3 场普通战斗");
+        answers[2].Label.Should().Be("战斗规则重点");
+    }
+
+    [Fact]
+    public async Task RestoreLatestAsync_ShouldReadLatestGddPromptForSameAccount()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var otherAccount = await store.CreateUserAccountAsync("account-two", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "deckbuilder");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "game-design-gdd");
+        await store.MarkRunStartedAsync(runId);
+        await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{}");
+        var promptPath = Path.Combine(project.RepoPath, "logs", "phase-a-gdd", projectId, runId, "gdd-prompt.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(promptPath)!);
+        await File.WriteAllTextAsync(
+            promptPath,
+            """
+            Question-form answers:
+            1. 参考信号: Slay the Spire route risk.
+            2. 玩家幻想: Build a lean deck.
+            """);
+        var service = new GameDesignQuestionFormRestoreService(store, options);
+
+        var result = await service.ReadLatestAsync(account.AccountId, projectId);
+        var denied = await service.ReadLatestAsync(otherAccount.AccountId, projectId);
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("ready");
+        result.SourceRunId.Should().Be(runId);
+        result.Answers.Should().HaveCount(2);
+        result.Answers[0].Answer.Should().Be("Slay the Spire route risk.");
+        denied.Should().BeNull();
+    }
+
+    [Fact]
     public async Task CreateAsync_ShouldUseAgentSchema_WhenLlmReturnsValidFields()
     {
         using var workspace = new TempWorkspace();

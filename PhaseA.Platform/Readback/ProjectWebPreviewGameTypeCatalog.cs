@@ -52,7 +52,12 @@ internal static class ProjectWebPreviewGameTypeCatalog
     public static string ResolveProjectGameTypeId(ProjectSnapshot project)
     {
         var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
-        return ResolveKnownGameTypeId(evidence.MatchedGameTypeId);
+        return ResolveGameTypeId(
+            evidence.MatchedGameTypeId,
+            evidence.MatchedGuidePath,
+            project.GameTypeSource,
+            project.GameName,
+            project.Name);
     }
 
     public static string ResolveGameTypeGuide(string? gameTypeId)

@@ -42,6 +42,7 @@ builder.Services.AddHttpClient<ISteamGameTypeMetadataProvider, SteamGameTypeMeta
     client.Timeout = TimeSpan.FromSeconds(3);
 });
 builder.Services.AddSingleton<IProjectGameTypeMatchService, ProjectGameTypeMatchService>();
+builder.Services.AddSingleton<ProjectGameTypeMatchBackfillService>();
 builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
     options.MaxConcurrentProjectCreations,
     options.MaxConcurrentProjectCreationsPerAccount));
@@ -98,6 +99,7 @@ builder.Services.AddSingleton(new QuestionFormConcurrencyLimiter(
     options.MaxConcurrentQuestionForms,
     options.MaxConcurrentQuestionFormsPerAccount));
 builder.Services.AddSingleton<GameDesignQuestionFormService>();
+builder.Services.AddSingleton<GameDesignQuestionFormRestoreService>();
 builder.Services.AddSingleton<PrototypeCommandBuilder>();
 builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
 builder.Services.AddSingleton<PrototypeCommandService>();
@@ -179,6 +181,24 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.Use(async (context, next) =>
 {
+    try
+    {
+        await next(context);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Unhandled request failed. Method={Method} Path={Path}", context.Request.Method, context.Request.Path);
+        await RecordUnhandledRequestDiagnosticAsync(options, context, ex, CancellationToken.None);
+        if (!context.Response.HasStarted)
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsJsonAsync(new { error = "unhandled_request_failed" });
+        }
+    }
+});
+
+app.Use(async (context, next) =>
+{
     if (context.Request.Path == "/healthz" ||
         context.Request.Path == "/favicon.ico" ||
         context.Request.Path == "/" ||
@@ -192,6 +212,7 @@ app.Use(async (context, next) =>
         context.Request.Path == "/admin/llm-usage" ||
         context.Request.Path == "/admin/run-duration-metrics" ||
         context.Request.Path == "/admin/chat-average-metrics" ||
+        context.Request.Path == "/admin/game-type-match-records" ||
         context.Request.Path == "/admin/game-type-match-failures" ||
         (context.Request.Path.StartsWithSegments("/projects") &&
          context.Request.Path.Value?.Contains("/asset-preview", StringComparison.Ordinal) == true &&
@@ -217,7 +238,8 @@ app.Use(async (context, next) =>
         return;
     }
 
-    if (TryReadApiProjectId(context.Request.Path, out var projectId) &&
+    if (!identity.IsAdmin &&
+        TryReadApiProjectId(context.Request.Path, out var projectId) &&
         !await metadataStore.ProjectBelongsToAccountAsync(identity.AccountId, projectId, context.RequestAborted))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -462,6 +484,20 @@ app.MapGet("/api/admin/game-type-match-failures", async (
     return Results.Ok(await readback.GetAdminGameTypeMatchFailuresAsync(limit ?? 100, cancellationToken));
 });
 
+app.MapGet("/api/admin/game-type-match-records", async (
+    int? limit,
+    HttpContext context,
+    [FromServices] ArtifactReadbackService readback,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await readback.GetAdminGameTypeMatchRecordsAsync(limit ?? 100, cancellationToken));
+});
+
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
     HttpContext context,
@@ -596,6 +632,16 @@ app.MapPost("/api/projects/{projectId}/gdd/question-form", async (
     return result.Status == "rate_limited"
         ? Results.Json(result, statusCode: StatusCodes.Status429TooManyRequests)
         : Results.Ok(result);
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/question-form/restore-latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignQuestionFormRestoreService restore,
+    CancellationToken cancellationToken) =>
+{
+    var result = await restore.ReadLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/gdd/scene-route", async (
@@ -1238,6 +1284,12 @@ app.MapGet("/admin/chat-average-metrics", (
 });
 
 app.MapGet("/admin/game-type-match-failures", (
+    [FromServices] BrowserUiRenderer ui) =>
+{
+    return Results.Content(ui.RenderAdminGameTypeMatchFailures(), "text/html; charset=utf-8");
+});
+
+app.MapGet("/admin/game-type-match-records", (
     [FromServices] BrowserUiRenderer ui) =>
 {
     return Results.Content(ui.RenderAdminGameTypeMatchFailures(), "text/html; charset=utf-8");
@@ -2288,20 +2340,55 @@ app.MapGet("/api/projects/{projectId}/prototype-drafts/latest", async (
 
 app.MapDelete("/api/projects/{projectId}", async (
     string projectId,
-    [FromBody] ProjectDeletionRequest request,
     HttpContext context,
     [FromServices] ProjectCreationService projects,
     CancellationToken cancellationToken) =>
 {
-    var result = await projects.DeleteProjectAsync(CurrentAccountId(context), projectId, request, cancellationToken);
-    return result.Succeeded
-        ? Results.Ok(result)
-        : result.FailureCode switch
-        {
-            "project_not_found" => Results.NotFound(result),
-            "project_busy" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
-            _ => Results.BadRequest(result)
-        };
+    var identity = CurrentIdentity(context);
+    ProjectDeletionRequest? request;
+    try
+    {
+        request = await context.Request.ReadFromJsonAsync<ProjectDeletionRequest>(cancellationToken);
+    }
+    catch (JsonException ex)
+    {
+        var invalidRequest = ProjectDeletionResult.Failure("delete_request_invalid");
+        await RecordProjectDeleteDiagnosticAsync(options, identity, projectId, invalidRequest.FailureCode, ex, cancellationToken);
+        return Results.BadRequest(invalidRequest);
+    }
+
+    if (request is null)
+    {
+        var missingRequest = ProjectDeletionResult.Failure("delete_request_required");
+        await RecordProjectDeleteDiagnosticAsync(options, identity, projectId, missingRequest.FailureCode, null, cancellationToken);
+        return Results.BadRequest(missingRequest);
+    }
+
+    try
+    {
+        var result = await projects.DeleteProjectAsync(identity.AccountId, identity.IsAdmin, projectId, request, cancellationToken);
+        await RecordProjectDeleteDiagnosticAsync(options, identity, projectId, result.FailureCode ?? "succeeded", null, cancellationToken);
+        return result.Succeeded
+            ? Results.Ok(result)
+            : result.FailureCode switch
+            {
+                "project_not_found" => Results.NotFound(result),
+                "project_busy" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+                _ => Results.BadRequest(result)
+            };
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        await RecordProjectDeleteDiagnosticAsync(options, identity, projectId, "run_cancelled", null, CancellationToken.None);
+        return CancelledRunResult();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Project delete failed for project {ProjectId}.", projectId);
+        await RecordProjectDeleteDiagnosticAsync(options, identity, projectId, "project_delete_failed", ex, CancellationToken.None);
+        var result = ProjectDeletionResult.Failure("project_delete_failed");
+        return Results.Json(result, statusCode: StatusCodes.Status500InternalServerError);
+    }
 });
 
 app.MapPost("/api/projects/{projectId}/chapter2-bootstrap", async (
@@ -2590,6 +2677,104 @@ static IResult CancelledRunResult()
     return Results.Json(
         new { status = "cancel", error = "run_cancelled" },
         statusCode: 499);
+}
+
+static async Task RecordProjectDeleteDiagnosticAsync(
+    PhaseAPlatformOptions options,
+    AccountIdentity identity,
+    string projectId,
+    string? failureCode,
+    Exception? exception,
+    CancellationToken cancellationToken)
+{
+    try
+    {
+        var dataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
+        if (string.IsNullOrWhiteSpace(dataDirectory))
+        {
+            return;
+        }
+
+        var phaseRoot = Directory.GetParent(dataDirectory)?.FullName;
+        if (string.IsNullOrWhiteSpace(phaseRoot))
+        {
+            return;
+        }
+
+        var runtimeDirectory = Path.Combine(phaseRoot, "runtime");
+        Directory.CreateDirectory(runtimeDirectory);
+        var payload = new
+        {
+            timestampUtc = DateTimeOffset.UtcNow,
+            projectId,
+            accountId = identity.AccountId,
+            role = identity.Role,
+            failureCode,
+            exceptionType = exception?.GetType().FullName,
+            exceptionMessage = exception?.Message
+        };
+        var line = JsonSerializer.Serialize(payload) + Environment.NewLine;
+        await File.AppendAllTextAsync(
+            Path.Combine(runtimeDirectory, "project-delete-diagnostics.jsonl"),
+            line,
+            Encoding.UTF8,
+            cancellationToken);
+    }
+    catch
+    {
+        // Diagnostics must never break the delete route.
+    }
+}
+
+static async Task RecordUnhandledRequestDiagnosticAsync(
+    PhaseAPlatformOptions options,
+    HttpContext context,
+    Exception exception,
+    CancellationToken cancellationToken)
+{
+    try
+    {
+        var runtimeDirectory = ResolveRuntimeDiagnosticsDirectory(options);
+        if (runtimeDirectory is null)
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(runtimeDirectory);
+        var payload = new
+        {
+            timestampUtc = DateTimeOffset.UtcNow,
+            method = context.Request.Method,
+            path = context.Request.Path.Value,
+            statusCode = context.Response.HasStarted ? context.Response.StatusCode : StatusCodes.Status500InternalServerError,
+            accountId = context.Items.TryGetValue("phasea.accountId", out var accountId) ? accountId?.ToString() : null,
+            role = context.Items.TryGetValue("phasea.role", out var role) ? role?.ToString() : null,
+            exceptionType = exception.GetType().FullName,
+            exceptionMessage = exception.Message
+        };
+        var line = JsonSerializer.Serialize(payload) + Environment.NewLine;
+        await File.AppendAllTextAsync(
+            Path.Combine(runtimeDirectory, "unhandled-request-diagnostics.jsonl"),
+            line,
+            Encoding.UTF8,
+            cancellationToken);
+    }
+    catch
+    {
+        // Diagnostics must never break request handling.
+    }
+}
+
+static string? ResolveRuntimeDiagnosticsDirectory(PhaseAPlatformOptions options)
+{
+    var dataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
+    if (string.IsNullOrWhiteSpace(dataDirectory))
+    {
+        return null;
+    }
+
+    var phaseRoot = Directory.GetParent(dataDirectory)?.FullName;
+    return string.IsNullOrWhiteSpace(phaseRoot) ? null : Path.Combine(phaseRoot, "runtime");
 }
 
 static void ApplyNoStore(HttpContext context)

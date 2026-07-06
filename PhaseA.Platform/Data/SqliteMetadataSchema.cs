@@ -115,6 +115,48 @@ public static class SqliteMetadataSchema
         await AddColumnIfMissingAsync(
             connection,
             transaction,
+            "project_game_type_match_failures",
+            "matched_game_type_id",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN matched_game_type_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_game_type_match_failures",
+            "matched_guide_path",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN matched_guide_path TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_game_type_match_failures",
+            "steam_app_id",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN steam_app_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_game_type_match_failures",
+            "steam_name",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN steam_name TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_game_type_match_failures",
+            "steam_resolved_query",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN steam_resolved_query TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_game_type_match_failures",
+            "steam_attempted_queries_json",
+            "ALTER TABLE project_game_type_match_failures ADD COLUMN steam_attempted_queries_json TEXT NOT NULL DEFAULT '[]';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
             "runs",
             "exit_code",
             "ALTER TABLE runs ADD COLUMN exit_code INTEGER NULL;",
@@ -518,6 +560,12 @@ public static class SqliteMetadataSchema
             normalized_genre_tags_json TEXT NOT NULL DEFAULT '[]',
             candidate_scores_json TEXT NOT NULL DEFAULT '[]',
             missing_guide_path TEXT NOT NULL DEFAULT '',
+            matched_game_type_id TEXT NOT NULL DEFAULT '',
+            matched_guide_path TEXT NOT NULL DEFAULT '',
+            steam_app_id TEXT NOT NULL DEFAULT '',
+            steam_name TEXT NOT NULL DEFAULT '',
+            steam_resolved_query TEXT NOT NULL DEFAULT '',
+            steam_attempted_queries_json TEXT NOT NULL DEFAULT '[]',
             created_utc TEXT NOT NULL,
             FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE

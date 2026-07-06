@@ -74,6 +74,38 @@ public sealed class GameTypeGuideCatalogTests
     }
 
     [Fact]
+    public void MatchByGenreTags_ShouldResolveDeckbuilderCardBattlerBeforeRoguelikeAmbiguity()
+    {
+        using var repo = new TempRepo();
+        repo.WriteGuideCatalog();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(repo.Path, "workspaces"),
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(repo.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+        var catalog = new GameTypeGuideCatalog(options);
+
+        var match = catalog.MatchByGenreTags([
+            "Roguelike",
+            "Card Game",
+            "Deckbuilding",
+            "Strategy",
+            "Roguelike Deckbuilder",
+            "Card Battler",
+            "Roguelite",
+            "Dungeon Crawler",
+            "Procedural Generation",
+            "Turn-Based Combat"
+        ]);
+
+        match.Status.Should().Be("matched");
+        match.StatusReason.Should().Be("matched_by_genre_tags");
+        match.MatchedGameTypeId.Should().Be("card-game");
+        match.CandidateScores.Should().Contain(candidate => candidate.GameTypeId == "roguelike");
+    }
+
+    [Fact]
     public void MatchByGenreTags_ShouldResolveDeckBuilderFromRepositoryCatalog()
     {
         var repoRoot = ResolveRepositoryRoot();
@@ -123,9 +155,9 @@ public sealed class GameTypeGuideCatalogTests
             Directory.CreateDirectory(dir);
             File.WriteAllText(System.IO.Path.Combine(dir, "game-types.csv"), """
                 id,name,description,genre_tags,fragment_file
-                card-game,Card Game,"Card systems","card,deck-build,deckbuild,deck-builder,deck-building,deckbuilder,deckbuilding,roguelike-deckbuilder,card-battler",card-game.md
+                card-game,Card Game,"Card systems","card,deck-build,deckbuild,deck-builder,deck-building,deckbuilder,deckbuilding,roguelike-deckbuilder,card-battler,strategy,turn-based-combat",card-game.md
                 rpg,RPG,"Role playing","rpg,role-playing",rpg.md
-                roguelike,Roguelike,"Run-based generation","roguelike,roguelike-deckbuilder",roguelike.md
+                roguelike,Roguelike,"Run-based generation","roguelike,roguelike-deckbuilder,roguelite,dungeon-crawler,procedural-generation,turn-based-combat",roguelike.md
                 """);
             File.WriteAllText(System.IO.Path.Combine(dir, "card-game.md"), "# Card Game");
             File.WriteAllText(System.IO.Path.Combine(dir, "rpg.md"), "# RPG");

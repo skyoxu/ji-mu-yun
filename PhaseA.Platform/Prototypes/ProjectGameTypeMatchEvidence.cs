@@ -26,6 +26,10 @@ public sealed record ProjectGameTypeMatchEvidence(
 {
     public bool IsMatched => string.Equals(Status, "matched", StringComparison.Ordinal);
 
+    public string SteamResolvedQuery { get; init; } = "";
+
+    public IReadOnlyList<string> SteamAttemptedQueries { get; init; } = [];
+
     public static ProjectGameTypeMatchEvidence Empty(string statusReason = "not_resolved")
     {
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -93,6 +97,8 @@ public sealed record ProjectGameTypeMatchEvidence(
             SteamTags = evidence.SteamTags ?? [],
             SteamCategories = evidence.SteamCategories ?? [],
             SteamGenres = evidence.SteamGenres ?? [],
+            SteamResolvedQuery = evidence.SteamResolvedQuery ?? "",
+            SteamAttemptedQueries = evidence.SteamAttemptedQueries ?? [],
             NormalizedGenreTags = evidence.NormalizedGenreTags ?? [],
             MatchedGameTypeId = evidence.MatchedGameTypeId ?? "",
             MatchedGuidePath = evidence.MatchedGuidePath ?? "",

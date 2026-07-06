@@ -301,6 +301,7 @@ public sealed class BrowserUiRendererTests
             let resolveApi;
             async function api(path, options) {
               apiCalls.push({ path, options });
+              if (path.includes("/gdd/question-form/restore-latest")) return { status: "not_found", answers: [] };
               return await new Promise(resolve => { resolveApi = resolve; });
             }
 
@@ -352,7 +353,8 @@ public sealed class BrowserUiRendererTests
 
               const apiCountBeforeCachedOpen = apiCalls.length;
               await openGddQuestionFormModal();
-              assert.strictEqual(apiCalls.length, apiCountBeforeCachedOpen);
+              assert.strictEqual(apiCalls.length, apiCountBeforeCachedOpen + 1);
+              assert.ok(apiCalls.at(-1).path.includes("/gdd/question-form/restore-latest"));
               assert.strictEqual($("gddQuestionFormModal").classList.contains("hidden"), false);
               assert.strictEqual(state.gddQuestionFormProgressTimer, null);
               closeGddQuestionFormModal();
@@ -362,6 +364,14 @@ public sealed class BrowserUiRendererTests
               assert.strictEqual(document.inputs.get("reference_signal").required, true);
               assert.strictEqual(document.inputs.get("reference_signal").getAttribute("aria-required"), "true");
               assert.strictEqual(document.inputs.get("reference_signal").value, "Towerdemo2 的参考对象、体验目标和禁忌方向。");
+              clearGddQuestionFormDraft();
+              renderGddQuestionForm({
+                fields: fallbackGddQuestionFormFields(),
+                source: "agent",
+                restoreDraft: { answers: [{ label: "参考信号", answer: "上一次填写的参考信号" }] }
+              });
+              assert.strictEqual(document.inputs.get("reference_signal").value, "上一次填写的参考信号");
+              assert.ok($("gddQuestionFormHint").textContent.includes("已导入上一次填写的 1 项答案"));
 
               document.inputs.get("reference_signal").value = "";
               await confirmGddQuestionForm();
@@ -457,7 +467,7 @@ public sealed class BrowserUiRendererTests
               gddOutlineReady: false,
               localBusy: false
             };
-            const calls = { api: [], loadHistory: 0, render: 0, save: 0, out: [], loadRuns: 0, loadPackages: 0, clear: 0, refresh: 0, errors: 0, busy: [] };
+            const calls = { api: [], loadHistory: 0, render: 0, save: 0, out: [], loadRuns: 0, loadPackages: 0, clear: 0, refresh: 0, errors: 0, busy: [], openForm: 0, openOutline: 0 };
             let apiMode = "success";
             let loadRunsMode = "failure";
             const $ = id => elements.get(id) || null;
@@ -481,6 +491,13 @@ public sealed class BrowserUiRendererTests
             function showError() { calls.errors += 1; }
             function clearChatAttachments() { calls.clear += 1; state.chatAttachments = []; }
             async function refreshActiveRun() { calls.refresh += 1; return new Promise(() => {}); }
+            function normalizeGddSceneRoute(route) {
+              if (!route) return { scenes: [], entryScene: "" };
+              return { ...route, scenes: Array.isArray(route.scenes) ? route.scenes : [], entryScene: route.entryScene || "" };
+            }
+            function isGddQuestionFormModalOpen() { return false; }
+            async function openGddQuestionFormModal() { calls.openForm += 1; }
+            function callV2(name) { if (name === "v2OpenGddOutlineTab") calls.openOutline += 1; }
             function withTimeout(promise, label) {
               return new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => reject(new Error(`${label} timed out`)), 500);
@@ -499,13 +516,26 @@ public sealed class BrowserUiRendererTests
             {{routeScript}}
 
             (async () => {
-              const success = await withTimeout(startGddDocumentRoute("raw material"), "success GDD route");
+              const blocked = await withTimeout(startGddDocumentRoute("raw material"), "blocked GDD route");
+              assert.strictEqual(blocked, false);
+              assert.strictEqual(calls.api.length, 0);
+              assert.strictEqual(calls.openForm, 1);
+              assert.strictEqual(calls.out.at(-1), "请先确认场景路由后再创建策划大纲。");
+
+              const sceneRoute = {
+                sceneCountIntent: "multi",
+                entryScene: "map",
+                scenes: [{ id: "map", name: "Map", role: "hub", m1Required: true, playerGoal: "Pick a route." }],
+                transitions: []
+              };
+              const success = await withTimeout(startGddDocumentRoute("raw material", sceneRoute), "success GDD route");
               assert.strictEqual(success, true);
               assert.strictEqual(calls.api[0].path, "/api/projects/p1/gdd");
               const payload = JSON.parse(calls.api[0].options.body);
               assert.strictEqual(payload.message, "raw material");
               assert.strictEqual(payload.model, "gpt-test");
               assert.deepStrictEqual(payload.attachments, [{ name: "brief.md", content: "raw" }]);
+              assert.deepStrictEqual(payload.sceneRoute, sceneRoute);
               assert.strictEqual(state.gddOutlineReady, true);
               assert.strictEqual(calls.clear, 1);
               assert.deepStrictEqual(state.chatAttachments, []);
@@ -524,7 +554,7 @@ public sealed class BrowserUiRendererTests
               elements.get("chatMessage").value = "retry note";
               loadRunsMode = "success";
               apiMode = "failure";
-              const failure = await withTimeout(startGddDocumentRoute("raw material"), "failure GDD route");
+              const failure = await withTimeout(startGddDocumentRoute("raw material", sceneRoute), "failure GDD route");
               assert.strictEqual(failure, false);
               assert.strictEqual(calls.clear, 1);
               assert.deepStrictEqual(state.chatAttachments, [{ name: "brief.md", content: "raw" }]);
@@ -2937,6 +2967,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("function confirmGddQuestionForm()");
         html.Should().Contain("function startGddDocumentRoute(message, sceneRoute = null)");
         html.Should().Contain("/gdd/question-form");
+        html.Should().Contain("/gdd/question-form/restore-latest");
+        html.Should().Contain("function restoreValuesForGddQuestionForm");
+        html.Should().Contain("已导入上一次填写的");
         html.Should().Contain("/gdd/scene-route");
         html.Should().Contain("data-gdd-scene-route-json");
         html.Should().Contain("state.gddSceneRoute");
@@ -3059,6 +3092,17 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("退出登录");
         html.Should().Contain("data-delete-project");
         html.Should().Contain("deleteProject");
+        html.Should().Contain("id=\"projectListStatus\"");
+        html.Should().Contain("function setProjectListStatus");
+        html.Should().Contain("data-delete-project=\"${p.projectId}\">删除项目</button>");
+        html.Should().Contain("$(\"projects\").addEventListener(\"click\", event =>");
+        html.Should().Contain("void deleteProject(deleteButton.dataset.deleteProject || \"\")");
+        html.Should().Contain("正在调用删除 API");
+        html.Should().Contain("setProjectListStatus(failureMessage, true)");
+        var newGddMilestoneRoundIndex = html.IndexOf("async function createNewGddMilestoneRound", StringComparison.Ordinal);
+        newGddMilestoneRoundIndex.Should().BeGreaterThanOrEqualTo(0);
+        var newGddMilestoneRoundSource = html[newGddMilestoneRoundIndex..html.IndexOf("async function createIterationPlan", newGddMilestoneRoundIndex, StringComparison.Ordinal)];
+        newGddMilestoneRoundSource.Should().NotContain("项目已删除");
         html.Should().Contain("loadLatestProjectCreationFailure");
         html.Should().Contain("/api/project-creation-failures/latest");
         html.Should().Contain("listableProjects");
@@ -3806,6 +3850,38 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_ProjectOwnershipPrecheckDoesNotBlockAdminProjectDeleteRoute()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var middlewareIndex = source.IndexOf("TryReadApiProjectId(context.Request.Path, out var projectId)", StringComparison.Ordinal);
+        middlewareIndex.Should().BeGreaterThanOrEqualTo(0);
+        var middlewareSource = source[(middlewareIndex - 80)..(middlewareIndex + 260)];
+        middlewareSource.Should().Contain("!identity.IsAdmin");
+        middlewareSource.Should().Contain("ProjectBelongsToAccountAsync(identity.AccountId, projectId");
+
+        var deleteRouteIndex = source.IndexOf("app.MapDelete(\"/api/projects/{projectId}\"", StringComparison.Ordinal);
+        deleteRouteIndex.Should().BeGreaterThan(middlewareIndex);
+        var deleteRouteSource = source[deleteRouteIndex..source.IndexOf("app.MapPost(\"/api/projects/{projectId}/chapter2-bootstrap\"", deleteRouteIndex, StringComparison.Ordinal)];
+        deleteRouteSource.Should().Contain("CurrentIdentity(context)");
+        deleteRouteSource.Should().Contain("ReadFromJsonAsync<ProjectDeletionRequest>");
+        deleteRouteSource.Should().Contain("delete_request_invalid");
+        deleteRouteSource.Should().Contain("delete_request_required");
+        deleteRouteSource.Should().Contain("RecordProjectDeleteDiagnosticAsync");
+        deleteRouteSource.Should().Contain("DeleteProjectAsync(identity.AccountId, identity.IsAdmin, projectId");
+        source.Should().Contain("project-delete-diagnostics.jsonl");
+        source.Should().Contain("RecordUnhandledRequestDiagnosticAsync");
+        source.Should().Contain("unhandled-request-diagnostics.jsonl");
+    }
+
+    [Fact]
     public void Program_GddQuestionFormEndpointTranslatesConcurrencyLimit()
     {
         var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
@@ -3824,6 +3900,30 @@ public sealed class BrowserUiRendererTests
         var endpointSource = source[routeIndex..nextRouteIndex];
         endpointSource.Should().Contain("result.Status == \"rate_limited\"");
         endpointSource.Should().Contain("StatusCodes.Status429TooManyRequests");
+    }
+
+    [Fact]
+    public void Program_GddQuestionFormRestoreEndpointIsReadOnly()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var routeIndex = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/gdd/question-form/restore-latest\"", StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/scene-route\"", routeIndex, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        var endpointSource = source[routeIndex..nextRouteIndex];
+        endpointSource.Should().Contain("GameDesignQuestionFormRestoreService restore");
+        endpointSource.Should().Contain("restore.ReadLatestAsync(CurrentAccountId(context), projectId, cancellationToken)");
+        endpointSource.Should().Contain("Results.NotFound(new { error = \"project_not_found\" })");
+        endpointSource.Should().NotContain("Upsert");
+        endpointSource.Should().NotContain("CreateRunAsync");
     }
 
     [Fact]

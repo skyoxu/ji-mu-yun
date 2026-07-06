@@ -21,6 +21,7 @@ public sealed class GameDesignSceneRouteService
     private readonly PhaseAPlatformOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
+    private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
     private readonly TimeSpan _sceneRouteGenerationTimeout;
 
     public GameDesignSceneRouteService(
@@ -28,12 +29,14 @@ public sealed class GameDesignSceneRouteService
         PhaseAPlatformOptions options,
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
+        ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
         TimeSpan? sceneRouteGenerationTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine;
         _concurrencyLimiter = concurrencyLimiter ?? new QuestionFormConcurrencyLimiter();
+        _gameTypeMatchBackfill = gameTypeMatchBackfill;
         _sceneRouteGenerationTimeout = sceneRouteGenerationTimeout ?? DefaultSceneRouteGenerationTimeout;
     }
 
@@ -51,6 +54,10 @@ public sealed class GameDesignSceneRouteService
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return null;
+        }
+        if (_gameTypeMatchBackfill is not null)
+        {
+            project = await _gameTypeMatchBackfill.EnsureResolvedAsync(project, cancellationToken);
         }
 
         var message = Trim(request.Message, MaxMessageChars);

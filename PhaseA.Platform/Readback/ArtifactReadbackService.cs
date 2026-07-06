@@ -348,6 +348,14 @@ public sealed class ArtifactReadbackService
         return new AdminGameTypeMatchFailuresReadback(failures.Count, failures);
     }
 
+    public async Task<AdminGameTypeMatchRecordsReadback> GetAdminGameTypeMatchRecordsAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _metadataStore.ListProjectGameTypeMatchRecordsForAdminAsync(limit, cancellationToken);
+        return new AdminGameTypeMatchRecordsReadback(records.Count, records);
+    }
+
     public async Task<ProjectRunsReadback?> GetProjectRunsAsync(string projectId, CancellationToken cancellationToken = default)
     {
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);

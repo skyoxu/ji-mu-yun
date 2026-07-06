@@ -13,4 +13,10 @@ public sealed record ProjectGameTypeMatchFailureSnapshot(
     string NormalizedGenreTagsJson,
     string CandidateScoresJson,
     string MissingGuidePath,
+    string MatchedGameTypeId,
+    string MatchedGuidePath,
+    string SteamAppId,
+    string SteamName,
+    string SteamResolvedQuery,
+    string SteamAttemptedQueriesJson,
     string CreatedUtc);

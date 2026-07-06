@@ -33,6 +33,7 @@ public sealed class GameDesignDocumentService
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
+    private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
     private readonly TimeSpan _executionTimeout;
     private readonly TimeSpan _modelCapacityRetryDelay;
 
@@ -49,6 +50,7 @@ public sealed class GameDesignDocumentService
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
+        ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
         TimeSpan? executionTimeout = null,
         TimeSpan? modelCapacityRetryDelay = null)
     {
@@ -59,6 +61,7 @@ public sealed class GameDesignDocumentService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _gameTypeMatchBackfill = gameTypeMatchBackfill;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _modelCapacityRetryDelay = modelCapacityRetryDelay ?? DefaultModelCapacityRetryDelay;
     }
@@ -77,6 +80,11 @@ public sealed class GameDesignDocumentService
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
+        }
+        var allowGameTypeKeywordFallback = _gameTypeMatchBackfill is null;
+        if (_gameTypeMatchBackfill is not null)
+        {
+            project = await _gameTypeMatchBackfill.EnsureResolvedAsync(project, cancellationToken);
         }
 
         var message = (request.Message ?? "").Trim();
@@ -151,7 +159,7 @@ public sealed class GameDesignDocumentService
             var now = DateTimeOffset.UtcNow.ToString("O");
             var persistedAttachments = await PersistAttachmentsAsync(projectRoot, runId, attachments, CancellationToken.None);
             var historicalAttachments = LoadHistoricalAttachments(projectRoot, persistedAttachments);
-            var designTemplate = SelectGameTypeDesignTemplate(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments);
+            var designTemplate = SelectGameTypeDesignTemplate(project, message, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, allowGameTypeKeywordFallback);
             var sceneRoute = GameDesignSceneRouteService.NormalizeSubmittedSceneRoute(request.SceneRoute);
             var prompt = BuildPrompt(project, message, sceneRoute, memory?.MemorySummary, chatMessages, persistedAttachments, historicalAttachments, designTemplate, now, outlineDraftRelativePath);
             await File.WriteAllTextAsync(promptAbsolutePath, prompt, Encoding.UTF8, CancellationToken.None);
@@ -1522,7 +1530,8 @@ public sealed class GameDesignDocumentService
         string? memorySummary,
         IReadOnlyList<ProjectChatMessageSnapshot> chatMessages,
         IReadOnlyList<TextAttachment> currentAttachments,
-        IReadOnlyList<TextAttachment> historicalAttachments)
+        IReadOnlyList<TextAttachment> historicalAttachments,
+        bool allowKeywordFallback = true)
     {
         var catalog = new BmadGameTypeDesignCatalog(_options);
         var matchEvidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
@@ -1547,6 +1556,11 @@ public sealed class GameDesignDocumentService
                     "explicit_gameplay_semantics",
                     $"Explicit gameplay semantics matched template '{gameplayEntry.Id}'.");
             }
+        }
+
+        if (!allowKeywordFallback)
+        {
+            return null;
         }
 
         var matchText = BuildTemplateMatchText(project, message, memorySummary, chatMessages, currentAttachments, historicalAttachments);

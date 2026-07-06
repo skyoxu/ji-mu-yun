@@ -142,40 +142,56 @@ public sealed class ProjectCreationService
             return ProjectCreationResult.Failure("project_creation_failed");
         }
 
-        if (!gameTypeMatch.IsMatched)
-        {
-            await RecordGameTypeMatchFailureBestEffortAsync(new ProjectGameTypeMatchFailureCommand(
-                accountId,
-                projectId,
-                command.ProjectName,
-                command.GameName,
-                command.GameTypeSource,
-                gameTypeMatch.Status,
-                gameTypeMatch.StatusReason,
-                gameTypeMatch.ReferenceQuery,
-                JsonSerializer.Serialize(gameTypeMatch.NormalizedGenreTags, ProjectGameTypeMatchEvidence.JsonOptions),
-                JsonSerializer.Serialize(gameTypeMatch.CandidateScores, ProjectGameTypeMatchEvidence.JsonOptions),
-                gameTypeMatch.MissingGuidePath), cancellationToken);
-        }
+        await RecordGameTypeMatchRecordBestEffortAsync(
+            BuildGameTypeMatchRecord(accountId, projectId, command.ProjectName, command.GameName, command.GameTypeSource, gameTypeMatch),
+            cancellationToken);
 
         return result;
     }
 
-    private async Task RecordGameTypeMatchFailureBestEffortAsync(
-        ProjectGameTypeMatchFailureCommand failure,
+    private async Task RecordGameTypeMatchRecordBestEffortAsync(
+        ProjectGameTypeMatchFailureCommand record,
         CancellationToken cancellationToken)
     {
         try
         {
-            await _metadataStore.RecordProjectGameTypeMatchFailureAsync(failure, cancellationToken);
+            await _metadataStore.RecordProjectGameTypeMatchFailureAsync(record, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger?.LogWarning(
                 ex,
-                "Failed to record game type match failure for project {ProjectId}.",
-                failure.ProjectId);
+                "Failed to record game type match record for project {ProjectId}.",
+                record.ProjectId);
         }
+    }
+
+    private static ProjectGameTypeMatchFailureCommand BuildGameTypeMatchRecord(
+        string accountId,
+        string projectId,
+        string projectName,
+        string gameName,
+        string gameTypeSource,
+        ProjectGameTypeMatchEvidence evidence)
+    {
+        return new ProjectGameTypeMatchFailureCommand(
+            accountId,
+            projectId,
+            projectName,
+            gameName,
+            gameTypeSource,
+            evidence.Status,
+            evidence.StatusReason,
+            evidence.ReferenceQuery,
+            JsonSerializer.Serialize(evidence.NormalizedGenreTags, ProjectGameTypeMatchEvidence.JsonOptions),
+            JsonSerializer.Serialize(evidence.CandidateScores, ProjectGameTypeMatchEvidence.JsonOptions),
+            evidence.MissingGuidePath,
+            evidence.MatchedGameTypeId,
+            evidence.MatchedGuidePath,
+            evidence.SteamAppId,
+            evidence.SteamName,
+            evidence.SteamResolvedQuery,
+            JsonSerializer.Serialize(evidence.SteamAttemptedQueries, ProjectGameTypeMatchEvidence.JsonOptions));
     }
 
     private async Task<ProjectGameTypeMatchEvidence> ResolveGameTypeMatchAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -200,6 +216,16 @@ public sealed class ProjectCreationService
         ProjectDeletionRequest request,
         CancellationToken cancellationToken = default)
     {
+        return await DeleteProjectAsync(accountId, isAdmin: false, projectId, request, cancellationToken);
+    }
+
+    public async Task<ProjectDeletionResult> DeleteProjectAsync(
+        string accountId,
+        bool isAdmin,
+        string projectId,
+        ProjectDeletionRequest request,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
@@ -211,7 +237,7 @@ public sealed class ProjectCreationService
         }
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
+        if (project is null || (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal)))
         {
             return ProjectDeletionResult.Failure("project_not_found");
         }
@@ -224,11 +250,24 @@ public sealed class ProjectCreationService
         }
 
         await _metadataStore.DeleteProjectAsync(projectId, cancellationToken);
+        var warningCode = (string?)null;
         if (Directory.Exists(project.WorkspaceRootPath))
         {
-            Directory.Delete(project.WorkspaceRootPath, recursive: true);
+            try
+            {
+                Directory.Delete(project.WorkspaceRootPath, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                warningCode = "workspace_delete_failed";
+                _logger?.LogWarning(
+                    ex,
+                    "Project {ProjectId} was deleted from metadata, but workspace deletion failed for {WorkspaceRootPath}.",
+                    projectId,
+                    project.WorkspaceRootPath);
+            }
         }
 
-        return ProjectDeletionResult.Deleted(projectId);
+        return ProjectDeletionResult.Deleted(projectId, warningCode);
     }
 }
