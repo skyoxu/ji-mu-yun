@@ -70,7 +70,28 @@
 - Defeat conditions
 - Early surrender / concession mechanics
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| command_map | Command map | Show the strategic board, units, territory, or base state. | Always | start | economy_build,battle_resolution | The player can inspect map state and choose a strategic action. |
+| economy_build | Economy / build / production state | Allocate resources toward future tactical or strategic advantage. | Always | command_map | battle_resolution | At least one resource is spent to build, produce, research, or deploy. |
+| battle_resolution | Battle or turn resolution | The plan produces a visible conflict or outcome. | Always | command_map,economy_build | command_map | A unit/order/tactic resolves and changes map or score state. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| resource_economy | Resource economy | Always | Strategic decisions need constrained resources. | Resources are displayed, spent, and changed by player choices. |
+| unit_or_structure_rules | Unit, structure, or order rules | Always | The prototype needs controllable strategic actors. | At least one actor/structure accepts commands and changes state. |
+| opposition_ai_or_rules | Opponent AI or rule pressure | Always | Without opposition there is no strategic tension. | Enemy, timer, wave, or objective pressure responds to player state. |
+| turn_or_tick_resolution | Turn/tick/action resolution | Always | The game must advance consequences deterministically. | A clear turn, tick, or command resolution updates the world. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

@@ -259,6 +259,7 @@ public sealed class PrototypeIterationPlanService
             planning_analysis = planningAnalysis,
             llm_observability = llmObservability,
             selected_capabilities = BuildSelectedCapabilitiesForRoute(routeStrategy, promptMessage, planningContext, prototypeContract, regenerationGuidance),
+            required_modules = BuildRequiredModulesForRoute(routeStrategy, prototypeContract),
             goals = goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -271,7 +272,14 @@ public sealed class PrototypeIterationPlanService
         });
 
         var evaluation = await EvaluateAsync(accountId, projectId, ToPrototypeProgress(planningContext), model, cancellationToken);
-        return new PrototypeIterationPlanResult(created.SessionId, "ready", summary, goals, planningAnalysis, evaluation);
+        return new PrototypeIterationPlanResult(
+            created.SessionId,
+            "ready",
+            summary,
+            goals,
+            planningAnalysis,
+            evaluation,
+            BuildRequiredModulesForRoute(routeStrategy, prototypeContract));
     }
 
     private async Task<IterationGoalBuildResult> BuildGoalsForProjectAsync(
@@ -1200,7 +1208,7 @@ public sealed class PrototypeIterationPlanService
     {
         if (string.IsNullOrWhiteSpace(stateText))
         {
-            return new PrototypeIterationRouteContext(null, null);
+            return new PrototypeIterationRouteContext(null, null, null);
         }
 
         try
@@ -1208,16 +1216,18 @@ public sealed class PrototypeIterationPlanService
             using var document = JsonDocument.Parse(stateText);
             if (!IsCurrentOrLegacyRouteState(document.RootElement, expectedSessionId))
             {
-                return new PrototypeIterationRouteContext(null, null);
+                return new PrototypeIterationRouteContext(null, null, null);
             }
 
+            var requiredModules = TryReadRequiredModules(document.RootElement);
             return new PrototypeIterationRouteContext(
                 TryReadPlanningAnalysis(document.RootElement),
-                TryReadSelectedCapabilities(document.RootElement));
+                TryReadSelectedCapabilities(document.RootElement),
+                requiredModules);
         }
         catch (JsonException)
         {
-            return new PrototypeIterationRouteContext(null, null);
+            return new PrototypeIterationRouteContext(null, null, null);
         }
     }
 
@@ -1318,6 +1328,86 @@ public sealed class PrototypeIterationPlanService
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return capabilities.Count == 0 ? null : capabilities;
+    }
+
+    private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? TryReadRequiredModules(JsonElement root)
+    {
+        if (!root.TryGetProperty("required_modules", out var modulesElement) ||
+            modulesElement.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var modules = modulesElement
+            .EnumerateArray()
+            .Select(ReadRequiredModule)
+            .Where(module => module is not null)
+            .Select(module => module!)
+            .ToArray();
+
+        return modules.Length == 0 ? null : modules;
+    }
+
+    private static PrototypeIterationPlanRequiredModuleResult? ReadRequiredModule(JsonElement moduleElement)
+    {
+        if (moduleElement.ValueKind == JsonValueKind.String)
+        {
+            var id = moduleElement.GetString();
+            return string.IsNullOrWhiteSpace(id)
+                ? null
+                : new PrototypeIterationPlanRequiredModuleResult(id, "", "required", "explicit_gdd_conflict", [], null);
+        }
+
+        if (moduleElement.ValueKind == JsonValueKind.Object &&
+            moduleElement.TryGetProperty("id", out var idElement) &&
+            idElement.ValueKind == JsonValueKind.String)
+        {
+            var id = idElement.GetString();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return null;
+            }
+
+            return new PrototypeIterationPlanRequiredModuleResult(
+                id,
+                ReadOptionalString(moduleElement, "source"),
+                ReadOptionalString(moduleElement, "status"),
+                ReadOptionalString(moduleElement, "appliesUnless"),
+                ReadStringArray(moduleElement, "acceptanceMarkers"),
+                ReadOptionalNullableString(moduleElement, "coveredByGoalCapability"));
+        }
+
+        return null;
+    }
+
+    private static string ReadOptionalString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString() ?? ""
+            : "";
+    }
+
+    private static string? ReadOptionalNullableString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+    }
+
+    private static IReadOnlyList<string> ReadStringArray(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var property) || property.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return property
+            .EnumerateArray()
+            .Where(item => item.ValueKind == JsonValueKind.String)
+            .Select(item => item.GetString())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item!)
+            .ToArray();
     }
 
     private static bool IsKnownJrpgCapability(string capabilityId)
@@ -1436,7 +1526,8 @@ public sealed class PrototypeIterationPlanService
             details.Goals,
             details.GoalRuns,
             details.LatestEvaluation,
-            routeContext.PlanningAnalysis);
+            routeContext.PlanningAnalysis,
+            routeContext.RequiredModules);
     }
 
     public async Task<IReadOnlyList<PrototypeIterationPlanRoundDetails>> ListAsync(
@@ -1465,7 +1556,8 @@ public sealed class PrototypeIterationPlanService
                     details.Goals,
                     details.GoalRuns,
                     details.LatestEvaluation,
-                    routeContext.PlanningAnalysis);
+                    routeContext.PlanningAnalysis,
+                    routeContext.RequiredModules);
             })
             .ToArray();
     }
@@ -1681,7 +1773,8 @@ public sealed class PrototypeIterationPlanService
         if (routeStrategy.UsesSpecializedPlanEvaluation &&
             string.Equals(routeStrategy.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
         {
-            var deckbuilderPlanIssue = FindDeckbuilderPlanContractIssue(goals, details.Session.SourceMessage);
+            var routeContext = TryReadCurrentIterationRouteContext(_routeStateWriter.ReadLatestIterationPlanState(project), details.Session.SessionId);
+            var deckbuilderPlanIssue = FindDeckbuilderPlanContractIssue(goals, routeContext.RequiredModules);
             if (deckbuilderPlanIssue is not null)
             {
                 return await PersistEvaluationAsync(details, new PrototypeIterationPlanEvaluationResult(
@@ -2287,6 +2380,72 @@ public sealed class PrototypeIterationPlanService
             .ToArray();
     }
 
+    private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> BuildRequiredModulesForRoute(
+        IGameTypeRouteStrategy routeStrategy,
+        PrototypeContractSnapshot? prototypeContract)
+    {
+        if (string.Equals(routeStrategy.GameTypeId, "deckbuilder", StringComparison.OrdinalIgnoreCase))
+        {
+            return DeckbuilderRequiredModules
+                .Select(module => HasExplicitDeckbuilderRequiredModuleConflict(module.Id, prototypeContract)
+                    ? module with { Status = "skipped_by_explicit_gdd_conflict" }
+                    : module)
+                .ToArray();
+        }
+
+        return [];
+    }
+
+    private static bool HasExplicitDeckbuilderRequiredModuleConflict(string moduleId, PrototypeContractSnapshot? prototypeContract)
+    {
+        var text = BuildDeckbuilderRequiredModuleConflictText(prototypeContract);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        return moduleId switch
+        {
+            "route_map_path_selection" => ContainsAny(
+                text,
+                "no route map",
+                "without route map",
+                "no route selection",
+                "without route selection",
+                "no path selection",
+                "without path selection",
+                "single combat scene only",
+                "single battle scene only",
+                "battle only prototype",
+                "combat only prototype"),
+            "hand_card_dragging" => ContainsAny(
+                text,
+                "no drag",
+                "without drag",
+                "no dragging",
+                "without dragging",
+                "button only card play",
+                "button-only card play",
+                "click only card play",
+                "click-to-play only",
+                "tap only card play"),
+            _ => false
+        };
+    }
+
+    private static string BuildDeckbuilderRequiredModuleConflictText(PrototypeContractSnapshot? prototypeContract)
+    {
+        if (string.IsNullOrWhiteSpace(prototypeContract?.Json))
+        {
+            return "";
+        }
+
+        return string.Join(
+            " ",
+            prototypeContract.Json,
+            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract.Json)).ToLowerInvariant();
+    }
+
     private static string BuildJrpgSelectionText(
         string message,
         IterationPlanningContext? planningContext,
@@ -2428,11 +2587,6 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractSnapshot? prototypeContract,
         string? regenerationGuidance)
     {
-        var text = string.Join(
-            " ",
-            message ?? string.Empty,
-            regenerationGuidance ?? string.Empty,
-            JrpgRouteSemantics.ExtractPrototypeContractIntentText(prototypeContract?.Json)).ToLowerInvariant();
         var selectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "run_context",
@@ -2446,12 +2600,6 @@ public sealed class PrototypeIterationPlanService
             "deck_mutation_feedback",
             "final_deckbuilder_first_loop_acceptance"
         };
-
-        if (RequiresDeckbuilderRouteChoice(text) ||
-            ContainsAny(text, "route map", "event nodes", "shop nodes", "elites", "route choice", "node choice", "branch", "path", "地图", "路线", "节点", "商店", "精英", "分支"))
-        {
-            selectedIds.Add("map_or_route_choice");
-        }
 
         return DeckbuilderFirstLoopCapabilities
             .Where(capability => selectedIds.Contains(capability.Id))
@@ -2544,6 +2692,24 @@ public sealed class PrototypeIterationPlanService
         string Title,
         string DescriptionTemplate,
         string AcceptanceTemplate);
+
+    private static readonly PrototypeIterationPlanRequiredModuleResult[] DeckbuilderRequiredModules =
+    [
+        new(
+            "route_map_path_selection",
+            "docs/game-type-guides/card-game.md",
+            "required",
+            "explicit_gdd_conflict",
+            ["RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection"],
+            "final_deckbuilder_first_loop_acceptance"),
+        new(
+            "hand_card_dragging",
+            "docs/game-type-guides/card-game.md",
+            "required",
+            "explicit_gdd_conflict",
+            ["DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone"],
+            "card_play_resolution")
+    ];
 
     private static List<PrototypeIterationPlanGoalResult> AppendGenericFinalAcceptanceGoal(
         List<PrototypeIterationPlanGoalResult> goals,
@@ -3223,7 +3389,9 @@ public sealed class PrototypeIterationPlanService
             """;
     }
 
-    private static string? FindDeckbuilderPlanContractIssue(ProjectIterationGoalSnapshot[] goals, string? sourceMessage)
+    private static string? FindDeckbuilderPlanContractIssue(
+        ProjectIterationGoalSnapshot[] goals,
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? requiredModules)
     {
         if (goals.Length == 0)
         {
@@ -3232,9 +3400,8 @@ public sealed class PrototypeIterationPlanService
 
         var orderedGoals = goals.OrderBy(goal => goal.GoalIndex).ToArray();
         var selected = ResolveDeckbuilderCapabilitiesFromGoals(orderedGoals);
-        var sourceRequiresRoute = RequiresDeckbuilderRouteChoice((sourceMessage ?? string.Empty).ToLowerInvariant());
         var required = DeckbuilderFirstLoopCapabilities
-            .Where(capability => sourceRequiresRoute || !string.Equals(capability.Id, "map_or_route_choice", StringComparison.OrdinalIgnoreCase))
+            .Where(capability => !string.Equals(capability.Id, "map_or_route_choice", StringComparison.OrdinalIgnoreCase))
             .Select(capability => capability.Id)
             .ToArray();
         var missing = required.Where(id => !selected.Contains(id)).ToArray();
@@ -3243,9 +3410,13 @@ public sealed class PrototypeIterationPlanService
             return "Deckbuilder plan boundary mismatch: missing first-loop capabilities: " + string.Join(", ", missing) + ".";
         }
 
-        if (!sourceRequiresRoute && selected.Contains("map_or_route_choice"))
+        var missingRequiredModules = DeckbuilderRequiredModules
+            .Where(module => requiredModules is null || !requiredModules.Any(candidate => string.Equals(candidate.Id, module.Id, StringComparison.OrdinalIgnoreCase)))
+            .Select(module => module.Id)
+            .ToArray();
+        if (missingRequiredModules.Length > 0)
         {
-            return "Deckbuilder plan boundary mismatch: route/map choice is conditional and must not be required unless the source request asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map.";
+            return "Deckbuilder plan boundary mismatch: missing required game-type modules: " + string.Join(", ", missingRequiredModules) + ".";
         }
 
         var firstText = string.Join(" ", orderedGoals[0].Title, orderedGoals[0].Description, orderedGoals[0].AcceptanceHint).ToLowerInvariant();
@@ -3343,8 +3514,9 @@ public sealed class PrototypeIterationPlanService
             7. combat win/fail resolution
             8. post-combat card draft or reward
             9. deck mutation feedback
-            10. map or route choice only if the source request explicitly asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map
-            11. final deckbuilder first-loop acceptance
+            10. final deckbuilder first-loop acceptance
+
+            Add a separate required_modules block with route_map_path_selection and hand_card_dragging. Treat these modules as required unless the GDD records an explicit conflict; do not add route_map_path_selection as a normal iteration goal.
 
             Keep the source request in scope: {TrimForHint(details.Session.SourceMessage, 160)}
             """;
@@ -4172,7 +4344,8 @@ public sealed class PrototypeIterationPlanService
 
     private sealed record PrototypeIterationRouteContext(
         PrototypeIterationPlanningAnalysisResult? PlanningAnalysis,
-        HashSet<string>? SelectedCapabilities);
+        HashSet<string>? SelectedCapabilities,
+        IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules);
 
     private sealed record IterationPlanningContext(
         string AnalysisSource,
@@ -4321,7 +4494,8 @@ public sealed record PrototypeIterationPlanDetails(
     IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
-    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);
+    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
+    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null);
 
 public sealed record PrototypeIterationPlanRoundDetails(
     int RoundIndex,
@@ -4329,7 +4503,8 @@ public sealed record PrototypeIterationPlanRoundDetails(
     IReadOnlyList<ProjectIterationGoalSnapshot> Goals,
     IReadOnlyList<ProjectIterationGoalRunSnapshot> GoalRuns,
     PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
-    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null);
+    PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
+    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null);
 
 internal sealed class PrototypeIterationPlanLlmException : Exception
 {

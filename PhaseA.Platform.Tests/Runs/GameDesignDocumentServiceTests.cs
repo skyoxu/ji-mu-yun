@@ -94,11 +94,15 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("not ECS");
         runner.Commands[0].StandardInput.Should().Contain("Game Type Design Template Baseline");
         runner.Commands[0].StandardInput.Should().Contain("TemplateId: rpg");
-        runner.Commands[0].StandardInput.Should().Contain("RPG Specific Elements");
+        runner.Commands[0].StandardInput.Should().Contain("Default Prototype Contract");
+        runner.Commands[0].StandardInput.Should().Contain("field_exploration");
+        runner.Commands[0].StandardInput.Should().Contain("combat_encounter");
+        runner.Commands[0].StandardInput.Should().Contain("character_stats");
         runner.Commands[0].StandardInput.Should().Contain("Module Matrix");
         runner.Commands[0].StandardInput.Should().Contain("final_first_loop_acceptance");
-        runner.Commands[0].StandardInput.Should().Contain("Current user input and uploaded references override this baseline");
-        runner.Commands[0].StandardInput.Should().Contain("This template must not affect prototype skeleton creation");
+        runner.Commands[0].StandardInput.Should().Contain("Preserve `Always` default scenes");
+        runner.Commands[0].StandardInput.Should().Contain("record the explicit override reason");
+        runner.Commands[0].StandardInput.Should().NotContain("This template must not affect prototype skeleton creation");
         runner.Commands[0].StandardInput.Should().Contain("Each milestone item must be implementation-facing enough to become a SPEC");
         runner.Commands[0].StandardInput.Should().Contain("M1 must be the first playable skeleton module");
         runner.Commands[0].StandardInput.Should().Contain("matching Godot physics nodes and collision validation");
@@ -118,6 +122,51 @@ public sealed class GameDesignDocumentServiceTests
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-gdd-outline-draft" && item.RelativePath.EndsWith("gdd-outline.generated.json", StringComparison.Ordinal));
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath == "docs/prototype-v1-plan.md");
         artifacts.Should().Contain(item => item.ArtifactType == "game-design-milestone-spec" && item.RelativePath.StartsWith("docs/m1-", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldInjectDeckbuilderDefaultPrototypeContract()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var accountId = account.AccountId;
+        var projectId = await CreateProjectAsync(store, options, accountId, "Deckbuilder");
+        var runner = new FakeHostedProcessRunner();
+        var service = new GameDesignDocumentService(
+            store,
+            options,
+            runner,
+            new ProjectWorkspaceSeeder(options),
+            executionTimeout: TimeSpan.FromSeconds(5));
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new GameDesignDocumentRequest(
+                "Create a deckbuilder prototype with class selection, route map, card battle, and reward choice.",
+                "gpt-5.4",
+                []));
+
+        result.Status.Should().Be("succeeded");
+        runner.Commands.Should().ContainSingle();
+        runner.Commands[0].StandardInput.Should().Contain("TemplateId: card-game");
+        runner.Commands[0].StandardInput.Should().Contain("Default Prototype Contract");
+        runner.Commands[0].StandardInput.Should().Contain("class_selection");
+        runner.Commands[0].StandardInput.Should().Contain("Class Selection");
+        runner.Commands[0].StandardInput.Should().Contain("route_map");
+        runner.Commands[0].StandardInput.Should().Contain("Route Map");
+        runner.Commands[0].StandardInput.Should().Contain("card_battle");
+        runner.Commands[0].StandardInput.Should().Contain("Card Battle");
+        runner.Commands[0].StandardInput.Should().Contain("reward_choice");
+        runner.Commands[0].StandardInput.Should().Contain("Reward Choice");
+        runner.Commands[0].StandardInput.Should().Contain("route_map_path_selection");
+        runner.Commands[0].StandardInput.Should().Contain("Slay the Spire-like route map");
+        runner.Commands[0].StandardInput.Should().Contain("hand_card_dragging");
+        runner.Commands[0].StandardInput.Should().Contain("Cards in hand can be dragged");
     }
 
     [Fact]
@@ -349,6 +398,8 @@ public sealed class GameDesignDocumentServiceTests
     [InlineData("Create a turn_based_tactics prototype with grid movement and positioning.", "turn-based-tactics")]
     [InlineData("Create an idle-incremental prototype with offline growth and clicker upgrades.", "idle-incremental")]
     [InlineData("Create a visual novel prototype with branching dialogue and relationship choices.", "visual-novel")]
+    [InlineData("Create a deckbuild prototype with route choices and card combat.", "card-game")]
+    [InlineData("Create a deck builder prototype with route choices and card combat.", "card-game")]
     public async Task CreateAsync_ShouldMatchHyphenSpaceAndUnderscoreEquivalentTemplateAliases(string prompt, string expectedTemplateId)
     {
         using var workspace = new TempWorkspace();
@@ -404,6 +455,7 @@ public sealed class GameDesignDocumentServiceTests
     [InlineData("sandbox game creative mode", "sandbox")]
     [InlineData("interactive fiction parser", "text-based")]
     [InlineData("party game local multiplayer", "party-game")]
+    [InlineData("deckbuild route map card combat", "card-game")]
     public void DetectExplicitGameplayTemplateId_ShouldCoverAllGameTypeTemplateIds(string text, string expectedTemplateId)
     {
         GameTypeDesignTemplateDetector.DetectExplicitGameplayTemplateId(text).Should().Be(expectedTemplateId);
@@ -1430,7 +1482,18 @@ public sealed class GameDesignDocumentServiceTests
 
         public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
         {
-            var matched = _gameType.Equals("RPG", StringComparison.OrdinalIgnoreCase) ? "rpg" : "";
+            var lower = _gameType.ToLowerInvariant();
+            var matched = _gameType.Equals("RPG", StringComparison.OrdinalIgnoreCase)
+                ? "rpg"
+                : lower.Contains("deck", StringComparison.Ordinal) || lower.Contains("card", StringComparison.Ordinal)
+                    ? "card-game"
+                    : "";
+            var tags = matched switch
+            {
+                "rpg" => new[] { "rpg", "jrpg" },
+                "card-game" => new[] { "card", "deck-building", "roguelike deckbuilder" },
+                _ => []
+            };
             var now = DateTimeOffset.UtcNow.ToString("O");
             return Task.FromResult(new ProjectGameTypeMatchEvidence(
                 1,
@@ -1440,10 +1503,10 @@ public sealed class GameDesignDocumentServiceTests
                 gameTypeSource,
                 "1",
                 "Test App",
-                matched == "rpg" ? ["RPG", "JRPG"] : [],
+                tags,
                 [],
-                matched == "rpg" ? ["RPG"] : [],
-                matched == "rpg" ? ["rpg", "jrpg"] : [],
+                tags,
+                tags,
                 matched,
                 string.IsNullOrWhiteSpace(matched) ? "" : $"docs/game-type-guides/{matched}.md",
                 string.IsNullOrWhiteSpace(matched) ? 0 : 20,

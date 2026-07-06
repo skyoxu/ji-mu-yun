@@ -75,7 +75,27 @@
 - Special event modes
 - Tournament formats
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| class_selection | Class Selection | Let the player choose a starting class, starter deck, and class identity before the run. | Always | start | route_map | At least two classes are selectable and the selected class affects the starter deck or starting stats. |
+| route_map | Route Map | Present a branching run map where the player chooses the next node and route. | Always | class_selection,reward_choice | card_battle | A Slay the Spire-like route map shows connected nodes and accepts a valid next-node choice. |
+| card_battle | Card Battle | Resolve turn-based card combat with hand, resources, targets, enemies, and card play feedback. | Always | route_map | reward_choice | The player can drag a card from hand, preview the target/play intent, and resolve at least one card effect. |
+| reward_choice | Reward Choice | Let the player choose post-battle rewards before returning to the route map. | Always | card_battle | route_map | At least two rewards are shown, one can be selected, and the selected reward changes deck or run state. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| route_map_path_selection | Route map path selection | Always | Deckbuilder runs need a clear branching route choice similar to Slay the Spire. | The route map renders connected nodes, restricts choices to reachable next nodes, stores the selected path, and transitions into the selected encounter. |
+| hand_card_dragging | Hand card dragging | Always | Card battle needs tactile hand interaction instead of button-only card play. | Cards in hand can be dragged, lifted above the hand, preview a valid or invalid drop target, snap back on cancel, and resolve when dropped on a valid target or play zone. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

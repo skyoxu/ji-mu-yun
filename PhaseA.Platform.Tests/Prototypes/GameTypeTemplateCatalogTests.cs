@@ -129,9 +129,9 @@ public sealed class GameTypeTemplateCatalogTests
         File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
         ## RPG Specific Elements
 
-        {new string('A', 2600)}
+        {new string('A', 5000)}
 
-        ## Module Matrix
+        ### Module Matrix
 
         | No | id | Module | Default | Purpose | Acceptance |
         | --- | --- | --- | --- | --- | --- |
@@ -201,13 +201,74 @@ public sealed class GameTypeTemplateCatalogTests
         var rpg = catalog.Find("rpg");
 
         rpg.Should().NotBeNull();
-        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(4200);
         rpg.GuideExcerpt.Should().Contain("Module Matrix");
         rpg.GuideExcerpt.Should().Contain("`battle_or_challenge_resolution`");
         rpg.GuideExcerpt.Should().Contain("`final_first_loop_acceptance`");
         rpg.GuideExcerpt.Should().Contain("Conflict is settled.");
         rpg.GuideExcerpt.Should().NotContain("Huge Reference Appendix");
         rpg.GuideExcerpt.Should().NotContain(new string('Z', 100));
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldPrioritizeDefaultPrototypeContract_WhenGuideIsLong()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var skillRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        var gameTypesRoot = Path.Combine(skillRoot, "game-types");
+        Directory.CreateDirectory(gameTypesRoot);
+        File.WriteAllText(Path.Combine(skillRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Character progression,rpg,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), $"""
+        ## RPG Specific Elements
+
+        {new string('A', 5000)}
+
+        ## Default Prototype Contract
+
+        ### Default Scenes
+
+        | scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+        | --- | --- | --- | --- | --- | --- | --- |
+        | field_exploration | Field exploration | Explore. | Always | start | combat_encounter | Movement and objective are visible. |
+        | combat_encounter | Combat encounter | Fight. | Always | field_exploration | field_exploration | Enemy and result are visible. |
+
+        ### Required Modules
+
+        | module_id | module_name | required_by_default | purpose | minimum_acceptance |
+        | --- | --- | --- | --- | --- |
+        | character_stats | Character stats | Always | Track actor state. | HP or stats affect play. |
+
+        ## Module Matrix
+
+        | No | id | Module | Default | Purpose | Acceptance |
+        | --- | --- | --- | --- | --- | --- |
+        | 1 | `opening_context` | Opening context | Always | Establish context. | Context is visible. |
+        """, System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(4200);
+        rpg.GuideExcerpt.Should().Contain("Default Prototype Contract");
+        rpg.GuideExcerpt.Should().Contain("field_exploration");
+        rpg.GuideExcerpt.Should().Contain("combat_encounter");
+        rpg.GuideExcerpt.Should().Contain("character_stats");
+        rpg.GuideExcerpt.Should().Contain("Module Matrix");
+        rpg.GuideExcerpt.Split("Module Matrix").Length.Should().Be(2);
+        rpg.GuideExcerpt.Should().Contain("`opening_context`");
+        rpg.GuideExcerpt.Should().NotContain(new string('A', 100));
     }
 
     [Fact]
@@ -247,7 +308,7 @@ public sealed class GameTypeTemplateCatalogTests
         var rpg = catalog.Find("rpg");
 
         rpg.Should().NotBeNull();
-        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(4200);
         rpg.GuideExcerpt.Should().Contain("Compact id index");
         rpg.GuideExcerpt.Should().Contain("`module_01`");
         rpg.GuideExcerpt.Should().Contain("`module_24`");
@@ -290,7 +351,7 @@ public sealed class GameTypeTemplateCatalogTests
         var rpg = catalog.Find("rpg");
 
         rpg.Should().NotBeNull();
-        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(4200);
         rpg.GuideExcerpt.Should().Contain("Compact id index");
         rpg.GuideExcerpt.Should().Contain("`module_001`");
         rpg.GuideExcerpt.Should().Contain("`module_050`");
@@ -334,7 +395,7 @@ public sealed class GameTypeTemplateCatalogTests
         var rpg = catalog.Find("rpg");
 
         rpg.Should().NotBeNull();
-        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(2400);
+        rpg!.GuideExcerpt.Length.Should().BeLessThanOrEqualTo(4200);
         rpg.GuideExcerpt.Should().Contain("Compact id index");
         rpg.GuideExcerpt.Should().Contain("omitted");
         rpg.GuideExcerpt.Should().Contain("module ids");

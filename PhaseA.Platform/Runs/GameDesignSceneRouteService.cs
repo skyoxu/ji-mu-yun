@@ -147,8 +147,16 @@ public sealed class GameDesignSceneRouteService
             notes);
     }
 
-    internal static GameDesignSceneRouteDocument BuildFallbackSceneRoute(ProjectSnapshot project)
+    internal static GameDesignSceneRouteDocument BuildFallbackSceneRoute(
+        ProjectSnapshot project,
+        PhaseAPlatformOptions? options = null)
     {
+        var defaultContractRoute = BuildFallbackSceneRouteFromDefaultContract(project, options);
+        if (defaultContractRoute is not null)
+        {
+            return defaultContractRoute;
+        }
+
         var gameType = GameType(project).ToLowerInvariant();
         if (ContainsAny(gameType, "deck", "card", "牌", "卡"))
         {
@@ -229,7 +237,178 @@ public sealed class GameDesignSceneRouteService
                 Scene("first_playable", "首个可玩场景", "gameplay", true, "承载第一轮核心操作、反馈和成功/失败判断。")
             ],
             [],
-            "用户或 GDD 需要确认是否真的只做单一体验状态。");
+                "用户或 GDD 需要确认是否真的只做单一体验状态。");
+    }
+
+    private static GameDesignSceneRouteDocument? BuildFallbackSceneRouteFromDefaultContract(
+        ProjectSnapshot project,
+        PhaseAPlatformOptions? options)
+    {
+        if (options is null)
+        {
+            return null;
+        }
+
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        if (string.IsNullOrWhiteSpace(evidence.MatchedGameTypeId))
+        {
+            return null;
+        }
+
+        var entry = new BmadGameTypeDesignCatalog(options).Find(evidence.MatchedGameTypeId);
+        if (entry is null || string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+        {
+            return null;
+        }
+
+        var sceneRows = ParseDefaultSceneRows(entry.GuideExcerpt)
+            .Where(row => string.Equals(row.Required, "Always", StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(row.Required, "Conditional", StringComparison.OrdinalIgnoreCase))
+            .Take(MaxScenes)
+            .ToArray();
+        if (sceneRows.Length == 0)
+        {
+            return null;
+        }
+
+        var scenes = sceneRows
+            .Select(row => Scene(
+                row.SceneId,
+                row.SceneName,
+                InferContractSceneRole(row),
+                string.Equals(row.Required, "Always", StringComparison.OrdinalIgnoreCase),
+                row.MinimumPlayableContent))
+            .ToArray();
+        var sceneIds = scenes.Select(scene => scene.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var entryScene = sceneRows.FirstOrDefault(row => ContainsSceneToken(row.EntryFrom, "start"))?.SceneId ?? scenes[0].Id;
+        if (!sceneIds.Contains(entryScene))
+        {
+            entryScene = scenes[0].Id;
+        }
+
+        var transitions = sceneRows
+            .SelectMany(row => SplitSceneTokens(row.ExitsTo)
+                .Where(to => sceneIds.Contains(to))
+                .Select(to => Transition(
+                    row.SceneId,
+                    to,
+                    "Default contract transition",
+                    "",
+                    [])))
+            .Take(MaxTransitions)
+            .ToArray();
+
+        return Document(
+            scenes.Length > 1 ? "multi" : "single",
+            entryScene,
+            scenes,
+            transitions,
+            $"Fallback generated from Default Prototype Contract for {entry.Id}.");
+    }
+
+    private static IReadOnlyList<DefaultSceneContractRow> ParseDefaultSceneRows(string guideExcerpt)
+    {
+        var lines = guideExcerpt.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.TrimEntries);
+        var rows = new List<DefaultSceneContractRow>();
+        var inDefaultScenes = false;
+        foreach (var line in lines)
+        {
+            if (line.StartsWith("### Default Scenes", StringComparison.OrdinalIgnoreCase))
+            {
+                inDefaultScenes = true;
+                continue;
+            }
+
+            if (inDefaultScenes && line.StartsWith("### ", StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            if (!inDefaultScenes || !line.StartsWith("|", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var columns = SplitMarkdownTableRow(line);
+            if (columns.Length < 7 ||
+                columns[0].Contains("---", StringComparison.Ordinal) ||
+                string.Equals(columns[0], "scene_id", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var sceneId = NormalizeId(columns[0]);
+            if (string.IsNullOrWhiteSpace(sceneId))
+            {
+                continue;
+            }
+
+            rows.Add(new DefaultSceneContractRow(
+                sceneId,
+                Trim(columns[1], 80),
+                Trim(columns[2], 180),
+                Trim(columns[3], 40),
+                Trim(columns[4], 160),
+                Trim(columns[5], 160),
+                Trim(columns[6], 220)));
+        }
+
+        return rows;
+    }
+
+    private static string[] SplitMarkdownTableRow(string line)
+    {
+        return line.Trim().Trim('|')
+            .Split('|', StringSplitOptions.TrimEntries)
+            .Select(column => column.Replace("\\|", "|", StringComparison.Ordinal).Trim())
+            .ToArray();
+    }
+
+    private static string InferContractSceneRole(DefaultSceneContractRow row)
+    {
+        var text = string.Join(" ", row.SceneId, row.SceneName, row.Purpose).ToLowerInvariant();
+        if (ContainsAny(text, "reward", "upgrade", "result", "summary", "debrief"))
+        {
+            return "reward";
+        }
+
+        if (ContainsAny(text, "combat", "battle", "fight", "wave", "threat", "encounter"))
+        {
+            return "combat";
+        }
+
+        if (ContainsAny(text, "shop", "loadout", "deckbuilding", "setup", "lobby", "menu", "garage"))
+        {
+            return "menu";
+        }
+
+        if (ContainsAny(text, "ending", "end", "death", "victory"))
+        {
+            return "ending";
+        }
+
+        if (ContainsAny(text, "field", "map", "world", "hub", "exploration", "dashboard"))
+        {
+            return "hub";
+        }
+
+        return NormalizeRole(row.SceneId);
+    }
+
+    private static bool ContainsSceneToken(string value, string token)
+    {
+        return SplitSceneTokens(value).Contains(token, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<string> SplitSceneTokens(string value)
+    {
+        return (value ?? "")
+            .Split([',', ';', '|'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeId)
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .ToArray();
     }
 
     private string ResolveLlmWorkspace(ProjectSnapshot project)
@@ -242,7 +421,7 @@ public sealed class GameDesignSceneRouteService
         return Path.Combine(_options.HostedWorkspaceRoot, "_gdd-scene-route");
     }
 
-    private static string BuildPrompt(
+    private string BuildPrompt(
         ProjectSnapshot project,
         string message,
         IReadOnlyList<GameDesignQuestionAnswer> answers)
@@ -266,8 +445,13 @@ public sealed class GameDesignSceneRouteService
         Question-form answers:
         {{FormatAnswers(answers)}}
 
+        Game type default prototype contract and guide excerpt:
+        {{FormatGameTypeGuideExcerpt(project)}}
+
         Requirements:
         - Infer from the matched game type evidence, Steam English genre tags, and the user's GDD form answers.
+        - If the guide excerpt includes `Default Prototype Contract`, use `Default Scenes` as default scene topology and `Required Modules` as default implementation coverage.
+        - Preserve `Always` default scenes unless the user's GDD material explicitly conflicts with them. If an `Always` scene is omitted, renamed beyond recognition, or merged, explain the explicit override reason in `notes`.
         - Distinguish player-facing experience states from Godot .tscn files. Do not force one .tscn per state.
         - Prefer a multi-scene route when the genre commonly needs map/combat/reward, route/combat/reward, build/wave/reward, arena/upgrade/summary, or hub/mission/summary states.
         - Keep M1 tight: mark only the scenes required for the first playable loop as m1Required=true.
@@ -305,22 +489,44 @@ public sealed class GameDesignSceneRouteService
         """;
     }
 
-    private static GameDesignSceneRouteDraftResult Fallback(ProjectSnapshot project, string failureCode)
+    private string FormatGameTypeGuideExcerpt(ProjectSnapshot project)
+    {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        if (string.IsNullOrWhiteSpace(evidence.MatchedGameTypeId))
+        {
+            return "(none)";
+        }
+
+        var entry = new BmadGameTypeDesignCatalog(_options).Find(evidence.MatchedGameTypeId);
+        if (entry is null || string.IsNullOrWhiteSpace(entry.GuideExcerpt))
+        {
+            return "(none)";
+        }
+
+        return $$"""
+        GuideId: {{entry.Id}}
+        GuidePath: {{entry.FragmentRelativePath}}
+
+        {{entry.GuideExcerpt}}
+        """;
+    }
+
+    private GameDesignSceneRouteDraftResult Fallback(ProjectSnapshot project, string failureCode)
     {
         return new GameDesignSceneRouteDraftResult(
             "ready",
             project.ProjectId,
-            BuildFallbackSceneRoute(project),
+            BuildFallbackSceneRoute(project, _options),
             "fallback",
             failureCode);
     }
 
-    private static GameDesignSceneRouteDraftResult RateLimited(ProjectSnapshot project, string failureCode)
+    private GameDesignSceneRouteDraftResult RateLimited(ProjectSnapshot project, string failureCode)
     {
         return new GameDesignSceneRouteDraftResult(
             "rate_limited",
             project.ProjectId,
-            BuildFallbackSceneRoute(project),
+            BuildFallbackSceneRoute(project, _options),
             "none",
             failureCode);
     }
@@ -682,4 +888,13 @@ public sealed class GameDesignSceneRouteService
         var trimmed = (value ?? "").Trim();
         return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
+
+    private sealed record DefaultSceneContractRow(
+        string SceneId,
+        string SceneName,
+        string Purpose,
+        string Required,
+        string EntryFrom,
+        string ExitsTo,
+        string MinimumPlayableContent);
 }

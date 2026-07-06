@@ -243,10 +243,12 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 """,
             "deckbuilder-card-play-resolution" => """
                 Platform hard acceptance for deckbuilder card play resolution:
-                - The player must be able to play at least one card.
+                - The player must be able to drag at least one card out of the hand, lift it above the hand, preview a valid or invalid target/play zone, and either resolve it or snap it back on cancel.
                 - The card must create immediate visible feedback such as damage, block, summon, sacrifice, draw, status, or project-specific effect.
                 - Resource, target, and battle log or equivalent feedback should stay coherent after play.
-                - Missing card play resolution proof means STATUS: needs_fix.
+                - Implementation, scene/node names, tests, or explicit evidence text should include a recognizable marker such as DragCard, CardDrag, DragPreview, DropTarget, DropZone, DropArea, or PlayZone.
+                - Button-only card play is not sufficient for the default deckbuilder contract unless the project records an explicit user override against hand_card_dragging.
+                - Missing hand-card dragging or card play resolution proof means STATUS: needs_fix.
                 """,
             "deckbuilder-deck-cycle-hand-flow" => """
                 Platform hard acceptance for deckbuilder deck cycle and hand flow:
@@ -275,14 +277,18 @@ internal static class PrototypeGoalAcceptancePromptBuilder
                 """,
             "deckbuilder-map-route-choice" => """
                 Platform hard acceptance for deckbuilder route choice:
-                - This capability is conditional. Only implement it when the project asks for routes, nodes, events, shops, elites, branches, or a Slay-the-Spire-like map.
-                - The player must be able to choose among at least two next nodes/routes/events, or a non-map project must clearly advance into the next combat/event state.
-                - Missing route or next-state choice proof means STATUS: needs_fix.
+                - Route map path selection is required by the default deckbuilder contract unless the project records an explicit user override against route_map_path_selection.
+                - The player must be able to choose among at least two reachable next nodes/routes/events on a Slay-the-Spire-like route map.
+                - The selected route must be stored or visibly reflected before transitioning into the selected encounter or next state.
+                - Implementation, scene/node names, tests, or explicit evidence text should include a recognizable marker such as RouteChoice, RouteMap, RouteNode, ChooseNode, SelectRoute, or PathSelection.
+                - Missing route map path selection proof means STATUS: needs_fix.
                 """,
             "deckbuilder-final-first-loop-acceptance" => """
                 Platform hard acceptance for deckbuilder final first-loop acceptance:
-                - The selected deckbuilder first-loop capabilities must work end-to-end from run entry through combat, card play, result, reward/deck mutation, and continuation or terminal prototype state.
-                - Route/map choice is required only when the project selected that conditional capability.
+                - The default deckbuilder loop must work end-to-end through class selection, route map path selection, card battle with hand-card dragging, combat result, reward choice, and return to the route map.
+                - Implementation, scene/node names, tests, or explicit evidence text should include recognizable markers for class selection, route path selection, and hand-card dragging.
+                - Button-only card play is not sufficient unless the project records an explicit user override against hand_card_dragging.
+                - Route/map choice is required unless the project records an explicit user override against route_map_path_selection.
                 - Project-specific contract fields, runtime proof, Godot smoke, selected asset usage, main host UI hiding, and package readiness must pass.
                 - Missing final deckbuilder first-loop proof means STATUS: needs_fix.
                 """,

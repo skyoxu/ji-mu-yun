@@ -48,6 +48,10 @@ public sealed class GameDesignSceneRouteServiceTests
         llm.LastRequest.RequireJsonObject.Should().BeTrue();
         llm.LastRequest.Prompt.Should().Contain("玩家在地图探索并进入战斗。");
         llm.LastRequest.Prompt.Should().Contain("地图、战斗、奖励。");
+        llm.LastRequest.Prompt.Should().Contain("Default Prototype Contract");
+        llm.LastRequest.Prompt.Should().Contain("field_exploration");
+        llm.LastRequest.Prompt.Should().Contain("combat_encounter");
+        llm.LastRequest.Prompt.Should().Contain("Preserve `Always` default scenes");
     }
 
     [Fact]
@@ -72,9 +76,15 @@ public sealed class GameDesignSceneRouteServiceTests
         result.Source.Should().Be("fallback");
         result.FailureCode.Should().Be("model_capacity");
         result.SceneRoute.SceneCountIntent.Should().Be("multi");
-        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "route_map");
-        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "combat");
-        result.SceneRoute.Transitions.Should().Contain(transition => transition.From == "route_map" && transition.To == "combat");
+        result.SceneRoute.EntryScene.Should().Be("class_selection");
+        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "class_selection" && scene.M1Required);
+        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "route_map" && scene.M1Required && scene.Role == "hub");
+        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "card_battle" && scene.M1Required);
+        result.SceneRoute.Scenes.Should().Contain(scene => scene.Id == "reward_choice" && scene.M1Required && scene.Role == "reward");
+        result.SceneRoute.Transitions.Should().Contain(transition => transition.From == "class_selection" && transition.To == "route_map");
+        result.SceneRoute.Transitions.Should().Contain(transition => transition.From == "route_map" && transition.To == "card_battle");
+        result.SceneRoute.Transitions.Should().Contain(transition => transition.From == "card_battle" && transition.To == "reward_choice");
+        result.SceneRoute.Transitions.Should().Contain(transition => transition.From == "reward_choice" && transition.To == "route_map");
     }
 
     [Fact]
@@ -182,6 +192,60 @@ public sealed class GameDesignSceneRouteServiceTests
         sceneRoute.SceneCountIntent.Should().Be("unsure");
         sceneRoute.Scenes.Should().ContainSingle(scene => scene.Id == "first_playable");
         sceneRoute.SingleSceneConfirmation.Allowed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void BuildFallbackSceneRoute_ShouldUseDefaultPrototypeContractScenes_WhenGuideExists()
+    {
+        using var workspace = new TempWorkspace();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var project = new ProjectSnapshot(
+            "p1",
+            "account-1",
+            "Action Prototype",
+            "Action Game",
+            "Action Platformer",
+            "",
+            false,
+            "[]",
+            "succeeded",
+            null,
+            "workspace-1",
+            workspace.Root,
+            Path.Combine(workspace.Root, "p1"),
+            Path.Combine(workspace.Root, "p1", "runtime"),
+            Path.Combine(workspace.Root, "p1", ".phasea"),
+            new ProjectGameTypeMatchEvidence(
+                1,
+                "matched",
+                "matched_by_test_genre_tags",
+                "steam",
+                "Action Platformer",
+                "1",
+                "Test App",
+                ["Action", "Platformer"],
+                [],
+                [],
+                ["action-platformer", "platformer"],
+                "action-platformer",
+                "docs/game-type-guides/action-platformer.md",
+                20,
+                [],
+                "",
+                "test",
+                now,
+                now).ToJson());
+
+        var sceneRoute = GameDesignSceneRouteService.BuildFallbackSceneRoute(project, options);
+
+        sceneRoute.SceneCountIntent.Should().Be("multi");
+        sceneRoute.EntryScene.Should().Be("level_start");
+        sceneRoute.Scenes.Should().Contain(scene => scene.Id == "level_start" && scene.M1Required);
+        sceneRoute.Scenes.Should().Contain(scene => scene.Id == "traversal_combat" && scene.M1Required);
+        sceneRoute.Scenes.Should().Contain(scene => scene.Id == "checkpoint_goal" && scene.M1Required);
+        sceneRoute.Transitions.Should().Contain(transition => transition.From == "level_start" && transition.To == "traversal_combat");
+        sceneRoute.Notes.Should().Contain(note => note.Contains("Default Prototype Contract", StringComparison.Ordinal));
     }
 
     [Fact]

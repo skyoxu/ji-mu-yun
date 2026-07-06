@@ -61,7 +61,28 @@
 - Matchmaking and ranking
 - Balance considerations (skill ceiling, counter-play)
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| combat_arena | Combat arena or mission room | Provide movement, aiming, firing, targets, and cover/space. | Always | start | objective_result | Playable arena with aim, weapon fire, enemy/target pressure, and hit feedback. |
+| loadout_spawn | Loadout / spawn state | Define weapon and combat resources before action starts. | Conditional | start | combat_arena | Player starts with a defined weapon and ammo/resource state. |
+| objective_result | Objective and result state | The loop needs win/fail/extract or score feedback. | Always | combat_arena | combat_arena | Kill, survive, extract, or score condition is detected and shown. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| movement_aiming | Movement and aim/facing controls | Always | Shooter feel depends on embodied aiming and positioning. | Mouse/keyboard or twin-stick aim updates facing and shot direction. |
+| weapon_projectile_hits | Weapon, projectile, raycast, and hit feedback | Always | The core action must be playable, not UI-only. | Shots consume ammo/cooldown and can hit targets with feedback. |
+| enemy_or_target_pressure | Enemies, targets, or combat pressure | Always | A shooting range without pressure is incomplete unless explicitly requested. | At least one target or enemy reacts, attacks, moves, or scores. |
+| combat_hud | Ammo, health, crosshair, score, or objective HUD | Always | Players need immediate combat readability. | HUD shows critical combat state and updates during play. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

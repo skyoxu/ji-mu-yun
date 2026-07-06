@@ -83,7 +83,28 @@ This game type is **narrative-heavy**. Consider running the Narrative Design wor
 - Environmental clues
 - Show vs. tell balance
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| exploration_scene | Exploration scene | Let the player inspect locations, objects, and route choices. | Always | start | interaction_dialogue,puzzle_or_objective | Scene contains interactables and a clear short-term objective. |
+| interaction_dialogue | Interaction or dialogue state | Adventure games rely on authored interactions and narrative response. | Always | exploration_scene | exploration_scene | At least one object/NPC interaction reveals or changes state. |
+| puzzle_or_objective | Puzzle, clue, or objective gate | Prove comprehension through a stateful gate. | Conditional | exploration_scene | exploration_scene | A clue/item/choice unlocks progress unless the GDD explicitly removes puzzles. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| interaction_hotspots | Interactable hotspots and inspection text | Always | The player must discover meaning through interaction. | Hotspots can be selected and produce contextual feedback. |
+| inventory_or_clue_state | Inventory, clue, or flag state | Conditional | Stateful discovery prevents pure linear reading. | At least one flag/item/clue persists and gates or changes later content. |
+| narrative_objective | Narrative objective tracking | Always | Exploration needs player intent. | Current goal is visible or strongly implied and updates after progress. |
+| scene_transition | Scene or room transition | Conditional | Adventure structure commonly spans locations. | At least one transition exists when more than one location is present. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

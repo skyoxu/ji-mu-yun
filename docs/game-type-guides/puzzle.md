@@ -57,7 +57,28 @@
 - Daily/weekly puzzles
 - Challenge modes
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| puzzle_board | Puzzle board | Present the current puzzle state, interactable pieces, and objective. | Always | start | completion_feedback | At least one solvable puzzle with visible rules and state feedback. |
+| hint_reset | Hint and reset state | Let the player recover from mistakes without leaving the loop. | Conditional | puzzle_board | puzzle_board | Reset is available; hint is included when rules are not self-evident. |
+| completion_feedback | Completion feedback | Confirm solved state and unlock the next challenge or summary. | Always | puzzle_board | puzzle_board | Solved condition is detected and shown to the player. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| puzzle_state_model | Puzzle state and rule model | Always | Puzzle logic must be deterministic and inspectable. | Moves update a structured state and can be validated independently. |
+| interaction_controls | Selection, drag, click, or keyboard interaction | Always | The player must manipulate the puzzle directly. | Inputs change puzzle state with immediate visual/audio feedback. |
+| solution_validation | Win/fail validation | Always | The loop depends on knowing whether a configuration is solved. | The prototype detects solved state and blocks false positives. |
+| reset_or_undo | Reset or undo support | Conditional | Most puzzle prototypes need recovery from dead states. | Player can reset or undo unless the GDD explicitly rejects it. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

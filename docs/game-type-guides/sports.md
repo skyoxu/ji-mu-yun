@@ -74,7 +74,28 @@
 - Ultimate team/card collection (if applicable)
 - Co-op vs. AI
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| match_field | Match field / court | Represent the sport space, player control, ball/object, and score. | Always | start | match_result | Playable possession/action loop with rules and score feedback. |
+| team_setup | Team, player, or mode setup | Sports games often require side/team/player selection. | Conditional | start | match_field | Team/player selection exists when more than one side or athlete matters. |
+| match_result | Match result | Matches need win/loss/time/score closure. | Always | match_field | match_field,team_setup | Score or timer creates an end state and restart/rematch path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| sport_rules | Core sport rule and scoring model | Always | The prototype must encode the sport objective. | Legal scoring condition updates score and can end play. |
+| player_control_physics | Player and object control/physics | Always | Sports feel requires embodied control. | Player and ball/puck/object movement collide and respond plausibly. |
+| opponent_or_team_ai | Opponent, teammate, or second-player control | Always | Sports need contesting agents. | AI or second player can contest possession/position. |
+| match_clock_hud | Clock, score, possession, or status HUD | Always | Players need match readability. | HUD updates score/time/status during play. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

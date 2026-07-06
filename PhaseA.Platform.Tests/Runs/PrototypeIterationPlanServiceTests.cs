@@ -959,12 +959,71 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
             "Deckbuilder First Loop: deck mutation feedback",
             "Deckbuilder First Loop: final deckbuilder first-loop acceptance");
         result.Goals.Select(goal => goal.Title).Should().NotContain(title => title.Contains("map or route choice", StringComparison.OrdinalIgnoreCase));
+        result.RequiredModules.Should().NotBeNull();
+        result.RequiredModules!.Select(module => module.Id).Should().Contain(["route_map_path_selection", "hand_card_dragging"]);
+        result.RequiredModules!.Single(module => module.Id == "route_map_path_selection").CoveredByGoalCapability
+            .Should().Be("final_deckbuilder_first_loop_acceptance");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateJson = new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project!);
+        using var state = JsonDocument.Parse(stateJson);
+        var requiredModules = state.RootElement.GetProperty("required_modules").EnumerateArray()
+            .Select(module => module.GetProperty("id").GetString())
+            .ToArray();
+        requiredModules.Should().Contain(["route_map_path_selection", "hand_card_dragging"]);
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldIncludeDeckbuilderRouteChoice_WhenSourceRequestsRoutes()
+    public async Task CreateAsync_ShouldSkipDeckbuilderRequiredModules_WhenPrototypeContractExplicitlyConflicts()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Roguelike Deckbuilder");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        new PrototypeContractService().WriteFromRequest(
+            project!,
+            new PrototypeWorkflowRequest(
+                "button-card-demo",
+                "Button Card Demo",
+                "card-game",
+                "Roguelike Deckbuilder",
+                "Validate a compact button-only card combat prototype.",
+                "Play cards through clear buttons instead of drag interactions.",
+                "Single combat scene only; no route map; button-only card play; no dragging.",
+                ["Cards can be played with buttons."],
+                "Button-only card play without route map or dragging.",
+                "Start combat, click cards, resolve combat, choose reward.",
+                "Win by defeating the enemy.",
+                true),
+            "docs/prototypes/2026-05-24-button-card-demo.md",
+            "button-card-demo");
+        var service = new PrototypeIterationPlanService(store);
+
+        var result = await service.CreateAsync(
+            accountId,
+            projectId,
+            new PrototypeIterationPlanRequest(
+                "Build a compact deckbuilder first loop with buttons, combat, rewards, and deck mutation.",
+                "completion_suggestion"));
+
+        result.Status.Should().Be("ready");
+        result.Goals.Should().HaveCount(10);
+        result.RequiredModules.Should().NotBeNull();
+        result.RequiredModules!.Select(module => module.Id).Should().Contain(["route_map_path_selection", "hand_card_dragging"]);
+        result.RequiredModules!.Where(module => module.Id is "route_map_path_selection" or "hand_card_dragging")
+            .Should().OnlyContain(module => module.Status == "skipped_by_explicit_gdd_conflict");
+        result.LatestEvaluation.Should().NotBeNull();
+        result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldWriteDeckbuilderRouteChoiceRequiredModule_WhenSourceRequestsRoutes()
     {
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
@@ -984,9 +1043,17 @@ public sealed class PrototypeIterationPlanServiceTests : IDisposable
                 "completion_suggestion"));
 
         result.Status.Should().Be("ready");
-        result.Goals.Should().HaveCount(11);
-        result.Goals.Select(goal => goal.Title).Should().Contain("Deckbuilder First Loop: map or route choice");
+        result.Goals.Should().HaveCount(10);
+        result.Goals.Select(goal => goal.Title).Should().NotContain("Deckbuilder First Loop: map or route choice");
         result.Goals[^1].Title.Should().Be("Deckbuilder First Loop: final deckbuilder first-loop acceptance");
+        result.RequiredModules.Should().NotBeNull();
+        result.RequiredModules!.Select(module => module.Id).Should().Contain("route_map_path_selection");
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        var stateJson = new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project!);
+        using var state = JsonDocument.Parse(stateJson);
+        state.RootElement.GetProperty("required_modules").EnumerateArray()
+            .Select(module => module.GetProperty("id").GetString())
+            .Should().Contain("route_map_path_selection");
         result.LatestEvaluation.Should().NotBeNull();
         result.LatestEvaluation!.Decision.Should().Be("ready_to_execute", result.LatestEvaluation.Reason);
     }

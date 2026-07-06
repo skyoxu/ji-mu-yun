@@ -72,7 +72,28 @@
 - Random/procedural scenarios
 - Custom scenario creation
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| simulation_dashboard | Simulation dashboard | Expose entities, time, resources, and controllable systems. | Always | start | build_manage,report_summary | Player can inspect simulation state and trigger time or actions. |
+| build_manage | Build / manage / configure state | Simulation loops require intervention in systems. | Always | simulation_dashboard | simulation_dashboard | At least one object/entity/system can be configured or built. |
+| report_summary | Report or consequence summary | Players need feedback on system outcomes. | Conditional | simulation_dashboard | simulation_dashboard | Simulation changes produce readable metrics, alerts, or reports. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| simulation_tick | Time/tick progression | Always | Simulation must evolve even from simple rules. | State advances through ticks, turns, or explicit time steps. |
+| entity_state | Entities with persistent state | Always | Systems need tracked objects or agents. | At least one entity has state that changes over time or actions. |
+| management_ui | Management controls and readouts | Always | The player controls and understands the system through UI. | Controls and metrics are visible and update correctly. |
+| economy_or_constraints | Economy, capacity, or constraint rules | Conditional | Most simulations need meaningful tradeoffs. | At least one bounded resource or constraint affects decisions. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

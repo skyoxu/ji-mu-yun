@@ -146,7 +146,7 @@ public sealed class GameTypeGuideCatalog
 
             if (entryTags.Contains(tag, StringComparer.Ordinal))
             {
-                score += 10;
+                score += IsHighConfidenceSingleTag(entry.Id, tag) ? 16 : 10;
                 matched.Add(tag);
                 continue;
             }
@@ -159,6 +159,12 @@ public sealed class GameTypeGuideCatalog
         }
 
         return new GameTypeGuideCandidate(entry.Id, entry.FragmentRelativePath, score, matched.Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray(), !entry.GuideExists);
+    }
+
+    private static bool IsHighConfidenceSingleTag(string entryId, string tag)
+    {
+        return string.Equals(entryId, "card-game", StringComparison.Ordinal) &&
+               HighConfidenceDeckbuilderTags.Contains(tag);
     }
 
     private static IReadOnlyDictionary<string, GameTypeGuideEntry> Load(string csvPath, string docsRoot)
@@ -278,6 +284,17 @@ public sealed class GameTypeGuideCatalog
         "remote-play-together",
         "family-sharing",
         "early-access"
+    };
+
+    private static readonly IReadOnlySet<string> HighConfidenceDeckbuilderTags = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "deck-build",
+        "deckbuild",
+        "deck-builder",
+        "deck-building",
+        "deckbuilder",
+        "deckbuilding",
+        "roguelike-deckbuilder"
     };
 }
 

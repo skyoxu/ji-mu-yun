@@ -123,6 +123,7 @@ public sealed class PrototypeRouteSkillPolicyTests
 
     [Theory]
     [InlineData("deckbuilder")]
+    [InlineData("deckbuild")]
     [InlineData("deckbuilding")]
     [InlineData("deck-building")]
     [InlineData("deck-building roguelike")]
@@ -337,6 +338,276 @@ public sealed class PrototypeRouteSkillPolicyTests
 
         prompt.Should().NotContain("Platform hard acceptance for deckbuilder card play resolution");
         prompt.Should().NotContain("STATUS: needs_fix");
+    }
+
+    [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldRequireDeckbuilderHandCardDragging()
+    {
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Deckbuilder First Loop: card play resolution feedback with hand card dragging",
+            "Validate dragging a card from hand into the play zone.",
+            "Pass only when card dragging and play resolution both produce visible feedback.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        prompt.Should().Contain("Platform hard acceptance for deckbuilder card play resolution");
+        prompt.Should().Contain("drag at least one card out of the hand");
+        prompt.Should().Contain("DragCard, CardDrag, DragPreview, DropTarget, DropZone, DropArea, or PlayZone");
+        prompt.Should().Contain("Button-only card play is not sufficient");
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+    }
+
+    [Fact]
+    public void GoalAcceptancePromptBuilder_ShouldRequireDeckbuilderDefaultRouteMapAndDraggingInFinalAcceptance()
+    {
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            11,
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance",
+            "Validate class selection, route map, card battle, and reward choice.",
+            "Pass only when the default deckbuilder loop is complete.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var prompt = PrototypeGoalAcceptancePromptBuilder.Build(project, goal);
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        prompt.Should().Contain("class selection, route map path selection, card battle with hand-card dragging");
+        prompt.Should().Contain("recognizable markers for class selection, route path selection, and hand-card dragging");
+        prompt.Should().Contain("Route/map choice is required unless");
+        prompt.Should().NotContain("Route/map choice is required only when the project selected that conditional capability");
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("ClassSelection|ClassSelect|ChooseClass|ClassChoice|ArchetypeChoice|JobSelection|StarterClass");
+        contract.RequiredMarkers.Should().Contain("RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection");
+        contract.RequiredMarkers.Should().Contain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+    }
+
+    [Fact]
+    public void RouteStrategy_ShouldResolveDeckbuilderFinalAcceptanceBeforeLocalCapabilities()
+    {
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: Path.GetTempPath());
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            10,
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance",
+            "Validate final acceptance across run context, starter deck, card play, route map, combat result, and reward choice.",
+            "Pass only when class selection, route map path selection, hand-card dragging, reward, and deck mutation are complete.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.Kind.Should().Be("deckbuilder-final-first-loop-acceptance");
+        contract.RequiredMarkers.Should().Contain("ClassSelection|ClassSelect|ChooseClass|ClassChoice|ArchetypeChoice|JobSelection|StarterClass");
+        contract.RequiredMarkers.Should().Contain("RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection");
+        contract.RequiredMarkers.Should().Contain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+        contract.FinalAcceptance.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RouteStrategy_ShouldFilterSkippedDeckbuilderRequiredModulesFromFinalAcceptance()
+    {
+        using var temp = TempDirectory.Create();
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: temp.Path);
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+        {
+            session_id = "session-id",
+            required_modules = new[]
+            {
+                new { id = "route_map_path_selection", status = "skipped_by_explicit_gdd_conflict" },
+                new { id = "hand_card_dragging", status = "skipped_by_explicit_gdd_conflict" }
+            }
+        });
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            10,
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance",
+            "Validate final acceptance for a button-only combat prototype with explicit route and drag overrides.",
+            "Pass when the compatible compact loop is complete.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("RunContext");
+        contract.RequiredMarkers.Should().Contain("PlayCard");
+        contract.RequiredMarkers.Should().Contain("Reward");
+        contract.RequiredMarkers.Should().NotContain("RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection");
+        contract.RequiredMarkers.Should().NotContain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+    }
+
+    [Theory]
+    [InlineData("stale-session")]
+    [InlineData(null)]
+    public void RouteStrategy_ShouldIgnoreSkippedDeckbuilderRequiredModulesFromNonCurrentIterationState(string? stateSessionId)
+    {
+        using var temp = TempDirectory.Create();
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: temp.Path);
+        if (stateSessionId is null)
+        {
+            new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+            {
+                required_modules = new[]
+                {
+                    new { id = "route_map_path_selection", status = "skipped_by_explicit_gdd_conflict" },
+                    new { id = "hand_card_dragging", status = "skipped_by_explicit_gdd_conflict" }
+                }
+            });
+        }
+        else
+        {
+            new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+            {
+                session_id = stateSessionId,
+                required_modules = new[]
+                {
+                    new { id = "route_map_path_selection", status = "skipped_by_explicit_gdd_conflict" },
+                    new { id = "hand_card_dragging", status = "skipped_by_explicit_gdd_conflict" }
+                }
+            });
+        }
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "current-session",
+            10,
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance",
+            "Validate final acceptance for the current deckbuilder loop.",
+            "Pass only when default required modules are present for the current plan.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection");
+        contract.RequiredMarkers.Should().Contain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+    }
+
+    [Fact]
+    public void RouteStrategy_ShouldFailClosed_WhenDeckbuilderIterationStateIsTemporarilyUnreadable()
+    {
+        using var temp = TempDirectory.Create();
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: temp.Path);
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+        {
+            session_id = "session-id",
+            required_modules = new[]
+            {
+                new { id = "route_map_path_selection", status = "skipped_by_explicit_gdd_conflict" },
+                new { id = "hand_card_dragging", status = "skipped_by_explicit_gdd_conflict" }
+            }
+        });
+        var statePath = Path.Combine(project.MetaPath, "routes", "iteration-plan", "latest.json");
+        using var locked = new FileStream(statePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            10,
+            "Deckbuilder First Loop: final deckbuilder first-loop acceptance",
+            "Validate final acceptance while route state is temporarily unavailable.",
+            "Pass only when default required modules are not silently skipped.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection");
+        contract.RequiredMarkers.Should().Contain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
+    }
+
+    [Fact]
+    public void RouteStrategy_ShouldFilterSkippedDeckbuilderDraggingFromCardPlayAcceptance()
+    {
+        using var temp = TempDirectory.Create();
+        var project = Project(
+            name: "deck-demo",
+            gameName: "Deck Demo",
+            gameTypeSource: "Roguelike Deckbuilder",
+            repoPath: temp.Path);
+        new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
+        {
+            session_id = "session-id",
+            required_modules = new[]
+            {
+                new { id = "hand_card_dragging", status = "skipped_by_explicit_gdd_conflict" }
+            }
+        });
+        var goal = new ProjectIterationGoalSnapshot(
+            "goal-id",
+            "session-id",
+            5,
+            "Deckbuilder First Loop: card play resolution feedback",
+            "Validate button-only card play after explicit hand-card dragging override.",
+            "Pass when card play resolution produces visible feedback.",
+            "pending",
+            null,
+            DateTimeOffset.UtcNow.ToString("O"),
+            DateTimeOffset.UtcNow.ToString("O"),
+            null);
+
+        var contract = GameTypeRouteStrategies.Resolve(project).ResolveAcceptanceContract(project, goal);
+
+        contract.Should().NotBeNull();
+        contract!.RequiredMarkers.Should().Contain("PlayCard");
+        contract.RequiredMarkers.Should().Contain("Damage|Block|Feedback");
+        contract.RequiredMarkers.Should().NotContain("DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone");
     }
 
     [Fact]

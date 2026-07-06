@@ -73,7 +73,7 @@ internal static class ProjectWebPreviewGameTypeCatalog
         {
             "role-playing-game" or "role-playing" or "roleplaying-game" or "roleplaying" or "jrpg" => "rpg",
             "vampire-survivors-like" or "survivors-like" or "survivor-like" or "survivorslike" or "survivor" or "arena-survival" => "survivorslike",
-            "deck-builder" or "deck-building" or "deckbuilding" or "deckbuilder" or "roguelike-deckbuilder" => "card-game",
+            "deck-build" or "deckbuild" or "deck-builder" or "deck-building" or "deckbuilding" or "deckbuilder" or "roguelike-deckbuilder" => "card-game",
             "card" or "cards" => "card-game",
             "tower-defence" or "towerdefence" or "towerdefense" or "td" => "tower-defense",
             "platformer" or "action" => "action-platformer",

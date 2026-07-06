@@ -77,7 +77,28 @@
 - Challenge runs
 - Endgame goals
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| production_dashboard | Production dashboard | Show resources, generators, rates, and available upgrades. | Always | start | upgrade_shop,milestone_summary | Resources increase and UI communicates rate/change. |
+| upgrade_shop | Upgrade shop | Incremental loops need spending and multiplier feedback. | Always | production_dashboard | production_dashboard | Player buys at least one upgrade that changes production. |
+| milestone_summary | Milestone / prestige / summary | Long-term goals guide idle play. | Conditional | production_dashboard | production_dashboard | Milestone or summary appears when thresholds are reached. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| resource_accumulation | Resource accumulation over time or clicks | Always | Idle/incremental identity depends on growing numbers. | Resource increases through time, clicks, or automation. |
+| upgrade_multipliers | Upgrade costs and effects | Always | Progression requires meaningful purchase choices. | Upgrade spends resources and changes rate/output/capacity. |
+| automation_loop | Automation or passive production | Always | Idle play requires progress without constant action. | At least one generator produces automatically or on a timer. |
+| milestone_scaling | Milestones, unlocks, or scaling costs | Conditional | Long-term structure prevents flat growth. | Threshold unlocks content or adjusts cost/output curve when in scope. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

@@ -3454,6 +3454,9 @@ public sealed class BrowserUiRendererTests
         html.Should().Contain("iterationPlanStatus");
         html.Should().Contain("iterationPlanEvaluation");
         html.Should().Contain("iterationPlanGoals");
+        html.Should().Contain("iterationPlanRequiredModules");
+        html.Should().Contain("requiredModules: result.requiredModules || []");
+        html.Should().Contain("必需模块");
         html.Should().Contain("需要定制路线");
         html.Should().Contain("联系管理员创建定制游戏类型路线");
         html.Should().Contain("主流程：游戏模块");
@@ -4217,7 +4220,7 @@ public sealed class BrowserUiRendererTests
         var source = File.ReadAllText(sourcePath);
 
         source.Should().MatchRegex("(?s)async function sendChat\\(\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*state\\.chatBusy = false;");
-        source.Should().MatchRegex("(?s)async function startGddDocumentRoute\\(message\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*if \\(succeeded\\) clearChatAttachments\\(\\);");
+        source.Should().MatchRegex("(?s)async function startGddDocumentRoute\\(message(?:, sceneRoute = null)?\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*if \\(succeeded\\) clearChatAttachments\\(\\);");
         source.Should().MatchRegex("(?s)async function createRepairPlan\\(\\).*?catch \\(error\\) \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*showError\\(error\\);\\s*\\} finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;");
         source.Should().MatchRegex("(?s)async function submitFormalFeedbackText\\(feedback, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await loadProjectPackages\\(\\);");
         source.Should().MatchRegex("(?s)async function submitNeedsFixRouteRequest\\(payload, busyText\\).*?finally \\{\\s*if \\(!isCurrentProjectContext\\(context\\)\\) return;\\s*try \\{\\s*await refreshActiveRun\\(\\);");

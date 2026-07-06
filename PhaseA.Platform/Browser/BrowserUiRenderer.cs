@@ -3269,7 +3269,17 @@ public sealed class BrowserUiRenderer
                       ? "有任务正在执行，请等待当前任务执行完毕。"
                       : "";
                   const needsFixDisabledAttrs = needsFixDisabled ? ` disabled title="${escapeHtml(needsFixTitle)}"` : "";
-                  $("iterationPlanGoals").innerHTML = goals.map(goal => `
+                  const requiredModules = iterationPlanRequiredModules(plan);
+                  const requiredModulesHtml = requiredModules.length
+                    ? `<div class="card">
+                        <strong>必需模块</strong>
+                        ${requiredModules.map(module => `
+                          <p>${escapeHtml(module.id || "")}</p>
+                          <p class="muted">${escapeHtml(module.status || "")}${module.appliesUnless ? ` · unless: ${escapeHtml(module.appliesUnless)}` : ""}${module.coveredByGoalCapability ? ` · goal: ${escapeHtml(module.coveredByGoalCapability)}` : ""}</p>
+                        `).join("")}
+                      </div>`
+                    : "";
+                  $("iterationPlanGoals").innerHTML = requiredModulesHtml + goals.map(goal => `
                     <div class="card">
                       <strong>任务 ${escapeHtml(String(goal.goalIndex))} · ${escapeHtml(publicGoalStatusLabel(goal.status))}</strong>
                       ${v2IsRepairGoalStatus(goal.status)
@@ -3295,6 +3305,10 @@ public sealed class BrowserUiRenderer
 
                 function iterationPlanGoals(plan = state.iterationPlan) {
                   return Array.isArray(plan?.goals) ? plan.goals : [];
+                }
+
+                function iterationPlanRequiredModules(plan = state.iterationPlan) {
+                  return Array.isArray(plan?.requiredModules) ? plan.requiredModules : [];
                 }
 
                 function latestIterationPlanForAction() {
@@ -3651,7 +3665,8 @@ public sealed class BrowserUiRenderer
                       },
                       goals: result.goals || [],
                       goalRuns: [],
-                      latestEvaluation: result.latestEvaluation || null
+                      latestEvaluation: result.latestEvaluation || null,
+                      requiredModules: result.requiredModules || []
                     };
                     state.iterationPlans = [...(Array.isArray(state.iterationPlans) ? state.iterationPlans.filter(plan => plan?.session?.sessionId !== result.sessionId) : []), state.iterationPlan];
                     state.selectedIterationSessionId = result.sessionId;

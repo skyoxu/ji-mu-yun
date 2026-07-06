@@ -1245,10 +1245,11 @@ public sealed class GameDesignDocumentService
             2. User-confirmed scene route has the same high priority for scene count, scene roles, transitions, return paths, and state carried between scenes.
             3. Current uploaded TXT references have the next priority.
             4. Historical uploaded TXT references have medium priority.
-            5. The 24-type game design template baseline is a low-priority scaffold used only to fill missing GDD dimensions.
-            6. Project memory, server chat history, and implicit LLM context have low priority.
+            5. The selected game type `Default Prototype Contract` is workflow-consumed default guidance. Preserve its `Always` scenes and required modules when user input is missing, vague, or compatible. Only override an `Always` scene/module when the current user input, confirmed scene route, or uploaded GDD reference explicitly conflicts with it; record the override reason in the outline skeleton.
+            6. Other guide prose and the `Module Matrix` are lower-priority scaffolding used to fill missing GDD dimensions.
+            7. Project memory, server chat history, and implicit LLM context have low priority.
             If sources conflict, keep the higher-priority source and discard or ignore conflicting lower-priority details.
-            Lay down the selected template baseline first only as reusable genre scaffolding; current user input and uploaded references below must override it.
+            Lay down the selected game type baseline first as reusable genre scaffolding and as default scene/module coverage. Current user input and uploaded references below must override it only when they explicitly conflict.
 
             Outline requirements:
             - Write user-facing fields in Chinese.
@@ -1261,6 +1262,7 @@ public sealed class GameDesignDocumentService
             - Before using any game-type template signal, verify the reference game's likely public genre/tag signals from the provided context and your BMAD game design knowledge. Do not infer genre from title words alone. For example, a game named with "Tower" is not tower defense unless the gameplay/tag evidence says tower defense.
             - If reference-game title words conflict with the user's explicit gameplay genre, mechanics, controls, or loop, follow the user's explicit gameplay. Do not expose an incorrect template name or template rationale in user-facing title, summary, skeleton, or content.
             - The outline must include scene creation content: first playable scene, important rooms/boards/encounters, and how the player enters the scene.
+            - When the selected game type guide includes `Default Prototype Contract`, include its `Always` default scenes and `Always` required modules in the GDD outline unless the user-confirmed GDD explicitly conflicts. If omitted or replaced, include the explicit conflict/override reason in the relevant skeleton.
             - If a user-confirmed scene route is provided, the outline must preserve that route as the authoritative scene topology. Include scene count intent, entry scene, required M1 scenes, transitions, return paths, and state carried. Do not collapse a confirmed multi-scene route into one generic scene.
             - The outline must include keyboard and mouse basics when the target platform is PC, covering movement, aiming/selection, primary action, cancel/dodge/back, and skill/action hotkeys where relevant.
             - The outline must include the basic gameplay loop that the prototype skeleton should materialize first.
@@ -1288,7 +1290,7 @@ public sealed class GameDesignDocumentService
             - GameType: {{project.GameTypeSource}}
             - CreatedAtUtc: {{now}}
 
-            Game Type Design Template Baseline, low priority and only for GDD creation:
+            Game Type Design Template Baseline and Default Prototype Contract:
             {{FormatDesignTemplate(designTemplate)}}
 
             Current user input, highest priority:
@@ -1854,9 +1856,11 @@ public sealed class GameDesignDocumentService
         var entry = selected.Entry;
         return $$"""
             Template policy:
-            - This baseline is injected before user details only to provide missing GDD dimensions.
-            - Current user input and uploaded references override this baseline.
-            - This template must not affect prototype skeleton creation, milestone execution, asset replacement, packaging, route selection, or type-kit selection.
+            - This baseline is injected before user details to provide missing GDD dimensions.
+            - The `Default Prototype Contract` inside the guide excerpt is workflow-consumed default guidance for scene topology and required modules.
+            - Preserve `Always` default scenes and `Always` required modules unless current user input, a user-confirmed scene route, or uploaded GDD/reference material explicitly conflicts.
+            - If an `Always` item is omitted, renamed beyond recognition, or replaced, record the explicit override reason in the GDD outline skeleton.
+            - Other guide prose and `Module Matrix` content are scaffolding and must not override explicit user requirements.
 
             TemplateId: {{entry.Id}}
             TemplateName: {{entry.Name}}

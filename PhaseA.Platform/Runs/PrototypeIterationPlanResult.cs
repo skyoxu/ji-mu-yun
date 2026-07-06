@@ -6,7 +6,16 @@ public sealed record PrototypeIterationPlanResult(
     string Summary,
     IReadOnlyList<PrototypeIterationPlanGoalResult> Goals,
     PrototypeIterationPlanningAnalysisResult? PlanningAnalysis = null,
-    PrototypeIterationPlanEvaluationResult? LatestEvaluation = null);
+    PrototypeIterationPlanEvaluationResult? LatestEvaluation = null,
+    IReadOnlyList<PrototypeIterationPlanRequiredModuleResult>? RequiredModules = null);
+
+public sealed record PrototypeIterationPlanRequiredModuleResult(
+    string Id,
+    string Source,
+    string Status,
+    string AppliesUnless,
+    IReadOnlyList<string> AcceptanceMarkers,
+    string? CoveredByGoalCapability);
 
 public sealed record PrototypeIterationPlanGoalResult(
     int GoalIndex,

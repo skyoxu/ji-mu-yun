@@ -116,7 +116,7 @@ internal static class GameTypeDesignTemplateDetector
             ["platformer", "platforming"],
             [["action", "platformer"], ["action", "platforming"]]),
         new("card-game",
-            ["deck building", "deck-building", "deckbuilder", "card game", "card-game", "卡牌构筑", "牌组构筑", "卡牌游戏", "打牌"],
+            ["deck build", "deckbuild", "deck builder", "deck building", "deck-building", "deckbuilder", "card game", "card-game", "卡牌构筑", "牌组构筑", "卡牌游戏", "打牌"],
             ["deckbuilder"],
             [["deck", "building"], ["card", "game"]]),
         new("text-based",

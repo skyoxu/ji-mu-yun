@@ -242,6 +242,8 @@ public static class GameTypeRouteProfiles
         ArgumentNullException.ThrowIfNull(project);
         var tags = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).NormalizedGenreTags;
         return tags.Contains("deckbuilder", StringComparer.Ordinal) ||
+               tags.Contains("deckbuild", StringComparer.Ordinal) ||
+               tags.Contains("deck-build", StringComparer.Ordinal) ||
                tags.Contains("deck-building", StringComparer.Ordinal) ||
                tags.Contains("deckbuilding", StringComparer.Ordinal) ||
                tags.Contains("deck-builder", StringComparer.Ordinal) ||

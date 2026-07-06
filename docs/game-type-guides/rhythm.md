@@ -78,7 +78,28 @@
 - Song unlock progression
 - Favorites and playlists
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| song_select | Song or chart select | Let the player start a track and understand difficulty/tempo. | Conditional | start | rhythm_play | A chart/song can be selected when multiple tracks exist. |
+| rhythm_play | Rhythm gameplay lane | Synchronize prompts/notes with music or beat timing. | Always | song_select,start | results | Player hits timed inputs and receives accuracy feedback. |
+| results | Results | Show score, combo, accuracy, and retry/continue. | Always | rhythm_play | song_select,rhythm_play | Performance summary is shown after chart ends or fails. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| beat_timing | Beat timing and chart scheduler | Always | Rhythm games depend on precise timing windows. | Notes/prompts spawn or activate according to chart time. |
+| input_judgement | Input judgement windows | Always | The loop needs hit/miss/accuracy feedback. | Inputs are judged as hit/miss/grade based on timing. |
+| score_combo | Score, combo, and accuracy model | Always | Players need performance feedback. | Score/combo/accuracy update during play and summarize after. |
+| audio_sync | Audio and visual synchronization | Always | Desync breaks rhythm gameplay. | Visual prompts align with music/beat within declared tolerance. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

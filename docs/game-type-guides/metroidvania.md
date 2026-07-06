@@ -86,7 +86,28 @@ This game type is **narrative-moderate**. Consider running the Narrative Design 
 - Developer stance on breaks
 - Game completion without all abilities
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| interconnected_room | Interconnected room | Provide traversal, combat/hazards, exits, and map memory. | Always | start | ability_gate | Room has at least two exits or a visible blocked path. |
+| ability_gate | Ability gate | Show a path blocked/unlocked by ability, item, or movement skill. | Always | interconnected_room | interconnected_room,reward_unlock | Gate communicates requirement and changes after unlock. |
+| reward_unlock | Reward / ability unlock | Progression depends on new traversal or combat capability. | Always | ability_gate,interconnected_room | interconnected_room | Player gains ability/item that enables a new route or interaction. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| traversal_controller | Traversal movement and collision | Always | Metroidvania identity depends on movement through rooms. | Movement/jump/dash or equivalent traversal is playable with collision. |
+| room_graph | Room graph and transitions | Always | The world must feel interconnected. | At least two rooms/states or exits connect with persistent state. |
+| ability_gating | Ability or item gating | Always | Nonlinear progression requires locks and unlocks. | A gate blocks progress until the player obtains an ability/item. |
+| combat_or_hazards | Combat, hazards, or environmental pressure | Always | Rooms need challenge beyond walking. | Enemy/hazard damages, blocks, or tests traversal. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

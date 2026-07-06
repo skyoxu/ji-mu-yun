@@ -78,7 +78,28 @@
 - Pause and resume
 - Party management (hosting, invites)
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| lobby_setup | Lobby / player setup | Register players, teams, input devices, or round options. | Always | start | minigame_round | At least two players or simulated players can enter a round. |
+| minigame_round | Minigame round | Host a short, readable competitive or cooperative challenge. | Always | lobby_setup,score_results | score_results | Playable round has objective, timer or success condition, and feedback. |
+| score_results | Score / results | Compare players, award points, and continue/retry. | Always | minigame_round | lobby_setup,minigame_round | Results show winner/score and next-round path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| player_join_input | Player join and input routing | Always | Party games depend on multiple participants. | Two or more local/simulated players have distinct controls or identities. |
+| round_manager | Round timer, rules, and reset manager | Always | Minigames need quick loops. | Round starts, ends, resets, and reports status. |
+| scoring_system | Scoring, ranking, or win condition | Always | Competition/cooperation needs outcome tracking. | Scores or success state update and display after each round. |
+| minigame_rules | Minigame-specific interaction rules | Always | The prototype must prove one actual activity. | At least one short minigame is playable end-to-end. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

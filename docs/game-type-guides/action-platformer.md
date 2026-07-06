@@ -44,7 +44,28 @@
 - Ability synergies
 - Upgrade paths
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| level_start | Level start / spawn | Introduce movement, camera framing, first hazard, and the immediate goal. | Always | start | traversal_combat | Playable spawn with movement, jump, landing feedback, and visible objective. |
+| traversal_combat | Traversal and combat lane | Combine platforms, enemies or hazards, collectibles, and readable fail states. | Always | level_start | checkpoint_goal | At least one traversal challenge and one enemy/hazard interaction with feedback. |
+| checkpoint_goal | Checkpoint or level goal | Confirm progress, success, restart, or next-level transition. | Always | traversal_combat | level_start | Reachable goal/checkpoint with completion feedback and restart path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| player_movement | Responsive run, jump, fall, and landing controller | Always | Platformer identity depends on embodied movement and collision feel. | Keyboard movement, jump arc, gravity, collision, and landing feedback are playable. |
+| platform_collision | Platforms, hazards, and collision layers | Always | The prototype must prove traversal geometry and failure boundaries. | Static platforms, at least one hazard, and collision masks are validated in play. |
+| enemy_or_obstacle_pressure | Enemy, obstacle, or timing pressure | Always | A blank movement test is not enough for this type. | The player must avoid, hit, or time around at least one pressure source. |
+| level_goal | Checkpoint, collectible, or exit objective | Always | The first loop needs a clear win/progress condition. | The scene communicates and detects a local success condition. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

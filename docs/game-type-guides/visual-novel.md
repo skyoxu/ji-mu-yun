@@ -88,7 +88,28 @@ This game type is **narrative-critical**. You MUST run the Narrative Design work
 - Special effects
 - Asset quantity estimates
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| dialogue_scene | Dialogue scene | Present speaker, portrait/background, text, and progression. | Always | start | choice_branch | Player advances dialogue with stable speaker/text presentation. |
+| choice_branch | Choice branch | Offer meaningful options that set flags or branch content. | Always | dialogue_scene | dialogue_scene,branch_result | Choice changes state, route, relationship, or next scene. |
+| branch_result | Branch result / ending preview | Branching needs consequence feedback. | Conditional | choice_branch | dialogue_scene | Different choice produces different visible result when branching is in scope. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| dialogue_renderer | Dialogue text, speaker, and visual presentation | Always | Visual novels rely on readable authored text flow. | Text advances, speaker identity displays, and layout is stable. |
+| choice_system | Choice and branching system | Always | Player agency is usually expressed through choices. | Choices set flags and affect subsequent dialogue or scene. |
+| state_flags | Flags, relationship, or route state | Always | Branching requires persistent state. | Choice/state persists and can be read by later content. |
+| asset_slots | Background, portrait, and audio slots | Conditional | VN presentation depends on reusable media slots. | Placeholder assets exist unless the GDD explicitly text-only. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

@@ -78,7 +78,28 @@
 - Viral moments and showcases
 - Evolution of the meta
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| sandbox_world | Sandbox world | Provide open space for building, crafting, physics, or experimentation. | Always | start | build_craft | Player can move/inspect and manipulate at least one object/system. |
+| build_craft | Build / craft / spawn state | Sandbox play depends on creation or manipulation. | Always | sandbox_world | sandbox_world,test_summary | Player places, crafts, edits, or spawns a persistent object. |
+| test_summary | Test / objective / showcase state | Even open-ended prototypes need a way to confirm results. | Conditional | build_craft | sandbox_world | Player can test or observe the effect of created objects. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| world_interaction | World interaction and object selection | Always | Sandbox agency starts with manipulating objects. | Player selects/uses/picks/places an object in the world. |
+| creation_rules | Building, crafting, spawning, or editing rules | Always | The prototype needs a creation affordance. | Creation action validates cost/placement/rules and persists result. |
+| persistence_state | Persistent world or session state | Always | Sandbox changes should remain meaningful. | Created/changed objects remain after interaction or scene step. |
+| physics_or_system_feedback | Physics, simulation, or system feedback | Conditional | Sandbox actions need observable consequences. | Objects react through physics, logic, resource, or visual feedback. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

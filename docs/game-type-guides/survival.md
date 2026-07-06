@@ -78,7 +78,29 @@
 - Risk/reward zones
 - Fast travel or navigation systems
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| survival_world | Survival world | Let the player explore, gather, face threats, and manage needs. | Always | start | craft_base,threat_event | Playable world space with resource pickup and danger or need pressure. |
+| craft_base | Crafting / base / inventory state | Survival loops depend on resource conversion and preparation. | Always | survival_world | survival_world | Player can craft, build, or manage inventory from gathered resources. |
+| threat_event | Threat or environmental event | Survival requires danger beyond collection. | Always | survival_world | death_or_safe_return,survival_world | Enemy, hunger, weather, darkness, or timer creates risk. |
+| death_or_safe_return | Death, safe return, or day summary | Players need closure for failure or safe progress. | Conditional | threat_event | survival_world | Fail/safe condition is visible when health/needs/threats are active. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| vitals_resources | Vitals, resources, or condition meters | Always | Survival depends on constrained player state. | At least one need/resource changes through action or time. |
+| gather_craft_build | Gathering, crafting, or building rules | Always | The loop needs resource transformation. | Resource pickup feeds a craft/build/use action. |
+| threat_system | Threat, enemy, weather, or depletion pressure | Always | Risk differentiates survival from sandbox collection. | Threat can damage, block, chase, deplete, or force action. |
+| inventory_persistence | Inventory and persistence | Always | Player preparation must carry across actions. | Inventory/resources persist across scene states or loop steps. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

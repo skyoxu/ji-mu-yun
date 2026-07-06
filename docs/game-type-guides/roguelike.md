@@ -68,7 +68,29 @@
 - Challenge runs
 - Achievement conditions
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| run_start | Run start / loadout | Initialize a temporary run with player state and initial choice. | Always | start | encounter_room | Run state resets or initializes clearly. |
+| encounter_room | Encounter room | Resolve combat, puzzle, event, or hazard under run rules. | Always | run_start,reward_choice | reward_choice,run_end | At least one encounter changes HP/resources/rewards. |
+| reward_choice | Reward or upgrade choice | Run-based progression depends on choices between encounters. | Always | encounter_room | encounter_room,run_end | Player selects or receives a reward that changes the run. |
+| run_end | Death, victory, or run summary | Permadeath/run closure must be legible. | Always | encounter_room | run_start | Failure or success ends the run and shows summary/retry path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| run_state | Temporary run state | Always | Roguelike identity depends on run-scoped state. | HP/resources/rewards reset or initialize per run. |
+| procedural_or_randomized_content | Procedural/randomized encounter or reward selection | Always | Replay value needs controlled randomness unless explicitly excluded. | At least one room, enemy, reward, or event is selected from a pool. |
+| risk_reward | Risk/reward decision point | Always | Runs require choices with consequences. | Player chooses path/reward/action with visible tradeoff. |
+| death_retry | Death/failure and retry loop | Always | Permadeath or run reset must be proven. | A fail state returns to a restart or summary state. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

@@ -101,7 +101,7 @@ public sealed class ProjectWebPreviewService
         "godot3-html5-card-package-preview",
         "game-type-guide-card-v1",
         "card",
-        ["card", "card-game", "deckbuilder", "deck-building", "roguelike-deckbuilder"],
+        ["card", "card-game", "deckbuild", "deck-build", "deck-builder", "deckbuilder", "deck-building", "roguelike-deckbuilder"],
         "",
         "",
         "",

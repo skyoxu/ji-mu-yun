@@ -69,7 +69,29 @@
 - Status effects
 - Party composition (if applicable)
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| field_exploration | Field or town exploration | Let the player move, inspect, and choose a next objective. | Always | start | combat_encounter,dialogue_menu | Playable field/town scene with objective marker or NPC/encounter hook. |
+| combat_encounter | Combat encounter | Resolve a representative fight or tactical exchange. | Always | field_exploration | reward_progression,field_exploration | At least one enemy, player action, HP/resource feedback, and win/fail result. |
+| dialogue_menu | Dialogue / menu / inventory state | Expose character, quest, inventory, or party information. | Always | field_exploration | field_exploration | One NPC/dialogue or inventory/menu interaction changes or reveals state. |
+| reward_progression | Reward and progression feedback | Show XP, item, quest, or stat progress after play. | Conditional | combat_encounter | field_exploration | Reward feedback exists when combat or quests are present. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| character_stats | Character stats, HP/resource, and progression data | Always | RPG prototypes need persistent character state. | Player stats are visible and affect at least one interaction or combat result. |
+| inventory_or_equipment | Inventory, item, or equipment slot | Always | Items and loadout are core RPG affordances unless explicitly excluded. | At least one item can be gained, used, equipped, or inspected. |
+| quest_or_objective_log | Quest/objective tracking | Always | The player needs authored context and next-step clarity. | Current objective is visible and updates after a meaningful action. |
+| combat_resolution | Combat/skill resolution | Always | RPG scope requires a representative rules exchange. | Combat resolves through player choice, stats, or skills with clear outcome feedback. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

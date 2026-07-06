@@ -87,7 +87,28 @@
 - Achievements and challenges
 - Skill-based unlocks vs. time-based
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| track_race | Race track | Provide vehicle control, track boundaries, checkpoints, and speed feedback. | Always | start | results | Playable lap or point-to-point race with checkpoint validation. |
+| garage_setup | Garage or vehicle setup | Expose vehicle/track selection when relevant. | Conditional | start | track_race | Vehicle or track is selected or displayed before race when relevant. |
+| results | Race results | The loop needs finish/time/rank feedback. | Always | track_race | track_race,garage_setup | Finish line or timer creates result and restart path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| vehicle_control | Vehicle acceleration, braking, steering, and handling | Always | Racing identity depends on vehicle feel. | Vehicle responds continuously to input and track collisions. |
+| track_checkpoints | Track, lap, checkpoint, or route validation | Always | The game must know race progress. | Checkpoints/laps/finish are detected in order. |
+| timing_rank_hud | Timer, speed, rank, or lap HUD | Always | Players need performance feedback. | HUD updates speed/time/lap/rank during the race. |
+| opponent_or_time_trial | Opponent AI or time-trial pressure | Conditional | Racing needs competition or time pressure. | AI racer, ghost, or target time exists unless explicitly excluded. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

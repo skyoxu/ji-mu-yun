@@ -1144,6 +1144,21 @@ internal sealed class DeckbuilderGameTypeRouteStrategy : IGameTypeRouteStrategy
         }
 
         var text = string.Join(" ", goal.Title ?? "", goal.Description ?? "", goal.AcceptanceHint ?? "").ToLowerInvariant();
+        if (ContainsAny(text, "final deckbuilder first loop", "final deckbuilder first-loop", "final first-loop acceptance", "final acceptance", "最终验收"))
+        {
+            var requiredMarkers = FilterSkippedRequiredModuleMarkers(
+                project,
+                goal.SessionId,
+                ["RunContext", "ClassSelection|ClassSelect|ChooseClass|ClassChoice|ArchetypeChoice|JobSelection|StarterClass", "Deck", "Energy", "PlayCard", "DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone", "CombatResult", "RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection", "Reward", "DeckMutation"]);
+            return new PrototypeGoalAcceptanceContract(
+                "deckbuilder-final-first-loop-acceptance",
+                requiredMarkers,
+                AssetUsageAcceptance: true,
+                MainSceneHostUiHiddenAcceptance: true,
+                FinalAcceptance: true,
+                StaticAcceptanceOnly: true);
+        }
+
         if (ContainsAny(text, "run context", "opening run context", "开局目标", "路线语境"))
         {
             return Static("deckbuilder-run-context", ["RunContext", "Objective", "FailureCondition"]);
@@ -1164,9 +1179,14 @@ internal sealed class DeckbuilderGameTypeRouteStrategy : IGameTypeRouteStrategy
             return Static("deckbuilder-enemy-intent-pressure", ["EnemyIntent", "Pressure", "Countdown"]);
         }
 
-        if (ContainsAny(text, "card play resolution", "play a card", "出牌结算"))
+        if (ContainsAny(text, "card play resolution", "hand card dragging", "card dragging", "drag a card", "play a card", "出牌结算", "手牌拖曳"))
         {
-            return Static("deckbuilder-card-play-resolution", ["PlayCard", "Damage", "Block", "Feedback"]);
+            return Static(
+                "deckbuilder-card-play-resolution",
+                FilterSkippedRequiredModuleMarkers(
+                    project,
+                    goal.SessionId,
+                    ["PlayCard", "DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone", "Damage|Block|Feedback"]));
         }
 
         if (ContainsAny(text, "deck cycle", "hand flow", "draw", "discard", "shuffle", "牌库循环", "手牌流转"))
@@ -1191,18 +1211,12 @@ internal sealed class DeckbuilderGameTypeRouteStrategy : IGameTypeRouteStrategy
 
         if (ContainsAny(text, "map or route", "route choice", "node choice", "event/shop/elite", "路线选择", "节点", "商店", "精英"))
         {
-            return Static("deckbuilder-map-route-choice", ["RouteChoice", "Node", "Next"]);
-        }
-
-        if (ContainsAny(text, "final deckbuilder first loop", "final first-loop acceptance", "final acceptance", "最终验收"))
-        {
-            return new PrototypeGoalAcceptanceContract(
-                "deckbuilder-final-first-loop-acceptance",
-                ["RunContext", "Deck", "Energy", "PlayCard", "CombatResult", "Reward", "DeckMutation"],
-                AssetUsageAcceptance: true,
-                MainSceneHostUiHiddenAcceptance: true,
-                FinalAcceptance: true,
-                StaticAcceptanceOnly: true);
+            return Static(
+                "deckbuilder-map-route-choice",
+                FilterSkippedRequiredModuleMarkers(
+                    project,
+                    goal.SessionId,
+                    ["RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection", "Node", "Next"]));
         }
 
         return null;
@@ -1212,6 +1226,114 @@ internal sealed class DeckbuilderGameTypeRouteStrategy : IGameTypeRouteStrategy
     {
         return new PrototypeGoalAcceptanceContract(kind, markers, StaticAcceptanceOnly: true);
     }
+
+    private static IReadOnlyList<string> FilterSkippedRequiredModuleMarkers(ProjectSnapshot project, string? expectedSessionId, IReadOnlyList<string> markers)
+    {
+        var skippedModules = ReadSkippedRequiredModules(project, expectedSessionId);
+        if (skippedModules.Count == 0)
+        {
+            return markers;
+        }
+
+        return markers
+            .Where(marker => !ShouldSkipMarker(marker, skippedModules))
+            .ToArray();
+    }
+
+    private static bool ShouldSkipMarker(string marker, IReadOnlySet<string> skippedModules)
+    {
+        return (skippedModules.Contains("route_map_path_selection") &&
+                string.Equals(marker, "RouteChoice|RouteMap|RouteNode|ChooseNode|SelectRoute|PathSelection", StringComparison.Ordinal)) ||
+               (skippedModules.Contains("hand_card_dragging") &&
+                string.Equals(marker, "DragCard|CardDrag|Dragging|DraggedCard|DragPreview|DropTarget|DropZone|DropArea|PlayZone", StringComparison.Ordinal));
+    }
+
+    private static IReadOnlySet<string> ReadSkippedRequiredModules(ProjectSnapshot project, string? expectedSessionId)
+    {
+        try
+        {
+            var stateText = ReadIterationPlanState(project);
+            if (string.IsNullOrWhiteSpace(stateText))
+            {
+                return EmptySkippedModules;
+            }
+
+            using var document = JsonDocument.Parse(stateText);
+            if (!IsCurrentIterationPlanState(document.RootElement, expectedSessionId) ||
+                !document.RootElement.TryGetProperty("required_modules", out var modulesElement) ||
+                modulesElement.ValueKind != JsonValueKind.Array)
+            {
+                return EmptySkippedModules;
+            }
+
+            var skipped = modulesElement
+                .EnumerateArray()
+                .Where(module => module.ValueKind == JsonValueKind.Object &&
+                                 module.TryGetProperty("id", out var idElement) &&
+                                 idElement.ValueKind == JsonValueKind.String &&
+                                 module.TryGetProperty("status", out var statusElement) &&
+                                 statusElement.ValueKind == JsonValueKind.String &&
+                                 string.Equals(statusElement.GetString(), "skipped_by_explicit_gdd_conflict", StringComparison.OrdinalIgnoreCase))
+                .Select(module => module.GetProperty("id").GetString())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return skipped.Count == 0 ? EmptySkippedModules : skipped;
+        }
+        catch (JsonException)
+        {
+            return EmptySkippedModules;
+        }
+        catch (IOException)
+        {
+            return EmptySkippedModules;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return EmptySkippedModules;
+        }
+    }
+
+    private static bool IsCurrentIterationPlanState(JsonElement root, string? expectedSessionId)
+    {
+        if (string.IsNullOrWhiteSpace(expectedSessionId) ||
+            !root.TryGetProperty("session_id", out var sessionElement))
+        {
+            return false;
+        }
+
+        return sessionElement.ValueKind == JsonValueKind.String &&
+               string.Equals(sessionElement.GetString(), expectedSessionId, StringComparison.Ordinal);
+    }
+
+    private static string ReadIterationPlanState(ProjectSnapshot project)
+    {
+        foreach (var path in CandidateIterationPlanStatePaths(project))
+        {
+            if (File.Exists(path))
+            {
+                return File.ReadAllText(path);
+            }
+        }
+
+        return "";
+    }
+
+    private static IEnumerable<string> CandidateIterationPlanStatePaths(ProjectSnapshot project)
+    {
+        if (!string.IsNullOrWhiteSpace(project.MetaPath))
+        {
+            yield return Path.Combine(project.MetaPath, "routes", "iteration-plan", "latest.json");
+        }
+
+        if (!string.IsNullOrWhiteSpace(project.RepoPath))
+        {
+            yield return Path.Combine(project.RepoPath, "meta", "routes", "iteration-plan", "latest.json");
+        }
+    }
+
+    private static readonly IReadOnlySet<string> EmptySkippedModules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     private static bool ContainsAny(string text, params string[] values)
     {

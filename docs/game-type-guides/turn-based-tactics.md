@@ -87,7 +87,29 @@ This game type is **narrative-moderate to heavy**. Consider running the Narrativ
 - Permadeath vs. casualty systems
 - Resource management between missions
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| tactical_grid | Tactical grid | Represent units, movement range, terrain, and turn order. | Always | start,prep_loadout | combat_resolution | Player selects unit, moves on grid, and performs an action. |
+| prep_loadout | Preparation / squad setup | Tactics games often need unit/loadout setup. | Conditional | start | tactical_grid | Player can inspect or choose units when squad composition matters. |
+| combat_resolution | Combat resolution | Turns need visible consequences and win/fail objective. | Always | tactical_grid | reward_debrief,tactical_grid | Attack/action resolves with HP/status/objective changes. |
+| reward_debrief | Reward / debrief | Campaign tactics need post-mission feedback. | Conditional | combat_resolution | tactical_grid,prep_loadout | Mission result updates units/resources when campaign loop is in scope. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| grid_movement | Grid movement and range rules | Always | Tactics identity depends on spatial decisions. | Movement range, blocked tiles, and destination validation work. |
+| turn_order | Turn order and action economy | Always | Players need structured tactical sequencing. | Units act in a clear order with limited actions. |
+| combat_actions | Attack, skill, or ability resolution | Always | The grid must support meaningful conflict. | Action resolves hit/damage/status with feedback. |
+| terrain_objectives | Terrain, cover, or mission objective rules | Conditional | Terrain/objectives create tactical depth. | At least one tile/objective modifier affects decisions when in scope. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

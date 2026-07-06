@@ -15,7 +15,7 @@ public sealed record BmadGameTypeDesignEntry(
 
 public sealed class BmadGameTypeDesignCatalog
 {
-    private const int MaxGuideExcerptChars = 2400;
+    private const int MaxGuideExcerptChars = 4200;
     private readonly IReadOnlyDictionary<string, BmadGameTypeDesignEntry> _entries;
 
     public BmadGameTypeDesignCatalog(PhaseAPlatformOptions options)
@@ -215,7 +215,24 @@ public sealed class BmadGameTypeDesignCatalog
             return text;
         }
 
+        var defaultContractStart = FindSectionStart(text, "Default Prototype Contract");
         var moduleMatrixStart = FindModuleMatrixStart(text);
+        if (defaultContractStart >= 0)
+        {
+            var contract = ExtractDefaultPrototypeContractSection(text, defaultContractStart).Trim();
+            var contractBudget = moduleMatrixStart >= 0 ? (MaxGuideExcerptChars * 2 / 3) : MaxGuideExcerptChars;
+            var parts = new List<string> { TruncateTail(contract, Math.Min(contract.Length, contractBudget)) };
+            if (moduleMatrixStart >= 0)
+            {
+                var remainingBudget = Math.Max(MaxGuideExcerptChars / 4, MaxGuideExcerptChars - parts[0].Length - 8);
+                var contractModuleMatrix = ExtractModuleMatrixSection(text, moduleMatrixStart);
+                var compactContractModuleMatrix = CompactModuleMatrix(contractModuleMatrix, remainingBudget);
+                parts.Add(TruncateTail(compactContractModuleMatrix, remainingBudget));
+            }
+
+            return TruncateTail(string.Join("\n...\n\n", parts.Where(part => !string.IsNullOrWhiteSpace(part))), MaxGuideExcerptChars);
+        }
+
         if (moduleMatrixStart < 0)
         {
             return TruncateTail(text, MaxGuideExcerptChars);
@@ -241,7 +258,12 @@ public sealed class BmadGameTypeDesignCatalog
 
     private static int FindModuleMatrixStart(string text)
     {
-        foreach (Match match in Regex.Matches(text, @"(?im)^\s*#{1,6}\s+Module Matrix\s*$"))
+        return FindSectionStart(text, "Module Matrix");
+    }
+
+    private static int FindSectionStart(string text, string title)
+    {
+        foreach (Match match in Regex.Matches(text, $@"(?im)^\s*#{{1,6}}\s+{Regex.Escape(title)}\s*$"))
         {
             if (match.Success)
             {
@@ -254,17 +276,31 @@ public sealed class BmadGameTypeDesignCatalog
 
     private static string ExtractModuleMatrixSection(string text, int moduleMatrixStart)
     {
-        var headingMatch = Regex.Match(text[moduleMatrixStart..], @"(?m)^\s*(#{1,6})\s+Module Matrix\s*$");
+        return ExtractMarkdownSection(text, moduleMatrixStart);
+    }
+
+    private static string ExtractDefaultPrototypeContractSection(string text, int defaultContractStart)
+    {
+        var section = ExtractMarkdownSection(text, defaultContractStart);
+        var moduleMatrix = Regex.Match(section, @"(?im)^\s*#{1,6}\s+Module Matrix\s*$");
+        return moduleMatrix.Success && moduleMatrix.Index > 0
+            ? section[..moduleMatrix.Index].Trim()
+            : section.Trim();
+    }
+
+    private static string ExtractMarkdownSection(string text, int sectionStart)
+    {
+        var headingMatch = Regex.Match(text[sectionStart..], @"(?m)^\s*(#{1,6})\s+\S.*$");
         if (!headingMatch.Success)
         {
-            return text[moduleMatrixStart..].Trim();
+            return text[sectionStart..].Trim();
         }
 
         var headingLevel = headingMatch.Groups[1].Value.Length;
-        var bodyStart = moduleMatrixStart + headingMatch.Index + headingMatch.Length;
+        var bodyStart = sectionStart + headingMatch.Index + headingMatch.Length;
         var nextHeading = Regex.Match(text[bodyStart..], $@"(?m)^\s*#{{1,{headingLevel}}}\s+\S");
         var sectionEnd = nextHeading.Success ? bodyStart + nextHeading.Index : text.Length;
-        return text[moduleMatrixStart..sectionEnd].Trim();
+        return text[sectionStart..sectionEnd].Trim();
     }
 
     private static string CompactModuleMatrix(string moduleMatrix, int maxChars)

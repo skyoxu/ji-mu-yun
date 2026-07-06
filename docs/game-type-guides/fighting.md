@@ -88,7 +88,28 @@
 - Spectator mode
 - Tournament mode
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| fight_arena | Fight arena | Host the round with two fighters, health, timer, spacing, and hit feedback. | Always | start | round_result | Playable fight with attacks, block/dodge, and health changes. |
+| character_select | Character select or matchup setup | Character-driven fighters need visible matchup setup. | Conditional | start | fight_arena | Player can choose or confirm fighter when multiple fighters exist. |
+| round_result | Round result | Rounds need win/loss and rematch flow. | Always | fight_arena | fight_arena,character_select | KO, timer, or score result is shown with rematch path. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| fighter_controls | Movement, attack, block/dodge controls | Always | Fighting feel starts with responsive direct control. | Inputs trigger movement and at least light/heavy/special or equivalent actions. |
+| hit_hurt_boxes | Hit/hurt detection and impact feedback | Always | Combat cannot be UI-only. | Attacks can connect/miss and produce stun, damage, or feedback. |
+| round_rules | Health, timer, rounds, and win condition | Always | The fight needs competitive structure. | Round ends when health/time/score condition is met. |
+| opponent_behavior | Opponent behavior or second-player input | Always | A solo dummy is insufficient unless explicitly requested. | AI or local second-player control can oppose the player. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 

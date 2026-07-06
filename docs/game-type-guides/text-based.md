@@ -90,7 +90,28 @@ This game type is **narrative-critical**. You MUST run the Narrative Design work
 - Walkthrough or hint accessibility
 - Replayability considerations
 
-### Module Matrix
+## Default Prototype Contract
+
+This contract is workflow-consumed default guidance. Unless the user-confirmed GDD explicitly conflicts with it, `Always` scenes and modules must be included in the GDD outline, scene route, prototype plan, and repair/iteration planning. If the GDD overrides an `Always` item, record the override reason explicitly.
+
+### Default Scenes
+
+| scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+| --- | --- | --- | --- | --- | --- | --- |
+| text_interface | Text interface | Present narrative, prompt, input/choices, and current state. | Always | start | state_update,ending | Player can read, choose/type, and receive response. |
+| state_update | State update / log | Text games need persistent flags, inventory, or room state. | Always | text_interface | text_interface,ending | Input changes state and output reflects the change. |
+| ending | Ending or branch result | Narrative choices should reach consequence. | Conditional | state_update | text_interface | At least one branch/failure/success result is reachable when scoped. |
+
+### Required Modules
+
+| module_id | module_name | required_by_default | purpose | minimum_acceptance |
+| --- | --- | --- | --- | --- |
+| parser_or_choice_input | Parser or choice input model | Always | Text interaction is the primary control surface. | Commands or choices are accepted and validated. |
+| narrative_state | Narrative flags, inventory, room, or relationship state | Always | Responses need memory. | State changes from input and affects later output. |
+| response_renderer | Text response and history renderer | Always | Readability is the entire interface. | Current response and recent history are legible and stable. |
+| branching_logic | Branching, fail, or ending logic | Conditional | Interactive fiction needs consequences. | Different inputs can produce different reachable outcomes when in scope. |
+
+## Module Matrix
 
 This matrix is a first-loop planning convention for GDD creation and later module scoping. It does not override a project-specific brief, GDD, prototype type kit, or executable route contract.
 
