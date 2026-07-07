@@ -95,6 +95,10 @@ public sealed class GameDesignDocumentServiceTests
         runner.Commands[0].StandardInput.Should().Contain("Game Type Design Template Baseline");
         runner.Commands[0].StandardInput.Should().Contain("TemplateId: rpg");
         runner.Commands[0].StandardInput.Should().Contain("Default Prototype Contract");
+        runner.Commands[0].StandardInput.Should().Contain("Project Contract Snapshot");
+        runner.Commands[0].StandardInput.Should().Contain("MatchedGameTypeId: rpg");
+        runner.Commands[0].StandardInput.Should().Contain("DefaultScenes:");
+        runner.Commands[0].StandardInput.Should().Contain("RequiredModules:");
         runner.Commands[0].StandardInput.Should().Contain("field_exploration");
         runner.Commands[0].StandardInput.Should().Contain("combat_encounter");
         runner.Commands[0].StandardInput.Should().Contain("character_stats");
@@ -1465,7 +1469,7 @@ public sealed class GameDesignDocumentServiceTests
             options,
             new ProjectRuleCatalog(),
             new ProjectWorkspaceSeeder(options),
-            gameTypeMatchService: new FakeGameTypeMatchService(gameType));
+            gameTypeMatchService: new FakeGameTypeMatchService(gameType, options));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
@@ -1474,10 +1478,12 @@ public sealed class GameDesignDocumentServiceTests
     private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
     {
         private readonly string _gameType;
+        private readonly PhaseAPlatformOptions _options;
 
-        public FakeGameTypeMatchService(string gameType)
+        public FakeGameTypeMatchService(string gameType, PhaseAPlatformOptions options)
         {
             _gameType = gameType;
+            _options = options;
         }
 
         public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -1495,7 +1501,7 @@ public sealed class GameDesignDocumentServiceTests
                 _ => []
             };
             var now = DateTimeOffset.UtcNow.ToString("O");
-            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+            var evidence = new ProjectGameTypeMatchEvidence(
                 1,
                 string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
                 string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
@@ -1514,7 +1520,11 @@ public sealed class GameDesignDocumentServiceTests
                 "",
                 "test",
                 now,
-                now));
+                now);
+            return Task.FromResult(evidence with
+            {
+                ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, evidence)
+            });
         }
     }
 

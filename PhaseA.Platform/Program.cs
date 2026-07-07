@@ -498,6 +498,28 @@ app.MapGet("/api/admin/game-type-match-records", async (
     return Results.Ok(await readback.GetAdminGameTypeMatchRecordsAsync(limit ?? 100, cancellationToken));
 });
 
+app.MapPost("/api/admin/projects/{projectId}/game-type-contract-snapshot/refresh", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] ProjectGameTypeMatchBackfillService gameTypeMatchBackfill,
+    CancellationToken cancellationToken) =>
+{
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var result = await gameTypeMatchBackfill.RefreshContractSnapshotAsync(projectId, cancellationToken);
+    return result.Status == "succeeded"
+        ? Results.Ok(result)
+        : result.FailureCode switch
+        {
+            "project_not_found" => Results.NotFound(result),
+            "game_type_not_matched" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            _ => Results.BadRequest(result)
+        };
+});
+
 app.MapGet("/api/projects/{projectId}/runs", async (
     string projectId,
     HttpContext context,

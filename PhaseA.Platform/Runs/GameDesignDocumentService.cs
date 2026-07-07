@@ -1301,6 +1301,9 @@ public sealed class GameDesignDocumentService
             Game Type Design Template Baseline and Default Prototype Contract:
             {{FormatDesignTemplate(designTemplate)}}
 
+            Project Contract Snapshot:
+            {{FormatContractSnapshot(project)}}
+
             Current user input, highest priority:
             {{EmptyAsNone(message)}}
 
@@ -1886,6 +1889,34 @@ public sealed class GameDesignDocumentService
 
             GuideExcerpt:
             {{EmptyAsNone(entry.GuideExcerpt)}}
+            """;
+    }
+
+    private static string FormatContractSnapshot(ProjectSnapshot project)
+    {
+        var snapshot = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).ContractSnapshot;
+        if (!snapshot.HasContract)
+        {
+            return "(none)";
+        }
+
+        var scenes = snapshot.DefaultScenes.Count == 0
+            ? "- (none)"
+            : string.Join(Environment.NewLine, snapshot.DefaultScenes.Select(scene =>
+                $"- {scene.SceneId}: {scene.SceneName}; required={scene.Required}; entry_from={scene.EntryFrom}; exits_to={scene.ExitsTo}; minimum={scene.MinimumPlayableContent}"));
+        var modules = snapshot.RequiredModules.Count == 0
+            ? "- (none)"
+            : string.Join(Environment.NewLine, snapshot.RequiredModules.Select(module =>
+                $"- {module.ModuleId}: {module.ModuleName}; required_by_default={module.RequiredByDefault}; acceptance={module.MinimumAcceptance}"));
+
+        return $$"""
+            MatchedGameTypeId: {{snapshot.MatchedGameTypeId}}
+            GuidePath: {{snapshot.GuidePath}}
+            SourceGuideHash: {{snapshot.SourceGuideHash}}
+            DefaultScenes:
+            {{scenes}}
+            RequiredModules:
+            {{modules}}
             """;
     }
 

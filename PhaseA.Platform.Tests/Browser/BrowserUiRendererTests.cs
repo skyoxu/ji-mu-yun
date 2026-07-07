@@ -3903,6 +3903,40 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void AdminGameTypeMatchRecordsPage_ExposesContractSnapshotRefreshControls()
+    {
+        var html = new BrowserUiRenderer().RenderAdminGameTypeMatchFailures();
+
+        html.Should().Contain("Contract Snapshot");
+        html.Should().Contain("data-refresh-snapshot");
+        html.Should().Contain("/api/admin/projects/${encodeURIComponent(projectId)}/game-type-contract-snapshot/refresh");
+        html.Should().Contain("method: \"POST\"");
+    }
+
+    [Fact]
+    public void Program_AdminContractSnapshotRefreshEndpointIsAdminOnly()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var routeIndex = source.IndexOf("app.MapPost(\"/api/admin/projects/{projectId}/game-type-contract-snapshot/refresh\"", StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.MapGet(\"/api/projects/{projectId}/runs\"", routeIndex, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        var endpointSource = source[routeIndex..nextRouteIndex];
+        endpointSource.Should().Contain("!CurrentIdentity(context).IsAdmin");
+        endpointSource.Should().Contain("RefreshContractSnapshotAsync(projectId");
+        endpointSource.Should().Contain("game_type_not_matched");
+        endpointSource.Should().Contain("StatusCodes.Status409Conflict");
+    }
+
+    [Fact]
     public void Program_GddQuestionFormRestoreEndpointIsReadOnly()
     {
         var source = File.ReadAllText(Path.GetFullPath(Path.Combine(

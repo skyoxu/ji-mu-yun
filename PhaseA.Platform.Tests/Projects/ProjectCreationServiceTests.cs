@@ -217,6 +217,142 @@ public sealed class ProjectCreationServiceTests
     }
 
     [Fact]
+    public async Task GameTypeMatchBackfill_ShouldEnrichMatchedEvidenceWithContractSnapshot()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var initialEvidence = new ProjectGameTypeMatchEvidence(
+            1,
+            "matched",
+            "matched_by_genre_tags",
+            "steam",
+            "\u6740\u622e\u5c16\u5854",
+            "646570",
+            "Slay the Spire",
+            ["Roguelike Deckbuilder", "Card Game"],
+            [],
+            ["Strategy"],
+            ["roguelike-deckbuilder", "card-game", "strategy"],
+            "card-game",
+            "docs/game-type-guides/card-game.md",
+            89,
+            [],
+            "",
+            "old-hash",
+            now,
+            now).ToJson();
+        await store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId,
+            accountId,
+            "Deck Demo",
+            "Deck Demo",
+            "\u6740\u622e\u5c16\u5854",
+            "godot-prototype-default",
+            true,
+            ["chapter2-bootstrap"],
+            layout.RootPath,
+            layout.RepoPath,
+            layout.RuntimePath,
+            layout.MetaPath,
+            initialEvidence));
+        var project = await store.GetProjectSnapshotAsync(projectId);
+        ProjectGameTypeMatchEvidence.FromJson(project!.GameTypeMatchJson).ContractSnapshot.HasContract.Should().BeFalse();
+        var backfill = new ProjectGameTypeMatchBackfillService(store, new FixedGameTypeMatchService("rpg"), options);
+
+        var resolved = await backfill.EnsureResolvedAsync(project);
+
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(resolved.GameTypeMatchJson);
+        evidence.MatchedGameTypeId.Should().Be("card-game");
+        evidence.ContractSnapshot.HasContract.Should().BeTrue();
+        evidence.ContractSnapshot.DefaultScenes.Select(scene => scene.SceneId)
+            .Should()
+            .Contain(["class_selection", "route_map", "card_battle", "reward_choice"]);
+        evidence.ContractSnapshot.RequiredModules.Select(module => module.ModuleId)
+            .Should()
+            .Contain(["route_map_path_selection", "hand_card_dragging"]);
+    }
+
+    [Fact]
+    public async Task GameTypeMatchBackfill_RefreshContractSnapshot_ShouldRebuildWithoutResolvingSteamAgain()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempWorkspaceRoot.Create();
+        var options = Options(workspaceRoot.Path);
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var initialEvidence = new ProjectGameTypeMatchEvidence(
+            1,
+            "matched",
+            "matched_by_genre_tags",
+            "steam",
+            "Slay the Spire",
+            "646570",
+            "Slay the Spire",
+            ["Roguelike Deckbuilder", "Card Game"],
+            [],
+            ["Strategy"],
+            ["roguelike-deckbuilder", "card-game", "strategy"],
+            "card-game",
+            "docs/game-type-guides/card-game.md",
+            89,
+            [],
+            "",
+            "old-hash",
+            now,
+            now)
+        {
+            ContractSnapshot = new ProjectGameTypeContractSnapshot(
+                1,
+                "card-game",
+                "docs/game-type-guides/card-game.md",
+                "stale-hash",
+                [new ProjectGameTypeContractScene("stale_scene", "Stale Scene", "", "Always", "start", "", "")],
+                [],
+                [],
+                "2026-01-01T00:00:00.0000000+00:00",
+                "2026-01-01T00:00:00.0000000+00:00")
+        }.ToJson();
+        await store.CreateProjectAsync(new ProjectCreationCommand(
+            projectId,
+            accountId,
+            "Deck Demo",
+            "Deck Demo",
+            "Slay the Spire",
+            "godot-prototype-default",
+            true,
+            ["chapter2-bootstrap"],
+            layout.RootPath,
+            layout.RepoPath,
+            layout.RuntimePath,
+            layout.MetaPath,
+            initialEvidence));
+        var matchService = new CountingGameTypeMatchService("rpg");
+        var backfill = new ProjectGameTypeMatchBackfillService(store, matchService, options);
+
+        var result = await backfill.RefreshContractSnapshotAsync(projectId);
+
+        result.Status.Should().Be("succeeded");
+        result.Snapshot.SourceGuideHash.Should().NotBe("stale-hash");
+        result.Snapshot.DefaultScenes.Select(scene => scene.SceneId).Should().Contain("route_map");
+        result.Snapshot.RequiredModules.Select(module => module.ModuleId).Should().Contain("hand_card_dragging");
+        matchService.ResolveCalls.Should().Be(0);
+        var persisted = ProjectGameTypeMatchEvidence.FromJson((await store.GetProjectSnapshotAsync(projectId))!.GameTypeMatchJson);
+        persisted.ContractSnapshot.SourceGuideHash.Should().Be(result.Snapshot.SourceGuideHash);
+        persisted.MatchedGameTypeId.Should().Be("card-game");
+    }
+
+    [Fact]
     public async Task GameTypeMatchBackfill_ShouldRetryAmbiguousEvidence()
     {
         using var database = TempSqliteDatabase.Create();
@@ -754,8 +890,19 @@ public sealed class ProjectCreationServiceTests
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
-            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3")
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot()
         });
+    }
+
+    private static string RepositoryRoot()
+    {
+        return Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            ".."));
     }
 
     private sealed class TempWorkspaceRoot : IDisposable
@@ -828,6 +975,24 @@ public sealed class ProjectCreationServiceTests
                 SteamResolvedQuery = "Test App",
                 SteamAttemptedQueries = [gameTypeSource]
             });
+        }
+    }
+
+    private sealed class CountingGameTypeMatchService : IProjectGameTypeMatchService
+    {
+        private readonly FixedGameTypeMatchService _inner;
+
+        public CountingGameTypeMatchService(string matchedGameTypeId)
+        {
+            _inner = new FixedGameTypeMatchService(matchedGameTypeId);
+        }
+
+        public int ResolveCalls { get; private set; }
+
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
+        {
+            ResolveCalls++;
+            return _inner.ResolveAsync(gameTypeSource, cancellationToken);
         }
     }
 

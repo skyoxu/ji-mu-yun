@@ -259,7 +259,7 @@ public sealed class PrototypeIterationPlanService
             planning_analysis = planningAnalysis,
             llm_observability = llmObservability,
             selected_capabilities = BuildSelectedCapabilitiesForRoute(routeStrategy, promptMessage, planningContext, prototypeContract, regenerationGuidance),
-            required_modules = BuildRequiredModulesForRoute(routeStrategy, prototypeContract),
+            required_modules = BuildRequiredModulesForProject(project, routeStrategy, prototypeContract),
             goals = goals.Select(goal => new
             {
                 goal.GoalIndex,
@@ -279,7 +279,7 @@ public sealed class PrototypeIterationPlanService
             goals,
             planningAnalysis,
             evaluation,
-            BuildRequiredModulesForRoute(routeStrategy, prototypeContract));
+            BuildRequiredModulesForProject(project, routeStrategy, prototypeContract));
     }
 
     private async Task<IterationGoalBuildResult> BuildGoalsForProjectAsync(
@@ -2380,6 +2380,20 @@ public sealed class PrototypeIterationPlanService
             .ToArray();
     }
 
+    private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> BuildRequiredModulesForProject(
+        ProjectSnapshot project,
+        IGameTypeRouteStrategy routeStrategy,
+        PrototypeContractSnapshot? prototypeContract)
+    {
+        var modules = BuildRequiredModulesFromContractSnapshot(project).ToDictionary(module => module.Id, StringComparer.OrdinalIgnoreCase);
+        foreach (var module in BuildRequiredModulesForRoute(routeStrategy, prototypeContract))
+        {
+            modules[module.Id] = module;
+        }
+
+        return modules.Values.OrderBy(module => module.Id, StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
     private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> BuildRequiredModulesForRoute(
         IGameTypeRouteStrategy routeStrategy,
         PrototypeContractSnapshot? prototypeContract)
@@ -2394,6 +2408,26 @@ public sealed class PrototypeIterationPlanService
         }
 
         return [];
+    }
+
+    private static IReadOnlyList<PrototypeIterationPlanRequiredModuleResult> BuildRequiredModulesFromContractSnapshot(ProjectSnapshot project)
+    {
+        var snapshot = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).ContractSnapshot;
+        if (!snapshot.HasContract)
+        {
+            return [];
+        }
+
+        return snapshot.RequiredModules
+            .Where(module => module.IsAlways)
+            .Select(module => new PrototypeIterationPlanRequiredModuleResult(
+                module.ModuleId,
+                string.IsNullOrWhiteSpace(snapshot.GuidePath) ? "project_contract_snapshot" : snapshot.GuidePath,
+                "required",
+                "explicit_gdd_conflict",
+                [],
+                null))
+            .ToArray();
     }
 
     private static bool HasExplicitDeckbuilderRequiredModuleConflict(string moduleId, PrototypeContractSnapshot? prototypeContract)

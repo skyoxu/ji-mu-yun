@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
 
@@ -24,15 +25,18 @@ public sealed class ProjectGameTypeMatchBackfillService
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly IProjectGameTypeMatchService _gameTypeMatchService;
+    private readonly PhaseAPlatformOptions? _options;
     private readonly ILogger<ProjectGameTypeMatchBackfillService>? _logger;
 
     public ProjectGameTypeMatchBackfillService(
         PhaseAMetadataStore metadataStore,
         IProjectGameTypeMatchService gameTypeMatchService,
+        PhaseAPlatformOptions? options = null,
         ILogger<ProjectGameTypeMatchBackfillService>? logger = null)
     {
         _metadataStore = metadataStore;
         _gameTypeMatchService = gameTypeMatchService;
+        _options = options;
         _logger = logger;
     }
 
@@ -43,6 +47,21 @@ public sealed class ProjectGameTypeMatchBackfillService
         ArgumentNullException.ThrowIfNull(project);
 
         var current = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        if (current.IsMatched && !current.ContractSnapshot.HasContract)
+        {
+            var enriched = current with
+            {
+                ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, current),
+                UpdatedUtc = DateTimeOffset.UtcNow.ToString("O")
+            };
+            if (enriched.ContractSnapshot.HasContract)
+            {
+                var enrichedJson = enriched.ToJson();
+                await _metadataStore.UpdateProjectGameTypeMatchAsync(project.ProjectId, enrichedJson, cancellationToken);
+                return project with { GameTypeMatchJson = enrichedJson };
+            }
+        }
+
         if (!ShouldBackfill(project.GameTypeMatchJson, current))
         {
             return project;
@@ -71,6 +90,39 @@ public sealed class ProjectGameTypeMatchBackfillService
         }
 
         return project with { GameTypeMatchJson = json };
+    }
+
+    public async Task<ProjectGameTypeContractSnapshotRefreshResult> RefreshContractSnapshotAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null)
+        {
+            return ProjectGameTypeContractSnapshotRefreshResult.NotFound(projectId);
+        }
+
+        var current = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        if (!current.IsMatched)
+        {
+            return ProjectGameTypeContractSnapshotRefreshResult.NotMatched(projectId, current.Status, current.StatusReason);
+        }
+
+        var refreshedSnapshot = ProjectGameTypeContractSnapshot.RefreshFromProjectMatch(_options, current);
+        if (!refreshedSnapshot.HasContract)
+        {
+            return ProjectGameTypeContractSnapshotRefreshResult.NoContract(projectId, current.MatchedGameTypeId);
+        }
+
+        var refreshed = current with
+        {
+            ContractSnapshot = refreshedSnapshot,
+            UpdatedUtc = DateTimeOffset.UtcNow.ToString("O")
+        };
+        await _metadataStore.UpdateProjectGameTypeMatchAsync(project.ProjectId, refreshed.ToJson(), cancellationToken);
+        return ProjectGameTypeContractSnapshotRefreshResult.Succeeded(projectId, refreshedSnapshot);
     }
 
     internal static bool ShouldBackfill(string? rawJson, ProjectGameTypeMatchEvidence evidence)
@@ -125,5 +177,64 @@ public sealed class ProjectGameTypeMatchBackfillService
         {
             _logger?.LogWarning(ex, "Failed to record game type match backfill failure for project {ProjectId}.", project.ProjectId);
         }
+    }
+}
+
+public sealed record ProjectGameTypeContractSnapshotRefreshResult(
+    string Status,
+    string ProjectId,
+    string? FailureCode,
+    string? Message,
+    ProjectGameTypeContractSnapshot Snapshot)
+{
+    public static ProjectGameTypeContractSnapshotRefreshResult Succeeded(
+        string projectId,
+        ProjectGameTypeContractSnapshot snapshot)
+    {
+        return new ProjectGameTypeContractSnapshotRefreshResult(
+            "succeeded",
+            projectId,
+            null,
+            null,
+            ProjectGameTypeContractSnapshot.Normalize(snapshot));
+    }
+
+    public static ProjectGameTypeContractSnapshotRefreshResult NotFound(string projectId)
+    {
+        return Failure("project_not_found", projectId, "Project was not found.");
+    }
+
+    public static ProjectGameTypeContractSnapshotRefreshResult NotMatched(
+        string projectId,
+        string status,
+        string statusReason)
+    {
+        return Failure(
+            "game_type_not_matched",
+            projectId,
+            $"Project game type is not matched. status={status}; reason={statusReason}");
+    }
+
+    public static ProjectGameTypeContractSnapshotRefreshResult NoContract(
+        string projectId,
+        string matchedGameTypeId)
+    {
+        return Failure(
+            "contract_snapshot_unavailable",
+            projectId,
+            $"No Default Prototype Contract was found for matched game type {matchedGameTypeId}.");
+    }
+
+    private static ProjectGameTypeContractSnapshotRefreshResult Failure(
+        string failureCode,
+        string projectId,
+        string message)
+    {
+        return new ProjectGameTypeContractSnapshotRefreshResult(
+            "failed",
+            projectId,
+            failureCode,
+            message,
+            ProjectGameTypeContractSnapshot.Empty());
     }
 }

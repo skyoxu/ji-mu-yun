@@ -7,6 +7,7 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Projects;
 using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
@@ -73,6 +74,94 @@ public sealed class ArtifactReadbackServiceTests
             "exports/second.zip");
         artifacts.Select(artifact => artifact.RunId).Should().OnlyContain(runId => runId == firstRunId || runId == secondRunId);
         empty.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Readback_AdminGameTypeMatchRecordsIncludesContractSnapshotSummary()
+    {
+        using var database = TempSqliteDatabase.Create();
+        using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
+        using var repoRoot = TempDirectory.Create("phase-a-repo");
+        SeedGameTypeGuide(repoRoot.Path);
+        var options = Options(workspaceRoot.Path, repoRoot.Path);
+        var store = await CreateStoreAsync(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var projectId = await CreateProjectAsync(store, options, accountId, "Deck Game", "Slay the Spire");
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var evidence = new ProjectGameTypeMatchEvidence(
+            1,
+            "matched",
+            "matched_by_genre_tags",
+            "steam",
+            "Slay the Spire",
+            "646570",
+            "Slay the Spire",
+            ["Roguelike Deckbuilder"],
+            [],
+            ["Strategy"],
+            ["roguelike-deckbuilder", "strategy"],
+            "card-game",
+            "docs/game-type-guides/card-game.md",
+            92,
+            [],
+            "",
+            "catalog",
+            now,
+            now)
+        {
+            ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(options, new ProjectGameTypeMatchEvidence(
+                1,
+                "matched",
+                "matched_by_genre_tags",
+                "steam",
+                "Slay the Spire",
+                "646570",
+                "Slay the Spire",
+                ["Roguelike Deckbuilder"],
+                [],
+                ["Strategy"],
+                ["roguelike-deckbuilder", "strategy"],
+                "card-game",
+                "docs/game-type-guides/card-game.md",
+                92,
+                [],
+                "",
+                "catalog",
+                now,
+                now))
+        };
+        await store.UpdateProjectGameTypeMatchAsync(projectId, evidence.ToJson());
+        await store.RecordProjectGameTypeMatchFailureAsync(new ProjectGameTypeMatchFailureCommand(
+            accountId,
+            projectId,
+            "Deck Game",
+            "Deck Game",
+            "Slay the Spire",
+            "matched",
+            "matched_by_genre_tags",
+            "Slay the Spire",
+            """["roguelike-deckbuilder"]""",
+            """[]""",
+            "",
+            "card-game",
+            "docs/game-type-guides/card-game.md",
+            "646570",
+            "Slay the Spire",
+            "Slay the Spire",
+            """["Slay the Spire"]"""));
+        var service = new ArtifactReadbackService(store, options);
+
+        var readback = await service.GetAdminGameTypeMatchRecordsAsync(10);
+
+        var record = readback.Records.Should().ContainSingle(item =>
+            item.ProjectId == projectId &&
+            item.MatchStatus == "matched" &&
+            item.MatchedGameTypeId == "card-game").Subject;
+        record.ContractSnapshot.HasContract.Should().BeTrue();
+        record.ContractSnapshot.MatchedGameTypeId.Should().Be("card-game");
+        record.ContractSnapshot.DefaultSceneIds.Should().Contain(["route_map", "card_battle"]);
+        record.ContractSnapshot.RequiredModuleIds.Should().Contain(["route_map_path_selection", "hand_card_dragging"]);
+        record.ContractSnapshot.SourceGuideHash.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -2403,6 +2492,35 @@ public sealed class ArtifactReadbackServiceTests
         }
 
         return PhaseAPlatformOptionsLoader.FromDictionary(values);
+    }
+
+    private static void SeedGameTypeGuide(string repoRoot)
+    {
+        var guideRoot = Path.Combine(repoRoot, "docs", "game-type-guides");
+        Directory.CreateDirectory(guideRoot);
+        File.WriteAllText(Path.Combine(guideRoot, "game-types.csv"), """
+            id,name,description,genre_tags,fragment_file
+            card-game,Card Game,Card game prototypes,"card,deckbuilder,roguelike-deckbuilder",card-game.md
+            """);
+        File.WriteAllText(Path.Combine(guideRoot, "card-game.md"), """
+            # Card Game
+
+            ## Default Prototype Contract
+
+            ### Default Scenes
+
+            | scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+            | --- | --- | --- | --- | --- | --- | --- |
+            | route_map | Route Map | Route choices. | Always | start | card_battle | Connected route nodes can be selected. |
+            | card_battle | Card Battle | Card combat. | Always | route_map | reward_choice | A card can be dragged and resolved. |
+
+            ### Required Modules
+
+            | module_id | module_name | required_by_default | purpose | minimum_acceptance |
+            | --- | --- | --- | --- | --- |
+            | route_map_path_selection | Route map path selection | Always | Branching route choice. | Reachable next nodes are enforced. |
+            | hand_card_dragging | Hand card dragging | Always | Tactile hand interaction. | Cards drag, preview, cancel, and resolve. |
+            """);
     }
 
     private static string AssetLibraryJson(string projectId)

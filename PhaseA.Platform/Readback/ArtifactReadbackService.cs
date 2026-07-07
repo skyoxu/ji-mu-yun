@@ -1,6 +1,7 @@
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -353,7 +354,37 @@ public sealed class ArtifactReadbackService
         CancellationToken cancellationToken = default)
     {
         var records = await _metadataStore.ListProjectGameTypeMatchRecordsForAdminAsync(limit, cancellationToken);
-        return new AdminGameTypeMatchRecordsReadback(records.Count, records);
+        var enriched = new List<AdminGameTypeMatchRecordReadback>(records.Count);
+        foreach (var record in records)
+        {
+            var project = await _metadataStore.GetProjectSnapshotAsync(record.ProjectId, cancellationToken);
+            enriched.Add(AdminGameTypeMatchRecordReadback.FromSnapshot(
+                record,
+                BuildContractSnapshotSummary(project?.GameTypeMatchJson)));
+        }
+
+        return new AdminGameTypeMatchRecordsReadback(enriched.Count, enriched);
+    }
+
+    private static ProjectGameTypeContractSnapshotSummary BuildContractSnapshotSummary(string? gameTypeMatchJson)
+    {
+        var snapshot = ProjectGameTypeMatchEvidence.FromJson(gameTypeMatchJson).ContractSnapshot;
+        if (!snapshot.HasContract)
+        {
+            return ProjectGameTypeContractSnapshotSummary.Empty();
+        }
+
+        return new ProjectGameTypeContractSnapshotSummary(
+            true,
+            snapshot.MatchedGameTypeId,
+            snapshot.GuidePath,
+            snapshot.SourceGuideHash,
+            snapshot.DefaultScenes.Count,
+            snapshot.RequiredModules.Count,
+            snapshot.DefaultScenes.Select(scene => scene.SceneId).ToArray(),
+            snapshot.RequiredModules.Select(module => module.ModuleId).ToArray(),
+            snapshot.CreatedUtc,
+            snapshot.UpdatedUtc);
     }
 
     public async Task<ProjectRunsReadback?> GetProjectRunsAsync(string projectId, CancellationToken cancellationToken = default)

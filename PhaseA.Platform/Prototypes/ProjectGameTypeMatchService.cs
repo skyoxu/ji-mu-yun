@@ -11,21 +11,26 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
 {
     private readonly GameTypeGuideCatalog _catalog;
     private readonly ISteamGameTypeMetadataProvider? _steamProvider;
+    private readonly PhaseAPlatformOptions? _options;
 
     public ProjectGameTypeMatchService(PhaseAPlatformOptions options, ISteamGameTypeMetadataProvider steamProvider)
-        : this(new GameTypeGuideCatalog(options), steamProvider)
+        : this(new GameTypeGuideCatalog(options), steamProvider, options)
     {
     }
 
-    private ProjectGameTypeMatchService(GameTypeGuideCatalog catalog, ISteamGameTypeMetadataProvider? steamProvider)
+    private ProjectGameTypeMatchService(
+        GameTypeGuideCatalog catalog,
+        ISteamGameTypeMetadataProvider? steamProvider,
+        PhaseAPlatformOptions? options)
     {
         _catalog = catalog;
         _steamProvider = steamProvider;
+        _options = options;
     }
 
     public static IProjectGameTypeMatchService Offline(PhaseAPlatformOptions options)
     {
-        return new ProjectGameTypeMatchService(new GameTypeGuideCatalog(options), null);
+        return new ProjectGameTypeMatchService(new GameTypeGuideCatalog(options), null, options);
     }
 
     public async Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -89,7 +94,7 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
 
         var normalizedTags = GameTypeGuideCatalog.NormalizeTags(steam.Tags.Concat(steam.Categories).Concat(steam.Genres).ToArray());
         var match = _catalog.MatchByGenreTags(normalizedTags);
-        return new ProjectGameTypeMatchEvidence(
+        var evidence = new ProjectGameTypeMatchEvidence(
             1,
             match.Status,
             match.StatusReason,
@@ -112,6 +117,10 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
         {
             SteamResolvedQuery = steam.ResolvedQuery,
             SteamAttemptedQueries = steam.AttemptedQueries
+        };
+        return evidence with
+        {
+            ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, evidence)
         };
     }
 

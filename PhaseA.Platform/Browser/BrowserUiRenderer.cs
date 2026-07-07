@@ -11627,10 +11627,12 @@ public sealed class BrowserUiRenderer
                         <th>查询</th>
                         <th>英文标签</th>
                         <th>候选</th>
+                        <th>Contract Snapshot</th>
+                        <th>操作</th>
                         <th>缺失文件</th>
                       </tr>
                     </thead>
-                    <tbody id="rows"><tr><td colspan="10" class="muted">暂无数据。</td></tr></tbody>
+                    <tbody id="rows"><tr><td colspan="12" class="muted">暂无数据。</td></tr></tbody>
                   </table>
                 </section>
               </main>
@@ -11650,11 +11652,15 @@ public sealed class BrowserUiRenderer
                     return [];
                   }
                 };
-                async function api(path) {
+                async function api(path, options = {}) {
                   if (!token()) throw new Error("missing_token");
-                  const response = await fetch(path, { headers: { "Authorization": `Bearer ${token()}` }, cache: "no-store" });
+                  const response = await fetch(path, {
+                    method: options.method || "GET",
+                    headers: { "Authorization": `Bearer ${token()}` },
+                    cache: "no-store"
+                  });
                   const payload = await response.json();
-                  if (!response.ok) throw new Error(payload.error || "request_failed");
+                  if (!response.ok) throw new Error(payload.failureCode || payload.error || "request_failed");
                   return payload;
                 }
                 function render(failures) {
@@ -11664,6 +11670,12 @@ public sealed class BrowserUiRenderer
                     const tags = parseJsonArray(item.normalizedGenreTagsJson).join(", ");
                     const attempts = parseJsonArray(item.steamAttemptedQueriesJson).join(", ");
                     const candidates = parseJsonArray(item.candidateScoresJson).map(candidate => `${candidate.gameTypeId || ""}:${candidate.score || 0} [${(candidate.matchedTags || []).join(", ")}]`).join("; ");
+                    const snapshot = item.contractSnapshot || {};
+                    const scenes = Array.isArray(snapshot.defaultSceneIds) ? snapshot.defaultSceneIds.join(", ") : "";
+                    const modules = Array.isArray(snapshot.requiredModuleIds) ? snapshot.requiredModuleIds.join(", ") : "";
+                    const snapshotHtml = snapshot.hasContract
+                      ? `<code>${escapeHtml(snapshot.matchedGameTypeId || "-")}</code><br><span class="muted">${escapeHtml(snapshot.guidePath || "-")}</span><br><span class="muted">hash ${escapeHtml(snapshot.sourceGuideHash || "-")}</span><br><span class="muted">scenes: ${escapeHtml(scenes || "-")}</span><br><span class="muted">modules: ${escapeHtml(modules || "-")}</span>`
+                      : `<span class="muted">none</span>`;
                     return `
                       <tr>
                         <td>${escapeHtml(item.createdUtc)}</td>
@@ -11675,9 +11687,28 @@ public sealed class BrowserUiRenderer
                         <td>${escapeHtml(item.steamResolvedQuery || item.referenceQuery || "-")}<br><span class="muted">${escapeHtml(attempts || "-")}</span></td>
                         <td>${escapeHtml(tags || "-")}</td>
                         <td>${escapeHtml(candidates || "-")}</td>
+                        <td>${snapshotHtml}</td>
+                        <td><button type="button" data-refresh-snapshot="${escapeHtml(item.projectId)}">刷新快照</button></td>
                         <td>${escapeHtml(item.missingGuidePath || "-")}</td>
                       </tr>`;
-                  }).join("") : `<tr><td colspan="10" class="muted">暂无匹配记录。</td></tr>`;
+                  }).join("") : `<tr><td colspan="12" class="muted">暂无匹配记录。</td></tr>`;
+                  document.querySelectorAll("[data-refresh-snapshot]").forEach(button => {
+                    button.onclick = () => refreshSnapshot(button.dataset.refreshSnapshot);
+                  });
+                }
+                async function refreshSnapshot(projectId) {
+                  try {
+                    if (!projectId) return;
+                    $("summary").className = "card muted";
+                    $("summary").textContent = "刷新快照中...";
+                    const result = await api(`/api/admin/projects/${encodeURIComponent(projectId)}/game-type-contract-snapshot/refresh`, { method: "POST" });
+                    $("summary").className = "card";
+                    $("summary").innerHTML = `快照已刷新：<code>${escapeHtml(result.snapshot?.matchedGameTypeId || projectId)}</code>`;
+                    await load();
+                  } catch (error) {
+                    $("summary").className = "card danger";
+                    $("summary").textContent = error.message;
+                  }
                 }
                 async function load() {
                   try {

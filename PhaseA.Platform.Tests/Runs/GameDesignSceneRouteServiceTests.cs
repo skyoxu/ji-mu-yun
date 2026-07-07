@@ -49,8 +49,10 @@ public sealed class GameDesignSceneRouteServiceTests
         llm.LastRequest.Prompt.Should().Contain("玩家在地图探索并进入战斗。");
         llm.LastRequest.Prompt.Should().Contain("地图、战斗、奖励。");
         llm.LastRequest.Prompt.Should().Contain("Default Prototype Contract");
+        llm.LastRequest.Prompt.Should().Contain("Project game-type contract snapshot");
         llm.LastRequest.Prompt.Should().Contain("field_exploration");
         llm.LastRequest.Prompt.Should().Contain("combat_encounter");
+        llm.LastRequest.Prompt.Should().Contain("DefaultScenes:");
         llm.LastRequest.Prompt.Should().Contain("Preserve `Always` default scenes");
     }
 
@@ -313,7 +315,7 @@ public sealed class GameDesignSceneRouteServiceTests
             options,
             new ProjectRuleCatalog(),
             new ProjectWorkspaceSeeder(options),
-            gameTypeMatchService: new FakeGameTypeMatchService(gameType));
+            gameTypeMatchService: new FakeGameTypeMatchService(gameType, options));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
@@ -322,10 +324,12 @@ public sealed class GameDesignSceneRouteServiceTests
     private sealed class FakeGameTypeMatchService : IProjectGameTypeMatchService
     {
         private readonly string _source;
+        private readonly PhaseAPlatformOptions _options;
 
-        public FakeGameTypeMatchService(string source)
+        public FakeGameTypeMatchService(string source, PhaseAPlatformOptions options)
         {
             _source = source;
+            _options = options;
         }
 
         public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -346,7 +350,7 @@ public sealed class GameDesignSceneRouteServiceTests
                 _ => []
             };
             var now = DateTimeOffset.UtcNow.ToString("O");
-            return Task.FromResult(new ProjectGameTypeMatchEvidence(
+            var evidence = new ProjectGameTypeMatchEvidence(
                 1,
                 string.IsNullOrWhiteSpace(matched) ? "no_match" : "matched",
                 string.IsNullOrWhiteSpace(matched) ? "test_no_match" : "matched_by_test_genre_tags",
@@ -365,7 +369,11 @@ public sealed class GameDesignSceneRouteServiceTests
                 "",
                 "test",
                 now,
-                now));
+                now);
+            return Task.FromResult(evidence with
+            {
+                ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, evidence)
+            });
         }
     }
 

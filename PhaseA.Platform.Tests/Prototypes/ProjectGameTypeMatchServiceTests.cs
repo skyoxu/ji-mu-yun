@@ -31,6 +31,14 @@ public sealed class ProjectGameTypeMatchServiceTests
         evidence.NormalizedGenreTags.Should().Contain(["deckbuilding", "roguelike-deckbuilder", "strategy"]);
         evidence.MatchedGameTypeId.Should().Be("card-game");
         evidence.MatchedGuidePath.Should().Be("docs/game-type-guides/card-game.md");
+        evidence.ContractSnapshot.HasContract.Should().BeTrue();
+        evidence.ContractSnapshot.MatchedGameTypeId.Should().Be("card-game");
+        evidence.ContractSnapshot.DefaultScenes.Select(scene => scene.SceneId)
+            .Should()
+            .Equal("class_selection", "route_map", "card_battle", "reward_choice");
+        evidence.ContractSnapshot.RequiredModules.Select(module => module.ModuleId)
+            .Should()
+            .Equal("route_map_path_selection", "hand_card_dragging");
     }
 
     private sealed class FakeSteamProvider : ISteamGameTypeMetadataProvider
@@ -72,7 +80,27 @@ public sealed class ProjectGameTypeMatchServiceTests
                 card-game,Card Game,"Card systems","card,deck-build,deckbuild,deck-builder,deck-building,deckbuilder,deckbuilding,roguelike-deckbuilder,card-battler,strategy",card-game.md
                 roguelike,Roguelike,"Run-based generation","roguelike",roguelike.md
                 """);
-            File.WriteAllText(System.IO.Path.Combine(dir, "card-game.md"), "# Card Game");
+            File.WriteAllText(System.IO.Path.Combine(dir, "card-game.md"), """
+                # Card Game
+
+                ## Default Prototype Contract
+
+                ### Default Scenes
+
+                | scene_id | scene_name | purpose | required | entry_from | exits_to | minimum_playable_content |
+                | --- | --- | --- | --- | --- | --- | --- |
+                | class_selection | Class Selection | Let the player choose a starting class. | Always | start | route_map | A class can be selected. |
+                | route_map | Route Map | Present route choices. | Always | class_selection,reward_choice | card_battle | Connected route nodes can be selected. |
+                | card_battle | Card Battle | Resolve card combat. | Always | route_map | reward_choice | A card can be dragged and resolved. |
+                | reward_choice | Reward Choice | Choose post-battle rewards. | Always | card_battle | route_map | A reward changes deck or run state. |
+
+                ### Required Modules
+
+                | module_id | module_name | required_by_default | purpose | minimum_acceptance |
+                | --- | --- | --- | --- | --- |
+                | route_map_path_selection | Route map path selection | Always | Branching route choice. | Reachable next nodes are enforced. |
+                | hand_card_dragging | Hand card dragging | Always | Tactile hand interaction. | Cards drag, preview, cancel, and resolve. |
+                """);
             File.WriteAllText(System.IO.Path.Combine(dir, "roguelike.md"), "# Roguelike");
         }
 

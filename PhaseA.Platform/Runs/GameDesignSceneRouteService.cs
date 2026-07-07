@@ -251,12 +251,18 @@ public sealed class GameDesignSceneRouteService
         ProjectSnapshot project,
         PhaseAPlatformOptions? options)
     {
+        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
+        var snapshotRoute = BuildFallbackSceneRouteFromContractSnapshot(evidence.ContractSnapshot);
+        if (snapshotRoute is not null)
+        {
+            return snapshotRoute;
+        }
+
         if (options is null)
         {
             return null;
         }
 
-        var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
         if (string.IsNullOrWhiteSpace(evidence.MatchedGameTypeId))
         {
             return null;
@@ -311,6 +317,59 @@ public sealed class GameDesignSceneRouteService
             scenes,
             transitions,
             $"Fallback generated from Default Prototype Contract for {entry.Id}.");
+    }
+
+    private static GameDesignSceneRouteDocument? BuildFallbackSceneRouteFromContractSnapshot(
+        ProjectGameTypeContractSnapshot snapshot)
+    {
+        if (!snapshot.HasContract)
+        {
+            return null;
+        }
+
+        var sceneRows = snapshot.DefaultScenes
+            .Where(row => string.Equals(row.Required, "Always", StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(row.Required, "Conditional", StringComparison.OrdinalIgnoreCase))
+            .Take(MaxScenes)
+            .ToArray();
+        if (sceneRows.Length == 0)
+        {
+            return null;
+        }
+
+        var scenes = sceneRows
+            .Select(row => Scene(
+                row.SceneId,
+                row.SceneName,
+                InferContractSceneRole(row.SceneId, row.SceneName, row.Purpose),
+                string.Equals(row.Required, "Always", StringComparison.OrdinalIgnoreCase),
+                row.MinimumPlayableContent))
+            .ToArray();
+        var sceneIds = scenes.Select(scene => scene.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var entryScene = sceneRows.FirstOrDefault(row => ContainsSceneToken(row.EntryFrom, "start"))?.SceneId ?? scenes[0].Id;
+        if (!sceneIds.Contains(entryScene))
+        {
+            entryScene = scenes[0].Id;
+        }
+
+        var transitions = sceneRows
+            .SelectMany(row => SplitSceneTokens(row.ExitsTo)
+                .Where(to => sceneIds.Contains(to))
+                .Select(to => Transition(
+                    row.SceneId,
+                    to,
+                    "Contract snapshot transition",
+                    "",
+                    [])))
+            .Take(MaxTransitions)
+            .ToArray();
+
+        return Document(
+            scenes.Length > 1 ? "multi" : "single",
+            entryScene,
+            scenes,
+            transitions,
+            $"Fallback generated from project contract snapshot for {snapshot.MatchedGameTypeId}.");
     }
 
     private static IReadOnlyList<DefaultSceneContractRow> ParseDefaultSceneRows(string guideExcerpt)
@@ -375,7 +434,12 @@ public sealed class GameDesignSceneRouteService
 
     private static string InferContractSceneRole(DefaultSceneContractRow row)
     {
-        var text = string.Join(" ", row.SceneId, row.SceneName, row.Purpose).ToLowerInvariant();
+        return InferContractSceneRole(row.SceneId, row.SceneName, row.Purpose);
+    }
+
+    private static string InferContractSceneRole(string sceneId, string sceneName, string purpose)
+    {
+        var text = string.Join(" ", sceneId, sceneName, purpose).ToLowerInvariant();
         if (ContainsAny(text, "reward", "upgrade", "result", "summary", "debrief"))
         {
             return "reward";
@@ -401,7 +465,7 @@ public sealed class GameDesignSceneRouteService
             return "hub";
         }
 
-        return NormalizeRole(row.SceneId);
+        return NormalizeRole(sceneId);
     }
 
     private static bool ContainsSceneToken(string value, string token)
@@ -451,6 +515,9 @@ public sealed class GameDesignSceneRouteService
 
         Question-form answers:
         {{FormatAnswers(answers)}}
+
+        Project game-type contract snapshot:
+        {{FormatContractSnapshot(project)}}
 
         Game type default prototype contract and guide excerpt:
         {{FormatGameTypeGuideExcerpt(project)}}
@@ -515,6 +582,34 @@ public sealed class GameDesignSceneRouteService
         GuidePath: {{entry.FragmentRelativePath}}
 
         {{entry.GuideExcerpt}}
+        """;
+    }
+
+    private static string FormatContractSnapshot(ProjectSnapshot project)
+    {
+        var snapshot = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson).ContractSnapshot;
+        if (!snapshot.HasContract)
+        {
+            return "(none)";
+        }
+
+        var scenes = snapshot.DefaultScenes.Count == 0
+            ? "- (none)"
+            : string.Join(Environment.NewLine, snapshot.DefaultScenes.Select(scene =>
+                $"- {scene.SceneId}: {scene.SceneName}; required={scene.Required}; entry_from={scene.EntryFrom}; exits_to={scene.ExitsTo}; minimum={scene.MinimumPlayableContent}"));
+        var modules = snapshot.RequiredModules.Count == 0
+            ? "- (none)"
+            : string.Join(Environment.NewLine, snapshot.RequiredModules.Select(module =>
+                $"- {module.ModuleId}: {module.ModuleName}; required_by_default={module.RequiredByDefault}; acceptance={module.MinimumAcceptance}"));
+
+        return $$"""
+        MatchedGameTypeId: {{snapshot.MatchedGameTypeId}}
+        GuidePath: {{snapshot.GuidePath}}
+        SourceGuideHash: {{snapshot.SourceGuideHash}}
+        DefaultScenes:
+        {{scenes}}
+        RequiredModules:
+        {{modules}}
         """;
     }
 
