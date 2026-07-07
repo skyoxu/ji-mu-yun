@@ -25,6 +25,7 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 4. Add explicit gates before executable module generation: completed GDD, confirmed scene route, requirement coverage, and frozen contract.
 5. Add UI wiring closure as a separate late-stage pass after core gameplay modules, so implemented features are visible and usable by players.
 6. Preserve compatibility by adding sidecars, additive JSON fields, and readback surfaces instead of breaking current APIs or old projects.
+7. Migrate TapTap's UI capability discipline into a Godot-only prototype UI capability contract so generated modules must account for UI surfaces, layout, drawing, input, camera/layer boundaries, animation, rendering, procedural generation, geometry sizing, and typed state evidence.
 
 ## 3. Non-Goals
 
@@ -33,6 +34,8 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 3. Do not allow downstream workflows to freely reread `docs/game-type-guides` as a new gameplay authority after GDD generation.
 4. Do not silently refresh confirmed contracts. When GDD or scene route changes, prompt for explicit user confirmation.
 5. Do not refactor the Godot generator itself in this plan. This plan focuses on inputs, contracts, module planning, workflow state, and frontend governance.
+6. Do not copy TapTap's TypeScript/MCP feature layout directly. Borrow its boundary, guard, CLI, logging, and documentation patterns only where they fit the Phase A C# service and browser workflow.
+7. Do not import TapTap's UrhoX, Urho3D, Lua, NanoVG, PBRNoTexture, `.emmylua`, or Maker runtime assumptions. All migrated UI capability requirements must be expressed with Godot 4.5/.NET-compatible concepts and repository-owned validation.
 
 ## 4. Target Frontend Workflow
 
@@ -49,7 +52,7 @@ The target frontend stages are:
 5. `gdd-requirement-map`
    - The system extracts and maps requirements from the GDD and scene route. The map is visible to users/admins.
 6. `prototype-contract-freeze`
-   - The system freezes the prototype contract and records artifact-local source hashes (`source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`) with camelCase API/readback projections.
+   - The system freezes the prototype contract and records artifact-local source hashes (`source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, `source_godot_ui_contract_hash`) with camelCase API/readback projections.
 7. `prototype-skeleton`
    - If the project has no prototype state yet, create the first playable M1 skeleton from the frozen GDD contract.
 8. `iteration-plan`
@@ -73,6 +76,23 @@ Acceptance criteria:
 - API DTO/readback fields remain camelCase and act as the compatibility adapter over artifact-local JSON.
 - Existing artifact-local snake_case fields are not renamed unless a compatibility adapter is provided.
 
+## 4.2 Acceptance Severity Standard
+
+All acceptance criteria in this plan use the following severity gate. A phase, implementation slice, or route change is not accepted if the review leaves any unresolved P0, P1, or P2 issue.
+
+Severity definitions:
+
+- P0: data loss, account isolation failure, auth bypass, secret or host-path leakage, destructive live DB mutation, source-boundary bypass after contract freeze, executing against stale P0 contract state, or a user-visible workflow path that cannot recover.
+- P1: P0/P1 GDD requirement lost or silently deferred, route/action/status drift that makes the frontend invoke the wrong operation, missing stale detection, missing audit trail for admin-only decisions, duplicate active run creation, or deterministic tests/smoke missing for a changed gate.
+- P2: ambiguity, degraded operator visibility, brittle guard coverage, missing non-critical evidence metadata, unclear migration behavior, or UX that makes the recommended next action hard to understand while still allowing recovery.
+
+Acceptance criteria:
+
+- Every implementation phase exit includes a documented P0/P1/P2 review result with zero unresolved P0, P1, or P2 findings.
+- If a P2 issue is intentionally deferred, it must be reclassified as an explicit later-phase open question with owner, scope, and proof that it does not affect current user execution or account/security boundaries.
+- A change cannot pass only because manual review found no problem; deterministic tests, smoke evidence, or a documented non-applicability rationale must cover each touched P0/P1 gate.
+- Acceptance evidence must identify the exact route, artifact, API, browser surface, or script covered by the check.
+
 ## 5. Proposed Artifacts
 
 ### 5.1 `meta/routes/gdd-requirements/latest.json`
@@ -90,6 +110,8 @@ Recommended schema:
   "source_gdd_hash": "sha256",
   "source_scene_route_hash": "sha256",
   "source_contract_snapshot_hash": "sha256",
+  "godot_ui_contract_version": "godot-ui-capability.v1",
+  "source_godot_ui_contract_hash": "sha256",
   "status": "ready|needs_review|blocked|stale",
   "readiness_scope": "requirement_map",
   "status_reason": "",
@@ -133,6 +155,8 @@ Acceptance criteria:
 - A GDD with concrete scene and mechanic requirements produces at least one requirement row per concrete gameplay, scene, or UI requirement.
 - Every `Always` scene from the confirmed scene route appears in at least one mapped requirement or has an explicit no-requirement rationale.
 - Every `Always` required module from the project contract snapshot appears in at least one mapped requirement unless explicitly contradicted by the GDD.
+- Every new requirement map created after Phase 0 records the Godot UI capability contract version/hash. Legacy maps without these fields are treated as `unknown` and require refresh before new contract freeze or new iteration plan creation.
+- If the Godot UI capability contract hash changes, the previous requirement map is stale for new contract freeze or new iteration plan creation.
 - If any P0 requirement is `missing_scene`, `missing_module`, `needs_review`, or `conflict`, the workflow blocks `prototype-contract-freeze` by default.
 - The artifact is readable from the project route-state location and mirrored to the repo `meta/routes/gdd-requirements/latest.json` if current route-state conventions require mirroring.
 - Tests cover normal mapping, missing scene, missing module, explicit defer, system conflict fallback, admin-approved conflict suppression, stale hash, and invalid JSON fallback.
@@ -159,6 +183,8 @@ Add fields:
   "source_scene_route_hash": "sha256",
   "source_requirement_map_hash": "sha256",
   "source_contract_snapshot_hash": "sha256",
+  "godot_ui_contract_version": "godot-ui-capability.v1",
+  "source_godot_ui_contract_hash": "sha256",
   "freshness": {
     "status": "fresh|stale|unknown",
     "stale_reasons": []
@@ -171,7 +197,8 @@ Acceptance criteria:
 
 - `contract_hash` is computed from the canonical frozen contract payload, excluding volatile fields such as `updated_utc`/`updatedUtc`, `freshness`, and `contract_hash` itself.
 - New contracts always include all source hash fields when source artifacts exist.
-- If `docs/gdd/GDD.md`, scene route, requirement map, or contract snapshot changes, readback reports the contract as `stale`.
+- If `docs/gdd/GDD.md`, scene route, requirement map, contract snapshot, or Godot UI capability contract hash changes, readback reports the contract as `stale`.
+- Browser/API readback projects artifact-local `godot_ui_contract_version` and `source_godot_ui_contract_hash` as `godotUiContractVersion` and `sourceGodotUiContractHash`.
 - Existing contracts without these fields load as `unknown`, not failed.
 - New iteration plan creation blocks or returns `contract_stale` when the contract is stale. The user can refresh/freeze the contract and then create a new plan, but cannot bypass stale state with a plain continue confirmation.
 - Execute-next-goal refuses to start against a stale contract unless the existing goal was created against the same stale contract hash and the user explicitly continues repair. Default behavior is to block.
@@ -224,11 +251,17 @@ Recommended schema:
   "schema_version": "ui-wiring-closure.v1",
   "project_id": "...",
   "source_iteration_session_id": "...",
-  "status": "ready|needs_fix|succeeded|blocked",
+  "source_iteration_session_hash": "sha256",
+  "source_validation_input_hash": "sha256",
+  "source_contract_hash": "sha256",
+  "source_requirement_map_hash": "sha256",
+  "source_godot_ui_contract_hash": "sha256",
+  "status": "ready|needs_fix|succeeded|blocked|stale",
   "readiness_scope": "ui_wiring_closure",
   "status_reason": "",
   "updated_utc": "...",
   "evidence_refs": [],
+  "godot_ui_contract_version": "godot-ui-capability.v1",
   "player_flows": [],
   "ui_surface_matrix": [
     {
@@ -236,6 +269,23 @@ Recommended schema:
       "source_requirement_ids": ["REQ-001"],
       "source_goal_ids": [],
       "ui_surface": "RouteMapView",
+      "godot_scene_path": "res://...",
+      "godot_node_path": "Main/CanvasLayer/RouteMapView",
+      "godot_surface_type": "control|hud_canvas_layer|custom_canvas_item|world_space_2d|world_space_3d|subviewport|no_ui_needed",
+      "layout_strategy": "container_theme|anchors_safe_area|fixed_board_with_responsive_bounds|world_overlay|explicit_no_ui",
+      "input_paths": ["mouse_left", "touch_press"],
+      "focus_navigation": {
+        "keyboard": "covered|not_applicable|missing",
+        "gamepad": "covered|not_applicable|missing",
+        "mouse_touch": "covered|not_applicable|missing"
+      },
+      "feedback_states": ["idle", "hover", "pressed", "selected", "disabled"],
+      "camera_layer_boundary": "ui_canvas_layer_separate_from_world_camera",
+      "asset_size_source": "theme_metric|control_min_size|texture_import_metadata|aabb|get_aabb|collision_shape|not_applicable",
+      "custom_drawing_surface": "none|Control._draw|CanvasItem._draw|Line2D|Polygon2D|ArrayMesh|ImmediateMesh|SubViewport",
+      "animation_state_ref": "AnimationPlayer:RouteMapSelection",
+      "material_rendering_policy": "theme_stylebox|canvas_item_material|standard_material_3d|shader_material_repo_approved|not_applicable",
+      "typed_state_ref": "RouteMapSelectionState",
       "player_action": "Select reachable next node",
       "system_response": "Highlight path and advance to battle",
       "state_boundary": "Run route state changes only after confirmed selection",
@@ -255,6 +305,15 @@ Acceptance criteria:
 - Missing player action, system response, or state boundary marks the item `needs_fix`.
 - UI closure can produce follow-up iteration goals for missing UI wiring.
 - Frontend displays UI closure status separately from gameplay module status.
+- UI closure records the iteration session hash, validation input hash, frozen contract hash, requirement map hash, and Godot UI capability contract hash that produced the closure result.
+- UI closure validation inputs include latest validation blockers, Godot diagnostics, screenshot/canvas/exported visual evidence references, UI closure mode, manual needs-fix inputs used for closure, and any repair evidence selected as current acceptance authority.
+- UI closure returns `stale` or `blocked` instead of final readiness when current iteration session, validation inputs, contract, requirement map, or Godot UI capability contract hash differs from the recorded source hash set.
+- Tests cover UI closure `stale` status when the recorded iteration session, validation input, contract, requirement map, or Godot UI capability contract hash does not match current sources.
+- Every non-`no_ui_needed` P0/P1 UI surface records a Godot scene path or node path, surface type, layout strategy, input path, feedback state list, and validation reference.
+- UI closure blocks final readiness when a required UI surface uses absolute-position-only layout without an explicit fixed-format rationale, when keyboard/gamepad/mouse-touch focus status is missing for an interactive surface, or when camera/layer boundaries are not stated.
+- Custom drawing requirements must name the Godot drawing surface (`Control._draw`, `CanvasItem._draw`, `Line2D`, `Polygon2D`, `ArrayMesh`, `ImmediateMesh`, or `SubViewport`) and include redraw/input/state validation evidence.
+- 2D/3D asset and geometry sizing cannot be guessed. The closure record must cite a measurable source such as theme metrics, `Control.custom_minimum_size`, texture import metadata, `AABB`, `get_aabb()`, collision shapes, or an explicit not-applicable rationale.
+- UI closure acceptance uses the P0/P1/P2 severity standard; a phase cannot pass with unresolved Godot UI contract gaps.
 
 ## 6. Backend Changes
 
@@ -265,6 +324,7 @@ Responsibilities:
 - Read `docs/gdd/GDD.md`.
 - Read confirmed scene route state.
 - Read project `contractSnapshot` and game-type default required modules.
+- Read the Godot UI capability contract described in this plan and classify UI-facing requirements with expected surfaces, inputs, feedback states, and validation markers.
 - Generate `gdd-requirements/latest.json` through structured LLM output or deterministic fallback.
 - Validate coverage and status.
 - Persist route state and mirror it if needed.
@@ -274,6 +334,7 @@ Acceptance criteria:
 - Service returns stable JSON with deterministic IDs (`REQ-001`, `REQ-002`, ...).
 - Service fails closed when GDD is missing, scene route is missing, or returned requirement map JSON is invalid.
 - Service produces fallback `needs_review` rows instead of silently returning an empty requirement set.
+- Service marks requirements as `kind=ui` or adds UI acceptance markers when the GDD implies player-facing interaction, feedback, HUD, menu, camera overlay, custom drawing, animation state, or visualized procedural content.
 - Unit tests cover successful map generation, invalid LLM JSON fallback, missing sources, and default module preservation.
 
 ### 6.2 New/Extended Service: `PrototypeContractFreezeService`
@@ -282,6 +343,7 @@ Responsibilities:
 
 - Freeze or refresh `prototype-contract/latest.json` from GDD, scene route, requirement map, contract snapshot, and current request fields.
 - Add source hashes and traceability.
+- Freeze the current Godot UI capability contract version/hash as part of the prototype contract source set.
 - Detect stale contract state.
 
 Acceptance criteria:
@@ -289,6 +351,7 @@ Acceptance criteria:
 - Freeze writes a contract with all source hashes.
 - Re-freezing unchanged sources is idempotent except `updated_utc`/`updatedUtc` if policy requires updating it.
 - Changed GDD or scene route marks the previous contract stale.
+- Changed Godot UI capability contract version/hash marks contracts as `stale` for new iteration plans unless the change is explicitly declared backward-compatible by a later decision log.
 - Freezing does not run Steam lookup or rematch game type.
 - Existing `PrototypeContractService` remains backward compatible.
 
@@ -299,6 +362,7 @@ Responsibilities:
 - Read requirement map as first-class input.
 - Generate goals from requirement rows and required modules.
 - Include `requirementIds` in every goal and every `required_modules` entry.
+- Generate explicit UI surface goals for P0/P1 requirements that need Godot `Control`, `CanvasLayer`, custom drawing, input/focus, camera/layer separation, animation, rendering, geometry sizing, or procedural visualization work.
 - Block if P0/P1 requirements are unmapped or contract is stale.
 
 Acceptance criteria:
@@ -307,10 +371,13 @@ Acceptance criteria:
 - Every P0 requirement is covered by a goal, required module, prototype skeleton, or explicit blocker.
 - `required_modules` retains deckbuilder route-map and hand-dragging defaults and adds requirement links.
 - If `route_map_path_selection` is required, it appears in `required_modules` as a separate block, not only as a vague goal title.
+- If a required module has player-facing interaction, the iteration plan includes either a linked UI surface goal or an explicit `no_ui_needed` rationale that survives into UI closure.
+- Generated UI goals name the expected Godot scene/node ownership, layout strategy, input/focus coverage, feedback states, and validation method rather than only saying "add UI".
 - Tests cover deckbuilder, RPG, generic fallback, stale contract, missing map, and admin-approved GDD conflict suppression.
-- The iteration plan route state must record `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractHash`, and `sourceContractSnapshotHash`.
+- The iteration plan route state must record `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractHash`, `sourceContractSnapshotHash`, and `sourceGodotUiContractHash`.
 - Every generated goal must record the same source hash set or a `sourceHashRef` that points to the session-level hash set.
 - Stale checks must compare execute-next-goal source hashes against the current frozen contract and requirement map before invoking Codex.
+- Stale checks must compare `sourceGodotUiContractHash` against the current frozen Godot UI capability contract hash before invoking Codex for any UI-touching goal.
 
 ### 6.4 Extend `PrototypeIterationGoalService`
 
@@ -318,12 +385,15 @@ Responsibilities:
 
 - Include requirement rows linked to the current goal in the prompt.
 - Include contract freshness metadata.
+- Include the frozen Godot UI capability contract when the current goal touches player-facing UI, input, drawing, camera/layer boundaries, animation, rendering, geometry, procedural visualization, or typed state.
 - Refuse executing goals whose source contract/hash does not match the current frozen contract, unless the repair route explicitly allows continuation.
 
 Acceptance criteria:
 
 - Goal input markdown contains `Requirement IDs` and source excerpts.
 - Prompt states that the current goal must not expand beyond linked requirements.
+- Prompt states that Godot UI work must use Godot 4.5 concepts only (`Control`, `Container`, `Theme`, `CanvasLayer`, `CanvasItem`/`Control._draw`, `Line2D`, `Polygon2D`, `ArrayMesh`, `ImmediateMesh`, `SubViewport`, `AnimationPlayer`, `AnimationTree`, camera nodes, materials/shaders, typed C#/GDScript state), not TapTap runtime concepts.
+- Prompt requires measurable layout/size/input validation evidence for UI goals before they can be marked complete.
 - Execution returns `contract_stale` or `requirement_map_missing` before Codex invocation when source state is invalid.
 - Tests assert Codex is not called in stale/missing cases.
 - Execute-next-goal can only allow an old goal to continue when the goal/session recorded source hashes match the contract and requirement map that were current when that goal was created.
@@ -361,7 +431,7 @@ Add or extend routes:
    - Return current recommended next action from the existing workflow route authority/read model.
 6. `POST /api/projects/{projectId}/ui-wiring-closure`
    - Generate UI wiring closure state.
-   - Idempotency: if the source iteration session and validation inputs match the latest closure state, return the existing state; if closure is already running, return the active run/state; otherwise create one closure run.
+   - Idempotency: return an existing closure state only when `source_iteration_session_hash`, `source_validation_input_hash`, `source_contract_hash`, `source_requirement_map_hash`, and `source_godot_ui_contract_hash` all match the latest closure state; if closure is already running for the same hash set, return the active run/state; otherwise create one closure run.
 7. `GET /api/projects/{projectId}/ui-wiring-closure/latest`
    - Read latest UI closure state.
 
@@ -371,6 +441,7 @@ Acceptance criteria:
 - Admin-only data remains behind `/api/admin/...`.
 - Responses are additive only; no existing route response field is removed or renamed.
 - POST API responses include an explicit `operationStatus` (`returned_existing|active_run_reused|created_run|rejected`) plus either a stable route state, an active `runId`, or an `evidenceRefs` pointer that can be read by a GET route; artifact-local sidecars keep the snake_case `evidence_refs` field.
+- `operationStatus=active_run_reused` responses include `runId`, polling/readback URL or route-state location, operation scope, source hash scope, and server-derived opaque/redacted account-project scope marker so the browser can resume the correct run and tests can prove a stale or cross-account run was not reused. Normal-user responses must not expose internal account IDs, host paths, or metadata DB identifiers.
 - If operation status is ever persisted in an artifact-local sidecar, it must use `operation_status`; `operationStatus` is reserved for API/readback DTOs.
 - `operationStatus=rejected` responses must include the standard error envelope with `requestId` and optional `details.domainCode`.
 - `evidenceRefs.kind` / `evidence_refs.kind` uses the Phase standard closed enum: `log|artifact|sidecar|screenshot|db_row|smoke|validator`, unless the standards document is updated first.
@@ -381,8 +452,8 @@ Acceptance criteria:
   | HTTP status | Envelope `code` | `details.domainCode` examples |
   | --- | --- | --- |
   | `404` | `gdd_not_found`, `scene_route_missing`, `contract_missing`, `requirement_map_missing` only when the caller is allowed to know absence |
-  | `409` | `conflict` | `contract_stale`, `iteration_plan_blocked`, `duplicate_active_run` |
-  | `422` | `route_state_invalid` | `requirement_map_invalid`, `ui_closure_not_ready` |
+  | `409` | `conflict` | `contract_stale`, `ui_contract_unknown`, `iteration_plan_blocked`, `duplicate_active_run` |
+  | `422` | `route_state_invalid` | `requirement_map_invalid`, `ui_closure_not_ready`, `ui_contract_unknown` when detected only while validating legacy route state |
   | `429` | `rate_limited` | `route_concurrency_limit`, `account_concurrency_limit` |
 
 - Cross-account or existence-hiding cases must return generic `project_not_found` or `forbidden` and must not expose fine-grained domain codes such as `gdd_not_found` or `requirement_map_missing`.
@@ -467,14 +538,18 @@ Acceptance criteria:
 - Flags completed functionality without player-facing entry or feedback.
 - Can generate follow-up goals for missing UI wiring.
 - Does not block early prototype creation; blocks final package readiness only when P0/P1 UI gaps exist.
+- Shows Godot UI gap families separately: layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, and typed state.
+- Shows Godot UI contract version/hash and source hashes in an account-safe readback format.
 
 ## 9. Migration And Compatibility
 
 1. Existing projects without requirement map:
    - Show `requirement_map_missing`, but allow lazy generation.
 2. Existing prototype contracts without source hashes:
-   - Treat freshness as `unknown`.
-   - Prompt user to freeze/refresh contract before creating new module plans.
+    - Treat freshness as `unknown`.
+    - Prompt user to freeze/refresh contract before creating new module plans.
+    - Treat missing Godot UI capability contract fields as `freshness.status=unknown` with `ui_contract_unknown` recorded as a `freshness.stale_reasons[]` value, API `details.domainCode`, and workflow `blockingIssues[]` entry where applicable. `ui_contract_unknown` is not a freshness status enum value.
+    - Preview/package can continue for existing successful prototypes, but new iteration plans require refresh/freeze.
 3. Existing iteration plans:
     - Continue readback.
     - Existing successful prototypes can still preview/package.
@@ -490,6 +565,7 @@ Acceptance criteria:
 - Old project list renders without exceptions.
 - Existing successful prototypes can still preview/package.
 - Creating a new iteration plan on an old project prompts requirement map/contract freeze first.
+- Existing projects without Godot UI capability contract fields cannot start new UI-touching goals until the current contract is refreshed and the UI capability hash is recorded.
 - No manual DB migration is required unless a later implementation chooses a persistent index table. If added, migration must be backward-compatible.
 
 ## 10. Testing Strategy
@@ -516,28 +592,33 @@ Acceptance criteria:
 - Tests cover system-detected conflict appearing in admin review/readback queue and blocking contract freeze until admin approval.
 - Tests cover `operationStatus=rejected` returning the standard error envelope with `requestId` and `details.domainCode`.
 - Tests cover UI closure missing surface producing needs-fix status.
+- Tests cover UI closure source hash matching for `source_iteration_session_hash`, `source_validation_input_hash`, `source_contract_hash`, `source_requirement_map_hash`, and `source_godot_ui_contract_hash`, including stale behavior when any hash differs.
+- Tests cover `ui_contract_unknown` as `freshness.stale_reasons[]`, API `details.domainCode`, and workflow `blockingIssues[]`, not as a freshness status enum value.
+- Tests cover route module contract guards, path/readback policy guards, source-boundary guard tests, and operation-status/error-envelope guard tests introduced by the TapTap-derived hardening patterns.
 
 ### 10.2 Integration / Smoke Tests
 
 Add a deterministic smoke path for:
 
-1. Create project.
-2. Generate GDD question form.
-3. Confirm scene route.
-4. Generate GDD.
-5. Generate requirement map.
-6. Freeze contract.
-7. Generate iteration plan.
-8. Execute or dry-run next-goal decision.
+1. Verify Phase 0 baseline evidence and guard artifacts exist.
+2. Create project.
+3. Generate GDD question form.
+4. Confirm scene route.
+5. Generate GDD.
+6. Generate requirement map.
+7. Freeze contract.
+8. Generate iteration plan.
+9. Execute or dry-run next-goal decision.
 
 Acceptance criteria:
 
 - Smoke writes evidence under `logs/`.
+- Smoke fails before project creation if Phase 0 baseline evidence, route contract template, path/readback policy, action exposure classes, duplicate-run convention, preflight checklist, or secret redaction fixture baseline is missing.
 - Smoke asserts route state files exist and contain matching hashes.
 - Smoke asserts no downstream route reads broad game-type guide as authority after contract freeze.
 - Smoke/test assertions define this concretely: execute-next-goal, needs-fix, repair, and UI closure prompts may include `source_boundary` and artifact paths, but must not include raw `docs/game-type-guides` guide excerpts or use guide-derived requirements that are absent from the frozen contract/requirement map.
 - Smoke/test assertions read the saved prompt or run evidence artifact, not only the route-state summary field, when checking source-boundary behavior.
-- Route state should record `source_boundary_enforced: true` when the prompt was built from frozen project artifacts only.
+- Route state must record `source_boundary_enforced: true` when the prompt was built from frozen project artifacts only. Missing or false `source_boundary_enforced` makes the smoke fail and marks the route state invalid for completion.
 
 ### 10.3 Browser Tests
 
@@ -549,6 +630,28 @@ Acceptance criteria:
 - Contract freshness banner displays the correct action.
 - Primary button follows `workflow-recommendation`.
 
+### 10.4 Godot UI Capability Tests
+
+Required test areas:
+
+- Godot UI contract source hash and freeze/readback tests.
+- Requirement-map classification tests for UI/HUD/menu/input/custom drawing/camera/animation/rendering/procedural visualization requirements.
+- Iteration-plan tests proving P0/P1 UI requirements become explicit UI goals or blocking gaps.
+- Execute-next-goal prompt tests proving Godot UI capability contract injection for UI goals and no TapTap runtime term leakage.
+- UI closure validator tests for Godot scene/node path, layout strategy, input/focus, feedback states, camera/layer boundary, custom drawing, geometry sizing, animation, material/rendering policy, and typed state references.
+- Godot headless, screenshot, canvas-pixel, or exported-evidence tests for representative UI surfaces. Validator-only evidence is allowed only for non-visual source-boundary checks or when phase review records a concrete harness limitation and a substitute deterministic check.
+
+Acceptance criteria:
+
+- Tests fail if a P0/P1 UI requirement reaches `succeeded` without a UI surface matrix row or explicit `no_ui_needed` rationale.
+- Tests fail if UI-goal prompts mention TapTap-only runtime concepts such as UrhoX, Urho3D, Lua, NanoVG, PBRNoTexture, or `.emmylua` outside a conflict-assessment document.
+- Tests fail if a required interactive surface lacks mouse/touch input coverage and keyboard/gamepad focus status.
+- Tests fail if a required custom drawing surface lacks a redraw/state validation reference.
+- Tests fail if a 2D/3D size-sensitive UI or world-space surface uses guessed dimensions without theme metrics, import metadata, `AABB`, `get_aabb()`, collision shape, or a not-applicable rationale.
+- Tests fail if camera/HUD surfaces do not declare whether they are separated by `CanvasLayer`, viewport, or camera ownership.
+- Tests fail if a high-risk visual UI change has neither screenshot/canvas-pixel/exported visual evidence nor an approved deterministic substitute tied to a recorded harness limitation.
+- Godot UI capability test results are included in phase review evidence and must have zero unresolved P0/P1/P2 findings.
+
 ## 11. Observability And Admin
 
 Add admin/readback visibility for:
@@ -558,6 +661,7 @@ Add admin/readback visibility for:
 - Stale artifact reasons.
 - Current recommended action.
 - UI closure status.
+- Godot UI capability contract version/hash and UI closure gap families.
 - Repeated failure families from needs-fix/validation.
 
 Acceptance criteria:
@@ -565,11 +669,518 @@ Acceptance criteria:
 - Admin can answer "Why can this project not generate modules right now?" without reading raw logs.
 - Admin can answer "Which GDD requirements did not enter the module plan?" from UI/readback.
 - Admin can answer "Which GDD, scene route, and contract snapshot hash produced this prototype contract?" from UI/readback.
+- Admin can answer "Which Godot UI capability contract version produced this module plan and UI closure result?" from UI/readback.
+- Admin can answer "Which UI gap family is blocking final readiness: layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state?" without reading raw logs.
 - User-facing readback remains account-scoped and cannot expose another account's project route state by guessed IDs.
 - Admin aggregation may cross accounts, but raw evidence blobs, host paths, prompts, token material, and provider secrets remain redacted or omitted.
 - Browser/API responses that expose project workflow state, route evidence, or admin audit details use `Cache-Control: no-store` unless a specific compatibility exception is recorded.
 
+## 11.1 TapTap-Derived Hardening Patterns
+
+This section records reusable engineering patterns observed in the TapTap project and adapts them to the Phase A frontend GDD-to-module workflow. These are not TypeScript or MCP migrations. They are boundary and governance patterns that should be implemented in Phase A's existing C# service, browser UI, route-state sidecars, and deterministic test style.
+
+### 11.1.1 Conflict Assessment Against This Plan
+
+Potential conflicts and decisions:
+
+| Borrowed pattern | Potential conflict | Decision |
+| --- | --- | --- |
+| Feature-module style ownership | Phase A currently groups many route services under `Runs/`, `Readback/`, and `Browser/` rather than per-feature folders | Borrow the ownership contract, not the directory layout. Each route gets a route module contract section and tests, while code can remain in current C# ownership areas until a later refactor. |
+| Unified definition plus handler | Phase A has ASP.NET handlers, services, route writers, browser callers, and artifact readback instead of MCP tools | Implement a route action descriptor/readback contract per route; do not introduce MCP abstractions. |
+| CLI-first initialization | The GDD and scene confirmation flows are intentionally browser-visible | Keep user-facing GDD/scene/review flows in the browser; move deterministic admin, backfill, diagnostics, and guard checks to scripts/CLI where appropriate. |
+| Release/workflow guard tests | Current plan is about prototype route governance, not npm release automation | Borrow the deterministic guard-test idea only: tests assert invariant text, artifact fields, route prompts, source boundaries, and API envelope behavior. |
+| Path resolution policy | Phase A already has hosted workspace, artifact, package, and admin evidence boundaries | Create a Phase-specific path/readback policy instead of adopting TapTap's `WORKSPACE_ROOT + project_path` formula literally. |
+| Runtime lifecycle logging | Phase A already has runtime recovery scripts and watchdogs | Add bounded expected-exit/orphan-process/log-retention guidance without changing runtime startup scripts in this plan. |
+| Capability allowlist | Phase A browser routes already have account/auth gates, not MCP remote tool exposure | Borrow the explicit allowlist posture for user-visible workflow actions and admin operations; do not expose raw maintenance capabilities as ordinary project buttons. |
+| Context separation | Phase A has account/project/run context mixed across services and readback | Add context-boundary tests and DTO rules rather than adopting TapTap's context types. |
+| Progress notifications | Phase A has run state and browser polling instead of MCP progress tokens | Borrow the requirement that long operations expose progress/status through the existing run/readback model. |
+| Release guard recovery | Phase A does not use TapTap's npm release flow | Borrow retry/idempotency and deterministic guard principles for workflow operations, not release-specific GitHub mechanics. |
+
+Acceptance criteria:
+
+- No new section requires moving Phase A code into a TapTap-style TypeScript directory layout.
+- Existing Phase service standards remain the higher authority for API naming, sidecar naming, status enums, auth, evidence, and readback security.
+- Any future implementation that adopts a borrowed pattern must include route-specific tests or a documented reason why the pattern is not applicable to that route.
+- Borrowed patterns that touch user-visible actions, admin operations, credentials, paths, process lifecycle, or source authority must be reviewed under the P0/P1/P2 acceptance severity standard.
+
+### 11.1.2 Route Module Contract Template
+
+Borrowed capability: TapTap keeps each feature's definition, handler, resources, docs, and tests under an explicit feature contract. Phase A should define an equivalent contract per browser-consumed prototype route.
+
+Target Phase A route module contract:
+
+1. Route purpose and owner.
+2. Required source artifacts.
+3. Artifact-local sidecar schema.
+4. API/readback DTO projection.
+5. Browser action and disabled-state behavior.
+6. Service entrypoint and route-state writer.
+7. Prompt source boundary, if the route invokes Codex/LLM.
+8. Admin/readback visibility.
+9. Deterministic tests and smoke evidence.
+10. Migration behavior for old projects.
+
+Routes that should receive this contract first:
+
+- `gdd-requirements`
+- `prototype-contract`
+- `workflow-recommendation`
+- `ui-wiring-closure`
+- `iteration-plan`
+- `execute-next-goal`
+- `needs-fix`
+- `repair`
+
+Acceptance criteria:
+
+- Each new or changed route has a documented route module contract before implementation is marked complete.
+- The route module contract names the route's artifact paths, API DTO fields, browser entrypoints, source hashes, stale behavior, and tests.
+- A route cannot be marked complete if its service, browser caller, readback, sidecar schema, and tests disagree on action names, status values, error envelope shape, or source hash fields.
+
+### 11.1.3 Unified Route Action Descriptor
+
+Borrowed capability: TapTap pairs tool definition and handler in one registration object to prevent schema/handler drift. Phase A should use a C#-appropriate version.
+
+Recommended shape:
+
+- Define a route action descriptor per action that names:
+  - `actionId`
+  - API route
+  - required source artifacts
+  - operation status set
+  - allowed HTTP status/error envelope mappings
+  - browser label and disabled-state reason
+  - service handler
+  - readback sidecar path
+
+This can be implemented as C# records, constants, or test fixtures. The important requirement is single-source verification, not a specific implementation class.
+
+Acceptance criteria:
+
+- `recommended_action`, browser button action, API action, and service handler names are checked by deterministic tests.
+- The same action cannot have different names in browser JavaScript, API DTOs, route-state JSON, and service tests.
+- Adding a new action requires updating the descriptor and a guard test that fails if the browser or readback omits it.
+
+### 11.1.4 Deterministic Guard Tests For Workflow Invariants
+
+Borrowed capability: TapTap uses tests to assert release and workflow guard behavior instead of relying on reviewers to remember rules.
+
+Phase A should add deterministic guard tests for these invariants:
+
+- Source-boundary prompts after contract freeze do not include raw `docs/game-type-guides` excerpts.
+- New sidecars use snake_case and API/readback projections use camelCase.
+- `operationStatus` values remain `returned_existing|active_run_reused|created_run|rejected`.
+- `operationStatus=rejected` returns the standard error envelope.
+- Route-state sidecars include `status`, `status_reason`, `updated_utc`, and `evidence_refs` when applicable.
+- `evidence_refs.kind` stays within the Phase standard closed enum.
+- `recommended_action` includes every action used by browser primary/secondary controls.
+- `contract_hash` excludes volatile fields and source hashes use the canonicalization rules defined in this plan.
+- Admin-only conflict/defer decisions cannot be made by normal user routes.
+- Cross-account/existence-hiding responses do not expose fine-grained domain codes.
+
+Acceptance criteria:
+
+- Guard tests fail on string, enum, prompt-source, or route-state drift before manual review is required.
+- Guard tests read saved prompts/evidence artifacts for source-boundary checks, not only summary route-state fields.
+- Guard tests are deterministic and do not call external LLM, Steam, GitHub, or public network services.
+- Each guard test names the invariant it protects and the route(s) it covers.
+
+### 11.1.5 CLI/Script-First Admin And Backfill Operations
+
+Borrowed capability: TapTap Maker keeps one-time initialization, environment checks, project binding, and repair-like operations in CLI workflows instead of spreading them across user-facing MCP/browser actions.
+
+Phase A should keep browser flows for user decisions, but use deterministic scripts/CLI for:
+
+- project game-type match backfill
+- contract snapshot refresh inspection
+- requirement map regeneration diagnostics
+- stale artifact inspection
+- route-state consistency audits
+- prompt source-boundary audits
+- admin review queue export
+- readback path/security smoke
+- runtime/orphan-process diagnostics
+
+Acceptance criteria:
+
+- Browser UI does not expose raw maintenance actions that can mutate many projects without explicit admin intent.
+- Each admin/backfill script writes evidence under `logs/` and includes `timestamp_utc`, operation label, scoped IDs, and sanitized paths.
+- Scripts are idempotent by default or explicitly document when they create new runs/states.
+- Scripts do not manually mutate the live metadata DB unless the user explicitly authorizes that operation and a decision log records the reason.
+
+### 11.1.6 Phase Path And Readback Policy
+
+Borrowed capability: TapTap documents path resolution so users, tools, and hosted environments agree on how paths are interpreted.
+
+Phase A should add a Phase-specific path/readback policy for hosted prototype routes:
+
+- Host filesystem paths stay internal.
+- Browser/API output uses workspace-relative paths, artifact IDs, package names, or short-lived tickets.
+- Route-state sidecars store stable project-relative paths where possible.
+- Admin raw evidence can include more detail only behind admin auth and redaction rules.
+- Prompt/evidence artifacts referenced by tests use sanitized paths.
+- Package/preview/download routes never accept caller-provided absolute host paths.
+
+Acceptance criteria:
+
+- A path/readback policy document or section exists before implementing new route-state readback surfaces.
+- Tests cover path sanitization for user readback, admin readback, prompt evidence, package paths, and preview/download references.
+- Browser/API responses never expose absolute host paths for normal users.
+- Cross-account guessed project IDs cannot reveal whether a path, artifact, package, or prompt evidence exists.
+
+### 11.1.7 Runtime Logs, Expected Exit, And Orphan Process Hygiene
+
+Borrowed capability: TapTap separates expected lifecycle exits from crashes and bounds runtime log growth.
+
+Phase A should extend runtime/route evidence guidance with:
+
+- expected exit vs failure distinction for Codex/LLM helper processes
+- bounded runtime/evidence log size or retention policy
+- orphan-process diagnostics for route runners and preview/package helpers
+- preserved failure evidence as sidecars, not overwritten summaries
+- cleanup guidance that never deletes user workspaces silently
+
+Acceptance criteria:
+
+- Expected process exits are logged as lifecycle events, not crash evidence.
+- Route runner failures preserve stderr/stdout or summarized evidence with redaction and size limits.
+- Runtime diagnostics identify orphaned route/helper processes without killing them unless an explicit recovery script is invoked.
+- Evidence cleanup rules preserve failure artifacts needed for repair and audit.
+
+### 11.1.8 Cache And Freshness Policy
+
+Borrowed capability: TapTap documents TTL, forced refresh, and write-through behavior for cached app data.
+
+Phase A should define cache/freshness behavior for project-level workflow artifacts:
+
+- Requirement map and prototype contract freshness is source-hash based, not time based.
+- Admin readback summaries may be cached only when they record source hashes or `updated_utc`.
+- Write operations that change GDD, scene route, contract snapshot, requirement map, or prototype contract must invalidate dependent recommendations.
+- Manual refresh must be explicit and recorded.
+- Old `unknown` freshness must remain diagnostic and cannot be promoted to success.
+
+Acceptance criteria:
+
+- Freshness rules name source artifacts and invalidation edges.
+- Write-through or invalidation tests cover GDD changes, scene route changes, contract snapshot changes, requirement map refresh, and contract freeze.
+- Cached readback responses expose freshness status and source hash references.
+- No route treats a stale or unknown cache as fresh without an explicit compatibility rule and test.
+
+### 11.1.9 Directory-Scoped Agent Instructions
+
+Borrowed capability: TapTap uses directory-scoped instructions for feature modules rather than relying only on one large repository guide.
+
+Phase A should avoid expanding `AGENTS.md` for every route detail. Instead, use focused docs or instructions near the relevant route family.
+
+Recommended targets:
+
+- `docs/standards/phase-service.md` for service-wide invariants.
+- A new route-module template document under `docs/workflows/` or `docs/standards/`.
+- Route-specific notes near GDD/scene/prototype workflow docs.
+- Execution plans for durable project-specific intent.
+
+Acceptance criteria:
+
+- New durable rules are placed in the narrowest authoritative document that owns the topic.
+- `AGENTS.md` remains a routing map and does not duplicate detailed route-module schemas.
+- Route implementation PRs link to the relevant route contract or standards section instead of relying on hidden conversation history.
+
+### 11.1.10 User-Guided Ambiguity Resolution
+
+Borrowed capability: TapTap tools explicitly instruct the agent to present choices to users when automatic selection would be unsafe.
+
+Phase A should apply the same principle to ambiguous game-design workflow decisions:
+
+- Multiple plausible scene routes require scene confirmation, not automatic selection.
+- Multiple candidate required modules require requirement-map review or admin/user decision depending on priority.
+- Multiple repair options require recommendation plus visible alternatives.
+- Default type contract conflicts require admin-approved defer/conflict decisions when they affect P0/P1 behavior.
+
+Acceptance criteria:
+
+- The workflow recommendation can present one primary action while preserving safe secondary actions.
+- Ambiguous P0/P1 scene/module decisions cannot be silently auto-selected.
+- User-facing flows ask for confirmation when scene count, scene relation, or module priority changes the prototype scope.
+- Admin-only decisions remain admin-only even when the LLM suggests a resolution.
+
+### 11.1.11 Capability Allowlist And Action Exposure
+
+Borrowed capability: TapTap's Maker flow exposes only a small allowlist of runtime tools through MCP while keeping broader setup and maintenance behind CLI/admin flows.
+
+Phase A should apply the same posture to browser-visible project actions:
+
+- User project pages expose only the safe current-stage actions, safe secondary actions, and readback views.
+- Bulk backfill, cross-project audits, raw prompt inspection, contract snapshot refresh inspection, and source-boundary audits stay admin-only or script-only.
+- Admin UI can list these operations, but mutation still requires explicit admin intent, scoped IDs, and evidence creation.
+- Route descriptors identify whether an action is `user_visible`, `admin_visible`, `script_only`, or `internal`.
+
+Acceptance criteria:
+
+- Every route action descriptor includes an exposure class: `user_visible|admin_visible|script_only|internal`.
+- Browser tests assert normal users cannot see or invoke admin/script-only mutation actions.
+- API tests assert hidden actions are not only hidden in the UI; unauthorized direct calls also fail with the standard account/auth error behavior.
+- Adding a new action without an exposure class fails a guard test.
+
+### 11.1.12 Context Boundary And DTO Hygiene
+
+Borrowed capability: TapTap separates business context from transport-layer extras so handlers do not accidentally depend on hidden client details.
+
+Phase A should define route execution context boundaries:
+
+- Account/project authorization context.
+- Route source context: GDD, scene route, requirement map, frozen contract, run state.
+- Transport context: request ID, correlation ID, browser session, polling/readback concerns.
+- Admin context: admin identity, scoped operation, redaction level.
+
+Acceptance criteria:
+
+- Route services do not accept browser-only DTOs as their internal source of authority; they receive validated account/project/source context.
+- Tests cover that spoofed project IDs, account IDs, source hashes, or admin flags in client payloads cannot override server-derived context.
+- Prompt builders receive explicit source artifacts and sanitized context, not raw request bodies.
+- Readback DTOs omit internal-only context fields unless the route is admin-authenticated and redacted.
+
+### 11.1.13 Progress And Long-Running Operation Feedback
+
+Borrowed capability: TapTap tool handlers support progress notification channels for long-running work.
+
+Phase A should express long-running progress through existing run state and readback surfaces:
+
+- GDD requirement map generation, contract freeze, iteration planning, execute-next-goal, repair, UI closure, preview, and package should expose stable progress states.
+- Progress should distinguish queued, running, waiting for user/admin decision, failed, blocked, stale, and succeeded.
+- Browser polling should show the last meaningful status instead of only a spinner.
+
+Acceptance criteria:
+
+- Long-running POST routes either return an immediately readable route state or an active `runId` with polling/readback URL.
+- Browser tests cover queued/running/blocked/failed/succeeded rendering for at least requirement map, iteration plan, and execute-next-goal.
+- A failed long-running operation exposes a sanitized failure reason and evidence reference, not only `unhandled_request_failed`.
+- Progress status cannot mark success unless the required sidecar/readback artifact exists and validates.
+
+### 11.1.14 Idempotent Recovery And Duplicate-Run Control
+
+Borrowed capability: TapTap release guards include recovery behavior for existing PRs and avoid duplicating release state.
+
+Phase A should apply this to route operations:
+
+- Repeated POST calls with unchanged source hashes return existing results or reuse active runs.
+- Changed source hashes require explicit refresh intent when they would invalidate confirmed user decisions.
+- Duplicate active run creation is rejected or reused consistently.
+- Recovery reads authoritative route state before starting new work.
+
+Acceptance criteria:
+
+- Tests cover double-click, browser retry, network retry, and concurrent duplicate POST behavior for requirement map, contract freeze, iteration plan, execute-next-goal, and UI closure.
+- Duplicate run handling returns `operationStatus=returned_existing`, `active_run_reused`, or `rejected`; it must not silently start two conflicting runs.
+- Recovery logic compares source hashes and operation scope before reusing a run.
+- Existing active runs from another account are never visible or reusable across account boundaries.
+
+### 11.1.15 Credential, Token, And Secret Boundary
+
+Borrowed capability: TapTap docs separate local credential preparation from runtime operations and avoid treating tokens as ordinary workflow data.
+
+Phase A already has token hashing and secret rules. This plan should reinforce them for GDD/prototype workflow changes:
+
+- Prompts, sidecars, route evidence, admin exports, and browser DTOs must not include provider secrets, auth tokens, token hashes, or raw credential material.
+- Script/admin evidence records operation scope without copying secret-bearing environment variables.
+- LLM/Codex prompt artifacts redact credentials before persistence.
+
+Acceptance criteria:
+
+- Tests or validators scan generated route evidence and prompt artifacts for known secret variable names and token-like fields.
+- Redaction tests include fixture-based examples for environment variable names, provider keys, token hashes, bearer-like tokens, local absolute paths that contain user/account identifiers, and prompt/evidence/admin export samples.
+- The validator owns a documented denylist and allowlist update path; adding a new secret-bearing variable or evidence field requires updating the fixture set or recording a non-applicability rationale.
+- Admin exports redact token hashes and provider credentials even for admin users.
+- Any new script that reads environment variables documents which ones are secret and proves they are not written to evidence.
+- Secret redaction failure is P0 and blocks acceptance.
+
+### 11.1.16 Configuration And Environment Preflight
+
+Borrowed capability: TapTap Maker CLI performs setup and environment checks before exposing runtime operations.
+
+Phase A should add deterministic preflight checks for workflow-critical capabilities:
+
+- Codex command availability and shared invocation protocol.
+- Godot binary availability where a route requires validation or preview/package.
+- Hosted workspace root and project boundary availability.
+- Metadata DB path readability through the platform service, without manual mutation.
+- Game-type guide and `game-types.csv` availability for project creation/matching only.
+
+Acceptance criteria:
+
+- Admin/operator preflight can report missing Codex, Godot, workspace root, metadata DB access, and game-type guide/index inputs without starting a GDD/prototype run.
+- User-facing project actions show blocked reasons when a required runtime dependency is unavailable.
+- Normal-user preflight/readback responses expose capability status and blocked reason only; host paths, metadata DB paths, environment values, and workspace roots are visible only in admin-authenticated, redacted evidence.
+- Preflight checks write sanitized evidence under `logs/`.
+- Preflight does not validate by invoking external LLM/Steam/network services unless explicitly requested by an admin/operator command.
+
+### 11.1.17 Documentation Indexing And Route Discoverability
+
+Borrowed capability: TapTap keeps targeted docs for maker, paths, logs, guards, and feature modules, making operational behavior discoverable without reading code.
+
+Phase A should keep this execution plan as intent and move durable implementation rules into authoritative docs during implementation:
+
+- Route module contract template.
+- Path/readback policy.
+- Guard-test invariant list.
+- Admin/backfill script evidence convention.
+- Runtime lifecycle and expected-exit guidance.
+- Cache/freshness policy.
+
+Acceptance criteria:
+
+- Each durable rule added by implementation is linked from `docs/standards/_index.md`, `docs/standards/phase-service.md`, or a route workflow doc.
+- Execution plan items that become permanent standards are not left only in the plan.
+- `AGENTS.md` remains a concise router and links to durable docs instead of duplicating full rule text.
+- A reviewer can find route contract, source-boundary, path/readback, and guard-test rules from the docs index without scanning conversation history.
+
+## 11.2 Godot UI Capability Contract Migration
+
+This section migrates TapTap's UI system capability model into this repository as a Godot-only workflow contract. It is not a technology migration. The source capability idea is: UI system work is a first-class gameplay implementation domain, custom drawing has explicit rules, camera/physics/rendering/animation/procedural systems affect player-facing UI, geometry sizes cannot be guessed, enum/state typing matters, and runtime-specific constraints must be governed.
+
+### 11.2.1 Conflict Assessment
+
+| TapTap capability or constraint | Conflict in this repo | Godot decision |
+| --- | --- | --- |
+| UrhoX/Urho3D runtime | This repo uses Godot 4.5 + .NET/Mono and hosted Godot workspaces | Translate runtime capability domains only; all implementation terms must be Godot 4.5/C# or Godot-compatible GDScript concepts. |
+| Lua 5.4 scripting | This repo's template and tests are C#/.NET-centered | Do not introduce Lua. UI contract examples use C# script ownership and allow typed GDScript only if an existing project already uses it. |
+| NanoVG custom drawing | Godot does not use NanoVG as the project UI drawing layer | Use `Control._draw`, `CanvasItem._draw`, `Line2D`, `Polygon2D`, `ArrayMesh`, `ImmediateMesh`, `SubViewport`, and Godot materials/shaders as the valid drawing vocabulary. |
+| PBRNoTexture material rule | The exact technique family is Urho-specific | Replace it with repo-approved Godot material/rendering policy fields. Do not invent external texture/material pipelines inside workflow prompts. |
+| `boundingBox` size discipline | Godot exposes size through different APIs and import metadata | Require measurable sources: theme metrics, `Control.custom_minimum_size`, texture import metadata, `AABB`, `get_aabb()`, collision shapes, or documented source assets. |
+| `CustomGeometry` fallback | Godot geometry APIs differ | Use `ArrayMesh`, `ImmediateMesh`, `MeshInstance3D`, `Polygon2D`, or `Line2D` when built-in shapes are missing. |
+| Numeric enum avoidance | The principle applies directly, but names differ | Require C# enums, typed GDScript enums, named constants, or schema enums for route state, UI mode, animation state, input state, and validation status. |
+| `.emmylua` typing source | This repo does not use EmmyLua as typing authority | Use C# types, typed GDScript where applicable, generated schema DTOs, and route-state JSON schema as the type authority. |
+
+Acceptance criteria:
+
+- No implementation prompt, route state, UI closure output, or durable workflow standard requires UrhoX, Urho3D, Lua, NanoVG, PBRNoTexture, or `.emmylua`.
+- The only permitted references to TapTap-only terms are conflict-assessment documentation or migration rationale.
+- Every migrated capability has a Godot-owned equivalent, validation artifact, and route in this workflow.
+- Review records zero unresolved P0/P1/P2 findings for technology-stack leakage, missing Godot equivalent, or untestable acceptance.
+
+### 11.2.2 Full Godot Capability Checklist
+
+The workflow must treat the following domains as first-class prototype implementation capabilities whenever the GDD, scene route, default prototype contract, or requirement map implies them:
+
+1. UI scene architecture
+   - Godot ownership: `Control` scenes, `CanvasLayer` HUDs, scene instancing, autoload boundaries, scene transitions, and route-specific UI roots.
+   - Required workflow data: scene path, node path, owning requirement IDs, player flow, state boundary, validation references.
+2. Layout, containers, theme, and responsive rules
+   - Godot ownership: `Container` nodes, anchors, safe-area handling, theme resources, minimum sizes, fixed-format board/grid constraints, and viewport-safe scaling.
+   - Required workflow data: layout strategy, fixed-format rationale, theme/min-size source, desktop/mobile or viewport evidence.
+3. HUD, menus, overlays, and modal state
+   - Godot ownership: `CanvasLayer`, modal controls, pause/menu overlays, notification/toast patterns, status bars, combat HUD, inventory/deck/reward panels.
+   - Required workflow data: overlay layer, modal blocking behavior, input routing, state synchronization, screenshot/evidence references.
+4. Custom 2D drawing and visual affordances
+   - Godot ownership: `Control._draw`, `CanvasItem._draw`, `Line2D`, `Polygon2D`, draw invalidation, hit testing, and redraw lifecycle.
+   - Required workflow data: drawing surface, redraw trigger, hit-test path, visual feedback states, canvas-pixel or screenshot evidence.
+5. Input, focus, and navigation
+   - Godot ownership: `InputMap`, mouse/touch events, keyboard focus, gamepad focus, drag/drop, hover/pressed/selected/disabled states, focus neighbors.
+   - Required workflow data: input paths, supported devices, focus status, drag/drop boundaries, disabled/error states, validation references.
+6. Camera, viewport, world/UI layering, and physics interaction
+   - Godot ownership: `Camera2D`, `Camera3D`, `CanvasLayer`, `SubViewport`, physics layers/masks, raycasts, world-space UI, and screen-to-world transforms.
+   - Required workflow data: camera owner, UI/world separation rule, raycast/input conversion path, layer/mask rationale, validation references.
+7. Rendering, materials, shaders, and import policy
+   - Godot ownership: `CanvasItemMaterial`, `StandardMaterial3D`, `ShaderMaterial`, import settings, render layers, lighting mode, and repo-approved material profiles.
+   - Required workflow data: material/rendering policy, source asset/import evidence, shader ownership, fallback policy, no unapproved material pipeline.
+8. Animation and state machines
+   - Godot ownership: `AnimationPlayer`, `AnimationTree`, state-machine resources, tween usage, transitions, combat/character/UI animation states.
+   - Required workflow data: animation state reference, transition trigger, state enum/constant, validation or screenshot evidence.
+9. Procedural generation and generated UI/world content
+   - Godot ownership: deterministic seed inputs, generated map/route/deck/reward layouts, generated scene nodes, headless validation, replayable artifacts.
+   - Required workflow data: seed/source, generated output summary, validation artifact, no hidden nondeterministic completion path.
+10. Geometry, mesh fallback, and size measurement
+    - Godot ownership: `AABB`, `get_aabb()`, collision shapes, import metadata, `ArrayMesh`, `ImmediateMesh`, `MeshInstance3D`, `Polygon2D`, `Line2D`.
+    - Required workflow data: size source, collision/interaction shape, fallback geometry API, validation reference.
+11. Typed state, enums, and schema contracts
+    - Godot ownership: C# enums/classes/records, typed GDScript where used, named constants, DTO/schema enums, route-state schema validation.
+    - Required workflow data: typed state reference, enum source, schema field, invalid-state behavior, tests.
+12. Accessibility, readability, and feedback legibility
+    - Godot ownership: theme contrast, readable font sizes, hover/focus/selected/disabled states, error copy, layout overflow handling, motion restraint where needed.
+    - Required workflow data: readability target, feedback states, screenshot/browser evidence, no-overlap validation.
+
+Acceptance criteria:
+
+- Requirement-map generation can classify each applicable domain above as a requirement kind, acceptance marker, or explicit not-applicable rationale.
+- Iteration-plan generation can create a goal for each applicable P0/P1 domain or block with a structured reason.
+- UI closure can validate each applicable domain through `ui_surface_matrix` fields and evidence references.
+- Deckbuilder reference coverage includes route-map UI scene architecture, route path custom drawing or visible node affordance, hand-card drag/drop input, combat HUD feedback, reward selection UI, and state-machine/typed-state references.
+- A phase cannot pass if any applicable P0/P1 domain is silently omitted from requirement map, iteration plan, execute-goal prompt, or UI closure.
+- The capability checklist is considered complete only when review records zero unresolved P0/P1/P2 findings.
+
+### 11.2.3 Workflow Injection Points
+
+The Godot UI capability contract must be consumed by:
+
+- `gdd-question-form`: optional hints may ask users about UI-heavy flows, but absence of user detail must not suppress default UI capability classification.
+- `scene-route-confirmation`: each confirmed scene should declare expected player-facing UI surfaces or `no_ui_needed`.
+- `gdd-document-generation`: generated GDD should include UI/HUD/input/drawing/camera/animation/procedural/rendering implications when they are part of the prototype promise.
+- `gdd-requirement-map`: extracts UI requirements and assigns severity, source section, scene mapping, module mapping, and acceptance markers.
+- `prototype-contract-freeze`: freezes the Godot UI capability contract version/hash and links it to the source artifact hash set.
+- `iteration-plan`: creates UI surface goals and required modules from P0/P1 requirements.
+- `module-execution`: injects the frozen Godot UI capability contract for relevant goals and requires evidence before completion.
+- `needs-fix` and `repair`: map UI failures back to requirement IDs and gap families instead of producing generic "fix UI" prompts.
+- `ui-wiring-closure`: validates the complete UI surface matrix, not only whether controls exist.
+- `preview-package`: exposes final-readiness blockers from UI closure while preserving the existing early package behavior defined in this plan.
+
+Acceptance criteria:
+
+- Each injection point above has an implementation note, route contract field, prompt section, validator, or explicit non-applicability record before the corresponding phase is accepted.
+- Source-boundary tests prove downstream routes use the frozen Godot UI capability contract and current project artifacts, not raw game-type guide excerpts or mutable broad guidance.
+- UI failures from validation, screenshots, canvas-pixel checks, or manual needs-fix records can be traced to requirement IDs and UI gap families.
+- Recommended next action surfaces UI-contract blockers as actionable workflow states, not hidden log-only failures.
+
+### 11.2.4 Godot Governance Rules
+
+1. No P0/P1 gameplay feature is complete without visible player entry, feedback, state boundary, and validation evidence unless `no_ui_needed` is explicitly justified.
+2. Prefer `Control` + `Container` + `Theme` + anchors/safe areas for UI layout. Absolute positioning is allowed only for fixed-format boards, canvas tools, or world overlays with responsive bounds and validation.
+3. HUD and menus must declare `CanvasLayer`/viewport ownership and input routing. World-space UI must declare camera and screen/world transform ownership.
+4. Drag/drop and pointer-heavy features must declare start, hover, cancel, drop, invalid drop, and commit states.
+5. Custom drawing must declare the Godot drawing API, redraw invalidation trigger, hit-test strategy, and screenshot/canvas evidence.
+6. Camera/physics interactions must use named layers/masks and measurable raycast/collision boundaries rather than hardcoded magic numbers.
+7. Rendering/material/shader work must use repo-approved Godot material profiles or explicitly documented built-in resources. Workflow prompts must not invent a new external material pipeline.
+8. 3D and 2D size-sensitive work must cite `AABB`, `get_aabb()`, collision shape, import metadata, theme metric, or min-size source. Guessing dimensions is a blocker.
+9. Missing built-in geometry must use Godot geometry APIs (`ArrayMesh`, `ImmediateMesh`, `MeshInstance3D`, `Polygon2D`, `Line2D`) with validation evidence.
+10. UI mode, animation state, input state, route state, and validation status must use enums, named constants, or schema enums rather than unexplained numeric codes.
+11. Procedural UI/world generation must be seedable, replayable, and validated by headless checks or exported deterministic evidence. A missing headless harness is not a pass condition; it requires a recorded substitute check.
+12. Screenshot, canvas-pixel, or exported visual evidence is required for high-risk visual UI changes. A validator-only substitute is allowed only when phase review records the exact harness limitation, affected route, substitute deterministic check, and proof that no P0/P1/P2 issue remains.
+
+Acceptance criteria:
+
+- The full governance checklist remains in scope for the migration. A phase may mark a rule as not-yet-active only when no touched route, artifact, prompt, or UI surface depends on that rule and the phase review records proof.
+- A touched route cannot mark an applicable Godot UI governance rule as not-yet-active.
+- Any violation of rules 1, 2, 3, 4, 5, 8, or 10 for a P0/P1 requirement is a blocking P1 or higher issue.
+- Rule exceptions require structured rationale in route state or phase review evidence and cannot be buried in chat text.
+- The final phase review confirms zero unresolved P0/P1/P2 findings across all governance rules touched by the migration.
+
 ## 12. Implementation Phases
+
+### Phase 0: Cross-Cutting Governance Prerequisites
+
+These prerequisites must land before Phase 1 creates new browser/API readback surfaces or new POST route behavior. Phase 6 remains the later consolidation phase for full route governance coverage, but these items are not allowed to wait until the end.
+
+Deliverables:
+
+- route module contract template
+- Phase path/readback policy
+- route action exposure classes: `user_visible|admin_visible|script_only|internal`
+- context-boundary and DTO hygiene rules
+- duplicate-run/idempotency convention for POST routes
+- secret redaction validator baseline with fixtures and denylist/allowlist update path
+- local deterministic preflight checklist
+- P0/P1/P2 review evidence template for phase exits
+- Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, contract version/hash rule, canonical hash exclusion list, and technology-stack leakage denylist
+
+Exit criteria:
+
+- New readback surfaces cannot be implemented until the path/readback policy exists and names normal-user, admin, prompt evidence, package, and preview/download path behavior.
+- New route actions cannot be implemented until exposure class, account/auth boundary, and duplicate-run behavior are documented in the route action descriptor.
+- New prompt/evidence persistence cannot be implemented until the secret redaction validator baseline passes fixture-based tests.
+- New UI-touching route work cannot be implemented until the Godot UI capability contract template exists and the denylist proves prompts do not import TapTap-only runtime terms.
+- The Godot UI capability contract template must be linked from `docs/standards/_index.md` before Phase 0 is accepted.
+- The Godot UI capability contract template must declare its canonical hash exclusions; an empty exclusion list is valid, but an implicit or undocumented exclusion list is not.
+- The phase exit review template records route, artifact, API, browser surface, script, evidence, reviewer, and unresolved P0/P1/P2 count.
+- Phase exit review evidence is written as a durable artifact under `logs/` and referenced by the implementation summary; chat text or PR prose alone is not sufficient evidence.
+- Phase 0 review records zero unresolved P0/P1/P2 findings.
 
 ### Phase 1: Requirement Map And Contract Freshness
 
@@ -580,6 +1191,12 @@ Deliverables:
 - prototype contract hash fields
 - contract stale detection
 - frontend requirement map panel
+- first route module contracts for `gdd-requirements` and `prototype-contract`
+- first guard tests for source hashes, stale behavior, sidecar naming, operation status, and error envelope shape
+- path/readback tests for requirement map and prototype contract readback
+- exposure-class and account-boundary tests for requirement map/freeze actions
+- duplicate-run tests for requirement map generation and contract freeze
+- requirement-map classification for Godot UI capability domains and prototype-contract freeze of the Godot UI contract hash
 
 Exit criteria:
 
@@ -587,6 +1204,10 @@ Exit criteria:
 - Stale GDD blocks new iteration plan.
 - Requirement map and contract sidecars use snake_case locally while API/readback exposes camelCase.
 - Tests for requirement map and contract freshness pass.
+- Normal-user requirement map and prototype contract readback do not expose host paths, cross-account state, raw prompts, token material, or admin-only evidence.
+- Requirement map generation and contract freeze handle double-click/retry/concurrent POST behavior without creating conflicting active runs.
+- Requirement map and frozen contract preserve Godot UI capability domain inputs for UI/HUD/input/custom drawing/camera/animation/rendering/procedural/geometry/typed-state requirements.
+- Route contracts and guard tests for `gdd-requirements` and `prototype-contract` pass the P0/P1/P2 acceptance severity standard.
 
 ### Phase 2: Iteration Plan Traceability Gate
 
@@ -596,12 +1217,17 @@ Deliverables:
 - required modules include requirement IDs and source reasons
 - module plan confirmation UI
 - block module generation on P0/P1 coverage gaps
+- iteration-plan route contract and route action descriptor updates
+- UI surface goals generated from the Godot UI capability contract
 
 Exit criteria:
 
 - Every P0/P1 requirement is covered by plan or explicit blocker.
 - Frontend module plan shows traceability.
 - Deckbuilder default modules are visible as required modules with source.
+- Every P0/P1 UI-facing requirement has an iteration goal or required module that names expected Godot UI surface, layout/input/focus/feedback requirements, and validation method.
+- Iteration-plan service/API/readback and module confirmation UI pass Phase 0 route governance checks for route action descriptor, path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, source-boundary evidence, and secret redaction.
+- Phase 2 review records zero unresolved P0/P1/P2 findings.
 
 ### Phase 3: Workflow Recommendation
 
@@ -615,8 +1241,10 @@ Exit criteria:
 
 - User sees one clear primary next step.
 - Forbidden actions are disabled with reason.
-- Existing advanced actions remain available where safe.
+- Existing advanced actions remain available only when route descriptors classify them as user-visible or safe secondary actions.
 - Workflow recommendation extends or reads from the existing workflow route authority instead of introducing a competing next-action engine.
+- Recommendation actions are checked against the route action descriptor and exposure classes so the frontend cannot recommend an admin-only, script-only, stale, or missing action to a normal user.
+- Phase 3 review records zero unresolved P0/P1/P2 findings.
 
 ### Phase 4: Execute Goal Freshness And Needs-Fix Tightening
 
@@ -625,12 +1253,18 @@ Deliverables:
 - execute-next-goal stale/missing guards
 - requirement rows in goal input
 - needs-fix reads requirement map and latest blocker
+- frozen Godot UI capability contract injection for UI-touching goals
+- UI gap family mapping in needs-fix and repair prompts
 
 Exit criteria:
 
 - Codex is not invoked when contract/map is stale.
 - Goal execution prompt contains linked requirements.
+- UI-touching goal prompts contain the frozen Godot UI capability contract and pass technology-stack leakage tests.
 - Failed acceptance maps back to a requirement or UI closure gap where possible.
+- Needs-fix and repair can classify UI failures as layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state gaps.
+- Execute-next-goal and needs-fix prompt/evidence artifacts pass source-boundary checks and secret redaction validator checks before the route is accepted.
+- Phase 4 review records zero unresolved P0/P1/P2 findings.
 
 ### Phase 5: UI Wiring Closure
 
@@ -640,12 +1274,55 @@ Deliverables:
 - UI surface matrix
 - UI closure panel
 - optional follow-up goal generation
+- Godot UI capability validator for scene/node path, layout, input/focus, feedback, camera/layer, custom drawing, material/rendering, animation, geometry sizing, procedural visualization, and typed state
 
 Exit criteria:
 
 - Completed gameplay modules are checked for player-facing UI exposure.
 - Missing UI surfaces are visible and actionable.
+- UI closure validates Godot-specific capability fields and gap families instead of only checking that a named UI surface exists.
+- Follow-up goals preserve requirement IDs, Godot UI capability domain, validation method, and source hashes.
 - Final package readiness can show UI closure blockers.
+- UI closure service/API/readback passes Phase 0 route governance checks for path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, and secret redaction.
+- Phase 5 review records zero unresolved P0/P1/P2 findings.
+
+### Phase 6: Route Governance Guardrails
+
+Phase 6 is a consolidation and expansion pass. It must not re-litigate or defer the Phase 0 baseline. It expands the already-created route governance primitives to every remaining route, admin script, readback surface, and durable standards document.
+
+Deliverables:
+
+- route module contracts for all remaining prototype routes
+- deterministic guard tests for route/action/status/source-boundary invariants across all covered routes
+- expanded Phase path/readback policy coverage for admin scripts, package/preview/download, and prompt evidence
+- admin/backfill script evidence conventions
+- runtime lifecycle and orphan-process diagnostic guidance
+- capability allowlist coverage for all user/admin/script/internal route actions
+- context-boundary and DTO hygiene tests for all browser-consumed route services
+- long-running progress/readback convention coverage for remaining routes
+- idempotent recovery and duplicate-run control coverage for remaining POST routes
+- credential/secret redaction validator coverage for scripts, admin exports, and newly persisted evidence families
+- configuration/environment preflight checklist coverage for every route dependency introduced by Phases 1-5
+- docs index links for durable route governance rules
+- Godot UI capability contract coverage across route contracts, tests, admin readback, and durable standards docs
+
+Exit criteria:
+
+- `gdd-requirements`, `prototype-contract`, `workflow-recommendation`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, and `ui-wiring-closure` have route module contracts, route action descriptors, exposure classes, and guard-test coverage.
+- `preview-package` routes are covered by Phase path/readback, capability exposure, account-boundary, package/preview/download reference, and host-path leakage tests; they do not need full route module contracts in this plan unless their behavior is changed beyond readback/package/preview/download governance.
+- Guard tests fail when action names, status enums, source hash fields, error envelope shape, or source-boundary prompt rules drift.
+- Path/readback tests prove normal users do not see host paths or cross-account admin review queue entries.
+- Admin/backfill scripts produce append-only evidence under `logs/` with scoped IDs and sanitized paths.
+- Runtime lifecycle guidance distinguishes expected process exits from crashes.
+- Capability exposure tests prove normal users cannot invoke admin/script-only route actions by direct API call.
+- Context-boundary tests prove client payload fields cannot spoof account/project/source/admin authority.
+- Duplicate-run tests cover retry, double-click, and concurrent POST behavior for the main route actions.
+- Secret redaction validators pass over route prompts, evidence, admin exports, and script evidence.
+- Preflight checks report missing local dependencies without starting a workflow run.
+- Godot UI capability contract is linked from durable docs, covered by guard tests, and consumed by `gdd-requirements`, `prototype-contract`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, and `ui-wiring-closure`.
+- Durable route governance docs are linked from the relevant standards or workflow index.
+- Phase 6 evidence proves each Phase 0 baseline primitive was reused and expanded, not duplicated as a competing contract.
+- Phase 6 review records zero unresolved P0/P1/P2 findings.
 
 ## 13. Risks And Mitigations
 
@@ -654,9 +1331,22 @@ Exit criteria:
 | Too many new stages overwhelm users | Use recommendation-driven primary action; hide advanced controls | User always sees one recommended next action |
 | LLM requirement map misses details | Add coverage validation and needs-review fallback | Empty map is invalid unless GDD has no requirements |
 | Contract stale blocks old users unexpectedly | Treat legacy as unknown; allow explicit refresh; allow continue only for old hash-bound sessions/goals | Existing preview/package still works; new execution from unknown-source legacy plans remains blocked |
-| Too much strictness slows prototype creation | Enforce P0/P1 only by default; keep P2 advisory | Fast path remains usable |
+| Too much strictness slows prototype creation | Enforce P0/P1 as runtime blockers by default; allow P2 to be advisory for ordinary user execution only when it is tracked under the acceptance severity standard | Fast path remains usable, and implementation acceptance still has zero unresolved P0/P1/P2 findings |
 | UI closure delays early playability | UI closure is a late-stage gate, not a skeleton gate | Prototype creation does not require UI closure |
 | Formatting-only GDD changes cause hash churn | Normalize text before hashing or classify as advisory stale | Formatting-only changes can avoid hard stale if normalized hash is unchanged |
+| Borrowed TapTap patterns are copied too literally | Adapt boundary and guard patterns only; keep Phase A C# service architecture | No TypeScript/MCP feature layout is required for Phase A |
+| Guard tests become brittle string snapshots | Guard only stable names, enums, source-boundary markers, and contract fields | Tests fail on real contract drift, not harmless copy changes |
+| Admin scripts become hidden mutation paths | Require explicit admin intent, idempotency notes, and append-only evidence | Browser user flows remain decision-focused and bulk maintenance stays auditable |
+| Capability allowlist hides needed user recovery actions | Route descriptors separate safe secondary actions from admin/script-only actions | User can still recover through visible safe actions while dangerous maintenance stays gated |
+| Context boundary rules duplicate existing service authorization | Treat context rules as tests over existing authorization/readback boundaries, not a second auth system | Tests prove server-derived context wins without adding competing auth logic |
+| Progress states become optimistic and mask failed runs | Success requires validated sidecar/readback artifact, not only process exit | Browser never shows success for a missing or invalid route artifact |
+| Preflight checks become a new dependency on external services | Keep preflight local and deterministic unless admin explicitly requests external probes | Preflight failures are actionable without Steam/LLM/network availability |
+| Secret validators produce false confidence | Combine variable-name denylist, token-like pattern scan, and route-specific redaction tests | Prompt/evidence/admin export samples pass redaction tests before acceptance |
+| Godot UI capability contract becomes too broad to implement | Phase-gate the contract: Phase 0 defines it, Phase 1 freezes/classifies it, Phase 2 plans from it, Phase 4 injects it, Phase 5 validates it | No phase claims completion for a touched UI domain without tests/evidence and zero unresolved P0/P1/P2 findings |
+| UI capability migration accidentally imports TapTap technology | Keep TapTap-only terms in conflict assessment only and add prompt/evidence denylist tests | Route prompts, sidecars, UI closure output, and durable standards contain Godot-only implementation terms |
+| UI closure produces generic "missing UI" items that are not actionable | Use gap families and required Godot fields in `ui_surface_matrix` | Each UI closure blocker names requirement IDs, scene/node or missing owner, gap family, and follow-up validation method |
+| Visual validation becomes impossible in headless runs | Use layered evidence: route-state validators first, Godot headless/screenshot/canvas-pixel/exported visual evidence for high-risk visual changes, and a recorded deterministic substitute only when the harness limitation is concrete | High-risk visual UI changes include machine-checkable evidence or a documented test-harness limitation that is reviewed as P0/P1/P2 |
+| Godot UI contract conflicts with the non-goal of not refactoring the generator | Keep this plan at workflow contract, prompt, validation, and readback level; generator internals change only when later implementation explicitly scopes them | Acceptance can be met by route contracts and generated goals without requiring a generator architecture rewrite in this plan |
 
 ## 14. Definition Of Done
 
@@ -671,15 +1361,29 @@ This refactor is done when:
 7. UI closure identifies missing player-facing surfaces for completed P0/P1 capabilities.
 8. Tests and smoke evidence cover the deckbuilder reference path.
 9. No existing public/browser API field is removed or renamed.
-10. No service restart is required as part of writing this plan.
+10. Route module contracts and deterministic guard tests cover action names, status enums, source hashes, error envelope shape, and source-boundary prompt rules.
+11. Phase path/readback policy prevents normal-user host path leakage and cross-account evidence leakage.
+12. Admin/backfill operations are scriptable, auditable, and evidence-backed without bypassing user-facing decision flows.
+13. Runtime lifecycle guidance distinguishes expected exits, failures, preserved evidence, and orphan-process diagnostics.
+14. Capability exposure classes, context-boundary tests, progress/readback states, duplicate-run controls, secret redaction, and local preflight checks are implemented for the routes touched by each phase.
+15. Durable TapTap-derived governance rules are moved or linked into the relevant standards/workflow docs before implementation is called complete.
+16. The final review records zero unresolved P0, P1, or P2 findings under the acceptance severity standard.
+17. No service restart is required as part of writing this plan.
+18. The Godot UI capability contract is frozen into prototype contracts, consumed by requirement map, iteration plan, execute-next-goal, needs-fix/repair, and UI closure, and exposed through account-safe readback.
+19. P0/P1 player-facing requirements cannot complete final readiness without UI surface, layout/input/focus/feedback/camera-layer/state evidence or an explicit `no_ui_needed` rationale.
+20. Godot UI capability tests prove no TapTap runtime technology is required or leaked into executable route prompts and artifacts.
 
 ## 15. Open Questions For Later Phases
 
-1. After Phase 1, should users be allowed to manually edit requirement map rows, or should edits continue to happen only by changing GDD/scene route and regenerating?
-2. After Phase 1, should `contract_stale` block execute-next-goal for all statuses, or allow broader continuation of already-running sessions with an explicit warning?
-3. After Phase 1, should UI closure become mandatory before package download or remain limited to "final package" readiness labeling?
-4. After Phase 1, should requirement map generation remain hybrid deterministic + structured LLM, or move toward a fully deterministic/fully LLM-based approach?
-5. After Phase 1, should source hash normalization ignore more than whitespace-only Markdown changes, such as heading punctuation or table formatting?
+These are product/design decisions intentionally scoped out of the first implementation slice. They are not accepted P2 defects. If any item becomes a discovered implementation issue, it must be reclassified under the P0/P1/P2 acceptance severity standard with owner, scope, and proof.
+
+| Question | Owner | Scope | Current proof that Phase 1 is not blocked |
+| --- | --- | --- | --- |
+| After Phase 1, should users be allowed to manually edit requirement map rows, or should edits continue to happen only by changing GDD/scene route and regenerating? | Product + Phase A platform | Requirement map editing UX and audit policy | Phase 1 default forbids normal-user direct edits and requires regeneration from GDD/scene route, so no unowned edit path exists. |
+| After Phase 1, should `contract_stale` block execute-next-goal for all statuses, or allow broader continuation of already-running sessions with an explicit warning? | Phase A platform | Execute-next-goal stale handling beyond hash-bound continuations | Phase 1 default blocks new execution from stale/unknown sources and allows continuation only when goal/session hashes match the original source set. |
+| After Phase 1, should UI closure become mandatory before package download or remain limited to "final package" readiness labeling? | Product + Phase A platform | Package readiness policy | Phase 1 default keeps early package download non-blocking while preserving final readiness blockers, so playable prototype creation remains recoverable. |
+| After Phase 1, should requirement map generation remain hybrid deterministic + structured LLM, or move toward a fully deterministic/fully LLM-based approach? | Phase A platform | Requirement extraction architecture | Phase 1 default uses deterministic source collection/validation plus structured LLM and deterministic fallback, so invalid or empty LLM output fails closed. |
+| After Phase 1, should source hash normalization ignore more than whitespace-only Markdown changes, such as heading punctuation or table formatting? | Phase A platform | Hash canonicalization policy | Phase 1 minimum canonicalization handles line endings and trailing whitespace while retaining raw diagnostic hashes, so stale decisions stay explainable. |
 
 ## 15.1 Phase 1 Default Decisions
 
@@ -689,7 +1393,7 @@ These defaults apply to the first implementation slice so Phase 1 can proceed wi
 2. `contract_stale` blocks new iteration plan creation by default. Continuing an old session is allowed only when the session/goal source hashes match the contract and requirement map that were current when the session was created. Missing hashes are `source_unknown` and block new-project execution.
 3. UI closure is not required for early prototype creation or ordinary package download in Phase 1. It affects final readiness labeling and can become a hard final-package gate in a later product decision.
 4. Requirement map generation starts as hybrid deterministic + structured LLM: deterministic source collection and validation, structured LLM mapping, deterministic fallback to `needs_review` rows.
-5. Source hashes should use normalized Markdown/text content where practical to avoid whitespace-only churn. Minimum canonicalization is: normalize line endings to `\n`, trim trailing whitespace, preserve heading text, preserve table cell content, and optionally exclude known volatile frontmatter fields such as `updatedUtc`. Raw hash can be retained as diagnostic metadata if needed.
+5. Source hashes use normalized Markdown/text content for Markdown and text artifacts to avoid whitespace-only churn. Minimum canonicalization is: normalize line endings to `\n`, trim trailing whitespace, preserve heading text, preserve table cell content, and optionally exclude known volatile frontmatter fields such as `updatedUtc`. JSON/schema contracts, including the Godot UI capability contract, use deterministic canonical JSON ordering and exclude documented volatile fields before hashing. Route-state and evidence-reference source hashes use deterministic canonical JSON ordering, sorted evidence refs, and exclude volatile timestamps, process IDs, request IDs, and run IDs unless a field is explicitly declared part of source identity. The Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md` must declare its canonical hash exclusion list; an empty exclusion list is valid. Raw hash can be retained as diagnostic metadata if needed.
 
 Acceptance criteria:
 
@@ -699,12 +1403,21 @@ Acceptance criteria:
 
 ## 16. Recommended First Implementation Slice
 
-Start with Phase 1 only:
+Start with Phase 0, then the smallest Phase 1 slice. Phase 1 work must not begin until Phase 0 exit criteria pass.
 
-1. Add `GameDesignRequirementMapService`.
-2. Add requirement map API/readback.
-3. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, and `source_contract_snapshot_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, and `sourceContractSnapshotHash`.
-4. Add stale detection and frontend banner.
-5. Add tests for deckbuilder GDD -> requirement map -> fresh contract.
+1. Add Phase 0 route module contract template and route action descriptor baseline.
+2. Add Phase 0 path/readback policy, action exposure classes, context-boundary rules, and account-boundary guard tests.
+3. Add Phase 0 duplicate-run/idempotency convention, `active_run_reused` response contract, and local preflight checklist.
+4. Add Phase 0 secret redaction validator baseline, fixture coverage, and phase review evidence template.
+5. Add Phase 0 Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, version/hash rule, canonical hash exclusion list, technology-stack leakage denylist, and initial guard fixtures.
+6. Add Phase 0 durable review evidence under `logs/`.
+7. Add `GameDesignRequirementMapService`.
+8. Add requirement map API/readback.
+9. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, and `source_godot_ui_contract_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractSnapshotHash`, and `sourceGodotUiContractHash`.
+10. Add artifact-local Godot UI capability contract version and readback/API projection `godotUiContractVersion`.
+11. Add stale detection and frontend banner.
+12. Apply the route module contract template to `gdd-requirements` and `prototype-contract`.
+13. Add guard tests for sidecar naming, source hash fields, Godot UI contract hash fields, action names, error envelope shape, path/readback, exposure class, account boundary, duplicate-run behavior, and secret redaction fixture coverage.
+14. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, and Godot-only UI capability classification.
 
 This first slice gives the largest drift reduction with the least UI disruption.
