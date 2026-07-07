@@ -26,6 +26,7 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 5. Add UI wiring closure as a separate late-stage pass after core gameplay modules, so implemented features are visible and usable by players.
 6. Preserve compatibility by adding sidecars, additive JSON fields, and readback surfaces instead of breaking current APIs or old projects.
 7. Migrate TapTap's UI capability discipline into a Godot-only prototype UI capability contract so generated modules must account for UI surfaces, layout, drawing, input, camera/layer boundaries, animation, rendering, procedural generation, geometry sizing, and typed state evidence.
+8. Migrate TapTap's quality-gate and troubleshooting discipline into Godot/Phase route diagnostics: pre-build diagnostics, symptom-to-remediation tables, debug-log lifecycle, interaction design artifacts, preview validation, explicit resource lifecycle checks, and project diagnostic spool/admin triage.
 
 ## 3. Non-Goals
 
@@ -36,6 +37,7 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 5. Do not refactor the Godot generator itself in this plan. This plan focuses on inputs, contracts, module planning, workflow state, and frontend governance.
 6. Do not copy TapTap's TypeScript/MCP feature layout directly. Borrow its boundary, guard, CLI, logging, and documentation patterns only where they fit the Phase A C# service and browser workflow.
 7. Do not import TapTap's UrhoX, Urho3D, Lua, NanoVG, PBRNoTexture, `.emmylua`, or Maker runtime assumptions. All migrated UI capability requirements must be expressed with Godot 4.5/.NET-compatible concepts and repository-owned validation.
+8. Do not copy TapTap's local-only LSP, preview, logging, or disposal mechanics literally. Quality gates in this plan must use Godot 4.5, C#/.NET, GdUnit4, Phase route evidence, sanitized readback, and hosted workspace/account boundaries.
 
 ## 4. Target Frontend Workflow
 
@@ -652,6 +654,30 @@ Acceptance criteria:
 - Tests fail if a high-risk visual UI change has neither screenshot/canvas-pixel/exported visual evidence nor an approved deterministic substitute tied to a recorded harness limitation.
 - Godot UI capability test results are included in phase review evidence and must have zero unresolved P0/P1/P2 findings.
 
+### 10.5 Godot Diagnostics And Quality Gate Tests
+
+Required test areas:
+
+- Pre-build/pre-preview diagnostics gate tests for changed routes.
+- Symptom-to-remediation table coverage tests for known failure families.
+- Debug-log lifecycle and redaction fixture tests.
+- Interaction-region artifact tests for UI/input/physics/camera-heavy goals.
+- Preview/package source-hash readiness tests.
+- Project diagnostic spool write/readback/triage tests.
+- Resource lifecycle and orphan-process diagnostic tests.
+
+Acceptance criteria:
+
+- Tests fail if a route that requires build, Godot validation, preview, package, repair, or UI closure can mark success without diagnostics evidence.
+- Tests fail if a known symptom family returns only `unhandled_request_failed` without a structured domain code, evidence ref, and remediation table entry.
+- Tests fail if temporary debug output remains the only acceptance evidence for a changed route.
+- Tests fail if deckbuilder route-map selection or hand-card dragging lacks an interaction-region artifact.
+- Tests fail if preview/package readiness is reported from stale source hashes, missing artifacts, invalid tickets, or missing browser-safe readback.
+- Tests fail if deleting a project deletes unresolved P0/P1/P2 project diagnostic spool records.
+- Tests fail if admin diagnostic aggregation leaks raw host paths, raw prompts, token material, provider secrets, or cross-account user-visible evidence.
+- Tests fail if routes with helper processes or temporary resources can mark success without lifecycle cleanup or orphan-process diagnostic evidence.
+- Godot diagnostics and quality gate test results are included in phase review evidence and must have zero unresolved P0/P1/P2 findings.
+
 ## 11. Observability And Admin
 
 Add admin/readback visibility for:
@@ -663,6 +689,8 @@ Add admin/readback visibility for:
 - UI closure status.
 - Godot UI capability contract version/hash and UI closure gap families.
 - Repeated failure families from needs-fix/validation.
+- Project diagnostic spool unresolved counts, severity, route, failure family, age, and triage status.
+- Preview/package diagnostic readiness, including source hash set and browser-safe failure summary.
 
 Acceptance criteria:
 
@@ -671,6 +699,8 @@ Acceptance criteria:
 - Admin can answer "Which GDD, scene route, and contract snapshot hash produced this prototype contract?" from UI/readback.
 - Admin can answer "Which Godot UI capability contract version produced this module plan and UI closure result?" from UI/readback.
 - Admin can answer "Which UI gap family is blocking final readiness: layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state?" without reading raw logs.
+- Admin can answer "Which projects have unresolved diagnostics after deletion?" without reading workspace directories.
+- Admin can triage project diagnostics as `unresolved|resolved|ignored|backlog` without rewriting raw failure history.
 - User-facing readback remains account-scoped and cannot expose another account's project route state by guessed IDs.
 - Admin aggregation may cross accounts, but raw evidence blobs, host paths, prompts, token material, and provider secrets remain redacted or omitted.
 - Browser/API responses that expose project workflow state, route evidence, or admin audit details use `Cache-Control: no-store` unless a specific compatibility exception is recorded.
@@ -1025,13 +1055,15 @@ Phase A should keep this execution plan as intent and move durable implementatio
 - Admin/backfill script evidence convention.
 - Runtime lifecycle and expected-exit guidance.
 - Cache/freshness policy.
+- Godot diagnostics and quality-gate contract.
+- Project diagnostic spool and symptom-to-remediation guide.
 
 Acceptance criteria:
 
 - Each durable rule added by implementation is linked from `docs/standards/_index.md`, `docs/standards/phase-service.md`, or a route workflow doc.
 - Execution plan items that become permanent standards are not left only in the plan.
 - `AGENTS.md` remains a concise router and links to durable docs instead of duplicating full rule text.
-- A reviewer can find route contract, source-boundary, path/readback, and guard-test rules from the docs index without scanning conversation history.
+- A reviewer can find route contract, source-boundary, path/readback, guard-test, Godot diagnostics, project diagnostic spool, and symptom-to-remediation rules from the docs index without scanning conversation history.
 
 ## 11.2 Godot UI Capability Contract Migration
 
@@ -1152,6 +1184,182 @@ Acceptance criteria:
 - Rule exceptions require structured rationale in route state or phase review evidence and cannot be buried in chat text.
 - The final phase review confirms zero unresolved P0/P1/P2 findings across all governance rules touched by the migration.
 
+## 11.3 Godot Diagnostics And Quality Gate Migration
+
+This section migrates TapTap's development quality-gate and troubleshooting discipline into a Godot/Phase service model. It is not a local tooling migration. The source capability idea is: diagnostics must run before build/preview/package, recurring symptoms should map to remediation, debug logs are useful during development but must become structured evidence before acceptance, interaction regions should be designed before implementation, preview is an immediate validation loop, and disposable/runtime resources must be released explicitly.
+
+### 11.3.1 Conflict Assessment
+
+| TapTap quality-gate capability | Conflict in this repo | Godot/Phase decision |
+| --- | --- | --- |
+| LSP diagnostics before build | Phase routes run through hosted workspaces, C#/.NET, Godot, Python scripts, and browser/API readback rather than a single local IDE | Translate this into pre-build/pre-preview diagnostics using `dotnet build`/tests, Godot self-check, GdUnit4, route-state validators, and saved evidence. No route can rely only on assistant prose. |
+| Symptom-to-solution table in `AGENTS.md` | This repo keeps `AGENTS.md` as a routing layer and avoids large embedded rule catalogs | Create a durable diagnostics guide and admin triage taxonomy outside `AGENTS.md`, then link it from standards or workflow indexes. |
+| Development-stage print-heavy logging | Phase service logs and browser readback can leak host paths, prompts, and secrets | Allow temporary diagnostics only when they are migrated to sanitized route evidence or removed before acceptance. Raw logs are admin-only or hidden unless redaction rules explicitly allow readback. |
+| ASCII collision-region sketch before implementation | Godot prototypes need UI hit zones, CanvasLayer/world boundaries, collision shapes, and raycast areas, not only TapTap collision sketches | Require a lightweight interaction-region artifact for UI/physics/input-heavy goals: ASCII sketch, hit-zone table, node/collision map, or scene sketch. |
+| Preview button immediate validation | Phase preview/package is browser/API hosted, ticketed, and source-hash-sensitive | Treat preview as an immediate validation route whose readiness is tied to current source hashes and diagnostic evidence. Preview failures must be actionable, not generic 500s. |
+| Immediate `Dispose()` of Object subclasses | Godot nodes and C# resources have different lifecycle ownership | Translate this into explicit lifecycle checks: Godot `QueueFree`/scene ownership, C# `IDisposable`, process/file/SQLite watcher disposal, and orphan-process diagnostics. |
+
+Acceptance criteria:
+
+- No implementation prompt, route state, diagnostics guide, or durable workflow standard requires TapTap local runtime concepts, TapTap-specific LSP APIs, or TapTap disposal rules.
+- Every migrated quality-gate capability has a Godot/Phase-owned equivalent, an evidence artifact, and a validation route or test.
+- `AGENTS.md` remains a router; durable diagnostics tables live in standards/workflow docs and are linked from the appropriate index.
+- Review records zero unresolved P0/P1/P2 findings for technology-stack leakage, missing Godot/Phase equivalent, or untestable acceptance.
+- The quality-gate migration cannot pass unless review records zero unresolved P0/P1/P2 findings in diagnostics, preview validation, resource lifecycle, diagnostic spool, admin triage, redaction, or deleted-project retention behavior.
+
+### 11.3.2 Full Quality Gate Migration Checklist
+
+The workflow must treat the following capabilities as first-class diagnostics and quality gates for GDD-to-module execution:
+
+1. Pre-build diagnostics gate
+   - Godot/Phase ownership: `dotnet build`, .NET tests, analyzer/nullable diagnostics where enabled, Godot self-check, GdUnit4, scene load checks, route-state validators, and source-hash validation.
+   - Required workflow data: diagnostic command, route, project/account scope, source hash set, status, evidence refs, failure family, and remediation hint.
+2. Symptom-to-remediation table
+   - Godot/Phase ownership: durable diagnostics guide outside `AGENTS.md`, with entries for GDD/scene/requirement/contract/iteration/execute/repair/UI/preview/package/project-delete failures.
+   - Required workflow data: symptom, likely causes, owner route, safe first checks, admin-only checks, evidence paths, and recovery action.
+3. Debug log lifecycle
+   - Godot/Phase ownership: temporary `GD.Print`, `Console.WriteLine`, stdout/stderr, and route debug traces are allowed during development but must be removed, reduced, or converted to sanitized evidence before acceptance.
+   - Required workflow data: raw path policy, redaction status, retention class, cleanup status, and replacement evidence refs.
+4. Interaction-region design artifact
+   - Godot/Phase ownership: ASCII diagram, hit-zone table, collision-shape map, CanvasLayer/world-boundary sketch, raycast/camera transform note, or scene sketch for UI/physics/input-heavy work.
+   - Required workflow data: affected requirement IDs, scene/node paths, input devices, hit zones, invalid zones, collision shapes or Control rects, and validation refs.
+5. Preview validation loop
+   - Godot/Phase ownership: preview route, package route, web preview smoke, Godot smoke, screenshot/canvas-pixel/exported evidence, ticket/readback rules, and source-hash readiness.
+   - Required workflow data: preview source hash set, preview readiness status, artifact refs, failure family, browser-safe diagnostic summary, and retry guidance.
+6. Explicit resource lifecycle
+   - Godot/Phase ownership: C# `IDisposable` resources, SQLite connections, file streams, process handles, watchers, temporary directories, Godot node ownership/`QueueFree`, preview/package helper cleanup, and orphan-process diagnostics.
+   - Required workflow data: owned resource list, cleanup strategy, expected exit behavior, orphan detection, evidence refs, and failure handling.
+7. Project diagnostic spool and admin triage
+   - Godot/Phase ownership: project-scoped diagnostic sidecars outside the deletable workspace, admin triage queue, failure-family taxonomy, redacted summaries, and deletion-safe retention.
+   - Required workflow data: account ID, project ID, project name, run ID, route, failure family, severity, source refs, redaction status, triage status, created UTC, and preserved evidence refs.
+8. Route failure taxonomy
+   - Godot/Phase ownership: bounded failure families such as `gdd_missing`, `scene_route_missing`, `requirement_map_invalid`, `coverage_gap`, `contract_stale`, `source_unknown`, `ui_contract_unknown`, `missing_ui_surface`, `godot_build_failed`, `scene_load_failed`, `preview_blank`, `package_missing`, `workspace_delete_failed`, `duplicate_active_run`, and `diagnostic_spool_write_failed`.
+   - Required workflow data: failure family enum, route domain code, remediation table entry, admin visibility, user-safe summary, and test coverage.
+
+Acceptance criteria:
+
+- Each quality-gate capability above has a route contract field, diagnostics guide entry, validator, smoke, or explicit non-applicability record before the corresponding route phase is accepted.
+- Any P0/P1 route that invokes build, Godot validation, preview, package, repair, or UI closure must pass the pre-build/pre-preview diagnostics gate or return a structured blocker before invoking downstream work.
+- Temporary debug output cannot be the only acceptance evidence for a changed route; final acceptance must cite sanitized evidence refs or structured route state.
+- Interaction-heavy P0/P1 goals cannot be marked complete unless the iteration goal or evidence includes an interaction-region artifact or an explicit `no_interaction_region_needed` rationale.
+- Preview/package readiness cannot be marked `ready` or `succeeded` when source hashes, diagnostic evidence, package artifact, preview ticket, or browser-safe readback is stale, missing, or invalid.
+- Project diagnostic spool records must survive workspace deletion and remain admin-triable without exposing raw host paths, token material, provider secrets, or raw prompts to normal users.
+- The quality-gate checklist is considered complete only when review records zero unresolved P0/P1/P2 findings.
+
+### 11.3.3 Project Diagnostic Spool
+
+The project diagnostic spool is the Phase-specific extension of TapTap's symptom table and debug-log discipline. Because Phase projects live in hosted workspaces that may be deleted, critical diagnostics must be preserved outside the project workspace.
+
+Recommended durable path:
+
+```text
+logs/phase-a-innernet/diagnostics/projects/<account_id>/<project_id>/
+```
+
+Recommended record schema:
+
+```json
+{
+  "schema_version": "project-diagnostic-spool.v1",
+  "account_id": "...",
+  "project_id": "...",
+  "project_name": "...",
+  "run_id": "...",
+  "route": "gdd-requirements|prototype-contract|iteration-plan|execute-next-goal|needs-fix|repair|ui-wiring-closure|preview-package|project-delete",
+  "failure_family": "gdd_missing|scene_route_missing|requirement_map_invalid|coverage_gap|contract_stale|source_unknown|ui_contract_unknown|missing_ui_surface|godot_build_failed|scene_load_failed|preview_blank|package_missing|workspace_delete_failed|duplicate_active_run|diagnostic_spool_write_failed",
+  "severity": "P0|P1|P2|info",
+  "triage_status": "unresolved|resolved|ignored|backlog",
+  "created_utc": "...",
+  "source_refs": [],
+  "evidence_refs": [],
+  "redaction_status": "redacted|raw_admin_only|blocked",
+  "user_safe_summary": "",
+  "admin_summary": "",
+  "remediation_hint_id": ""
+}
+```
+
+Acceptance criteria:
+
+- Diagnostic spool files are written outside the hosted workspace so project deletion removes workspace files without deleting preserved diagnostics.
+- Deleting a project preserves diagnostic spool records and records a `project-delete` diagnostic event with result code, account scope, and sanitized project identity.
+- The spool schema example, failure-family taxonomy seed, and symptom-to-remediation table use the same initial `failure_family` values, or the standards file explicitly declares the schema field as open-ended and points to the taxonomy as authority.
+- Admin readback can list unresolved diagnostics by account, project, route, failure family, severity, and age without reading raw logs.
+- Normal-user readback cannot access another account's diagnostic spool and cannot see raw host paths, raw prompts, token material, provider secrets, or admin-only evidence.
+- Triage status updates are admin-only, append-only or audit-backed, and cannot rewrite raw failure history.
+- Retention/cleanup rules must preserve unresolved P0/P1/P2 diagnostics and must never delete diagnostics as a side effect of ordinary project deletion.
+- Tests cover spool write, deleted-project lookup, account isolation, admin aggregation, redaction, triage status update, and cleanup/retention non-destruction for unresolved P0/P1/P2 diagnostics.
+- Project diagnostic spool review records zero unresolved P0/P1/P2 findings for schema drift, failure-family mismatch, redaction, account isolation, retention, cleanup, triage auditability, or deleted-project lookup.
+
+### 11.3.4 Symptom-To-Remediation Table
+
+The diagnostics guide should include an initial table for the GDD-to-module workflow. This table should be durable documentation, not hidden implementation knowledge.
+
+Initial symptom families:
+
+| Symptom | Likely failure family | First checks | Recovery action |
+| --- | --- | --- | --- |
+| GDD run completes but no scene confirmation appears | `scene_route_missing` | GDD run state, scene-route sidecar, workflow recommendation | Regenerate scene route or mark route state invalid with evidence. |
+| Requirement map is empty or too small | `requirement_map_invalid` | GDD hash, scene route hash, contract snapshot, LLM JSON validity | Regenerate requirement map; block contract freeze if P0/P1 gaps remain. |
+| Iteration plan ignores required modules | `coverage_gap` | Requirement IDs, default contract modules, admin conflict decisions | Block plan or create follow-up required module goals. |
+| Execute-next-goal starts from stale source | `contract_stale` | Source hash set, current frozen contract, requirement map | Reject before Codex invocation and recommend refresh/freeze. |
+| UI closure says success but player cannot use feature | `missing_ui_surface` | UI surface matrix, interaction-region artifact, screenshot/canvas evidence | Create UI follow-up goal and block final readiness. |
+| Preview opens blank or stale content | `preview_blank` | Preview source hash, package artifact, web preview smoke, browser console evidence | Rebuild preview/package from current source hash set. |
+| Package artifact missing | `package_missing` | Package run evidence, artifact index, ticket creation, workspace path policy | Re-run package or surface artifact readback blocker. |
+| Godot scene fails to load | `scene_load_failed` | Godot self-check, GdUnit, scene path, import diagnostics | Run repair with latest Godot diagnostic evidence. |
+| Project deletion fails or leaves workspace | `workspace_delete_failed` | project diagnostic spool, delete diagnostic jsonl as legacy/runtime evidence only, workspace path, account/project scope | Preserve diagnostic spool, surface admin cleanup action. |
+| Active run is reused incorrectly | `duplicate_active_run` | operation scope, source hash scope, account-project scope marker | Reject stale reuse and start or resume only matching hash scope. |
+
+Acceptance criteria:
+
+- The diagnostics guide includes at least the symptom families above before Phase 6 is accepted.
+- Every table row links to a route, failure family enum, safe user summary policy, admin evidence policy, and recovery action.
+- New failure families added by implementation must update the table and tests in the same implementation slice.
+- A route cannot expose only `unhandled_request_failed` for a known table symptom; it must return a structured domain code and evidence reference.
+- The table is linked from `docs/standards/_index.md`, `docs/standards/phase-service.md`, or a route workflow doc before implementation is called complete.
+
+### 11.3.5 Interaction-Region Design Gate
+
+P0/P1 UI, input, physics, route-map, card-dragging, collision, or camera-transform work should include an interaction-region artifact before implementation.
+
+Accepted artifact forms:
+
+- ASCII diagram.
+- Hit-zone table.
+- Godot scene/node map with `Control` rects or collision shapes.
+- CanvasLayer/world boundary sketch.
+- Raycast/camera transform note.
+- Screenshot annotated by coordinates or named regions.
+
+Acceptance criteria:
+
+- The artifact records affected requirement IDs, scene IDs, node paths, input devices, valid regions, invalid regions, state transitions, and validation refs.
+- Deckbuilder route-map path selection and hand-card dragging cannot be accepted without an interaction-region artifact.
+- If a goal declares `no_interaction_region_needed`, the route state must include a rationale and tests must prove the requirement has no UI/input/physics/camera interaction.
+- The interaction-region artifact is included in prompt/evidence source refs for UI-touching execution and repair routes.
+- Review records zero unresolved P0/P1/P2 findings for missing or stale interaction-region artifacts.
+
+### 11.3.6 Resource Lifecycle And Orphan Diagnostics Gate
+
+Resource lifecycle checks should prevent preview/package/repair helpers from leaking processes, handles, or temporary files.
+
+Godot/Phase lifecycle rules:
+
+- C# `IDisposable` resources are disposed through `using`, `await using`, or explicit cleanup in long-lived services.
+- SQLite connections, file streams, process handles, filesystem watchers, and temporary workspace handles have deterministic cleanup paths.
+- Godot nodes created dynamically have scene-tree ownership or `QueueFree`/`Free` cleanup rules appropriate to Godot object lifetime.
+- Preview/package/helper processes record expected exit, timeout, cancellation, and orphan-detection evidence.
+- Cleanup never deletes user workspaces silently and never deletes preserved diagnostic spool records.
+
+Acceptance criteria:
+
+- Changed routes that create processes, temp directories, file handles, or Godot runtime nodes include lifecycle tests or documented non-applicability.
+- Orphan-process diagnostics run before a route claims preview/package/repair success when helper processes were involved.
+- `workspace_delete_failed` and helper cleanup failures write project diagnostic spool records with redacted evidence.
+- Resource cleanup failures are never hidden behind a green route status.
+- Review records zero unresolved P0/P1/P2 findings for lifecycle leaks, unbounded temp files, or missing orphan diagnostics.
+- The resource lifecycle gate cannot pass unless review records zero unresolved P0/P1/P2 findings for leaked processes, undisposed C# resources, unbounded temporary files, unsafe workspace cleanup, or deleted diagnostic spool records.
+
 ## 12. Implementation Phases
 
 ### Phase 0: Cross-Cutting Governance Prerequisites
@@ -1169,6 +1377,7 @@ Deliverables:
 - local deterministic preflight checklist
 - P0/P1/P2 review evidence template for phase exits
 - Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, contract version/hash rule, canonical hash exclusion list, and technology-stack leakage denylist
+- Godot diagnostics and quality-gate contract template at `docs/standards/godot-diagnostics-quality-gates.md`, `docs/standards/_index.md` link, failure-family taxonomy, project diagnostic spool schema, symptom-to-remediation table seed, debug-log lifecycle rule, interaction-region artifact rule, preview validation rule, and resource lifecycle/orphan diagnostics rule
 
 Exit criteria:
 
@@ -1176,7 +1385,11 @@ Exit criteria:
 - New route actions cannot be implemented until exposure class, account/auth boundary, and duplicate-run behavior are documented in the route action descriptor.
 - New prompt/evidence persistence cannot be implemented until the secret redaction validator baseline passes fixture-based tests.
 - New UI-touching route work cannot be implemented until the Godot UI capability contract template exists and the denylist proves prompts do not import TapTap-only runtime terms.
+- New build, preview, package, repair, UI closure, or project-delete route work cannot be implemented until the Godot diagnostics and quality-gate contract template exists and defines pre-build/pre-preview diagnostics, diagnostic spool ownership, and failure-family taxonomy.
 - The Godot UI capability contract template must be linked from `docs/standards/_index.md` before Phase 0 is accepted.
+- The Godot diagnostics and quality-gate contract template must be linked from `docs/standards/_index.md` before Phase 0 is accepted.
+- When the Godot diagnostics and quality-gate contract becomes a durable standards file, Phase 0 must also update `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, and agent-facing routing where applicable, matching the standards index maintenance rule.
+- The Phase 0 failure-family taxonomy seed must cover every initial symptom family listed in section 11.3.4 before later route phases add more route-specific families.
 - The Godot UI capability contract template must declare its canonical hash exclusions; an empty exclusion list is valid, but an implicit or undocumented exclusion list is not.
 - The phase exit review template records route, artifact, API, browser surface, script, evidence, reviewer, and unresolved P0/P1/P2 count.
 - Phase exit review evidence is written as a durable artifact under `logs/` and referenced by the implementation summary; chat text or PR prose alone is not sufficient evidence.
@@ -1197,6 +1410,8 @@ Deliverables:
 - exposure-class and account-boundary tests for requirement map/freeze actions
 - duplicate-run tests for requirement map generation and contract freeze
 - requirement-map classification for Godot UI capability domains and prototype-contract freeze of the Godot UI contract hash
+- first failure-family taxonomy entries for GDD, scene route, requirement map, contract stale, source unknown, and UI contract unknown
+- route-specific expansion of the Phase 0 taxonomy seed for the first implemented `gdd-requirements` and `prototype-contract` slices
 
 Exit criteria:
 
@@ -1207,6 +1422,8 @@ Exit criteria:
 - Normal-user requirement map and prototype contract readback do not expose host paths, cross-account state, raw prompts, token material, or admin-only evidence.
 - Requirement map generation and contract freeze handle double-click/retry/concurrent POST behavior without creating conflicting active runs.
 - Requirement map and frozen contract preserve Godot UI capability domain inputs for UI/HUD/input/custom drawing/camera/animation/rendering/procedural/geometry/typed-state requirements.
+- GDD, scene route, requirement map, and contract freshness failures map to failure-family taxonomy entries and project diagnostic spool records where applicable.
+- Phase 1 may add route-specific failure families, but it must not shrink or redefine the Phase 0 initial symptom-family taxonomy.
 - Route contracts and guard tests for `gdd-requirements` and `prototype-contract` pass the P0/P1/P2 acceptance severity standard.
 
 ### Phase 2: Iteration Plan Traceability Gate
@@ -1219,6 +1436,7 @@ Deliverables:
 - block module generation on P0/P1 coverage gaps
 - iteration-plan route contract and route action descriptor updates
 - UI surface goals generated from the Godot UI capability contract
+- interaction-region artifact requirement for UI/input/physics/camera-heavy iteration goals
 
 Exit criteria:
 
@@ -1226,6 +1444,7 @@ Exit criteria:
 - Frontend module plan shows traceability.
 - Deckbuilder default modules are visible as required modules with source.
 - Every P0/P1 UI-facing requirement has an iteration goal or required module that names expected Godot UI surface, layout/input/focus/feedback requirements, and validation method.
+- UI/input/physics/camera-heavy P0/P1 goals include interaction-region artifacts or explicit `no_interaction_region_needed` rationales before execution.
 - Iteration-plan service/API/readback and module confirmation UI pass Phase 0 route governance checks for route action descriptor, path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, source-boundary evidence, and secret redaction.
 - Phase 2 review records zero unresolved P0/P1/P2 findings.
 
@@ -1255,14 +1474,17 @@ Deliverables:
 - needs-fix reads requirement map and latest blocker
 - frozen Godot UI capability contract injection for UI-touching goals
 - UI gap family mapping in needs-fix and repair prompts
+- pre-build diagnostics gate and debug-log lifecycle checks for execute-next-goal, needs-fix, and repair
 
 Exit criteria:
 
 - Codex is not invoked when contract/map is stale.
+- Codex is not invoked for build/repair/UI-touching work when required pre-build diagnostics fail or diagnostic prerequisites are missing.
 - Goal execution prompt contains linked requirements.
 - UI-touching goal prompts contain the frozen Godot UI capability contract and pass technology-stack leakage tests.
 - Failed acceptance maps back to a requirement or UI closure gap where possible.
 - Needs-fix and repair can classify UI failures as layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state gaps.
+- Failed execute/needs-fix/repair runs write sanitized project diagnostic spool records for known failure families.
 - Execute-next-goal and needs-fix prompt/evidence artifacts pass source-boundary checks and secret redaction validator checks before the route is accepted.
 - Phase 4 review records zero unresolved P0/P1/P2 findings.
 
@@ -1275,6 +1497,7 @@ Deliverables:
 - UI closure panel
 - optional follow-up goal generation
 - Godot UI capability validator for scene/node path, layout, input/focus, feedback, camera/layer, custom drawing, material/rendering, animation, geometry sizing, procedural visualization, and typed state
+- preview validation loop, visual evidence, source-hash readiness, and resource lifecycle/orphan diagnostics for UI closure follow-up work
 
 Exit criteria:
 
@@ -1283,6 +1506,7 @@ Exit criteria:
 - UI closure validates Godot-specific capability fields and gap families instead of only checking that a named UI surface exists.
 - Follow-up goals preserve requirement IDs, Godot UI capability domain, validation method, and source hashes.
 - Final package readiness can show UI closure blockers.
+- UI closure and preview readiness cannot pass when diagnostics evidence, visual evidence, source hash set, lifecycle cleanup, or orphan diagnostics are missing for routes that require them.
 - UI closure service/API/readback passes Phase 0 route governance checks for path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, and secret redaction.
 - Phase 5 review records zero unresolved P0/P1/P2 findings.
 
@@ -1305,6 +1529,7 @@ Deliverables:
 - configuration/environment preflight checklist coverage for every route dependency introduced by Phases 1-5
 - docs index links for durable route governance rules
 - Godot UI capability contract coverage across route contracts, tests, admin readback, and durable standards docs
+- Godot diagnostics and quality-gate contract coverage across route contracts, diagnostics guide, failure taxonomy, project diagnostic spool, admin triage, preview/package, resource lifecycle, and durable standards docs
 
 Exit criteria:
 
@@ -1320,6 +1545,8 @@ Exit criteria:
 - Secret redaction validators pass over route prompts, evidence, admin exports, and script evidence.
 - Preflight checks report missing local dependencies without starting a workflow run.
 - Godot UI capability contract is linked from durable docs, covered by guard tests, and consumed by `gdd-requirements`, `prototype-contract`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, and `ui-wiring-closure`.
+- Godot diagnostics and quality-gate contract is linked from durable docs, covered by guard tests, and consumed by build/validation, execute-next-goal, needs-fix, repair, UI closure, preview/package, and project-delete diagnostics.
+- Project diagnostic spool supports deleted-project admin lookup, triage status, redaction status, retention class, and unresolved P0/P1/P2 preservation.
 - Durable route governance docs are linked from the relevant standards or workflow index.
 - Phase 6 evidence proves each Phase 0 baseline primitive was reused and expanded, not duplicated as a competing contract.
 - Phase 6 review records zero unresolved P0/P1/P2 findings.
@@ -1347,6 +1574,12 @@ Exit criteria:
 | UI closure produces generic "missing UI" items that are not actionable | Use gap families and required Godot fields in `ui_surface_matrix` | Each UI closure blocker names requirement IDs, scene/node or missing owner, gap family, and follow-up validation method |
 | Visual validation becomes impossible in headless runs | Use layered evidence: route-state validators first, Godot headless/screenshot/canvas-pixel/exported visual evidence for high-risk visual changes, and a recorded deterministic substitute only when the harness limitation is concrete | High-risk visual UI changes include machine-checkable evidence or a documented test-harness limitation that is reviewed as P0/P1/P2 |
 | Godot UI contract conflicts with the non-goal of not refactoring the generator | Keep this plan at workflow contract, prompt, validation, and readback level; generator internals change only when later implementation explicitly scopes them | Acceptance can be met by route contracts and generated goals without requiring a generator architecture rewrite in this plan |
+| Diagnostics gate slows iteration | Run diagnostics at route boundaries and reuse current source hashes instead of rerunning unchanged checks | Routes block only on changed or stale diagnostic scope, and accepted phases still record zero unresolved P0/P1/P2 findings |
+| Project diagnostic spool leaks private evidence | Store spool outside workspaces with redaction status, account ownership, admin-only raw access, and user-safe summaries | Normal-user readback cannot expose cross-account diagnostics, raw host paths, raw prompts, token material, provider secrets, or admin-only evidence |
+| Project deletion accidentally removes diagnostics | Keep diagnostic spool outside hosted workspaces and make deletion cleanup ignore preserved diagnostics | Deleted-project admin lookup still finds unresolved diagnostics, and unresolved P0/P1/P2 records survive ordinary project deletion |
+| Symptom table becomes stale documentation | Treat failure-family taxonomy and remediation table as tested route contract inputs | New known failure families cannot ship without a table row, domain code, user-safe summary policy, and test coverage |
+| Temporary debug logs become permanent acceptance evidence | Require debug-log lifecycle checks and sanitized evidence replacement before acceptance | No changed route can pass with temporary stdout/print output as the only evidence |
+| Interaction-region artifacts become busywork | Require them only for UI/input/physics/camera-heavy P0/P1 goals and allow structured alternatives to ASCII | Deckbuilder route-map and hand-dragging goals have useful hit-zone/collision artifacts, not decorative documentation |
 
 ## 14. Definition Of Done
 
@@ -1372,6 +1605,9 @@ This refactor is done when:
 18. The Godot UI capability contract is frozen into prototype contracts, consumed by requirement map, iteration plan, execute-next-goal, needs-fix/repair, and UI closure, and exposed through account-safe readback.
 19. P0/P1 player-facing requirements cannot complete final readiness without UI surface, layout/input/focus/feedback/camera-layer/state evidence or an explicit `no_ui_needed` rationale.
 20. Godot UI capability tests prove no TapTap runtime technology is required or leaked into executable route prompts and artifacts.
+21. The Godot diagnostics and quality-gate contract is linked from durable docs, consumed by build/validation, execute-next-goal, needs-fix, repair, UI closure, preview/package, and project-delete diagnostics, and covered by guard tests.
+22. Project diagnostic spool preserves unresolved P0/P1/P2 diagnostics outside hosted workspaces, supports deleted-project admin lookup and triage, and protects normal users from raw or cross-account evidence.
+23. Preview/package readiness, resource lifecycle cleanup, orphan diagnostics, interaction-region artifacts, and symptom-to-remediation table coverage are validated before final readiness.
 
 ## 15. Open Questions For Later Phases
 
@@ -1410,14 +1646,15 @@ Start with Phase 0, then the smallest Phase 1 slice. Phase 1 work must not begin
 3. Add Phase 0 duplicate-run/idempotency convention, `active_run_reused` response contract, and local preflight checklist.
 4. Add Phase 0 secret redaction validator baseline, fixture coverage, and phase review evidence template.
 5. Add Phase 0 Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, version/hash rule, canonical hash exclusion list, technology-stack leakage denylist, and initial guard fixtures.
-6. Add Phase 0 durable review evidence under `logs/`.
-7. Add `GameDesignRequirementMapService`.
-8. Add requirement map API/readback.
-9. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, and `source_godot_ui_contract_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractSnapshotHash`, and `sourceGodotUiContractHash`.
-10. Add artifact-local Godot UI capability contract version and readback/API projection `godotUiContractVersion`.
-11. Add stale detection and frontend banner.
-12. Apply the route module contract template to `gdd-requirements` and `prototype-contract`.
-13. Add guard tests for sidecar naming, source hash fields, Godot UI contract hash fields, action names, error envelope shape, path/readback, exposure class, account boundary, duplicate-run behavior, and secret redaction fixture coverage.
-14. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, and Godot-only UI capability classification.
+6. Add Phase 0 Godot diagnostics and quality-gate contract template at `docs/standards/godot-diagnostics-quality-gates.md`, `docs/standards/_index.md` link, `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, agent-facing routing where applicable, failure-family taxonomy seed, project diagnostic spool schema, symptom-to-remediation table seed, debug-log lifecycle rule, interaction-region artifact rule, preview validation rule, resource lifecycle/orphan diagnostics rule, and initial guard fixtures.
+7. Add Phase 0 durable review evidence under `logs/`.
+8. Add `GameDesignRequirementMapService`.
+9. Add requirement map API/readback.
+10. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, and `source_godot_ui_contract_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractSnapshotHash`, and `sourceGodotUiContractHash`.
+11. Add artifact-local Godot UI capability contract version and readback/API projection `godotUiContractVersion`.
+12. Add stale detection and frontend banner.
+13. Apply the route module contract template to `gdd-requirements` and `prototype-contract`.
+14. Add guard tests for sidecar naming, source hash fields, Godot UI contract hash fields, diagnostic failure-family fields, action names, error envelope shape, path/readback, exposure class, account boundary, duplicate-run behavior, and secret redaction fixture coverage.
+15. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, Godot-only UI capability classification, and interaction-region artifact coverage.
 
 This first slice gives the largest drift reduction with the least UI disruption.
