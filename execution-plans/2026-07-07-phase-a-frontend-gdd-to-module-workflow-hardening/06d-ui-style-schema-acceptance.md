@@ -1,0 +1,47 @@
+# Godot UI Style Snapshot Schema Acceptance
+
+Source: `06b-ui-style-snapshot-schema.md` and original source lines 2152-2178.
+
+## Authority
+
+`06a-ui-style-migration-overview-and-catalog.md` owns the normalized TapTapMarker-to-Godot capability packages, UI family tiers, and style drift taxonomy. This document owns schema acceptance rules for `06b-ui-style-snapshot-schema.md`.
+
+
+Stable capability package IDs contributed by this document:
+
+| Capability ID | Owner scope |
+| --- | --- |
+| `ui_style_schema_acceptance_gate` | Deterministic validator coverage for style snapshot schema fields, hash identity, token/resource resolution, custom-style equivalence, gesture/state/lifecycle/virtualization rows, visual evidence, and capability inventory parity. |
+
+## Acceptance Criteria
+
+- The schema uses English field names and stable snake_case artifact fields; browser/API projections may use camelCase following Phase standards.
+- Schema validators must enforce required fields, enum-like allowed values, minimum array cardinality for active required sections, valid stable `capability_id` references, and explicit distinction between an optional empty array and a missing required array through a machine-readable schema contract profile. The profile may be a JSON Schema, validator fixture, or generated validator metadata, but it cannot leave required/enumerated/cardinality rules as prose only.
+- Pipe-delimited enum strings in `schemas/godot-ui-style-contract.v1.example.json` are example shorthand; acceptance requires a machine-readable enum source and fixture parity tests that fail when the example, profile, and validators diverge.
+- Hashes are deterministic and exclude only documented volatile fields. `runtime_environment.participates_in_hash_identity` must be true for active style snapshots unless a decision log records why an environment field is diagnostic-only.
+- `runtime_environment` must freeze Godot version, renderer, export target, platform class, target viewport set, display scale, DPI, theme scale, font oversampling, locale policy, text direction policy, and font-rendering notes before UI execution. Style readback and visual evidence are invalid when produced under an unrecorded or mismatched runtime environment.
+- Token families must declare canonical value format and Godot conversion rule. Color tokens cannot mix RGBA 0-255, hex, Godot float colors, and resource refs without a declared canonical conversion rule.
+- `ui_style_id` must be a repo-owned stable ID. Source skill names are allowed only in `source_inspiration` or `public_aliases`; every active public alias requires approved structured metadata. Pending or rejected alias records may remain in approval history only when they are not exposed as active public aliases.
+- `custom_style_equivalence_requirements` must enumerate every required equivalence family from `06a`, including tokens, component defaults, component family baseline, component coverage, state coverage, composition rules, pointer/gesture, gesture phase, pointer event shape, drag/drop payload, state ownership, lifecycle, scroll virtualization, motion transition, font policy, font-size unit, localization, visual evidence, UI tree readback, runtime environment, theme resource coverage, and technology leakage.
+- `ui_style_id: custom` is valid only when the custom style artifact records owner, version, source hash, artifact ref, created UTC, readback path policy, and passes the same built-in-equivalent checks as built-in styles.
+- `font_policy.roles` must define active font roles with primary asset ref, fallback asset ref, required component families, and validation refs. Active font assets must resolve to approved assets and approved licenses, never host-local paths or TapTapMarker font directories.
+- Icon/avatar/texture use must declare icon source, license ref, fallback icon, Godot theme icon slot or `Texture2D` ref, and readback path policy.
+- `godot_theme_resources` must map each required token to a Godot target slot or property such as theme color, font, font size, constant, icon, stylebox, StyleBox property, texture resource, shader parameter, or custom target. A resource cannot satisfy a style contract while any required P0/P1 token remains unresolved.
+- Generated theme resources must have resource load validation, export/package validation, deterministic diff evidence, packaging evidence, and project-relative or workspace-safe readback refs.
+- Pointer/gesture rows must declare gesture phase, pointer event shape, thresholds, drag source/drop target/cancel rules, and keyboard/gamepad equivalents for drag/drop or selection workflows.
+- Pointer event shape must cover pointer ID, pointer type, button/buttons mask, pressure, primary-pointer policy, delta, timestamp, target, stop-propagation, and prevent-default behavior when applicable.
+- Drag/drop policies that change gameplay state must define payload schema, source zone, target zone, valid/invalid reason, commit behavior, rollback behavior, cancel behavior, and keyboard/gamepad equivalent.
+- Overlay, modal, drawer, popover, and tooltip component families must declare close-on-overlay, outside-click, escape/back, focus trap, restore focus, tooltip delay, placement, and dismiss-animation behavior.
+- `state_tokens`, `state_ownership_rules`, component defaults, component coverage, and UI tree readback must represent disabled, readonly, and placeholder as distinct semantic states when exposed by the component family.
+- Text or form components must define placeholder, readonly, disabled, cursor, selection, max length, submit behavior, IME/composition input behavior, text-input signal, key-down policy, and validation-error state behavior.
+- `ui_lifecycle_rules` must declare input event sources, Godot lifecycle hooks, signal connection/disconnection policy, process mode, input/update/render phase ownership, cleanup method, duplicate-subscription guard, orphan diagnostic ref, and validation refs.
+- `scroll_virtualization_rules` must bind scroll/list/grid/timeline/carousel families or Godot equivalents to overflow axis, clipping owner, virtualization requirement, item extent or measurement policy, item width/height rules, buffer window, recycling policy, item key policy, visible-range readback, performance limit, and validation refs.
+- `file_upload` and similar tool/admin UI cannot be required, supported, or style-optional for normal-user workflows without a Phase service security policy covering allowed file types, maximum size, storage, account isolation, content validation, cleanup, readback-safe metadata, and admin-only raw evidence. Without that policy they must be `not_applicable` or `admin_tooling_or_security_gated`.
+- P0/P1 visible requirements cannot depend on component coverage, family baseline rows, composition rules, UI tree readback requirements, visual evidence rows, or game composition templates marked `deferred`, `not_consumed_by_first_slice`, not applicable, missing, or lacking requirement traceability and validation refs.
+- `ui_tree_readback_rows` must satisfy required fields, including layout bounds, z/canvas layer, visible/enabled/disabled/readonly/placeholder state, text overflow state, focus path, hit-test ref, and validation refs.
+- `visual_evidence_matrix` and `visual_validation_refs` must be self-describing: route ID, requirement IDs where applicable, severity, style-drift family, observed source type, viewport or scene, viewport size, device class, evidence method/type, pixel/check method where applicable, source hash, evidence refs, UI tree readback refs, validation status, and browser-safe readback policy.
+- Deterministic visual substitutes require limitation type, owner, approver, approval timestamp, expiry or recheck trigger, replacement evidence plan, and `cannot_substitute_for`. They cannot replace interactive behavior validation such as drag/drop, focus trap, keyboard navigation, gamepad navigation, pointer event handling, or route-state mutation.
+- Snapshot schema tests fail on missing or structurally invalid fields covered above, source-name identity leakage, active public alias without approved metadata, custom style contracts that fail built-in-equivalent checks, stale snapshot hash, unsafe readback refs, unresolved required P0/P1 theme tokens, or deterministic substitutes without approved and non-expired limitation metadata.
+- Snapshot schema tests fail when a required field, enum set, active-row cardinality rule, or nested object requirement is present only in prose and missing from the machine-readable schema contract profile.
+- Snapshot schema tests fail when `capability_packages[]` omits any stable capability ID declared by `06a`, `06b`, `06c`, `06d`, or `07`, contains duplicate IDs, contains owner-doc mismatches, or contains orphan IDs not declared by the split-plan capability inventory.
+- Review records zero unresolved P0/P1/P2 findings for schema completeness, source-boundary behavior, source-name ownership, account-safe readback, theme resource coverage, runtime identity, or evidence self-description.
