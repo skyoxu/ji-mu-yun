@@ -1,6 +1,6 @@
 # Phase A Frontend GDD-To-Module Workflow Hardening Plan
 
-Status: Draft plan
+Status: Source history. Implementation work should use `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md` as the primary split plan.
 Date: 2026-07-07
 Owner: Phase A platform
 Scope: Frontend-visible GDD -> scene route -> requirement map -> prototype contract -> iteration plan -> execute-next-goal -> UI closure workflow hardening
@@ -27,6 +27,7 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 6. Preserve compatibility by adding sidecars, additive JSON fields, and readback surfaces instead of breaking current APIs or old projects.
 7. Migrate TapTap's UI capability discipline into a Godot-only prototype UI capability contract so generated modules must account for UI surfaces, layout, drawing, input, camera/layer boundaries, animation, rendering, procedural generation, geometry sizing, and typed state evidence.
 8. Migrate TapTap's quality-gate and troubleshooting discipline into Godot/Phase route diagnostics: pre-build diagnostics, symptom-to-remediation tables, debug-log lifecycle, interaction design artifacts, preview validation, explicit resource lifecycle checks, and project diagnostic spool/admin triage.
+9. Migrate TapTapMarker's UI style theme discipline into a Godot-only UI style contract so generated UI uses a selected, versioned visual theme with trigger rules, palette, typography, radius, shadow, density/scale policy, component defaults, font assets, composition examples, forbidden patterns, and visual validation.
 
 ## 3. Non-Goals
 
@@ -38,6 +39,7 @@ This plan is not a minimum-change patch. It is a complete product/workflow refac
 6. Do not copy TapTap's TypeScript/MCP feature layout directly. Borrow its boundary, guard, CLI, logging, and documentation patterns only where they fit the Phase A C# service and browser workflow.
 7. Do not import TapTap's UrhoX, Urho3D, Lua, NanoVG, PBRNoTexture, `.emmylua`, or Maker runtime assumptions. All migrated UI capability requirements must be expressed with Godot 4.5/.NET-compatible concepts and repository-owned validation.
 8. Do not copy TapTap's local-only LSP, preview, logging, or disposal mechanics literally. Quality gates in this plan must use Godot 4.5, C#/.NET, GdUnit4, Phase route evidence, sanitized readback, and hosted workspace/account boundaries.
+9. Do not copy TapTapMarker's UI runtime, Widget API, Yoga layout layer, NanoVG drawing layer, Lua code templates, or font files into this repo. UI style migration in this plan must use Godot `Theme`, `StyleBox`, `FontFile`, `Control`, `Container`, `CanvasLayer`, scene templates, and repo-owned font/license policy.
 
 ## 4. Target Frontend Workflow
 
@@ -678,6 +680,44 @@ Acceptance criteria:
 - Tests fail if routes with helper processes or temporary resources can mark success without lifecycle cleanup or orphan-process diagnostic evidence.
 - Godot diagnostics and quality gate test results are included in phase review evidence and must have zero unresolved P0/P1/P2 findings.
 
+### 10.6 Godot UI Style Theme Contract Tests
+
+Required test areas:
+
+- UI style catalog schema tests for every built-in Godot style contract and every custom style contract that can enter execution.
+- UI style trigger/recommendation tests proving game type, reference direction, project tags, and user/admin override produce deterministic style selection reasons.
+- UI style selection/freeze/readback tests for new GDD projects.
+- Style snapshot hash tests for design DNA rules, structured style tokens, semantic usage/action-role rules, structured component defaults, component family baseline, component coverage matrix, variant coverage, component exception rule refs, game composition templates, structured composition rules, density/scale policy, pointer/gesture rules, state ownership rules, UI lifecycle rules, scroll/virtualization rules, motion/transition rules, font policy, font-size unit policy, localization/overflow policy, source-name policy, forbidden-pattern rules, safe theme/visual refs, UI tree readback refs, visual evidence matrix, and custom style built-in-equivalent checks.
+- Prompt/evidence tests proving UI-touching routes receive the frozen style snapshot and not broad mutable style-guide files.
+- Godot theme resource tests for generated `Theme`, `StyleBox`, `FontFile`, `Control`, `Container`, and `CanvasLayer` usage.
+- Visual consistency tests for representative controls: button, panel/card, modal, tab/menu/list, status bar/HUD, deck/card/reward panel where applicable.
+- Style-drift tests for repair and UI closure routes.
+- Font asset/license policy tests for bundled, generated, fallback, and missing-font cases.
+
+Acceptance criteria:
+
+- Tests fail if a P0/P1 UI goal starts without a selected `uiStyleId`, frozen `uiStyleSnapshotHash`, or explicit `style_not_applicable` rationale.
+- Tests fail if `uiStyleId: custom` can enter iteration, execution, repair, UI closure, preview, or package readiness without passing the same design DNA, schema, token, font, font-size unit, density/scale, component baseline, component coverage, composition, motion/transition, game composition, pointer/gesture, state ownership, UI lifecycle, scroll/virtualization, localization/overflow, contrast/readability, forbidden-pattern, visual-evidence matrix, UI tree readback, source-name, and technology-leakage checks as built-in styles.
+- Tests fail if UI prompts, route state, sidecars, generated code, or durable standards require TapTapMarker-only concepts such as UrhoX widgets, Yoga nodes, NanoVG calls, Lua theme templates, or EmmyLua annotations outside conflict-assessment text.
+- Tests fail if visual tokens are hand-authored per component when the selected style contract requires centralized Godot theme resources, unless the exception is listed in the style contract with a component, token, rationale, and validation rule.
+- Tests fail if the same screen mixes incompatible style families without a recorded style-composition exception.
+- Tests fail if generated UI omits required state tokens for hover, pressed, focused, disabled, selected, active, error, success, drag-hover, drop-valid, or drop-invalid states for controls that expose those states.
+- Tests fail if generated UI violates the selected style's semantic usage/action-role rules for primary, secondary, destructive, dismiss, modal footer, rarity, HUD, or component-specific action roles without a structured exception and validation evidence.
+- Tests fail if generated UI violates the selected style's Godot density/scale policy, safe-area rules, pixel-alignment rule where applicable, or minimum interactive target rule without a structured exception.
+- Tests fail if generated UI violates the selected style's design DNA rules, motion/transition rules, component composition rules, contrast/readability rule, or UI tree readback requirements without a structured exception and validation evidence.
+- Tests fail if P0/P1 interactive UI lacks pointer/gesture mapping for press, move, release, cancel, keyboard/gamepad focus, propagation/default-action behavior, and required gestures such as tap, pan, drag/drop, long press, wheel, or pinch where applicable.
+- Tests fail if UI state changes lack state ownership rules for stateless/stateful, controlled/uncontrolled, route-state binding, signal/update source, and persistence scope.
+- Tests fail if dynamic UI nodes, signals, tweens, timers, or input subscriptions lack lifecycle ownership, duplicate-subscription guards, and cleanup/readback evidence.
+- Tests fail if scrollable or large-list UI lacks clipping, overflow, visible-range, keying, and virtualization/performance policy where the component family requires it.
+- Tests fail if typography lacks a Godot font-size unit policy, design-pixel conversion rule where applicable, line-height rule, localized text expansion policy, max-lines/ellipsis/overflow behavior, and validation evidence.
+- Tests fail if built-in style IDs reuse TapTapMarker skill IDs as internal route IDs without a recorded product/legal approval reference and migration rationale.
+- Tests fail if a source-inspired public alias is present without structured approval metadata covering alias, approval ref, reviewer/owner, approval timestamp or decision-log ref, and `validation_status: approved`. Pending or rejected alias records may be retained as audit history, but they cannot appear in active public aliases or route identity.
+- Tests fail if a built-in style lacks a component family baseline and component coverage matrix for the minimum required built-in UI families and game composition families, or fails to mark each family as `required`, `style_optional`, `supported`, `not_applicable`, or `deferred` with rationale and validation status.
+- Tests fail if a P0/P1 visible requirement depends on a component family baseline, component coverage row, composition rule, UI tree readback requirement, visual evidence matrix row, or game composition template marked `deferred`, `not_applicable`, missing, or lacking required scene/node paths and validation refs.
+- Tests fail if generated UI uses unlicensed or missing fonts, host-local font paths, or font files copied from TapTapMarker assets.
+- Tests fail if screenshot/canvas-pixel/exported visual evidence shows style drift from the frozen style contract for high-risk UI changes, or if the evidence omits required viewport/component/state combinations from the style contract's visual evidence matrix.
+- Godot UI style contract test results are included in phase review evidence and must have zero unresolved P0/P1/P2 findings.
+
 ## 11. Observability And Admin
 
 Add admin/readback visibility for:
@@ -688,6 +728,7 @@ Add admin/readback visibility for:
 - Current recommended action.
 - UI closure status.
 - Godot UI capability contract version/hash and UI closure gap families.
+- Godot UI style contract ID/version/hash, selected style family, style-drift status, and font policy status.
 - Repeated failure families from needs-fix/validation.
 - Project diagnostic spool unresolved counts, severity, route, failure family, age, and triage status.
 - Preview/package diagnostic readiness, including source hash set and browser-safe failure summary.
@@ -698,7 +739,9 @@ Acceptance criteria:
 - Admin can answer "Which GDD requirements did not enter the module plan?" from UI/readback.
 - Admin can answer "Which GDD, scene route, and contract snapshot hash produced this prototype contract?" from UI/readback.
 - Admin can answer "Which Godot UI capability contract version produced this module plan and UI closure result?" from UI/readback.
+- Admin can answer "Which Godot UI style contract and snapshot hash produced this screen or UI closure result?" from UI/readback.
 - Admin can answer "Which UI gap family is blocking final readiness: layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state?" without reading raw logs.
+- Admin can answer "Which style-drift family is blocking final readiness: design_dna, palette, typography, radius, border, shadow, opacity, spacing, density_scale, rarity_hud, gradient_glow, bottom_accent, component_defaults, component_coverage, component_family_baseline, variant_coverage, component_exception_rules, forbidden_patterns, motion_transition, game_composition_templates, theme_resource_refs, semantic_usage, action_role, contrast_readability, font_policy, font_size_unit, localization_overflow, pointer_gesture, state_ownership, ui_lifecycle, scroll_virtualization, state_tokens, composition, ui_tree_readback, source_name_ownership, or visual_evidence?" without reading raw logs.
 - Admin can answer "Which projects have unresolved diagnostics after deletion?" without reading workspace directories.
 - Admin can triage project diagnostics as `unresolved|resolved|ignored|backlog` without rewriting raw failure history.
 - User-facing readback remains account-scoped and cannot expose another account's project route state by guessed IDs.
@@ -1056,6 +1099,7 @@ Phase A should keep this execution plan as intent and move durable implementatio
 - Runtime lifecycle and expected-exit guidance.
 - Cache/freshness policy.
 - Godot diagnostics and quality-gate contract.
+- Godot UI style theme contract.
 - Project diagnostic spool and symptom-to-remediation guide.
 
 Acceptance criteria:
@@ -1063,7 +1107,7 @@ Acceptance criteria:
 - Each durable rule added by implementation is linked from `docs/standards/_index.md`, `docs/standards/phase-service.md`, or a route workflow doc.
 - Execution plan items that become permanent standards are not left only in the plan.
 - `AGENTS.md` remains a concise router and links to durable docs instead of duplicating full rule text.
-- A reviewer can find route contract, source-boundary, path/readback, guard-test, Godot diagnostics, project diagnostic spool, and symptom-to-remediation rules from the docs index without scanning conversation history.
+- A reviewer can find route contract, source-boundary, path/readback, guard-test, Godot UI style, Godot diagnostics, project diagnostic spool, and symptom-to-remediation rules from the docs index without scanning conversation history.
 
 ## 11.2 Godot UI Capability Contract Migration
 
@@ -1184,11 +1228,1017 @@ Acceptance criteria:
 - Rule exceptions require structured rationale in route state or phase review evidence and cannot be buried in chat text.
 - The final phase review confirms zero unresolved P0/P1/P2 findings across all governance rules touched by the migration.
 
-## 11.3 Godot Diagnostics And Quality Gate Migration
+## 11.3 Godot UI Style Theme Contract Migration
+
+This section migrates TapTapMarker's UI style skill system into a Godot-only workflow contract. It is not a runtime migration. The source capability idea is: style should be selected before UI generation, frozen as a versioned contract, implemented through centralized theme tokens and component defaults, validated with visual evidence, and reused by repair/UI closure so the prototype does not drift between unrelated visual languages.
+
+TapTapMarker source capabilities observed:
+
+- `urhox-libs/UI` provides a Widget tree, layout layer, rendering layer, input/event flow, style/theme layer, UI inspector, serializer/loader, built-in widgets, and game composition components.
+- `ui-astroon`, `ui-brawlforge`, and `ui-pixelforge` each provide trigger rules, design DNA, font setup, theme initialization templates, token tables, component notes, and rules that visual properties should come from the theme rather than ad hoc per-component styling.
+- The style skills encode concrete token families: palette, semantic colors, typography, radius, shadow, spacing, density/scale assumptions, component defaults, state tokens, rarity/HUD colors, and component-specific exceptions.
+- The UI framework documentation treats layout scale, pixel alignment, event hit testing, and component state behavior as part of UI correctness. In this repo those concepts belong in Godot `Control` layout, viewport evidence, focus/input states, and style validation rather than TapTapMarker runtime APIs.
+
+### 11.3.1 Conflict Assessment
+
+| TapTapMarker style capability | Conflict in this repo | Godot decision |
+| --- | --- | --- |
+| UrhoX UI Widget library | This repo targets generated Godot projects, not UrhoX | Translate the architecture concept into Godot `Control` scene composition, `Container` layout, `CanvasLayer` HUD layering, centralized `Theme` resources, and route evidence. |
+| Yoga layout layer | Godot has its own anchors, containers, size flags, theme metrics, and safe-area handling | Use Godot `Container` nodes, anchors, `Control.custom_minimum_size`, size flags, viewport-safe scaling, and screenshot/viewport evidence. Do not introduce Yoga. |
+| NanoVG rendering layer | Godot uses CanvasItem drawing, theme resources, materials, and shaders | Use `Control._draw`, `CanvasItem`, `StyleBoxFlat`, `StyleBoxTexture`, `ShaderMaterial`, `CanvasItemMaterial`, and exported visual evidence. Do not introduce NanoVG calls. |
+| Lua theme initialization templates | This repo is C#/.NET-centered for Godot prototypes | Express examples as Godot `Theme` resources, `.tres`/`.res`, C# setup helpers, typed GDScript only where existing projects already use it, and JSON route contracts. |
+| Skill-specific font files | Fonts have licensing, storage, and runtime packaging implications | Define a repo-owned font asset and license policy. Style contracts may name font roles and fallback stacks, but implementation must use approved project assets or generated/open licensed fonts. |
+| "Visual properties come from theme, not per-component" | Godot allows direct per-node overrides, which can cause drift | Require style-critical colors, fonts, radius, borders, shadows, spacing, and state tokens to come from a frozen style contract and generated Godot theme resources. Per-node overrides need structured exceptions. |
+| UI inspector/serializer concepts | Phase A uses browser readback and hosted workspace evidence rather than TapTapMarker local inspector tools | Translate into route readback: selected style ID/version/hash, style token snapshot, generated theme resource refs, style-drift findings, screenshots, and UI closure evidence. |
+
+Acceptance criteria:
+
+- No implementation prompt, route state, style guide, generated Godot code, or durable workflow standard requires UrhoX widgets, Yoga, NanoVG, Lua theme templates, EmmyLua annotations, or TapTapMarker font assets.
+- Every migrated style capability has a Godot-owned equivalent, a route artifact, a validation check, and a readback surface.
+- The only permitted TapTapMarker runtime terms are in conflict-assessment documentation, migration rationale, or technology-leakage denylist fixtures.
+- Review records zero unresolved P0/P1/P2 findings for technology-stack leakage, missing Godot equivalent, font policy ambiguity, style-drift acceptance, or untestable style validation.
+
+### 11.3.2 Full UI Style Theme Migration Checklist
+
+The workflow must treat the following style-system capabilities as first-class contracts for UI-touching work:
+
+1. Style catalog, trigger taxonomy, and selection
+   - Godot ownership: `docs/ui-style-guides/*.md`, `docs/standards/godot-ui-style-contract.md`, project-level `uiStyleId`, and route-visible style recommendation.
+   - Required workflow data: repo-owned style ID, style name, version, source guide hash, trigger tags, suitable game genres/moods, suitable reference directions, explicit user/admin override, and selected/fallback reason.
+2. Frozen style snapshot
+   - Godot ownership: deterministic JSON snapshot stored with the prototype contract and copied into UI-touching route state.
+   - Required workflow data: `ui_style_id`, `ui_style_version`, `ui_style_snapshot_hash`, source guide hash, token hash, font policy hash, and canonical hash exclusions.
+3. Token families
+   - Godot ownership: palette tokens, semantic colors, typography roles, spacing, density, scale, radius, border, shadow, opacity, state colors, rarity/HUD colors, and composition exceptions.
+   - Required workflow data: token name, token value, intended component use, forbidden substitutions, and validation rule.
+4. Semantic usage and action-role rules
+   - Godot ownership: style-specific semantic rules for primary/secondary/destructive/dismiss actions, modal footer layout, button casing, status/HUD meaning, rarity meaning, and component-specific semantic exceptions.
+   - Required workflow data: rule ID, affected action/component role, required token or layout behavior, forbidden substitution, not-applicable rationale, validation refs, and repair guidance.
+5. Godot theme resource generation
+   - Godot ownership: generated or checked-in `Theme` resources, `StyleBoxFlat`/`StyleBoxTexture`, `FontFile` references, component default mappings, and scene template refs.
+   - Required workflow data: resource paths, node/control owner, token source, font source, generated/hand-authored status, and packaging evidence.
+6. Component defaults and exceptions
+   - Godot ownership: central style defaults for Button, Panel/Card, Modal/Dialog, Tabs/Menu/List, TextField, Slider, ProgressBar, Tooltip/Toast, HUD/status bars, deck/card/reward panels, and any other built-in UI family declared by the style catalog.
+   - Required workflow data: component family, default tokens, allowed overrides, exception rationale, and tests.
+7. Component coverage matrix
+   - Godot ownership: per-style support matrix for built-in UI families such as Button, Checkbox, Toggle, Slider, TextField, Card, Badge, Chip, Alert, Avatar, ProgressBar, Tabs, Menu, Stepper, Breadcrumb, Pagination, Toast, Tooltip, Modal, Drawer, Popover, Dropdown, Table, List, Accordion, Rating, DatePicker, TimePicker, Calendar, ColorPicker, Timeline, Tree, Carousel, FileUpload, and game composition families.
+   - Required workflow data: component family, support status `supported|not_applicable|deferred`, required tokens, state coverage, component-specific exceptions, validation refs, and rationale for gaps.
+8. Visual state system
+   - Godot ownership: hover, pressed, focused, disabled, selected, active, error, success, warning, info, drag-hover, drop-valid, and drop-invalid states where the component supports them.
+   - Required workflow data: state token mapping, input path, focus behavior, visual evidence refs, and unavailable-state rationale.
+9. Font asset and license policy
+   - Godot ownership: repo-approved fonts, generated/open licensed fonts, fallback stacks, `FontFile` import settings, packaging checks, and missing-font blockers.
+   - Required workflow data: font role, asset path, license/source, fallback, packaging status, and readback-safe name.
+10. Style composition rules
+   - Godot ownership: rules for one primary style per project/screen, explicit mixed-style exceptions, sub-surface overrides, and scene-specific style compatibility.
+   - Required workflow data: composition owner, affected scene IDs, allowed mixed tokens, rationale, and review evidence.
+11. Style drift detection
+   - Godot ownership: route-state validators, prompt/evidence checks, screenshot/canvas-pixel/exported visual evidence, token diff checks, and UI closure style findings.
+   - Required workflow data: drift family, expected token/source, observed artifact, severity, remediation goal, and evidence refs.
+12. Density, scale, and responsive layout policy
+   - Godot ownership: viewport breakpoints, safe-area behavior, minimum interactive target sizes, pixel-alignment requirements for pixel styles, `Control.custom_minimum_size`, size flags, and theme metric mapping.
+   - Required workflow data: target viewport set, style density mode, scale constraints, minimum hit target, overflow strategy, text measurement rule, and screenshot/exported evidence refs.
+13. Source-name and public alias policy
+   - Godot ownership: repo-owned internal style IDs, source inspiration metadata, optional public aliases, approval references, and route-state guards that prevent source skill names from becoming execution identity.
+   - Required workflow data: internal style ID, source inspiration label, public alias, approval reference, reviewer/owner, approval date or decision log ref, and validation status.
+14. Game composition templates
+   - Godot ownership: style-aware scene templates for combat HUD, route map, deck/card hand, reward selection, inventory, dialog, status bars, modal settings, and toast/notification flows.
+   - Required workflow data: template ID, required requirement IDs, scene/node paths, style tokens used, input states, and validation refs.
+15. Design DNA and custom-style equivalence
+   - Godot ownership: machine-readable style principles, forbidden visual behavior, and custom-style equivalence rows.
+   - Required workflow data: rule ID, affected component families, required visual behavior, custom requirement family, validation rule, and validation refs.
+16. Pointer, gesture, and input event behavior
+   - Godot ownership: `InputMap`, `Control.gui_input`, `_unhandled_input`, focus navigation, mouse/touch/gamepad/keyboard paths, drag/drop, pan, tap, long press, wheel, and cancel behavior.
+   - Required workflow data: gesture type, supported devices, event flow, coordinate space, propagation/default-action policy, focus policy, and validation refs.
+17. UI state ownership and data binding
+   - Godot ownership: stateless/stateful controls, controlled/uncontrolled values, route-state binding, autoload or scene-node ownership, signals, and update sources.
+   - Required workflow data: state owner, controlled mode, source signal refs, update method, persistence scope, and validation refs.
+18. UI lifecycle and subscription ownership
+   - Godot ownership: dynamically created nodes, signal connections, timers, tweens, process callbacks, input subscriptions, scene-tree ownership, and `QueueFree` cleanup.
+   - Required workflow data: dynamic owner, subscription owner, cleanup method, duplicate-subscription guard, lifecycle validation refs, and orphan diagnostics.
+19. Scroll, clipping, and virtualization
+   - Godot ownership: `ScrollContainer`, clipping masks, overflow behavior, virtualized list/grid policies, item keying, visible range readback, and large-list performance limits.
+   - Required workflow data: overflow axis, clipping owner, virtualization requirement, item key policy, visible-range readback, performance limit, and validation refs.
+20. Font-size unit and text measurement policy
+   - Godot ownership: Godot `Theme` font sizes, design-pixel mapping, line height, min/max readable sizes, text measurement, and per-style typography refs.
+   - Required workflow data: design unit, Godot unit, conversion rule, line-height rule, min/max sizes, text measurement rule, and validation refs.
+21. Localization and text overflow policy
+   - Godot ownership: localized UI copy expansion, CJK/Latin fallback font behavior, wrapping, max lines, ellipsis, clipping, and safe overflow state.
+   - Required workflow data: supported locales or input-language class, expansion factor, wrapping rule, max-lines rule, overflow behavior, fallback font role, and validation refs.
+22. Visual evidence matrix and UI tree readback rows
+   - Godot ownership: matrix rows that bind viewport, scene, component family, state, source hash, screenshot/exported evidence, and readback node rows.
+   - Required workflow data: matrix ID, route ID, viewport or scene, required component families, required states, evidence refs, and UI tree readback row refs.
+
+Acceptance criteria:
+
+- A UI-touching P0/P1 requirement cannot reach execution without `ui_style_id`, `ui_style_version`, `ui_style_snapshot_hash`, and `source_ui_style_contract_hash`, unless route state records `style_not_applicable` with evidence and tests prove no visible UI is produced.
+- UI style selection occurs before iteration-plan generation for UI-facing requirements and is frozen into the prototype contract before execute-next-goal can create UI.
+- UI-touching prompts contain the frozen Godot UI style snapshot and generated theme resource refs, not mutable broad style-guide excerpts.
+- Style-critical visual decisions are represented as tokens or component defaults. Per-node/per-control overrides require an exception with component, token, rationale, and validation evidence.
+- Style drift findings are grouped by bounded families: `design_dna`, `palette`, `typography`, `radius`, `border`, `shadow`, `opacity`, `spacing`, `density_scale`, `rarity_hud`, `gradient_glow`, `bottom_accent`, `component_defaults`, `component_coverage`, `component_family_baseline`, `variant_coverage`, `component_exception_rules`, `forbidden_patterns`, `motion_transition`, `game_composition_templates`, `theme_resource_refs`, `semantic_usage`, `action_role`, `contrast_readability`, `font_policy`, `font_size_unit`, `localization_overflow`, `pointer_gesture`, `state_ownership`, `ui_lifecycle`, `scroll_virtualization`, `state_tokens`, `composition`, `ui_tree_readback`, `source_name_ownership`, and `visual_evidence`.
+- Built-in style selection must use repo-owned internal IDs. Source skill names may appear only in migration rationale, external-label metadata, or an approved product/legal alias record.
+- High-risk UI style changes include screenshot/canvas-pixel/exported visual evidence or a documented deterministic substitute tied to a harness limitation.
+- The Godot UI style theme migration cannot pass unless review records zero unresolved P0/P1/P2 findings for style selection, snapshot freshness, design DNA rules, structured token coverage, semantic usage/action-role rules, component coverage, component family baseline, variant coverage, component exception refs, forbidden patterns, pointer/gesture behavior, state ownership/data binding, UI lifecycle/subscription ownership, scroll/virtualization policy, motion/transition rules, structured composition rules, game composition templates, density/scale policy, font-size unit policy, localization/overflow policy, contrast/readability rules, font policy, structured component defaults, state tokens, style drift, safe theme/visual refs, UI tree readback, visual evidence matrix coverage, custom style metadata and built-in-equivalent checks, source-name ownership, structured alias approval, or technology-stack leakage.
+
+### 11.3.3 Recommended Built-In Godot Style Catalog
+
+The plan should introduce Godot-native equivalents inspired by TapTapMarker's style families. Internal IDs must be repo-owned and neutral; source skill names can be reused only as product-facing labels if legal/product review approves and the approval is recorded.
+
+| Proposed style ID | Borrowed idea | Godot-native contract intent |
+| --- | --- | --- |
+| `godot_cosmic` | Cosmic cartoon, dark gradient, glowing accents, readable sans text, pill buttons, rarity colors | Space/fantasy UI with `Theme` tokens for cosmic backgrounds, gold primary CTA, glow-style shadows through Godot-compatible style resources, and layered panels. |
+| `godot_combat_hud` | Competitive combat HUD, sharp silhouettes, thick borders, bold typography, vivid state colors | Action/combat UI with hard-edged `StyleBox` defaults, strong borders, dedicated HUD bar colors, bold font roles, and clear pressed/focused/disabled states. |
+| `godot_pixel_arcade` | Retro pixel-art, zero radius, hard shadows, pixel fonts, high-contrast saturated accents | Pixel/arcade UI with zero-radius defaults, pixel-friendly scale policy, approved pixel fonts or fallbacks, no blur shadows, and square component templates. |
+
+Minimum required built-in UI families:
+
+| Family group | Required component families | Godot-owned implementation equivalents |
+| --- | --- | --- |
+| Core controls | `button`, `checkbox`, `toggle`, `slider`, `text_field`, `text_area`, `stepper`, `rating` | `Button`, `CheckBox`, `CheckButton`, `HSlider`/`VSlider`, `LineEdit`, `TextEdit`, composed `Control` scenes with `Theme` tokens. |
+| Choice and navigation | `tabs`, `menu`, `dropdown`, `breadcrumb`, `pagination`, `accordion`, `tree` | `TabContainer`/custom tab `Control`, `PopupMenu`, `OptionButton`, composed navigation controls, `Tree`, and route-state-backed selection. |
+| Feedback and status | `badge`, `chip`, `alert`, `toast`, `progress_bar`, `avatar_icon`, `tooltip` | `Label`/`PanelContainer` compositions, `ProgressBar`, `TextureRect`, `PopupPanel`, `Timer`, and tooltip/focus behavior rules. |
+| Surfaces and overlays | `panel_card`, `modal`, `drawer`, `popover`, `table` | `PanelContainer`, `Window`/`PopupPanel`, `CanvasLayer`, `MarginContainer`, `GridContainer`, and explicit overlay focus/dismiss rules. |
+| Scroll and large data | `scroll_view`, `list_view`, `grid_view`, `timeline`, `carousel`, `file_upload` | `ScrollContainer`, `ItemList` or composed list scenes, `GridContainer`, clipped `Control` scenes, visible-range/readback and virtualization policy. |
+| Date and color tools | `date_picker`, `time_picker`, `calendar`, `color_picker` | Godot `ColorPickerButton` where available and composed `Control` scenes for calendar/time selection when a game requirement needs them. |
+| Game composition | `stat_bar`, `hud_cluster`, `item_slot`, `inventory_grid`, `dialog_box`, `quest_tracker`, `deck_hand`, `card_view`, `reward_panel`, `route_map`, `combat_hud` | `CanvasLayer`, `Control`, `Container`, `TextureRect`, `ProgressBar`, route-state-backed composed scenes, and interaction-region evidence. |
+
+Acceptance criteria:
+
+- Each built-in style guide includes design DNA, trigger/use cases, structured token/default schemas, semantic usage/action-role rules, Godot theme mapping, component defaults, variant coverage, game composition templates, state-token rules, font policy, forbidden patterns, theme resource refs, visual evidence examples, and known non-applicable cases.
+- Each built-in style guide includes a component coverage matrix for the declared built-in UI families, including component-specific exceptions inspired by the source style only when translated into Godot-owned tokens and validation refs.
+- Each built-in style guide must classify every minimum required built-in UI family as `required`, `style_optional`, `not_applicable`, or `deferred`, and every required family must have component defaults, state coverage, variant coverage when applicable, readback fields, and visual evidence requirements.
+- Scroll/list/grid families cannot be marked complete without `scroll_virtualization_rules` rows that bind `scroll_view`, `list_view`, `grid_view`, or the applicable Godot equivalent to clipping, overflow, visible-range, keying, and performance policy.
+- `file_upload` cannot be marked required, supported, or style-optional for normal-user workflows without a Phase service security policy that defines allowed file types, maximum size, storage location, account isolation, content validation, temporary file cleanup, readback-safe metadata, and admin-only raw evidence access. If the policy is absent, `file_upload` must be `not_applicable` with rationale.
+- Each built-in style guide includes a machine-readable JSON or YAML contract used by tests; prose-only style guides are not sufficient.
+- Built-in styles do not depend on TapTapMarker assets, Lua templates, UrhoX widgets, Yoga, NanoVG, or EmmyLua.
+- Built-in internal style IDs are repo-owned. Any source-inspired public alias must be optional metadata with recorded approval and must not become route identity.
+- A reviewer can add or update a style only by updating its contract, tests, visual evidence fixtures, docs index entry, and style-selection policy together.
+- Review records zero unresolved P0/P1/P2 findings for style catalog completeness, Godot-native implementation, source-name ownership, licensing, or testability.
+
+### 11.3.4 Godot Style Snapshot Schema
+
+Recommended artifact fields:
+
+```json
+{
+  "schema_version": "godot-ui-style-contract.v1",
+  "ui_style_id": "godot_cosmic|godot_combat_hud|godot_pixel_arcade|custom",
+  "ui_style_version": "1",
+   "source_ui_style_contract_hash": "...",
+   "ui_style_snapshot_hash": "...",
+   "selected_by": "user|workflow|admin|fallback",
+   "selection_reason": "",
+   "design_dna_rules": [
+     {
+       "rule_id": "",
+       "design_principle": "",
+       "required_visual_behavior": "",
+       "affected_component_families": [],
+       "forbidden_visual_behavior": "",
+       "validation_refs": [],
+       "repair_guidance": ""
+     }
+   ],
+   "source_inspiration": [],
+   "public_aliases": [],
+  "custom_style_metadata": {
+    "owner": "",
+    "version": "",
+    "source_hash": "",
+    "artifact_ref": "",
+    "created_utc": "",
+    "readback_path_policy": "project_relative|workspace_safe_ref"
+  },
+  "source_name_policy": {
+    "internal_id_is_repo_owned": true,
+    "public_alias_approval_refs": [
+      {
+        "alias": "",
+        "approval_ref": "",
+        "reviewer_owner": "",
+        "approved_utc": "",
+        "decision_log_ref": "",
+        "validation_status": "approved|pending|rejected"
+      }
+    ]
+   },
+    "trigger_tags": [],
+    "suitable_game_tags": [],
+    "runtime_environment": {
+      "godot_version": "",
+      "renderer": "forward_plus|mobile|compatibility|unknown",
+      "platform_class": "desktop|mobile|web|unknown",
+      "target_viewports": [],
+      "font_rendering_notes": "",
+      "validation_refs": []
+    },
+    "custom_style_equivalence_requirements": [
+      {
+         "requirement_family": "design_dna",
+         "required_for_custom": true,
+         "validation_rule": "",
+         "validation_refs": []
+      },
+      {
+        "requirement_family": "tokens",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "component_defaults",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "component_family_baseline",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "component_coverage",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "variant_coverage",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "state_coverage",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "composition_rules",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "pointer_gesture",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "state_ownership",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "ui_lifecycle",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "scroll_virtualization",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "motion_transition",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "font_policy",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "font_size_unit",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "localization_overflow",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "visual_evidence_matrix",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "ui_tree_readback",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      },
+      {
+        "requirement_family": "technology_leakage",
+        "required_for_custom": true,
+        "validation_rule": "",
+        "validation_refs": []
+      }
+    ],
+  "palette_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "typography_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "spacing_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "density_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+   "scale_policy": {
+     "base_design_resolution": "",
+     "target_viewports": [],
+     "scale_mode": "viewport_relative|fixed_canvas|pixel_perfect|mixed",
+     "coordinate_space": "godot_control_local|viewport|world_space_2d|world_space_3d",
+     "input_coordinate_conversion": "",
+     "pixel_alignment_rule": "",
+     "minimum_hit_target": "",
+     "safe_area_rule": "",
+     "overflow_strategy": "",
+     "text_measurement_rule": "",
+     "validation_refs": []
+   },
+   "font_size_unit_policy": {
+      "design_unit": "design_px|godot_px|custom",
+      "godot_theme_unit": "font_size_px",
+      "conversion_rule": "",
+      "forbidden_conversion_rule": "Do not blindly reuse source-engine point-size formulas such as pt = px * 0.75 unless a Godot validation record proves equivalence for this style.",
+      "line_height_rule": "",
+      "min_readable_size": "",
+      "max_display_size": "",
+      "text_measurement_rule": "",
+     "validation_refs": []
+   },
+   "localization_overflow_policy": {
+      "supported_locale_classes": [],
+      "translation_key_policy": "",
+      "source_text_policy": "",
+      "mixed_script_validation_matrix": [],
+      "text_expansion_factor": "",
+      "wrapping_rule": "",
+      "max_lines_rule": "",
+     "ellipsis_rule": "",
+     "overflow_behavior": "wrap|ellipsis|clip|resize_container|blocker",
+     "fallback_font_role": "",
+     "validation_refs": []
+   },
+  "radius_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "border_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "shadow_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "opacity_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "rarity_hud_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "gradient_glow_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "bottom_accent_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+   "state_tokens": [
+     {
+        "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+       "token_name": "",
+       "token_value": "",
+       "affected_component_families": [],
+       "validation_rule": ""
+     }
+   ],
+   "pointer_gesture_rules": [
+     {
+        "rule_id": "",
+        "affected_component_family": "",
+        "gesture_type": "press|move|release|cancel|tap|double_tap|long_press|pan|swipe|pinch|wheel|drag_drop|keyboard_focus|gamepad_focus|custom",
+        "gesture_phase": "start|move|end|cancel|not_applicable",
+        "supported_devices": [],
+        "event_flow": "",
+         "coordinate_space": "viewport|control_local|canvas_layer|world_space_2d|world_space_3d",
+         "propagation_policy": "consume|bubble|pass_through|custom",
+         "default_action_policy": "allow_default|prevent_default|custom",
+         "focus_policy": "",
+        "pointer_event_shape": {
+          "pointer_id_policy": "",
+          "pointer_type_policy": "mouse|touch|pen|gamepad|keyboard|mixed|not_applicable",
+          "button_policy": "",
+          "buttons_mask_policy": "",
+          "pressure_policy": "",
+          "is_primary_policy": "",
+          "delta_policy": "",
+          "timestamp_policy": "",
+          "target_policy": "",
+          "stop_propagation_policy": "",
+          "prevent_default_policy": ""
+        },
+        "gesture_thresholds": {
+          "long_press_threshold_ms": 0,
+          "double_tap_interval_ms": 0,
+          "pan_threshold_px": 0,
+          "swipe_threshold_px": 0,
+          "pinch_scale_threshold": 0.0,
+          "wheel_step_policy": ""
+        },
+        "drag_drop_policy": {
+          "drag_source_rule": "",
+          "drop_target_rule": "",
+          "drop_valid_state": "",
+          "drop_invalid_state": "",
+          "cancel_behavior": "",
+          "keyboard_or_gamepad_equivalent": "",
+          "payload_schema_ref": "",
+          "source_zone_policy": "",
+          "target_zone_policy": "",
+          "valid_reason_policy": "",
+          "invalid_reason_policy": "",
+          "commit_policy": "",
+          "rollback_policy": ""
+        },
+        "overlay_dismiss_policy": {
+          "outside_click_behavior": "close|ignore|confirm|custom|not_applicable",
+          "escape_or_back_behavior": "close|ignore|confirm|custom|not_applicable",
+          "focus_trap_required": true,
+          "restore_focus_target": "",
+          "tooltip_delay_ms": 0,
+          "tooltip_placement_rule": ""
+        },
+        "validation_refs": []
+      }
+    ],
+   "state_ownership_rules": [
+     {
+       "rule_id": "",
+       "affected_component_family": "",
+       "state_model": "stateless|stateful|controlled|uncontrolled|hybrid",
+        "state_owner": "route_state|scene_node|autoload|component_local|external_resource",
+        "source_signal_refs": [],
+        "update_method": "",
+        "persistence_scope": "frame|scene|route|project|none",
+        "form_state_policy": {
+          "placeholder_state": "",
+          "readonly_state": "",
+          "disabled_state": "",
+          "cursor_state": "",
+          "selection_state": "",
+          "max_length_policy": "",
+          "submit_policy": "",
+          "composition_input_policy": "",
+          "text_input_signal": "",
+          "key_down_policy": "",
+          "validation_error_state": ""
+        },
+        "validation_refs": []
+      }
+    ],
+   "ui_lifecycle_rules": [
+     {
+       "rule_id": "",
+       "affected_component_family": "",
+        "dynamic_owner": "",
+        "subscription_owner": "",
+        "input_event_sources": [],
+        "godot_lifecycle_hooks": [],
+        "signal_connection_policy": "",
+        "signal_disconnection_policy": "",
+        "process_mode": "always|pausable|when_paused|disabled|not_applicable",
+        "auto_event_policy": {
+          "input_phase": "",
+          "update_phase": "",
+          "render_phase": "",
+          "manual_subscription_allowed": true
+        },
+        "cleanup_method": "queue_free|disconnect_signal|stop_timer|kill_tween|remove_child|not_applicable|custom",
+        "duplicate_subscription_guard": "",
+        "orphan_diagnostic_ref": "",
+       "validation_refs": []
+     }
+   ],
+   "scroll_virtualization_rules": [
+     {
+        "rule_id": "",
+        "affected_component_family": "scroll_view|list_view|grid_view|carousel|custom",
+        "godot_equivalent": "ScrollContainer|ItemList|GridContainer|custom_control|custom",
+        "overflow_axis": "none|x|y|both",
+        "clipping_owner": "",
+        "virtualization_required": true,
+        "item_extent_policy": "fixed_extent|required_measurement|dynamic_measurement|not_applicable",
+        "item_width_policy": "",
+        "item_height_policy": "",
+        "buffer_window_policy": "",
+        "recycling_policy": "",
+        "item_key_policy": "",
+        "visible_range_readback_ref": "",
+       "performance_limit": "",
+       "validation_refs": []
+     }
+   ],
+   "motion_transition_rules": [
+     {
+       "rule_id": "",
+       "affected_component_family": "",
+       "state_transition": "enter|exit|hover_to_pressed|pressed_to_default|disabled_change|value_change|custom",
+       "duration_ms": 0,
+       "easing": "linear|ease_in|ease_out|ease_in_out|instant|custom",
+       "animated_properties": [],
+       "motion_restraint_rationale": "",
+       "validation_refs": []
+     }
+   ],
+  "semantic_usage_rules": [
+    {
+      "rule_id": "",
+      "affected_component_role": "",
+      "required_token_or_layout_behavior": "",
+      "forbidden_substitution": "",
+      "not_applicable_rationale": "",
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+  "action_role_rules": [
+    {
+      "rule_id": "",
+      "affected_action_role": "primary|secondary|destructive|dismiss|confirm|cancel|custom",
+      "affected_component_family": "",
+      "required_token_or_layout_behavior": "",
+      "forbidden_substitution": "",
+      "not_applicable_rationale": "",
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+   "component_defaults": [
+    {
+      "component_family": "",
+      "default_tokens": [],
+      "variant_defaults": [
+        {
+          "variant_name": "",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "state_defaults": [
+        {
+          "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "theme_resource_refs": [],
+      "allowed_override_rule_ids": [],
+      "validation_refs": []
+     }
+   ],
+   "component_family_baseline": [
+     {
+       "component_family": "",
+       "baseline_level": "required|style_optional|not_applicable",
+       "rationale": "",
+       "required_states": [],
+       "required_variants": [],
+       "validation_refs": []
+     }
+   ],
+   "component_coverage_matrix": [
+    {
+      "component_family": "",
+      "support_status": "supported|not_applicable|deferred",
+      "applicable_requirement_ids": [],
+      "required_tokens": [
+        {
+          "token_family": "",
+          "token_name": "",
+          "required_for": ""
+        }
+      ],
+      "state_coverage": [
+        {
+          "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+          "support_status": "supported|not_applicable|deferred",
+          "token_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "variant_coverage": [
+        {
+          "variant_name": "",
+          "support_status": "supported|not_applicable|deferred",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "component_specific_exception_rule_ids": [],
+      "validation_refs": [],
+      "gap_rationale": ""
+    }
+  ],
+  "font_policy": {
+    "roles": [
+      {
+        "font_role": "",
+        "active": true,
+        "primary_asset_ref": "",
+        "fallback_asset_ref": "",
+        "required_by_components": [],
+        "validation_refs": []
+      }
+    ],
+    "approved_assets": [
+      {
+        "font_role": "",
+        "asset_ref": "",
+        "source_type": "bundled|generated|open_licensed|fallback",
+        "license_ref": "",
+        "packaging_status": "included|fallback_only|missing_blocker",
+        "fallback_role": "",
+        "readback_path_policy": "project_relative|workspace_safe_ref"
+      }
+    ],
+    "fallbacks": [
+      {
+        "font_role": "",
+        "fallback_role": "",
+        "rationale": "",
+        "validation_refs": []
+      }
+    ],
+    "license_refs": [
+      {
+        "license_ref": "",
+        "license_name": "",
+        "source_ref": "",
+        "allowed_use": "",
+        "validation_status": "approved|rejected|needs_review"
+      }
+    ]
+  },
+  "component_exception_rules": [
+    {
+      "exception_rule_id": "",
+      "component_family": "",
+      "token_family": "",
+      "token_name": "",
+      "override_scope": "",
+      "rationale": "",
+      "validation_rule": "",
+      "validation_refs": []
+    }
+  ],
+   "composition_rules": [
+     {
+       "rule_id": "",
+       "composition_type": "modal_footer|button_group|card_panel|hud_cluster|tooltip_popover|deck_hand|reward_panel|screen_mix|custom",
+       "affected_scene_or_component_family": "",
+        "required_layout_behavior": "",
+        "allowed_style_mix": [],
+        "forbidden_combinations": [],
+        "overlay_behavior": {
+          "close_on_overlay": "true|false|not_applicable",
+          "outside_click_policy": "close|ignore|confirm|custom|not_applicable",
+          "focus_trap_policy": "required|not_required|not_applicable",
+          "restore_focus_target": "",
+          "tooltip_delay_ms": 0,
+          "tooltip_placement": "top|right|bottom|left|cursor|custom|not_applicable",
+          "dismiss_animation_rule_ref": ""
+        },
+        "exception_rule_ids": [],
+        "validation_refs": [],
+        "repair_guidance": ""
+     }
+   ],
+  "game_composition_templates": [
+    {
+      "template_id": "",
+      "support_status": "supported|not_applicable|deferred",
+      "requirement_level": "required|optional|deferred",
+      "source_reason": "default_contract|user_gdd|style_contract|admin_override",
+      "required_requirement_ids": [],
+      "scene_node_paths": [],
+      "style_tokens_used": [],
+      "input_states": [],
+      "validation_refs": [],
+      "rationale": ""
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "pattern_id": "",
+      "scope": "prompt|route_state|generated_code|style_contract|visual_evidence",
+      "forbidden_expression": "",
+      "allowed_exception_ref": "",
+      "validation_rule": "",
+      "repair_guidance": ""
+    }
+  ],
+   "godot_theme_resources": [
+    {
+      "resource_ref": "",
+      "node_or_control_owner": "",
+      "token_source": "",
+      "required_token_refs": [],
+      "resolved_token_refs": [],
+      "unresolved_token_refs": [],
+      "font_source": "",
+      "generated_status": "generated|checked_in|hand_authored",
+      "packaging_evidence_refs": [],
+      "readback_path_policy": "project_relative|workspace_safe_ref"
+     }
+   ],
+   "ui_tree_readback_requirements": [
+     {
+       "required_for_surface_type": "control|hud_canvas_layer|custom_canvas_item|world_space_2d|world_space_3d|subviewport",
+       "required_fields": [
+         "scene_node_path",
+         "control_class",
+         "ui_style_snapshot_hash",
+         "theme_resource_ref",
+         "applied_token_refs",
+          "state_refs",
+          "layout_bounds",
+          "z_layer",
+          "visible_state",
+          "enabled_state",
+          "disabled_state",
+          "readonly_state",
+          "placeholder_state",
+          "text_overflow_state",
+          "focus_path",
+          "hit_test_ref",
+          "validation_refs"
+       ],
+       "readback_path_policy": "project_relative|workspace_safe_ref",
+       "validation_refs": []
+     }
+   ],
+   "ui_tree_readback_rows": [
+     {
+       "row_id": "",
+       "scene_node_path": "",
+       "control_class": "",
+       "surface_type": "control|hud_canvas_layer|custom_canvas_item|world_space_2d|world_space_3d|subviewport",
+       "ui_style_snapshot_hash": "",
+        "theme_resource_ref": "",
+        "applied_token_refs": [],
+        "state_refs": [],
+        "layout_bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "anchors": "",
+          "margins": ""
+        },
+        "z_layer": {
+          "canvas_layer": "",
+          "z_index": 0,
+          "draw_order_ref": ""
+        },
+        "visible_state": "visible|hidden|collapsed",
+        "enabled_state": "enabled|disabled|not_applicable",
+        "disabled_state": "disabled|not_disabled|not_applicable",
+        "readonly_state": "readonly|editable|not_applicable",
+        "placeholder_state": "shown|hidden|not_applicable",
+        "text_overflow_state": "fits|wrapped|ellipsized|clipped|overflowing|not_applicable",
+        "focus_path": "",
+        "hit_test_ref": "",
+        "pointer_gesture_rule_refs": [],
+       "state_ownership_rule_refs": [],
+       "lifecycle_rule_refs": [],
+       "validation_refs": [],
+       "readback_path_policy": "project_relative|workspace_safe_ref"
+     }
+   ],
+   "visual_evidence_matrix": [
+     {
+        "matrix_id": "",
+        "route_id": "",
+        "requirement_ids": [],
+        "severity": "P0|P1|P2|info",
+        "style_drift_family": "design_dna|palette|typography|radius|border|shadow|opacity|spacing|density_scale|rarity_hud|gradient_glow|bottom_accent|component_defaults|component_coverage|component_family_baseline|variant_coverage|component_exception_rules|forbidden_patterns|motion_transition|game_composition_templates|theme_resource_refs|semantic_usage|action_role|contrast_readability|font_policy|font_size_unit|localization_overflow|pointer_gesture|state_ownership|ui_lifecycle|scroll_virtualization|state_tokens|composition|ui_tree_readback|source_name_ownership|visual_evidence",
+        "viewport_or_scene": "",
+        "required_component_families": [],
+        "required_states": [],
+        "required_gestures": [],
+        "evidence_type": "screenshot|canvas_pixel|exported_visual|ui_tree_readback|deterministic_substitute",
+        "viewport_size": "",
+        "device_class": "desktop|mobile|tablet|web|unknown",
+        "pixel_check_method": "",
+        "source_hash": "",
+        "evidence_refs": [],
+       "ui_tree_readback_row_refs": [],
+       "validation_status": "passed|failed|blocked|not_applicable",
+       "harness_limitation_ref": ""
+     }
+   ],
+   "visual_validation_refs": [
+     {
+       "validation_ref": "",
+       "validation_type": "screenshot|canvas_pixel|exported_visual|deterministic_substitute",
+       "route_id": "",
+       "viewport_or_scene": "",
+       "required_component_families": [],
+       "required_states": [],
+       "source_hash": "",
+       "harness_limitation_ref": "",
+       "harness_limitation": {
+         "limitation_type": "headless_renderer|platform_unavailable|tool_missing|deterministic_substitute_only|other|not_applicable",
+         "owner": "",
+         "approved_by": "",
+         "approved_utc": "",
+         "expires_utc": "",
+         "recheck_trigger": "",
+         "replacement_evidence_plan": ""
+       },
+       "readback_path_policy": "project_relative|workspace_safe_ref"
+    }
+  ]
+}
+```
+
+Acceptance criteria:
+
+- The schema uses English field names and stable snake_case artifact fields; browser/API projections may use camelCase following Phase standards.
+- Hashes are deterministic and exclude only documented volatile fields.
+- `ui_style_id` must be a repo-owned stable ID. Source skill names are allowed only in `source_inspiration` or `public_aliases`; every active `public_aliases` entry requires a corresponding `source_name_policy.public_alias_approval_refs` entry with matching alias, approval ref, reviewer/owner, `approved_utc` or `decision_log_ref`, and `validation_status: approved`. Pending or rejected alias records may remain in approval history only when they are not exposed as active public aliases.
+- `custom_style_equivalence_requirements` must contain separate rows for each required equivalence family, not a single pipe-delimited enum string. Required families are `design_dna`, `tokens`, `component_defaults`, `component_family_baseline`, `component_coverage`, `variant_coverage`, `state_coverage`, `composition_rules`, `pointer_gesture`, `state_ownership`, `ui_lifecycle`, `scroll_virtualization`, `motion_transition`, `font_policy`, `font_size_unit`, `localization_overflow`, `visual_evidence_matrix`, `ui_tree_readback`, and `technology_leakage`.
+- `custom_style_equivalence_requirements` examples must enumerate all required families above. The implementation plan cannot rely on a partial sample, ellipsis, or prose-only "same as built-in" shortcut for custom style acceptance.
+- `ui_style_id: custom` is valid only when the custom style artifact records owner, version, source hash, artifact ref, created UTC, and readback path policy, and satisfies the same schema, snapshot hash, design DNA, token, font policy, font-size unit, localization/overflow, component family baseline, component coverage, component defaults, composition rule, pointer/gesture, state ownership, UI lifecycle, scroll/virtualization, motion/transition, game composition template, UI tree readback, visual evidence matrix, forbidden-pattern, source-name, and technology-leakage checks as built-in styles.
+- `runtime_environment` must freeze Godot version, renderer, platform class, target viewport set, and font-rendering notes before UI execution. Style readback and visual evidence are invalid when produced under an unrecorded or mismatched runtime environment.
+- `font_policy.roles` must define active font roles with primary asset ref, fallback asset ref, required component families, and validation refs. Active role `primary_asset_ref` and `fallback_asset_ref` must resolve to `font_policy.approved_assets[].asset_ref` entries that satisfy license, packaging, source, and readback policy checks. `font_policy.approved_assets` cannot point to host-local paths or TapTapMarker skill directories, and every approved asset requires font role, safe asset ref, source type, license ref, packaging status, fallback role, and readback path policy. Every active approved asset must reference a `font_policy.license_refs` entry with `validation_status: approved`; rejected or needs-review license refs are audit history only and cannot satisfy active font roles. Active font roles cannot use `packaging_status: missing_blocker`; `fallback_only` is valid only when a fallback role and validation refs prove the primary font is intentionally unavailable.
+- `font_size_unit_policy.forbidden_conversion_rule` must explicitly prevent blindly copying source-engine point-size formulas such as `pt = px * 0.75`; any non-Godot conversion requires a Godot validation ref proving equivalent rendered size, line height, and readability across declared viewports.
+- `localization_overflow_policy` must declare translation key policy, source text policy, mixed-script validation matrix, supported locale/input-language classes, text expansion factor, wrapping, max lines, ellipsis, overflow behavior, and fallback font role. Mixed CJK/Latin cases must be represented in validation refs when multilingual input is accepted by the workflow.
+- Pointer/gesture rows must declare gesture phase, pointer event shape, thresholds for long press, double tap, pan, swipe, pinch, wheel behavior when applicable, plus drag source/drop target/cancel rules and keyboard/gamepad equivalents for drag/drop or selection workflows.
+- Pointer event shape must cover pointer ID, pointer type, button/buttons mask, pressure, primary-pointer policy, delta, timestamp, target, stop-propagation, and prevent-default behavior when applicable. Multi-touch, right-click, pen, keyboard, and gamepad support cannot be claimed without matching shape and validation refs.
+- Drag/drop policies must define payload schema, source zone, target zone, valid/invalid reason, commit behavior, rollback behavior, cancel behavior, and keyboard/gamepad equivalent when the interaction changes gameplay state.
+- Overlay, modal, drawer, popover, and tooltip component families must declare close-on-overlay, outside-click, escape/back, focus-trap, restore-focus, tooltip delay, placement, and dismiss-animation behavior in `pointer_gesture_rules` or `composition_rules`.
+- `state_tokens`, `state_ownership_rules`, component defaults, component coverage, and UI tree readback must represent `disabled`, `readonly`, and `placeholder` as distinct semantic states when the component family can expose them; treating readonly as disabled or placeholder as ordinary text is a validation failure.
+- `state_ownership_rules` for text or form components must define placeholder, readonly, disabled, cursor, selection, max length, submit behavior, IME/composition input behavior, text-input signal, key-down policy, and validation-error state behavior.
+- `ui_lifecycle_rules` must declare input event sources, Godot lifecycle hooks, signal connection/disconnection policy, process mode, input/update/render phase ownership, manual subscription allowance, cleanup method, duplicate-subscription guard, orphan diagnostic ref, and validation refs for dynamic UI nodes or subscriptions.
+- `scroll_virtualization_rules` must bind scroll/list/grid/carousel families or their Godot equivalents to overflow axis, clipping owner, virtualization requirement, fixed or measured item extent policy, item width/height rules, buffer window, recycling policy, item key policy, visible-range readback, performance limit, and validation refs.
+- `godot_theme_resources` must prove required token coverage by listing required, resolved, and unresolved token refs. A resource cannot satisfy a style contract while any required token for an applicable P0/P1 component remains unresolved.
+- P0/P1 visible requirements cannot depend on component coverage, component family baseline rows, composition rules, UI tree readback requirements, visual evidence matrix rows, or game composition templates marked `deferred`, `not_applicable`, missing, or lacking applicable requirement IDs, required requirement IDs, requirement level/source reason, required scene/node paths, state/variant coverage, validation refs, and requirement traceability.
+- `godot_theme_resources` use project-relative artifact refs or workspace-relative safe refs, never raw host paths in normal-user readback.
+- `visual_validation_refs` use project-relative artifact refs or workspace-relative safe refs, never raw host paths in normal-user readback.
+- `ui_tree_readback_rows` must provide concrete rows for applicable UI surfaces and must satisfy the required fields declared by `ui_tree_readback_requirements`, including layout bounds, z/canvas layer, visible/enabled/disabled/readonly/placeholder state, text overflow state, focus path, hit-test ref, and validation refs.
+- `visual_evidence_matrix` must bind route ID, requirement IDs, severity, style-drift family, viewport or scene, evidence type, viewport size, device class, pixel/check method when applicable, required component families, required states, required gestures where applicable, source hash, evidence refs, UI tree readback row refs, validation status, and harness limitation ref when blocked.
+- `visual_validation_refs` with `validation_type: deterministic_substitute` require non-empty `route_id`, `viewport_or_scene`, `required_component_families`, `required_states`, `source_hash`, `harness_limitation_ref`, limitation type, owner, approver, approval timestamp, expiry or recheck trigger, and replacement evidence plan tied to the affected route, viewport or scene, component/state combination, and source hash.
+- Snapshot schema tests fail on missing or structurally invalid token families, missing or structurally invalid runtime environment fields, missing or structurally invalid design DNA rules, missing or structurally invalid scale policy fields, missing or structurally invalid font-size unit policy, font-size policy that blindly copies source-engine point-size formulas without Godot validation refs, missing or structurally invalid localization/overflow policy, missing translation key/source text/mixed-script validation fields, missing or structurally invalid pointer/gesture rules, missing gesture phase, missing pointer event shape, missing gesture thresholds or drag/drop target rules for applicable interactions, missing drag/drop payload/commit/rollback policy for state-changing interactions, missing overlay/modal/tooltip dismiss/focus/placement behavior, missing or structurally invalid state ownership rules, missing text-field/form state fields, missing max-length/submit/IME composition rules for text input, missing distinct disabled/readonly/placeholder semantic states for applicable components, missing or structurally invalid UI lifecycle rules, missing Godot lifecycle hooks, missing signal connection/disconnection policy, missing input/update/render process ownership fields, missing or structurally invalid scroll/virtualization rules, missing item extent/measurement policy for virtualized lists, scroll/list/grid coverage that is not bound to Godot scroll or list equivalents, missing or structurally invalid motion/transition rules, missing or structurally invalid component defaults, component defaults with `allowed_override_rule_ids` that do not match `component_exception_rules[].exception_rule_id`, component defaults with `theme_resource_refs` that do not match `godot_theme_resources[].resource_ref`, missing or structurally invalid semantic usage/action-role rules, missing or structurally invalid component family baseline, missing or structurally invalid component coverage matrix, component coverage rows missing applicable requirement IDs, missing or structurally invalid required token/state/variant coverage for component families with style variants or states, component coverage exception refs that do not match `component_exception_rules[].exception_rule_id`, missing file-upload security policy when file upload is not `not_applicable`, missing or structurally invalid composition rules, missing composition rule exception refs that do not match `component_exception_rules[].exception_rule_id`, missing or structurally invalid game composition templates, game composition templates missing requirement level or source reason, P0/P1 visible requirements depending on deferred or not-applicable component/template coverage, missing density/scale policy, missing contrast/readability validation, missing trigger tags, missing state tokens for interactive controls, missing or structurally invalid font policy roles, active font role without primary/fallback asset refs or validation refs, active font role asset refs that do not resolve to approved assets, active font asset with rejected or needs-review license ref, active font role with `packaging_status: missing_blocker`, missing source-name policy, missing or structurally invalid component exception rules, missing or structurally invalid forbidden patterns, missing or unsafe Godot theme resource refs, theme resources with unresolved required token refs for applicable P0/P1 components, missing UI tree readback layout/layer/visibility/state/overflow fields, missing or unsafe UI tree readback requirements or rows, missing visual evidence matrix requirement IDs, severity, style-drift family, evidence type, viewport size, device class, or pixel/check method where applicable, missing or unsafe visual evidence matrix rows, missing or unsafe visual validation refs for high-risk UI changes, deterministic visual substitutes without approved and non-expired harness limitation metadata, custom style contracts that do not pass built-in-equivalent checks or lack owner/version/source-hash/readback metadata, missing source hash, source-name identity leakage, public alias without approved structured metadata, active public alias with pending/rejected approval status, or stale snapshot hash.
+- Review records zero unresolved P0/P1/P2 findings for schema completeness, source-boundary behavior, source-name ownership, or account-safe readback.
+
+### 11.3.5 Style-Aware UI Closure
+
+UI closure should validate both "can the player use it?" and "does it still belong to the selected style?".
+
+Required style gap families:
+
+- `palette`
+- `typography`
+- `radius`
+- `border`
+- `shadow`
+- `opacity`
+- `spacing`
+- `density_scale`
+- `rarity_hud`
+- `gradient_glow`
+- `bottom_accent`
+- `design_dna`
+- `component_defaults`
+- `component_coverage`
+- `component_family_baseline`
+- `variant_coverage`
+- `component_exception_rules`
+- `forbidden_patterns`
+- `pointer_gesture`
+- `gesture_phase`
+- `pointer_event_shape`
+- `drag_drop_payload`
+- `state_ownership`
+- `ui_lifecycle`
+- `scroll_virtualization`
+- `motion_transition`
+- `game_composition_templates`
+- `theme_resource_refs`
+- `theme_resource_coverage`
+- `runtime_environment`
+- `file_upload_security`
+- `font_policy`
+- `semantic_usage`
+- `action_role`
+- `contrast_readability`
+- `font_size_unit`
+- `localization_overflow`
+- `state_tokens`
+- `composition`
+- `ui_tree_readback`
+- `source_name_ownership`
+- `visual_evidence`
+- `visual_evidence_method`
+
+Acceptance criteria:
+
+- UI closure output includes style gap rows with requirement IDs, scene/node paths, expected style token or rule, observed drift, severity, affected viewport/component/state evidence, UI tree readback ref when applicable, visual evidence method, and follow-up goal recommendation.
+- Repair prompts for style gaps include the frozen style snapshot, runtime environment, affected node paths, component defaults, exception rules, composition rules, motion/transition rules, pointer event shape, gesture phase, drag/drop payload policy where applicable, theme resource token coverage, visual evidence method, and UI tree readback refs, not broad mutable style-guide prose.
+- UI closure cannot mark final readiness when a P0/P1 visible UI requirement has unresolved style drift in `design_dna`, `palette`, `typography`, `radius`, `border`, `shadow`, `opacity`, `spacing`, `density_scale`, `rarity_hud`, `gradient_glow`, `bottom_accent`, `component_defaults`, `component_coverage`, `component_family_baseline`, `variant_coverage`, `component_exception_rules`, `forbidden_patterns`, `pointer_gesture`, `gesture_phase`, `pointer_event_shape`, `drag_drop_payload`, `state_ownership`, `ui_lifecycle`, `scroll_virtualization`, `motion_transition`, `game_composition_templates`, `theme_resource_refs`, `theme_resource_coverage`, `runtime_environment`, `file_upload_security`, `semantic_usage`, `action_role`, `contrast_readability`, `font_size_unit`, `localization_overflow`, `font_policy`, `state_tokens`, `composition`, `ui_tree_readback`, `source_name_ownership`, `visual_evidence`, or `visual_evidence_method`.
+- P2 style drift may be advisory for ordinary user execution only when it is tracked under the acceptance severity standard and final implementation review still records zero unresolved P0/P1/P2 findings.
+- Review records zero unresolved P0/P1/P2 findings for missing style closure, stale style snapshot, or unvalidated style drift.
+
+## 11.4 Godot Diagnostics And Quality Gate Migration
 
 This section migrates TapTap's development quality-gate and troubleshooting discipline into a Godot/Phase service model. It is not a local tooling migration. The source capability idea is: diagnostics must run before build/preview/package, recurring symptoms should map to remediation, debug logs are useful during development but must become structured evidence before acceptance, interaction regions should be designed before implementation, preview is an immediate validation loop, and disposable/runtime resources must be released explicitly.
 
-### 11.3.1 Conflict Assessment
+### 11.4.1 Conflict Assessment
 
 | TapTap quality-gate capability | Conflict in this repo | Godot/Phase decision |
 | --- | --- | --- |
@@ -1207,7 +2257,7 @@ Acceptance criteria:
 - Review records zero unresolved P0/P1/P2 findings for technology-stack leakage, missing Godot/Phase equivalent, or untestable acceptance.
 - The quality-gate migration cannot pass unless review records zero unresolved P0/P1/P2 findings in diagnostics, preview validation, resource lifecycle, diagnostic spool, admin triage, redaction, or deleted-project retention behavior.
 
-### 11.3.2 Full Quality Gate Migration Checklist
+### 11.4.2 Full Quality Gate Migration Checklist
 
 The workflow must treat the following capabilities as first-class diagnostics and quality gates for GDD-to-module execution:
 
@@ -1246,7 +2296,7 @@ Acceptance criteria:
 - Project diagnostic spool records must survive workspace deletion and remain admin-triable without exposing raw host paths, token material, provider secrets, or raw prompts to normal users.
 - The quality-gate checklist is considered complete only when review records zero unresolved P0/P1/P2 findings.
 
-### 11.3.3 Project Diagnostic Spool
+### 11.4.3 Project Diagnostic Spool
 
 The project diagnostic spool is the Phase-specific extension of TapTap's symptom table and debug-log discipline. Because Phase projects live in hosted workspaces that may be deleted, critical diagnostics must be preserved outside the project workspace.
 
@@ -1291,7 +2341,7 @@ Acceptance criteria:
 - Tests cover spool write, deleted-project lookup, account isolation, admin aggregation, redaction, triage status update, and cleanup/retention non-destruction for unresolved P0/P1/P2 diagnostics.
 - Project diagnostic spool review records zero unresolved P0/P1/P2 findings for schema drift, failure-family mismatch, redaction, account isolation, retention, cleanup, triage auditability, or deleted-project lookup.
 
-### 11.3.4 Symptom-To-Remediation Table
+### 11.4.4 Symptom-To-Remediation Table
 
 The diagnostics guide should include an initial table for the GDD-to-module workflow. This table should be durable documentation, not hidden implementation knowledge.
 
@@ -1318,7 +2368,7 @@ Acceptance criteria:
 - A route cannot expose only `unhandled_request_failed` for a known table symptom; it must return a structured domain code and evidence reference.
 - The table is linked from `docs/standards/_index.md`, `docs/standards/phase-service.md`, or a route workflow doc before implementation is called complete.
 
-### 11.3.5 Interaction-Region Design Gate
+### 11.4.5 Interaction-Region Design Gate
 
 P0/P1 UI, input, physics, route-map, card-dragging, collision, or camera-transform work should include an interaction-region artifact before implementation.
 
@@ -1339,7 +2389,7 @@ Acceptance criteria:
 - The interaction-region artifact is included in prompt/evidence source refs for UI-touching execution and repair routes.
 - Review records zero unresolved P0/P1/P2 findings for missing or stale interaction-region artifacts.
 
-### 11.3.6 Resource Lifecycle And Orphan Diagnostics Gate
+### 11.4.6 Resource Lifecycle And Orphan Diagnostics Gate
 
 Resource lifecycle checks should prevent preview/package/repair helpers from leaking processes, handles, or temporary files.
 
@@ -1377,6 +2427,7 @@ Deliverables:
 - local deterministic preflight checklist
 - P0/P1/P2 review evidence template for phase exits
 - Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, contract version/hash rule, canonical hash exclusion list, and technology-stack leakage denylist
+- Godot UI style contract template at `docs/standards/godot-ui-style-contract.md`, `docs/ui-style-guides/` style catalog, `docs/standards/_index.md` link, style snapshot schema, built-in style seed contracts, custom style built-in-equivalent rule, trigger taxonomy, design DNA rules, structured token rules for palette, typography, radius, border, shadow, opacity, spacing, rarity/HUD, gradient/glow, and bottom-accent families, semantic usage/action-role rules, density/scale policy, pointer/gesture thresholds and drag/drop rules, state ownership and text/form state rules, UI lifecycle input/update/render rules, scroll/list/grid virtualization rules, motion/transition rules, structured composition and overlay/modal/tooltip behavior rules, structured font role/asset/license rules, font-size unit anti-misconversion rule, localization/source-key/mixed-script overflow rules, structured component-default token rules, minimum component family baseline, component coverage matrix, variant coverage, component exception rule refs, game composition templates, UI tree readback requirements and rows, theme resource refs, style-drift taxonomy, technology-stack leakage denylist, source-name ownership and structured alias-approval rule, contrast/readability validation, and visual evidence matrix rule with requirement IDs, severity, and style-drift family
 - Godot diagnostics and quality-gate contract template at `docs/standards/godot-diagnostics-quality-gates.md`, `docs/standards/_index.md` link, failure-family taxonomy, project diagnostic spool schema, symptom-to-remediation table seed, debug-log lifecycle rule, interaction-region artifact rule, preview validation rule, and resource lifecycle/orphan diagnostics rule
 
 Exit criteria:
@@ -1385,12 +2436,16 @@ Exit criteria:
 - New route actions cannot be implemented until exposure class, account/auth boundary, and duplicate-run behavior are documented in the route action descriptor.
 - New prompt/evidence persistence cannot be implemented until the secret redaction validator baseline passes fixture-based tests.
 - New UI-touching route work cannot be implemented until the Godot UI capability contract template exists and the denylist proves prompts do not import TapTap-only runtime terms.
+- New styled UI-touching route work cannot be implemented until the Godot UI style contract template exists, at least one built-in Godot-native style contract exists, and the style technology-leakage denylist proves prompts do not import TapTapMarker-only runtime terms.
 - New build, preview, package, repair, UI closure, or project-delete route work cannot be implemented until the Godot diagnostics and quality-gate contract template exists and defines pre-build/pre-preview diagnostics, diagnostic spool ownership, and failure-family taxonomy.
 - The Godot UI capability contract template must be linked from `docs/standards/_index.md` before Phase 0 is accepted.
+- The Godot UI style contract template and `docs/ui-style-guides/` catalog must be linked from `docs/standards/_index.md`, `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, and agent-facing routing where applicable before Phase 0 is accepted.
 - The Godot diagnostics and quality-gate contract template must be linked from `docs/standards/_index.md` before Phase 0 is accepted.
 - When the Godot diagnostics and quality-gate contract becomes a durable standards file, Phase 0 must also update `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, and agent-facing routing where applicable, matching the standards index maintenance rule.
-- The Phase 0 failure-family taxonomy seed must cover every initial symptom family listed in section 11.3.4 before later route phases add more route-specific families.
+- The Phase 0 failure-family taxonomy seed must cover every initial symptom family listed in section 11.4.4 before later route phases add more route-specific families.
+- The Phase 0 UI style seed must cover at least one Godot-native built-in style with repo-owned internal ID, trigger taxonomy, structured palette, typography, radius, border, shadow, opacity, spacing, rarity/HUD, gradient/glow, and bottom-accent token families, semantic usage/action-role rules, density/scale policy, pointer/gesture rules, state ownership rules, UI lifecycle rules, scroll/virtualization policy, motion/transition rules, font-size unit policy, localization/overflow policy, structured component defaults, component family baseline, component coverage matrix with variant coverage and component exception rule refs, game composition templates with requirement level/source reason, structured font role/asset/license policy, state tokens, forbidden patterns, theme resource refs, UI tree readback rows, visual evidence matrix rows, visual evidence fixtures, and machine-readable contract.
 - The Godot UI capability contract template must declare its canonical hash exclusions; an empty exclusion list is valid, but an implicit or undocumented exclusion list is not.
+- The Godot UI style contract template must declare its canonical hash exclusions; an empty exclusion list is valid, but an implicit or undocumented exclusion list is not.
 - The phase exit review template records route, artifact, API, browser surface, script, evidence, reviewer, and unresolved P0/P1/P2 count.
 - Phase exit review evidence is written as a durable artifact under `logs/` and referenced by the implementation summary; chat text or PR prose alone is not sufficient evidence.
 - Phase 0 review records zero unresolved P0/P1/P2 findings.
@@ -1410,6 +2465,7 @@ Deliverables:
 - exposure-class and account-boundary tests for requirement map/freeze actions
 - duplicate-run tests for requirement map generation and contract freeze
 - requirement-map classification for Godot UI capability domains and prototype-contract freeze of the Godot UI contract hash
+- UI style selection/readback and prototype-contract freeze of `ui_style_id`, `ui_style_version`, `ui_style_snapshot_hash`, and `source_ui_style_contract_hash`
 - first failure-family taxonomy entries for GDD, scene route, requirement map, contract stale, source unknown, and UI contract unknown
 - route-specific expansion of the Phase 0 taxonomy seed for the first implemented `gdd-requirements` and `prototype-contract` slices
 
@@ -1422,6 +2478,7 @@ Exit criteria:
 - Normal-user requirement map and prototype contract readback do not expose host paths, cross-account state, raw prompts, token material, or admin-only evidence.
 - Requirement map generation and contract freeze handle double-click/retry/concurrent POST behavior without creating conflicting active runs.
 - Requirement map and frozen contract preserve Godot UI capability domain inputs for UI/HUD/input/custom drawing/camera/animation/rendering/procedural/geometry/typed-state requirements.
+- Prototype contract freezes the selected Godot UI style snapshot for UI-facing projects, and normal-user readback exposes style ID/version/hash without raw host paths or unapproved font paths.
 - GDD, scene route, requirement map, and contract freshness failures map to failure-family taxonomy entries and project diagnostic spool records where applicable.
 - Phase 1 may add route-specific failure families, but it must not shrink or redefine the Phase 0 initial symptom-family taxonomy.
 - Route contracts and guard tests for `gdd-requirements` and `prototype-contract` pass the P0/P1/P2 acceptance severity standard.
@@ -1436,6 +2493,7 @@ Deliverables:
 - block module generation on P0/P1 coverage gaps
 - iteration-plan route contract and route action descriptor updates
 - UI surface goals generated from the Godot UI capability contract
+- UI style-aware goals generated from the frozen Godot UI style contract for UI-facing requirements
 - interaction-region artifact requirement for UI/input/physics/camera-heavy iteration goals
 
 Exit criteria:
@@ -1444,6 +2502,7 @@ Exit criteria:
 - Frontend module plan shows traceability.
 - Deckbuilder default modules are visible as required modules with source.
 - Every P0/P1 UI-facing requirement has an iteration goal or required module that names expected Godot UI surface, layout/input/focus/feedback requirements, and validation method.
+- Every P0/P1 UI-facing requirement has style token expectations, design DNA/composition/motion expectations when applicable, UI tree readback expectations, visual evidence matrix requirements, or a `style_not_applicable` rationale before execution.
 - UI/input/physics/camera-heavy P0/P1 goals include interaction-region artifacts or explicit `no_interaction_region_needed` rationales before execution.
 - Iteration-plan service/API/readback and module confirmation UI pass Phase 0 route governance checks for route action descriptor, path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, source-boundary evidence, and secret redaction.
 - Phase 2 review records zero unresolved P0/P1/P2 findings.
@@ -1473,7 +2532,9 @@ Deliverables:
 - requirement rows in goal input
 - needs-fix reads requirement map and latest blocker
 - frozen Godot UI capability contract injection for UI-touching goals
+- frozen Godot UI style contract injection for styled UI-touching goals
 - UI gap family mapping in needs-fix and repair prompts
+- style-drift family mapping in needs-fix and repair prompts
 - pre-build diagnostics gate and debug-log lifecycle checks for execute-next-goal, needs-fix, and repair
 
 Exit criteria:
@@ -1482,8 +2543,10 @@ Exit criteria:
 - Codex is not invoked for build/repair/UI-touching work when required pre-build diagnostics fail or diagnostic prerequisites are missing.
 - Goal execution prompt contains linked requirements.
 - UI-touching goal prompts contain the frozen Godot UI capability contract and pass technology-stack leakage tests.
+- Styled UI-touching goal prompts contain the frozen Godot UI style snapshot, generated theme resource refs, component defaults, component exception refs, composition rules, pointer/gesture rules, state ownership rules, UI lifecycle rules, scroll/virtualization policy, motion/transition rules, font-size unit policy, localization/overflow policy, UI tree readback requirements, visual evidence matrix requirements, and pass TapTapMarker technology-stack leakage tests.
 - Failed acceptance maps back to a requirement or UI closure gap where possible.
 - Needs-fix and repair can classify UI failures as layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state gaps.
+- Needs-fix and repair can classify style failures as design_dna, palette, typography, radius, border, shadow, opacity, spacing, density_scale, rarity_hud, gradient_glow, bottom_accent, component_defaults, component_coverage, component_family_baseline, variant_coverage, component_exception_rules, forbidden_patterns, pointer_gesture, state_ownership, ui_lifecycle, scroll_virtualization, motion_transition, game_composition_templates, theme_resource_refs, semantic_usage, action_role, contrast_readability, font_size_unit, localization_overflow, font_policy, state_tokens, composition, ui_tree_readback, source_name_ownership, or visual_evidence gaps.
 - Failed execute/needs-fix/repair runs write sanitized project diagnostic spool records for known failure families.
 - Execute-next-goal and needs-fix prompt/evidence artifacts pass source-boundary checks and secret redaction validator checks before the route is accepted.
 - Phase 4 review records zero unresolved P0/P1/P2 findings.
@@ -1497,6 +2560,7 @@ Deliverables:
 - UI closure panel
 - optional follow-up goal generation
 - Godot UI capability validator for scene/node path, layout, input/focus, feedback, camera/layer, custom drawing, material/rendering, animation, geometry sizing, procedural visualization, and typed state
+- Godot UI style validator for selected style ID/version/hash, repo-owned style identity, custom style metadata, structured alias approval refs, trigger tags, design DNA rules, structured token usage, semantic usage/action-role rules, density/scale policy, generated theme resources, component defaults, component family baseline, component coverage matrix, variant coverage, component exception rule refs, forbidden patterns, pointer/gesture rules, state ownership rules, UI lifecycle rules, scroll/virtualization policy, motion/transition rules, composition rules, game composition templates, UI tree readback refs/rows, safe visual validation refs, visual evidence matrix coverage, state tokens, contrast/readability, font-size unit policy, localization/overflow policy, font policy, style composition, and style-drift families
 - preview validation loop, visual evidence, source-hash readiness, and resource lifecycle/orphan diagnostics for UI closure follow-up work
 
 Exit criteria:
@@ -1504,7 +2568,9 @@ Exit criteria:
 - Completed gameplay modules are checked for player-facing UI exposure.
 - Missing UI surfaces are visible and actionable.
 - UI closure validates Godot-specific capability fields and gap families instead of only checking that a named UI surface exists.
+- UI closure validates Godot UI style fields and style-drift families instead of only checking that controls exist.
 - Follow-up goals preserve requirement IDs, Godot UI capability domain, validation method, and source hashes.
+- Follow-up goals preserve selected style ID/version/hash, expected token family, design DNA/composition/motion expectation when relevant, pointer/gesture expectation, state ownership expectation, UI lifecycle expectation, scroll/virtualization expectation, density/scale expectation when relevant, font-size/localization overflow expectation, UI tree readback requirement, visual evidence matrix requirement, style-drift family, and visual validation method.
 - Final package readiness can show UI closure blockers.
 - UI closure and preview readiness cannot pass when diagnostics evidence, visual evidence, source hash set, lifecycle cleanup, or orphan diagnostics are missing for routes that require them.
 - UI closure service/API/readback passes Phase 0 route governance checks for path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, and secret redaction.
@@ -1529,6 +2595,7 @@ Deliverables:
 - configuration/environment preflight checklist coverage for every route dependency introduced by Phases 1-5
 - docs index links for durable route governance rules
 - Godot UI capability contract coverage across route contracts, tests, admin readback, and durable standards docs
+- Godot UI style contract coverage across route contracts, tests, style catalog, font policy, generated theme resource refs, UI closure, admin readback, and durable standards docs
 - Godot diagnostics and quality-gate contract coverage across route contracts, diagnostics guide, failure taxonomy, project diagnostic spool, admin triage, preview/package, resource lifecycle, and durable standards docs
 
 Exit criteria:
@@ -1545,6 +2612,7 @@ Exit criteria:
 - Secret redaction validators pass over route prompts, evidence, admin exports, and script evidence.
 - Preflight checks report missing local dependencies without starting a workflow run.
 - Godot UI capability contract is linked from durable docs, covered by guard tests, and consumed by `gdd-requirements`, `prototype-contract`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, and `ui-wiring-closure`.
+- Godot UI style contract is linked from durable docs, covered by guard tests, and consumed by style selection, `prototype-contract`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, `ui-wiring-closure`, and preview/package readiness.
 - Godot diagnostics and quality-gate contract is linked from durable docs, covered by guard tests, and consumed by build/validation, execute-next-goal, needs-fix, repair, UI closure, preview/package, and project-delete diagnostics.
 - Project diagnostic spool supports deleted-project admin lookup, triage status, redaction status, retention class, and unresolved P0/P1/P2 preservation.
 - Durable route governance docs are linked from the relevant standards or workflow index.
@@ -1571,6 +2639,11 @@ Exit criteria:
 | Secret validators produce false confidence | Combine variable-name denylist, token-like pattern scan, and route-specific redaction tests | Prompt/evidence/admin export samples pass redaction tests before acceptance |
 | Godot UI capability contract becomes too broad to implement | Phase-gate the contract: Phase 0 defines it, Phase 1 freezes/classifies it, Phase 2 plans from it, Phase 4 injects it, Phase 5 validates it | No phase claims completion for a touched UI domain without tests/evidence and zero unresolved P0/P1/P2 findings |
 | UI capability migration accidentally imports TapTap technology | Keep TapTap-only terms in conflict assessment only and add prompt/evidence denylist tests | Route prompts, sidecars, UI closure output, and durable standards contain Godot-only implementation terms |
+| UI style migration accidentally imports TapTapMarker runtime technology | Keep TapTapMarker-only terms in conflict assessment only and add denylist tests for UI prompts, generated code, route state, and style guides | Route prompts, sidecars, generated Godot files, UI closure output, and durable standards contain Godot-only style implementation terms |
+| UI style contracts become prose-only design advice | Require machine-readable style contracts, generated Godot theme resource refs, design DNA rules, component baselines, composition rules, motion/transition rules, UI tree readback requirements, token tests, and visual evidence fixtures | Style selection, execution, repair, and UI closure can validate tokens, UI tree readback, and drift without reading chat history |
+| Font assets create licensing or packaging risk | Use repo-approved fonts, generated/open licensed fonts, fallback stacks, and packaging checks; never copy TapTapMarker skill font files | Normal-user packages include only approved font assets and readback exposes no host-local font paths |
+| Style selection becomes arbitrary or inconsistent | Freeze `ui_style_id`, version, source hash, and selection reason in the prototype contract before UI execution | A reviewer can explain why the style was selected and prove downstream routes used the same snapshot |
+| Centralized style tokens block necessary local exceptions | Allow structured component exceptions with token, rationale, scope, and evidence | Exceptions stay auditable and final review still records zero unresolved P0/P1/P2 findings |
 | UI closure produces generic "missing UI" items that are not actionable | Use gap families and required Godot fields in `ui_surface_matrix` | Each UI closure blocker names requirement IDs, scene/node or missing owner, gap family, and follow-up validation method |
 | Visual validation becomes impossible in headless runs | Use layered evidence: route-state validators first, Godot headless/screenshot/canvas-pixel/exported visual evidence for high-risk visual changes, and a recorded deterministic substitute only when the harness limitation is concrete | High-risk visual UI changes include machine-checkable evidence or a documented test-harness limitation that is reviewed as P0/P1/P2 |
 | Godot UI contract conflicts with the non-goal of not refactoring the generator | Keep this plan at workflow contract, prompt, validation, and readback level; generator internals change only when later implementation explicitly scopes them | Acceptance can be met by route contracts and generated goals without requiring a generator architecture rewrite in this plan |
@@ -1608,6 +2681,9 @@ This refactor is done when:
 21. The Godot diagnostics and quality-gate contract is linked from durable docs, consumed by build/validation, execute-next-goal, needs-fix, repair, UI closure, preview/package, and project-delete diagnostics, and covered by guard tests.
 22. Project diagnostic spool preserves unresolved P0/P1/P2 diagnostics outside hosted workspaces, supports deleted-project admin lookup and triage, and protects normal users from raw or cross-account evidence.
 23. Preview/package readiness, resource lifecycle cleanup, orphan diagnostics, interaction-region artifacts, and symptom-to-remediation table coverage are validated before final readiness.
+24. The Godot UI style contract is frozen into prototype contracts, consumed by iteration plan, execute-next-goal, needs-fix/repair, UI closure, and preview/package readiness, and exposed through account-safe readback.
+25. P0/P1 visible UI requirements cannot complete final readiness with stale style snapshot, source-name identity leakage, missing custom style owner/version/source-hash/readback metadata when applicable, missing structured alias approval metadata, missing design DNA rules, missing structured style tokens including border/opacity/rarity-HUD/gradient-glow/bottom-accent families when applicable, missing component defaults, missing semantic usage/action-role rules, missing component family baseline, missing component coverage matrix, missing variant coverage, missing component exception rule refs, missing structured composition rules, missing pointer/gesture rules, missing state ownership rules, missing UI lifecycle/subscription rules, missing scroll/virtualization policy, missing motion/transition rules, missing game composition templates, missing game composition requirement level/source reason, missing UI tree readback requirements or rows, missing visual evidence matrix coverage, missing contrast/readability validation, missing font-size unit policy, missing localization/overflow policy, missing density/scale policy, unapproved font assets, unsafe theme/visual refs, untracked per-component style overrides, custom style failing built-in-equivalent checks, or unresolved style drift.
+26. Godot UI style tests prove no TapTapMarker runtime technology, font assets, Lua templates, UrhoX widget APIs, Yoga layout calls, NanoVG calls, or EmmyLua annotations are required or leaked into executable route prompts and generated artifacts.
 
 ## 15. Open Questions For Later Phases
 
@@ -1620,6 +2696,7 @@ These are product/design decisions intentionally scoped out of the first impleme
 | After Phase 1, should UI closure become mandatory before package download or remain limited to "final package" readiness labeling? | Product + Phase A platform | Package readiness policy | Phase 1 default keeps early package download non-blocking while preserving final readiness blockers, so playable prototype creation remains recoverable. |
 | After Phase 1, should requirement map generation remain hybrid deterministic + structured LLM, or move toward a fully deterministic/fully LLM-based approach? | Phase A platform | Requirement extraction architecture | Phase 1 default uses deterministic source collection/validation plus structured LLM and deterministic fallback, so invalid or empty LLM output fails closed. |
 | After Phase 1, should source hash normalization ignore more than whitespace-only Markdown changes, such as heading punctuation or table formatting? | Phase A platform | Hash canonicalization policy | Phase 1 minimum canonicalization handles line endings and trailing whitespace while retaining raw diagnostic hashes, so stale decisions stay explainable. |
+| Should users choose a UI style manually during GDD, or should workflow recommend one from project genre/reference direction first? | Product + Phase A platform | UI style selection UX | Phase 1 default allows workflow recommendation with explicit user/admin override and records selection reason before freezing the prototype contract. |
 
 ## 15.1 Phase 1 Default Decisions
 
@@ -1629,13 +2706,14 @@ These defaults apply to the first implementation slice so Phase 1 can proceed wi
 2. `contract_stale` blocks new iteration plan creation by default. Continuing an old session is allowed only when the session/goal source hashes match the contract and requirement map that were current when the session was created. Missing hashes are `source_unknown` and block new-project execution.
 3. UI closure is not required for early prototype creation or ordinary package download in Phase 1. It affects final readiness labeling and can become a hard final-package gate in a later product decision.
 4. Requirement map generation starts as hybrid deterministic + structured LLM: deterministic source collection and validation, structured LLM mapping, deterministic fallback to `needs_review` rows.
-5. Source hashes use normalized Markdown/text content for Markdown and text artifacts to avoid whitespace-only churn. Minimum canonicalization is: normalize line endings to `\n`, trim trailing whitespace, preserve heading text, preserve table cell content, and optionally exclude known volatile frontmatter fields such as `updatedUtc`. JSON/schema contracts, including the Godot UI capability contract, use deterministic canonical JSON ordering and exclude documented volatile fields before hashing. Route-state and evidence-reference source hashes use deterministic canonical JSON ordering, sorted evidence refs, and exclude volatile timestamps, process IDs, request IDs, and run IDs unless a field is explicitly declared part of source identity. The Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md` must declare its canonical hash exclusion list; an empty exclusion list is valid. Raw hash can be retained as diagnostic metadata if needed.
+5. UI style selection starts as workflow-recommended from project game type/reference direction and style trigger taxonomy with explicit user/admin override. The selected repo-owned style ID, version, snapshot hash, and selection reason are frozen into the prototype contract before UI execution.
+6. Source hashes use normalized Markdown/text content for Markdown and text artifacts to avoid whitespace-only churn. Minimum canonicalization is: normalize line endings to `\n`, trim trailing whitespace, preserve heading text, preserve table cell content, and optionally exclude known volatile frontmatter fields such as `updatedUtc`. JSON/schema contracts, including the Godot UI capability contract and Godot UI style contract, use deterministic canonical JSON ordering and exclude documented volatile fields before hashing. Route-state and evidence-reference source hashes use deterministic canonical JSON ordering, sorted evidence refs, and exclude volatile timestamps, process IDs, request IDs, and run IDs unless a field is explicitly declared part of source identity. The Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md` and the Godot UI style contract template at `docs/standards/godot-ui-style-contract.md` must declare canonical hash exclusion lists; an empty exclusion list is valid. Raw hash can be retained as diagnostic metadata if needed.
 
 Acceptance criteria:
 
 - Phase 1 implementation follows these defaults unless a newer decision log supersedes them.
 - Frontend copy and API errors reflect these defaults.
-- Tests cover the default decisions for map editability, stale blocking, and UI closure non-blocking package behavior.
+- Tests cover the default decisions for map editability, stale blocking, UI closure non-blocking package behavior, UI style recommendation/override, style snapshot hashing, runtime environment freeze/readback, frozen style readback, pointer/gesture thresholds, gesture phase, pointer event shape, drag/drop payload/cancel/commit/rollback and target rules, disabled/readonly/placeholder semantic states, text/form state ownership including max length, submit, and IME/composition input, UI lifecycle Godot hook and signal connect/disconnect ownership, scroll/list/grid/timeline virtualization binding with item extent or measurement policy, file-upload security non-applicability or policy coverage, theme resource token coverage, font-size unit anti-misconversion policy, localization source-key and mixed-script overflow policy, UI tree readback layout/layer/state/overflow fields, visual evidence matrix requirement/severity/style-drift/evidence-method fields, deterministic substitute limitation approval/expiry/recheck metadata, and Toast queue/duration/enter-exit behavior when Toast is supported.
 
 ## 16. Recommended First Implementation Slice
 
@@ -1646,15 +2724,16 @@ Start with Phase 0, then the smallest Phase 1 slice. Phase 1 work must not begin
 3. Add Phase 0 duplicate-run/idempotency convention, `active_run_reused` response contract, and local preflight checklist.
 4. Add Phase 0 secret redaction validator baseline, fixture coverage, and phase review evidence template.
 5. Add Phase 0 Godot UI capability contract template at `docs/standards/godot-ui-capability-contract.md`, `docs/standards/_index.md` link, version/hash rule, canonical hash exclusion list, technology-stack leakage denylist, and initial guard fixtures.
-6. Add Phase 0 Godot diagnostics and quality-gate contract template at `docs/standards/godot-diagnostics-quality-gates.md`, `docs/standards/_index.md` link, `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, agent-facing routing where applicable, failure-family taxonomy seed, project diagnostic spool schema, symptom-to-remediation table seed, debug-log lifecycle rule, interaction-region artifact rule, preview validation rule, resource lifecycle/orphan diagnostics rule, and initial guard fixtures.
-7. Add Phase 0 durable review evidence under `logs/`.
-8. Add `GameDesignRequirementMapService`.
-9. Add requirement map API/readback.
-10. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, and `source_godot_ui_contract_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractSnapshotHash`, and `sourceGodotUiContractHash`.
-11. Add artifact-local Godot UI capability contract version and readback/API projection `godotUiContractVersion`.
-12. Add stale detection and frontend banner.
-13. Apply the route module contract template to `gdd-requirements` and `prototype-contract`.
-14. Add guard tests for sidecar naming, source hash fields, Godot UI contract hash fields, diagnostic failure-family fields, action names, error envelope shape, path/readback, exposure class, account boundary, duplicate-run behavior, and secret redaction fixture coverage.
-15. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, Godot-only UI capability classification, and interaction-region artifact coverage.
+6. Add Phase 0 Godot UI style contract template at `docs/standards/godot-ui-style-contract.md`, built-in style seed under `docs/ui-style-guides/`, `docs/standards/_index.md` link, `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, agent-facing routing where applicable, style snapshot schema, runtime environment freeze fields, repo-owned style IDs, custom style metadata and complete built-in-equivalent checks, trigger taxonomy, design DNA rules, structured style token families including border, opacity, rarity/HUD, gradient/glow, and bottom-accent where applicable, semantic usage/action-role rules, density/scale policy, pointer event shape, pointer/gesture phases and thresholds, drag/drop payload/cancel/commit/rollback and target rules, state ownership rules, disabled/readonly/placeholder semantics, text/form state rules including max length, submit, and IME/composition input, UI lifecycle Godot hook, input/update/render, signal connection/disconnection and subscription rules, scroll/list/grid/timeline virtualization policy with item extent or measurement rules, file-upload security policy or forced non-applicability, structured component-default rules, minimum component family baseline, component coverage matrix, variant coverage, component exception rule refs, structured composition rules, overlay/modal/tooltip dismiss and focus rules, Toast queue/duration/enter-exit behavior, motion/transition rules, game composition templates with requirement level/source reason, UI tree readback requirements and rows with layout/layer/state/overflow fields, visual evidence matrix coverage with requirement IDs/severity/style-drift family/evidence method, deterministic substitute limitation approval/expiry/recheck rule, contrast/readability validation, font-size unit anti-misconversion policy, localization source-key/mixed-script overflow policy, structured font role/asset/license policy, safe theme resource refs with required/resolved/unresolved token coverage, source-name ownership and structured alias-approval rule, style-drift taxonomy, visual evidence fixture rule, technology-stack leakage denylist, and initial guard fixtures.
+7. Add Phase 0 Godot diagnostics and quality-gate contract template at `docs/standards/godot-diagnostics-quality-gates.md`, `docs/standards/_index.md` link, `README.md`, `docs/PROJECT_DOCUMENTATION_INDEX.md`, relevant Phase service architecture indexes, agent-facing routing where applicable, failure-family taxonomy seed, project diagnostic spool schema, symptom-to-remediation table seed, debug-log lifecycle rule, interaction-region artifact rule, preview validation rule, resource lifecycle/orphan diagnostics rule, and initial guard fixtures.
+8. Add Phase 0 durable review evidence under `logs/`.
+9. Add `GameDesignRequirementMapService`.
+10. Add requirement map API/readback.
+11. Add artifact-local `contract_hash`, `source_gdd_hash`, `source_scene_route_hash`, `source_requirement_map_hash`, `source_contract_snapshot_hash`, `source_godot_ui_contract_hash`, `source_ui_style_contract_hash`, and `ui_style_snapshot_hash`, with readback/API projections `contractHash`, `sourceGddHash`, `sourceSceneRouteHash`, `sourceRequirementMapHash`, `sourceContractSnapshotHash`, `sourceGodotUiContractHash`, `sourceUiStyleContractHash`, and `uiStyleSnapshotHash`.
+12. Add artifact-local Godot UI capability contract version, Godot UI style contract version, and readback/API projections `godotUiContractVersion`, `uiStyleId`, and `uiStyleVersion`.
+13. Add stale detection and frontend banner.
+14. Apply the route module contract template to `gdd-requirements` and `prototype-contract`.
+15. Add guard tests for sidecar naming, source hash fields, Godot UI contract hash fields, Godot UI style contract hash fields, diagnostic failure-family fields, action names, error envelope shape, path/readback, exposure class, account boundary, duplicate-run behavior, and secret redaction fixture coverage.
+16. Add tests for deckbuilder GDD -> requirement map -> fresh contract, including route-map UI, hand drag/drop, combat HUD feedback, reward selection UI, Godot-only UI capability classification, selected Godot UI style snapshot, runtime environment readback, design DNA coverage, structured style-token coverage including border/opacity/rarity-HUD/gradient-glow or bottom-accent families when applicable, semantic usage/action-role coverage, component defaults coverage, component family baseline coverage, component coverage matrix coverage, variant coverage, component exception rule refs, composition rule coverage, pointer/gesture coverage for phases, pointer event shape, drag/drop payload, cancel, commit, rollback, supported devices, and keyboard/gamepad equivalents, state ownership coverage, text/form state negative paths where applicable, UI lifecycle Godot hook/signal/subscription cleanup coverage, scroll/list/grid/timeline virtualization coverage with item extent or measurement rules when large lists are required, file-upload security non-applicability or policy coverage, Toast queue/duration/enter-exit behavior when supported, motion/transition coverage, font-size unit coverage, localization/overflow coverage, game composition template coverage, theme resource required/resolved/unresolved token coverage, UI tree readback coverage, visual evidence matrix method/viewport/device coverage, deterministic substitute limitation negative path coverage, contrast/readability coverage, density/scale coverage, safe theme/visual refs, custom-style negative path coverage, repo-owned style ID coverage, structured alias-approval coverage, and interaction-region artifact coverage.
 
 This first slice gives the largest drift reduction with the least UI disruption.
