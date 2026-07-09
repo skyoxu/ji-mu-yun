@@ -61,7 +61,7 @@ Stable capability package IDs contributed by this document:
    - Godot/Phase ownership: project-scoped diagnostic sidecars outside the deletable workspace, admin triage queue, failure-family taxonomy, redacted summaries, and deletion-safe retention.
    - Required workflow data: account ID, project ID, project name, run ID, route, failure family, severity, source refs, redaction status, triage status, created UTC, and preserved evidence refs.
 8. Route failure taxonomy
-   - Godot/Phase ownership: bounded failure families such as `gdd_missing`, `gdd_form_missing`, `game_type_structured_missing`, `game_type_structured_stale`, `scene_route_missing`, `scene_route_unconfirmed`, `gdd_scene_hash_write_failed`, `generated_gdd_hash_mismatch`, `requirement_map_invalid`, `coverage_gap`, `contract_stale`, `source_unknown`, `ui_contract_unknown`, `prototype_skeleton_stale`, `workflow_recommendation_unmapped`, `missing_ui_surface`, `godot_build_failed`, `scene_load_failed`, `preview_blank`, `package_missing`, `workspace_delete_failed`, `duplicate_active_run`, and `diagnostic_spool_write_failed`.
+   - Godot/Phase ownership: bounded failure families such as `gdd_missing`, `gdd_form_missing`, `game_type_structured_missing`, `game_type_structured_stale`, `scene_route_missing`, `scene_route_unconfirmed`, `gdd_scene_hash_write_failed`, `generated_gdd_hash_mismatch`, `requirement_map_invalid`, `coverage_gap`, `contract_stale`, `source_unknown`, `ui_contract_unknown`, `prototype_skeleton_stale`, `workflow_recommendation_unmapped`, `missing_ui_surface`, `reference_example_missing`, `godot_build_failed`, `scene_load_failed`, `preview_blank`, `package_missing`, `workspace_delete_failed`, `duplicate_active_run`, and `diagnostic_spool_write_failed`.
    - Required workflow data: failure family enum, route domain code, remediation table entry, admin visibility, user-safe summary, and test coverage.
 
 Acceptance criteria:
@@ -74,6 +74,7 @@ Acceptance criteria:
 - Project diagnostic spool records must survive workspace deletion and remain admin-triable without exposing raw host paths, token material, provider secrets, or raw prompts to normal users.
 - The quality-gate checklist is considered complete only when review records zero unresolved P0/P1/P2 findings.
 - The full-target closure ledger includes the stable capability IDs from this document and rejects missing or prose-derived diagnostic capability rows.
+- Diagnostics for UI, custom drawing, camera, input, physics, TileMap/map, preview, and package routes must validate the applicable Godot semantic family from `04d-godot-engine-semantics-and-reference-examples.md`, including viewport/scale mode and curated reference-example evidence when used.
 
 ### 11.4.3 Project Diagnostic Spool
 
@@ -144,6 +145,7 @@ Acceptance criteria:
 - The initial route seed covers every Phase 1 route/readback surface that can block GDD-to-module flow, including scene route confirmation, prototype-skeleton guard, and workflow recommendation. Adding a blocking route requires updating the diagnostic route seed, failure-family taxonomy, and tests in the same implementation slice.
 - Admin readback can list unresolved diagnostics by account, project, route, failure family, severity, and age without reading raw logs.
 - Normal-user readback cannot access another account's diagnostic spool and cannot see raw host paths, raw prompts, token material, provider secrets, or admin-only evidence.
+- Phase review diagnostics record which local official Godot reference examples were read for touched semantic families, or record `reference_example_missing` with approved substitute evidence before implementation can claim readiness for that family.
 - Triage status updates are admin-only, append-only or audit-backed, and cannot rewrite raw failure history.
 - Retention/cleanup rules must preserve unresolved P0/P1/P2 diagnostics and must never delete diagnostics as a side effect of ordinary project deletion.
 - Cleanup jobs may compact or redact resolved diagnostics only under a documented retention class, and must leave replacement evidence sufficient for admin triage, audit export, and repair-history explanation.
@@ -175,6 +177,7 @@ Initial symptom families:
 | Prototype skeleton starts without a fresh frozen contract | `prototype_skeleton_stale` | Prototype-skeleton guard state, contract hash, requirement map hash, legacy compatibility label | Reject new-chain skeleton creation and require contract refresh/freeze. |
 | Workflow recommendation emits an unmapped action | `workflow_recommendation_unmapped` | Route action descriptor hash, browser/API projection, recommendation readback | Block primary action display and repair descriptor or recommendation mapping. |
 | UI closure says success but player cannot use feature | `missing_ui_surface` | UI surface matrix, interaction-region artifact, screenshot/canvas evidence | Create UI follow-up goal and block final readiness. |
+| Required local Godot reference example is missing | `reference_example_missing` | `docs/reference/godot-official-examples-index.md`, affected semantic family, attempted local example path, substitute repo-owned example/test evidence | Add or refresh the curated reference index, approve substitute repo-owned evidence, or block the touched semantic family before implementation proceeds. |
 | Godot build or validation command fails | `godot_build_failed` | `dotnet build`, Godot self-check, GdUnit, import diagnostics, route source hash set | Run repair with preserved diagnostics and block preview/package readiness. |
 | Preview opens blank or stale content | `preview_blank` | Preview source hash, package artifact, web preview smoke, browser console evidence | Rebuild preview/package from current source hash set. |
 | Package artifact missing | `package_missing` | Package run evidence, artifact index, ticket creation, workspace path policy | Re-run package or surface artifact readback blocker. |

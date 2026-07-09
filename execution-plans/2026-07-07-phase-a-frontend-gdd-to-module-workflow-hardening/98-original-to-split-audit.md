@@ -144,6 +144,7 @@ Result: every original heading is represented in the split plan.
 | [04a-route-contracts-and-guards.md](04a-route-contracts-and-guards.md) | Route contracts and guard tests |
 | [04b-route-readback-recovery-and-freshness.md](04b-route-readback-recovery-and-freshness.md) | Readback, recovery, freshness |
 | [04c-route-operation-governance.md](04c-route-operation-governance.md) | Operation governance |
+| [04d-godot-engine-semantics-and-reference-examples.md](04d-godot-engine-semantics-and-reference-examples.md) | Godot engine semantics and curated official reference examples |
 | [05-godot-ui-capability-contract.md](05-godot-ui-capability-contract.md) | Godot UI capability contract |
 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) | Full TapTapMarker non-technology UI capability target and Godot style catalog |
 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md) | Style schema map |
@@ -165,6 +166,7 @@ Result: every original heading is represented in the split plan.
 - The original document remains useful as source history only. Implementation decisions should be made from the split documents.
 - The monolithic source document is not a live mirror after the split. Any later monolithic edit must be documented here as source-history maintenance or reverted before the split plan is accepted for implementation.
 - New normative requirements after the split must not be added to the monolithic source document. They belong in the split directory or in durable standards/ADR/workflow docs linked from the split index.
+- `04d-godot-engine-semantics-and-reference-examples.md` is a post-split hardening document, not original monolithic source coverage. Its normative requirements are tracked by `97-split-added-requirements-ledger.md`.
 - Source-history maintenance note for the current split work: the monolithic source document may remain modified only to mark itself as source history and to preserve pre-split TapTap/TapTapMarker capability additions that are fully represented in this split directory. It must be committed together with the split directory or reverted before implementation starts; leaving the monolith modified while the split directory is untracked is not an accepted ready state.
 - Commit/PR readiness requires this split directory, the `schemas/` fixture directory, this audit, and the source coverage map to be included together with no untracked split-plan files.
 - The large original style schema block is intentionally not kept as a giant Markdown block. It is represented by a schema map, a machine-readable JSON contract example/schema fixture, and separate schema acceptance criteria.

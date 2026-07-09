@@ -6,6 +6,8 @@ Source: `../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening.md` lin
 
 This section migrates TapTap's UI system capability model into this repository as a Godot-only workflow contract. It is not a technology migration. The source capability idea is: UI system work is a first-class gameplay implementation domain, custom drawing has explicit rules, camera/physics/rendering/animation/procedural systems affect player-facing UI, geometry sizes cannot be guessed, enum/state typing matters, and runtime-specific constraints must be governed.
 
+This contract consumes the Godot engine semantic baseline in `04d-godot-engine-semantics-and-reference-examples.md` for viewport/resolution mode, coordinate spaces, unit scale, input constants, camera projection, TileMap/map coordinates, and curated reference-example use. UI capability work must not redefine those baseline semantics locally.
+
 ### 11.2.1 Conflict Assessment
 
 | TapTap capability or constraint | Conflict in this repo | Godot decision |
@@ -75,6 +77,7 @@ Acceptance criteria:
 - Deckbuilder reference coverage includes route-map UI scene architecture, route path custom drawing or visible node affordance, hand-card drag/drop input, combat HUD feedback, reward selection UI, and state-machine/typed-state references.
 - A phase cannot pass if any applicable P0/P1 domain is silently omitted from requirement map, iteration plan, execute-goal prompt, or UI closure.
 - The capability checklist is considered complete only when review records zero unresolved P0/P1/P2 findings.
+- UI, HUD, custom drawing, camera, input, map, and interaction-region capability rows consume the selected Godot viewport/coordinate/reference-example mode from `04d-godot-engine-semantics-and-reference-examples.md`; missing semantic mode evidence blocks completion for affected P0/P1 rows.
 
 ### 11.2.3 Workflow Injection Points
 

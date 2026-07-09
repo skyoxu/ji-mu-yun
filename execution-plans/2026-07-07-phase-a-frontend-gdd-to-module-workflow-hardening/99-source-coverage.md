@@ -28,3 +28,4 @@ The split documents and JSON contract example/schema fixture cover source lines 
 ## Split-Added Requirements
 
 - Split-added hardening requirements are tracked separately in [97-split-added-requirements-ledger.md](97-split-added-requirements-ledger.md); original source-line coverage alone is not sufficient implementation readiness evidence.
+- `04d-godot-engine-semantics-and-reference-examples.md` is post-split hardening coverage for Godot engine semantics and curated official reference examples; it is intentionally tracked through the split-added ledger rather than original source-line coverage.

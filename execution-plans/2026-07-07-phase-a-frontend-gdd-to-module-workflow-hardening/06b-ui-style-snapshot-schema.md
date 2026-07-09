@@ -16,6 +16,7 @@ Phase 0 schema authority:
 - A formal JSON Schema file is not required for Phase 0, but the implementation must provide a machine-readable schema contract profile for `schemas/godot-ui-style-contract.v1.example.json`. The profile may be JSON Schema, a validator fixture, or generated validator metadata, but it must encode required top-level fields, required nested fields for active rows, enum-like allowed values, minimum array cardinality for active required sections, stable `capability_id` references, and optional-empty-array versus missing-required-array behavior.
 - Deterministic validators must treat the fixture and its schema contract profile as structural contracts, not examples. Pipe-delimited enum strings in the example fixture are documentation shorthand only; validators must consume the machine-readable enum set from the schema contract profile or a generated equivalent.
 - Any later conversion to formal JSON Schema requires a decision log or ADR update, a compatibility plan for existing style snapshots, and tests proving fixture/schema/profile parity.
+- Viewport, runtime environment, input, camera, TileMap/map, and visual evidence fields consume the Godot semantic baseline in `04d-godot-engine-semantics-and-reference-examples.md`; style snapshots must not invent a separate resolution, coordinate, or reference-example vocabulary.
 
 ## Top-Level Schema Areas
 

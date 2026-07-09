@@ -58,32 +58,34 @@ Acceptance criteria:
    - Defines path/readback policy, runtime evidence handling, cache/freshness rules, directory-scoped instructions, and ambiguity handling.
 8. [Route Operation Governance](04c-route-operation-governance.md)
    - Defines action exposure, DTO context boundaries, progress feedback, idempotency, credential boundaries, preflight checks, and docs indexing.
-9. [Godot UI Capability Contract](05-godot-ui-capability-contract.md)
+9. [Godot Engine Semantics And Reference Examples](04d-godot-engine-semantics-and-reference-examples.md)
+   - Defines Godot viewport/resolution, coordinate-space, unit, input, physics, camera, TileMap/map, and curated official-reference-example rules before GDD-to-module implementation.
+10. [Godot UI Capability Contract](05-godot-ui-capability-contract.md)
    - Defines Godot UI capability domains and how UI capability evidence enters GDD, contracts, iteration, execution, repair, and UI closure.
-10. [TapTapMarker UI Style Migration Overview And Catalog](06a-ui-style-migration-overview-and-catalog.md)
+11. [TapTapMarker UI Style Migration Overview And Catalog](06a-ui-style-migration-overview-and-catalog.md)
    - Preserves TapTapMarker non-technology UI framework capabilities as the full target and maps them into Godot style catalogs, component families, and style drift taxonomy.
-11. [Godot UI Style Snapshot Schema Map](06b-ui-style-snapshot-schema.md)
+12. [Godot UI Style Snapshot Schema Map](06b-ui-style-snapshot-schema.md)
    - Maps the machine-contract schema for style snapshots, theme resources, component coverage, input/gesture, lifecycle, virtualization, localization, visual evidence, and readback.
    - Full machine-readable contract example/schema fixture: [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json).
-12. [Style-Aware UI Closure](06c-style-aware-ui-closure.md)
+13. [Style-Aware UI Closure](06c-style-aware-ui-closure.md)
    - Defines how UI closure blocks final readiness on style drift and how repair receives frozen style evidence.
-13. [Godot UI Style Schema Acceptance](06d-ui-style-schema-acceptance.md)
+14. [Godot UI Style Schema Acceptance](06d-ui-style-schema-acceptance.md)
    - Defines validation requirements for the schema map and machine-readable contract example/schema fixture.
-14. [Godot Diagnostics And Quality Gates](07-godot-diagnostics-quality-gates.md)
+15. [Godot Diagnostics And Quality Gates](07-godot-diagnostics-quality-gates.md)
    - Migrates diagnostics, symptom remediation, debug-log lifecycle, interaction-region gates, preview validation, and project diagnostic spool.
-15. [Implementation Phases](08-implementation-phases.md)
+16. [Implementation Phases](08-implementation-phases.md)
     - Orders Phase 0 through Phase 6 with exit criteria.
-16. [Risks, DoD, Open Questions, Phase 1 Defaults](09-risks-dod-open-questions.md)
+17. [Risks, DoD, Open Questions, Phase 1 Defaults](09-risks-dod-open-questions.md)
     - Tracks risks, mitigations, done criteria, scoped questions, and first-slice default decisions.
-17. [Recommended First Implementation Slice](10-recommended-first-slice.md)
+18. [Recommended First Implementation Slice](10-recommended-first-slice.md)
     - Lists the first implementation slice after Phase 0 passes.
-18. [Global Review Standard](96-global-review-standard.md)
+19. [Global Review Standard](96-global-review-standard.md)
     - Freezes the review authority set, P0/P1/P2 severity standard, standard-change protocol, and regression-control rule for repeated global reviews.
-19. [Split-Added Requirements Ledger](97-split-added-requirements-ledger.md)
+20. [Split-Added Requirements Ledger](97-split-added-requirements-ledger.md)
     - Tracks normative hardening requirements added after the monolithic source split.
-20. [Original-To-Split Comparison Audit](98-original-to-split-audit.md)
+21. [Original-To-Split Comparison Audit](98-original-to-split-audit.md)
     - Records the explicit source-to-split comparison, heading coverage, split output inventory, and normalization notes.
-21. [Source Coverage Map](99-source-coverage.md)
+22. [Source Coverage Map](99-source-coverage.md)
     - Proves the original monolithic plan is covered by the split documents and records intentional normalization notes.
 
 ## Structural Refactor Principles
