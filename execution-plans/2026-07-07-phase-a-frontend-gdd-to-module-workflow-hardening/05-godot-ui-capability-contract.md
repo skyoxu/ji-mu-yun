@@ -32,6 +32,13 @@ Acceptance criteria:
 
 The workflow must treat the following domains as first-class prototype implementation capabilities whenever the GDD, scene route, default prototype contract, or requirement map implies them:
 
+Stable phase-dependency IDs used by requirement maps, phase matrices, iteration goals, and phase-exit evidence:
+
+| Capability ID | Owner scope |
+| --- | --- |
+| `godot_ui_update_ownership` | Dynamic UI construction owner, update mode, typed state owner, item identity, signal ownership, and cleanup policy. |
+| `godot_third_person_camera_profile` | Repo-owned third-person camera rig/profile, target/input/collision ownership, camera-relative movement boundary, and camera-state evidence. |
+
 1. UI scene architecture
    - Godot ownership: `Control` scenes, `CanvasLayer` HUDs, scene instancing, autoload boundaries, scene transitions, and route-specific UI roots.
    - Required workflow data: scene path, node path, owning requirement IDs, player flow, state boundary, validation references.
@@ -197,7 +204,9 @@ Third-person camera rules:
 Acceptance criteria:
 
 - Requirement-map generation can classify each applicable domain above as a requirement kind, acceptance marker, or explicit not-applicable rationale.
+- Requirement maps that classify dynamic UI or third-person camera work record `godot_ui_update_ownership` or `godot_third_person_camera_profile` in their applicable capability/dependency evidence.
 - Iteration-plan generation can create a goal for each applicable P0/P1 domain or block with a structured reason.
+- Dynamic UI goals record construction owner, update mode, state owner, cleanup policy, and stable item identity when applicable. Third-person camera goals record shared rig scene/script refs, target/input/collision ownership, and camera-state validation evidence.
 - UI closure can validate each applicable domain through `ui_surface_matrix` fields and evidence references.
 - Deckbuilder reference coverage includes route-map UI scene architecture, route path custom drawing or visible node affordance, hand-card drag/drop input, combat HUD feedback, reward selection UI, and state-machine/typed-state references.
 - A phase cannot pass if any applicable P0/P1 domain is silently omitted from requirement map, iteration plan, execute-goal prompt, or UI closure.

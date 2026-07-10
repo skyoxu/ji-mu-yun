@@ -1,0 +1,131 @@
+{
+  "schema_version": "workflow-action-contracts.v1",
+  "path_base": "split_directory",
+  "primary_recommendation_actions": [
+    "create_gdd",
+    "complete_gdd",
+    "import_gdd_form",
+    "analyze_game_type",
+    "confirm_scene_route",
+    "generate_gdd_document",
+    "generate_requirement_map",
+    "freeze_contract",
+    "refresh_contract",
+    "create_prototype",
+    "create_iteration_plan",
+    "execute_next_goal",
+    "run_needs_fix",
+    "run_ui_closure",
+    "preview_package",
+    "inspect_first"
+  ],
+  "secondary_action_ids": [
+    "delete_project"
+  ],
+  "canonical_action_universe": [
+    "create_gdd",
+    "complete_gdd",
+    "import_gdd_form",
+    "analyze_game_type",
+    "confirm_scene_route",
+    "generate_gdd_document",
+    "generate_requirement_map",
+    "freeze_contract",
+    "refresh_contract",
+    "create_prototype",
+    "create_iteration_plan",
+    "execute_next_goal",
+    "run_needs_fix",
+    "run_ui_closure",
+    "preview_package",
+    "inspect_first",
+    "delete_project"
+  ],
+  "action_descriptors": {
+    "run_needs_fix": {
+      "selection_authority": "server",
+      "sub_operation_ids": [
+        "needs_fix_plan",
+        "repair"
+      ],
+      "eligibility_state_values": [
+        "needs_fix_required",
+        "plan_missing",
+        "plan_stale",
+        "repair_ready",
+        "repair_in_progress",
+        "repair_retryable"
+      ],
+      "sub_operations": [
+        {
+          "sub_operation_id": "needs_fix_plan",
+          "eligibility_states": [
+            "needs_fix_required",
+            "plan_missing",
+            "plan_stale"
+          ],
+          "required_recovery_inputs": [
+            "parsed_game_type_route_profile",
+            "project_execution_guide",
+            "prototype_contract",
+            "current_route_latest_state",
+            "current_goal_step_session_state",
+            "failing_acceptance_or_godot_diagnostic_evidence",
+            "latest_live_platform_acceptance_blocker"
+          ],
+          "file_changing": false,
+          "api_route": "needs-fix-plan",
+          "endpoint_aliases": [
+            "needs-fix",
+            "repair-plan"
+          ]
+        },
+        {
+          "sub_operation_id": "repair",
+          "eligibility_states": [
+            "repair_ready",
+            "repair_in_progress",
+            "repair_retryable"
+          ],
+          "required_recovery_inputs": [
+            "parsed_game_type_route_profile",
+            "project_execution_guide",
+            "prototype_contract",
+            "current_route_latest_state",
+            "current_goal_step_session_state",
+            "current_repair_ledger",
+            "failing_acceptance_or_godot_diagnostic_evidence",
+            "latest_live_platform_acceptance_blocker"
+          ],
+          "file_changing": true,
+          "api_route": "repair",
+          "endpoint_aliases": [
+            "run-repair",
+            "continue-repair"
+          ]
+        }
+      ],
+      "acceptance_refs": [
+        "AC-REPAIR-SUBOPERATION"
+      ],
+      "test_refs": [
+        "03-testing-observability-admin.md#10.1 Unit Tests",
+        "02b-backend-api-contracts.md#6.5 Extend ProjectWorkflowRouteService"
+      ]
+    },
+    "delete_project": {
+      "exposure_class": "destructive_secondary",
+      "stage_driven": false,
+      "recommended_action_projection": false,
+      "allowed_actions_projection": true,
+      "forbidden_domain_codes": [
+        "route_contract_not_active",
+        "account_forbidden",
+        "diagnostic_blocked"
+      ],
+      "acceptance_refs": [
+        "AC-DELETE-PLACEMENT"
+      ]
+    }
+  }
+}

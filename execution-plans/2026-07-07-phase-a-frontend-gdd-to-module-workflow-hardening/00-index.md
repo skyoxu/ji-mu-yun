@@ -66,11 +66,16 @@ Acceptance criteria:
    - Preserves TapTapMarker non-technology UI framework capabilities as the full target and maps them into Godot style catalogs, component families, and style drift taxonomy.
 12. [Godot UI Style Snapshot Schema Map](06b-ui-style-snapshot-schema.md)
    - Maps the machine-contract schema for style snapshots, theme resources, component coverage, input/gesture, lifecycle, virtualization, localization, visual evidence, and readback.
-   - Full machine-readable contract example/schema fixture: [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json).
+   - Enum-declaration example fixture: [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json).
+   - Machine-readable structural/vocabulary authority: [schemas/godot-ui-style-contract.v1.profile.json](schemas/godot-ui-style-contract.v1.profile.json).
+   - Exhaustive bidirectional source-field contract: [schemas/godot-ui-style-contract.v1.field-map.json](schemas/godot-ui-style-contract.v1.field-map.json).
+   - Canonical cross-document capability inventory: [schemas/gdd-to-module-capability-inventory.v1.json](schemas/gdd-to-module-capability-inventory.v1.json).
+   - Stable split-added owner and acceptance registry: [schemas/split-added-acceptance-registry.v1.json](schemas/split-added-acceptance-registry.v1.json).
+   - Primary/secondary workflow action and repair sub-operation authority: [schemas/workflow-action-contracts.v1.json](schemas/workflow-action-contracts.v1.json).
 13. [Style-Aware UI Closure](06c-style-aware-ui-closure.md)
    - Defines how UI closure blocks final readiness on style drift and how repair receives frozen style evidence.
 14. [Godot UI Style Schema Acceptance](06d-ui-style-schema-acceptance.md)
-   - Defines validation requirements for the schema map and machine-readable contract example/schema fixture.
+   - Defines validation requirements for the schema map, machine-readable schema contract profile, and enum-declaration example fixture.
 15. [Godot Diagnostics And Quality Gates](07-godot-diagnostics-quality-gates.md)
    - Migrates diagnostics, symptom remediation, debug-log lifecycle, interaction-region gates, preview validation, and project diagnostic spool.
 16. [Implementation Phases](08-implementation-phases.md)

@@ -254,6 +254,24 @@
       "validation_refs": []
     },
     {
+      "requirement_family": "gesture_phase",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "pointer_event_shape",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "drag_drop_payload",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
       "requirement_family": "state_ownership",
       "required_for_custom": true,
       "validation_rule": "",
@@ -303,6 +321,18 @@
     },
     {
       "requirement_family": "ui_tree_readback",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "runtime_environment",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "theme_resource_coverage",
       "required_for_custom": true,
       "validation_rule": "",
       "validation_refs": []
@@ -907,6 +937,7 @@
       "evidence_refs": [],
       "ui_tree_readback_row_refs": [],
       "validation_status": "passed|failed|blocked|not_applicable",
+      "readback_path_policy": "project_relative|workspace_safe_ref",
       "harness_limitation_ref": "",
       "harness_limitation": {
         "limitation_type": "headless_renderer|platform_unavailable|tool_missing|deterministic_substitute_only|other|not_applicable",
@@ -933,6 +964,8 @@
       "required_component_families": [],
       "required_states": [],
       "source_hash": "",
+      "evidence_refs": [],
+      "validation_status": "passed|failed|blocked|not_applicable",
       "harness_limitation_ref": "",
       "harness_limitation": {
         "limitation_type": "headless_renderer|platform_unavailable|tool_missing|deterministic_substitute_only|other|not_applicable",

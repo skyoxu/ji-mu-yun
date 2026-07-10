@@ -58,7 +58,7 @@ Routes that should receive this contract first:
 - `scene-route-confirmation`
 - `structured-game-type-analysis`
 - `prototype-contract`
-- `prototype-skeleton`
+- `prototype-skeleton-guard` (canonical route module ID; `prototype-skeleton` and concrete prototype endpoints are route/endpoint aliases)
 - `workflow-recommendation`
 - `ui-wiring-closure`
 - `iteration-plan`
@@ -86,6 +86,7 @@ Recommended shape:
 - Define a route action descriptor per action that names:
   - `actionId`
   - optional `legacyAliasIds` or `endpointAliasIds`
+  - optional `subOperations`, where each row declares `subOperationId`, `selectionAuthority`, `eligibilityStates`, `requiredRecoveryInputs`, `fileChanging`, `apiRoute`, and endpoint aliases
   - API route
   - required source artifacts
   - operation status set
@@ -121,7 +122,9 @@ Acceptance criteria:
 - `analyze_game_type` is explicitly mapped to the structured game-type metadata analysis/backfill API or browser/admin-safe flow before `ProjectWorkflowRouteService` may emit it.
 - `confirm_scene_route` is explicitly mapped to the scene-route confirmation browser flow or a concrete confirmation API before `ProjectWorkflowRouteService` may emit it.
 - `generate_gdd_document` is explicitly mapped to the GDD document-generation API or browser flow before `ProjectWorkflowRouteService` may emit it.
-- `delete_project` is explicitly mapped to the ordinary project-delete API/browser action before `ProjectWorkflowRouteService` may emit it.
+- `delete_project` is explicitly mapped to the ordinary project-delete API/browser action before `ProjectWorkflowRouteService` may expose it as a secondary allowed/forbidden action; the service may not emit it as the primary recommendation.
+- `run_needs_fix` is the canonical workflow action for the needs-fix/repair route family. `schemas/workflow-action-contracts.v1.json` is the machine authority for its exact `subOperations` rows: `needs_fix_plan` and file-changing `repair`, server-only `selectionAuthority`, exact eligibility-state enums, exact ordered `requiredRecoveryInputs`, API route, aliases, acceptance refs, and tests. `repair` is not emitted as a second canonical workflow recommendation ID.
+- `delete_project` is classified as a stage-independent destructive secondary action, never the stage-driven primary recommendation. The descriptor defines account-scoped `allowedActions[]`; deletion `forbiddenActions[]` may use only `route_contract_not_active`, `account_forbidden`, or `diagnostic_blocked`, never `phase_gate_blocked`.
 - The phase-gated downstream subset `generate_requirement_map`, `freeze_contract`, `refresh_contract`, `create_prototype`, `create_iteration_plan`, `execute_next_goal`, `run_needs_fix`, `run_ui_closure`, `preview_package`, and `inspect_first` is explicitly mapped to route descriptors, browser actions, or non-action display mappings before they may appear in workflow recommendation readback. If their route contract is not active in the current phase, they must appear only as disabled/forbidden actions with browser-safe reasons.
 - Guard tests compute `descriptor_hash` from the canonical registry snapshot and fail when `action_descriptor_ref` in workflow recommendation readback differs from the browser/API action catalog.
 

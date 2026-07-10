@@ -1,0 +1,329 @@
+{
+  "schema_version": "gdd-to-module-capability-inventory.v1",
+  "path_base": "split_directory",
+  "acceptance_registry_path": "schemas/split-added-acceptance-registry.v1.json",
+  "required_capability_fields": [
+    "capability_id",
+    "owner_id",
+    "owner_doc",
+    "first_required_phase",
+    "trigger",
+    "ledger_scope",
+    "contract_scope",
+    "acceptance_refs"
+  ],
+  "allowed_ledger_scopes": [
+    "full_target"
+  ],
+  "inventory_owner_docs": [
+    "05-godot-ui-capability-contract.md",
+    "06a-ui-style-migration-overview-and-catalog.md",
+    "06b-ui-style-snapshot-schema.md",
+    "06c-style-aware-ui-closure.md",
+    "06d-ui-style-schema-acceptance.md",
+    "07-godot-diagnostics-quality-gates.md"
+  ],
+  "capability_count": 25,
+  "capabilities": [
+    {
+      "capability_id": "ui_component_system",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_theme_token_system",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_layout_scale_coordinates",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_input_pointer_gesture",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_state_data_binding",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_lifecycle_ownership",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_scroll_virtualization",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 2-6 when consumed",
+      "trigger": "a touched list, grid, timeline, carousel, or scroll surface requires visible-range or performance policy",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_overlays_feedback",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_diagnostics_visual_evidence",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_security_gated_tooling",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "first_required_phase": "Security-policy dependent",
+      "trigger": "file upload, raw diagnostic viewer, or account/admin asset tooling is implemented",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_style_snapshot_schema",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_runtime_environment_identity",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_theme_resource_contract",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_visual_evidence_contract",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_style_closure_gap_taxonomy",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "first_required_phase": "Phase 5",
+      "trigger": "style-aware repair, UI closure, or final readiness consumes the capability",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_style_repair_prompt_contract",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "first_required_phase": "Phase 5",
+      "trigger": "style-aware repair, UI closure, or final readiness consumes the capability",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_final_readiness_style_gate",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "first_required_phase": "Phase 5",
+      "trigger": "style-aware repair, UI closure, or final readiness consumes the capability",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "ui_style_schema_acceptance_gate",
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "owner_doc": "06d-ui-style-schema-acceptance.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-STYLE"
+      ]
+    },
+    {
+      "capability_id": "godot_diagnostic_spool_contract",
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-DIAGNOSTICS"
+      ]
+    },
+    {
+      "capability_id": "godot_failure_family_taxonomy",
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "first_required_phase": "Phase 0B / Phase 1 when consumed",
+      "trigger": "the touched route consumes the capability according to its owner contract",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-DIAGNOSTICS"
+      ]
+    },
+    {
+      "capability_id": "godot_prebuild_preview_quality_gate",
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-DIAGNOSTICS"
+      ]
+    },
+    {
+      "capability_id": "godot_interaction_region_gate",
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-DIAGNOSTICS"
+      ]
+    },
+    {
+      "capability_id": "godot_resource_lifecycle_gate",
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "first_required_phase": "Phase 2-5 when consumed",
+      "trigger": "the touched route creates dynamic resources, interaction regions, visual evidence, preview, package, repair, or UI closure",
+      "ledger_scope": "full_target",
+      "contract_scope": "gdd_to_module_full_target",
+      "acceptance_refs": [
+        "AC-CAPABILITY-INVENTORY-DIAGNOSTICS"
+      ]
+    },
+    {
+      "capability_id": "godot_ui_update_ownership",
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "owner_doc": "05-godot-ui-capability-contract.md",
+      "first_required_phase": "Phase 1 classification / Phase 2 execution planning",
+      "trigger": "a requirement creates repeated or dynamic controls, dynamic item factories, signal-driven updates, or mutable UI state",
+      "ledger_scope": "full_target",
+      "contract_scope": "dynamic_ui_requirements",
+      "acceptance_refs": [
+        "AC-UI-UPDATE-OWNERSHIP"
+      ]
+    },
+    {
+      "capability_id": "godot_third_person_camera_profile",
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "owner_doc": "05-godot-ui-capability-contract.md",
+      "first_required_phase": "Phase 1 classification / Phase 2 execution planning",
+      "trigger": "a requirement introduces third-person follow, orbit, shoulder, collision, or camera-relative movement behavior",
+      "ledger_scope": "full_target",
+      "contract_scope": "third_person_camera_requirements",
+      "acceptance_refs": [
+        "AC-THIRD-PERSON-CAMERA"
+      ]
+    }
+  ]
+}

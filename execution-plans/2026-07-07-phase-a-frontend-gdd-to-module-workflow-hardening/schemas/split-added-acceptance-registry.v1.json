@@ -1,0 +1,356 @@
+{
+  "schema_version": "split-added-acceptance-registry.v1",
+  "path_base": "split_directory",
+  "owners": {
+    "OWNER-PHASEA-WORKFLOW": [
+      "02a-route-state-artifacts.md",
+      "02b-backend-api-contracts.md"
+    ],
+    "OWNER-PHASEA-VOCABULARY": [
+      "02c-frontend-migration-compatibility.md"
+    ],
+    "OWNER-PHASEA-PHASE-GATES": [
+      "08-implementation-phases.md"
+    ],
+    "OWNER-PHASEA-METADATA": [
+      "02a-route-state-artifacts.md",
+      "07-godot-diagnostics-quality-gates.md"
+    ],
+    "OWNER-GODOT-UI-STYLE": [
+      "06a-ui-style-migration-overview-and-catalog.md",
+      "06b-ui-style-snapshot-schema.md",
+      "06c-style-aware-ui-closure.md",
+      "06d-ui-style-schema-acceptance.md"
+    ],
+    "OWNER-GODOT-UI-CAPABILITY": [
+      "05-godot-ui-capability-contract.md"
+    ],
+    "OWNER-GODOT-DIAGNOSTICS": [
+      "07-godot-diagnostics-quality-gates.md"
+    ],
+    "OWNER-GODOT-ENGINE-SEMANTICS": [
+      "04d-godot-engine-semantics-and-reference-examples.md"
+    ],
+    "OWNER-GODOT-REFERENCE-PACK": [
+      "04d-godot-engine-semantics-and-reference-examples.md"
+    ],
+    "OWNER-PHASEA-STANDARDS": [
+      "04c-route-operation-governance.md"
+    ],
+    "OWNER-PHASEA-DELIVERY-REVIEW": [
+      "09-risks-dod-open-questions.md"
+    ]
+  },
+  "acceptance_refs": {
+    "AC-IMPORT-GDD-DESCRIPTOR": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "file": "03-testing-observability-admin.md",
+      "section": "10.1 Unit Tests",
+      "match_text": "route action descriptor mapping for `import_gdd_form`"
+    },
+    "AC-IMPORT-GDD-BROWSER": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "file": "03-testing-observability-admin.md",
+      "section": "10.3 Browser Tests",
+      "match_text": "Primary button follows `workflow-recommendation`"
+    },
+    "AC-REPAIR-SUBOPERATION": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "file": "04a-route-contracts-and-guards.md",
+      "section": "11.1.3 Unified Route Action Descriptor",
+      "match_text": "subOperations"
+    },
+    "AC-DELETE-PLACEMENT": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "file": "04a-route-contracts-and-guards.md",
+      "section": "11.1.3 Unified Route Action Descriptor",
+      "match_text": "stage-independent destructive secondary action"
+    },
+    "AC-PROTOTYPE-ALIAS": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "file": "02b-backend-api-contracts.md",
+      "section": "6.2.1 Extend Prototype Skeleton Creation/Readback Guard",
+      "match_text": "canonical workflow action for starting prototype creation remains `create_prototype`"
+    },
+    "AC-STATUS-SUBSET": {
+      "owner_id": "OWNER-PHASEA-VOCABULARY",
+      "file": "02c-frontend-migration-compatibility.md",
+      "section": "8.0 Status Vocabulary",
+      "match_text": "Artifact sidecars that need a smaller state set"
+    },
+    "AC-SKELETON-PHASE0B": {
+      "owner_id": "OWNER-PHASEA-PHASE-GATES",
+      "file": "08-implementation-phases.md",
+      "section": "Phase 0: Cross-Cutting Governance Prerequisites",
+      "match_text": "New-chain skeleton creation and validation cannot bypass"
+    },
+    "AC-METADATA-TABLES": {
+      "owner_id": "OWNER-PHASEA-METADATA",
+      "file": "03-testing-observability-admin.md",
+      "section": "10.1 Unit Tests",
+      "match_text": "metadata DB table contracts"
+    },
+    "AC-STYLE-PROFILE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "machine-readable schema contract profile"
+    },
+    "AC-FULL-TARGET-SCHEDULE": {
+      "owner_id": "OWNER-PHASEA-PHASE-GATES",
+      "file": "10-recommended-first-slice.md",
+      "section": "16. Recommended First Implementation Slice",
+      "match_text": "Schedule acceptance"
+    },
+    "AC-STANDARDS-DESTINATION": {
+      "owner_id": "OWNER-PHASEA-STANDARDS",
+      "file": "04c-route-operation-governance.md",
+      "section": "11.1.17 Documentation Indexing And Route Discoverability",
+      "match_text": "Destination acceptance"
+    },
+    "AC-DOD-LAYERS": {
+      "owner_id": "OWNER-PHASEA-DELIVERY-REVIEW",
+      "file": "09-risks-dod-open-questions.md",
+      "section": "14.0 DoD Layers",
+      "match_text": "Implementation summaries state which DoD layer"
+    },
+    "AC-ENGINE-SEMANTICS": {
+      "owner_id": "OWNER-GODOT-ENGINE-SEMANTICS",
+      "file": "04d-godot-engine-semantics-and-reference-examples.md",
+      "section": "Godot Resolution And Viewport Mode",
+      "match_text": "UI, custom drawing, map, camera, and interaction work"
+    },
+    "AC-FEATURE-READING": {
+      "owner_id": "OWNER-GODOT-ENGINE-SEMANTICS",
+      "file": "04d-godot-engine-semantics-and-reference-examples.md",
+      "section": "Godot Feature Family Reading Rule",
+      "match_text": "Route evidence names the feature family"
+    },
+    "AC-EXAMPLE-COPY": {
+      "owner_id": "OWNER-GODOT-REFERENCE-PACK",
+      "file": "04d-godot-engine-semantics-and-reference-examples.md",
+      "section": "Official Godot Reference Examples",
+      "match_text": "Example copy evidence must record"
+    },
+    "AC-GEOMETRY-MATERIAL": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "file": "05-godot-ui-capability-contract.md",
+      "section": "11.2.2.1 Godot Geometry, Size, And Material Profiles",
+      "match_text": "Built-in primitives, imported 3D models, generated meshes, collision shapes, textures, and fixed-format UI surfaces must cite"
+    },
+    "AC-RENDERING-ANIMATION": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "file": "05-godot-ui-capability-contract.md",
+      "section": "11.2.2.2 Godot Rendering And Atmosphere Profiles",
+      "match_text": "Missing rendering ownership or missing atmosphere profile blocks"
+    },
+    "AC-UI-UPDATE-OWNERSHIP": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "file": "05-godot-ui-capability-contract.md",
+      "section": "11.2.2.4 Godot UI Construction And Update Ownership",
+      "match_text": "Dynamic lists, card hands, inventories, reward choices, route nodes, and generated panels"
+    },
+    "AC-THIRD-PERSON-CAMERA": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "file": "05-godot-ui-capability-contract.md",
+      "section": "11.2.2.5 Godot Third-Person Camera Rig Profile",
+      "match_text": "Gameplay modules must configure or instance the repo-owned rig/profile"
+    },
+    "AC-CAPABILITY-INVENTORY-STYLE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`capability_packages[]` omits any stable capability ID"
+    },
+    "AC-CAPABILITY-INVENTORY-DIAGNOSTICS": {
+      "owner_id": "OWNER-GODOT-DIAGNOSTICS",
+      "file": "07-godot-diagnostics-quality-gates.md",
+      "section": "11.4.2 Full Quality Gate Migration Checklist",
+      "match_text": "Each quality-gate capability above has a route contract field"
+    },
+    "GUSC-AC-PROFILE-COMPLETE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "required field, enum set, active-row cardinality rule, or nested object requirement"
+    },
+    "GUSC-AC-RUNTIME-SCALE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`runtime_environment` must freeze Godot version"
+    },
+    "GUSC-AC-CUSTOM-SOURCE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`custom_style_equivalence_requirements`"
+    },
+    "GUSC-AC-POINTER-GESTURE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "Pointer/gesture rows must declare"
+    },
+    "GUSC-AC-STATE-OWNERSHIP": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`state_tokens`, `state_ownership_rules`"
+    },
+    "GUSC-AC-LIFECYCLE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`ui_lifecycle_rules` must declare"
+    },
+    "GUSC-AC-VIRTUALIZATION": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`scroll_virtualization_rules` must bind"
+    },
+    "GUSC-AC-FONT-LOCALIZATION": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`font_policy.roles`"
+    },
+    "GUSC-AC-THEME-RESOURCES": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`godot_theme_resources` must map"
+    },
+    "GUSC-AC-UI-READBACK": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`ui_tree_readback_rows` must satisfy"
+    },
+    "GUSC-AC-VISUAL-EVIDENCE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "`visual_evidence_matrix` and `visual_validation_refs`"
+    },
+    "GUSC-AC-COMPONENT-COVERAGE": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "file": "06d-ui-style-schema-acceptance.md",
+      "section": "Acceptance Criteria",
+      "match_text": "P0/P1 visible requirements cannot depend"
+    }
+  },
+  "expected_split_added_requirements": {
+    "split_added_workflow_action_import_gdd_form": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "acceptance_ids": [
+        "AC-IMPORT-GDD-DESCRIPTOR",
+        "AC-IMPORT-GDD-BROWSER"
+      ]
+    },
+    "split_added_repair_action_alias_boundary": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "acceptance_ids": [
+        "AC-REPAIR-SUBOPERATION"
+      ]
+    },
+    "split_added_delete_project_action_placement": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "acceptance_ids": [
+        "AC-DELETE-PLACEMENT"
+      ]
+    },
+    "split_added_prototype_alias_boundary": {
+      "owner_id": "OWNER-PHASEA-WORKFLOW",
+      "acceptance_ids": [
+        "AC-PROTOTYPE-ALIAS"
+      ]
+    },
+    "split_added_status_subset_contract": {
+      "owner_id": "OWNER-PHASEA-VOCABULARY",
+      "acceptance_ids": [
+        "AC-STATUS-SUBSET"
+      ]
+    },
+    "split_added_phase0b_skeleton_guard_dependency": {
+      "owner_id": "OWNER-PHASEA-PHASE-GATES",
+      "acceptance_ids": [
+        "AC-SKELETON-PHASE0B"
+      ]
+    },
+    "split_added_metadata_db_table_contracts": {
+      "owner_id": "OWNER-PHASEA-METADATA",
+      "acceptance_ids": [
+        "AC-METADATA-TABLES"
+      ]
+    },
+    "split_added_style_schema_contract_profile": {
+      "owner_id": "OWNER-GODOT-UI-STYLE",
+      "acceptance_ids": [
+        "AC-STYLE-PROFILE",
+        "GUSC-AC-PROFILE-COMPLETE"
+      ]
+    },
+    "split_added_full_target_capability_schedule": {
+      "owner_id": "OWNER-PHASEA-PHASE-GATES",
+      "acceptance_ids": [
+        "AC-FULL-TARGET-SCHEDULE"
+      ]
+    },
+    "split_added_durable_standards_destination_matrix": {
+      "owner_id": "OWNER-PHASEA-STANDARDS",
+      "acceptance_ids": [
+        "AC-STANDARDS-DESTINATION"
+      ]
+    },
+    "split_added_dod_layering": {
+      "owner_id": "OWNER-PHASEA-DELIVERY-REVIEW",
+      "acceptance_ids": [
+        "AC-DOD-LAYERS"
+      ]
+    },
+    "split_added_godot_engine_semantics_reference_examples": {
+      "owner_id": "OWNER-GODOT-ENGINE-SEMANTICS",
+      "acceptance_ids": [
+        "AC-ENGINE-SEMANTICS"
+      ]
+    },
+    "split_added_godot_feature_family_reading_gate": {
+      "owner_id": "OWNER-GODOT-ENGINE-SEMANTICS",
+      "acceptance_ids": [
+        "AC-FEATURE-READING"
+      ]
+    },
+    "split_added_godot_reference_example_copy_manifest": {
+      "owner_id": "OWNER-GODOT-REFERENCE-PACK",
+      "acceptance_ids": [
+        "AC-EXAMPLE-COPY"
+      ]
+    },
+    "split_added_godot_geometry_size_material_profiles": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "acceptance_ids": [
+        "AC-GEOMETRY-MATERIAL"
+      ]
+    },
+    "split_added_godot_rendering_animation_profiles": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "acceptance_ids": [
+        "AC-RENDERING-ANIMATION"
+      ]
+    },
+    "split_added_godot_ui_update_ownership": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "acceptance_ids": [
+        "AC-UI-UPDATE-OWNERSHIP"
+      ]
+    },
+    "split_added_godot_third_person_camera_profile": {
+      "owner_id": "OWNER-GODOT-UI-CAPABILITY",
+      "acceptance_ids": [
+        "AC-THIRD-PERSON-CAMERA"
+      ]
+    }
+  }
+}

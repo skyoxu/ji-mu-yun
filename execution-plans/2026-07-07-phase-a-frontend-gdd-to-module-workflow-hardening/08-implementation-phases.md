@@ -19,9 +19,9 @@ Phase 0B dependency matrix for Phase 1 routes:
 | Phase 1 route | Required Phase 0B package before implementation | Reason |
 | --- | --- | --- |
 | `structured-game-type-analysis` | Minimum diagnostic taxonomy, admin maintenance readback, and explicit Godot engine semantic non-applicability unless the analysis writes Godot runtime/map/camera/input metadata | Missing, ambiguous, or unmatched game-type records must become maintainable diagnostics without requiring UI style contracts or runtime semantic packages when they are not touched. |
-| `scene-route-confirmation` | Godot engine semantic baseline for scene UI/camera/map/input implications, Godot UI capability contract template, minimum diagnostic taxonomy, visual evidence rule when scene UI surfaces are inferred | Scene surfaces, route relationships, coordinate/camera/map implications, and UI-heavy defaults must not be lost before requirement extraction. |
+| `scene-route-confirmation` | Godot engine semantic baseline for scene UI/camera/map/input implications, Godot UI capability contract template, `godot_third_person_camera_profile` when third-person behavior is implied, minimum diagnostic taxonomy, visual evidence rule when scene UI surfaces are inferred | Scene surfaces, route relationships, coordinate/camera/map implications, and UI-heavy defaults must not be lost before requirement extraction. |
 | `gdd-document-generation` | Godot engine semantic baseline when generated GDD includes viewport, coordinate, input, camera, physics, TileMap/map, or visible UI/style promises; Godot UI capability contract template; Godot UI style contract seed when generated GDD includes visible UI/style promises; minimum diagnostic taxonomy | The generated GDD becomes downstream source authority and must preserve engine semantic, UI/style, and default contract implications. |
-| `gdd-requirements` | Godot engine semantic baseline for requirements touching viewport, coordinate, input, camera, physics, TileMap/map, preview, or package semantics; Godot UI capability contract template; Godot UI style contract seed for visible UI requirements; diagnostic spool/index seed | Requirement rows classify engine semantic, UI/style, and diagnostic obligations and cannot defer required touched capability packages. |
+| `gdd-requirements` | Godot engine semantic baseline for requirements touching viewport, coordinate, input, camera, physics, TileMap/map, preview, or package semantics; Godot UI capability contract template; `godot_ui_update_ownership` for dynamic UI and `godot_third_person_camera_profile` for third-person camera requirements; Godot UI style contract seed for visible UI requirements; diagnostic spool/index seed | Requirement rows classify engine semantic, UI/style, update-ownership/camera-profile, and diagnostic obligations and cannot defer required touched capability packages. |
 | `prototype-contract` | Godot engine semantic baseline for frozen runtime semantic source fields, Godot UI capability contract template, Godot UI style contract seed, diagnostic spool/index seed, style snapshot fixture for visible UI projects | The frozen contract is the source boundary for later execution and must freeze engine semantic, UI/style, and diagnostic hashes before downstream work. |
 | `prototype-skeleton-guard` | Godot engine semantic baseline for new-chain skeleton viewport/coordinate/input/camera/physics/map/preview semantics, Godot UI capability contract template, Godot UI style contract seed for visible skeletons, diagnostic spool/index seed, prototype-skeleton source-state vocabulary, preview/package readiness boundary | New-chain skeleton creation and validation cannot bypass the frozen contract/requirement-map chain or become final readiness evidence without current hashes and semantic-mode evidence. |
 
@@ -161,6 +161,8 @@ Deliverables:
 - block module generation on P0/P1 coverage gaps
 - iteration-plan route contract and route action descriptor updates
 - UI surface goals generated from the Godot UI capability contract
+- dynamic UI goals carry `godot_ui_update_ownership` evidence: construction owner, update mode, state owner, cleanup policy, and stable item identity where applicable
+- third-person camera goals carry `godot_third_person_camera_profile` evidence: shared rig refs, target/input/collision ownership, and camera-state validation
 - UI style-aware goals generated from the frozen Godot UI style contract for UI-facing requirements
 - interaction-region artifact requirement for UI/input/physics/camera-heavy iteration goals
 
@@ -172,6 +174,7 @@ Exit criteria:
 - Every P0/P1 UI-facing requirement has an iteration goal or required module that names expected Godot UI surface, layout/input/focus/feedback requirements, and validation method.
 - Every P0/P1 UI-facing requirement has style token expectations, design DNA/composition/motion expectations when applicable, UI tree readback expectations, visual evidence matrix requirements, or a `style_not_applicable` rationale before execution.
 - UI/input/physics/camera-heavy P0/P1 goals include interaction-region artifacts or explicit `no_interaction_region_needed` rationales before execution.
+- Dynamic UI and third-person camera P0/P1 goals cannot execute while their stable capability dependency is missing; they return `ui_update_ownership_missing` or `third_person_camera_profile_missing` before Codex invocation.
 - Iteration-plan service/API/readback and module confirmation UI pass Phase 0 route governance checks for route action descriptor, path/readback policy, exposure class, account boundary, duplicate-run behavior, `active_run_reused` response shape, source-boundary evidence, and secret redaction.
 - Phase 2 review records zero unresolved P0/P1/P2 findings.
 
@@ -192,6 +195,7 @@ Exit criteria:
 - Existing advanced actions remain available only when route descriptors classify them as user-visible or safe secondary actions.
 - Workflow recommendation extends or reads from the existing workflow route authority instead of introducing a competing next-action engine.
 - Recommendation actions are checked against the route action descriptor and exposure classes so the frontend cannot recommend an admin-only, script-only, stale, or missing action to a normal user.
+- `delete_project` is never emitted as the stage-driven primary recommendation; it is exposed only as an account-scoped destructive secondary action or a forbidden action with a stable browser-safe reason.
 - `complete_gdd` returns the user to the existing GDD draft-completion flow or a declared non-action display state, and tests fail if it is emitted unmapped.
 - `generate_gdd_document` triggers the GDD document-generation API/browser flow or a declared non-action display state, and tests fail if it is emitted unmapped.
 - Browser status mapping distinguishes stage `completed`, route `succeeded`, UI matrix `covered`, and readiness `ready`.
@@ -204,6 +208,7 @@ Deliverables:
 - execute-next-goal stale/missing guards
 - requirement rows in goal input
 - needs-fix reads requirement map and latest blocker
+- canonical `run_needs_fix` descriptor maps needs-fix planning and file-changing `repair` through server-selected `subOperations` rows with explicit eligibility and recovery-input contracts, without creating a second canonical recommendation ID
 - frozen Godot UI capability contract injection for UI-touching goals
 - frozen Godot UI style contract injection for styled UI-touching goals
 - UI gap family mapping in needs-fix and repair prompts
@@ -222,6 +227,7 @@ Exit criteria:
 - Needs-fix and repair can classify UI failures as layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, or typed state gaps.
 - Needs-fix and repair classify style failures using the normalized style drift taxonomy from `06a-ui-style-migration-overview-and-catalog.md`. They must not maintain a shorter route-local taxonomy.
 - Failed execute/needs-fix/repair runs write sanitized project diagnostic spool records for known failure families.
+- Repair execution cannot start until current step/session state, repair ledger, failing acceptance or Godot diagnostic evidence, and latest live platform blocker are present and current.
 - Execute-next-goal and needs-fix prompt/evidence artifacts pass source-boundary checks and secret redaction validator checks before the route is accepted.
 - Phase 4 review records zero unresolved P0/P1/P2 findings.
 
@@ -287,7 +293,7 @@ Deliverables:
 
 Exit criteria:
 
-- `structured-game-type-analysis`, `gdd-requirements`, `gdd-document-generation`, `scene-route-confirmation`, `prototype-contract`, `prototype-skeleton`, `workflow-recommendation`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, `project-delete`, and `ui-wiring-closure` have route module contracts, route action descriptors, exposure classes, and guard-test coverage.
+- `structured-game-type-analysis`, `gdd-requirements`, `gdd-document-generation`, `scene-route-confirmation`, `prototype-contract`, `prototype-skeleton-guard`, `workflow-recommendation`, `iteration-plan`, `execute-next-goal`, `needs-fix`, `repair`, `project-delete`, and `ui-wiring-closure` have route module contracts, route action descriptors, exposure classes, and guard-test coverage. `prototype-skeleton` and concrete prototype endpoints are aliases under the canonical `prototype-skeleton-guard` route module; `repair` is a route alias/sub-operation under canonical workflow action `run_needs_fix`.
 - `preview-package` routes are covered by Phase path/readback, capability exposure, account-boundary, package/preview/download reference, and host-path leakage tests; they do not need full route module contracts in this plan unless their behavior is changed beyond readback/package/preview/download governance.
 - Even when `preview-package` does not receive a full route module contract, it must satisfy the preview/package readiness contract in `02b-backend-api-contracts.md`: source hash set, package artifact ref, preview ticket ref, ordinary-download compatibility, final-readiness eligibility, unresolved blocker counts, account boundary, and evidence refs.
 - Guard tests fail when action names, status enums, source hash fields, error envelope shape, or source-boundary prompt rules drift.

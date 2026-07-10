@@ -1,20 +1,28 @@
 # Godot UI Style Snapshot Schema Map
 
-Source: original `../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening.md` lines 1378-2151, normalized into this schema map plus the machine-readable contract example/schema fixture below.
+Source plan coverage: original `../2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening.md` lines 1378-2178. The embedded JSON object extracted for field-level comparison occupies source lines 1383-2146; surrounding schema prose and acceptance text remain covered by this map and `06d`.
 
-Machine-readable contract example/schema fixture: [`schemas/godot-ui-style-contract.v1.example.json`](schemas/godot-ui-style-contract.v1.example.json)
+Enum-declaration example fixture: [`schemas/godot-ui-style-contract.v1.example.json`](schemas/godot-ui-style-contract.v1.example.json)
+
+Machine-readable schema contract profile: [`schemas/godot-ui-style-contract.v1.profile.json`](schemas/godot-ui-style-contract.v1.profile.json)
+
+Exhaustive bidirectional source-field contract: [`schemas/godot-ui-style-contract.v1.field-map.json`](schemas/godot-ui-style-contract.v1.field-map.json)
+
+Canonical capability inventory: [`schemas/gdd-to-module-capability-inventory.v1.json`](schemas/gdd-to-module-capability-inventory.v1.json)
+
+Stable owner and acceptance registry: [`schemas/split-added-acceptance-registry.v1.json`](schemas/split-added-acceptance-registry.v1.json)
 
 Acceptance rules: [`06d-ui-style-schema-acceptance.md`](06d-ui-style-schema-acceptance.md)
 
 ## Purpose
 
-This document is the map for the Godot UI style snapshot contract. The JSON artifact is intentionally kept separate so Markdown remains reviewable while the machine contract remains complete and parseable. It is an example contract instance and schema fixture that defines expected fields, nested objects, enum-like values, and validator coverage.
+This document is the map for the Godot UI style snapshot contract. The JSON artifacts are intentionally kept separate so Markdown remains reviewable. The example fixture declares the complete field shape and pipe-delimited enum examples; the schema contract profile is the machine-readable validation entrypoint; the field map is the exhaustive bidirectional field contract from original source pointers and lines to normalized fixture paths; the capability inventory is the canonical cross-document capability set; and the acceptance registry resolves stable owner and acceptance IDs.
 
 Phase 0 schema authority:
 
-- Phase 0 acceptance uses the JSON fixture plus deterministic validators as the machine contract authority.
-- A formal JSON Schema file is not required for Phase 0, but the implementation must provide a machine-readable schema contract profile for `schemas/godot-ui-style-contract.v1.example.json`. The profile may be JSON Schema, a validator fixture, or generated validator metadata, but it must encode required top-level fields, required nested fields for active rows, enum-like allowed values, minimum array cardinality for active required sections, stable `capability_id` references, and optional-empty-array versus missing-required-array behavior.
-- Deterministic validators must treat the fixture and its schema contract profile as structural contracts, not examples. Pipe-delimited enum strings in the example fixture are documentation shorthand only; validators must consume the machine-readable enum set from the schema contract profile or a generated equivalent.
+- Phase 0 acceptance uses `schemas/godot-ui-style-contract.v1.profile.json` as the machine-readable validation entrypoint, `schemas/godot-ui-style-contract.v1.field-map.json` as the exhaustive source-to-fixture and fixture-to-source field authority, and `schemas/godot-ui-style-contract.v1.example.json` as the enum-declaration example fixture.
+- The profile resolves the fixture, field map, capability inventory, acceptance registry, and workflow action contract relative to `path_base=split_directory`. Absolute paths, drive-qualified paths, and `..` escapes are invalid. The monolithic source uses its separate `source_path_base=repository_root`. The field map distinguishes `source_plan_coverage_line_range=1378-2178` from `source_json_line_range=1383-2146` and encodes every object, array, field, enum, source pointer/line, normalization status, resolvable `profile_rule_path`, and acceptance reference.
+- Deterministic validators must validate fixture/profile/field-map parity, reverse-orphan absence, capability inventory parity, and acceptance-ID resolution. Pipe-delimited enum strings in the example fixture are documentation shorthand only; validators consume the machine-readable enum sets from the field map through the profile.
 - Any later conversion to formal JSON Schema requires a decision log or ADR update, a compatibility plan for existing style snapshots, and tests proving fixture/schema/profile parity.
 - Viewport, runtime environment, input, camera, TileMap/map, and visual evidence fields consume the Godot semantic baseline in `04d-godot-engine-semantics-and-reference-examples.md`; style snapshots must not invent a separate resolution, coordinate, or reference-example vocabulary.
 
@@ -60,10 +68,15 @@ Stable capability package IDs contributed by this document:
 When schema fields, acceptance criteria, style closure, admin readback, tests, or implementation phases disagree, use this authority order:
 
 1. `06a-ui-style-migration-overview-and-catalog.md` for capability packages, UI family tiers, and normalized style drift taxonomy.
-2. `schemas/godot-ui-style-contract.v1.example.json` for the machine-readable example contract instance/schema fixture.
-3. `06d-ui-style-schema-acceptance.md` for schema validation rules.
-4. `06c-style-aware-ui-closure.md` for closure and repair consumption.
-5. `08-implementation-phases.md`, `09-risks-dod-open-questions.md`, and `10-recommended-first-slice.md` for phase scoping.
+2. `schemas/godot-ui-style-contract.v1.profile.json` for validation modes, path resolution, and bundle entrypoint behavior.
+3. `schemas/godot-ui-style-contract.v1.field-map.json` for the exhaustive bidirectional field contract, source pointers/lines, normalization, object/array/cardinality rules, and enum contracts.
+4. `schemas/gdd-to-module-capability-inventory.v1.json` for canonical capability IDs, triggers, owners, phases, and acceptance references.
+5. `schemas/split-added-acceptance-registry.v1.json` for stable owner IDs and resolvable acceptance IDs.
+6. `schemas/godot-ui-style-contract.v1.example.json` for the enum-declaration example fixture and complete field-shape example.
+7. `schemas/workflow-action-contracts.v1.json` for primary/secondary workflow action projection and exact repair sub-operation contracts.
+8. `06d-ui-style-schema-acceptance.md` for schema validation rules.
+9. `06c-style-aware-ui-closure.md` for closure and repair consumption.
+10. `08-implementation-phases.md`, `09-risks-dod-open-questions.md`, and `10-recommended-first-slice.md` for phase scoping.
 
 Ledger acceptance:
 

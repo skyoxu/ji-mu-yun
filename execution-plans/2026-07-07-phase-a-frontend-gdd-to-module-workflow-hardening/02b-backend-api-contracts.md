@@ -152,7 +152,9 @@ Responsibilities:
 - Resolve `analyze_game_type` through the project structured game-type analysis/backfill API or browser/admin-safe flow before the recommendation service may emit it.
 - Resolve `confirm_scene_route` through the existing scene route confirmation browser flow or a new concrete confirmation API before the recommendation service may emit it. Either path must write `meta/routes/scene-route/latest.json` and a stable `confirmed_scene_route_hash`.
 - Resolve `generate_gdd_document` through the GDD document-generation API or browser flow before the recommendation service may emit it. The mapped action must write `meta/routes/gdd-document/latest.json` and update `meta/routes/scene-route/latest.json.source_generated_gdd_hash`.
-- Resolve `delete_project` through the ordinary user project-delete API/browser action before the recommendation service may emit it; the mapped action must preserve admin review and diagnostic tombstone evidence.
+- Resolve `delete_project` through the ordinary user project-delete API/browser action before route readback may expose it in `allowedActions[]` or `forbiddenActions[]`; the recommendation service must never emit it as `recommendedAction`. The mapped action must preserve admin review and diagnostic tombstone evidence.
+- Resolve `run_needs_fix` through one descriptor-owned route family whose `subOperations[]` rows include needs-fix planning and the file-changing `repair` route. Each row exposes only server-derived eligibility/readback and declares `subOperationId`, `selectionAuthority`, `eligibilityStates`, `requiredRecoveryInputs`, `fileChanging`, `apiRoute`, and endpoint aliases. Repair execution consumes the repair recovery sources required by `AGENTS.md`.
+- Keep `delete_project` out of stage-driven primary recommendation. It is a stage-independent destructive secondary `allowedActions[]` item after account ownership, active descriptor, and diagnostic/tombstone preservation preflight pass. It may be forbidden only by `route_contract_not_active`, `account_forbidden`, or `diagnostic_blocked`, never by workflow phase.
 - Resolve the phase-gated downstream subset `generate_requirement_map`, `freeze_contract`, `refresh_contract`, `create_prototype`, `create_iteration_plan`, `execute_next_goal`, `run_needs_fix`, `run_ui_closure`, `preview_package`, and `inspect_first` through descriptor entries before those actions may appear in workflow recommendation readback. Inactive later-phase actions return only forbidden/disabled descriptors with stable `disabledDomainCode`; `inspect_first` remains a non-mutating display mapping unless a later API is introduced.
 
 Acceptance criteria:
@@ -166,7 +168,9 @@ Acceptance criteria:
 - `analyze_game_type` maps to the project structured game-type analysis/backfill flow, writes the canonical English structured metadata payload, and is never emitted as an unmapped string.
 - `confirm_scene_route` maps to the scene route confirmation browser flow or concrete confirmation API, writes the scene-route confirmation sidecar, and is never emitted as an unmapped string.
 - `generate_gdd_document` maps to the GDD document-generation API or browser flow, writes the GDD document sidecar, updates the scene-route generated-GDD hash, and is never emitted as an unmapped string.
-- `delete_project` maps to the ordinary project-delete API/browser action, preserves tombstone evidence, and is never emitted as an unmapped string.
+- `delete_project` maps to the ordinary project-delete API/browser action, preserves tombstone evidence, and is exposed only through secondary `allowedActions[]` or deletion-safe `forbiddenActions[]`, never through `recommendedAction`.
+- `run_needs_fix` descriptor tests enumerate all sub-operation rows, verify server-only selection, verify every eligibility state and recovery input, and prove the browser cannot request repair without current repair recovery evidence.
+- `delete_project` descriptor tests prove it is never the primary `recommendedAction`, is never disabled by workflow stage, and is exposed only as an account-scoped destructive secondary or a forbidden action using the three deletion-safe disabled codes.
 - Every action in the complete canonical workflow action set is covered by service-level descriptor mapping tests, including non-mutating `inspect_first` and inactive later-phase actions in `forbiddenActions[]`.
 
 ### 6.6 New Admin Review Queue Readback
@@ -234,7 +238,7 @@ Add or extend routes:
 - `inspect_first` returns a non-action display mapping to workflow/readback inspection surfaces and never starts a run, mutates project state, or bypasses admin-only evidence redaction.
 12. `DELETE /api/projects/{projectId}`
     - Ordinary user project deletion. The route enforces account ownership, is idempotent for repeated delete requests, preserves diagnostic spool/admin review tombstone evidence with shared `deletionEventId` and `projectTombstoneId`, and returns browser-safe errors such as `workspace_delete_failed` instead of unhandled 500s.
-    - `recommendedAction=delete_project` maps to this route or the existing browser action that invokes it.
+    - Secondary action descriptor `actionId=delete_project` maps to this route or the existing browser action that invokes it; `recommendedAction=delete_project` is invalid.
 13. `POST /api/projects/{projectId}/ui-wiring-closure`
     - Generate UI wiring closure state.
     - Idempotency: return an existing closure state only when `source_iteration_session_hash`, `source_validation_input_hash`, `source_contract_hash`, `source_requirement_map_hash`, `source_godot_ui_contract_hash`, `source_ui_style_contract_hash`, and `ui_style_snapshot_hash` all match the latest closure state; if closure is already running for the same hash set, return the active run/state; otherwise create one closure run.

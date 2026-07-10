@@ -8,13 +8,25 @@ Primary index: [00-index.md](00-index.md)
 
 Coverage map: [99-source-coverage.md](99-source-coverage.md)
 
-Machine-readable contract example/schema fixture: [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json)
+Enum-declaration example fixture: [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json)
+
+Machine-readable schema contract profile: [schemas/godot-ui-style-contract.v1.profile.json](schemas/godot-ui-style-contract.v1.profile.json)
+
+Exhaustive bidirectional field contract: [schemas/godot-ui-style-contract.v1.field-map.json](schemas/godot-ui-style-contract.v1.field-map.json)
+
+Canonical capability inventory: [schemas/gdd-to-module-capability-inventory.v1.json](schemas/gdd-to-module-capability-inventory.v1.json)
+
+Stable owner and acceptance registry: [schemas/split-added-acceptance-registry.v1.json](schemas/split-added-acceptance-registry.v1.json)
+
+Workflow action machine contract: [schemas/workflow-action-contracts.v1.json](schemas/workflow-action-contracts.v1.json)
 
 ## Comparison Method
 
 - The original monolithic document has 2739 lines.
 - The split coverage ranges are contiguous from source line 1 through source line 2739.
-- Every original top-level and subsection heading is mapped to the split output that owns it. Most headings map to one split Markdown document; intentionally split headings such as route governance and the large style schema block map to multiple split outputs plus the machine-readable JSON fixture.
+- Every original top-level and subsection heading is mapped to the split output that owns it. Most headings map to one split Markdown document; intentionally split headings such as route governance and the large style schema block map to multiple split outputs plus the example fixture and machine-readable profile.
+- `schemas/godot-ui-style-contract.v1.field-map.json` is the bidirectional field contract for the embedded JSON at source lines 1383-2146 within the wider style-schema plan coverage at lines 1378-2178. Every original JSON pointer maps to a fixture path or explicit normalization, every fixture path maps back to source or is marked `split_added`, source lines are recomputed from actual source keys, and every `profile_rule_path` resolves against its declared machine document. Fixture/profile/field-map parity plus reverse-orphan, type, duplicate, active-policy, and path-confinement checks prove the normalized JSON contract retained required fields, enums, nested rows, and acceptance obligations. The surrounding prose/acceptance lines remain covered by `06b` and `06d` rather than being misrepresented as JSON fields.
+- `schemas/gdd-to-module-capability-inventory.v1.json` proves capability ID uniqueness and requires each row's owner ID/doc, first phase, capability-specific trigger, ledger/contract scope, and owner-matching resolvable acceptance references. It does not by itself prove runtime implementation or full-target closure.
 - Normalization patches in the split documents supersede weaker or ambiguous wording from the source history. These normalizations are intentional hardening changes, not omissions.
 - The full TapTapMarker non-technology UI framework capability target is preserved in [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md). TapTapMarker runtime technology remains excluded.
 
@@ -32,7 +44,7 @@ Machine-readable contract example/schema fixture: [schemas/godot-ui-style-contra
 | 983-1111 | [04c-route-operation-governance.md](04c-route-operation-governance.md) | Covered |
 | 1112-1230 | [05-godot-ui-capability-contract.md](05-godot-ui-capability-contract.md) | Covered |
 | 1231-1377 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) | Covered |
-| 1378-2178 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md), [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json), and [06d-ui-style-schema-acceptance.md](06d-ui-style-schema-acceptance.md) | Covered through schema map, machine-readable contract example/schema fixture, and acceptance rules |
+| 1378-2178 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md), [schemas/godot-ui-style-contract.v1.profile.json](schemas/godot-ui-style-contract.v1.profile.json), [schemas/godot-ui-style-contract.v1.field-map.json](schemas/godot-ui-style-contract.v1.field-map.json), [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json), and [06d-ui-style-schema-acceptance.md](06d-ui-style-schema-acceptance.md) | Covered through the schema map, validation profile, exhaustive bidirectional field contract, enum-declaration example fixture, reverse-orphan checks, and acceptance rules |
 | 2179-2236 | [06c-style-aware-ui-closure.md](06c-style-aware-ui-closure.md) | Covered |
 | 2237-2412 | [07-godot-diagnostics-quality-gates.md](07-godot-diagnostics-quality-gates.md) | Covered |
 | 2413-2621 | [08-implementation-phases.md](08-implementation-phases.md) | Covered |
@@ -106,7 +118,7 @@ Result: no source-line gap or overlap remains in the split plan.
 | 11.3.1 Conflict Assessment | 1242 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) |
 | 11.3.2 Full UI Style Theme Migration Checklist | 1261 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) |
 | 11.3.3 Recommended Built-In Godot Style Catalog | 1343 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) |
-| 11.3.4 Godot Style Snapshot Schema | 1378 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md), [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json), [06d-ui-style-schema-acceptance.md](06d-ui-style-schema-acceptance.md) |
+| 11.3.4 Godot Style Snapshot Schema | 1378 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md), [schemas/godot-ui-style-contract.v1.profile.json](schemas/godot-ui-style-contract.v1.profile.json), [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json), [06d-ui-style-schema-acceptance.md](06d-ui-style-schema-acceptance.md) |
 | 11.3.5 Style-Aware UI Closure | 2179 | [06c-style-aware-ui-closure.md](06c-style-aware-ui-closure.md) |
 | 11.4 Godot Diagnostics And Quality Gate Migration | 2237 | [07-godot-diagnostics-quality-gates.md](07-godot-diagnostics-quality-gates.md) |
 | 11.4.1 Conflict Assessment | 2241 | [07-godot-diagnostics-quality-gates.md](07-godot-diagnostics-quality-gates.md) |
@@ -148,7 +160,12 @@ Result: every original heading is represented in the split plan.
 | [05-godot-ui-capability-contract.md](05-godot-ui-capability-contract.md) | Godot UI capability contract |
 | [06a-ui-style-migration-overview-and-catalog.md](06a-ui-style-migration-overview-and-catalog.md) | Full TapTapMarker non-technology UI capability target and Godot style catalog |
 | [06b-ui-style-snapshot-schema.md](06b-ui-style-snapshot-schema.md) | Style schema map |
-| [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json) | Machine-readable style contract example/schema fixture |
+| [schemas/godot-ui-style-contract.v1.profile.json](schemas/godot-ui-style-contract.v1.profile.json) | Machine-readable validation entrypoint, path-base rules, and validation modes |
+| [schemas/godot-ui-style-contract.v1.field-map.json](schemas/godot-ui-style-contract.v1.field-map.json) | Exhaustive bidirectional source/fixture field contract with source lines, normalization, profile rules, object/array/enum contracts, and acceptance references |
+| [schemas/gdd-to-module-capability-inventory.v1.json](schemas/gdd-to-module-capability-inventory.v1.json) | Canonical cross-document capability IDs, triggers, owners, phases, and acceptance references |
+| [schemas/split-added-acceptance-registry.v1.json](schemas/split-added-acceptance-registry.v1.json) | Stable owner IDs and resolvable acceptance IDs for split-added requirements and field contracts |
+| [schemas/workflow-action-contracts.v1.json](schemas/workflow-action-contracts.v1.json) | Primary recommendation enum, secondary destructive action projection, and exact repair sub-operation machine contract |
+| [schemas/godot-ui-style-contract.v1.example.json](schemas/godot-ui-style-contract.v1.example.json) | Enum-declaration example fixture and complete field-shape example |
 | [06c-style-aware-ui-closure.md](06c-style-aware-ui-closure.md) | Style-aware UI closure |
 | [06d-ui-style-schema-acceptance.md](06d-ui-style-schema-acceptance.md) | Schema acceptance criteria |
 | [07-godot-diagnostics-quality-gates.md](07-godot-diagnostics-quality-gates.md) | Diagnostics and quality gates |
@@ -169,7 +186,7 @@ Result: every original heading is represented in the split plan.
 - `04d-godot-engine-semantics-and-reference-examples.md` is a post-split hardening document, not original monolithic source coverage. Its normative requirements are tracked by `97-split-added-requirements-ledger.md`.
 - Source-history maintenance note for the current split work: the monolithic source document may remain modified only to mark itself as source history and to preserve pre-split TapTap/TapTapMarker capability additions that are fully represented in this split directory. It must be committed together with the split directory or reverted before implementation starts; leaving the monolith modified while the split directory is untracked is not an accepted ready state.
 - Commit/PR readiness requires this split directory, the `schemas/` fixture directory, this audit, and the source coverage map to be included together with no untracked split-plan files.
-- The large original style schema block is intentionally not kept as a giant Markdown block. It is represented by a schema map, a machine-readable JSON contract example/schema fixture, and separate schema acceptance criteria.
+- The large original style schema block is intentionally not kept as a giant Markdown block. It is represented by a schema map, a machine-readable validation profile, an exhaustive bidirectional field contract with source pointers and lines, a canonical capability inventory, a stable owner/acceptance registry, an enum-declaration example fixture, and separate schema acceptance criteria.
 - The split plan strengthens acceptance language where previous wording could permit drift, including runtime identity, Godot theme slot mapping, normalized style drift taxonomy, UI family tiers, deterministic substitute boundaries, file upload security gating, and full TapTapMarker non-technology UI capability preservation.
 - These strengthened rules are additive hardening and do not remove source requirements.
 - The GDD document-generation sidecar/status/action, admin review queue, and prototype-skeleton compatibility guard are split-plan hardening additions inside `02a-route-state-artifacts.md` and related API/frontend/test/phase documents; they are intentionally listed in the split output inventory and normalization notes rather than as original source headings.
