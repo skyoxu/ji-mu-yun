@@ -1,0 +1,103 @@
+{
+  "schema_version": "gdd-to-module-first-slice-review.v1",
+  "slice_id": "phase-a-gdd-to-module-recommended-first-slice",
+  "slice_version": "v1",
+  "run_id": "20260710T000000Z-example",
+  "reviewed_utc": "2026-07-10T00:00:00.0000000Z",
+  "reviewer": "automation",
+  "commit_readiness": {
+    "split_directory_included": true,
+    "schema_fixtures_included": true,
+    "no_untracked_split_plan_files": true,
+    "monolithic_source_used_as_live_mirror": false,
+    "monolithic_source_changed": false,
+    "monolithic_source_change_recorded_as_history_maintenance": false
+  },
+  "phase0a_exit": {
+    "can_start_phase1": true,
+    "completed_item_ids": [
+      "0A-01",
+      "0A-02",
+      "0A-03",
+      "0A-04",
+      "0A-05",
+      "0A-06",
+      "0A-07",
+      "0A-08",
+      "0A-09",
+      "0A-10",
+      "0A-11",
+      "0A-12",
+      "0A-13",
+      "0A-14",
+      "0A-15",
+      "0A-16",
+      "0A-17"
+    ],
+    "unresolved_findings_by_severity": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0,
+      "info": 0
+    }
+  },
+  "phase0b_route_dependencies": [
+    {
+      "route": "gdd-requirements",
+      "required_item_ids": [
+        "0B-18",
+        "0B-19",
+        "0B-20",
+        "0B-21",
+        "0B-23"
+      ],
+      "active_blockers": []
+    }
+  ],
+  "phase1_slice_items": [
+    {
+      "item_id": "P1-23",
+      "status": "covered",
+      "evidence_refs": [
+        {
+          "kind": "test",
+          "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs"
+        }
+      ]
+    },
+    {
+      "item_id": "P1-33",
+      "status": "covered",
+      "evidence_refs": [
+        {
+          "kind": "test",
+          "path": "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+        }
+      ]
+    }
+  ],
+  "full_target_capability_records": [
+    {
+      "capability_id": "ui_scroll_virtualization",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "coverage_status": "not_consumed_by_first_slice",
+      "reason": "No large list or virtualized grid is consumed by the first touched route.",
+      "affected_routes": [
+        "gdd-requirements"
+      ],
+      "recheck_phase": "Phase 5-6 or earlier if a touched route consumes large lists/grids."
+    }
+  ],
+  "evidence_refs": [
+    {
+      "kind": "test",
+      "path": "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+    }
+  ],
+  "unresolved_findings_by_severity": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "info": 0
+  }
+}

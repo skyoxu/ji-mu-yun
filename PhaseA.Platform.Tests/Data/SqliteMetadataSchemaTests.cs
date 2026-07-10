@@ -37,8 +37,239 @@ public sealed class SqliteMetadataSchemaTests
             "project_prototype_drafts",
             "project_iteration_sessions",
             "project_iteration_goals",
-            "project_iteration_goal_runs"
+            "project_iteration_goal_runs",
+            "project_admin_review_queue",
+            "project_diagnostic_spool",
+            "project_delete_tombstones",
+            "game_type_maintenance_records"
         ]);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_CreatesGovernanceIndexesForAdminReadback()
+    {
+        using var database = TempSqliteDatabase.Create();
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var indexes = await ReadIndexNamesAsync(database.ConnectionString);
+
+        indexes.Should().Contain([
+            "ix_project_admin_review_queue_status_created",
+            "ix_project_admin_review_queue_project_status",
+            "ix_project_admin_review_queue_project_route_requirement_reason",
+            "ix_project_diagnostic_spool_triage_created",
+            "ix_project_diagnostic_spool_project_triage",
+            "ix_project_diagnostic_spool_diagnostic_id",
+            "ix_project_diagnostic_spool_triage_severity_updated",
+            "ix_project_diagnostic_spool_account_project_triage",
+            "ix_project_diagnostic_spool_deleted_lookup",
+            "ix_project_diagnostic_spool_route_family_created",
+            "ix_project_diagnostic_spool_retention_cleanup",
+            "ix_project_delete_tombstones_deleted",
+            "ix_project_delete_tombstones_tombstone_event",
+            "ix_game_type_maintenance_records_status_created"
+        ]);
+    }
+
+    [Fact]
+    public async Task AdminReviewQueueDecision_IsIdempotentForSamePayloadAndConflictsForDifferentPayload()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "queue-project", "Queue Game"));
+        var entry = await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId,
+            project.ProjectId!,
+            "gdd-requirements",
+            "REQ-001",
+            "P1",
+            "requirement conflict",
+            "meta/routes/gdd-requirements/latest.json",
+            """[{"kind":"sidecar","path":"meta/routes/gdd-requirements/latest.json"}]"""));
+
+        var approved = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            "approved",
+            "accepted conflict suppression",
+            """{"decisionId":"D-1"}""",
+            expectedDecisionVersion: 0);
+        var retry = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            "approved",
+            "accepted conflict suppression",
+            """{"decisionId":"D-1"}""",
+            expectedDecisionVersion: 0);
+        var conflict = await store.DecideProjectAdminReviewQueueEntryAsync(
+            entry.Id,
+            accountId,
+            "rejected",
+            "different decision",
+            """{"decisionId":"D-2"}""",
+            expectedDecisionVersion: 0);
+
+        approved.Status.Should().Be("updated");
+        approved.Entry!.DecisionVersion.Should().Be(1);
+        retry.Status.Should().Be("returned_existing");
+        retry.Entry!.DecisionVersion.Should().Be(1);
+        conflict.Status.Should().Be("conflict");
+        conflict.FailureCode.Should().Be("decision_version_conflict");
+    }
+
+    [Fact]
+    public async Task DeleteProjectAsync_PreservesGovernanceRecordsAndWritesTombstone()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "deleted-project", "Deleted Game"));
+        await store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            accountId,
+            project.ProjectId!,
+            "prototype-contract",
+            "REQ-002",
+            "P0",
+            "admin review blocked",
+            "routes/prototype-contract/latest.json",
+            """[{"kind":"db_row","path":"project_admin_review_queue"}]"""));
+        await store.RecordProjectDiagnosticSpoolEntryAsync(new ProjectDiagnosticSpoolCommand(
+            accountId,
+            project.ProjectId!,
+            "ui-wiring",
+            "missing_ui_surface",
+            "P1",
+            "UI closure surface is missing.",
+            """[{"kind":"validator","path":"meta/routes/ui-wiring/latest.json"}]""",
+            ProjectNameSnapshot: "Deleted Game",
+            SourceRefsJson: """[{"kind":"sidecar","path":"meta/routes/ui-wiring/latest.json"}]""",
+            RemediationHintId: "missing_ui_surface"));
+
+        await store.DeleteProjectAsync(project.ProjectId!);
+
+        var queue = await store.ListProjectAdminReviewQueueForAdminAsync();
+        var diagnostics = await store.ListProjectDiagnosticSpoolForAdminAsync("");
+        var tombstones = await store.ListProjectDeleteTombstonesForAdminAsync();
+
+        queue.Should().ContainSingle(entry => entry.ProjectId == project.ProjectId && entry.ProjectDeletedUtc != null);
+        diagnostics.Where(entry => entry.ProjectId == project.ProjectId && entry.ProjectDeletedUtc != null)
+            .Should()
+            .HaveCount(2);
+        tombstones.Should().ContainSingle(tombstone =>
+            tombstone.ProjectId == project.ProjectId &&
+            !string.IsNullOrWhiteSpace(tombstone.ProjectTombstoneId) &&
+            !string.IsNullOrWhiteSpace(tombstone.DeletionEventId) &&
+            tombstone.UnresolvedAdminReviewCount == 1 &&
+            tombstone.UnresolvedDiagnosticCount == 1);
+        diagnostics.Should().OnlyContain(entry =>
+            entry.ProjectTombstoneId == tombstones[0].ProjectTombstoneId &&
+            entry.DeletionEventId == tombstones[0].DeletionEventId);
+        diagnostics.Should().Contain(entry => entry.RouteId == "project-delete" && entry.FailureFamily == "workspace_delete_failed");
+    }
+
+    [Fact]
+    public async Task DiagnosticSpool_WritesOutsideWorkspace_AndSupportsAdminTriageWithoutRewritingHistory()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "phase-a-diagnostic-test", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var metadataPath = Path.Combine(root, "data", "phase-a-platform.sqlite3");
+        Directory.CreateDirectory(Path.GetDirectoryName(metadataPath)!);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_METADATA_DB_PATH"] = metadataPath
+        });
+        var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+        {
+            DataSource = metadataPath,
+            Pooling = false
+        }.ToString();
+
+        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        var store = new PhaseAMetadataStore(connectionString, options);
+        var accountId = await store.EnsureSingleAdminAsync();
+        var project = await store.CreateProjectAsync(CreateCommand(accountId, "diagnostic-project", "Diagnostic Game"));
+        var projectSnapshot = await store.GetProjectSnapshotAsync(project.ProjectId!);
+
+        var entry = await store.RecordProjectDiagnosticSpoolEntryAsync(new ProjectDiagnosticSpoolCommand(
+            accountId,
+            project.ProjectId!,
+            "preview-package",
+            "preview_blank",
+            "P1",
+            "C:/secret/path prompt: sk-test should be redacted.",
+            """[{"kind":"screenshot","path":"artifacts/preview.png"}]""",
+            ProjectNameSnapshot: "Diagnostic Game",
+            RunId: "run-one",
+            SourceRefsJson: """[{"kind":"source_hash","path":"routes/prototype-contract/latest.json"}]""",
+            AdminSummary: "C:/secret/admin/path token=value",
+            RemediationHintId: "preview_blank"));
+
+        entry.DiagnosticId.Should().Be(entry.Id);
+        entry.SpoolRef.Should().StartWith("logs/phase-a-innernet/diagnostics/projects/");
+        entry.SpoolRef.Should().NotContain(projectSnapshot!.RepoPath.Replace('\\', '/'));
+        entry.UserSafeSummary.Should().NotContain("C:/secret");
+        entry.UserSafeSummary.Should().NotContain("sk-test");
+        var spoolFileName = Path.GetFileName(entry.SpoolRef.Replace('/', Path.DirectorySeparatorChar));
+        File.Exists(Path.Combine(root, "diagnostics", "projects", accountId, project.ProjectId!, spoolFileName)).Should().BeTrue();
+
+        var filtered = await store.ListProjectDiagnosticSpoolForAdminAsync(new ProjectDiagnosticSpoolQuery(
+            "unresolved",
+            accountId,
+            project.ProjectId,
+            "preview-package",
+            "preview_blank",
+            "P1"));
+        filtered.Should().ContainSingle(item => item.DiagnosticId == entry.DiagnosticId);
+        (await store.CountUnresolvedBlockingDiagnosticsAsync(accountId, project.ProjectId!)).Should().Be(1);
+
+        var decided = await store.DecideProjectDiagnosticSpoolEntryAsync(
+            entry.DiagnosticId,
+            accountId,
+            "resolved",
+            "Fixed through rebuilt preview.",
+            """[{"kind":"screenshot","path":"artifacts/preview-fixed.png"}]""");
+
+        decided.Status.Should().Be("updated");
+        decided.Entry!.FailureFamily.Should().Be("preview_blank");
+        decided.Entry.SpoolRef.Should().Be(entry.SpoolRef);
+        decided.Entry.TriageStatus.Should().Be("resolved");
+        decided.Entry.RetentionClass.Should().Be("resolved_audit");
+        decided.Entry.TriageDecisionBy.Should().Be(accountId);
+        (await store.CountUnresolvedBlockingDiagnosticsAsync(accountId, project.ProjectId!)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task DiagnosticSpool_UserReadback_IsScopedToCurrentAccount()
+    {
+        using var database = TempSqliteDatabase.Create();
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
+
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var owner = await store.CreateUserAccountAsync("diagnostic-owner", 1);
+        var other = await store.CreateUserAccountAsync("diagnostic-other", 1);
+        var project = await store.CreateProjectAsync(CreateCommand(owner.AccountId, "owned-diagnostic", "Owned Game"));
+        await store.RecordProjectDiagnosticSpoolEntryAsync(new ProjectDiagnosticSpoolCommand(
+            owner.AccountId,
+            project.ProjectId!,
+            "execute-next-goal",
+            "contract_stale",
+            "P1",
+            "Contract is stale.",
+            "[]"));
+
+        var ownerRows = await store.ListProjectDiagnosticSpoolForAccountAsync(owner.AccountId, project.ProjectId!);
+        var otherRows = await store.ListProjectDiagnosticSpoolForAccountAsync(other.AccountId, project.ProjectId!);
+
+        ownerRows.Should().ContainSingle(row => row.FailureFamily == "contract_stale");
+        otherRows.Should().BeEmpty();
     }
 
     [Fact]
@@ -1058,5 +1289,21 @@ public sealed class SqliteMetadataSchemaTests
         command.CommandText = sql;
         var value = await command.ExecuteScalarAsync();
         return Convert.ToInt64(value);
+    }
+
+    private static async Task<IReadOnlySet<string>> ReadIndexNamesAsync(string connectionString)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT name FROM sqlite_master WHERE type = 'index';";
+        var indexes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            indexes.Add(reader.GetString(0));
+        }
+
+        return indexes;
     }
 }

@@ -10,6 +10,22 @@ public sealed class ProjectWorkflowRouteService
 {
     private const string NoActionId = "none";
 
+    private static readonly IReadOnlyList<ProjectWorkflowStageDefinition> StageDefinitions =
+    [
+        new("project-created", "项目创建", "input", "metadata project row, workspace root, bootstrap status", "P0"),
+        new("gdd-question-form", "GDD 问卷", "input", "GDD question-form answers or restore state", "P1"),
+        new("scene-route-confirmation", "场景路线确认", "input", "confirmed scene route draft", "P1"),
+        new("gdd-document-generation", "GDD 文档生成", "input", "docs/gdd/GDD.md and outline readback", "P1"),
+        new("gdd-requirement-map", "GDD 需求映射", "contract", "requirement map sidecar or explicit missing-state readback", "P1"),
+        new("prototype-contract-freeze", "原型契约冻结", "contract", "prototype contract with source hashes and freshness state", "P0"),
+        new("prototype-skeleton", "M1 场景骨架", "execution", "prototype workflow run and skeleton validation evidence", "P0"),
+        new("iteration-plan", "游戏模块计划", "execution", "iteration session and mapped executable goals", "P1"),
+        new("module-execution", "模块逐项执行", "execution", "current goal state, run link, and acceptance evidence", "P1"),
+        new("needs-fix-or-repair", "验收修复", "recovery", "repair ledger or latest blocker evidence", "P0"),
+        new("ui-wiring-closure", "UI wiring closure", "closure", "UI closure readback or explicit pending state", "P1"),
+        new("preview-package", "预览打包下载", "release", "preview/package/readback artifacts", "P2")
+    ];
+
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly PrototypeWorkflowService _prototypeWorkflow;
@@ -17,6 +33,7 @@ public sealed class ProjectWorkflowRouteService
     private readonly ProjectPackageService _packages;
     private readonly ProjectAssetInventoryService _assetInventory;
     private readonly ILlmRouteEngine _llmRouteEngine;
+    private readonly ProjectRouteStateArtifactService _routeStateArtifacts;
 
     public ProjectWorkflowRouteService(
         PhaseAMetadataStore metadataStore,
@@ -25,7 +42,8 @@ public sealed class ProjectWorkflowRouteService
         PrototypeRepairPlanService repairPlans,
         ProjectPackageService packages,
         ProjectAssetInventoryService assetInventory,
-        ILlmRouteEngine llmRouteEngine)
+        ILlmRouteEngine llmRouteEngine,
+        ProjectRouteStateArtifactService? routeStateArtifacts = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -34,6 +52,7 @@ public sealed class ProjectWorkflowRouteService
         _packages = packages;
         _assetInventory = assetInventory;
         _llmRouteEngine = llmRouteEngine;
+        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService();
     }
 
     public async Task<ProjectWorkflowRouteResult?> QueryAsync(
@@ -77,6 +96,12 @@ public sealed class ProjectWorkflowRouteService
         var stage = steps.FirstOrDefault(step => step.Id == action.UiTarget) ??
                     steps.FirstOrDefault(step => step.Id == state.StageId) ??
                     steps.First();
+        var routeStateArtifacts = _routeStateArtifacts.Read(project);
+        var workflowRecommendation = _routeStateArtifacts.BuildRecommendation(project, routeStateArtifacts, action);
+        var unresolvedDiagnosticBlockerCount = await _metadataStore.CountUnresolvedBlockingDiagnosticsAsync(
+            accountId,
+            project.ProjectId,
+            cancellationToken);
 
         return new ProjectWorkflowRouteResult(
             project.ProjectId,
@@ -86,7 +111,11 @@ public sealed class ProjectWorkflowRouteService
             BuildRecommendation(state, action, playtestFeedback),
             action,
             steps,
-            actions);
+            actions,
+            StageDefinitions,
+            BuildSeverityReview(state, unresolvedDiagnosticBlockerCount),
+            workflowRecommendation,
+            routeStateArtifacts);
     }
 
     public async Task<ProjectWorkflowIntentResult> ClassifyIntentAsync(
@@ -165,14 +194,31 @@ public sealed class ProjectWorkflowRouteService
     {
         return
         [
-            new("new-project", "游戏项目概述", "done", state.Project.Name),
-            new("create-prototype", "游戏场景创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
-            new("execute-or-repair", "场景验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
-            new("iteration-plan", "创建游戏模块", state.IterationStatus, state.IterationEvidence),
-            new("prototype-acceptance", "原型项目验收", state.AcceptanceStatus, state.AcceptanceEvidence),
-            new("asset-inventory", "项目素材库", state.AssetInventoryStatus, state.AssetInventoryEvidence),
-            new("download-project", "打包下载项目", state.DownloadStatus, state.DownloadEvidence)
+            Step("project-created", "done", state.Project.Name),
+            Step("gdd-question-form", state.GddQuestionFormStatus, state.GddQuestionFormEvidence),
+            Step("scene-route-confirmation", state.SceneRouteStatus, state.SceneRouteEvidence),
+            Step("gdd-document-generation", state.GddDocumentStatus, state.GddDocumentEvidence),
+            Step("gdd-requirement-map", state.RequirementMapStatus, state.RequirementMapEvidence),
+            Step("prototype-contract-freeze", state.ContractFreezeStatus, state.ContractFreezeEvidence),
+            Step("prototype-skeleton", state.PrototypeCreationStatus, state.PrototypeCreationEvidence),
+            Step("needs-fix-or-repair", state.SkeletonRepairStatus, state.SkeletonRepairEvidence),
+            Step("iteration-plan", state.IterationStatus, state.IterationEvidence),
+            Step("module-execution", state.ModuleExecutionStatus, state.ModuleExecutionEvidence),
+            Step("ui-wiring-closure", state.UiClosureStatus, state.UiClosureEvidence),
+            Step("preview-package", state.DownloadStatus, state.DownloadEvidence),
+            new("new-project", "游戏项目概述", "done", state.Project.Name, "legacy", "P0"),
+            new("create-prototype", "游戏场景创建", state.PrototypeCreationStatus, state.PrototypeCreationEvidence, "legacy", "P0"),
+            new("execute-or-repair", "场景验收修复", state.SkeletonRepairStatus, state.SkeletonRepairEvidence, "legacy", "P0"),
+            new("prototype-acceptance", "原型项目验收", state.AcceptanceStatus, state.AcceptanceEvidence, "legacy", "P1"),
+            new("asset-inventory", "项目素材库", state.AssetInventoryStatus, state.AssetInventoryEvidence, "legacy", "P2"),
+            new("download-project", "打包下载项目", state.DownloadStatus, state.DownloadEvidence, "legacy", "P2")
         ];
+    }
+
+    private static ProjectWorkflowRouteStep Step(string id, string status, string evidence)
+    {
+        var definition = StageDefinitions.First(stage => stage.Id == id);
+        return new ProjectWorkflowRouteStep(id, definition.Label, status, evidence, definition.StageGroup, definition.SeverityGate);
     }
 
     private static ProjectWorkflowNextAction ResolveNextAction(ProjectWorkflowState state, string? playtestFeedback)
@@ -260,6 +306,8 @@ public sealed class ProjectWorkflowRouteService
         {
             $"项目：{project.Name}（{project.GameName}）",
             $"游戏类型：{project.GameTypeSource}",
+            $"当前阶段：{state.StageId}",
+            $"GDD 链路：{HumanStatus(state.GddDocumentStatus)}；需求映射：{HumanStatus(state.RequirementMapStatus)}；契约冻结：{HumanStatus(state.ContractFreezeStatus)}",
             $"游戏场景：{HumanStatus(state.PrototypeCreationStatus)}",
             $"场景/原型项目验收：{HumanStatus(state.AcceptanceStatus)}",
             $"游戏模块：{state.IterationEvidence}",
@@ -267,6 +315,68 @@ public sealed class ProjectWorkflowRouteService
         };
 
         return string.Join("\n", parts);
+    }
+
+    private static ProjectWorkflowSeverityReview BuildSeverityReview(ProjectWorkflowState state, int unresolvedDiagnosticBlockerCount)
+    {
+        var blockers = new SortedSet<string>(StringComparer.Ordinal)
+        {
+            "P0",
+            "P1"
+        };
+
+        if (!state.HasPackage)
+        {
+            blockers.Add("P2");
+        }
+
+        if (state.HasPrototypeSkeleton && !state.HasContractFreeze)
+        {
+            blockers.Add("P0");
+        }
+
+        if (state.HasIterationPlan && !state.HasRequirementMap)
+        {
+            blockers.Add("P1");
+        }
+
+        if (unresolvedDiagnosticBlockerCount > 0)
+        {
+            blockers.Add("P1");
+        }
+
+        var refs = new List<string>
+        {
+            "route:/api/projects/{projectId}/workflow-route",
+            "artifact:project-workflow-route-result"
+        };
+
+        if (state.HasPrototypeSkeleton)
+        {
+            refs.Add("run:prototype-7day-playable");
+        }
+
+        if (state.HasIterationPlan)
+        {
+            refs.Add("db:project_iteration_sessions");
+        }
+
+        if (state.HasPackage)
+        {
+            refs.Add("artifact:project-package-zip");
+        }
+
+        if (unresolvedDiagnosticBlockerCount > 0)
+        {
+            refs.Add("metadata:project_diagnostic_spool");
+        }
+
+        var status = blockers.Count == 0 ? "passed" : "blocked";
+        var summary = status == "passed"
+            ? "No unresolved P0/P1/P2 workflow blockers are visible in the current route readback."
+            : "Workflow route reports unresolved severity gates; continue only through the recommended recoverable action.";
+
+        return new ProjectWorkflowSeverityReview(status, blockers.ToArray(), refs, summary);
     }
 
     private static string BuildRecommendation(ProjectWorkflowState state, ProjectWorkflowNextAction action, string? playtestFeedback)
@@ -445,6 +555,8 @@ public sealed class ProjectWorkflowRouteService
         bool HasRunnableRepairStep,
         bool RepairCompletedOrEmpty,
         bool HasIterationPlan,
+        bool HasRequirementMap,
+        bool HasContractFreeze,
         bool HasNeedsFixIterationGoal,
         bool IterationCompleted,
         bool UiOptimizationSucceeded,
@@ -452,14 +564,28 @@ public sealed class ProjectWorkflowRouteService
         bool HasPackage,
         bool UsesGenericPrototypeRoute,
         string StageId,
+        string GddQuestionFormStatus,
+        string GddQuestionFormEvidence,
+        string SceneRouteStatus,
+        string SceneRouteEvidence,
+        string GddDocumentStatus,
+        string GddDocumentEvidence,
+        string RequirementMapStatus,
+        string RequirementMapEvidence,
+        string ContractFreezeStatus,
+        string ContractFreezeEvidence,
         string PrototypeCreationStatus,
         string PrototypeCreationEvidence,
         string SkeletonRepairStatus,
         string SkeletonRepairEvidence,
         string IterationStatus,
         string IterationEvidence,
+        string ModuleExecutionStatus,
+        string ModuleExecutionEvidence,
         string UiOptimizationStatus,
         string UiOptimizationEvidence,
+        string UiClosureStatus,
+        string UiClosureEvidence,
         string AcceptanceStatus,
         string AcceptanceEvidence,
         string AssetInventoryStatus,
@@ -523,6 +649,34 @@ public sealed class ProjectWorkflowRouteService
                 PrototypeRouteSkillPolicy.ResolveProfile(project).GameTypeId,
                 "default",
                 StringComparison.OrdinalIgnoreCase);
+            var hasQuestionForm = AnyProjectFileExists(
+                project,
+                Path.Combine("meta", "gdd", "question-form.latest.json"),
+                Path.Combine("meta", "routes", "gdd-question-form", "latest.json"),
+                Path.Combine("routes", "gdd-question-form", "latest.json"));
+            var hasSceneRoute = AnyProjectFileExists(
+                project,
+                Path.Combine("meta", "routes", "gdd-scene-route", "latest.json"),
+                Path.Combine("meta", "routes", "scene-route", "latest.json"),
+                Path.Combine("routes", "gdd-scene-route", "latest.json"));
+            var hasGddDocument = AnyProjectFileExists(
+                project,
+                Path.Combine("docs", "gdd", "GDD.md"),
+                Path.Combine("docs", "gdd", "gdd.md"));
+            var hasRequirementMap = AnyProjectFileExists(
+                project,
+                Path.Combine("meta", "routes", "gdd-requirement-map", "latest.json"),
+                Path.Combine("meta", "routes", "requirement-map", "latest.json"),
+                Path.Combine("routes", "gdd-requirement-map", "latest.json"));
+            var hasContractFreeze = AnyProjectFileExists(
+                project,
+                Path.Combine("meta", "routes", "prototype-contract", "latest.json"),
+                Path.Combine("routes", "prototype-contract", "latest.json"));
+            var hasUiClosure = AnyProjectFileExists(
+                project,
+                Path.Combine("meta", "routes", "ui-wiring-closure", "latest.json"),
+                Path.Combine("meta", "routes", "ui-closure", "latest.json"),
+                Path.Combine("logs", "ci", "chapter7-ui-wiring", "closure-summary.json"));
 
             var prototypeStepStatus = !hasPrototype
                 ? creationStatus == "failed" ? "fix" : "pending"
@@ -546,8 +700,35 @@ public sealed class ProjectWorkflowRouteService
             var assetStatus = inventoryAvailable ? "done" : "pending";
             var packageStatus = hasPackage ? "done" : "pending";
             var downloadStatus = hasPackage ? "done" : "pending";
+            var questionFormStatus = hasQuestionForm ? "done" : "pending";
+            var sceneRouteStatus = hasSceneRoute ? "done" : "pending";
+            var gddStatus = hasGddDocument ? "done" : "pending";
+            var requirementMapStatus = hasRequirementMap ? "done" : hasGddDocument ? "pending" : "blocked";
+            var contractStatus = hasContractFreeze ? "done" : hasRequirementMap ? "pending" : "blocked";
+            var moduleExecutionStatus = !hasPlan
+                ? "pending"
+                : hasNeedsFix
+                    ? "fix"
+                    : iterationCompleted
+                        ? "done"
+                        : "continue";
+            var uiClosureStatus = hasUiClosure ? "done" : iterationCompleted ? "pending" : "blocked";
 
-            var stageId = ResolveStageId(hasPrototype, failedAcceptance, hasRunnableRepair, hasPlan, hasNeedsFix, iterationCompleted, finalAcceptancePassed, inventoryAvailable, hasPackage);
+            var stageId = ResolveStageId(
+                hasQuestionForm,
+                hasSceneRoute,
+                hasGddDocument,
+                hasRequirementMap,
+                hasContractFreeze,
+                hasPrototype,
+                failedAcceptance,
+                hasRunnableRepair,
+                hasPlan,
+                hasNeedsFix,
+                iterationCompleted,
+                hasUiClosure,
+                finalAcceptancePassed,
+                hasPackage);
             return new ProjectWorkflowState(
                 project,
                 hasPrototype,
@@ -557,6 +738,8 @@ public sealed class ProjectWorkflowRouteService
                 hasRunnableRepair,
                 repairCompletedOrEmpty,
                 hasPlan,
+                hasRequirementMap,
+                hasContractFreeze,
                 hasNeedsFix,
                 iterationCompleted,
                 uiSucceeded,
@@ -564,14 +747,28 @@ public sealed class ProjectWorkflowRouteService
                 hasPackage,
                 usesGenericRoute,
                 stageId,
+                questionFormStatus,
+                hasQuestionForm ? "GDD question-form state is available." : "GDD question-form state is missing or not yet restored.",
+                sceneRouteStatus,
+                hasSceneRoute ? "Confirmed scene route state is available." : "Scene route confirmation state is missing.",
+                gddStatus,
+                hasGddDocument ? "docs/gdd/GDD.md is available." : "GDD document has not been generated yet.",
+                requirementMapStatus,
+                hasRequirementMap ? "GDD requirement map sidecar is available." : "GDD requirement map sidecar is not available yet.",
+                contractStatus,
+                hasContractFreeze ? "Prototype contract freeze sidecar is available." : "Prototype contract freeze sidecar is missing or blocked by upstream inputs.",
                 prototypeStepStatus,
                 hasPrototype ? "游戏场景已创建。" : progress.PrototypeCreationFailure ?? progress.Failure ?? progress.Label ?? "尚未创建游戏场景。",
                 repairStatus,
                 repairGoals.Count == 0 ? "尚未生成修复计划。" : $"修复计划 {repairGoals.Count} 个任务，待处理 {repairGoals.Count(goal => IsRunnable(goal.Status))} 个任务。",
                 iterationStatus,
                 hasPlan ? $"共 {goals.Count} 个任务，完成 {goals.Count(goal => IsDone(goal.Status))} 个，需要修复 {goals.Count(goal => IsNeedsFix(goal.Status))} 个。" : "尚未生成游戏模块。",
+                moduleExecutionStatus,
+                hasPlan ? $"模块执行状态：完成 {goals.Count(goal => IsDone(goal.Status))}/{goals.Count}，需要修复 {goals.Count(goal => IsNeedsFix(goal.Status))}。" : "尚无可执行模块任务。",
                 uiStatus,
                 uiSucceeded ? "游戏界面优化已完成。" : uiRun is null ? "游戏界面优化尚未运行，可选。" : $"最近一次游戏界面优化状态：{uiRun.Status}。",
+                uiClosureStatus,
+                hasUiClosure ? "UI wiring closure evidence is available." : "UI wiring closure has not been completed.",
                 acceptanceStatus,
                 finalAcceptancePassed ? "原型项目验收通过。" : acceptancePassed && iterationCompleted ? "游戏模块完成后尚未重新进行原型项目验收。" : progress.AcceptanceFailure ?? progress.Failure ?? "尚未获得通过的原型项目验收。",
                 assetStatus,
@@ -583,23 +780,80 @@ public sealed class ProjectWorkflowRouteService
         }
 
         private static string ResolveStageId(
+            bool hasQuestionForm,
+            bool hasSceneRoute,
+            bool hasGddDocument,
+            bool hasRequirementMap,
+            bool hasContractFreeze,
             bool hasPrototype,
             bool failedAcceptance,
             bool hasRunnableRepair,
             bool hasPlan,
             bool hasNeedsFix,
             bool iterationCompleted,
+            bool hasUiClosure,
             bool acceptancePassed,
-            bool inventoryAvailable,
             bool hasPackage)
         {
-            if (!hasPrototype) return "create-prototype";
-            if (failedAcceptance || hasRunnableRepair) return "execute-or-repair";
+            if (!hasQuestionForm) return "gdd-question-form";
+            if (!hasSceneRoute) return "scene-route-confirmation";
+            if (!hasGddDocument) return "gdd-document-generation";
+            if (!hasRequirementMap) return "gdd-requirement-map";
+            if (!hasContractFreeze) return "prototype-contract-freeze";
+            if (!hasPrototype) return "prototype-skeleton";
+            if (failedAcceptance || hasRunnableRepair) return "needs-fix-or-repair";
             if (!hasPlan || hasNeedsFix || !iterationCompleted) return "iteration-plan";
+            if (!hasUiClosure) return "ui-wiring-closure";
             if (!acceptancePassed) return "prototype-acceptance";
-            if (!inventoryAvailable) return "asset-inventory";
-            if (!hasPackage) return "download-project";
-            return "download-project";
+            if (!hasPackage) return "preview-package";
+            return "preview-package";
+        }
+
+        private static bool AnyProjectFileExists(ProjectSnapshot project, params string[] relativePaths)
+        {
+            return relativePaths.Any(relativePath => ProjectFileExists(project, relativePath));
+        }
+
+        private static bool ProjectFileExists(ProjectSnapshot project, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath) ||
+                Path.IsPathRooted(relativePath) ||
+                relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(part => part == ".."))
+            {
+                return false;
+            }
+
+            return SafeFileExists(project.RepoPath, relativePath) || SafeFileExists(project.MetaPath, relativePath);
+        }
+
+        private static bool SafeFileExists(string root, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                return false;
+            }
+
+            try
+            {
+                var rootFullPath = Path.GetFullPath(root);
+                var fullPath = Path.GetFullPath(Path.Combine(rootFullPath, relativePath));
+                var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+                if (!fullPath.StartsWith(rootFullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, comparison) &&
+                    !string.Equals(fullPath, rootFullPath, comparison))
+                {
+                    return false;
+                }
+
+                return File.Exists(fullPath);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                return false;
+            }
         }
 
         private static RunSnapshot? LatestRun(IEnumerable<RunSnapshot> runs, Func<RunSnapshot, bool> predicate)

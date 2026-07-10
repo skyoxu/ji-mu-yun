@@ -210,6 +210,34 @@ public sealed class BrowserUiRenderer
                 body.v2-detail .v2-workflow-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 0.55rem; }
                 body.v2-detail .v2-workflow-route-action { width: auto; border-radius: 999px; padding: 0.48rem 0.8rem; }
                 body.v2-detail .v2-workflow-route-action[disabled] { opacity: 0.55; cursor: not-allowed; }
+                body.v2-detail .v2-workflow-readback { display: grid; gap: 0.75rem; margin-top: 0.75rem; max-width: 100%; }
+                body.v2-detail .v2-workflow-stage-timeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.45rem; }
+                body.v2-detail .v2-workflow-stage { border: 1px solid #ded8cc; border-left-width: 0.35rem; border-radius: 0.45rem; padding: 0.5rem; background: #fffdf8; min-width: 0; }
+                body.v2-detail .v2-workflow-stage strong,
+                body.v2-detail .v2-workflow-stage span,
+                body.v2-detail .v2-workflow-stage small { display: block; overflow-wrap: anywhere; }
+                body.v2-detail .v2-workflow-stage span { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; }
+                body.v2-detail .v2-workflow-stage small { color: #6b6258; font-size: 0.74rem; }
+                body.v2-detail .v2-workflow-stage.completed { border-left-color: #2f855a; }
+                body.v2-detail .v2-workflow-stage.ready,
+                body.v2-detail .v2-workflow-stage.running { border-left-color: #2b6cb0; }
+                body.v2-detail .v2-workflow-stage.needs_review,
+                body.v2-detail .v2-workflow-stage.stale { border-left-color: #b7791f; }
+                body.v2-detail .v2-workflow-stage.blocked { border-left-color: #c53030; }
+                body.v2-detail .v2-workflow-stage.not_started { border-left-color: #a0aec0; }
+                body.v2-detail .v2-workflow-freshness-banner,
+                body.v2-detail .v2-workflow-compatibility,
+                body.v2-detail .v2-workflow-module-plan,
+                body.v2-detail .v2-workflow-ui-closure,
+                body.v2-detail .v2-workflow-final-readiness { border: 1px solid #ded8cc; border-radius: 0.45rem; padding: 0.6rem; background: #fffdf8; }
+                body.v2-detail .v2-workflow-freshness-banner { border-color: #b7791f; background: #fffaf0; }
+                body.v2-detail .v2-workflow-section-title { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.5rem; }
+                body.v2-detail .v2-workflow-requirements { overflow-x: auto; max-width: 100%; }
+                body.v2-detail .v2-workflow-requirements table { width: 100%; min-width: 56rem; border-collapse: collapse; font-size: 0.78rem; }
+                body.v2-detail .v2-workflow-requirements th,
+                body.v2-detail .v2-workflow-requirements td { border: 1px solid #ded8cc; padding: 0.4rem; vertical-align: top; overflow-wrap: anywhere; }
+                body.v2-detail .v2-workflow-requirements tr.blocked { background: #fff5f5; }
+                body.v2-detail .v2-workflow-module-plan ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
                 .v2-fast-tooltip { position: fixed; z-index: 2500; max-width: min(28rem, calc(100vw - 2rem)); pointer-events: none; background: rgba(23, 33, 27, 0.94); color: #fffdf8; border-radius: 0.45rem; padding: 0.42rem 0.55rem; font-size: 0.82rem; line-height: 1.35; box-shadow: 0 0.75rem 1.8rem rgba(23, 33, 27, 0.22); opacity: 0; transform: translateY(0.15rem); transition: opacity 80ms ease, transform 80ms ease; }
                 .v2-fast-tooltip.open { opacity: 1; transform: translateY(0); }
                 body.v2-detail #v2IterationPanel,
@@ -1435,6 +1463,182 @@ public sealed class BrowserUiRenderer
                     lines.push("系统不会自动启动 run。需要你点击下方一次性按钮打开对应页面，再在页面内确认执行。");
                   }
                   return lines.filter(line => line !== null && line !== undefined).join("\n").trim();
+                }
+
+                const workflowStageTimeline = [
+                  ["gdd", "GDD", ["gdd-question-form"]],
+                  ["scene-confirmation", "Scene Confirmation", ["scene-route-confirmation"]],
+                  ["gdd-document-generation", "GDD Document Generation", ["gdd-document-generation"]],
+                  ["requirement-map", "Requirement Map", ["gdd-requirements"]],
+                  ["contract-freeze", "Contract Freeze", ["prototype-contract"]],
+                  ["game-modules", "Game Modules", ["prototype-skeleton"]],
+                  ["task-execution", "Task Execution", ["iteration-plan", "execute-next-goal"]],
+                  ["ui-closure", "UI Closure", ["ui-wiring"]],
+                  ["preview-package", "Preview/Package", ["preview-package"]]
+                ];
+                const routeReadbackToStageStatusMap = {
+                  queued: "ready",
+                  running: "running",
+                  ready: "completed",
+                  succeeded: "completed",
+                  needs_fix: "needs_review",
+                  failed: "blocked",
+                  blocked: "blocked",
+                  cancelled: "blocked",
+                  stale: "stale",
+                  unknown: "not_started",
+                  missing: "not_started"
+                };
+                const workflowRouteStatusValues = ["queued", "running", "ready", "blocked", "needs_fix", "succeeded", "failed", "cancelled", "stale", "unknown"];
+                const workflowStageStatusValues = ["not_started", "ready", "running", "needs_review", "blocked", "completed", "stale"];
+                const workflowRequirementStatusValues = ["mapped", "missing_scene", "missing_module", "needs_review", "explicitly_deferred", "conflict"];
+                const workflowUiSurfaceStatusValues = ["covered", "missing_ui", "missing_feedback", "needs_fix", "no_ui_needed"];
+                function workflowRouteArtifacts(route) {
+                  return Array.isArray(route?.routeStateArtifacts?.artifacts) ? route.routeStateArtifacts.artifacts : [];
+                }
+                function workflowArtifactByRoute(route, routeName) {
+                  return workflowRouteArtifacts(route).find(artifact => artifact?.route === routeName) || null;
+                }
+                function workflowStageStatusForArtifact(artifact) {
+                  if (!artifact) return "not_started";
+                  const freshness = String(artifact.freshness || "").toLowerCase();
+                  const status = String(artifact.status || "").toLowerCase();
+                  if (freshness === "stale") return "stale";
+                  if (status === "needs_review") return "needs_review";
+                  return routeReadbackToStageStatusMap[status] || "blocked";
+                }
+                function workflowStageReason(route, artifact) {
+                  if (!artifact) return "Missing route-state artifact.";
+                  const issues = Array.isArray(artifact.blockingIssueIds) ? artifact.blockingIssueIds : [];
+                  if (issues.length) return `${issues[0]} (${artifact.canonicalPath || artifact.route || "artifact"})`;
+                  if (artifact.freshness === "stale") return `${artifact.route || "artifact"} is stale: ${artifact.canonicalPath || ""}`;
+                  return artifact.canonicalPath || artifact.route || "";
+                }
+                function workflowStageTimelineModel(route) {
+                  return workflowStageTimeline.map(([id, label, routeNames]) => {
+                    const artifacts = routeNames.map(name => workflowArtifactByRoute(route, name)).filter(Boolean);
+                    const artifact = artifacts[0] || null;
+                    const statuses = artifacts.length ? artifacts.map(workflowStageStatusForArtifact) : ["not_started"];
+                    const priority = ["blocked", "stale", "needs_review", "running", "ready", "not_started", "completed"];
+                    const status = priority.find(item => statuses.includes(item)) || "not_started";
+                    return { id, label, status, reason: workflowStageReason(route, artifact), artifact };
+                  });
+                }
+                function workflowBlockingIssues(route) {
+                  const fromRecommendation = Array.isArray(route?.workflowRecommendation?.blockingIssues) ? route.workflowRecommendation.blockingIssues : [];
+                  const fromArtifacts = Array.isArray(route?.routeStateArtifacts?.blockingIssues) ? route.routeStateArtifacts.blockingIssues : [];
+                  return fromRecommendation.length ? fromRecommendation : fromArtifacts;
+                }
+                function workflowStaleReasons(route) {
+                  const contract = workflowArtifactByRoute(route, "prototype-contract");
+                  const issues = workflowBlockingIssues(route);
+                  const reasons = [];
+                  if (contract?.freshness === "stale") reasons.push("Prototype contract is stale; refresh the contract before creating or executing modules.");
+                  issues.forEach(issue => {
+                    const code = issue.domainCode || issue.issueId || "";
+                    if (code.includes("generated_gdd_hash_mismatch")) reasons.push("Generated GDD no longer matches the confirmed scene route. Regenerate the GDD document or reconfirm scenes.");
+                    if (code.includes("game_type_structured_stale")) reasons.push("Project type analysis changed after scene confirmation. Reconfirm scene route before continuing.");
+                    if (code.includes("scene_route_stale")) reasons.push("Scene route changed after contract freeze. Refresh contract and regenerate affected modules.");
+                    if (code.includes("contract_stale")) reasons.push("Frozen prototype contract no longer matches current sources.");
+                    if (code.includes("ui_contract_unknown")) reasons.push("Godot UI capability contract hash is missing; refresh the contract before UI-touching goals.");
+                  });
+                  return [...new Set(reasons)];
+                }
+                function workflowRequirementRows(route) {
+                  const artifact = workflowArtifactByRoute(route, "gdd-requirements");
+                  const rows = Array.isArray(artifact?.requirements) ? artifact.requirements : [];
+                  return rows;
+                }
+                function workflowExtractRequirementIssues(route) {
+                  return workflowBlockingIssues(route)
+                    .filter(issue => String(issue.issueId || "").startsWith("gdd-requirements:"));
+                }
+                function workflowModulePlanRows(route) {
+                  const plan = Array.isArray(state.iterationPlan?.goals) ? state.iterationPlan.goals : [];
+                  return plan.map(goal => ({
+                    index: goal.goalIndex || goal.index || "",
+                    title: goal.title || goal.description || "",
+                    requirementIds: Array.isArray(goal.requirementIds) ? goal.requirementIds : [],
+                    status: goal.status || ""
+                  }));
+                }
+                function workflowRenderRouteReadback(route) {
+                  if (!route) return "";
+                  const stages = workflowStageTimelineModel(route);
+                  const staleReasons = workflowStaleReasons(route);
+                  const requirementRows = workflowRequirementRows(route);
+                  const requirementIssues = workflowExtractRequirementIssues(route);
+                  const moduleRows = workflowModulePlanRows(route);
+                  const uiArtifact = workflowArtifactByRoute(route, "ui-wiring");
+                  const contract = workflowArtifactByRoute(route, "prototype-contract");
+                  return `
+                    <section class="v2-workflow-readback" data-workflow-route-readback="true">
+                      <div class="v2-workflow-stage-timeline" data-workflow-stage-timeline="true">
+                        ${stages.map(stage => `
+                          <div class="v2-workflow-stage ${escapeHtml(stage.status)}" data-workflow-stage="${escapeHtml(stage.id)}" data-stage-status="${escapeHtml(stage.status)}">
+                            <strong>${escapeHtml(stage.label)}</strong>
+                            <span>${escapeHtml(stage.status)}</span>
+                            <small>${escapeHtml(stage.reason || "")}</small>
+                          </div>
+                        `).join("")}
+                      </div>
+                      ${staleReasons.length ? `
+                        <div class="v2-workflow-freshness-banner" data-contract-freshness-banner="true">
+                          <strong>Contract freshness</strong>
+                          ${staleReasons.map(reason => `<p>${escapeHtml(reason)}</p>`).join("")}
+                          <button type="button" class="secondary" data-workflow-refresh-contract="true">Refresh contract</button>
+                        </div>
+                      ` : ""}
+                      <div class="v2-workflow-compatibility" data-workflow-compatibility="true">
+                        <span>Legacy preview/package remains separate from final readiness.</span>
+                        <span>Missing new-chain artifacts show concrete upstream actions instead of failing the page.</span>
+                      </div>
+                      <div class="v2-workflow-requirements" data-requirement-map-review="true">
+                        <div class="v2-workflow-section-title">
+                          <strong>GDD requirement map</strong>
+                          <button type="button" class="secondary" data-workflow-generate-requirement-map="true">Regenerate requirement map</button>
+                        </div>
+                        <table>
+                          <thead><tr><th>Requirement ID</th><th>Source section</th><th>Requirement</th><th>Priority</th><th>Kind</th><th>Scenes</th><th>Required modules</th><th>Goals</th><th>Status</th><th>Issue / conflict reason</th></tr></thead>
+                          <tbody>
+                            ${requirementRows.length ? requirementRows.map(row => {
+                              const status = String(row.status || "");
+                              const blocked = ["missing_scene", "missing_module", "needs_review", "conflict"].includes(status);
+                              return `<tr class="${blocked ? "blocked" : ""}" data-requirement-status="${escapeHtml(status)}">
+                                <td>${escapeHtml(row.requirementId || row.requirement_id || "")}</td>
+                                <td>${escapeHtml(row.sourceSection || row.source_section || "")}</td>
+                                <td>${escapeHtml(row.normalizedRequirement || row.normalized_requirement || row.normalizedSourceSummary || row.normalized_source_summary || "")}</td>
+                                <td>${escapeHtml(row.priority || "")}</td>
+                                <td>${escapeHtml(row.kind || "")}</td>
+                                <td>${escapeHtml((row.mappedSceneIds || row.mapped_scene_ids || []).join(", "))}</td>
+                                <td>${escapeHtml((row.mappedRequiredModuleIds || row.mapped_required_module_ids || []).join(", "))}</td>
+                                <td>${escapeHtml((row.mappedIterationGoalIds || row.mapped_iteration_goal_ids || []).join(", "))}</td>
+                                <td>${escapeHtml(status)}</td>
+                                <td>${escapeHtml(row.conflictReason || row.conflict_reason || row.deferReason || row.defer_reason || "")}</td>
+                              </tr>`;
+                            }).join("") : `<tr><td colspan="10">requirement_map_missing: generate or backfill upstream GDD, scene route, and GDD document first.</td></tr>`}
+                          </tbody>
+                        </table>
+                        ${requirementIssues.length ? `<p class="warning">${escapeHtml(requirementIssues.map(issue => issue.domainCode || issue.issueId).join(", "))}</p>` : ""}
+                      </div>
+                      <div class="v2-workflow-module-plan" data-module-plan-confirmation="true">
+                        <strong>Module plan traceability</strong>
+                        <p>Required modules appear separately from goal rows. New projects must confirm hash-bound requirement map and contract before execution.</p>
+                        <ul>${moduleRows.length ? moduleRows.map(goal => `<li>${escapeHtml(goal.index)} ${escapeHtml(goal.title)} <code>${escapeHtml(goal.requirementIds.join(", ") || "requirement_ids_pending")}</code></li>`).join("") : "<li>No hash-bound module plan is active.</li>"}</ul>
+                      </div>
+                      <div class="v2-workflow-ui-closure" data-ui-wiring-closure-panel="true">
+                        <strong>UI wiring closure</strong>
+                        <p>Status: ${escapeHtml(uiArtifact?.status || "unknown")} · Source: ${escapeHtml(uiArtifact?.canonicalPath || "meta/routes/ui-wiring/latest.json")}</p>
+                        <p>Gap families: layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, typed state.</p>
+                        <p>Godot UI contract: ${escapeHtml(contract?.sourceGodotUiContractHash || "unknown")} · Style contract: ${escapeHtml(contract?.sourceUiStyleContractHash || "unknown")}</p>
+                        <p>Exemptions: no_ui_needed applies only to UI surfaces; style_not_applicable applies only to style contract requirements.</p>
+                      </div>
+                      <div class="v2-workflow-final-readiness" data-final-readiness-boundary="true">
+                        <strong>Final readiness boundary</strong>
+                        <p>Ordinary package download is not final readiness. Final readiness remains blocked by stale source hashes, diagnostics, UI closure, source-boundary, style, or admin review P0/P1 blockers.</p>
+                      </div>
+                    </section>
+                  `;
                 }
 
                 function buildWorkflowRouteMessageExtra(route, intent = null) {
@@ -2893,7 +3097,7 @@ public sealed class BrowserUiRenderer
                   const outlineButton = message?.gddOutlineUrl
                     ? `<p><button class="secondary v2-open-gdd-outline" type="button">&#26597;&#38405;&#31574;&#21010;&#22823;&#32434;</button></p>`
                     : "";
-                  return (parts.join("") || "<p></p>") + outlineButton + renderWorkflowRouteAction(message);
+                  return (parts.join("") || "<p></p>") + outlineButton + workflowRenderRouteReadback(message?.workflowRoute) + renderWorkflowRouteAction(message);
                 }
 
                 function renderWorkflowRouteAction(message) {

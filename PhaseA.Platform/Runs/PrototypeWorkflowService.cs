@@ -33,6 +33,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
     private readonly GameTypeTemplateCatalog _templateCatalog;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeContractFreezeService _contractFreezeService;
     private readonly PrototypeEngineeringClosureService _engineeringClosure;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
@@ -73,7 +74,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
         TimeSpan? creationTotalTimeout = null,
-        TimeSpan? creationInactivityTimeout = null)
+        TimeSpan? creationInactivityTimeout = null,
+        PrototypeContractFreezeService? contractFreezeService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -87,6 +89,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         _templateCatalog = templateCatalog;
         _routeStateWriter = routeStateWriter ?? new PrototypeRouteStateWriter();
         _contractService = contractService ?? new PrototypeContractService();
+        _contractFreezeService = contractFreezeService ?? new PrototypeContractFreezeService(metadataStore);
         _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
@@ -106,6 +109,20 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
+        }
+
+        var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        if (newChainGuard.NewChainActive && !newChainGuard.Allowed)
+        {
+            return new PrototypeWorkflowResult(
+                "",
+                newChainGuard.Status,
+                409,
+                "",
+                "",
+                newChainGuard.Summary,
+                [],
+                []);
         }
 
         var lockedPrototype = await RejectPrototypeCreationIfLockedAsync(project, cancellationToken);
@@ -569,6 +586,20 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
+        }
+
+        var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        if (SkeletonValidationOnly && newChainGuard.NewChainActive && !newChainGuard.Allowed)
+        {
+            return new PrototypeWorkflowResult(
+                "",
+                newChainGuard.Status,
+                409,
+                "",
+                "",
+                newChainGuard.Summary,
+                [],
+                []);
         }
 
         if (await _metadataStore.HasActiveRunAsync(project.ProjectId, cancellationToken))

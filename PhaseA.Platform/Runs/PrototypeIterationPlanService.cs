@@ -43,6 +43,7 @@ public sealed class PrototypeIterationPlanService
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeContractFreezeService _contractFreezeService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly GameTypeTemplateCatalog? _templateCatalog;
 
@@ -57,11 +58,13 @@ public sealed class PrototypeIterationPlanService
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
         ILlmRouteEngine? llmRouteEngine = null,
-        GameTypeTemplateCatalog? templateCatalog = null)
+        GameTypeTemplateCatalog? templateCatalog = null,
+        PrototypeContractFreezeService? contractFreezeService = null)
     {
         _metadataStore = metadataStore;
         _routeStateWriter = routeStateWriter;
         _contractService = contractService ?? new PrototypeContractService();
+        _contractFreezeService = contractFreezeService ?? new PrototypeContractFreezeService(metadataStore);
         _llmRouteEngine = llmRouteEngine ?? (codexChatClient is null ? null : new LlmRouteEngine(codexChatClient));
         _templateCatalog = templateCatalog;
     }
@@ -80,6 +83,17 @@ public sealed class PrototypeIterationPlanService
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
+        }
+
+        var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        if (newChainGuard.NewChainActive && !newChainGuard.Allowed)
+        {
+            return new PrototypeIterationPlanResult(
+                "",
+                newChainGuard.Status is "contract_missing" ? "requirement_map_missing" : "contract_stale",
+                newChainGuard.Summary,
+                [],
+                null);
         }
 
         var rawMessage = request.Message?.Trim();

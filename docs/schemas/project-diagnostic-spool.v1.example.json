@@ -1,0 +1,34 @@
+{
+  "schema_version": "project-diagnostic-spool.v1",
+  "diagnostic_id": "diag-example-001",
+  "account_id": "account-example",
+  "project_id": "project-example",
+  "project_name": "Example Project",
+  "deletion_event_id": "",
+  "project_tombstone_id": "",
+  "run_id": "run-example",
+  "route": "preview-package",
+  "failure_family": "preview_blank",
+  "severity": "P1",
+  "triage_status": "unresolved",
+  "created_utc": "2026-07-10T00:00:00.0000000Z",
+  "source_refs": [
+    {
+      "kind": "source_hash",
+      "path": "routes/prototype-contract/latest.json"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "kind": "screenshot",
+      "path": "artifacts/preview.png"
+    }
+  ],
+  "redaction_status": "redacted",
+  "retention_class": "unresolved_blocker",
+  "cleanup_status": "preserved",
+  "replacement_evidence_refs": [],
+  "user_safe_summary": "Preview opened blank for the current source hash set.",
+  "admin_summary": "Preview smoke produced a blank screenshot; raw logs are admin-only and redacted from browser readback.",
+  "remediation_hint_id": "preview_blank"
+}

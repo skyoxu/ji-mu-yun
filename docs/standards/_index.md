@@ -7,10 +7,22 @@ Scope: Current scope is Phase service standards; future cross-cutting repository
 ## Reading Order
 
 1. `docs/standards/phase-service.md` for Phase service API, database, error handling, logging, security, testing, and status conventions.
+2. `docs/standards/godot-engine-semantics.md` for Godot runtime semantics, viewport modes, feature-family reading gates, and official example usage rules.
+3. `docs/standards/godot-ui-capability-contract.md` for Godot UI capability domains, profiles, workflow injection points, and UI closure governance.
+4. `docs/standards/godot-ui-style-contract.md` for Godot UI style catalog, style selection, component coverage, and drift taxonomy.
+5. `docs/standards/godot-ui-style-closure.md` for style-aware UI closure, style repair prompt inputs, and final-readiness style gates.
+6. `docs/standards/godot-ui-style-schema-acceptance.md` for deterministic style snapshot schema acceptance gates.
+7. `docs/standards/godot-diagnostics-quality-gates.md` for Godot/Phase diagnostics, project diagnostic spool, failure-family taxonomy, preview/package quality gates, interaction-region evidence, and resource lifecycle rules.
 
 ## Current Standards
 
 - [Phase Service Standards](phase-service.md)
+- [Godot Engine Semantics Standard](godot-engine-semantics.md)
+- [Godot UI Capability Contract](godot-ui-capability-contract.md)
+- [Godot UI Style Contract](godot-ui-style-contract.md)
+- [Godot UI Style Closure Standard](godot-ui-style-closure.md)
+- [Godot UI Style Schema Acceptance Standard](godot-ui-style-schema-acceptance.md)
+- [Godot Diagnostics And Quality Gates](godot-diagnostics-quality-gates.md)
 
 ## Maintenance Rules
 

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "evidence-ref-kind.v1",
+  "values": [
+    "log",
+    "artifact",
+    "sidecar",
+    "screenshot",
+    "db_row",
+    "smoke",
+    "validator"
+  ]
+}

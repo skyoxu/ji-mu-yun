@@ -1,0 +1,76 @@
+{
+  "schema_version": "gdd-to-module-global-review-standard.v1",
+  "standard_id": "phase-a-gdd-to-module-global-review-standard",
+  "standard_version": "v1",
+  "execution_plan_standard_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/96-global-review-standard.md",
+  "split_directory": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/",
+  "authority_files": [
+    "AGENTS.md",
+    "README.md",
+    "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/96-global-review-standard.md"
+  ],
+  "review_modes": [
+    {
+      "mode_id": "whole-directory",
+      "whole_directory_coverage_allowed": true
+    },
+    {
+      "mode_id": "standard-only",
+      "whole_directory_coverage_allowed": false
+    },
+    {
+      "mode_id": "standard-change-self-review",
+      "whole_directory_coverage_allowed": false
+    }
+  ],
+  "whole_directory_mechanical_checks": [
+    "file_inventory",
+    "link_integrity",
+    "json_validity",
+    "ledger_and_audit_alignment",
+    "status_action_schema_vocabulary_consistency"
+  ],
+  "scoped_mechanical_checks": [
+    "authority_file_read_coverage",
+    "standard_structure_and_ledger_validity",
+    "internal_reference_checks",
+    "open_ledger_blocker_checks",
+    "standard_change_completeness"
+  ],
+  "prior_finding_ledger_columns": [
+    "finding_id",
+    "Severity",
+    "Summary",
+    "First found",
+    "Status",
+    "Fix reference",
+    "Closure reason",
+    "Linked finding",
+    "Validation method"
+  ],
+  "severity_values": [
+    "P0",
+    "P1",
+    "P2"
+  ],
+  "finding_statuses": [
+    "Open",
+    "Closed",
+    "OutOfScopeByStandardChange"
+  ],
+  "review_output_requirement_ids": [
+    "state_review_mode",
+    "state_standard_change_ids",
+    "state_authority_set",
+    "state_self_review_gate",
+    "mechanical_check_summary",
+    "findings_first_by_severity",
+    "stable_finding_ids",
+    "p0_p1_p2_labels",
+    "file_line_references",
+    "global_impact",
+    "separate_target_findings_from_open_blockers",
+    "avoid_optional_issues",
+    "skipped_mechanical_checks"
+  ]
+}

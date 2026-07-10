@@ -1,0 +1,531 @@
+{
+  "baselineId": "godot-engine-semantics",
+  "baselineVersion": "1",
+  "baselineHash": "9a2563eac429591243c104a32751bdf9420c4aeca0639f65926a359ced41443f",
+  "standardPath": "docs/standards/godot-engine-semantics.md",
+  "officialExamplesIndexPath": "docs/reference/godot-official-examples-index.md",
+  "recipesIndexPath": "docs/reference/godot-recipes-index.md",
+  "missingEvidenceCodes": [
+    "reference_example_missing",
+    "godot_recipe_missing",
+    "reference_example_manifest_missing"
+  ],
+  "exampleManifestFileNames": [
+    "godot-example-manifest.json",
+    "manifest.json"
+  ],
+  "exampleManifestFields": [
+    "includes",
+    "excludes",
+    "copyAll",
+    "targetDir",
+    "preservePaths",
+    "licenseRefs",
+    "requiredInputActions",
+    "requiredProjectSettings",
+    "assetImportPolicy"
+  ],
+  "semanticFamilies": [
+    {
+      "familyId": "unit_scale",
+      "displayName": "Unit scale",
+      "scope": "Godot project units, 2D pixels/control sizes, TileMap cells, and 3D meter-like project units must not be conflated.",
+      "requiredDeclarations": [
+        "unit scale source",
+        "2D/3D scope",
+        "conversion rule when mixed"
+      ],
+      "blockingExamples": [
+        "hard-coded world scale without project source"
+      ]
+    },
+    {
+      "familyId": "coordinate_spaces",
+      "displayName": "Coordinate spaces",
+      "scope": "Screen, viewport, Control local, CanvasLayer, Node2D local/global, Camera2D world, TileMap cell, and 3D world coordinates must be named before conversion.",
+      "requiredDeclarations": [
+        "source coordinate space",
+        "target coordinate space",
+        "conversion owner"
+      ],
+      "blockingExamples": [
+        "mixed screen/world/cell coordinates without conversion path"
+      ]
+    },
+    {
+      "familyId": "viewport_resolution",
+      "displayName": "Viewport and resolution",
+      "scope": "Window size, project stretch settings, viewport size, UI logical size, and screenshot dimensions are distinct unless a route records a rule.",
+      "requiredDeclarations": [
+        "viewport mode",
+        "stretch/aspect policy",
+        "evidence dimensions"
+      ],
+      "blockingExamples": [
+        "hard-coded screen size without viewport mode"
+      ]
+    },
+    {
+      "familyId": "input_constants",
+      "displayName": "Input constants",
+      "scope": "InputMap actions, Godot enums, named constants, or route schema enums are required before accepting input behavior.",
+      "requiredDeclarations": [
+        "input action or named constant",
+        "device scope",
+        "fallback behavior"
+      ],
+      "blockingExamples": [
+        "numeric mouse button or key code without named source"
+      ]
+    },
+    {
+      "familyId": "physics_collision",
+      "displayName": "Physics and collision",
+      "scope": "Movement and interaction routes must declare body type, layer/mask ownership, signal ownership, and raycast coordinate space.",
+      "requiredDeclarations": [
+        "body type",
+        "layer/mask owner",
+        "signal/raycast owner"
+      ],
+      "blockingExamples": [
+        "collision layer number without fixture or profile"
+      ]
+    },
+    {
+      "familyId": "camera_projection",
+      "displayName": "Camera and projection",
+      "scope": "Camera owner, zoom/FOV, projection, and screen/world conversion must be declared for camera-dependent interaction or evidence.",
+      "requiredDeclarations": [
+        "camera owner",
+        "zoom or FOV",
+        "screen/world conversion"
+      ],
+      "blockingExamples": [
+        "click/drag hit testing without camera state"
+      ]
+    },
+    {
+      "familyId": "third_person_camera",
+      "displayName": "Third-person camera",
+      "scope": "Third-person gameplay should use a repo-owned camera rig/profile before adding gameplay-specific camera behavior.",
+      "requiredDeclarations": [
+        "rig/profile source",
+        "target/camera/spring-arm paths",
+        "yaw/pitch/collision semantics"
+      ],
+      "blockingExamples": [
+        "duplicated orbit math while shared rig is required"
+      ]
+    },
+    {
+      "familyId": "tilemap_map",
+      "displayName": "TileMap and map drawing",
+      "scope": "Tile size, cell coordinate source, local/world conversion, and TileSet collision/navigation ownership must be declared.",
+      "requiredDeclarations": [
+        "tile size",
+        "cell/world conversion",
+        "TileSet ownership"
+      ],
+      "blockingExamples": [
+        "map route using cells without tile source"
+      ]
+    },
+    {
+      "familyId": "geometry_size_measurement",
+      "displayName": "Geometry and size measurement",
+      "scope": "Built-in primitives, imported meshes, generated meshes, collision shapes, and hit zones require measured or documented dimensions.",
+      "requiredDeclarations": [
+        "AABB/import/shape/source size",
+        "owner resource",
+        "fallback behavior"
+      ],
+      "blockingExamples": [
+        "guessed mesh or collision bounds"
+      ]
+    },
+    {
+      "familyId": "rendering_material_resources",
+      "displayName": "Rendering and material resources",
+      "scope": "Material, shader, texture, and generated visual resource paths must come from repo files, generated artifacts, import metadata, or approved profiles.",
+      "requiredDeclarations": [
+        "material profile",
+        "resource path source",
+        "validation evidence"
+      ],
+      "blockingExamples": [
+        "invented shader, texture, or material path"
+      ]
+    }
+  ],
+  "viewportModes": [
+    {
+      "modeId": "fixed_design_resolution",
+      "displayName": "Fixed design resolution",
+      "useWhen": "The GDD or style contract names a target resolution or fixed-format board/map/tool surface.",
+      "requiredEvidence": [
+        "design resolution",
+        "stretch/aspect policy",
+        "target-size screenshot or layout evidence",
+        "overflow behavior"
+      ]
+    },
+    {
+      "modeId": "responsive_control_layout",
+      "displayName": "Responsive Control layout",
+      "useWhen": "UI is built from Godot Control nodes, containers, anchors, and theme resources.",
+      "requiredEvidence": [
+        "anchor/container policy",
+        "minimum size",
+        "font/theme scale",
+        "overflow policy",
+        "non-target-size validation"
+      ]
+    },
+    {
+      "modeId": "camera_world_scaled_view",
+      "displayName": "Camera/world-scaled view",
+      "useWhen": "Gameplay interaction depends on Camera2D/Camera3D, zoom, world units, or world-space UI.",
+      "requiredEvidence": [
+        "camera owner",
+        "zoom or FOV",
+        "world-to-screen conversion",
+        "input hit-test conversion",
+        "camera-state evidence"
+      ]
+    },
+    {
+      "modeId": "tilemap_grid_scaled_view",
+      "displayName": "TileMap/grid-scaled view",
+      "useWhen": "The route paints or reads cells, terrain, route maps, minimaps, or grid gameplay.",
+      "requiredEvidence": [
+        "tile size",
+        "cell/world conversion",
+        "TileSet collision/navigation ownership",
+        "map validation evidence"
+      ]
+    },
+    {
+      "modeId": "viewport_custom_drawing",
+      "displayName": "Viewport/custom drawing",
+      "useWhen": "The route uses _draw, Line2D, Polygon2D, SubViewport, shaders, or procedural visual evidence.",
+      "requiredEvidence": [
+        "viewport size source",
+        "redraw trigger",
+        "coordinate space",
+        "interactive hit testing when applicable",
+        "screenshot or canvas-pixel evidence"
+      ]
+    }
+  ],
+  "featureFamilyGates": [
+    {
+      "featureFamilyId": "ui_hud_menus",
+      "displayName": "UI, HUD, menus, dialogs, tooltips, readable text",
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "viewport_resolution",
+        "input_constants",
+        "rendering_material_resources"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "ui_control_container_theme",
+        "canvas_layer"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "input_pointer_gamepad_focus",
+      "displayName": "Input, pointer, gestures, gamepad, focus, drag/drop",
+      "semanticFamilyIds": [
+        "input_constants",
+        "coordinate_spaces",
+        "viewport_resolution"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "input_map",
+        "ui_interaction"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "physics_collision_navigation",
+      "displayName": "Physics, collision, raycast, navigation, interaction regions",
+      "semanticFamilyIds": [
+        "unit_scale",
+        "coordinate_spaces",
+        "physics_collision",
+        "geometry_size_measurement"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "movement_2d_collision",
+        "movement_3d_collision",
+        "raycast_navigation"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "camera_projection",
+      "displayName": "Camera, third-person camera, world-to-screen, screen-to-world",
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "viewport_resolution",
+        "camera_projection",
+        "third_person_camera"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "camera_2d_3d",
+        "third_person_camera"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "tilemap_maps",
+      "displayName": "TileMap, TileSet, route maps, minimaps, terrain, map painting",
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "viewport_resolution",
+        "tilemap_map",
+        "geometry_size_measurement"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "tilemap_tileset_navigation"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "materials_rendering_shaders",
+      "displayName": "Materials, shaders, textures, rendering, lights, sky, fog, postprocess",
+      "semanticFamilyIds": [
+        "rendering_material_resources",
+        "geometry_size_measurement",
+        "viewport_resolution"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "materials_shaders_rendering"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "animation_state_signals",
+      "displayName": "Character animation, animation state machines, blend spaces, combat/locomotion animation",
+      "semanticFamilyIds": [
+        "unit_scale",
+        "physics_collision",
+        "rendering_material_resources"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "animation_player_tree_state_machine"
+      ],
+      "blocksWithoutReadingEvidence": true
+    },
+    {
+      "featureFamilyId": "audio_video_media",
+      "displayName": "Audio, video, cutscenes, media playback",
+      "semanticFamilyIds": [
+        "rendering_material_resources"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "audio_video_playback"
+      ],
+      "blocksWithoutReadingEvidence": false
+    },
+    {
+      "featureFamilyId": "save_load_persistence",
+      "displayName": "Save/load, persistence, settings, project-local data",
+      "semanticFamilyIds": [
+        "unit_scale"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/reference/godot-official-examples-index.md"
+      ],
+      "referenceExampleFamilies": [
+        "save_load_project_local"
+      ],
+      "blocksWithoutReadingEvidence": false
+    },
+    {
+      "featureFamilyId": "platform_services_monetization",
+      "displayName": "Ads, monetization, platform services, external SDKs",
+      "semanticFamilyIds": [
+        "rendering_material_resources"
+      ],
+      "requiredStandardRefs": [
+        "docs/standards/godot-engine-semantics.md",
+        "docs/standards/phase-service.md"
+      ],
+      "referenceExampleFamilies": [
+        "repo_approved_platform_integration"
+      ],
+      "blocksWithoutReadingEvidence": true
+    }
+  ],
+  "routeRequirements": [
+    {
+      "routeId": "prototype-skeleton",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "physics_collision_navigation",
+        "camera_projection",
+        "tilemap_maps",
+        "materials_rendering_shaders"
+      ],
+      "requiredEvidenceFields": [
+        "semantic_family",
+        "viewport_mode",
+        "feature_family_reading_evidence",
+        "source_boundary_hash"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    },
+    {
+      "routeId": "iteration-plan",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "physics_collision_navigation",
+        "camera_projection",
+        "tilemap_maps",
+        "materials_rendering_shaders",
+        "animation_state_signals",
+        "audio_video_media",
+        "save_load_persistence"
+      ],
+      "requiredEvidenceFields": [
+        "semantic_family",
+        "planned_feature_family",
+        "reading_evidence_refs",
+        "source_boundary_hash"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    },
+    {
+      "routeId": "execute-next-goal",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "physics_collision_navigation",
+        "camera_projection",
+        "tilemap_maps",
+        "materials_rendering_shaders",
+        "animation_state_signals"
+      ],
+      "requiredEvidenceFields": [
+        "semantic_family",
+        "viewport_mode",
+        "implementation_reading_evidence",
+        "route_state_ref"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    },
+    {
+      "routeId": "needs-fix",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "physics_collision_navigation",
+        "camera_projection",
+        "tilemap_maps",
+        "materials_rendering_shaders"
+      ],
+      "requiredEvidenceFields": [
+        "diagnostic_code",
+        "semantic_family",
+        "repair_evidence_ref",
+        "latest_acceptance_blocker"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    },
+    {
+      "routeId": "repair",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "physics_collision_navigation",
+        "camera_projection",
+        "tilemap_maps",
+        "materials_rendering_shaders"
+      ],
+      "requiredEvidenceFields": [
+        "diagnostic_code",
+        "semantic_family",
+        "repair_ledger_ref",
+        "validation_evidence_ref"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    },
+    {
+      "routeId": "ui-wiring-closure",
+      "featureFamilyIds": [
+        "ui_hud_menus",
+        "input_pointer_gamepad_focus",
+        "camera_projection",
+        "materials_rendering_shaders"
+      ],
+      "requiredEvidenceFields": [
+        "viewport_mode",
+        "ui_style_snapshot_hash",
+        "godot_ui_contract_hash",
+        "feature_family_reading_evidence"
+      ],
+      "missingEvidenceCodes": [
+        "reference_example_missing",
+        "godot_recipe_missing",
+        "reference_example_manifest_missing"
+      ]
+    }
+  ]
+}

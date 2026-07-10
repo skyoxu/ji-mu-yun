@@ -1,0 +1,53 @@
+{
+  "schema_version": "gdd-to-module-split-added-requirements.v1",
+  "ledger_id": "phase-a-gdd-to-module-split-added-requirements",
+  "ledger_version": "v1",
+  "execution_plan_ledger_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md",
+  "ledger_columns": [
+    "split_added_id",
+    "Requirement",
+    "Primary owner doc",
+    "Acceptance reference"
+  ],
+  "coverage_statuses": [
+    "implemented",
+    "not_applicable",
+    "explicitly_deferred"
+  ],
+  "coverage_rows": [
+    {
+      "split_added_id": "split_added_full_target_capability_schedule",
+      "coverage_status": "implemented",
+      "owner_doc_refs": [
+        "10-recommended-first-slice.md",
+        "03-testing-observability-admin.md"
+      ],
+      "acceptance_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-1-exit-review-example.json",
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-review",
+      "defer_reason": ""
+    },
+    {
+      "split_added_id": "split_added_godot_third_person_camera_profile",
+      "coverage_status": "explicitly_deferred",
+      "owner_doc_refs": [
+        "04d-godot-engine-semantics-and-reference-examples.md",
+        "05-godot-ui-capability-contract.md",
+        "02a-route-state-artifacts.md",
+        "03-testing-observability-admin.md",
+        "07-godot-diagnostics-quality-gates.md",
+        "08-implementation-phases.md"
+      ],
+      "acceptance_evidence_refs": [
+        "Phase 0B dependency matrix"
+      ],
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-1-exit-review-example.json",
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when third-person camera gameplay is touched",
+      "defer_reason": "Not consumed by the first implementation slice."
+    }
+  ]
+}

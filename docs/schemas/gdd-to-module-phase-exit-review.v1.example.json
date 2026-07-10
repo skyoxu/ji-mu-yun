@@ -1,0 +1,58 @@
+{
+  "schema_version": "gdd-to-module-phase-exit-review.v1",
+  "phase": "1",
+  "run_id": "20260710T000000Z-example",
+  "reviewed_utc": "2026-07-10T00:00:00.0000000Z",
+  "reviewer": "automation",
+  "evidence_root": "logs/phase-a-innernet/reviews/gdd-to-module-hardening",
+  "implemented_items": [
+    "requirement map readback",
+    "prototype contract freshness"
+  ],
+  "consumed_phase0a_items": [
+    "route_module_contract_template",
+    "path_readback_policy"
+  ],
+  "required_phase0b_items": [
+    "godot_engine_semantic_baseline",
+    "godot_diagnostics_quality_gate_contract"
+  ],
+  "routes": [
+    "gdd-requirements",
+    "prototype-contract"
+  ],
+  "artifacts": [
+    "meta/routes/gdd-requirements/latest.json",
+    "routes/prototype-contract/latest.json"
+  ],
+  "api_surfaces": [
+    "/api/projects/{projectId}/gdd/requirements-map/latest"
+  ],
+  "browser_surfaces": [
+    "workflowRouteReadback"
+  ],
+  "scripts": [
+    "scripts/python/phase_a_gdd_to_module_hardening_smoke.py"
+  ],
+  "evidence_refs": [
+    {
+      "kind": "test",
+      "path": "PhaseA.Platform.Tests"
+    }
+  ],
+  "durable_decision_refs": [
+    "docs/standards/phase-service.md"
+  ],
+  "unresolved_findings_by_severity": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "info": 0
+  },
+  "regression_checks": [
+    {
+      "command": "dotnet test PhaseA.Platform.Tests --filter FullyQualifiedName~ProjectWorkflowRouteServiceTests",
+      "status": "passed"
+    }
+  ]
+}

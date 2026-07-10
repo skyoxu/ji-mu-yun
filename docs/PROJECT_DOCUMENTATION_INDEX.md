@@ -29,7 +29,7 @@ This file is the top-level navigation for project docs.
 - Base architecture: `docs/architecture/base/**`
 - Overlay slices: `docs/architecture/overlays/**`
 - Phase service architecture rationale: `docs/architecture/phase-service/_index.md`
-- Standards: `docs/standards/_index.md`, `docs/standards/phase-service.md`
+- Standards: `docs/standards/_index.md`, `docs/standards/phase-service.md`, `docs/standards/godot-engine-semantics.md`, `docs/standards/godot-ui-capability-contract.md`, `docs/standards/godot-ui-style-contract.md`
 - Testing rules: `docs/testing-framework.md`
 - Delivery/run protocol: `DELIVERY_PROFILE.md`, `docs/workflows/run-protocol.md`, `docs/workflows/local-hard-checks.md`
 
@@ -56,6 +56,19 @@ This file is the top-level navigation for project docs.
 - Prototype lane playbook: `docs/workflows/prototype-lane-playbook.md`
 - Prototype TDD: `docs/workflows/prototype-tdd.md`
 - Game type route framework guide: `docs/workflows/game-type-route-framework-guide.md`
+- Godot official examples index: `docs/reference/godot-official-examples-index.md`
+- Godot UI style snapshot schema fixture: `docs/schemas/godot-ui-style-contract.v1.example.json`
+- GDD-to-module recommended first slice: `docs/workflows/phase-a-gdd-to-module-first-slice.md`
+- GDD-to-module first-slice review schema: `docs/schemas/gdd-to-module-first-slice-review.v1.example.json`
+- Full-target UI closure ledger schema: `docs/schemas/full-target-ui-closure-ledger.v1.example.json`
+- GDD-to-module global review standard: `docs/workflows/phase-a-gdd-to-module-global-review-standard.md`
+- GDD-to-module global review standard schema: `docs/schemas/gdd-to-module-global-review-standard.v1.example.json`
+- GDD-to-module split-added requirements: `docs/workflows/phase-a-gdd-to-module-split-added-requirements.md`
+- GDD-to-module split-added requirements schema: `docs/schemas/gdd-to-module-split-added-requirements.v1.example.json`
+- GDD-to-module original split audit: `docs/workflows/phase-a-gdd-to-module-original-split-audit.md`
+- GDD-to-module original split audit schema: `docs/schemas/gdd-to-module-original-split-audit.v1.example.json`
+- GDD-to-module source coverage map: `docs/workflows/phase-a-gdd-to-module-source-coverage-map.md`
+- GDD-to-module source coverage map schema: `docs/schemas/gdd-to-module-source-coverage-map.v1.example.json`
 
 ## Recovery And Stop-Loss
 
@@ -106,3 +119,9 @@ Current stop-loss families:
 - Game Type Guides: `docs/game-type-guides/README.md`
 - Prototype Type Kits: `docs/prototype-type-kits/README.md`
 - Prototype 7-Day Playable Godot ZH Skill: `.agents/skills/prototype-7day-playable-godot-zh/SKILL.md`
+
+- `docs/standards/godot-diagnostics-quality-gates.md`
+
+- `docs/workflows/phase-a-gdd-to-module-implementation-phases.md`
+- `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md`
+

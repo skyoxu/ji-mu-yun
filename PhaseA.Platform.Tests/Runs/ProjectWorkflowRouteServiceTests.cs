@@ -7,6 +7,7 @@ using PhaseA.Platform.Projects;
 using PhaseA.Platform.Readback;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Workflow;
 using PhaseA.Platform.Workspaces;
 using Xunit;
 
@@ -23,6 +24,36 @@ public sealed class ProjectWorkflowRouteServiceTests
 
         result!.NextAction.ActionId.Should().Be("create-prototype");
         result.StageId.Should().Be("create-prototype");
+        result.StageDefinitions.Should().NotBeNull();
+        result.StageDefinitions!.Select(stage => stage.Id).Should().Contain([
+            "gdd-question-form",
+            "scene-route-confirmation",
+            "gdd-document-generation",
+            "gdd-requirement-map",
+            "prototype-contract-freeze",
+            "prototype-skeleton",
+            "iteration-plan",
+            "module-execution",
+            "needs-fix-or-repair",
+            "ui-wiring-closure",
+            "preview-package"
+        ]);
+        result.WorkflowRecommendation.Should().NotBeNull();
+        result.WorkflowRecommendation!.ActionDescriptorRef.DescriptorId.Should().Be(RouteActionDescriptors.DescriptorId);
+        result.WorkflowRecommendation.AllowedActions.Concat(result.WorkflowRecommendation.ForbiddenActions)
+            .Select(action => action.ActionId)
+            .Should()
+            .BeEquivalentTo(RouteActionDescriptors.CanonicalActionIds);
+        result.RouteStateArtifacts.Should().NotBeNull();
+        result.RouteStateArtifacts!.Artifacts.Select(artifact => artifact.Route).Should().Contain([
+            "gdd-requirements",
+            "scene-route-confirmation",
+            "gdd-document-generation",
+            "prototype-contract",
+            "prototype-skeleton",
+            "ui-wiring"
+        ]);
+        result.AcceptanceReview.Should().NotBeNull();
         result.Recommendation.Should().Contain("建议先进行 2. 游戏场景创建");
         result.Recommendation.Should().Contain("高级策划模式");
     }

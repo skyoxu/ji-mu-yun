@@ -252,6 +252,184 @@ public static class SqliteMetadataSchema
             "coverage_missing_topics_json",
             "ALTER TABLE project_prototype_drafts ADD COLUMN coverage_missing_topics_json TEXT NOT NULL DEFAULT '[]';",
             cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "diagnostic_id",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN diagnostic_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "project_name_snapshot",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN project_name_snapshot TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "run_id",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN run_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "retention_class",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN retention_class TEXT NOT NULL DEFAULT 'unresolved_blocker';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "redaction_status",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN redaction_status TEXT NOT NULL DEFAULT 'redacted';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "spool_ref",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN spool_ref TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "user_safe_summary",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN user_safe_summary TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "source_refs_json",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN source_refs_json TEXT NOT NULL DEFAULT '[]';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "cleanup_status",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN cleanup_status TEXT NOT NULL DEFAULT 'preserved';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "replacement_evidence_refs_json",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN replacement_evidence_refs_json TEXT NOT NULL DEFAULT '[]';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "admin_summary",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN admin_summary TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "remediation_hint_id",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN remediation_hint_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "triage_decision_by",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN triage_decision_by TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "triage_decision_reason",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN triage_decision_reason TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "deletion_event_id",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN deletion_event_id TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_diagnostic_spool",
+            "project_tombstone_id",
+            "ALTER TABLE project_diagnostic_spool ADD COLUMN project_tombstone_id TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_delete_tombstones",
+            "project_tombstone_id",
+            "ALTER TABLE project_delete_tombstones ADD COLUMN project_tombstone_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_delete_tombstones",
+            "deletion_event_id",
+            "ALTER TABLE project_delete_tombstones ADD COLUMN deletion_event_id TEXT NOT NULL DEFAULT '';",
+            cancellationToken);
+
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE project_diagnostic_spool
+            SET diagnostic_id = id
+            WHERE diagnostic_id = '';
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE project_diagnostic_spool
+            SET user_safe_summary = safe_summary
+            WHERE user_safe_summary = '';
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE project_diagnostic_spool
+            SET retention_class = CASE
+                    WHEN triage_status = 'unresolved' AND severity IN ('P0', 'P1', 'P2') THEN 'unresolved_blocker'
+                    WHEN triage_status = 'resolved' THEN 'resolved_audit'
+                    WHEN triage_status = 'ignored' THEN 'ignored_audit'
+                    WHEN triage_status = 'backlog' THEN 'backlog_audit'
+                    ELSE retention_class
+                END
+            WHERE retention_class = '';
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE project_delete_tombstones
+            SET project_tombstone_id = project_id
+            WHERE project_tombstone_id = '';
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            UPDATE project_delete_tombstones
+            SET deletion_event_id = 'delete-' || project_id
+            WHERE deletion_event_id = '';
+            """,
+            transaction,
+            cancellationToken);
 
         await ExecuteAsync(
             connection,
@@ -446,7 +624,11 @@ public static class SqliteMetadataSchema
     private static bool ShouldDeferLastActivityStatement(string statement)
     {
         return statement.Contains("last_activity_utc", StringComparison.Ordinal)
-            && !statement.Contains("CREATE TABLE IF NOT EXISTS projects", StringComparison.Ordinal);
+            && !statement.Contains("CREATE TABLE IF NOT EXISTS projects", StringComparison.Ordinal)
+            || statement.Contains("ix_project_diagnostic_spool_diagnostic_id", StringComparison.Ordinal)
+            || statement.Contains("ix_project_diagnostic_spool_deleted_lookup", StringComparison.Ordinal)
+            || statement.Contains("ix_project_diagnostic_spool_retention_cleanup", StringComparison.Ordinal)
+            || statement.Contains("ix_project_delete_tombstones_tombstone_event", StringComparison.Ordinal);
     }
 
     private static async Task ExecuteAsync(SqliteConnection connection, string sql, CancellationToken cancellationToken)
@@ -859,6 +1041,92 @@ public static class SqliteMetadataSchema
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
         );
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_admin_review_queue (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            route_id TEXT NOT NULL,
+            requirement_id TEXT NOT NULL DEFAULT '',
+            severity TEXT NOT NULL,
+            blocking_reason TEXT NOT NULL,
+            source_artifact_path TEXT NOT NULL,
+            evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+            status TEXT NOT NULL,
+            decision_status TEXT NOT NULL DEFAULT 'pending',
+            decision_actor_account_id TEXT NULL,
+            decision_reason TEXT NOT NULL DEFAULT '',
+            decision_metadata_json TEXT NOT NULL DEFAULT '{}',
+            decision_version INTEGER NOT NULL DEFAULT 0,
+            created_utc TEXT NOT NULL,
+            updated_utc TEXT NOT NULL,
+            decided_utc TEXT NULL,
+            project_deleted_utc TEXT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_diagnostic_spool (
+            id TEXT PRIMARY KEY,
+            diagnostic_id TEXT NOT NULL DEFAULT '',
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            project_name_snapshot TEXT NOT NULL DEFAULT '',
+            run_id TEXT NOT NULL DEFAULT '',
+            route_id TEXT NOT NULL,
+            failure_family TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            triage_status TEXT NOT NULL,
+            retention_class TEXT NOT NULL DEFAULT 'unresolved_blocker',
+            redaction_status TEXT NOT NULL DEFAULT 'redacted',
+            spool_ref TEXT NOT NULL DEFAULT '',
+            safe_summary TEXT NOT NULL,
+            user_safe_summary TEXT NOT NULL DEFAULT '',
+            source_refs_json TEXT NOT NULL DEFAULT '[]',
+            evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+            source_artifact_path TEXT NOT NULL DEFAULT '',
+            cleanup_status TEXT NOT NULL DEFAULT 'preserved',
+            replacement_evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+            admin_summary TEXT NOT NULL DEFAULT '',
+            remediation_hint_id TEXT NOT NULL DEFAULT '',
+            created_utc TEXT NOT NULL,
+            updated_utc TEXT NOT NULL,
+            resolved_utc TEXT NULL,
+            triage_decision_by TEXT NULL,
+            triage_decision_reason TEXT NOT NULL DEFAULT '',
+            deletion_event_id TEXT NULL,
+            project_tombstone_id TEXT NULL,
+            project_deleted_utc TEXT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_delete_tombstones (
+            project_tombstone_id TEXT NOT NULL DEFAULT '',
+            deletion_event_id TEXT NOT NULL DEFAULT '',
+            project_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_name TEXT NOT NULL,
+            deleted_utc TEXT NOT NULL,
+            unresolved_admin_review_count INTEGER NOT NULL DEFAULT 0,
+            unresolved_diagnostic_count INTEGER NOT NULL DEFAULT 0,
+            evidence_refs_json TEXT NOT NULL DEFAULT '[]'
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS game_type_maintenance_records (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            match_status TEXT NOT NULL,
+            selected_game_type_id TEXT NOT NULL DEFAULT '',
+            selected_guide_id TEXT NOT NULL DEFAULT '',
+            normalized_genre_tags_json TEXT NOT NULL DEFAULT '[]',
+            missing_guide INTEGER NOT NULL DEFAULT 0,
+            confidence TEXT NOT NULL DEFAULT '',
+            evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+            created_utc TEXT NOT NULL,
+            project_deleted_utc TEXT NULL
+        );
+        """,
         "CREATE INDEX IF NOT EXISTS ix_projects_account_id ON projects(account_id);",
         "CREATE INDEX IF NOT EXISTS ix_projects_account_last_activity ON projects(account_id, last_activity_utc DESC, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_game_type_match_failures_created ON project_game_type_match_failures(created_utc DESC);",
@@ -876,6 +1144,20 @@ public static class SqliteMetadataSchema
         "CREATE INDEX IF NOT EXISTS ix_project_iteration_goals_session_goal_index ON project_iteration_goals(session_id, goal_index);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_run_memories_project_scope ON project_run_memories(project_id, scope);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_ui_states_account_project ON project_ui_states(account_id, project_id);",
+        "CREATE INDEX IF NOT EXISTS ix_project_admin_review_queue_status_created ON project_admin_review_queue(status, created_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_status ON project_admin_review_queue(project_id, status);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_route_requirement_reason ON project_admin_review_queue(project_id, route_id, requirement_id, blocking_reason);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_triage_created ON project_diagnostic_spool(triage_status, created_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_project_triage ON project_diagnostic_spool(project_id, triage_status);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_diagnostic_spool_diagnostic_id ON project_diagnostic_spool(diagnostic_id);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_triage_severity_updated ON project_diagnostic_spool(triage_status, severity, updated_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_account_project_triage ON project_diagnostic_spool(account_id, project_id, triage_status);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_deleted_lookup ON project_diagnostic_spool(project_tombstone_id, deletion_event_id);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_route_family_created ON project_diagnostic_spool(route_id, failure_family, created_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_retention_cleanup ON project_diagnostic_spool(retention_class, triage_status, updated_utc DESC);",
+        "CREATE INDEX IF NOT EXISTS ix_project_delete_tombstones_deleted ON project_delete_tombstones(deleted_utc DESC);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_delete_tombstones_tombstone_event ON project_delete_tombstones(project_tombstone_id, deletion_event_id);",
+        "CREATE INDEX IF NOT EXISTS ix_game_type_maintenance_records_status_created ON game_type_maintenance_records(match_status, created_utc DESC);",
         """
         CREATE TRIGGER IF NOT EXISTS tr_projects_last_activity_bootstrap_update
         AFTER UPDATE OF bootstrap_status, bootstrap_error ON projects

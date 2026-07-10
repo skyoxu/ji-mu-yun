@@ -30,6 +30,14 @@
 最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。
 `docs/workflows/phase-b-agf-godogen-absorption.md` 记录 Phase B 对 AGF/GodoGen 能力吸收的阶段范围和后续边界。
 
+- GDD-to-module implementation phases: `docs/workflows/phase-a-gdd-to-module-implementation-phases.md`
+- GDD-to-module risks, DoD, and open questions: `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md`
+- GDD-to-module recommended first slice: `docs/workflows/phase-a-gdd-to-module-first-slice.md`
+- GDD-to-module global review standard: `docs/workflows/phase-a-gdd-to-module-global-review-standard.md`
+- GDD-to-module split-added requirements: `docs/workflows/phase-a-gdd-to-module-split-added-requirements.md`
+- GDD-to-module original split audit: `docs/workflows/phase-a-gdd-to-module-original-split-audit.md`
+- GDD-to-module source coverage map: `docs/workflows/phase-a-gdd-to-module-source-coverage-map.md`
+
 - `docs/workflows/phase-b-account-isolation.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `docs/workflows/cloud-platform-evolution-plan.cn.md`
@@ -283,6 +291,11 @@ py -3 scripts/python/sync_task_overlay_refs.py --prd-id <PRD-ID> --write
 - Phase service ADR index: `docs/architecture/ADR_INDEX_PHASE.md`
 - Standards index: `docs/standards/_index.md`
 - Phase service standards: `docs/standards/phase-service.md`
+- Godot engine semantics standard: `docs/standards/godot-engine-semantics.md`
+- Godot UI capability contract: `docs/standards/godot-ui-capability-contract.md`
+- Godot UI style contract: `docs/standards/godot-ui-style-contract.md`
+- Godot diagnostics and quality gates: `docs/standards/godot-diagnostics-quality-gates.md`
+- Godot official examples index: `docs/reference/godot-official-examples-index.md`
 - `docs/workflows/phase-b-account-isolation.md`
 - `docs/workflows/phase-b-agf-godogen-absorption.md`
 - `docs/workflows/cloud-platform-evolution-plan.cn.md`

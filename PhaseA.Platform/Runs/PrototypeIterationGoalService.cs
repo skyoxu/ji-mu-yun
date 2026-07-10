@@ -19,6 +19,7 @@ public sealed class PrototypeIterationGoalService
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
+    private readonly PrototypeContractFreezeService _contractFreezeService;
     private readonly IAiCodeMirrorBillingClient _billingClient;
     private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
@@ -42,7 +43,8 @@ public sealed class PrototypeIterationGoalService
         IAiCodeMirrorBillingClient? billingClient = null,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         TimeSpan? executionTimeout = null,
-        HeavyRunnerQueueService? heavyRunnerQueue = null)
+        HeavyRunnerQueueService? heavyRunnerQueue = null,
+        PrototypeContractFreezeService? contractFreezeService = null)
     {
         _metadataStore = metadataStore;
         _options = options;
@@ -50,6 +52,7 @@ public sealed class PrototypeIterationGoalService
         _workspaceSeeder = workspaceSeeder;
         _stateWriter = stateWriter ?? new PrototypeRouteStateWriter();
         _contractService = contractService ?? new PrototypeContractService();
+        _contractFreezeService = contractFreezeService ?? new PrototypeContractFreezeService(metadataStore);
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
@@ -68,6 +71,20 @@ public sealed class PrototypeIterationGoalService
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
+        }
+
+        var newChainGuard = _contractFreezeService.EvaluateNewChainGuard(project);
+        if (newChainGuard.NewChainActive && !newChainGuard.Allowed)
+        {
+            return new PrototypeIterationGoalExecutionResult(
+                "",
+                "",
+                "",
+                newChainGuard.Status is "contract_missing" ? "requirement_map_missing" : "contract_stale",
+                newChainGuard.Summary,
+                0,
+                false,
+                "blocked");
         }
 
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);

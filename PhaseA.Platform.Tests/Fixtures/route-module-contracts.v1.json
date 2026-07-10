@@ -1,0 +1,596 @@
+{
+  "schemaVersion": "route-module-contracts.v1",
+  "contractSetId": "phasea-gdd-to-module-route-contracts",
+  "contractSetVersion": "1",
+  "contractSetHash": "bbc0fb2f71f99cf54e9ee70e64516c731e1413fe70c10574ff362e787581475d",
+  "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+  "contracts": [
+    {
+      "routeId": "gdd-requirements",
+      "owner": "Runs/GameDesignRequirementMapService",
+      "canonicalRouteStatePath": "meta/routes/gdd-requirements/latest.json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "generate_requirement_map"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/gdd/requirements-map",
+        "/api/projects/{projectId}/gdd/requirements-map/latest"
+      ],
+      "browserEntrypoints": [
+        "workflowRouteReadback"
+      ],
+      "requiredSourceArtifacts": [
+        "docs/gdd/GDD.md",
+        "meta/routes/scene-route/latest.json",
+        "meta/routes/gdd-document/latest.json"
+      ],
+      "sourceHashFields": [
+        "source_gdd_hash",
+        "source_scene_route_hash",
+        "source_generated_gdd_hash",
+        "source_game_type_structured_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "gdd-document-generation",
+      "owner": "Runs/GameDesignDocumentService",
+      "canonicalRouteStatePath": "meta/routes/gdd-document/latest.json",
+      "mirrorRouteStatePath": "docs/gdd/GDD.md",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "generate_gdd_document",
+        "create_gdd",
+        "complete_gdd",
+        "import_gdd_form"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/gdd/document/generate",
+        "/api/projects/{projectId}/gdd/document/status",
+        "/api/projects/{projectId}/gdd"
+      ],
+      "browserEntrypoints": [
+        "createGddDocument",
+        "openGddQuestionFormModal"
+      ],
+      "requiredSourceArtifacts": [
+        "meta/routes/gdd-question-form/latest.json",
+        "meta/routes/scene-route/latest.json"
+      ],
+      "sourceHashFields": [
+        "generated_gdd_hash",
+        "source_scene_route_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "scene-route-confirmation",
+      "owner": "Runs/GameDesignSceneRouteService",
+      "canonicalRouteStatePath": "meta/routes/scene-route/latest.json",
+      "mirrorRouteStatePath": "meta/routes/gdd-scene-route/latest.json",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "confirm_scene_route"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/gdd/scene-route",
+        "/api/projects/{projectId}/gdd/scene-route/confirm",
+        "/api/projects/{projectId}/gdd/scene-route/latest"
+      ],
+      "browserEntrypoints": [
+        "gddQuestionForm"
+      ],
+      "requiredSourceArtifacts": [
+        "meta/routes/gdd-question-form/latest.json",
+        "docs/gdd/GDD.md"
+      ],
+      "sourceHashFields": [
+        "confirmed_scene_route_hash",
+        "source_generated_gdd_hash",
+        "source_game_type_structured_hash"
+      ],
+      "statusDimension": "scene_route_confirmation",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "structured-game-type-analysis",
+      "owner": "Projects/ProjectGameTypeMatchService",
+      "canonicalRouteStatePath": "metadata:projects.game_type_match_json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": false,
+      "recoverySourceOrderRef": "source_boundary_not_applicable",
+      "actionIds": [
+        "analyze_game_type"
+      ],
+      "apiRoutes": [
+        "/api/admin/game-type-match-records",
+        "/api/admin/projects/{projectId}/game-type-contract-snapshot/refresh"
+      ],
+      "browserEntrypoints": [
+        "currentProjectPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "metadata:projects.game_type_match_json",
+        "metadata:project_game_type_match_failures"
+      ],
+      "sourceHashFields": [
+        "source_game_type_structured_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "admin_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "prototype-contract",
+      "owner": "Runs/PrototypeContractFreezeService",
+      "canonicalRouteStatePath": "routes/prototype-contract/latest.json",
+      "mirrorRouteStatePath": "meta/routes/prototype-contract/latest.json",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "freeze_contract",
+        "refresh_contract"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/prototype-contract/freeze",
+        "/api/projects/{projectId}/prototype-contract/status"
+      ],
+      "browserEntrypoints": [
+        "workflowRouteReadback"
+      ],
+      "requiredSourceArtifacts": [
+        "docs/gdd/GDD.md",
+        "meta/routes/scene-route/latest.json",
+        "meta/routes/gdd-requirements/latest.json"
+      ],
+      "sourceHashFields": [
+        "contract_hash",
+        "source_gdd_hash",
+        "source_scene_route_hash",
+        "source_requirement_map_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "prototype-skeleton",
+      "owner": "Runs/PrototypeWorkflowService",
+      "canonicalRouteStatePath": "meta/routes/prototype-skeleton/latest.json",
+      "mirrorRouteStatePath": "meta/routes/prototype/latest.json",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "create_prototype"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/prototype-7day-playable/from-gdd",
+        "/api/projects/{projectId}/prototype-skeleton/status"
+      ],
+      "browserEntrypoints": [
+        "prototypeWorkflowPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "routes/prototype-contract/latest.json",
+        "meta/routes/gdd-requirements/latest.json"
+      ],
+      "sourceHashFields": [
+        "source_contract_hash",
+        "source_scene_route_hash",
+        "source_requirement_map_hash"
+      ],
+      "statusDimension": "prototype_skeleton_source",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "workflow-recommendation",
+      "owner": "Runs/ProjectWorkflowRouteService",
+      "canonicalRouteStatePath": "meta/routes/workflow-recommendation/latest.json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": false,
+      "recoverySourceOrderRef": "source_boundary_not_applicable",
+      "actionIds": [
+        "create_gdd",
+        "complete_gdd",
+        "import_gdd_form",
+        "analyze_game_type",
+        "confirm_scene_route",
+        "generate_gdd_document",
+        "generate_requirement_map",
+        "freeze_contract",
+        "refresh_contract",
+        "create_prototype",
+        "create_iteration_plan",
+        "execute_next_goal",
+        "run_needs_fix",
+        "run_ui_closure",
+        "preview_package",
+        "inspect_first",
+        "delete_project"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/workflow-route",
+        "/api/projects/{projectId}/workflow-recommendation"
+      ],
+      "browserEntrypoints": [
+        "workflowRouteReadback"
+      ],
+      "requiredSourceArtifacts": [
+        "route-state-readback",
+        "PhaseA.Platform/Workflow/RouteActionDescriptors.cs"
+      ],
+      "sourceHashFields": [
+        "descriptor_hash"
+      ],
+      "statusDimension": "readiness_label",
+      "exposureClass": "admin_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "ui-wiring-closure",
+      "owner": "Runs/PrototypeUiOptimizationService",
+      "canonicalRouteStatePath": "meta/routes/ui-wiring/latest.json",
+      "mirrorRouteStatePath": "meta/routes/ui-closure/latest.json",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "run_ui_closure"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/ui-optimization",
+        "/api/projects/{projectId}/ui-wiring-closure/latest"
+      ],
+      "browserEntrypoints": [
+        "v2UiOptimizationPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "routes/prototype-contract/latest.json",
+        "meta/routes/gdd-requirements/latest.json"
+      ],
+      "sourceHashFields": [
+        "source_iteration_session_hash",
+        "source_validation_input_hash",
+        "source_contract_hash",
+        "source_requirement_map_hash",
+        "source_godot_ui_contract_hash",
+        "source_ui_style_contract_hash",
+        "ui_style_snapshot_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "iteration-plan",
+      "owner": "Runs/PrototypeIterationPlanService",
+      "canonicalRouteStatePath": "meta/routes/iteration-plan/latest.json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "create_iteration_plan"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/iteration-plan",
+        "/api/projects/{projectId}/iteration-plan/latest"
+      ],
+      "browserEntrypoints": [
+        "v2IterationPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "routes/prototype-contract/latest.json",
+        "meta/routes/gdd-requirements/latest.json",
+        "meta/routes/prototype-skeleton/latest.json"
+      ],
+      "sourceHashFields": [
+        "source_contract_hash",
+        "source_requirement_map_hash",
+        "source_scene_route_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "execute-next-goal",
+      "owner": "Runs/PrototypeIterationGoalService",
+      "canonicalRouteStatePath": "meta/routes/execute-next-goal/latest.json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "execute_next_goal"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/iteration-plan/execute-next"
+      ],
+      "browserEntrypoints": [
+        "v2IterationPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "meta/routes/iteration-plan/latest.json",
+        "routes/prototype-contract/latest.json"
+      ],
+      "sourceHashFields": [
+        "source_iteration_session_hash",
+        "source_contract_hash",
+        "source_requirement_map_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "needs-fix",
+      "owner": "Runs/PrototypeNeedsFixRouteService",
+      "canonicalRouteStatePath": "meta/routes/needs-fix/latest.json",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "run_needs_fix"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/needs-fix-route",
+        "/api/projects/{projectId}/prototype-feedback-iterations"
+      ],
+      "browserEntrypoints": [
+        "v2RepairPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "meta/routes/iteration-plan/latest.json",
+        "routes/prototype-contract/latest.json",
+        "latest live platform acceptance blocker"
+      ],
+      "sourceHashFields": [
+        "source_iteration_session_hash",
+        "source_contract_hash",
+        "source_validation_input_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "repair",
+      "owner": "Runs/PrototypeQuickFixService",
+      "canonicalRouteStatePath": "meta/routes/repair/latest.json",
+      "mirrorRouteStatePath": "meta/routes/repair-plan/latest.json",
+      "promptSourceBoundaryRequired": true,
+      "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
+      "actionIds": [
+        "run_needs_fix"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/repair-plan",
+        "/api/projects/{projectId}/repair-plan/execute-next",
+        "/api/projects/{projectId}/prototype-quick-fixes"
+      ],
+      "browserEntrypoints": [
+        "v2RepairPanel"
+      ],
+      "requiredSourceArtifacts": [
+        "repair ledger",
+        "Godot diagnostic evidence",
+        "latest live platform acceptance blocker"
+      ],
+      "sourceHashFields": [
+        "source_repair_ledger_hash",
+        "source_validation_input_hash",
+        "source_contract_hash"
+      ],
+      "statusDimension": "route_readback",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "preview-package",
+      "owner": "Runs/ProjectPackageService",
+      "canonicalRouteStatePath": "metadata:packages",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": false,
+      "recoverySourceOrderRef": "source_boundary_not_applicable",
+      "actionIds": [
+        "preview_package"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}/packages"
+      ],
+      "browserEntrypoints": [
+        "v2DownloadsFramePanel"
+      ],
+      "requiredSourceArtifacts": [
+        "routes/prototype-contract/latest.json",
+        "meta/routes/ui-wiring/latest.json",
+        "metadata:project_diagnostic_spool"
+      ],
+      "sourceHashFields": [
+        "source_contract_hash",
+        "diagnostic_spool_updated_utc"
+      ],
+      "statusDimension": "readiness_label",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "phase_gated",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    },
+    {
+      "routeId": "project-delete",
+      "owner": "Projects/ProjectCreationService",
+      "canonicalRouteStatePath": "metadata:project_delete_tombstones",
+      "mirrorRouteStatePath": null,
+      "promptSourceBoundaryRequired": false,
+      "recoverySourceOrderRef": "source_boundary_not_applicable",
+      "actionIds": [
+        "delete_project"
+      ],
+      "apiRoutes": [
+        "/api/projects/{projectId}",
+        "/api/admin/project-delete-tombstones"
+      ],
+      "browserEntrypoints": [
+        "deleteProject"
+      ],
+      "requiredSourceArtifacts": [
+        "metadata:projects",
+        "metadata:project_admin_review_queue",
+        "metadata:project_diagnostic_spool"
+      ],
+      "sourceHashFields": [
+        "project_id"
+      ],
+      "statusDimension": "operation_status",
+      "exposureClass": "user_visible",
+      "phaseEligibility": "active",
+      "adminReadbackSurfaces": [
+        "admin review queue",
+        "diagnostic spool",
+        "workflow recommendation readback"
+      ],
+      "deterministicTestOwners": [
+        "PhaseA.Platform.Tests/Runs",
+        "PhaseA.Platform.Tests/Workflow",
+        "PhaseA.Platform.Tests/Browser"
+      ]
+    }
+  ]
+}

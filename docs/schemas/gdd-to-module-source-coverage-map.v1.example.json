@@ -1,0 +1,22 @@
+{
+  "schema_version": "gdd-to-module-source-coverage-map.v1",
+  "coverage_map_id": "phase-a-gdd-to-module-source-coverage-map",
+  "coverage_map_version": "v1",
+  "execution_plan_coverage_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/99-source-coverage.md",
+  "original_split_audit_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/98-original-to-split-audit.md",
+  "original_source_line_count": 2739,
+  "range_contract": {
+    "must_start_at": 1,
+    "must_end_at": 2739,
+    "allow_gaps": false,
+    "allow_overlaps": false,
+    "must_match_original_split_audit": true
+  },
+  "split_added_boundary_refs": [
+    "97-split-added-requirements-ledger.md",
+    "04d-godot-engine-semantics-and-reference-examples.md"
+  ],
+  "json_fixture_counted_as_source_coverage": [
+    "schemas/godot-ui-style-contract.v1.example.json"
+  ]
+}

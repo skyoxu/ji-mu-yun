@@ -3,6 +3,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using SQLitePCL;
 
@@ -1492,10 +1493,427 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await RecordProjectDeleteTombstoneInsideTransactionAsync(connection, transaction, projectId, cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = "DELETE FROM projects WHERE id = $project_id;";
         command.Parameters.AddWithValue("$project_id", projectId);
         await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task<ProjectAdminReviewQueueEntry> UpsertProjectAdminReviewQueueEntryAsync(
+        ProjectAdminReviewQueueCommand entry,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.AccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.ProjectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.RouteId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.Severity);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.BlockingReason);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.SourceArtifactPath);
+
+        var id = NewId();
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                INSERT INTO project_admin_review_queue (
+                    id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                    source_artifact_path, evidence_refs_json, status, decision_status, created_utc, updated_utc)
+                VALUES (
+                    $id, $account_id, $project_id, $route_id, $requirement_id, $severity, $blocking_reason,
+                    $source_artifact_path, $evidence_refs_json, $status, 'pending', $created_utc, $updated_utc)
+                ON CONFLICT(project_id, route_id, requirement_id, blocking_reason) DO UPDATE SET
+                    severity = excluded.severity,
+                    source_artifact_path = excluded.source_artifact_path,
+                    evidence_refs_json = excluded.evidence_refs_json,
+                    status = excluded.status,
+                    updated_utc = excluded.updated_utc;
+                """;
+            command.Parameters.AddWithValue("$id", id);
+            command.Parameters.AddWithValue("$account_id", entry.AccountId);
+            command.Parameters.AddWithValue("$project_id", entry.ProjectId);
+            command.Parameters.AddWithValue("$route_id", entry.RouteId);
+            command.Parameters.AddWithValue("$requirement_id", entry.RequirementId);
+            command.Parameters.AddWithValue("$severity", entry.Severity);
+            command.Parameters.AddWithValue("$blocking_reason", entry.BlockingReason);
+            command.Parameters.AddWithValue("$source_artifact_path", entry.SourceArtifactPath);
+            command.Parameters.AddWithValue("$evidence_refs_json", entry.EvidenceRefsJson);
+            command.Parameters.AddWithValue("$status", entry.Status);
+            command.Parameters.AddWithValue("$created_utc", now);
+            command.Parameters.AddWithValue("$updated_utc", now);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        var existing = await GetProjectAdminReviewQueueEntryAsync(entry.ProjectId, entry.RouteId, entry.RequirementId, entry.BlockingReason, cancellationToken);
+        return existing ?? throw new InvalidOperationException("admin_review_queue_upsert_failed");
+    }
+
+    public async Task<IReadOnlyList<ProjectAdminReviewQueueEntry>> ListProjectAdminReviewQueueForAdminAsync(
+        string status = "open",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                   source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+            FROM project_admin_review_queue
+            WHERE ($status = '' OR status = $status)
+            ORDER BY created_utc DESC, id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+        var entries = new List<ProjectAdminReviewQueueEntry>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            entries.Add(ReadAdminReviewQueueEntry(reader));
+        }
+
+        return entries;
+    }
+
+    public async Task<ProjectAdminReviewDecisionResult> DecideProjectAdminReviewQueueEntryAsync(
+        string entryId,
+        string actorAccountId,
+        string decisionStatus,
+        string decisionReason,
+        string decisionMetadataJson,
+        int expectedDecisionVersion,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(entryId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(actorAccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(decisionStatus);
+        ArgumentException.ThrowIfNullOrWhiteSpace(decisionReason);
+        ArgumentException.ThrowIfNullOrWhiteSpace(decisionMetadataJson);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var existing = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+        if (existing is null)
+        {
+            return new ProjectAdminReviewDecisionResult("not_found", "admin_review_entry_not_found", null);
+        }
+
+        if (existing.DecisionVersion != expectedDecisionVersion)
+        {
+            if (existing.DecisionStatus == decisionStatus &&
+                existing.DecisionActorAccountId == actorAccountId &&
+                existing.DecisionReason == decisionReason &&
+                existing.DecisionMetadataJson == decisionMetadataJson)
+            {
+                return new ProjectAdminReviewDecisionResult("returned_existing", null, existing);
+            }
+
+            return new ProjectAdminReviewDecisionResult("conflict", "decision_version_conflict", existing);
+        }
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                UPDATE project_admin_review_queue
+                SET status = CASE WHEN $decision_status IN ('approved', 'rejected', 'deferred') THEN $decision_status ELSE status END,
+                    decision_status = $decision_status,
+                    decision_actor_account_id = $actor_account_id,
+                    decision_reason = $decision_reason,
+                    decision_metadata_json = $decision_metadata_json,
+                    decision_version = decision_version + 1,
+                    updated_utc = $updated_utc,
+                    decided_utc = $decided_utc
+                WHERE id = $id
+                  AND decision_version = $expected_decision_version;
+                """;
+            command.Parameters.AddWithValue("$id", entryId);
+            command.Parameters.AddWithValue("$actor_account_id", actorAccountId);
+            command.Parameters.AddWithValue("$decision_status", decisionStatus);
+            command.Parameters.AddWithValue("$decision_reason", decisionReason);
+            command.Parameters.AddWithValue("$decision_metadata_json", decisionMetadataJson);
+            command.Parameters.AddWithValue("$expected_decision_version", expectedDecisionVersion);
+            command.Parameters.AddWithValue("$updated_utc", now);
+            command.Parameters.AddWithValue("$decided_utc", now);
+            var rows = await command.ExecuteNonQueryAsync(cancellationToken);
+            if (rows == 0)
+            {
+                var current = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+                return new ProjectAdminReviewDecisionResult("conflict", "decision_version_conflict", current);
+            }
+        }
+
+        var updated = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+        return new ProjectAdminReviewDecisionResult("updated", null, updated);
+    }
+
+    public async Task<ProjectDiagnosticSpoolEntry> RecordProjectDiagnosticSpoolEntryAsync(
+        ProjectDiagnosticSpoolCommand entry,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.AccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.ProjectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.RouteId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.FailureFamily);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.Severity);
+        ArgumentException.ThrowIfNullOrWhiteSpace(entry.SafeSummary);
+
+        var id = NewId();
+        var diagnosticId = id;
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var retentionClass = string.IsNullOrWhiteSpace(entry.RetentionClass)
+            ? DefaultDiagnosticRetentionClass(entry.TriageStatus, entry.Severity)
+            : entry.RetentionClass.Trim();
+        var userSafeSummary = RedactDiagnosticText(entry.SafeSummary);
+        var adminSummary = string.IsNullOrWhiteSpace(entry.AdminSummary)
+            ? userSafeSummary
+            : RedactDiagnosticText(entry.AdminSummary);
+        var spoolRef = await WriteDiagnosticSpoolFileAsync(
+            diagnosticId,
+            entry with
+            {
+                SafeSummary = userSafeSummary,
+                AdminSummary = adminSummary,
+                RetentionClass = retentionClass
+            },
+            now,
+            cancellationToken);
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO project_diagnostic_spool (
+                id, diagnostic_id, account_id, project_id, project_name_snapshot, run_id, route_id, failure_family, severity, triage_status,
+                retention_class, redaction_status, spool_ref, safe_summary, user_safe_summary, source_refs_json,
+                evidence_refs_json, source_artifact_path, cleanup_status, replacement_evidence_refs_json, admin_summary, remediation_hint_id,
+                created_utc, updated_utc)
+            VALUES (
+                $id, $diagnostic_id, $account_id, $project_id, $project_name_snapshot, $run_id, $route_id, $failure_family, $severity, $triage_status,
+                $retention_class, $redaction_status, $spool_ref, $safe_summary, $user_safe_summary, $source_refs_json,
+                $evidence_refs_json, $source_artifact_path, $cleanup_status, $replacement_evidence_refs_json, $admin_summary, $remediation_hint_id,
+                $created_utc, $updated_utc);
+            """;
+        command.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$diagnostic_id", diagnosticId);
+        command.Parameters.AddWithValue("$account_id", entry.AccountId);
+        command.Parameters.AddWithValue("$project_id", entry.ProjectId);
+        command.Parameters.AddWithValue("$project_name_snapshot", entry.ProjectNameSnapshot);
+        command.Parameters.AddWithValue("$run_id", entry.RunId);
+        command.Parameters.AddWithValue("$route_id", entry.RouteId);
+        command.Parameters.AddWithValue("$failure_family", entry.FailureFamily);
+        command.Parameters.AddWithValue("$severity", entry.Severity);
+        command.Parameters.AddWithValue("$triage_status", entry.TriageStatus);
+        command.Parameters.AddWithValue("$retention_class", retentionClass);
+        command.Parameters.AddWithValue("$redaction_status", entry.RedactionStatus);
+        command.Parameters.AddWithValue("$spool_ref", spoolRef);
+        command.Parameters.AddWithValue("$safe_summary", userSafeSummary);
+        command.Parameters.AddWithValue("$user_safe_summary", userSafeSummary);
+        command.Parameters.AddWithValue("$source_refs_json", entry.SourceRefsJson);
+        command.Parameters.AddWithValue("$evidence_refs_json", entry.EvidenceRefsJson);
+        command.Parameters.AddWithValue("$source_artifact_path", entry.SourceArtifactPath);
+        command.Parameters.AddWithValue("$cleanup_status", entry.CleanupStatus);
+        command.Parameters.AddWithValue("$replacement_evidence_refs_json", entry.ReplacementEvidenceRefsJson);
+        command.Parameters.AddWithValue("$admin_summary", adminSummary);
+        command.Parameters.AddWithValue("$remediation_hint_id", entry.RemediationHintId);
+        command.Parameters.AddWithValue("$created_utc", now);
+        command.Parameters.AddWithValue("$updated_utc", now);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        return (await GetProjectDiagnosticSpoolEntryByIdAsync(id, cancellationToken))!;
+    }
+
+    public async Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAdminAsync(
+        string triageStatus = "unresolved",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        return await ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery(triageStatus, Limit: limit),
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAdminAsync(
+        ProjectDiagnosticSpoolQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, diagnostic_id, account_id, project_id, project_name_snapshot, run_id, route_id, failure_family, severity, triage_status,
+                   retention_class, redaction_status, spool_ref, safe_summary, user_safe_summary, source_refs_json,
+                   evidence_refs_json, source_artifact_path, cleanup_status, replacement_evidence_refs_json, admin_summary, remediation_hint_id,
+                   created_utc, updated_utc, resolved_utc, project_deleted_utc, triage_decision_by, triage_decision_reason,
+                   deletion_event_id, project_tombstone_id
+            FROM project_diagnostic_spool
+            WHERE ($triage_status = '' OR triage_status = $triage_status)
+              AND ($account_id IS NULL OR account_id = $account_id)
+              AND ($project_id IS NULL OR project_id = $project_id)
+              AND ($route_id IS NULL OR route_id = $route_id)
+              AND ($failure_family IS NULL OR failure_family = $failure_family)
+              AND ($severity IS NULL OR severity = $severity)
+            ORDER BY updated_utc DESC, id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$triage_status", query.TriageStatus);
+        command.Parameters.AddWithValue("$account_id", string.IsNullOrWhiteSpace(query.AccountId) ? DBNull.Value : query.AccountId);
+        command.Parameters.AddWithValue("$project_id", string.IsNullOrWhiteSpace(query.ProjectId) ? DBNull.Value : query.ProjectId);
+        command.Parameters.AddWithValue("$route_id", string.IsNullOrWhiteSpace(query.RouteId) ? DBNull.Value : query.RouteId);
+        command.Parameters.AddWithValue("$failure_family", string.IsNullOrWhiteSpace(query.FailureFamily) ? DBNull.Value : query.FailureFamily);
+        command.Parameters.AddWithValue("$severity", string.IsNullOrWhiteSpace(query.Severity) ? DBNull.Value : query.Severity);
+        command.Parameters.AddWithValue("$limit", Math.Clamp(query.Limit, 1, 500));
+        var entries = new List<ProjectDiagnosticSpoolEntry>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            entries.Add(ReadDiagnosticSpoolEntry(reader));
+        }
+
+        return entries;
+    }
+
+    public async Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAccountAsync(
+        string accountId,
+        string projectId,
+        string triageStatus = "unresolved",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        return await ListProjectDiagnosticSpoolForAdminAsync(
+            new ProjectDiagnosticSpoolQuery(triageStatus, accountId, projectId, Limit: limit),
+            cancellationToken);
+    }
+
+    public async Task<ProjectDiagnosticTriageDecisionResult> DecideProjectDiagnosticSpoolEntryAsync(
+        string diagnosticId,
+        string actorAccountId,
+        string triageStatus,
+        string triageDecisionReason,
+        string replacementEvidenceRefsJson,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(diagnosticId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(actorAccountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(triageStatus);
+        ArgumentException.ThrowIfNullOrWhiteSpace(triageDecisionReason);
+
+        var allowed = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "unresolved",
+            "resolved",
+            "ignored",
+            "backlog"
+        };
+        if (!allowed.Contains(triageStatus))
+        {
+            return new ProjectDiagnosticTriageDecisionResult("invalid", "diagnostic_triage_status_invalid", null);
+        }
+
+        var existing = await GetProjectDiagnosticSpoolEntryByIdAsync(diagnosticId, cancellationToken);
+        if (existing is null)
+        {
+            return new ProjectDiagnosticTriageDecisionResult("not_found", "diagnostic_not_found", null);
+        }
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var retentionClass = triageStatus switch
+        {
+            "resolved" => "resolved_audit",
+            "ignored" => "ignored_audit",
+            "backlog" => "backlog_audit",
+            _ => DefaultDiagnosticRetentionClass(triageStatus, existing.Severity)
+        };
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            UPDATE project_diagnostic_spool
+            SET triage_status = $triage_status,
+                retention_class = $retention_class,
+                updated_utc = $updated_utc,
+                resolved_utc = CASE WHEN $triage_status IN ('resolved', 'ignored') THEN $updated_utc ELSE resolved_utc END,
+                triage_decision_by = $triage_decision_by,
+                triage_decision_reason = $triage_decision_reason,
+                replacement_evidence_refs_json = $replacement_evidence_refs_json
+            WHERE diagnostic_id = $diagnostic_id;
+            """;
+        command.Parameters.AddWithValue("$diagnostic_id", diagnosticId);
+        command.Parameters.AddWithValue("$triage_status", triageStatus);
+        command.Parameters.AddWithValue("$retention_class", retentionClass);
+        command.Parameters.AddWithValue("$updated_utc", now);
+        command.Parameters.AddWithValue("$triage_decision_by", actorAccountId);
+        command.Parameters.AddWithValue("$triage_decision_reason", RedactDiagnosticText(triageDecisionReason));
+        command.Parameters.AddWithValue("$replacement_evidence_refs_json", replacementEvidenceRefsJson);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        return new ProjectDiagnosticTriageDecisionResult(
+            "updated",
+            null,
+            await GetProjectDiagnosticSpoolEntryByIdAsync(diagnosticId, cancellationToken));
+    }
+
+    public async Task<int> CountUnresolvedBlockingDiagnosticsAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        var count = await ExecuteScalarLongAsync(
+            connection,
+            """
+            SELECT COUNT(*)
+            FROM project_diagnostic_spool
+            WHERE account_id = $account_id
+              AND project_id = $project_id
+              AND triage_status IN ('unresolved', 'backlog')
+              AND severity IN ('P0', 'P1', 'P2');
+            """,
+            cancellationToken,
+            ("$account_id", accountId),
+            ("$project_id", projectId)) ?? 0;
+        return checked((int)count);
+    }
+
+    public async Task<IReadOnlyList<ProjectDeleteTombstone>> ListProjectDeleteTombstonesForAdminAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT project_tombstone_id, deletion_event_id, project_id, account_id, project_name, deleted_utc, unresolved_admin_review_count, unresolved_diagnostic_count, evidence_refs_json
+            FROM project_delete_tombstones
+            ORDER BY deleted_utc DESC, project_id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+        var tombstones = new List<ProjectDeleteTombstone>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            tombstones.Add(new ProjectDeleteTombstone(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                checked((int)reader.GetInt64(6)),
+                checked((int)reader.GetInt64(7)),
+                reader.GetString(8)));
+        }
+
+        return tombstones;
     }
 
     public async Task UpdateProjectGameTypeMatchAsync(
@@ -4258,6 +4676,487 @@ public sealed class PhaseAMetadataStore
             reader.IsDBNull(offset + 20) ? null : reader.GetString(offset + 20));
     }
 
+    private async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryAsync(
+        string projectId,
+        string routeId,
+        string requirementId,
+        string blockingReason,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                   source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+            FROM project_admin_review_queue
+            WHERE project_id = $project_id
+              AND route_id = $route_id
+              AND requirement_id = $requirement_id
+              AND blocking_reason = $blocking_reason
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$route_id", routeId);
+        command.Parameters.AddWithValue("$requirement_id", requirementId);
+        command.Parameters.AddWithValue("$blocking_reason", blockingReason);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadAdminReviewQueueEntry(reader) : null;
+    }
+
+    private static async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryByIdAsync(
+        SqliteConnection connection,
+        string entryId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                   source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+            FROM project_admin_review_queue
+            WHERE id = $id
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$id", entryId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadAdminReviewQueueEntry(reader) : null;
+    }
+
+    private async Task<ProjectDiagnosticSpoolEntry?> GetProjectDiagnosticSpoolEntryByIdAsync(
+        string entryId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, diagnostic_id, account_id, project_id, project_name_snapshot, run_id, route_id, failure_family, severity, triage_status,
+                   retention_class, redaction_status, spool_ref, safe_summary, user_safe_summary, source_refs_json,
+                   evidence_refs_json, source_artifact_path, cleanup_status, replacement_evidence_refs_json, admin_summary, remediation_hint_id,
+                   created_utc, updated_utc, resolved_utc, project_deleted_utc, triage_decision_by, triage_decision_reason,
+                   deletion_event_id, project_tombstone_id
+            FROM project_diagnostic_spool
+            WHERE id = $id OR diagnostic_id = $id
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$id", entryId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadDiagnosticSpoolEntry(reader) : null;
+    }
+
+    private async Task RecordProjectDeleteTombstoneInsideTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        var project = await GetProjectSnapshotInsideTransactionAsync(connection, transaction, projectId, cancellationToken);
+        if (project is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow.ToString("O");
+        var deletionEventId = $"delete-{NewId()}";
+        var projectTombstoneId = $"tombstone-{project.ProjectId}";
+        var unresolvedAdminReviewCount = await ExecuteScalarLongInsideTransactionAsync(
+            connection,
+            transaction,
+            "SELECT COUNT(*) FROM project_admin_review_queue WHERE project_id = $project_id AND status IN ('open', 'deferred', 'backlog');",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+        var unresolvedDiagnosticCount = await ExecuteScalarLongInsideTransactionAsync(
+            connection,
+            transaction,
+            "SELECT COUNT(*) FROM project_diagnostic_spool WHERE project_id = $project_id AND triage_status IN ('unresolved', 'backlog');",
+            cancellationToken,
+            ("$project_id", projectId)) ?? 0;
+
+        await using (var tombstone = connection.CreateCommand())
+        {
+            tombstone.Transaction = transaction;
+            tombstone.CommandText =
+                """
+                INSERT INTO project_delete_tombstones (
+                    project_tombstone_id, deletion_event_id, project_id, account_id, project_name, deleted_utc,
+                    unresolved_admin_review_count, unresolved_diagnostic_count, evidence_refs_json)
+                VALUES (
+                    $project_tombstone_id, $deletion_event_id, $project_id, $account_id, $project_name, $deleted_utc,
+                    $unresolved_admin_review_count, $unresolved_diagnostic_count, $evidence_refs_json)
+                ON CONFLICT(project_id) DO UPDATE SET
+                    project_tombstone_id = excluded.project_tombstone_id,
+                    deletion_event_id = excluded.deletion_event_id,
+                    deleted_utc = excluded.deleted_utc,
+                    unresolved_admin_review_count = excluded.unresolved_admin_review_count,
+                    unresolved_diagnostic_count = excluded.unresolved_diagnostic_count,
+                    evidence_refs_json = excluded.evidence_refs_json;
+                """;
+            tombstone.Parameters.AddWithValue("$project_tombstone_id", projectTombstoneId);
+            tombstone.Parameters.AddWithValue("$deletion_event_id", deletionEventId);
+            tombstone.Parameters.AddWithValue("$project_id", project.ProjectId);
+            tombstone.Parameters.AddWithValue("$account_id", project.AccountId);
+            tombstone.Parameters.AddWithValue("$project_name", project.Name);
+            tombstone.Parameters.AddWithValue("$deleted_utc", now);
+            tombstone.Parameters.AddWithValue("$unresolved_admin_review_count", unresolvedAdminReviewCount);
+            tombstone.Parameters.AddWithValue("$unresolved_diagnostic_count", unresolvedDiagnosticCount);
+            tombstone.Parameters.AddWithValue("$evidence_refs_json", """[{"kind":"db_row","path":"project_delete_tombstones"}]""");
+            await tombstone.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        foreach (var table in new[] { "project_admin_review_queue", "project_diagnostic_spool", "game_type_maintenance_records" })
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = $"UPDATE {table} SET project_deleted_utc = $deleted_utc WHERE project_id = $project_id AND project_deleted_utc IS NULL;";
+            command.Parameters.AddWithValue("$deleted_utc", now);
+            command.Parameters.AddWithValue("$project_id", projectId);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await using (var diagnosticIds = connection.CreateCommand())
+        {
+            diagnosticIds.Transaction = transaction;
+            diagnosticIds.CommandText =
+                """
+                UPDATE project_diagnostic_spool
+                SET deletion_event_id = $deletion_event_id,
+                    project_tombstone_id = $project_tombstone_id,
+                    project_name_snapshot = CASE WHEN project_name_snapshot = '' THEN $project_name ELSE project_name_snapshot END,
+                    updated_utc = $updated_utc
+                WHERE project_id = $project_id
+                  AND deletion_event_id IS NULL;
+                """;
+            diagnosticIds.Parameters.AddWithValue("$deletion_event_id", deletionEventId);
+            diagnosticIds.Parameters.AddWithValue("$project_tombstone_id", projectTombstoneId);
+            diagnosticIds.Parameters.AddWithValue("$project_name", project.Name);
+            diagnosticIds.Parameters.AddWithValue("$updated_utc", now);
+            diagnosticIds.Parameters.AddWithValue("$project_id", projectId);
+            await diagnosticIds.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        var diagnosticId = NewId();
+        var spoolRef = await WriteDiagnosticSpoolFileAsync(
+            diagnosticId,
+            new ProjectDiagnosticSpoolCommand(
+                project.AccountId,
+                project.ProjectId,
+                "project-delete",
+                "workspace_delete_failed",
+                unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "P2" : "info",
+                "Project deletion preserved governance and diagnostic records for admin triage.",
+                """[{"kind":"db_row","path":"project_delete_tombstones"}]""",
+                "project_delete_tombstones",
+                unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "backlog" : "resolved",
+                project.Name,
+                SourceRefsJson: """[{"kind":"db_row","path":"projects"}]""",
+                RetentionClass: unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "backlog_audit" : "resolved_audit",
+                AdminSummary: "Project deletion tombstone recorded; preserved diagnostics remain outside the hosted workspace.",
+                RemediationHintId: "workspace_delete_failed"),
+            now,
+            cancellationToken);
+        await using (var deleteDiagnostic = connection.CreateCommand())
+        {
+            deleteDiagnostic.Transaction = transaction;
+            deleteDiagnostic.CommandText =
+                """
+                INSERT INTO project_diagnostic_spool (
+                    id, diagnostic_id, account_id, project_id, project_name_snapshot, route_id, failure_family, severity,
+                    triage_status, retention_class, redaction_status, spool_ref, safe_summary, user_safe_summary,
+                    source_refs_json, evidence_refs_json, source_artifact_path, cleanup_status, admin_summary,
+                    remediation_hint_id, created_utc, updated_utc, resolved_utc, triage_decision_by,
+                    triage_decision_reason, deletion_event_id, project_tombstone_id, project_deleted_utc)
+                VALUES (
+                    $id, $diagnostic_id, $account_id, $project_id, $project_name_snapshot, 'project-delete', 'workspace_delete_failed', $severity,
+                    $triage_status, $retention_class, 'redacted', $spool_ref, $safe_summary, $user_safe_summary,
+                    $source_refs_json, $evidence_refs_json, 'project_delete_tombstones', 'preserved', $admin_summary,
+                    'workspace_delete_failed', $created_utc, $updated_utc, $resolved_utc, $triage_decision_by,
+                    $triage_decision_reason, $deletion_event_id, $project_tombstone_id, $project_deleted_utc);
+                """;
+            deleteDiagnostic.Parameters.AddWithValue("$id", diagnosticId);
+            deleteDiagnostic.Parameters.AddWithValue("$diagnostic_id", diagnosticId);
+            deleteDiagnostic.Parameters.AddWithValue("$account_id", project.AccountId);
+            deleteDiagnostic.Parameters.AddWithValue("$project_id", project.ProjectId);
+            deleteDiagnostic.Parameters.AddWithValue("$project_name_snapshot", project.Name);
+            deleteDiagnostic.Parameters.AddWithValue("$severity", unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "P2" : "info");
+            deleteDiagnostic.Parameters.AddWithValue("$triage_status", unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "backlog" : "resolved");
+            deleteDiagnostic.Parameters.AddWithValue("$retention_class", unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? "backlog_audit" : "resolved_audit");
+            deleteDiagnostic.Parameters.AddWithValue("$spool_ref", spoolRef);
+            deleteDiagnostic.Parameters.AddWithValue("$safe_summary", "Project deletion preserved governance and diagnostic records for admin triage.");
+            deleteDiagnostic.Parameters.AddWithValue("$user_safe_summary", "Project deletion preserved governance and diagnostic records for admin triage.");
+            deleteDiagnostic.Parameters.AddWithValue("$source_refs_json", """[{"kind":"db_row","path":"projects"}]""");
+            deleteDiagnostic.Parameters.AddWithValue("$evidence_refs_json", """[{"kind":"db_row","path":"project_delete_tombstones"}]""");
+            deleteDiagnostic.Parameters.AddWithValue("$admin_summary", "Project deletion tombstone recorded; preserved diagnostics remain outside the hosted workspace.");
+            deleteDiagnostic.Parameters.AddWithValue("$created_utc", now);
+            deleteDiagnostic.Parameters.AddWithValue("$updated_utc", now);
+            deleteDiagnostic.Parameters.AddWithValue("$resolved_utc", unresolvedAdminReviewCount + unresolvedDiagnosticCount > 0 ? DBNull.Value : now);
+            deleteDiagnostic.Parameters.AddWithValue("$triage_decision_by", DBNull.Value);
+            deleteDiagnostic.Parameters.AddWithValue("$triage_decision_reason", "");
+            deleteDiagnostic.Parameters.AddWithValue("$deletion_event_id", deletionEventId);
+            deleteDiagnostic.Parameters.AddWithValue("$project_tombstone_id", projectTombstoneId);
+            deleteDiagnostic.Parameters.AddWithValue("$project_deleted_utc", now);
+            await deleteDiagnostic.ExecuteNonQueryAsync(cancellationToken);
+        }
+    }
+
+    private static async Task<ProjectSnapshot?> GetProjectSnapshotInsideTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT
+                p.id,
+                p.account_id,
+                p.name,
+                p.game_name,
+                p.game_type_source,
+                p.template_rule_id,
+                p.llm_binding_required,
+                p.allowed_workflows_json,
+                p.bootstrap_status,
+                p.bootstrap_error,
+                w.id,
+                w.root_path,
+                w.repo_path,
+                w.runtime_path,
+                w.meta_path,
+                p.game_type_match_json
+            FROM projects p
+            JOIN workspaces w ON w.project_id = p.id
+            WHERE p.id = $project_id
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$project_id", projectId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new ProjectSnapshot(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.GetString(5),
+            reader.GetInt64(6) == 1,
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.GetString(10),
+            reader.GetString(11),
+            reader.GetString(12),
+            reader.GetString(13),
+            reader.GetString(14),
+            reader.GetString(15));
+    }
+
+    private static ProjectAdminReviewQueueEntry ReadAdminReviewQueueEntry(SqliteDataReader reader)
+    {
+        return new ProjectAdminReviewQueueEntry(
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.GetString(5),
+            reader.GetString(6),
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.GetString(9),
+            reader.GetString(10),
+            reader.IsDBNull(11) ? null : reader.GetString(11),
+            reader.GetString(12),
+            reader.GetString(13),
+            checked((int)reader.GetInt64(14)),
+            reader.GetString(15),
+            reader.GetString(16),
+            reader.IsDBNull(17) ? null : reader.GetString(17),
+            reader.IsDBNull(18) ? null : reader.GetString(18));
+    }
+
+    private static ProjectDiagnosticSpoolEntry ReadDiagnosticSpoolEntry(SqliteDataReader reader)
+    {
+        return new ProjectDiagnosticSpoolEntry(
+            reader.GetString(0),
+            reader.IsDBNull(1) || string.IsNullOrWhiteSpace(reader.GetString(1)) ? reader.GetString(0) : reader.GetString(1),
+            reader.GetString(2),
+            reader.GetString(3),
+            reader.GetString(4),
+            reader.GetString(5),
+            reader.GetString(6),
+            reader.GetString(7),
+            reader.GetString(8),
+            reader.GetString(9),
+            reader.GetString(10),
+            reader.GetString(11),
+            reader.GetString(12),
+            reader.GetString(13),
+            reader.GetString(14),
+            reader.GetString(15),
+            reader.GetString(16),
+            reader.GetString(17),
+            reader.GetString(18),
+            reader.GetString(19),
+            reader.GetString(20),
+            reader.GetString(21),
+            reader.GetString(22),
+            reader.GetString(23),
+            reader.IsDBNull(24) ? null : reader.GetString(24),
+            reader.IsDBNull(25) ? null : reader.GetString(25),
+            reader.IsDBNull(26) ? null : reader.GetString(26),
+            reader.GetString(27),
+            reader.IsDBNull(28) ? null : reader.GetString(28),
+            reader.IsDBNull(29) ? null : reader.GetString(29));
+    }
+
+    private async Task<string> WriteDiagnosticSpoolFileAsync(
+        string diagnosticId,
+        ProjectDiagnosticSpoolCommand entry,
+        string createdUtc,
+        CancellationToken cancellationToken)
+    {
+        var root = ResolveDiagnosticSpoolRoot();
+        var directory = Path.Combine(root, SanitizePathSegment(entry.AccountId), SanitizePathSegment(entry.ProjectId));
+        Directory.CreateDirectory(directory);
+        var fileName = $"{SanitizePathSegment(createdUtc).Replace(':', '-')}-{SanitizePathSegment(diagnosticId)}.json";
+        var path = Path.Combine(directory, fileName);
+        var relativeRef = Path.Combine(
+            "logs",
+            "phase-a-innernet",
+            "diagnostics",
+            "projects",
+            SanitizePathSegment(entry.AccountId),
+            SanitizePathSegment(entry.ProjectId),
+            fileName).Replace('\\', '/');
+
+        var payload = new
+        {
+            schema_version = "project-diagnostic-spool.v1",
+            diagnostic_id = diagnosticId,
+            account_id = entry.AccountId,
+            project_id = entry.ProjectId,
+            project_name = entry.ProjectNameSnapshot,
+            deletion_event_id = "",
+            project_tombstone_id = "",
+            run_id = entry.RunId,
+            route = entry.RouteId,
+            failure_family = entry.FailureFamily,
+            severity = entry.Severity,
+            triage_status = entry.TriageStatus,
+            created_utc = createdUtc,
+            source_refs = ParseJsonArray(entry.SourceRefsJson),
+            evidence_refs = ParseJsonArray(entry.EvidenceRefsJson),
+            redaction_status = entry.RedactionStatus,
+            retention_class = entry.RetentionClass,
+            cleanup_status = entry.CleanupStatus,
+            replacement_evidence_refs = ParseJsonArray(entry.ReplacementEvidenceRefsJson),
+            user_safe_summary = RedactDiagnosticText(entry.SafeSummary),
+            admin_summary = RedactDiagnosticText(entry.AdminSummary),
+            remediation_hint_id = entry.RemediationHintId
+        };
+
+        await File.WriteAllTextAsync(
+            path,
+            JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }),
+            Encoding.UTF8,
+            cancellationToken);
+        return relativeRef;
+    }
+
+    private string ResolveDiagnosticSpoolRoot()
+    {
+        var dataDirectory = Path.GetDirectoryName(_options.MetadataDatabasePath);
+        var phaseRoot = string.IsNullOrWhiteSpace(dataDirectory)
+            ? Path.Combine(_options.HostedWorkspaceRoot, "..")
+            : Directory.GetParent(dataDirectory)?.FullName;
+        if (string.IsNullOrWhiteSpace(phaseRoot))
+        {
+            phaseRoot = Path.Combine(_options.HostedWorkspaceRoot, "..");
+        }
+
+        return Path.GetFullPath(Path.Combine(phaseRoot, "diagnostics", "projects"));
+    }
+
+    private static string DefaultDiagnosticRetentionClass(string triageStatus, string severity)
+    {
+        return (triageStatus, severity) switch
+        {
+            ("unresolved", "P0" or "P1" or "P2") => "unresolved_blocker",
+            ("resolved", _) => "resolved_audit",
+            ("ignored", _) => "ignored_audit",
+            ("backlog", _) => "backlog_audit",
+            (_, "info") => "info_ephemeral",
+            _ => "unresolved_blocker"
+        };
+    }
+
+    private static string RedactDiagnosticText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "";
+        }
+
+        var sanitized = value
+            .Replace("\\", "/", StringComparison.Ordinal)
+            .Replace("Bearer ", "Bearer [redacted] ", StringComparison.OrdinalIgnoreCase);
+        if (sanitized.Contains("C:/", StringComparison.OrdinalIgnoreCase))
+        {
+            sanitized = "[redacted-host-path]";
+        }
+
+        foreach (var token in new[] { "sk-", "token=", "password=", "prompt:" })
+        {
+            if (sanitized.Contains(token, StringComparison.OrdinalIgnoreCase))
+            {
+                sanitized = sanitized.Replace(token, "[redacted]", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return sanitized;
+    }
+
+    private static JsonElement ParseJsonArray(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "[]" : json);
+            return document.RootElement.ValueKind == JsonValueKind.Array
+                ? document.RootElement.Clone()
+                : JsonDocument.Parse("[]").RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            using var document = JsonDocument.Parse("[]");
+            return document.RootElement.Clone();
+        }
+    }
+
+    private static string SanitizePathSegment(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "unknown";
+        }
+
+        var builder = new StringBuilder(value.Length);
+        foreach (var ch in value)
+        {
+            builder.Append(char.IsLetterOrDigit(ch) || ch is '-' or '_' or '.' ? ch : '_');
+        }
+
+        return builder.ToString();
+    }
+
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
     {
         var connection = new SqliteConnection(_connectionString);
@@ -4506,6 +5405,25 @@ public sealed class PhaseAMetadataStore
         params (string Name, object Value)[] parameters)
     {
         await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        foreach (var parameter in parameters)
+        {
+            command.Parameters.AddWithValue(parameter.Name, parameter.Value);
+        }
+
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return result is null or DBNull ? null : Convert.ToInt64(result);
+    }
+
+    private static async Task<long?> ExecuteScalarLongInsideTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        string sql,
+        CancellationToken cancellationToken,
+        params (string Name, object Value)[] parameters)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = sql;
         foreach (var parameter in parameters)
         {

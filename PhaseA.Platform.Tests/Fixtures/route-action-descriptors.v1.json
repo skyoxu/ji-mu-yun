@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "route-action-descriptors.v1",
+  "descriptorId": "phasea-workflow-actions",
+  "descriptorVersion": "1",
+  "descriptorHash": "c74147b72b450e507105afe8c8489ee22cd906803ffd153c57fce84b5dcb5399",
+  "disabledDomainCodes": [
+    "route_contract_not_active",
+    "phase_gate_blocked",
+    "source_stale",
+    "admin_review_blocked",
+    "diagnostic_blocked",
+    "account_forbidden",
+    "not_applicable"
+  ],
+  "actions": [
+    {
+      "actionId": "create_gdd",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "/api/projects/{projectId}/gdd",
+      "browserActionId": "createGddDocument",
+      "displayLabelKey": "workflow.create_gdd",
+      "operationScope": "run",
+      "readbackUrlTemplate": "/api/projects/{projectId}/gdd",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "complete_gdd",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "/api/projects/{projectId}/gdd/outline",
+      "browserActionId": "createGddDocument",
+      "displayLabelKey": "workflow.complete_gdd",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "/gdd-outline?projectId={projectId}",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "import_gdd_form",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "openGddQuestionFormModal",
+      "displayLabelKey": "workflow.import_gdd_form",
+      "operationScope": "non_action",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "analyze_game_type",
+      "exposureClass": "admin_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "currentProjectPanel",
+      "displayLabelKey": "workflow.analyze_game_type",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "confirm_scene_route",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "/api/projects/{projectId}/gdd/scene-route",
+      "browserActionId": "gddQuestionForm",
+      "displayLabelKey": "workflow.confirm_scene_route",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "generate_gdd_document",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "/api/projects/{projectId}/gdd",
+      "browserActionId": "createGddDocument",
+      "displayLabelKey": "workflow.generate_gdd_document",
+      "operationScope": "run",
+      "readbackUrlTemplate": "/api/projects/{projectId}/gdd",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "generate_requirement_map",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "workflowRouteReadback",
+      "displayLabelKey": "workflow.generate_requirement_map",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "freeze_contract",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "workflowRouteReadback",
+      "displayLabelKey": "workflow.freeze_contract",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "refresh_contract",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "workflowRouteReadback",
+      "displayLabelKey": "workflow.refresh_contract",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "inspect_first",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "",
+      "browserActionId": "workflowRouteReadback",
+      "displayLabelKey": "workflow.inspect_first",
+      "operationScope": "non_action",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "delete_project",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "active",
+      "apiRouteTemplate": "/api/projects/{projectId}",
+      "browserActionId": "deleteProject",
+      "displayLabelKey": "workflow.delete_project",
+      "operationScope": "project",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "1"
+    },
+    {
+      "actionId": "create_prototype",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/prototype-7day-playable/from-gdd",
+      "browserActionId": "prototypeWorkflowPanel",
+      "displayLabelKey": "workflow.create_prototype",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    },
+    {
+      "actionId": "create_iteration_plan",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/iteration-plan",
+      "browserActionId": "v2IterationPanel",
+      "displayLabelKey": "workflow.create_iteration_plan",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    },
+    {
+      "actionId": "execute_next_goal",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/iteration-plan/execute-next",
+      "browserActionId": "v2IterationPanel",
+      "displayLabelKey": "workflow.execute_next_goal",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    },
+    {
+      "actionId": "run_needs_fix",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/prototype-feedback-iterations",
+      "browserActionId": "v2RepairPanel",
+      "displayLabelKey": "workflow.run_needs_fix",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    },
+    {
+      "actionId": "run_ui_closure",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/ui-optimization",
+      "browserActionId": "v2UiOptimizationPanel",
+      "displayLabelKey": "workflow.run_ui_closure",
+      "operationScope": "run",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    },
+    {
+      "actionId": "preview_package",
+      "exposureClass": "user_visible",
+      "defaultPhaseEligibility": "not_active",
+      "apiRouteTemplate": "/api/projects/{projectId}/packages",
+      "browserActionId": "v2DownloadsFramePanel",
+      "displayLabelKey": "workflow.preview_package",
+      "operationScope": "readback",
+      "readbackUrlTemplate": "",
+      "requiredPhase": "2"
+    }
+  ]
+}

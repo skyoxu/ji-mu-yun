@@ -94,6 +94,8 @@ builder.Services.AddSingleton<PrototypeRepairPlanService>();
 builder.Services.AddSingleton<PrototypeUiOptimizationService>();
 builder.Services.AddSingleton<GddMilestoneStepService>();
 builder.Services.AddSingleton<GameDesignDocumentService>();
+builder.Services.AddSingleton<GameDesignRequirementMapService>();
+builder.Services.AddSingleton<PrototypeContractFreezeService>();
 builder.Services.AddSingleton<GameDesignSceneRouteService>();
 builder.Services.AddSingleton(new QuestionFormConcurrencyLimiter(
     options.MaxConcurrentQuestionForms,
@@ -131,6 +133,7 @@ builder.Services.AddSingleton(new ChatConcurrencyLimiter(
 builder.Services.AddTransient<ChatService>();
 builder.Services.AddSingleton<ProjectChatHistoryService>();
 builder.Services.AddSingleton<ProjectWorkflowRouteService>();
+builder.Services.AddSingleton<ProjectRouteStateArtifactService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
@@ -498,6 +501,128 @@ app.MapGet("/api/admin/game-type-match-records", async (
     return Results.Ok(await readback.GetAdminGameTypeMatchRecordsAsync(limit ?? 100, cancellationToken));
 });
 
+app.MapGet("/api/admin/project-admin-review-queue", async (
+    string? status,
+    int? limit,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await metadataStore.ListProjectAdminReviewQueueForAdminAsync(status ?? "open", limit ?? 100, cancellationToken));
+});
+
+app.MapGet("/api/admin/project-diagnostic-spool", async (
+    string? triageStatus,
+    string? accountId,
+    string? projectId,
+    string? routeId,
+    string? failureFamily,
+    string? severity,
+    int? limit,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+        new ProjectDiagnosticSpoolQuery(triageStatus ?? "unresolved", accountId, projectId, routeId, failureFamily, severity, limit ?? 100),
+        cancellationToken));
+});
+
+app.MapPost("/api/admin/project-diagnostic-spool/{diagnosticId}/triage", async (
+    string diagnosticId,
+    ProjectDiagnosticTriageRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var identity = CurrentIdentity(context);
+    if (!identity.IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var result = await metadataStore.DecideProjectDiagnosticSpoolEntryAsync(
+        diagnosticId,
+        identity.AccountId,
+        request.TriageStatus,
+        request.TriageDecisionReason,
+        request.ReplacementEvidenceRefsJson ?? "[]",
+        cancellationToken);
+    return result.Status switch
+    {
+        "updated" => Results.Ok(result),
+        "not_found" => Results.NotFound(result),
+        "invalid" => Results.BadRequest(result),
+        _ => Results.Json(result, statusCode: StatusCodes.Status409Conflict)
+    };
+});
+
+app.MapGet("/api/projects/{projectId}/diagnostics", async (
+    string projectId,
+    string? triageStatus,
+    int? limit,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var accountId = CurrentAccountId(context);
+    if (!await metadataStore.ProjectBelongsToAccountAsync(accountId, projectId, cancellationToken))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var diagnostics = await metadataStore.ListProjectDiagnosticSpoolForAccountAsync(
+        accountId,
+        projectId,
+        triageStatus ?? "unresolved",
+        limit ?? 100,
+        cancellationToken);
+    return Results.Ok(diagnostics.Select(item => new
+    {
+        item.DiagnosticId,
+        item.ProjectId,
+        route = item.RouteId,
+        item.FailureFamily,
+        item.Severity,
+        item.TriageStatus,
+        item.UserSafeSummary,
+        item.RedactionStatus,
+        item.RetentionClass,
+        item.CreatedUtc,
+        item.UpdatedUtc,
+        evidenceRefsJson = item.EvidenceRefsJson
+    }));
+});
+
+app.MapGet("/api/admin/project-delete-tombstones", async (
+    int? limit,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    return Results.Ok(await metadataStore.ListProjectDeleteTombstonesForAdminAsync(limit ?? 100, cancellationToken));
+});
+
 app.MapPost("/api/admin/projects/{projectId}/game-type-contract-snapshot/refresh", async (
     string projectId,
     HttpContext context,
@@ -684,6 +809,59 @@ app.MapPost("/api/projects/{projectId}/gdd/scene-route", async (
         : Results.Ok(result);
 });
 
+app.MapPost("/api/projects/{projectId}/gdd/scene-route/confirm", async (
+    string projectId,
+    GameDesignSceneRouteDraftRequest request,
+    HttpContext context,
+    [FromServices] GameDesignSceneRouteService sceneRoutes,
+    CancellationToken cancellationToken) =>
+{
+    var result = await sceneRoutes.CreateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    if (result is null)
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    return Results.Ok(new
+    {
+        operationStatus = "returned_existing",
+        result.ProjectId,
+        status = result.Status == "succeeded" ? "confirmed" : result.Status,
+        confirmedSceneRouteHash = "",
+        blockingIssues = Array.Empty<object>(),
+        evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", "meta/routes/scene-route/latest.json") },
+        sceneRoute = result.SceneRoute
+    });
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/scene-route/latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] ProjectRouteStateArtifactService routeArtifacts,
+    CancellationToken cancellationToken) =>
+{
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var readback = routeArtifacts.Read(project);
+    var scene = readback.Artifacts.FirstOrDefault(item => item.Route == "scene-route-confirmation");
+    return scene is null
+        ? Results.NotFound(new { error = "scene_route_not_found" })
+        : Results.Ok(new
+        {
+            projectId,
+            status = scene.Status,
+            confirmedSceneRouteHash = "",
+            staleReasons = scene.Freshness == "stale" ? new[] { "source_stale" } : Array.Empty<string>(),
+            blockingIssues = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("scene-route", StringComparison.OrdinalIgnoreCase)).ToArray(),
+            evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", scene.CanonicalPath) }
+        });
+});
+
 app.MapGet("/api/projects/{projectId}/gdd", async (
     string projectId,
     HttpContext context,
@@ -701,6 +879,101 @@ app.MapGet("/api/projects/{projectId}/gdd", async (
             lastUpdatedUtc = result.LastUpdatedUtc,
             downloadUrl = $"/api/projects/{projectId}/gdd/download"
         });
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/document/generate", async (
+    string projectId,
+    GameDesignDocumentRequest request,
+    HttpContext context,
+    [FromServices] GameDesignDocumentService gdd,
+    [FromServices] ProjectChatHistoryService chatHistory,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var accountId = CurrentAccountId(context);
+        var result = await gdd.CreateAsync(accountId, projectId, request, cancellationToken);
+        return result.Status == "succeeded"
+            ? Results.Ok(new
+            {
+                operationStatus = "created_run",
+                result.ProjectId,
+                result.RunId,
+                status = "ready",
+                generatedGddHash = "",
+                result.RelativePath,
+                result.Artifacts,
+                result.Summary,
+                evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", "meta/routes/gdd-document/latest.json") }
+            })
+            : result.FailureCode == "gdd_already_exists"
+                ? Results.Conflict(new { operationStatus = "returned_existing", result.ProjectId, status = "ready", result.Summary })
+                : Results.BadRequest(result);
+    }
+    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+    {
+        return CancelledRunResult();
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/document/status", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] ProjectRouteStateArtifactService routeArtifacts,
+    CancellationToken cancellationToken) =>
+{
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var readback = routeArtifacts.Read(project);
+    var document = readback.Artifacts.FirstOrDefault(item => item.Route == "gdd-document-generation");
+    return document is null
+        ? Results.NotFound(new { error = "gdd_document_not_found" })
+        : Results.Ok(new
+        {
+            projectId,
+            status = document.Status,
+            generatedGddHash = "",
+            sceneRouteRecordedGeneratedGddHash = "",
+            staleReasons = document.Freshness == "stale" ? new[] { "source_stale" } : Array.Empty<string>(),
+            blockingIssues = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("gdd-document", StringComparison.OrdinalIgnoreCase)).ToArray(),
+            evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", document.CanonicalPath) }
+        });
+});
+
+app.MapPost("/api/projects/{projectId}/gdd/requirements-map", async (
+    string projectId,
+    GameDesignRequirementMapRequest request,
+    HttpContext context,
+    [FromServices] GameDesignRequirementMapService requirementMaps,
+    CancellationToken cancellationToken) =>
+{
+    var result = await requirementMaps.CreateAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result.Status switch
+    {
+        "project_not_found" => Results.NotFound(new { error = "project_not_found" }),
+        "ready" or "needs_review" => Results.Ok(result),
+        "blocked" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+        _ => Results.Json(result, statusCode: StatusCodes.Status422UnprocessableEntity)
+    };
+});
+
+app.MapGet("/api/projects/{projectId}/gdd/requirements-map/latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] GameDesignRequirementMapService requirementMaps,
+    CancellationToken cancellationToken) =>
+{
+    var result = await requirementMaps.GetLatestAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "requirement_map_not_found" }) : Results.Ok(result);
 });
 
 app.MapGet("/api/projects/{projectId}/gdd/outline", async (
@@ -1797,6 +2070,7 @@ app.MapGet("/api/projects/{projectId}/workflow-route", async (
     [FromServices] ILoggerFactory loggerFactory,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     try
     {
         var result = await workflowRoute.QueryAsync(CurrentAccountId(context), projectId, playtestFeedback, cancellationToken);
@@ -1827,8 +2101,63 @@ app.MapPost("/api/projects/{projectId}/workflow-route/intent", async (
     [FromServices] ProjectWorkflowRouteService workflowRoute,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     var result = await workflowRoute.ClassifyIntentAsync(CurrentAccountId(context), projectId, request, cancellationToken);
     return result.Status == "project_not_found" ? Results.NotFound(result) : Results.Ok(result);
+});
+
+app.MapGet("/api/projects/{projectId}/workflow-recommendation", async (
+    string projectId,
+    string? playtestFeedback,
+    HttpContext context,
+    [FromServices] ProjectWorkflowRouteService workflowRoute,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    var result = await workflowRoute.QueryAsync(CurrentAccountId(context), projectId, playtestFeedback, cancellationToken);
+    return result is null
+        ? Results.NotFound(new { error = "project_not_found" })
+        : Results.Ok(new
+        {
+            projectId = result.ProjectId,
+            recommendedAction = result.WorkflowRecommendation?.RecommendedAction,
+            result.WorkflowRecommendation?.AllowedActions,
+            result.WorkflowRecommendation?.ForbiddenActions,
+            result.WorkflowRecommendation?.BlockingIssues,
+            result.WorkflowRecommendation?.StaleArtifacts,
+            result.WorkflowRecommendation?.ActionDescriptorRef,
+            descriptorHash = result.WorkflowRecommendation?.ActionDescriptorRef.DescriptorHash,
+            result.WorkflowRecommendation?.Status,
+            result.WorkflowRecommendation?.StatusReason,
+            result.WorkflowRecommendation?.EvidenceRefs
+        });
+});
+
+app.MapPost("/api/projects/{projectId}/prototype-contract/freeze", async (
+    string projectId,
+    PrototypeContractFreezeRequest request,
+    HttpContext context,
+    [FromServices] PrototypeContractFreezeService contracts,
+    CancellationToken cancellationToken) =>
+{
+    var result = await contracts.FreezeAsync(CurrentAccountId(context), projectId, request, cancellationToken);
+    return result.Status switch
+    {
+        "project_not_found" => Results.NotFound(new { error = "project_not_found" }),
+        "fresh" => Results.Ok(result),
+        "blocked" or "stale" or "unknown" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+        _ => Results.BadRequest(result)
+    };
+});
+
+app.MapGet("/api/projects/{projectId}/prototype-contract/status", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PrototypeContractFreezeService contracts,
+    CancellationToken cancellationToken) =>
+{
+    var result = await contracts.GetStatusAsync(CurrentAccountId(context), projectId, cancellationToken);
+    return result is null ? Results.NotFound(new { error = "project_not_found" }) : Results.Ok(result);
 });
 
 app.MapPost("/api/projects/{projectId}/iteration-plan", async (
@@ -2459,6 +2788,11 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable", async (
             return Results.Json(result, statusCode: StatusCodes.Status409Conflict);
         }
 
+        if (result.Status is "contract_missing" or "contract_stale")
+        {
+            return Results.Json(result, statusCode: StatusCodes.Status409Conflict);
+        }
+
         return result.Status == "queued" ? Results.Json(result, statusCode: StatusCodes.Status202Accepted) : Results.BadRequest(result);
     }
     catch (InvalidOperationException ex)
@@ -2483,6 +2817,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/from-gdd", async 
             "gdd_not_found" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
             "gdd_empty" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             "prototype_skeleton_locked" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
+            "contract_missing" or "contract_stale" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             _ => Results.BadRequest(result)
         };
     }
@@ -2506,6 +2841,35 @@ app.MapGet("/api/projects/{projectId}/prototype-7day-playable/progress", async (
     {
         return Results.NotFound(new { error = ex.Message });
     }
+});
+
+app.MapGet("/api/projects/{projectId}/prototype-skeleton/status", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] PrototypeContractFreezeService contracts,
+    CancellationToken cancellationToken) =>
+{
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var guard = contracts.EvaluateNewChainGuard(project);
+    return Results.Ok(new
+    {
+        projectId,
+        status = guard.Status,
+        sourceContractHash = guard.ContractStatus.ContractHash,
+        sourceRequirementMapHash = guard.ContractStatus.SourceRequirementMapHash,
+        sourceGddHash = guard.ContractStatus.SourceGddHash,
+        sourceSceneRouteHash = guard.ContractStatus.SourceSceneRouteHash,
+        finalReadinessEligible = guard.NewChainActive && guard.Allowed,
+        legacyCompatibilityReason = guard.NewChainActive ? "" : guard.Summary,
+        blockingIssues = guard.ContractStatus.BlockingIssues,
+        evidenceRefs = guard.ContractStatus.EvidenceRefs
+    });
 });
 
 app.MapPost("/api/projects/{projectId}/prototype-7day-playable/repair", async (
@@ -2568,6 +2932,7 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate-skeleton
             "succeeded" or "failed" => Results.Ok(result),
             "project_busy" => Results.Json(result, statusCode: StatusCodes.Status423Locked),
             "prototype_validation_not_available" => Results.Json(result, statusCode: StatusCodes.Status404NotFound),
+            "contract_missing" or "contract_stale" => Results.Json(result, statusCode: StatusCodes.Status409Conflict),
             _ => Results.BadRequest(result)
         };
     }
@@ -2579,6 +2944,42 @@ app.MapPost("/api/projects/{projectId}/prototype-7day-playable/validate-skeleton
     {
         return Results.NotFound(new { error = ex.Message });
     }
+});
+
+app.MapGet("/api/projects/{projectId}/ui-wiring-closure/latest", async (
+    string projectId,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore store,
+    [FromServices] ProjectRouteStateArtifactService routeArtifacts,
+    CancellationToken cancellationToken) =>
+{
+    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    if (project is null || !string.Equals(project.AccountId, CurrentAccountId(context), StringComparison.Ordinal))
+    {
+        return Results.NotFound(new { error = "project_not_found" });
+    }
+
+    var readback = routeArtifacts.Read(project);
+    var ui = readback.Artifacts.FirstOrDefault(item => item.Route == "ui-wiring");
+    return ui is null
+        ? Results.NotFound(new { error = "ui_wiring_closure_not_found" })
+        : Results.Ok(new
+        {
+            projectId,
+            status = ui.Status,
+            sourceIterationSessionHash = "",
+            sourceValidationInputHash = "",
+            sourceContractHash = "",
+            sourceRequirementMapHash = "",
+            sourceGodotUiContractHash = "",
+            sourceUiStyleContractHash = "",
+            uiStyleSnapshotHash = "",
+            uiSurfaceMatrixSummary = new { status = ui.Status },
+            styleGapSummary = new { unresolved = readback.BlockingIssues.Count(issue => issue.DomainCode == "diagnostic_blocked") },
+            finalReadinessEligible = ui.Status == "succeeded" && readback.BlockingIssues.Count == 0,
+            blockingIssues = readback.BlockingIssues.Where(issue => issue.IssueId.Contains("ui-wiring", StringComparison.OrdinalIgnoreCase)).ToArray(),
+            evidenceRefs = new[] { new ProjectRouteStateEvidenceRef("sidecar", ui.CanonicalPath) }
+        });
 });
 
 app.MapPost("/api/projects/{projectId}/prototype-tdd", async (

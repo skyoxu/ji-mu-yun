@@ -1,0 +1,950 @@
+{
+  "schema_version": "godot-ui-style-contract.v1",
+  "ui_style_id": "godot_cosmic|godot_combat_hud|godot_pixel_arcade|custom",
+  "ui_style_version": "1",
+  "source_ui_style_contract_hash": "...",
+  "ui_style_snapshot_hash": "...",
+  "selected_by": "user|workflow|admin|fallback",
+  "selection_reason": "",
+  "design_dna_rules": [
+    {
+      "rule_id": "",
+      "design_principle": "",
+      "required_visual_behavior": "",
+      "affected_component_families": [],
+      "forbidden_visual_behavior": "",
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+  "source_inspiration": [],
+  "public_aliases": [],
+  "custom_style_metadata": {
+    "owner": "",
+    "version": "",
+    "source_hash": "",
+    "artifact_ref": "",
+    "created_utc": "",
+    "readback_path_policy": "project_relative|workspace_safe_ref"
+  },
+  "source_name_policy": {
+    "internal_id_is_repo_owned": true,
+    "public_alias_approval_refs": [
+      {
+        "alias": "",
+        "approval_ref": "",
+        "reviewer_owner": "",
+        "approved_utc": "",
+        "decision_log_ref": "",
+        "validation_status": "approved|pending|rejected"
+      }
+    ]
+  },
+  "trigger_tags": [],
+  "suitable_game_tags": [],
+  "capability_packages": [
+    {
+      "capability_id": "ui_component_system",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_theme_token_system",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_layout_scale_coordinates",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_input_pointer_gesture",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_state_data_binding",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_lifecycle_ownership",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_scroll_virtualization",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_overlays_feedback",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_diagnostics_visual_evidence",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_security_gated_tooling",
+      "owner_doc": "06a-ui-style-migration-overview-and-catalog.md",
+      "coverage_status": "admin_tooling_or_security_gated|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_style_snapshot_schema",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "coverage_status": "required|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_runtime_environment_identity",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_theme_resource_contract",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "coverage_status": "required|style_optional|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_visual_evidence_contract",
+      "owner_doc": "06b-ui-style-snapshot-schema.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_style_closure_gap_taxonomy",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "coverage_status": "required|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_style_repair_prompt_contract",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_final_readiness_style_gate",
+      "owner_doc": "06c-style-aware-ui-closure.md",
+      "coverage_status": "required|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "ui_style_schema_acceptance_gate",
+      "owner_doc": "06d-ui-style-schema-acceptance.md",
+      "coverage_status": "required|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "godot_diagnostic_spool_contract",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "godot_failure_family_taxonomy",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "coverage_status": "required|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "godot_prebuild_preview_quality_gate",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "godot_interaction_region_gate",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    },
+    {
+      "capability_id": "godot_resource_lifecycle_gate",
+      "owner_doc": "07-godot-diagnostics-quality-gates.md",
+      "coverage_status": "required|conditional|not_applicable|deferred|not_consumed_by_first_slice",
+      "validation_refs": []
+    }
+  ],
+  "runtime_environment": {
+    "godot_version": "",
+    "renderer": "forward_plus|mobile|compatibility|unknown",
+    "export_target": "windows|web|linux|macos|android|ios|editor_headless|unknown",
+    "platform_class": "desktop|mobile|web|unknown",
+    "target_viewports": [],
+    "display_scale_policy": "",
+    "dpi_policy": "",
+    "theme_scale_policy": "",
+    "font_oversampling_policy": "",
+    "locale_policy": "",
+    "text_direction_policy": "ltr|rtl|auto|not_supported",
+    "font_rendering_notes": "",
+    "participates_in_hash_identity": true,
+    "validation_refs": []
+  },
+  "custom_style_equivalence_requirements": [
+    {
+      "requirement_family": "design_dna",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "tokens",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "component_defaults",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "component_family_baseline",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "component_coverage",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "variant_coverage",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "state_coverage",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "composition_rules",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "pointer_gesture",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "state_ownership",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "ui_lifecycle",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "scroll_virtualization",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "motion_transition",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "font_policy",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "font_size_unit",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "localization_overflow",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "visual_evidence_matrix",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "ui_tree_readback",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    },
+    {
+      "requirement_family": "technology_leakage",
+      "required_for_custom": true,
+      "validation_rule": "",
+      "validation_refs": []
+    }
+  ],
+  "palette_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "canonical_value_format": "rgba_u8|hex_rgba|godot_color_float|resource_ref",
+      "godot_conversion_rule": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "typography_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "spacing_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "density_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "scale_policy": {
+    "base_design_resolution": "",
+    "target_viewports": [],
+    "scale_mode": "viewport_relative|fixed_canvas|pixel_perfect|mixed",
+    "coordinate_space": "godot_control_local|viewport|world_space_2d|world_space_3d",
+    "input_coordinate_conversion": "",
+    "pixel_alignment_rule": "",
+    "minimum_hit_target": "",
+    "safe_area_rule": "",
+    "overflow_strategy": "",
+    "text_measurement_rule": "",
+    "validation_refs": []
+  },
+  "font_size_unit_policy": {
+    "design_unit": "design_px|godot_px|custom",
+    "godot_theme_unit": "font_size_px",
+    "conversion_rule": "",
+    "forbidden_conversion_rule": "Do not blindly reuse source-engine point-size formulas such as pt = px * 0.75 unless a Godot validation record proves equivalence for this style.",
+    "line_height_rule": "",
+    "min_readable_size": "",
+    "max_display_size": "",
+    "text_measurement_rule": "",
+    "validation_refs": []
+  },
+  "localization_overflow_policy": {
+    "supported_locale_classes": [],
+    "translation_key_policy": "",
+    "source_text_policy": "",
+    "mixed_script_validation_matrix": [],
+    "text_expansion_factor": "",
+    "wrapping_rule": "",
+    "max_lines_rule": "",
+    "ellipsis_rule": "",
+    "overflow_behavior": "wrap|ellipsis|clip|resize_container|blocker",
+    "fallback_font_role": "",
+    "validation_refs": []
+  },
+  "radius_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "border_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "shadow_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "opacity_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "rarity_hud_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "gradient_glow_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "bottom_accent_tokens": [
+    {
+      "token_name": "",
+      "token_value": "",
+      "intended_component_use": [],
+      "forbidden_substitutions": [],
+      "validation_rule": ""
+    }
+  ],
+  "state_tokens": [
+    {
+      "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+      "token_name": "",
+      "token_value": "",
+      "affected_component_families": [],
+      "validation_rule": ""
+    }
+  ],
+  "pointer_gesture_rules": [
+    {
+      "rule_id": "",
+      "affected_component_family": "",
+      "gesture_type": "press|move|release|cancel|tap|double_tap|long_press|pan|swipe|pinch|wheel|drag_drop|keyboard_focus|gamepad_focus|custom",
+      "gesture_phase": "start|move|end|cancel|not_applicable",
+      "supported_devices": [],
+      "event_flow": "",
+      "coordinate_space": "viewport|control_local|canvas_layer|world_space_2d|world_space_3d",
+      "propagation_policy": "consume|bubble|pass_through|custom",
+      "default_action_policy": "allow_default|prevent_default|custom",
+      "focus_policy": "",
+      "pointer_event_shape": {
+        "pointer_id_policy": "",
+        "pointer_type_policy": "mouse|touch|pen|gamepad|keyboard|mixed|not_applicable",
+        "button_policy": "",
+        "buttons_mask_policy": "",
+        "pressure_policy": "",
+        "is_primary_policy": "",
+        "delta_policy": "",
+        "timestamp_policy": "",
+        "target_policy": "",
+        "stop_propagation_policy": "",
+        "prevent_default_policy": ""
+      },
+      "gesture_thresholds": {
+        "long_press_threshold_ms": 0,
+        "double_tap_interval_ms": 0,
+        "pan_threshold_px": 0,
+        "swipe_threshold_px": 0,
+        "pinch_scale_threshold": 0.0,
+        "wheel_step_policy": ""
+      },
+      "drag_drop_policy": {
+        "drag_source_rule": "",
+        "drop_target_rule": "",
+        "drop_valid_state": "",
+        "drop_invalid_state": "",
+        "cancel_behavior": "",
+        "keyboard_or_gamepad_equivalent": "",
+        "payload_schema_ref": "",
+        "source_zone_policy": "",
+        "target_zone_policy": "",
+        "valid_reason_policy": "",
+        "invalid_reason_policy": "",
+        "commit_policy": "",
+        "rollback_policy": ""
+      },
+      "overlay_dismiss_policy": {
+        "outside_click_behavior": "close|ignore|confirm|custom|not_applicable",
+        "escape_or_back_behavior": "close|ignore|confirm|custom|not_applicable",
+        "focus_trap_required": true,
+        "restore_focus_target": "",
+        "tooltip_delay_ms": 0,
+        "tooltip_placement_rule": ""
+      },
+      "validation_refs": []
+    }
+  ],
+  "state_ownership_rules": [
+    {
+      "rule_id": "",
+      "affected_component_family": "",
+      "state_model": "stateless|stateful|controlled|uncontrolled|hybrid",
+      "state_owner": "route_state|scene_node|autoload|component_local|external_resource",
+      "source_signal_refs": [],
+      "update_method": "",
+      "persistence_scope": "frame|scene|route|project|none",
+      "form_state_policy": {
+        "placeholder_state": "",
+        "readonly_state": "",
+        "disabled_state": "",
+        "cursor_state": "",
+        "selection_state": "",
+        "max_length_policy": "",
+        "submit_policy": "",
+        "composition_input_policy": "",
+        "text_input_signal": "",
+        "key_down_policy": "",
+        "validation_error_state": ""
+      },
+      "validation_refs": []
+    }
+  ],
+  "ui_lifecycle_rules": [
+    {
+      "rule_id": "",
+      "affected_component_family": "",
+      "dynamic_owner": "",
+      "subscription_owner": "",
+      "input_event_sources": [],
+      "godot_lifecycle_hooks": [],
+      "signal_connection_policy": "",
+      "signal_disconnection_policy": "",
+      "process_mode": "always|pausable|when_paused|disabled|not_applicable",
+      "auto_event_policy": {
+        "input_phase": "",
+        "update_phase": "",
+        "render_phase": "",
+        "manual_subscription_allowed": true
+      },
+      "cleanup_method": "queue_free|disconnect_signal|stop_timer|kill_tween|remove_child|not_applicable|custom",
+      "duplicate_subscription_guard": "",
+      "orphan_diagnostic_ref": "",
+      "validation_refs": []
+    }
+  ],
+  "scroll_virtualization_rules": [
+    {
+      "rule_id": "",
+      "affected_component_family": "scroll_view|list_view|grid_view|carousel|custom",
+      "godot_equivalent": "ScrollContainer|ItemList|GridContainer|custom_control|custom",
+      "overflow_axis": "none|x|y|both",
+      "clipping_owner": "",
+      "virtualization_required": true,
+      "item_extent_policy": "fixed_extent|required_measurement|dynamic_measurement|not_applicable",
+      "item_width_policy": "",
+      "item_height_policy": "",
+      "buffer_window_policy": "",
+      "recycling_policy": "",
+      "item_key_policy": "",
+      "visible_range_readback_ref": "",
+      "performance_limit": "",
+      "validation_refs": []
+    }
+  ],
+  "motion_transition_rules": [
+    {
+      "rule_id": "",
+      "affected_component_family": "",
+      "state_transition": "enter|exit|hover_to_pressed|pressed_to_default|disabled_change|value_change|custom",
+      "duration_ms": 0,
+      "easing": "linear|ease_in|ease_out|ease_in_out|instant|custom",
+      "animated_properties": [],
+      "motion_restraint_rationale": "",
+      "validation_refs": []
+    }
+  ],
+  "semantic_usage_rules": [
+    {
+      "rule_id": "",
+      "affected_component_role": "",
+      "required_token_or_layout_behavior": "",
+      "forbidden_substitution": "",
+      "not_applicable_rationale": "",
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+  "action_role_rules": [
+    {
+      "rule_id": "",
+      "affected_action_role": "primary|secondary|destructive|dismiss|confirm|cancel|custom",
+      "affected_component_family": "",
+      "required_token_or_layout_behavior": "",
+      "forbidden_substitution": "",
+      "not_applicable_rationale": "",
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+  "component_defaults": [
+    {
+      "component_family": "",
+      "default_tokens": [],
+      "variant_defaults": [
+        {
+          "variant_name": "",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "state_defaults": [
+        {
+          "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "theme_resource_refs": [],
+      "allowed_override_rule_ids": [],
+      "validation_refs": []
+    }
+  ],
+  "component_family_baseline": [
+    {
+      "component_family": "",
+      "baseline_level": "required|style_optional|not_applicable",
+      "rationale": "",
+      "required_states": [],
+      "required_variants": [],
+      "validation_refs": []
+    }
+  ],
+  "component_coverage_matrix": [
+    {
+      "component_family": "",
+      "coverage_status": "required|style_optional|conditional|admin_tooling_or_security_gated|not_applicable|deferred|not_consumed_by_first_slice",
+      "applicable_requirement_ids": [],
+      "required_tokens": [
+        {
+          "token_family": "",
+          "token_name": "",
+          "required_for": ""
+        }
+      ],
+      "state_coverage": [
+        {
+          "state_name": "hover|pressed|focused|disabled|readonly|placeholder|selected|active|error|success|warning|info|drag-hover|drop-valid|drop-invalid",
+          "coverage_status": "required|style_optional|conditional|admin_tooling_or_security_gated|not_applicable|deferred|not_consumed_by_first_slice",
+          "token_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "variant_coverage": [
+        {
+          "variant_name": "",
+          "coverage_status": "required|style_optional|conditional|admin_tooling_or_security_gated|not_applicable|deferred|not_consumed_by_first_slice",
+          "token_refs": [],
+          "theme_resource_refs": [],
+          "validation_refs": []
+        }
+      ],
+      "component_specific_exception_rule_ids": [],
+      "validation_refs": [],
+      "gap_rationale": ""
+    }
+  ],
+  "font_policy": {
+    "roles": [
+      {
+        "font_role": "",
+        "active": true,
+        "primary_asset_ref": "",
+        "fallback_asset_ref": "",
+        "required_by_components": [],
+        "validation_refs": []
+      }
+    ],
+    "approved_assets": [
+      {
+        "font_role": "",
+        "asset_ref": "",
+        "source_type": "bundled|generated|open_licensed|fallback",
+        "license_ref": "",
+        "packaging_status": "included|fallback_only|missing_blocker",
+        "fallback_role": "",
+        "readback_path_policy": "project_relative|workspace_safe_ref"
+      }
+    ],
+    "fallbacks": [
+      {
+        "font_role": "",
+        "fallback_role": "",
+        "rationale": "",
+        "validation_refs": []
+      }
+    ],
+    "license_refs": [
+      {
+        "license_ref": "",
+        "license_name": "",
+        "source_ref": "",
+        "allowed_use": "",
+        "validation_status": "approved|rejected|needs_review"
+      }
+    ]
+  },
+  "component_exception_rules": [
+    {
+      "exception_rule_id": "",
+      "component_family": "",
+      "token_family": "",
+      "token_name": "",
+      "override_scope": "",
+      "rationale": "",
+      "validation_rule": "",
+      "validation_refs": []
+    }
+  ],
+  "composition_rules": [
+    {
+      "rule_id": "",
+      "composition_type": "modal_footer|button_group|card_panel|hud_cluster|tooltip_popover|deck_hand|reward_panel|screen_mix|custom",
+      "affected_scene_or_component_family": "",
+      "required_layout_behavior": "",
+      "allowed_style_mix": [],
+      "forbidden_combinations": [],
+      "overlay_behavior": {
+        "close_on_overlay": "true|false|not_applicable",
+        "outside_click_policy": "close|ignore|confirm|custom|not_applicable",
+        "focus_trap_policy": "required|not_required|not_applicable",
+        "restore_focus_target": "",
+        "tooltip_delay_ms": 0,
+        "tooltip_placement": "top|right|bottom|left|cursor|custom|not_applicable",
+        "dismiss_animation_rule_ref": ""
+      },
+      "exception_rule_ids": [],
+      "validation_refs": [],
+      "repair_guidance": ""
+    }
+  ],
+  "game_composition_templates": [
+    {
+      "template_id": "",
+      "coverage_status": "required|style_optional|conditional|admin_tooling_or_security_gated|not_applicable|deferred|not_consumed_by_first_slice",
+      "requirement_level": "required|optional|deferred",
+      "source_reason": "default_contract|user_gdd|style_contract|admin_override",
+      "required_requirement_ids": [],
+      "scene_node_paths": [],
+      "style_tokens_used": [],
+      "input_states": [],
+      "validation_refs": [],
+      "rationale": ""
+    }
+  ],
+  "forbidden_patterns": [
+    {
+      "pattern_id": "",
+      "scope": "prompt|route_state|generated_code|style_contract|visual_evidence",
+      "forbidden_expression": "",
+      "allowed_exception_ref": "",
+      "validation_rule": "",
+      "repair_guidance": ""
+    }
+  ],
+  "godot_theme_resources": [
+    {
+      "resource_ref": "",
+      "resource_type": "Theme|StyleBoxFlat|StyleBoxTexture|FontFile|Texture2D|ShaderMaterial|CanvasItemMaterial|custom",
+      "node_or_control_owner": "",
+      "token_source": "",
+      "required_token_refs": [],
+      "resolved_token_refs": [],
+      "unresolved_token_refs": [],
+      "theme_slot_mappings": [
+        {
+          "token_ref": "",
+          "godot_target": "theme_color|theme_font|theme_font_size|theme_constant|theme_icon|theme_stylebox|stylebox_property|texture_resource|shader_parameter|custom",
+          "control_class": "",
+          "slot_or_property": "",
+          "validation_refs": []
+        }
+      ],
+      "font_source": "",
+      "icon_texture_policy": {
+        "icon_source_ref": "",
+        "license_ref": "",
+        "fallback_icon_ref": "",
+        "theme_icon_slot": "",
+        "readback_path_policy": "project_relative|workspace_safe_ref"
+      },
+      "generated_status": "generated|checked_in|hand_authored",
+      "resource_load_validation_ref": "",
+      "export_package_validation_ref": "",
+      "deterministic_diff_ref": "",
+      "packaging_evidence_refs": [],
+      "readback_path_policy": "project_relative|workspace_safe_ref"
+    }
+  ],
+  "ui_tree_readback_requirements": [
+    {
+      "required_for_surface_type": "control|hud_canvas_layer|custom_canvas_item|world_space_2d|world_space_3d|subviewport",
+      "required_fields": [
+        "scene_node_path",
+        "control_class",
+        "ui_style_snapshot_hash",
+        "theme_resource_ref",
+        "applied_token_refs",
+        "state_refs",
+        "layout_bounds",
+        "z_layer",
+        "visible_state",
+        "enabled_state",
+        "disabled_state",
+        "readonly_state",
+        "placeholder_state",
+        "text_overflow_state",
+        "focus_path",
+        "hit_test_ref",
+        "validation_refs"
+      ],
+      "readback_path_policy": "project_relative|workspace_safe_ref",
+      "validation_refs": []
+    }
+  ],
+  "ui_tree_readback_rows": [
+    {
+      "row_id": "",
+      "scene_node_path": "",
+      "control_class": "",
+      "surface_type": "control|hud_canvas_layer|custom_canvas_item|world_space_2d|world_space_3d|subviewport",
+      "ui_style_snapshot_hash": "",
+      "theme_resource_ref": "",
+      "applied_token_refs": [],
+      "state_refs": [],
+      "layout_bounds": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "anchors": "",
+        "margins": ""
+      },
+      "z_layer": {
+        "canvas_layer": "",
+        "z_index": 0,
+        "draw_order_ref": ""
+      },
+      "visible_state": "visible|hidden|collapsed",
+      "enabled_state": "enabled|disabled|not_applicable",
+      "disabled_state": "disabled|not_disabled|not_applicable",
+      "readonly_state": "readonly|editable|not_applicable",
+      "placeholder_state": "shown|hidden|not_applicable",
+      "text_overflow_state": "fits|wrapped|ellipsized|clipped|overflowing|not_applicable",
+      "focus_path": "",
+      "hit_test_ref": "",
+      "pointer_gesture_rule_refs": [],
+      "state_ownership_rule_refs": [],
+      "lifecycle_rule_refs": [],
+      "validation_refs": [],
+      "readback_path_policy": "project_relative|workspace_safe_ref"
+    }
+  ],
+  "visual_evidence_matrix": [
+    {
+      "matrix_id": "",
+      "route_id": "",
+      "requirement_ids": [],
+      "severity": "P0|P1|P2|info",
+      "style_drift_family": "design_dna|palette|typography|radius|border|shadow|opacity|spacing|density_scale|rarity_hud|gradient_glow|bottom_accent|component_defaults|component_coverage|component_family_baseline|variant_coverage|component_exception_rules|forbidden_patterns|motion_transition|game_composition_templates|theme_resource_refs|theme_resource_coverage|semantic_usage|action_role|contrast_readability|font_policy|font_size_unit|localization_overflow|pointer_gesture|gesture_phase|pointer_event_shape|drag_drop_payload|state_ownership|ui_lifecycle|scroll_virtualization|state_tokens|composition|ui_tree_readback|source_name_ownership|runtime_environment|file_upload_security|visual_evidence|visual_evidence_method",
+      "observed_source_type": "generated_code|theme_resource|screenshot|canvas_pixel|ui_tree_readback|manual_exception|prompt_evidence|package_export|deterministic_substitute",
+      "viewport_or_scene": "",
+      "required_component_families": [],
+      "required_states": [],
+      "required_gestures": [],
+      "evidence_type": "screenshot|canvas_pixel|exported_visual|ui_tree_readback|deterministic_substitute",
+      "viewport_size": "",
+      "device_class": "desktop|mobile|tablet|web|unknown",
+      "pixel_check_method": "",
+      "source_hash": "",
+      "evidence_refs": [],
+      "ui_tree_readback_row_refs": [],
+      "validation_status": "passed|failed|blocked|not_applicable",
+      "harness_limitation_ref": "",
+      "harness_limitation": {
+        "limitation_type": "headless_renderer|platform_unavailable|tool_missing|deterministic_substitute_only|other|not_applicable",
+        "owner": "",
+        "approved_by": "",
+        "approved_utc": "",
+        "expires_utc": "",
+        "recheck_trigger": "",
+        "replacement_evidence_plan": "",
+        "cannot_substitute_for": []
+      }
+    }
+  ],
+  "visual_validation_refs": [
+    {
+      "validation_ref": "",
+      "validation_type": "screenshot|canvas_pixel|exported_visual|deterministic_substitute",
+      "route_id": "",
+      "viewport_or_scene": "",
+      "viewport_size": "",
+      "device_class": "desktop|mobile|tablet|web|unknown",
+      "evidence_method": "screenshot|canvas_pixel|exported_visual|ui_tree_readback|deterministic_substitute",
+      "pixel_check_method": "",
+      "required_component_families": [],
+      "required_states": [],
+      "source_hash": "",
+      "harness_limitation_ref": "",
+      "harness_limitation": {
+        "limitation_type": "headless_renderer|platform_unavailable|tool_missing|deterministic_substitute_only|other|not_applicable",
+        "owner": "",
+        "approved_by": "",
+        "approved_utc": "",
+        "expires_utc": "",
+        "recheck_trigger": "",
+        "replacement_evidence_plan": "",
+        "cannot_substitute_for": []
+      },
+      "readback_path_policy": "project_relative|workspace_safe_ref"
+    }
+  ]
+}

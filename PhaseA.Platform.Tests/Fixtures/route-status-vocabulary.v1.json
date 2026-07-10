@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "route-status-vocabulary.v1",
+  "dimensions": {
+    "stage_timeline": [
+      "not_started",
+      "ready",
+      "running",
+      "needs_review",
+      "blocked",
+      "completed",
+      "stale"
+    ],
+    "route_readback": [
+      "queued",
+      "running",
+      "ready",
+      "blocked",
+      "needs_fix",
+      "succeeded",
+      "failed",
+      "cancelled",
+      "stale",
+      "unknown"
+    ],
+    "requirement_coverage": [
+      "mapped",
+      "missing_scene",
+      "missing_module",
+      "needs_review",
+      "explicitly_deferred",
+      "conflict"
+    ],
+    "scene_route_confirmation": [
+      "draft",
+      "needs_review",
+      "confirmed",
+      "stale",
+      "blocked"
+    ],
+    "admin_review_queue": [
+      "open",
+      "approved",
+      "deferred",
+      "rejected",
+      "backlog",
+      "superseded",
+      "resolved"
+    ],
+    "ui_surface_matrix": [
+      "covered",
+      "missing_ui",
+      "missing_feedback",
+      "needs_fix",
+      "no_ui_needed"
+    ],
+    "readiness_label": [
+      "not_ready",
+      "ready",
+      "blocked",
+      "stale",
+      "unknown"
+    ],
+    "prototype_skeleton_source": [
+      "fresh",
+      "stale",
+      "missing",
+      "unknown",
+      "legacy_compatibility_only"
+    ],
+    "diagnostic_triage": [
+      "unresolved",
+      "resolved",
+      "ignored",
+      "backlog"
+    ],
+    "style_capability_coverage": [
+      "required",
+      "style_optional",
+      "conditional",
+      "admin_tooling_or_security_gated",
+      "not_applicable",
+      "deferred",
+      "not_consumed_by_first_slice"
+    ],
+    "full_target_closure": [
+      "covered",
+      "reviewed_not_applicable",
+      "explicitly_deferred"
+    ],
+    "operation_status": [
+      "returned_existing",
+      "active_run_reused",
+      "created_run",
+      "rejected"
+    ]
+  }
+}

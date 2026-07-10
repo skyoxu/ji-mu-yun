@@ -10,6 +10,13 @@ This document is the standards source of truth for Phase service conventions wit
 
 Use it when changing:
 
+- GDD-to-module route contracts under `docs/workflows/phase-a-gdd-to-module-route-contracts.md`, `PhaseA.Platform/Workflow/RouteModuleContracts.cs`, and the matching fixture.
+- Godot runtime semantic gates under `docs/standards/godot-engine-semantics.md`, `PhaseA.Platform/Workflow/GodotEngineSemantics.cs`, and the matching fixture.
+- Godot UI capability gates under `docs/standards/godot-ui-capability-contract.md`, `PhaseA.Platform/Workflow/GodotUiCapabilityContract.cs`, and the matching fixture.
+- Godot UI style catalog, snapshot schema profile, drift taxonomy, style-aware closure, and schema acceptance under `docs/standards/godot-ui-style-contract.md`, `docs/standards/godot-ui-style-closure.md`, `docs/standards/godot-ui-style-schema-acceptance.md`, `docs/schemas/godot-ui-style-contract.v1.example.json`, `PhaseA.Platform/Workflow/GodotUiStyleCatalog.cs`, `PhaseA.Platform/Workflow/GodotUiStyleSnapshotSchema.cs`, `PhaseA.Platform/Workflow/GodotUiStyleClosureContract.cs`, and the matching fixtures.
+- Godot/Phase diagnostics, project diagnostic spool, failure-family taxonomy, preview/package quality gates, interaction-region evidence, and resource lifecycle rules under `docs/standards/godot-diagnostics-quality-gates.md`, `docs/schemas/project-diagnostic-spool.v1.example.json`, `PhaseA.Platform/Workflow/GodotDiagnosticsQualityGate.cs`, `PhaseA.Platform/Data/SqliteMetadataSchema.cs`, and `PhaseA.Platform/Data/PhaseAMetadataStore.cs`.
+- Hosted route readback, recovery, and source-hash freshness policy under `docs/workflows/phase-a-route-readback-recovery-freshness.md`, `RouteReadbackPathPolicy.cs`, and `RouteFreshnessPolicy.cs`.
+- Route operation governance, exposure classes, preflight, duplicate-run semantics, and secret redaction policy under `docs/workflows/phase-a-route-operation-governance.md`, `RouteOperationPreflight.cs`, and `SecretRedactionPolicy.cs`.
 - `PhaseA.Platform/**` and `PhaseA.Platform.Tests/**`.
 - Phase runtime scripts and configuration under `runtime/phase-a/**`.
 - Phase-facing smoke, drill, and ops scripts under `scripts/python/phase_a_*.py` and `scripts/python/phase_b_*.py`.
@@ -207,6 +214,7 @@ Use the narrowest test set that proves the changed contract:
 - DB schema change: schema creation and persistence/upgrade tests.
 - Readback/artifact/package/asset change: account-scoped readback tests and path sanitization tests.
 - Prototype route change: recovery input tests, stale-state or missing-source negative tests, bounded status tests, and route-specific acceptance evidence.
+- Godot runtime route change: semantic-family declaration, viewport mode evidence where visual work is touched, feature-family reading evidence, and missing reference/recipe/manifest codes from `docs/standards/godot-engine-semantics.md` when sources are absent.
 - LLM/Codex entrypoint change: shared entrypoint tests before caller-specific tests.
 - Runtime/Caddy/recovery change: local health evidence first, then public proxy evidence.
 
@@ -222,6 +230,11 @@ Minimum evidence commands or files by change type:
 | Account isolation or admin audit | `py -3 scripts/python/phase_b_account_smoke.py --base-url <url>` with redacted evidence |
 | Public endpoint validation | `py -3 scripts/python/phase_a_public_smoke.py --base-url <url>`; use `--allow-http` only for direct HTTP diagnostic probes |
 | Browser caller behavior | Route-specific browser smoke or Playwright/E2E evidence by default, with evidence written under `logs/` and linked from task or PR evidence. Manual verification gaps are allowed only when browser automation is unavailable, and must record the blocker, owner, and follow-up evidence path. |
+| GDD-to-module hardening route contracts | `py -3 scripts/python/phase_a_gdd_to_module_hardening_smoke.py --repository-root <repo>`; add `--project-root <hosted-project-root>` or API readback arguments when validating a concrete hosted project chain. Run evidence is written under `logs/phase-a-gdd-to-module-hardening/`. |
+| Godot engine semantic registry | `dotnet test PhaseA.Platform.Tests --filter FullyQualifiedName~GodotEngineSemanticsTests` plus route-specific tests when route prompts/readback consume semantic evidence. |
+| Godot UI capability contract | `dotnet test PhaseA.Platform.Tests --filter "FullyQualifiedName~GodotUiCapabilityContractTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests"` plus browser readback tests when UI closure surfaces change. |
+| Godot UI style catalog and snapshot schema | `dotnet test PhaseA.Platform.Tests --filter "FullyQualifiedName~GodotUiStyleCatalogTests|FullyQualifiedName~GodotUiStyleSnapshotSchemaTests"` plus UI closure tests when style evidence is consumed. |
+| Godot UI style closure | `dotnet test PhaseA.Platform.Tests --filter "FullyQualifiedName~GodotUiStyleClosureContractTests|FullyQualifiedName~ProjectRouteStateArtifactServiceTests"` for style gap rows, repair prompt inputs, and final-readiness blockers. |
 
 ## Status Enums And Readback State
 

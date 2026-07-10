@@ -1,0 +1,444 @@
+{
+  "schema_version": "full-target-ui-closure-ledger.v1",
+  "updated_utc": "2026-07-10T00:00:00.0000000Z",
+  "runtime_path": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/full-target-ui-closure-ledger.json",
+  "capability_packages": [
+    {
+      "capability_id": "ui_component_system",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_theme_token_system",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_layout_scale_coordinates",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_input_pointer_gesture",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_state_data_binding",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_style_snapshot_schema",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_runtime_environment_identity",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_theme_resource_contract",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_style_schema_acceptance_gate",
+      "owner_doc": "docs/standards/godot-ui-style-schema-acceptance.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "godot_failure_family_taxonomy",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "godot_diagnostic_spool_contract",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 0B / Phase 1 touched routes",
+      "trigger": "Any visible UI project, requirement map, scene confirmation, GDD document generation, or contract freeze",
+      "ownerEvidence": "Standards templates, style fixture/profile, phase exit evidence, route/style capability matrix",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "prototype-contract"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_lifecycle_ownership",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "execute-next-goal"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when dynamic UI nodes or resource-owning helpers are touched",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes lifecycle-owned UI nodes.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_overlays_feedback",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "execute-next-goal"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when overlays or player feedback are touched",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes overlays or feedback UI.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_diagnostics_visual_evidence",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "ui-wiring-closure"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when UI diagnostics or visual evidence are consumed",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes diagnostics visual evidence.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_visual_evidence_contract",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "ui-wiring-closure"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when UI visual evidence is consumed",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes visual evidence.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "godot_prebuild_preview_quality_gate",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "preview-package"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when preview/package readiness is touched",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes preview/package readiness.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "godot_interaction_region_gate",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "execute-next-goal"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when interaction-heavy goals are touched",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes interaction-region evidence.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "godot_resource_lifecycle_gate",
+      "owner_doc": "docs/standards/godot-diagnostics-quality-gates.md",
+      "firstRequiredPhase": "Phase 2-5 when consumed by iteration, execution, repair, UI closure, preview, or package",
+      "trigger": "Dynamic UI nodes, overlays, player feedback, diagnostics, preview/package, interaction-heavy goals, resource-owning helpers",
+      "ownerEvidence": "Route contracts, diagnostic spool records, visual evidence, interaction-region artifact, lifecycle cleanup evidence",
+      "currentCoverageStatus": "covered",
+      "closure_status": "explicitly_deferred",
+      "affected_routes": [
+        "execute-next-goal"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when resource-owning helpers are touched",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Deferred until a touched route consumes resource lifecycle cleanup.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_scroll_virtualization",
+      "owner_doc": "docs/standards/godot-ui-style-contract.md",
+      "firstRequiredPhase": "Phase 5-6 or earlier if consumed by a touched route",
+      "trigger": "Large lists/grids, style-aware repair, UI closure, final readiness",
+      "ownerEvidence": "UI closure readback, style gap rows, repair prompt evidence, full-target closure ledger",
+      "currentCoverageStatus": "covered",
+      "closure_status": "reviewed_not_applicable",
+      "affected_routes": [
+        "ui-wiring-closure"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when large lists or virtualized grids are introduced",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Reviewed not applicable to current touched routes.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_style_closure_gap_taxonomy",
+      "owner_doc": "docs/standards/godot-ui-style-closure.md",
+      "firstRequiredPhase": "Phase 5-6 or earlier if consumed by a touched route",
+      "trigger": "Large lists/grids, style-aware repair, UI closure, final readiness",
+      "ownerEvidence": "UI closure readback, style gap rows, repair prompt evidence, full-target closure ledger",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "ui-wiring-closure"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_style_repair_prompt_contract",
+      "owner_doc": "docs/standards/godot-ui-style-closure.md",
+      "firstRequiredPhase": "Phase 5-6 or earlier if consumed by a touched route",
+      "trigger": "Large lists/grids, style-aware repair, UI closure, final readiness",
+      "ownerEvidence": "UI closure readback, style gap rows, repair prompt evidence, full-target closure ledger",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "repair"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_final_readiness_style_gate",
+      "owner_doc": "docs/standards/godot-ui-style-closure.md",
+      "firstRequiredPhase": "Phase 5-6 or earlier if consumed by a touched route",
+      "trigger": "Large lists/grids, style-aware repair, UI closure, final readiness",
+      "ownerEvidence": "UI closure readback, style gap rows, repair prompt evidence, full-target closure ledger",
+      "currentCoverageStatus": "covered",
+      "closure_status": "covered",
+      "affected_routes": [
+        "preview-package"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "phase-6-or-route-consumption",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    },
+    {
+      "capability_id": "ui_security_gated_tooling",
+      "owner_doc": "docs/standards/phase-service.md",
+      "firstRequiredPhase": "Only when security-gated admin/tooling UI is implemented",
+      "trigger": "File upload, raw diagnostic viewers, account/admin-only asset tooling",
+      "ownerEvidence": "Phase service security policy, account-boundary tests, redacted admin evidence, explicit normal-user non-applicability rows",
+      "currentCoverageStatus": "covered",
+      "closure_status": "reviewed_not_applicable",
+      "affected_routes": [
+        "admin-review"
+      ],
+      "owner": "Phase A platform",
+      "expiry_or_recheck_trigger": "when security-gated admin/tooling UI is implemented",
+      "validation_evidence_refs": [
+        "PhaseA.Platform.Tests/Workflow/GddToModuleFirstSliceTests.cs"
+      ],
+      "defer_reason": "Reviewed not applicable to normal-user game UI.",
+      "phase_exit_review_ref": "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-6-exit-review-example.json"
+    }
+  ]
+}

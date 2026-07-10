@@ -3903,6 +3903,67 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_WorkflowReadbackEndpointsApplyNoStore()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        AssertEndpointAppliesNoStore(source, "app.MapGet(\"/api/projects/{projectId}/workflow-route\"");
+        AssertEndpointAppliesNoStore(source, "app.MapPost(\"/api/projects/{projectId}/workflow-route/intent\"");
+        AssertEndpointAppliesNoStore(source, "app.MapGet(\"/api/projects/{projectId}/workflow-recommendation\"");
+    }
+
+    [Fact]
+    public void Program_AdminGovernanceReadbackEndpointsAreAdminOnlyAndNoStore()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        foreach (var marker in new[]
+        {
+            "app.MapGet(\"/api/admin/project-admin-review-queue\"",
+            "app.MapGet(\"/api/admin/project-diagnostic-spool\"",
+            "app.MapGet(\"/api/admin/project-delete-tombstones\""
+        })
+        {
+            var endpointSource = ExtractEndpointSource(source, marker);
+            endpointSource.Should().Contain("ApplyNoStore(context);");
+            endpointSource.Should().Contain("!CurrentIdentity(context).IsAdmin");
+            endpointSource.Should().Contain("AdminForbidden()");
+        }
+
+        source.Should().Contain("ListProjectAdminReviewQueueForAdminAsync");
+        source.Should().Contain("ListProjectDiagnosticSpoolForAdminAsync");
+        source.Should().Contain("ListProjectDeleteTombstonesForAdminAsync");
+    }
+
+    private static void AssertEndpointAppliesNoStore(string source, string routeMarker)
+    {
+        ExtractEndpointSource(source, routeMarker).Should().Contain("ApplyNoStore(context);");
+    }
+
+    private static string ExtractEndpointSource(string source, string routeMarker)
+    {
+        var routeIndex = source.IndexOf(routeMarker, StringComparison.Ordinal);
+        routeIndex.Should().BeGreaterThanOrEqualTo(0);
+        var nextRouteIndex = source.IndexOf("app.Map", routeIndex + routeMarker.Length, StringComparison.Ordinal);
+        nextRouteIndex.Should().BeGreaterThan(routeIndex);
+        return source[routeIndex..nextRouteIndex];
+    }
+
+    [Fact]
     public void AdminGameTypeMatchRecordsPage_ExposesContractSnapshotRefreshControls()
     {
         var html = new BrowserUiRenderer().RenderAdminGameTypeMatchFailures();
@@ -4337,6 +4398,42 @@ public sealed class BrowserUiRendererTests
         var assembly = typeof(BrowserUiRenderer).Assembly;
         var names = assembly.GetManifestResourceNames();
         names.Should().Contain(name => name.EndsWith("Browser.Assets.PrototypeSkeletonRunNotes.txt", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void DetailView_ShouldRenderGddToModuleWorkflowReadbackSurfaces()
+    {
+        var html = new BrowserUiRenderer().RenderShellV2();
+
+        html.Should().Contain("const workflowStageTimeline = [");
+        html.Should().Contain("[\"gdd\", \"GDD\", [\"gdd-question-form\"]]");
+        html.Should().Contain("[\"scene-confirmation\", \"Scene Confirmation\", [\"scene-route-confirmation\"]]");
+        html.Should().Contain("[\"gdd-document-generation\", \"GDD Document Generation\", [\"gdd-document-generation\"]]");
+        html.Should().Contain("[\"requirement-map\", \"Requirement Map\", [\"gdd-requirements\"]]");
+        html.Should().Contain("[\"contract-freeze\", \"Contract Freeze\", [\"prototype-contract\"]]");
+        html.Should().Contain("[\"game-modules\", \"Game Modules\", [\"prototype-skeleton\"]]");
+        html.Should().Contain("[\"task-execution\", \"Task Execution\", [\"iteration-plan\", \"execute-next-goal\"]]");
+        html.Should().Contain("[\"ui-closure\", \"UI Closure\", [\"ui-wiring\"]]");
+        html.Should().Contain("[\"preview-package\", \"Preview/Package\", [\"preview-package\"]]");
+        html.Should().Contain("const workflowRouteStatusValues = [\"queued\", \"running\", \"ready\", \"blocked\", \"needs_fix\", \"succeeded\", \"failed\", \"cancelled\", \"stale\", \"unknown\"]");
+        html.Should().Contain("const workflowStageStatusValues = [\"not_started\", \"ready\", \"running\", \"needs_review\", \"blocked\", \"completed\", \"stale\"]");
+        html.Should().Contain("const workflowRequirementStatusValues = [\"mapped\", \"missing_scene\", \"missing_module\", \"needs_review\", \"explicitly_deferred\", \"conflict\"]");
+        html.Should().Contain("const workflowUiSurfaceStatusValues = [\"covered\", \"missing_ui\", \"missing_feedback\", \"needs_fix\", \"no_ui_needed\"]");
+        html.Should().Contain("routeReadbackToStageStatusMap");
+        html.Should().Contain("const workflowUiSurfaceStatusValues = [\"covered\", \"missing_ui\", \"missing_feedback\", \"needs_fix\", \"no_ui_needed\"]");
+        html.Should().NotContain("covered: \"completed\"");
+        html.Should().Contain("data-workflow-stage-timeline=\"true\"");
+        html.Should().Contain("data-requirement-map-review=\"true\"");
+        html.Should().Contain("Requirement ID</th><th>Source section</th><th>Requirement</th><th>Priority</th><th>Kind</th><th>Scenes</th><th>Required modules</th><th>Goals</th><th>Status</th><th>Issue / conflict reason");
+        html.Should().Contain("data-contract-freshness-banner=\"true\"");
+        html.Should().Contain("Generated GDD no longer matches the confirmed scene route");
+        html.Should().Contain("Project type analysis changed after scene confirmation");
+        html.Should().Contain("data-module-plan-confirmation=\"true\"");
+        html.Should().Contain("data-ui-wiring-closure-panel=\"true\"");
+        html.Should().Contain("layout, input/focus, feedback, custom drawing, camera/layer, rendering/material, animation, geometry sizing, procedural visualization, typed state");
+        html.Should().Contain("data-final-readiness-boundary=\"true\"");
+        html.Should().Contain("Ordinary package download is not final readiness");
+        html.Should().Contain("workflowRenderRouteReadback(message?.workflowRoute)");
     }
 
     [Fact]

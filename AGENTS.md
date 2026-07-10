@@ -22,6 +22,10 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Phase service ADRs live in `docs/architecture/ADR_INDEX_PHASE.md`; read them before changing Phase service decisions.
 - Phase service standards index lives in `docs/standards/_index.md`.
 - Phase service standards live in `docs/standards/phase-service.md`; read them before changing API, DB, errors, logs, security, tests, or readback status contracts.
+- Godot runtime semantic standards live in `docs/standards/godot-engine-semantics.md`; read them before changing hosted Godot UI, input, physics, camera, TileMap, rendering, visual evidence, preview, package, or repair routes.
+- Godot UI capability standards live in `docs/standards/godot-ui-capability-contract.md`; read them before changing GDD-to-module UI capability classification, UI closure, visible surface evidence, UI profiles, or no-UI exemptions.
+- Godot UI style standards live in `docs/standards/godot-ui-style-contract.md`; read them before changing style catalog selection, style snapshots, component coverage, drift taxonomy, or style-not-applicable exemptions.
+- Godot diagnostics and quality-gate standards live in `docs/standards/godot-diagnostics-quality-gates.md`; read them before changing diagnostic spool, failure families, preview/package readiness, interaction-region evidence, lifecycle cleanup, admin triage, or deleted-project diagnostic retention.
 
 ## Start Here
 
@@ -66,6 +70,17 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Implement a Phase service feature or touch Phase service contracts:
   - [Standards Index](docs/standards/_index.md)
   - [Phase Service Standards](docs/standards/phase-service.md)
+  - [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
+  - [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
+  - [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
+  - [Godot Diagnostics And Quality Gates](docs/standards/godot-diagnostics-quality-gates.md)
+  - [GDD-To-Module Implementation Phases](docs/workflows/phase-a-gdd-to-module-implementation-phases.md)
+  - [GDD-To-Module Risks, DoD, And Open Questions](docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md)
+  - [GDD-To-Module Recommended First Slice](docs/workflows/phase-a-gdd-to-module-first-slice.md)
+  - [GDD-To-Module Global Review Standard](docs/workflows/phase-a-gdd-to-module-global-review-standard.md)
+  - [GDD-To-Module Split-Added Requirements](docs/workflows/phase-a-gdd-to-module-split-added-requirements.md)
+  - [GDD-To-Module Original Split Audit](docs/workflows/phase-a-gdd-to-module-original-split-audit.md)
+  - [GDD-To-Module Source Coverage Map](docs/workflows/phase-a-gdd-to-module-source-coverage-map.md)
   - [Phase ADR Index](docs/architecture/ADR_INDEX_PHASE.md)
   - [Phase Service Architecture](docs/architecture/phase-service/_index.md)
 - Implement a feature or touch architecture:
@@ -119,6 +134,13 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Need Phase service API, DB, errors, logs, security, tests, or status standards:
   - [Standards Index](docs/standards/_index.md)
   - [Phase Service Standards](docs/standards/phase-service.md)
+- Need Godot runtime semantics, viewport mode, feature-family reading gates, or reference example rules for hosted routes:
+  - [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
+  - [Godot Official Examples Index](docs/reference/godot-official-examples-index.md)
+- Need Godot UI capability domains, profiles, workflow injection, UI closure, or no-UI exemption rules:
+  - [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
+- Need Godot UI style catalog, component coverage, drift taxonomy, or style-not-applicable rules:
+  - [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
 - Need security posture, release health, logs, or runtime ops rules:
   - [Security, Release Health, And Runtime Ops Rules](docs/agents/15-security-release-health-and-runtime-ops.md)
 - [Template Upgrade Protocol](docs/workflows/template-upgrade-protocol.md)
@@ -351,6 +373,10 @@ Missing required recovery sources must fail closed. Route state and repair ledge
 - [Testing Framework](docs/testing-framework.md)
 - [Standards Index](docs/standards/_index.md)
 - [Phase Service Standards](docs/standards/phase-service.md)
+- [Godot Engine Semantics Standard](docs/standards/godot-engine-semantics.md)
+- [Godot UI Capability Contract](docs/standards/godot-ui-capability-contract.md)
+- [Godot UI Style Contract](docs/standards/godot-ui-style-contract.md)
+- [Godot Official Examples Index](docs/reference/godot-official-examples-index.md)
 - [DELIVERY_PROFILE](DELIVERY_PROFILE.md)
 - [ADR Index](docs/architecture/ADR_INDEX_GODOT.md)
 - [Agents Docs Index](docs/agents/00-index.md)

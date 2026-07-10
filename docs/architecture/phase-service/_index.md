@@ -17,6 +17,9 @@ Use these notes together with:
 - `docs/architecture/ADR_INDEX_PHASE.md` for Phase service ADRs.
 - `docs/standards/_index.md` for the standards index.
 - `docs/standards/phase-service.md` for API, database, error, logging, security, testing, and status conventions.
+- `docs/standards/godot-engine-semantics.md` for Godot runtime semantics, viewport modes, feature-family reading gates, and reference example rules used by hosted implementation routes.
+- `docs/standards/godot-ui-capability-contract.md` for Godot UI capability domains, profiles, workflow injection points, and UI closure governance.
+- `docs/standards/godot-ui-style-contract.md` for Godot UI style catalog, component coverage, style selection, and drift taxonomy.
 - `docs/architecture/overlays/PHASE-A-CLOUD-RUNNER/08/08-Phase-A-Cloud-Runner-Architecture.md` for the original Phase A overlay.
 - `docs/workflows/phase-b-account-isolation.md` for the completed Phase B account-isolation slice.
 - `docs/workflows/phase-b-agf-godogen-absorption.md` for Phase B machine-closed evidence and prototype-route governance direction.
@@ -53,3 +56,19 @@ Primary sources scanned:
 ## One-Sentence Architecture Rule
 
 The Phase service is a hosted product shell around repository-native game-prototype workflows: scripts and route contracts own execution truth; the platform hosts, scopes, queues, records, reads back, and recovers that truth.
+
+- Diagnostic spool, failure-family taxonomy, preview/package readiness, interaction-region evidence, and resource lifecycle rules are standardized in `docs/standards/godot-diagnostics-quality-gates.md` and implemented by `PhaseA.Platform/Workflow/GodotDiagnosticsQualityGate.cs`.
+
+- GDD-to-module phase prerequisites, route dependency matrix, and phase exit review evidence are standardized in `docs/workflows/phase-a-gdd-to-module-implementation-phases.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleImplementationPhases.cs`.
+
+- GDD-to-module risk register, DoD layering, ADR/decision evidence, and open-question defaults are standardized in `docs/workflows/phase-a-gdd-to-module-risk-dod-open-questions.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleRiskDodOpenQuestions.cs`.
+
+- GDD-to-module recommended first-slice ordering, full-target capability consumption schedule, source-history gate, and full-target ledger closure rules are standardized in `docs/workflows/phase-a-gdd-to-module-first-slice.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleFirstSlice.cs`.
+
+- GDD-to-module global review authority, review modes, mechanical checks, prior-finding ledger validation, and output contract are standardized in `docs/workflows/phase-a-gdd-to-module-global-review-standard.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleGlobalReviewStandard.cs`.
+
+- GDD-to-module split-added hardening requirements, coverage statuses, owner-doc refs, and phase review coverage rules are standardized in `docs/workflows/phase-a-gdd-to-module-split-added-requirements.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleSplitAddedRequirements.cs`.
+
+- GDD-to-module original source coverage, split output inventory, source-history boundary, and no-gap/no-overlap audit rules are standardized in `docs/workflows/phase-a-gdd-to-module-original-split-audit.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleOriginalSplitAudit.cs`.
+
+- GDD-to-module compact source coverage ranges, audit-range parity, JSON fixture source coverage, and split-added boundary rules are standardized in `docs/workflows/phase-a-gdd-to-module-source-coverage-map.md` and implemented by `PhaseA.Platform/Workflow/GddToModuleSourceCoverageMap.cs`.

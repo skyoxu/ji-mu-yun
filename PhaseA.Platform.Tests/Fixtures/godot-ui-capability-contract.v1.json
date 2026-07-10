@@ -1,0 +1,519 @@
+{
+  "contractId": "godot-ui-capability",
+  "contractVersion": "1",
+  "contractHash": "230d96ef12c1b83002394117197389d50c63b6adc7153772e10704f1ec02afbe",
+  "standardPath": "docs/standards/godot-ui-capability-contract.md",
+  "forbiddenTechnologyTerms": [
+    "UrhoX",
+    "Urho3D",
+    "Lua",
+    "NanoVG",
+    "PBRNoTexture",
+    ".emmylua"
+  ],
+  "capabilityStatuses": [
+    "required",
+    "covered",
+    "missing_ui",
+    "missing_feedback",
+    "needs_fix",
+    "no_ui_needed",
+    "not_applicable",
+    "explicitly_deferred"
+  ],
+  "blockingDiagnosticCodes": [
+    "godot_ui_contract_missing",
+    "godot_ui_capability_missing",
+    "godot_ui_semantic_mode_missing",
+    "godot_ui_surface_incomplete",
+    "godot_ui_no_ui_needed_review_missing",
+    "material_profile_missing",
+    "rendering_profile_missing",
+    "animation_state_profile_missing",
+    "third_person_camera_profile_missing",
+    "ui_update_owner_missing",
+    "technology_stack_leakage"
+  ],
+  "capabilityDomains": [
+    {
+      "domainId": "ui_scene_architecture",
+      "displayName": "UI scene architecture",
+      "godotOwnership": [
+        "Control scenes",
+        "CanvasLayer HUDs",
+        "scene instancing",
+        "autoload boundaries",
+        "scene transitions",
+        "route-specific UI roots"
+      ],
+      "requiredWorkflowFields": [
+        "scene_path",
+        "node_path",
+        "requirement_ids",
+        "player_flow",
+        "state_boundary",
+        "validation_refs"
+      ],
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "viewport_resolution"
+      ]
+    },
+    {
+      "domainId": "layout_theme_responsive",
+      "displayName": "Layout, containers, theme, and responsive rules",
+      "godotOwnership": [
+        "Container nodes",
+        "anchors",
+        "safe-area handling",
+        "theme resources",
+        "minimum sizes",
+        "viewport-safe scaling"
+      ],
+      "requiredWorkflowFields": [
+        "layout_strategy",
+        "fixed_format_rationale",
+        "theme_or_min_size_source",
+        "viewport_evidence"
+      ],
+      "semanticFamilyIds": [
+        "viewport_resolution",
+        "geometry_size_measurement"
+      ]
+    },
+    {
+      "domainId": "hud_menus_overlays",
+      "displayName": "HUD, menus, overlays, and modal state",
+      "godotOwnership": [
+        "CanvasLayer",
+        "modal controls",
+        "pause/menu overlays",
+        "notifications",
+        "status bars",
+        "inventory/deck/reward panels"
+      ],
+      "requiredWorkflowFields": [
+        "overlay_layer",
+        "modal_blocking_behavior",
+        "input_routing",
+        "state_synchronization",
+        "evidence_refs"
+      ],
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "input_constants"
+      ]
+    },
+    {
+      "domainId": "custom_2d_drawing",
+      "displayName": "Custom 2D drawing and visual affordances",
+      "godotOwnership": [
+        "Control._draw",
+        "CanvasItem._draw",
+        "Line2D",
+        "Polygon2D",
+        "draw invalidation",
+        "hit testing"
+      ],
+      "requiredWorkflowFields": [
+        "drawing_surface",
+        "redraw_trigger",
+        "hit_test_path",
+        "visual_feedback_states",
+        "canvas_or_screenshot_evidence"
+      ],
+      "semanticFamilyIds": [
+        "coordinate_spaces",
+        "viewport_resolution",
+        "geometry_size_measurement"
+      ]
+    },
+    {
+      "domainId": "input_focus_navigation",
+      "displayName": "Input, focus, and navigation",
+      "godotOwnership": [
+        "InputMap",
+        "mouse/touch events",
+        "keyboard focus",
+        "gamepad focus",
+        "drag/drop",
+        "hover/pressed/selected/disabled states"
+      ],
+      "requiredWorkflowFields": [
+        "input_paths",
+        "supported_devices",
+        "focus_status",
+        "drag_drop_boundaries",
+        "disabled_error_states",
+        "validation_refs"
+      ],
+      "semanticFamilyIds": [
+        "input_constants",
+        "coordinate_spaces"
+      ]
+    },
+    {
+      "domainId": "camera_viewport_world_physics",
+      "displayName": "Camera, viewport, world/UI layering, and physics interaction",
+      "godotOwnership": [
+        "Camera2D",
+        "Camera3D",
+        "CanvasLayer",
+        "SubViewport",
+        "physics layers/masks",
+        "raycasts",
+        "screen-to-world transforms"
+      ],
+      "requiredWorkflowFields": [
+        "camera_owner",
+        "ui_world_separation_rule",
+        "raycast_input_conversion_path",
+        "layer_mask_rationale",
+        "validation_refs"
+      ],
+      "semanticFamilyIds": [
+        "camera_projection",
+        "physics_collision",
+        "coordinate_spaces"
+      ]
+    },
+    {
+      "domainId": "rendering_materials_shaders",
+      "displayName": "Rendering, materials, shaders, and import policy",
+      "godotOwnership": [
+        "CanvasItemMaterial",
+        "StandardMaterial3D",
+        "ShaderMaterial",
+        "import settings",
+        "render layers",
+        "lighting mode"
+      ],
+      "requiredWorkflowFields": [
+        "material_profile",
+        "rendering_profile",
+        "source_asset_import_evidence",
+        "shader_owner",
+        "fallback_policy"
+      ],
+      "semanticFamilyIds": [
+        "rendering_material_resources",
+        "geometry_size_measurement"
+      ]
+    },
+    {
+      "domainId": "animation_state_machines",
+      "displayName": "Animation and state machines",
+      "godotOwnership": [
+        "AnimationPlayer",
+        "AnimationTree",
+        "state-machine resources",
+        "tween usage",
+        "transitions"
+      ],
+      "requiredWorkflowFields": [
+        "animation_profile",
+        "animation_state_reference",
+        "transition_trigger",
+        "state_enum_source",
+        "validation_refs"
+      ],
+      "semanticFamilyIds": [
+        "unit_scale",
+        "physics_collision"
+      ]
+    },
+    {
+      "domainId": "procedural_generation",
+      "displayName": "Procedural generation and generated UI/world content",
+      "godotOwnership": [
+        "deterministic seeds",
+        "generated map/route/deck/reward layouts",
+        "generated scene nodes",
+        "headless validation"
+      ],
+      "requiredWorkflowFields": [
+        "seed_source",
+        "generated_output_summary",
+        "validation_artifact",
+        "replayability_rule"
+      ],
+      "semanticFamilyIds": [
+        "tilemap_map",
+        "geometry_size_measurement"
+      ]
+    },
+    {
+      "domainId": "geometry_mesh_size",
+      "displayName": "Geometry, mesh fallback, and size measurement",
+      "godotOwnership": [
+        "AABB",
+        "get_aabb()",
+        "collision shapes",
+        "import metadata",
+        "ArrayMesh",
+        "ImmediateMesh",
+        "Polygon2D",
+        "Line2D"
+      ],
+      "requiredWorkflowFields": [
+        "size_source",
+        "collision_or_interaction_shape",
+        "fallback_geometry_api",
+        "validation_ref"
+      ],
+      "semanticFamilyIds": [
+        "geometry_size_measurement"
+      ]
+    },
+    {
+      "domainId": "typed_state_schema",
+      "displayName": "Typed state, enums, and schema contracts",
+      "godotOwnership": [
+        "C# enums/classes/records",
+        "typed GDScript where used",
+        "named constants",
+        "DTO/schema enums"
+      ],
+      "requiredWorkflowFields": [
+        "typed_state_reference",
+        "enum_source",
+        "schema_field",
+        "invalid_state_behavior",
+        "tests"
+      ],
+      "semanticFamilyIds": [
+        "input_constants"
+      ]
+    },
+    {
+      "domainId": "accessibility_readability_feedback",
+      "displayName": "Accessibility, readability, and feedback legibility",
+      "godotOwnership": [
+        "theme contrast",
+        "readable font sizes",
+        "hover/focus/selected/disabled states",
+        "error copy",
+        "layout overflow handling"
+      ],
+      "requiredWorkflowFields": [
+        "readability_target",
+        "feedback_states",
+        "screenshot_or_browser_evidence",
+        "no_overlap_validation"
+      ],
+      "semanticFamilyIds": [
+        "viewport_resolution",
+        "rendering_material_resources"
+      ]
+    }
+  ],
+  "materialProfiles": [
+    "solid_3d_standard",
+    "transparent_3d_standard",
+    "solid_2d_canvas",
+    "canvas_item_material",
+    "shader_material",
+    "existing_material_resource"
+  ],
+  "renderingProfiles": [
+    "ambient_3d_default",
+    "directional_key_light",
+    "local_light_group",
+    "environment_fog_atmosphere",
+    "postprocess_profile",
+    "rendering_not_applicable"
+  ],
+  "animationProfiles": [
+    "animation_player_simple",
+    "animation_tree_state_machine",
+    "animation_tree_blendspace",
+    "repo_character_animation_profile",
+    "animation_not_applicable"
+  ],
+  "uiUpdateOwnershipModes": [
+    "retained_typed_references",
+    "registered_control_map",
+    "state_apply_pass",
+    "dynamic_item_factory",
+    "no_dynamic_update"
+  ],
+  "injectionPoints": [
+    {
+      "routeId": "gdd-question-form",
+      "summary": "Optionally asks for UI-heavy flow hints without suppressing default UI classification.",
+      "requiredFields": [
+        "ui_hints_optional",
+        "default_ui_classification_preserved"
+      ]
+    },
+    {
+      "routeId": "scene-route-confirmation",
+      "summary": "Declares expected player-facing UI surfaces or no_ui_needed per confirmed scene.",
+      "requiredFields": [
+        "scene_ui_surface_expectations",
+        "no_ui_needed_rationale"
+      ]
+    },
+    {
+      "routeId": "gdd-document-generation",
+      "summary": "Carries UI, HUD, input, drawing, camera, animation, procedural, and rendering implications into generated GDD.",
+      "requiredFields": [
+        "ui_implications",
+        "input_feedback_implications"
+      ]
+    },
+    {
+      "routeId": "gdd-requirements",
+      "summary": "Extracts UI capability requirements with severity, scene/module mapping, and acceptance markers.",
+      "requiredFields": [
+        "capability_domain_ids",
+        "acceptance_markers",
+        "source_godot_ui_contract_hash"
+      ]
+    },
+    {
+      "routeId": "prototype-contract",
+      "summary": "Freezes Godot UI capability contract version/hash into the prototype contract.",
+      "requiredFields": [
+        "godot_ui_contract_version",
+        "source_godot_ui_contract_hash"
+      ]
+    },
+    {
+      "routeId": "iteration-plan",
+      "summary": "Creates UI surface goals and required modules from P0/P1 capability requirements.",
+      "requiredFields": [
+        "capability_goal_refs",
+        "semantic_reading_evidence"
+      ]
+    },
+    {
+      "routeId": "execute-next-goal",
+      "summary": "Injects the frozen UI capability contract for relevant implementation goals.",
+      "requiredFields": [
+        "frozen_contract_ref",
+        "required_capability_evidence"
+      ]
+    },
+    {
+      "routeId": "needs-fix",
+      "summary": "Maps UI failures to requirement IDs and UI gap families.",
+      "requiredFields": [
+        "ui_gap_family",
+        "requirement_ids"
+      ]
+    },
+    {
+      "routeId": "repair",
+      "summary": "Keeps UI repair prompts bound to requirement IDs, diagnostics, and capability gaps.",
+      "requiredFields": [
+        "repair_ledger_ref",
+        "ui_gap_family"
+      ]
+    },
+    {
+      "routeId": "ui-wiring-closure",
+      "summary": "Validates the complete UI surface matrix, profiles, evidence, and exemptions.",
+      "requiredFields": [
+        "ui_surface_matrix",
+        "profile_refs",
+        "exemption_review"
+      ]
+    },
+    {
+      "routeId": "preview-package",
+      "summary": "Exposes final-readiness blockers from UI closure without blocking early package generation.",
+      "requiredFields": [
+        "final_readiness_blockers",
+        "ui_closure_ref"
+      ]
+    }
+  ],
+  "governanceRules": [
+    {
+      "ruleId": "visible_entry_feedback_required",
+      "summary": "P0/P1 gameplay features need visible player entry, feedback, state boundary, and validation evidence unless no_ui_needed is explicitly reviewed.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "control_container_theme_preferred",
+      "summary": "Prefer Control, Container, Theme, anchors, and safe areas; absolute positioning needs a fixed-format or world-overlay rationale.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "hud_menu_canvaslayer_input_owner",
+      "summary": "HUD and menus must declare CanvasLayer/viewport ownership and input routing.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "drag_drop_state_complete",
+      "summary": "Drag/drop and pointer-heavy features must declare start, hover, cancel, drop, invalid drop, and commit states.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "custom_drawing_evidence",
+      "summary": "Custom drawing must declare drawing API, redraw trigger, hit-test strategy, and screenshot/canvas evidence.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "named_camera_physics_constants",
+      "summary": "Camera/physics interactions must use named layers, masks, and measurable boundaries.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "approved_material_profiles",
+      "summary": "Rendering/material/shader work must use approved Godot profiles or block with material_profile_missing.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "measured_size_required",
+      "summary": "Size-sensitive work must cite AABB, get_aabb(), collision shape, import metadata, theme metric, or min-size source.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "godot_geometry_fallback",
+      "summary": "Missing built-in geometry must use Godot geometry APIs with validation evidence.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "typed_state_required",
+      "summary": "UI mode, animation state, input state, route state, and validation status must use enums, named constants, or schema enums.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "procedural_generation_replayable",
+      "summary": "Procedural UI/world generation must be seedable, replayable, and validated.",
+      "blocksP0P1": false
+    },
+    {
+      "ruleId": "visual_evidence_required",
+      "summary": "High-risk visual UI changes require screenshot, canvas-pixel, or exported visual evidence.",
+      "blocksP0P1": false
+    },
+    {
+      "ruleId": "material_profile_selected",
+      "summary": "Pure-color/no-texture material work must select a known material profile or block.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "dynamic_ui_update_owner",
+      "summary": "Dynamic UI must declare construction owner and update ownership mode.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "third_person_camera_shared_rig",
+      "summary": "Third-person camera behavior must use or create the repo-owned shared rig/profile before gameplay-specific camera work.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "rendering_profile_selected",
+      "summary": "Lighting, fog, sky, environment, and postprocess work must select a rendering/atmosphere profile with readability evidence.",
+      "blocksP0P1": true
+    },
+    {
+      "ruleId": "animation_profile_selected",
+      "summary": "Character animation/state-machine work must select an animation profile with typed state and fallback behavior.",
+      "blocksP0P1": true
+    }
+  ]
+}
