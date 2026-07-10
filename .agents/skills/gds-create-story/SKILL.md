@@ -52,7 +52,7 @@ description: 'Creates a dedicated story file with all the context the agent will
 
 ### Step 1: Resolve the Workflow Block
 
-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`
+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`
 
 **If the script fails**, resolve the `workflow` block yourself by reading these three files in base → team → user order and applying the same structural merge rules as the resolver:
 
@@ -90,7 +90,7 @@ Greet `{user_name}`, speaking in `{communication_language}`.
 
 Execute each entry in `{workflow.activation_steps_append}` in order.
 
-Activation is complete. Begin the workflow below.
+Activation is complete. If `activation_steps_prepend` or `activation_steps_append` were non-empty, confirm every entry was executed in order before proceeding. Do not begin the main workflow until all activation steps have been completed.
 
 ## EXECUTION
 
@@ -323,6 +323,18 @@ Activation is complete. Begin the workflow below.
   processes - **Integration Patterns:** External service integrations, data flows <action>Extract any story-specific requirements that the
   developer MUST follow</action>
   <action>Identify any architectural decisions that override previous patterns</action>
+
+  <!-- Read existing code being modified — non-negotiable -->
+  <critical>📂 READ FILES BEING MODIFIED — skipping this is the primary cause of implementation failures and review cycles</critical>
+  <action>From the architecture directory structure, identify every file marked UPDATE (not NEW) that this story will touch</action>
+  <action>Read each relevant UPDATE file completely. For each one, document in dev notes:
+    - Current state: what it does today (state machine, API calls, data shapes, existing behaviors)
+    - What this story changes: the specific sections or behaviors being modified
+    - What must be preserved: existing interactions and behaviors the story must not break
+  </action>
+  <critical>A story implementation must leave the system working end-to-end — not just satisfy its stated ACs.
+  If a behavior is required for the feature to work correctly in the existing system, it is a requirement
+  whether or not it is explicitly written in the story. The dev agent owns this.</critical>
 </step>
 
 <step n="4" goal="Web research for latest technical specifics">
@@ -438,7 +450,7 @@ Activation is complete. Begin the workflow below.
 
     **The developer now has everything needed for flawless implementation!**
   </output>
-<action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
+<action>Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
 </step>
 
 </workflow>

@@ -1,6 +1,6 @@
 # Document Project Workflow Router
 
-<critical>The workflow execution engine is governed by: skill:bmad-workflow</critical>
+<critical>Execute this router and {installed_path}/workflow.yaml directly; no external workflow-engine skill is required.</critical>
 <critical>You MUST have already loaded and processed: {installed_path}/workflow.yaml</critical>
 <critical>Communicate all responses in {communication_language}</critical>
 
@@ -10,10 +10,9 @@
 
 <step n="1" goal="Validate workflow and get project info">
 
-<invoke-workflow path="skill:gds-workflow-status">
-  <param>mode: data</param>
-  <param>data_request: project_config</param>
-</invoke-workflow>
+<action>Check whether {output_folder}/gds-workflow-status.yaml exists.</action>
+<action>If it exists, set status_exists = true, store status_file_path, and read the project configuration fields used below.</action>
+<action>If it does not exist, set status_exists = false, set suggestion to "Run standalone or create sprint status later", and continue in standalone mode.</action>
 
 <check if="status_exists == false">
   <output>{{suggestion}}</output>
@@ -36,10 +35,7 @@
   </check>
 
   <!-- Now validate sequencing -->
-  <invoke-workflow path="skill:gds-workflow-status">
-    <param>mode: validate</param>
-    <param>calling_workflow: document-project</param>
-  </invoke-workflow>
+  <action>Validate document-project sequencing directly against the loaded status file when it declares an ordered workflow; otherwise leave warning empty.</action>
 
   <check if="warning != ''">
     <output>{{warning}}</output>
@@ -178,11 +174,8 @@ Your choice [1/2/3]:
 <step n="4" goal="Update status and complete">
 
 <check if="status_file_found == true">
-  <invoke-workflow path="skill:gds-workflow-status">
-    <param>mode: update</param>
-    <param>action: complete_workflow</param>
-    <param>workflow_name: document-project</param>
-  </invoke-workflow>
+  <action>Update the loaded status file directly: mark document-project complete while preserving its comments and structure.</action>
+  <action>Set success = true only after the updated status file is saved successfully; otherwise warn and preserve the generated documentation.</action>
 
   <check if="success == true">
     <output>Status updated!</output>
@@ -215,7 +208,7 @@ Since no workflow is in progress:
 - Or run `workflow-init` to create a workflow path and get guided next steps
   {{/if}}
   </output>
-<action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
+<action>Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
 </step>
 
 </workflow>
