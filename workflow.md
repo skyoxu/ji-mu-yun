@@ -132,7 +132,8 @@ Required actions:
 - Ask the player in two separate steps:
   1. Game name.
   2. Game type or reference game name.
-- Classify the second answer with `codex exec` into exactly one of the 24 canonical game type ids in `docs/game-type-guides/game-types.csv`.
+- Classify the second answer with `codex exec` into exactly one of the 25 runtime-effective game type ids in `docs/game-type-guides/game-types.csv` (24 upstream GDS ids plus the Ji Mu Yun `survivorslike` extension).
+- If that catalog is missing, unparsable, contains duplicate ids, or points to a missing guide, stop and restore it from the template before classification.
 - Write the result to `AGENTS.md` and `README.md` under `## Game Project Metadata`:
   - `Game Name: <player input>`
   - `Game Type: <canonical id>`

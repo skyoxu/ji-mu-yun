@@ -213,7 +213,7 @@ public sealed class ChatService
         var prompt = BuildCodexPrompt(project, request, skillAction, memorySummary);
         var completion = await _llmRouteEngine.CompleteAsync(
             new LlmRouteRequest(
-                EnsureChatPromptWorkspace(project),
+                project.RepoPath,
                 "project-chat",
                 model,
                 prompt,
@@ -269,15 +269,6 @@ public sealed class ChatService
         {
             _runCancellation.Unregister(runId);
         }
-    }
-
-    private static string EnsureChatPromptWorkspace(ProjectSnapshot project)
-    {
-        var repoParent = Path.GetDirectoryName(project.RepoPath);
-        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
-        var root = Path.Combine(workspaceRoot, "_phasea_llm", "project-chat");
-        Directory.CreateDirectory(root);
-        return root;
     }
 
     private async Task<ChatResult> CompleteDeterministicAsync(

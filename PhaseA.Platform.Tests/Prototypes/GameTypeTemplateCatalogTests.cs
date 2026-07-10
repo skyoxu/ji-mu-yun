@@ -81,6 +81,13 @@ public sealed class GameTypeTemplateCatalogTests
         text-based,Text-Based,Text interface,text,text-based.md
         party-game,Party Game,Local multiplayer party,party,party-game.md
         """, System.Text.Encoding.UTF8);
+        foreach (var fragmentFile in File.ReadAllLines(Path.Combine(skillRoot, "game-types.csv"), System.Text.Encoding.UTF8)
+                     .Skip(1)
+                     .Where(line => !string.IsNullOrWhiteSpace(line))
+                     .Select(line => line[(line.LastIndexOf(',') + 1)..].Trim()))
+        {
+            File.WriteAllText(Path.Combine(gameTypesRoot, fragmentFile), $"## {fragmentFile} guide\n", System.Text.Encoding.UTF8);
+        }
         File.WriteAllText(Path.Combine(gameTypesRoot, "rpg.md"), """
         ## RPG Specific Elements
 
@@ -521,11 +528,253 @@ public sealed class GameTypeTemplateCatalogTests
         rpg.GuideExcerpt.Should().Be("Docs RPG guide.");
     }
 
+    [Fact]
+    public void BmadCatalog_ShouldPreferCanonicalGdsAssetsOverCompatibilityMirror()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        var compatibilityRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-create-gdd");
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        Directory.CreateDirectory(Path.Combine(compatibilityRoot, "game-types"));
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(compatibilityRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Compatibility description,compatibility,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(compatibilityRoot, "game-types", "rpg.md"), "Compatibility RPG guide.", System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+        var rpg = catalog.Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Description.Should().Be("Canonical description");
+        rpg.FragmentRelativePath.Should().Be(".agents/skills/gds-gdd/assets/game-types/rpg.md");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldMergePartialDocsOverCanonicalFallback()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Docs description,docs,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(docsRoot, "rpg.md"), "Docs RPG guide.", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical RPG,canonical-rpg,rpg.md
+        puzzle,Puzzle,Canonical puzzle,canonical-puzzle,puzzle.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "puzzle.md"), "Canonical puzzle guide.", System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+
+        catalog.Entries.Should().HaveCount(2);
+        catalog.Find("rpg")!.GuideExcerpt.Should().Be("Docs RPG guide.");
+        catalog.Find("rpg")!.FragmentRelativePath.Should().Be("docs/game-type-guides/rpg.md");
+        catalog.Find("puzzle")!.GuideExcerpt.Should().Be("Canonical puzzle guide.");
+        catalog.Find("puzzle")!.FragmentRelativePath.Should().Be(".agents/skills/gds-gdd/assets/game-types/puzzle.md");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldUseCanonicalFieldsAndGuideWhenDocsRowIsPartial()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,,,,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Name.Should().Be("RPG");
+        rpg.Description.Should().Be("Canonical description");
+        rpg.GenreTags.Should().Be("canonical");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+        rpg.FragmentRelativePath.Should().Be(".agents/skills/gds-gdd/assets/game-types/rpg.md");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldIgnoreDuplicateDocsIdsAndUseCanonicalCatalog()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,First docs row,docs,rpg.md
+        RPG,RPG,Duplicate docs row,duplicate,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(docsRoot, "rpg.md"), "Docs RPG guide.", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Description.Should().Be("Canonical description");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldIgnoreMalformedDocsCsvAndUseCanonicalCatalog()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,"Unclosed description,docs,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Description.Should().Be("Canonical description");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldIgnoreDocsCsvWithMissingRequiredHeader()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags
+        rpg,RPG,Docs description,docs
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Description.Should().Be("Canonical description");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldRejectGuideFragmentsOutsideCatalogRoot()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        var canonicalRoot = Path.Combine(repo.Path, ".agents", "skills", "gds-gdd", "assets");
+        Directory.CreateDirectory(docsRoot);
+        Directory.CreateDirectory(Path.Combine(canonicalRoot, "game-types"));
+        File.WriteAllText(Path.Combine(repo.Path, "docs", "secret.md"), "Outside guide content.", System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Escaping docs row,docs,../secret.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        rpg,RPG,Canonical description,canonical,rpg.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(canonicalRoot, "game-types", "rpg.md"), "Canonical RPG guide.", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var rpg = new BmadGameTypeDesignCatalog(options).Find("rpg");
+
+        rpg.Should().NotBeNull();
+        rpg!.Description.Should().Be("Canonical description");
+        rpg.GuideExcerpt.Should().Be("Canonical RPG guide.");
+        rpg.GuideExcerpt.Should().NotContain("Outside guide content");
+    }
+
     [Theory]
     [InlineData("Vampire Survivors-like")]
     [InlineData("survivors like")]
     [InlineData("arena survival")]
-    public void BmadCatalog_ShouldMapSurvivorsLikeAliasesToSurvivalGuidance(string alias)
+    public void BmadCatalog_ShouldNotImpersonateSurvivalWhenRepositoryExtensionIsUnavailable(string alias)
     {
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
@@ -550,9 +799,87 @@ public sealed class GameTypeTemplateCatalogTests
         var catalog = new BmadGameTypeDesignCatalog(options);
         var entry = catalog.Find(alias);
 
+        entry.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("Vampire Survivors-like")]
+    [InlineData("survivors like")]
+    [InlineData("arena survival")]
+    public void BmadCatalog_ShouldMapSurvivorsLikeAliasesToRepositoryExtension(string alias)
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        Directory.CreateDirectory(docsRoot);
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        survivorslike,Survivorslike,Arena survival,bullet-heaven,survivorslike.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(docsRoot, "survivorslike.md"), "Survivorslike guide excerpt.", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var entry = new BmadGameTypeDesignCatalog(options).Find(alias);
+
         entry.Should().NotBeNull();
-        entry!.Id.Should().Be("survival");
-        entry.GuideExcerpt.Should().Be("Survival guide excerpt.");
+        entry!.Id.Should().Be("survivorslike");
+        entry.GuideExcerpt.Should().Be("Survivorslike guide excerpt.");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("survivorslike.md")]
+    public void BmadCatalog_ShouldTreatBlankOrMissingRepositoryExtensionGuideAsUnavailable(string fragmentFile)
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        Directory.CreateDirectory(docsRoot);
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), $"""
+        id,name,description,genre_tags,fragment_file
+        survivorslike,Survivorslike,Arena survival,bullet-heaven,{fragmentFile}
+        """, System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+
+        catalog.Find("survivorslike").Should().BeNull();
+        catalog.Find("Vampire Survivors-like").Should().BeNull();
+    }
+
+    [Fact]
+    public void BmadCatalog_ShouldTreatEmptyRepositoryExtensionGuideAsUnavailable()
+    {
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        using var repo = TempDirectory.Create("phase-a-repo");
+        var docsRoot = Path.Combine(repo.Path, "docs", "game-type-guides");
+        Directory.CreateDirectory(docsRoot);
+        File.WriteAllText(Path.Combine(docsRoot, "game-types.csv"), """
+        id,name,description,genre_tags,fragment_file
+        survivorslike,Survivorslike,Arena survival,bullet-heaven,survivorslike.md
+        """, System.Text.Encoding.UTF8);
+        File.WriteAllText(Path.Combine(docsRoot, "survivorslike.md"), "{{placeholder_only}}\n", System.Text.Encoding.UTF8);
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = repo.Path
+        });
+
+        var catalog = new BmadGameTypeDesignCatalog(options);
+
+        catalog.Find("survivorslike").Should().BeNull();
+        catalog.Find("Vampire Survivors-like").Should().BeNull();
     }
 
     private sealed class TempDirectory : IDisposable

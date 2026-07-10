@@ -27,10 +27,16 @@ SKILLS = {
         "steps": [
             "Resolve the target business repo as a sibling of the template repo.",
             "Clean copied template names, paths, workflow names, release names, project paths, and PRD ids.",
+            "Ensure docs/prd, docs/gdd, and docs/prototypes exist as the primary game-document directories.",
+            "Ask the player in two separate steps: first the game name, then the game type or reference game name.",
+            "Classify the second answer with codex exec against exactly one of the 25 runtime-effective ids in docs/game-type-guides/game-types.csv (24 upstream GDS ids plus the Ji Mu Yun survivorslike extension); never leave it unclassified or outside the registered set.",
+            "If the game-type catalog is missing, unparsable, contains duplicate ids, or points to a missing guide, stop and restore it from the template before classification.",
+            "Write Game Name, Game Type, Game Type Source, and Game Type Guide into AGENTS.md and README.md under Game Project Metadata.",
             "Rebuild entry indexes in README.md, AGENTS.md, docs/PROJECT_DOCUMENTATION_INDEX.md, and docs/agents/00-index.md.",
             "Run repository-level hard checks immediately after cleanup and index repair.",
             "Optionally start the local project-health service when browser-based health inspection is useful; keep it bound to 127.0.0.1.",
             "Use OpenAI backend bootstrap only when the repo explicitly opts into openai-api transport, and keep it out of default CI until checklist self-checks are clean.",
+            "After Chapter 2 completes, display the project-health URL from logs/ci/project-health/server.json when available, otherwise show the default local URL and the command that starts the service.",
         ],
     },
     "workflow-chapter3-task-triplet-baseline": {
@@ -602,6 +608,21 @@ def skill_markdown(name: str, cfg: dict[str, Any]) -> str:
             "2. Optionally read `references/business-repos/<repo>.md` only as empirical validation evidence when the target business repo has a generated reference.\n"
             "3. If that optional evidence file is missing or stale, run `py -3 scripts/python/update_workflow_chapter_skills.py <repo>` from the template repo."
         )
+    chapter_specific = ""
+    if cfg["chapter"] == "2":
+        chapter_specific = """
+## Game Type Classification Prompt
+
+Use `codex exec` in read-only mode from the target repository. Provide the player answer, the game name when available, and the registered CSV rows from `docs/game-type-guides/game-types.csv`. Require JSON with exactly one `game_type` id and a short reason. If the answer names a reference game, classify by gameplay fit rather than title similarity.
+
+## User Interaction Language And Encoding
+
+- Chapter 2 user-facing questions, confirmations, and missing-input messages must be in Chinese.
+- Read and write Chinese documentation through Python with explicit `encoding=\"utf-8\"`.
+- Do not use PowerShell or Windows-native text commands to read or write Chinese documentation.
+- If a temporary Python script must carry Chinese text, use ASCII-only source with Unicode escapes.
+
+"""
     return f"""---
 name: {name}
 description: {cfg["desc"]}
@@ -650,7 +671,7 @@ Use this skill to {cfg["purpose"]}.
 
 {steps}
 
-## Stop-Loss Signals
+{chapter_specific}## Stop-Loss Signals
 
 - Existing `forbidden_commands` blocks the command about to be run.
 - `artifact_integrity`, `planned_only_incomplete`, or planned-only run type appears in recovery evidence.

@@ -142,7 +142,7 @@ public sealed class SkillActionService
             ? await RunLegacyCodexProcessAsync(runId, project, outputAbsolutePath, prompt, sandbox, ReasoningEffortFor(request), runToken)
             : await _llmRouteEngine.CompleteAsync(
                 new LlmRouteRequest(
-                    EnsureSkillActionPromptWorkspace(project),
+                    project.RepoPath,
                     "skill-action",
                     "gpt-5.4",
                     prompt,
@@ -331,15 +331,6 @@ public sealed class SkillActionService
             - Summarize generated files or state why no real asset file could be generated.
             - Do not claim files were modified unless you actually wrote them.
             """;
-    }
-
-    private static string EnsureSkillActionPromptWorkspace(ProjectSnapshot project)
-    {
-        var repoParent = Path.GetDirectoryName(project.RepoPath);
-        var workspaceRoot = string.IsNullOrWhiteSpace(repoParent) ? project.RepoPath : repoParent;
-        var root = Path.Combine(workspaceRoot, "_phasea_llm", "skill-action");
-        Directory.CreateDirectory(root);
-        return root;
     }
 
     private static string FirstNonEmpty(params string?[] values)

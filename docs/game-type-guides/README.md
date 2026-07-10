@@ -1,8 +1,8 @@
 # Game Type Guides
 
-Source: `.agents/skills/gds-create-gdd/game-types/` and `.agents/skills/gds-create-gdd/game-types.csv`.
+Canonical upstream source: `.agents/skills/gds-gdd/assets/game-types/` and `.agents/skills/gds-gdd/assets/game-types.csv`. The legacy `.agents/skills/gds-create-gdd/game-types*` paths are compatibility mirrors only.
 
-These 25 guides are the extracted BMAD/GDS game-type templates used by the prototype lane and project-health metadata. They provide docs-side reference material plus workflow-consumed default prototype contracts; they do not replace the formal Chapter 3 through Chapter 7 workflow.
+This directory exposes 25 runtime-effective guides: 24 upstream GDS game types plus the Ji Mu Yun `survivorslike` extension. The upstream-derived guides preserve their canonical GDS base text and add repository-owned prototype contracts, module matrices, and expanded genre tags. They provide docs-side reference material for the prototype lane and project-health metadata; they do not replace the formal Chapter 3 through Chapter 7 workflow.
 
 For browser preview generation, use [Web Preview Conversion Contract](web-preview-conversion-contract.md). The converter consumes packaged download artifacts and publishes a guest-readable `web/preview-contract.json` for package-to-preview consistency checks.
 
@@ -66,7 +66,11 @@ When a matrix is present, keep this column contract:
 - `Optional`
 - `Out of Scope`
 
-Canonical ids:
+Runtime-effective ids (25 total):
+
+- Upstream GDS ids: the 24 ids from `.agents/skills/gds-gdd/assets/game-types.csv`.
+- Ji Mu Yun extension id: `survivorslike`.
+
 
 - `action-platformer` -> `action-platformer.md`
 - `adventure` -> `adventure.md`

@@ -116,7 +116,7 @@ Use this after Chapter 6 has closed the current completed backlog slice and you 
 - `logs/ci/<date>/sc-review-pipeline-task-<task>/latest.json` points to the latest local pipeline artifacts, including `summary.json`, `execution-context.json`, `repair-guide.*`, and `agent-review.*` when generated.
 
 ## Prototype And Game Type Guides
-- `docs/game-type-guides/README.md` stores the extracted 24 BMAD/GDS game type guides.
+- `docs/game-type-guides/README.md` stores 25 runtime-effective game type guides: 24 upstream GDS types plus the Ji Mu Yun `survivorslike` extension.
 - `docs/prototype-type-kits/README.md` stores Phase A prototype-lane type kits, including executable-route inputs and documentation-only future type inputs.
 - `.agents/skills/prototype-7day-playable-godot-zh/SKILL.md` routes the Chinese 7-day playable prototype lane.
 - [../workflows/game-type-route-profile-guide.md](../workflows/game-type-route-profile-guide.md) describes how to add new game type route profiles and strategies.

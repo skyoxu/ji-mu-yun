@@ -31,6 +31,7 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     private static readonly string[] ManagedRelativeDirectories =
     [
         "scripts",
+        "_bmad/scripts",
         ".agents/skills",
         "docs/prototype-type-kits",
         "Tests.Godot/addons/gdUnit4"
@@ -40,6 +41,23 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
     [
         "Directory.Build.props",
         "Directory.Build.targets"
+    ];
+
+    private static readonly string[] ManagedIfMissingRelativeFiles =
+    [
+        "_bmad/gds/config.yaml"
+    ];
+
+    private static readonly string[] RetiredManagedSkillDirectories =
+    [
+        "bmad-create-ux-design",
+        "bmad-distillator",
+        "gds-create-prd",
+        "gds-create-ux-design",
+        "gds-edit-gdd",
+        "gds-edit-prd",
+        "gds-validate-gdd",
+        "gds-validate-prd"
     ];
 
     private static readonly string[] BootstrapBaselineRelativeFiles =
@@ -141,6 +159,19 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(sourcePath, destinationPath, overwrite: true);
         }
+
+        foreach (var relativeFile in ManagedIfMissingRelativeFiles)
+        {
+            var sourcePath = Path.Combine(sourceRoot, relativeFile.Replace('/', Path.DirectorySeparatorChar));
+            var destinationPath = Path.Combine(targetRoot, relativeFile.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(sourcePath) || File.Exists(destinationPath))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(sourcePath, destinationPath, overwrite: false);
+        }
     }
 
     private static void SyncManagedDirectories(string sourceRoot, string targetRoot)
@@ -156,6 +187,30 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
             var destinationPath = Path.Combine(targetRoot, relativeDirectory.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(destinationPath);
             CopyDirectory(sourceRoot, sourcePath, destinationPath, overwriteFiles: true);
+            if (string.Equals(relativeDirectory, ".agents/skills", StringComparison.OrdinalIgnoreCase))
+            {
+                PruneRetiredManagedSkills(sourcePath, destinationPath);
+            }
+        }
+    }
+
+    private static void PruneRetiredManagedSkills(string sourceSkillRoot, string targetSkillRoot)
+    {
+        foreach (var skillName in RetiredManagedSkillDirectories)
+        {
+            if (Directory.Exists(Path.Combine(sourceSkillRoot, skillName)))
+            {
+                continue;
+            }
+
+            var targetPath = Path.Combine(targetSkillRoot, skillName);
+            if (!Directory.Exists(targetPath))
+            {
+                continue;
+            }
+
+            var attributes = File.GetAttributes(targetPath);
+            Directory.Delete(targetPath, recursive: (attributes & FileAttributes.ReparsePoint) == 0);
         }
     }
 

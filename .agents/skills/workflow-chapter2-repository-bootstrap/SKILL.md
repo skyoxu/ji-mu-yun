@@ -11,12 +11,6 @@ Operate Chapter 2 from `workflow.md` idempotently for a business repository that
 
 ## Operating Contract
 
-## Highest Encoding Rule
-
-- 所有中文文档读写必须通过 Python 并显式 `encoding="utf-8"`。
-- 严禁使用 PowerShell 或 Windows 原生文本工具读写中文文件。
-- 临时 Python 脚本如果需要写中文，使用 ASCII-only source + Unicode escapes 避免 Windows 终端转码。
-
 - Treat `workflow.md` as the normative workflow source.
 - Treat business-repo logs as empirical evidence, not policy overrides.
 - Use Python with UTF-8 for documentation reads and writes.
@@ -54,33 +48,28 @@ Chapter 2 is an early bootstrap workflow. Prefer direct repository checks and pr
 
 1. Resolve the target business repo as a sibling of the template repo.
 2. Clean copied template names, paths, workflow names, release names, project paths, and PRD ids.
-3. Ensure `docs/prd`, `docs/gdd`, and `docs/prototypes` exist as the primary PRD, GDD, and prototype document directories.
-4. 初始化完成后，分两步向玩家提问：
-   - 第 1 步：游戏名称。
-   - 第 2 步：游戏类型或参考游戏名称。
-5. Classify the Step 2 answer with `codex exec` against exactly one of the 24 ids in `docs/game-type-guides/game-types.csv`; never leave it unclassified or outside the canonical set.
-6. 将结果写入 `AGENTS.md` 与 `README.md` 的 `## Game Project Metadata` 段：
-   - `Game Name: <player input>`
-   - `Game Type: <canonical id>`
-   - `Game Type Source: <player input>`
-   - `Game Type Guide: docs/game-type-guides/<canonical id>.md`
-7. Rebuild entry indexes in README.md, AGENTS.md, docs/PROJECT_DOCUMENTATION_INDEX.md, and docs/agents/00-index.md.
-8. Run repository-level hard checks immediately after cleanup and index repair.
-9. Optionally start the local project-health service when browser-based health inspection is useful; keep it bound to 127.0.0.1.
-10. Use OpenAI backend bootstrap only when the repo explicitly opts into openai-api transport, and keep it out of default CI until checklist self-checks are clean.
-11. Chapter 2 任务完成后必须显示 project-health 访问链接：
-    - URL: read `logs/ci/project-health/server.json` -> `url` when available.
-    - HTML: `logs/ci/project-health/latest.html`.
-    - 如果启动了本地服务，向用户显示 URL；否则显示 HTML 路径。
+3. Ensure docs/prd, docs/gdd, and docs/prototypes exist as the primary game-document directories.
+4. Ask the player in two separate steps: first the game name, then the game type or reference game name.
+5. Classify the second answer with codex exec against exactly one of the 25 runtime-effective ids in docs/game-type-guides/game-types.csv (24 upstream GDS ids plus the Ji Mu Yun survivorslike extension); never leave it unclassified or outside the registered set.
+6. If the game-type catalog is missing, unparsable, contains duplicate ids, or points to a missing guide, stop and restore it from the template before classification.
+7. Write Game Name, Game Type, Game Type Source, and Game Type Guide into AGENTS.md and README.md under Game Project Metadata.
+8. Rebuild entry indexes in README.md, AGENTS.md, docs/PROJECT_DOCUMENTATION_INDEX.md, and docs/agents/00-index.md.
+9. Run repository-level hard checks immediately after cleanup and index repair.
+10. Optionally start the local project-health service when browser-based health inspection is useful; keep it bound to 127.0.0.1.
+11. Use OpenAI backend bootstrap only when the repo explicitly opts into openai-api transport, and keep it out of default CI until checklist self-checks are clean.
+12. After Chapter 2 completes, display the project-health URL from logs/ci/project-health/server.json when available, otherwise show the default local URL and the command that starts the service.
+
 
 ## Game Type Classification Prompt
 
-Use `codex exec` in read-only mode from the target repo. Provide the player answer, the game name when available, and the canonical CSV rows from `docs/game-type-guides/game-types.csv`. Require JSON with one `game_type` id and a short reason. If the answer names a reference game, classify by gameplay fit rather than title similarity.
+Use `codex exec` in read-only mode from the target repository. Provide the player answer, the game name when available, and the registered CSV rows from `docs/game-type-guides/game-types.csv`. Require JSON with exactly one `game_type` id and a short reason. If the answer names a reference game, classify by gameplay fit rather than title similarity.
 
-## 用户交互文案要求
+## User Interaction Language And Encoding
 
-- Chapter 2 面向用户的提问、确认、缺失项提示必须使用中文。
-- 涉及中文写入的文件更新必须通过 Python 且显式 `encoding=\"utf-8\"` 执行，避免 PowerShell 编码干扰导致乱码。
+- Chapter 2 user-facing questions, confirmations, and missing-input messages must be in Chinese.
+- Read and write Chinese documentation through Python with explicit `encoding="utf-8"`.
+- Do not use PowerShell or Windows-native text commands to read or write Chinese documentation.
+- If a temporary Python script must carry Chinese text, use ASCII-only source with Unicode escapes.
 
 ## Stop-Loss Signals
 

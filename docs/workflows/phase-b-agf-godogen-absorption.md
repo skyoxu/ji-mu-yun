@@ -29,7 +29,7 @@ This repository already has several Phase B-compatible foundations:
 - Admin/user token isolation, LLM binding, LLM usage tracking, admin audit, CSV export, and Phase B smoke verification.
 - Hosted project route recovery order with project-level sources, route state, repair evidence, and latest blocker priority.
 - Shared LLM/Codex invocation entrypoints for C# and Python routes.
-- BMAD/GDS 24 game-type guides as design semantics, not direct executable promises.
+- BMAD/GDS design semantics from 24 upstream game-type guides plus the Ji Mu Yun `survivorslike` extension, not direct executable promises.
 - Prototype type kits as executable-route input contracts.
 - Active executable route profiles for default, RPG/JRPG, survivorslike, and deckbuilder flows.
 
@@ -429,7 +429,7 @@ Acceptance standard:
 | --- | --- | --- |
 | AGF browser drag-edit | Requires browser-side visual editing of engine-owned scene concepts. This repository is Windows-only Godot C# and should not overpromise browser scene editing. | Exclude broad browser editing. Browser sidecars may propose, annotate, or request changes only. Any actual scene write must execute through a Godot-native tool, plugin, or validated repository script, then pass deterministic verification. |
 | AGF schema-first scene model | Could replace Godot scene files with an intermediate schema. | Use sidecars for readback, route recovery, and validation only. Godot project files remain authoritative. |
-| AGF genre capability matrix | Could duplicate BMAD/GDS 24 game-type templates. | Convert to platform and prototype-route readiness catalog. Do not create another taxonomy. |
+| AGF genre capability matrix | Could duplicate the 24 upstream BMAD/GDS game-type templates and the Ji Mu Yun `survivorslike` extension. | Convert to platform and prototype-route readiness catalog. Do not create another taxonomy. |
 | godogen visual self-repair | Often relies on AI or human visual judgement. | Keep capture artifacts; acceptance is only objective checks, assertions, and route markers. |
 | godogen asset quality planning | May require subjective quality approval. | Absorb manifest, budget, size, hash, import, route reference, and package checks; exclude subjective art approval. |
 | godogen multi-engine publishing | Conflicts with Windows-only Godot C# premise. | Exclude. Keep only Godot C# operational and prototype-route patterns. |

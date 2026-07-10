@@ -409,9 +409,11 @@ public sealed class ChatServiceTests
         var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
 
         await service.SendAsync(accountId, projectId, new ChatRequest("help design", "gpt-5.4", SkillActionId: "game-design-master"));
+        var project = await store.GetProjectSnapshotAsync(projectId);
 
         codex.LastPrompt.Should().Contain("游戏策划大师");
         codex.LastPrompt.Should().Contain("$bmad-agent-game-designer");
+        codex.LastProjectRoot.Should().Be(project!.RepoPath);
     }
 
     [Fact]
@@ -639,6 +641,7 @@ public sealed class ChatServiceTests
         public string? LastModel { get; private set; }
 
         public string? LastPrompt { get; private set; }
+        public string? LastProjectRoot { get; private set; }
         public string? LastBillingApiKeyName { get; private set; }
         public int CallCount { get; private set; }
 
@@ -651,6 +654,7 @@ public sealed class ChatServiceTests
             CancellationToken cancellationToken = default)
         {
             CallCount++;
+            LastProjectRoot = projectRoot;
             LastModel = model;
             LastPrompt = prompt;
             LastBillingApiKeyName = billingApiKeyName;

@@ -61,9 +61,9 @@ RPG/JRPG 现在是 capability-driven：默认只保留 opening context、field n
 - 素材清单和打包下载属于项目级工作流，不应该写进单个 game-type strategy 的 acceptance contract。
 - 聊天里的“下一步建议”只查询顶层项目路由；一次性按钮只打开对应页面，不自动启动 run。
 
-## BMAD/GDS 24 Game-Type Templates
+## BMAD/GDS 24 Upstream Types Plus 1 Repository Extension
 
-BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog first reads `docs/game-type-guides/game-types.csv` and `docs/game-type-guides/<game-type>.md`; if those extracted docs are missing, it falls back to `.agents/skills/gds-create-gdd/game-types.csv` and matching fragments.
+BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog first reads `docs/game-type-guides/game-types.csv` and `docs/game-type-guides/<game-type>.md`; if those repository guides are missing, it falls back to canonical `.agents/skills/gds-gdd/assets/game-types.csv` and matching fragments, then to the legacy `.agents/skills/gds-create-gdd/game-types*` compatibility mirror.
 
 Use boundaries:
 
@@ -74,12 +74,12 @@ Use boundaries:
 - If sources conflict, keep the higher-authority source and record the discarded lower-authority matrix row or guide signal in route/type-kit notes instead of silently merging both.
 - Do not turn every GDD section in a template into iteration steps.
 - Do not automatically promote optional or conditional modules to required scope unless the project brief, type kit, or route contract says so.
-- Do not assume all 24 ids have dedicated Godot executable routes just because the taxonomy exists.
+- Do not assume all 25 runtime-effective ids have dedicated Godot executable routes just because the taxonomy exists. The set contains 24 upstream GDS ids plus the Ji Mu Yun `survivorslike` extension.
 - A type becomes a Phase A executable route only after it has `GameTypeRouteProfile`, `IGameTypeRouteStrategy`, skill contract, plan generation/evaluation, execution acceptance, and tests.
 
 Current runtime integration:
 
-- `BmadGameTypeDesignCatalog` loads the 24 design templates read-only and exposes raw guide excerpts; it does not yet parse module matrices into structured fields.
+- `BmadGameTypeDesignCatalog` loads the 25 runtime-effective design guides read-only (24 upstream GDS types plus `survivorslike`) and exposes raw guide excerpts; it does not yet parse module matrices into structured fields.
 - RPG/JRPG GDD prompting can use the `rpg` guide excerpt and its module matrix as taxonomy, first-loop structure, and semantic hints. Executable route planning still needs type-kit and strategy support before treating matrix rows as route scope.
 - RPG/JRPG execution boundaries still come from `prototype-rpg-godot-zh`, `GameTypeRouteProfiles.Rpg`, and `RpgGameTypeRouteStrategy`.
 - Survivors-like execution boundaries come from `prototype-survivorslike-godot-zh`, `GameTypeRouteProfiles.SurvivorsLike`, and `SurvivorsLikeGameTypeRouteStrategy`.

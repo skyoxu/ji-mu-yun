@@ -52,10 +52,16 @@ public sealed class ProjectWorkspaceSeederTests
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         var sourceRoot = source.Path;
         Directory.CreateDirectory(Path.Combine(sourceRoot, "scripts", "python"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "_bmad", "scripts"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, "_bmad", "gds"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, ".agents", "skills", "prototype-rpg-godot-zh"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot, ".agents", "skills", "bmad-agent-game-designer"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "docs", "prototype-type-kits"));
         File.WriteAllText(Path.Combine(sourceRoot, "scripts", "python", "run_prototype_workflow.py"), "new workflow\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "_bmad", "scripts", "resolve_customization.py"), "new resolver\n");
+        File.WriteAllText(Path.Combine(sourceRoot, "_bmad", "gds", "config.yaml"), "new config\n");
         File.WriteAllText(Path.Combine(sourceRoot, ".agents", "skills", "prototype-rpg-godot-zh", "SKILL.md"), "new skill\n");
+        File.WriteAllText(Path.Combine(sourceRoot, ".agents", "skills", "bmad-agent-game-designer", "SKILL.md"), "new bmad skill\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "new manifest\n");
 
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
@@ -66,10 +72,18 @@ public sealed class ProjectWorkspaceSeederTests
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
         Directory.CreateDirectory(Path.Combine(targetRepo, "scripts", "python"));
+        Directory.CreateDirectory(Path.Combine(targetRepo, "_bmad", "scripts"));
+        Directory.CreateDirectory(Path.Combine(targetRepo, "_bmad", "gds"));
         Directory.CreateDirectory(Path.Combine(targetRepo, ".agents", "skills", "prototype-rpg-godot-zh"));
+        Directory.CreateDirectory(Path.Combine(targetRepo, ".agents", "skills", "gds-edit-gdd"));
+        Directory.CreateDirectory(Path.Combine(targetRepo, ".agents", "skills", "project-custom-skill"));
         Directory.CreateDirectory(Path.Combine(targetRepo, "docs", "prototype-type-kits"));
         File.WriteAllText(Path.Combine(targetRepo, "scripts", "python", "run_prototype_workflow.py"), "old workflow\n");
+        File.WriteAllText(Path.Combine(targetRepo, "_bmad", "scripts", "resolve_customization.py"), "old resolver\n");
+        File.WriteAllText(Path.Combine(targetRepo, "_bmad", "gds", "config.yaml"), "old config\n");
         File.WriteAllText(Path.Combine(targetRepo, ".agents", "skills", "prototype-rpg-godot-zh", "SKILL.md"), "old skill\n");
+        File.WriteAllText(Path.Combine(targetRepo, ".agents", "skills", "gds-edit-gdd", "SKILL.md"), "retired skill\n");
+        File.WriteAllText(Path.Combine(targetRepo, ".agents", "skills", "project-custom-skill", "SKILL.md"), "custom skill\n");
         File.WriteAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md"), "old manifest\n");
         File.WriteAllText(Path.Combine(targetRepo, "README.md"), "keep local file\n");
 
@@ -78,10 +92,37 @@ public sealed class ProjectWorkspaceSeederTests
         seeder.EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "scripts", "python", "run_prototype_workflow.py")).Should().Be("new workflow\n");
+        File.ReadAllText(Path.Combine(targetRepo, "_bmad", "scripts", "resolve_customization.py")).Should().Be("new resolver\n");
+        File.ReadAllText(Path.Combine(targetRepo, "_bmad", "gds", "config.yaml")).Should().Be("old config\n");
         File.ReadAllText(Path.Combine(targetRepo, ".agents", "skills", "prototype-rpg-godot-zh", "SKILL.md")).Should().Be("new skill\n");
+        File.ReadAllText(Path.Combine(targetRepo, ".agents", "skills", "bmad-agent-game-designer", "SKILL.md")).Should().Be("new bmad skill\n");
+        Directory.Exists(Path.Combine(targetRepo, ".agents", "skills", "gds-edit-gdd")).Should().BeFalse();
+        File.ReadAllText(Path.Combine(targetRepo, ".agents", "skills", "project-custom-skill", "SKILL.md")).Should().Be("custom skill\n");
         File.ReadAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md")).Should().Be("new manifest\n");
         File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("keep local file\n");
         File.Exists(Path.Combine(targetRepo, "logs", ".gdignore")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void EnsureSeeded_CopiesGdsConfigWhenExistingWorkspaceIsMissingIt()
+    {
+        using var source = TempDirectory.Create("phase-a-source");
+        using var workspace = TempDirectory.Create("phase-a-workspaces");
+        Directory.CreateDirectory(Path.Combine(source.Path, "_bmad", "gds"));
+        File.WriteAllText(Path.Combine(source.Path, "_bmad", "gds", "config.yaml"), "project_name: template\n");
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
+            ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
+            ["PHASEA_REPOSITORY_ROOT"] = source.Path
+        });
+        var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
+        Directory.CreateDirectory(targetRepo);
+        File.WriteAllText(Path.Combine(targetRepo, "README.md"), "existing workspace\n");
+
+        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+
+        File.ReadAllText(Path.Combine(targetRepo, "_bmad", "gds", "config.yaml")).Should().Be("project_name: template\n");
     }
 
     [Fact]
