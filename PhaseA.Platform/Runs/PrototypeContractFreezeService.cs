@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
 
@@ -32,6 +33,16 @@ public sealed class PrototypeContractFreezeService
         PrototypeContractFreezeRequest request,
         CancellationToken cancellationToken = default)
     {
+        await using var lease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+        return await FreezeCoreAsync(accountId, projectId, request, cancellationToken);
+    }
+
+    private async Task<PrototypeContractStatusResult> FreezeCoreAsync(
+        string accountId,
+        string projectId,
+        PrototypeContractFreezeRequest request,
+        CancellationToken cancellationToken)
+    {
         var project = await GetProjectAsync(accountId, projectId, cancellationToken);
         if (project is null)
         {
@@ -39,8 +50,36 @@ public sealed class PrototypeContractFreezeService
         }
 
         var source = ReadSourceHashes(project);
+        var adminReviewItems = (await _metadataStore.ListProjectAdminReviewQueueForProjectAsync(accountId, projectId, "", 500, cancellationToken))
+            .Where(item => item.Severity is "P0" or "P1")
+            .ToArray();
+        var unresolvedAdminItems = adminReviewItems
+            .Where(item => !string.Equals(item.Status, "approved", StringComparison.Ordinal))
+            .ToArray();
+        var adminReviewNeeds = ReadRequirementAdminReviewNeeds(project);
+        var missingApprovalNeeds = adminReviewNeeds
+            .Where(need =>
+            {
+                var matching = adminReviewItems.Where(item =>
+                    string.Equals(item.RouteId, "gdd-requirements", StringComparison.Ordinal) &&
+                    string.Equals(item.RequirementId, need.RequirementId, StringComparison.Ordinal)).ToArray();
+                return matching.Length == 0 || matching.Any(item => !string.Equals(item.Status, "approved", StringComparison.Ordinal));
+            })
+            .ToArray();
+        if (unresolvedAdminItems.Length > 0 || missingApprovalNeeds.Length > 0)
+        {
+            var safeBlocker = new ProjectWorkflowBlockingIssue(
+                "prototype-contract:admin_review_blocked",
+                "admin_review_blocked",
+                unresolvedAdminItems.Any(item => item.Severity == "P0") || missingApprovalNeeds.Any(item => item.Priority == "P0") ? "P0" : "P1",
+                "Contract freeze is blocked by unresolved requirement review.",
+                [new ProjectRouteStateEvidenceRef("sidecar", RequirementMapRelativePath)]);
+            source = source with { BlockingIssues = source.BlockingIssues.Append(safeBlocker).ToArray() };
+        }
+
         if (source.BlockingIssues.Count > 0)
         {
+            await RecordDiagnosticsAsync(project, source.BlockingIssues, cancellationToken);
             return ToStatus(project.ProjectId, "blocked", "", source, "rejected");
         }
 
@@ -70,6 +109,13 @@ public sealed class PrototypeContractFreezeService
             ["ui_style_version"] = source.UiStyleVersion,
             ["source_ui_style_contract_hash"] = source.SourceUiStyleContractHash,
             ["ui_style_snapshot_hash"] = source.UiStyleSnapshotHash,
+            ["ui_style_applicability"] = new
+            {
+                status = source.UiStyleApplicability.Status,
+                reason = source.UiStyleApplicability.Reason,
+                reviewed_by = source.UiStyleApplicability.ReviewedBy,
+                recheck_trigger = source.UiStyleApplicability.RecheckTrigger
+            },
             ["requirement_traceability"] = source.RequirementIds.Select(id => new { requirement_id = id }).ToArray()
         };
         var contractHash = Sha256(JsonSerializer.Serialize(canonicalPayload, JsonOptions()));
@@ -96,9 +142,9 @@ public sealed class PrototypeContractFreezeService
             ["updated_utc"] = now,
             ["evidence_refs"] = new[] { new { kind = "sidecar", path = ContractRelativePath } }
         };
-        await WriteJsonAsync(project, ContractRelativePath, payload, cancellationToken);
         await WriteJsonAsync(project, ContractMirrorRelativePath, payload, cancellationToken);
-        return ToStatus(project.ProjectId, "fresh", contractHash, source, request.Refresh ? "created_run" : "returned_existing");
+        await WriteJsonAsync(project, ContractRelativePath, payload, cancellationToken);
+        return ToStatus(project.ProjectId, "fresh", contractHash, source, "created_run");
     }
 
     public NewChainGuardResult EvaluateNewChainGuard(ProjectSnapshot project)
@@ -167,20 +213,33 @@ public sealed class PrototypeContractFreezeService
             using var doc = JsonDocument.Parse(File.ReadAllText(contractPath, Encoding.UTF8));
             var root = doc.RootElement;
             var staleReasons = new List<string>();
+            var recordedContractHash = ReadString(root, "contract_hash");
+            var recomputedContractHash = ComputeRecordedContractHash(root);
+            if (string.IsNullOrWhiteSpace(recordedContractHash) ||
+                string.IsNullOrWhiteSpace(recomputedContractHash) ||
+                !string.Equals(recordedContractHash, recomputedContractHash, StringComparison.Ordinal))
+            {
+                staleReasons.Add("contract_hash_mismatch");
+            }
+
             Compare(staleReasons, "source_gdd_hash", ReadString(root, "source_gdd_hash"), source.SourceGddHash);
             Compare(staleReasons, "source_scene_route_hash", ReadString(root, "source_scene_route_hash"), source.SourceSceneRouteHash);
             Compare(staleReasons, "source_requirement_map_hash", ReadString(root, "source_requirement_map_hash"), source.SourceRequirementMapHash);
+            Compare(staleReasons, "source_contract_snapshot_hash", ReadString(root, "source_contract_snapshot_hash"), source.SourceContractSnapshotHash);
+            Compare(staleReasons, "godot_ui_contract_version", ReadString(root, "godot_ui_contract_version"), source.GodotUiContractVersion);
             Compare(staleReasons, "source_godot_ui_contract_hash", ReadString(root, "source_godot_ui_contract_hash"), source.SourceGodotUiContractHash);
+            Compare(staleReasons, "ui_style_id", ReadString(root, "ui_style_id"), source.UiStyleId);
+            Compare(staleReasons, "ui_style_version", ReadString(root, "ui_style_version"), source.UiStyleVersion);
             Compare(staleReasons, "source_ui_style_contract_hash", ReadString(root, "source_ui_style_contract_hash"), source.SourceUiStyleContractHash);
             Compare(staleReasons, "ui_style_snapshot_hash", ReadString(root, "ui_style_snapshot_hash"), source.UiStyleSnapshotHash);
             var mirrorPath = Resolve(project.RepoPath, ContractMirrorRelativePath);
-            if (File.Exists(mirrorPath) && Sha256(NormalizeText(File.ReadAllText(mirrorPath, Encoding.UTF8))) != Sha256(NormalizeText(File.ReadAllText(contractPath, Encoding.UTF8))))
+            if (File.Exists(mirrorPath) && !MirrorContractHashMatches(mirrorPath, ReadString(root, "contract_hash")))
             {
                 staleReasons.Add("mirror_hash_mismatch");
             }
 
             var status = staleReasons.Count == 0 && source.BlockingIssues.Count == 0 ? "fresh" : "stale";
-            return ToStatus(project.ProjectId, status, ReadString(root, "contract_hash"), source, "returned_existing", staleReasons);
+            return ToStatus(project.ProjectId, status, recordedContractHash, source, "returned_existing", staleReasons);
         }
         catch (JsonException)
         {
@@ -212,6 +271,8 @@ public sealed class PrototypeContractFreezeService
         }
 
         var requirementIds = ReadRequirementIds(project);
+        ReadDirectRequirementMapIssues(project, issues);
+        var styleSource = ReadStyleSource(project);
         return new PrototypeContractSourceHashes(
             gddHash,
             sceneStatus.ConfirmedSceneRouteHash,
@@ -219,12 +280,75 @@ public sealed class PrototypeContractFreezeService
             string.IsNullOrWhiteSpace(sceneStatus.SourceContractSnapshotHash) ? "unknown" : sceneStatus.SourceContractSnapshotHash,
             "godot-ui-capability.v1",
             ReadJsonString(project, RequirementMapRelativePath, "source_godot_ui_contract_hash", [], "", "P2", "unknown"),
-            "godot_cosmic",
-            "1",
-            "unknown",
-            "unknown",
+            styleSource.UiStyleId,
+            styleSource.UiStyleVersion,
+            styleSource.SourceUiStyleContractHash,
+            styleSource.UiStyleSnapshotHash,
+            styleSource.Applicability,
             requirementIds,
             issues);
+    }
+
+    private static PrototypeContractStyleSource ReadStyleSource(ProjectSnapshot project)
+    {
+        var path = Resolve(project.RepoPath, RequirementMapRelativePath);
+        var visibleUi = false;
+        if (File.Exists(path))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+                visibleUi = document.RootElement.TryGetProperty("requirements", out var requirements) &&
+                             requirements.ValueKind == JsonValueKind.Array &&
+                             requirements.EnumerateArray().Any(item =>
+                                 string.Equals(ReadString(item, "kind"), "ui", StringComparison.Ordinal) ||
+                                 ReadStringArray(item, "capability_domain_ids").Any(id =>
+                                     id.StartsWith("ui_", StringComparison.Ordinal) ||
+                                     GodotUiCapabilityContract.IsKnownCapabilityDomain(id)));
+            }
+            catch (JsonException)
+            {
+                visibleUi = false;
+            }
+        }
+
+        if (!visibleUi)
+        {
+            return new PrototypeContractStyleSource(
+                "",
+                "",
+                GodotUiStyleCatalog.CatalogHash,
+                "",
+                new UiStyleApplicability(
+                    "reviewed_not_applicable",
+                    "No visible UI requirement is present in the frozen requirement map.",
+                    "system",
+                    "when a visible UI requirement is added"));
+        }
+
+        var style = GodotUiStyleCatalog.Styles.First(item => string.Equals(item.StyleId, "godot_cosmic", StringComparison.Ordinal));
+        var snapshotHash = Sha256(JsonSerializer.Serialize(new
+        {
+            schema_profile_hash = GodotUiStyleSnapshotSchema.SchemaProfileHash,
+            source_ui_style_contract_hash = GodotUiStyleCatalog.CatalogHash,
+            style.StyleId,
+            style.Version,
+            style.GuidePath,
+            style.TriggerTags,
+            style.DesignDna,
+            style.GodotControls,
+            style.GameCompositionTemplates
+        }, JsonOptions()));
+        return new PrototypeContractStyleSource(
+            style.StyleId,
+            style.Version,
+            GodotUiStyleCatalog.CatalogHash,
+            snapshotHash,
+            new UiStyleApplicability(
+                "applicable",
+                "Visible UI requirements require a frozen repo-owned style snapshot.",
+                "workflow",
+                "when UI requirements or style selection changes"));
     }
 
     private static PrototypeContractSceneSource ReadSceneRouteSource(ProjectSnapshot project, string currentGddHash, List<ProjectWorkflowBlockingIssue> issues)
@@ -302,6 +426,47 @@ public sealed class PrototypeContractFreezeService
             : null;
     }
 
+    private async Task RecordDiagnosticsAsync(
+        ProjectSnapshot project,
+        IReadOnlyList<ProjectWorkflowBlockingIssue> issues,
+        CancellationToken cancellationToken)
+    {
+        foreach (var issue in issues.Where(item => item.Severity is "P0" or "P1" or "P2"))
+        {
+            var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+                new ProjectDiagnosticSpoolQuery(
+                    "unresolved",
+                    project.AccountId,
+                    project.ProjectId,
+                    "prototype-contract",
+                    issue.DomainCode,
+                    issue.Severity,
+                    1),
+                cancellationToken);
+            if (existing.Count > 0)
+            {
+                continue;
+            }
+
+            var evidenceJson = JsonSerializer.Serialize(issue.EvidenceRefs, JsonOptions());
+            await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+                new ProjectDiagnosticSpoolCommand(
+                    project.AccountId,
+                    project.ProjectId,
+                    "prototype-contract",
+                    issue.DomainCode,
+                    issue.Severity,
+                    issue.Summary,
+                    evidenceJson,
+                    issue.EvidenceRefs.FirstOrDefault()?.Path ?? ContractRelativePath,
+                    ProjectNameSnapshot: project.Name,
+                    SourceRefsJson: evidenceJson,
+                    RetentionClass: "unresolved_blocker",
+                    RemediationHintId: issue.DomainCode),
+                cancellationToken);
+        }
+    }
+
     private static PrototypeContractStatusResult ToStatus(
         string projectId,
         string status,
@@ -318,9 +483,13 @@ public sealed class PrototypeContractFreezeService
             source.SourceSceneRouteHash,
             source.SourceRequirementMapHash,
             source.SourceContractSnapshotHash,
+            source.GodotUiContractVersion,
             source.SourceGodotUiContractHash,
+            source.UiStyleId,
+            source.UiStyleVersion,
             source.SourceUiStyleContractHash,
             source.UiStyleSnapshotHash,
+            source.UiStyleApplicability,
             new PrototypeContractFreshness(status == "fresh" ? "fresh" : status == "missing" ? "unknown" : status, staleReasons ?? []),
             source.BlockingIssues,
             [new ProjectRouteStateEvidenceRef("sidecar", ContractRelativePath)],
@@ -404,21 +573,140 @@ public sealed class PrototypeContractFreezeService
         }
     }
 
+    private static void ReadDirectRequirementMapIssues(ProjectSnapshot project, List<ProjectWorkflowBlockingIssue> issues)
+    {
+        foreach (var requirement in ReadRequirementRows(project).Where(item =>
+                     item.Priority is "P0" or "P1" &&
+                     item.Status is "missing_scene" or "missing_module" or "needs_review"))
+        {
+            issues.Add(new ProjectWorkflowBlockingIssue(
+                $"gdd-requirements:{requirement.RequirementId}:requirement_gap",
+                "requirement_map_invalid",
+                requirement.Priority,
+                $"Requirement {requirement.RequirementId} is {requirement.Status}.",
+                [new ProjectRouteStateEvidenceRef("sidecar", RequirementMapRelativePath)]));
+        }
+    }
+
+    private static IReadOnlyList<RequirementAdminReviewNeed> ReadRequirementAdminReviewNeeds(ProjectSnapshot project)
+    {
+        return ReadRequirementRows(project)
+            .Where(item => item.Priority is "P0" or "P1" && item.Status is "conflict" or "explicitly_deferred")
+            .Select(item => new RequirementAdminReviewNeed(item.RequirementId, item.Priority))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<RequirementStatusRow> ReadRequirementRows(ProjectSnapshot project)
+    {
+        var path = Resolve(project.RepoPath, RequirementMapRelativePath);
+        if (!File.Exists(path))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+            return doc.RootElement.TryGetProperty("requirements", out var requirements) && requirements.ValueKind == JsonValueKind.Array
+                ? requirements.EnumerateArray()
+                    .Select(item => new RequirementStatusRow(
+                        ReadString(item, "requirement_id"),
+                        ReadString(item, "priority"),
+                        ReadString(item, "status")))
+                    .Where(item => !string.IsNullOrWhiteSpace(item.RequirementId))
+                    .ToArray()
+                : [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static IReadOnlyList<string> ReadStringArray(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.Array
+            ? value.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String)
+                .Select(item => item.GetString() ?? "")
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToArray()
+            : [];
+    }
+
+    private static bool MirrorContractHashMatches(string mirrorPath, string canonicalContractHash)
+    {
+        try
+        {
+            using var mirror = JsonDocument.Parse(File.ReadAllText(mirrorPath, Encoding.UTF8));
+            return !string.IsNullOrWhiteSpace(canonicalContractHash) &&
+                   string.Equals(ReadString(mirror.RootElement, "contract_hash"), canonicalContractHash, StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     private static void Compare(List<string> staleReasons, string field, string recorded, string current)
     {
-        if (!string.IsNullOrWhiteSpace(recorded) &&
-            !string.IsNullOrWhiteSpace(current) &&
-            !string.Equals(recorded, current, StringComparison.Ordinal))
+        if (!string.Equals(recorded, current, StringComparison.Ordinal))
         {
             staleReasons.Add(field);
         }
+    }
+
+    private static string ComputeRecordedContractHash(JsonElement root)
+    {
+        var fieldNames = new[]
+        {
+            "schema_version",
+            "route",
+            "project_id",
+            "source_gdd_hash",
+            "source_scene_route_hash",
+            "source_requirement_map_hash",
+            "source_contract_snapshot_hash",
+            "godot_ui_contract_version",
+            "source_godot_ui_contract_hash",
+            "ui_style_id",
+            "ui_style_version",
+            "source_ui_style_contract_hash",
+            "ui_style_snapshot_hash",
+            "ui_style_applicability",
+            "requirement_traceability"
+        };
+        var payload = new SortedDictionary<string, JsonElement>();
+        foreach (var fieldName in fieldNames)
+        {
+            if (!root.TryGetProperty(fieldName, out var value))
+            {
+                return "";
+            }
+
+            payload[fieldName] = value.Clone();
+        }
+
+        return Sha256(JsonSerializer.Serialize(payload, JsonOptions()));
     }
 
     private static async Task WriteJsonAsync(ProjectSnapshot project, string relativePath, object payload, CancellationToken cancellationToken)
     {
         var path = Resolve(project.RepoPath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonOptions()), Encoding.UTF8, cancellationToken);
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(payload, JsonOptions()), new UTF8Encoding(false), cancellationToken);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
     }
 
     private static string Resolve(string root, string relativePath)
@@ -470,16 +758,20 @@ public sealed record PrototypeContractStatusResult(
     string SourceSceneRouteHash,
     string SourceRequirementMapHash,
     string SourceContractSnapshotHash,
+    string GodotUiContractVersion,
     string SourceGodotUiContractHash,
+    string UiStyleId,
+    string UiStyleVersion,
     string SourceUiStyleContractHash,
     string UiStyleSnapshotHash,
+    UiStyleApplicability UiStyleApplicability,
     PrototypeContractFreshness Freshness,
     IReadOnlyList<ProjectWorkflowBlockingIssue> BlockingIssues,
     IReadOnlyList<ProjectRouteStateEvidenceRef> EvidenceRefs,
     string OperationStatus)
 {
     public static PrototypeContractStatusResult NotFound(string projectId) =>
-        new(projectId, "project_not_found", "", "", "", "", "", "", "", "", new PrototypeContractFreshness("unknown", []), [], [], "rejected");
+        new(projectId, "project_not_found", "", "", "", "", "", "unknown", "unknown", "", "", "", "", new UiStyleApplicability("unknown", "", "", ""), new PrototypeContractFreshness("unknown", []), [], [], "rejected");
 }
 
 public sealed record PrototypeContractFreshness(string Status, IReadOnlyList<string> StaleReasons);
@@ -502,7 +794,25 @@ internal sealed record PrototypeContractSourceHashes(
     string UiStyleVersion,
     string SourceUiStyleContractHash,
     string UiStyleSnapshotHash,
+    UiStyleApplicability UiStyleApplicability,
     IReadOnlyList<string> RequirementIds,
     IReadOnlyList<ProjectWorkflowBlockingIssue> BlockingIssues);
 
+internal sealed record PrototypeContractStyleSource(
+    string UiStyleId,
+    string UiStyleVersion,
+    string SourceUiStyleContractHash,
+    string UiStyleSnapshotHash,
+    UiStyleApplicability Applicability);
+
+public sealed record UiStyleApplicability(
+    string Status,
+    string Reason,
+    string ReviewedBy,
+    string RecheckTrigger);
+
 internal sealed record PrototypeContractSceneSource(string ConfirmedSceneRouteHash, string SourceContractSnapshotHash);
+
+internal sealed record RequirementStatusRow(string RequirementId, string Priority, string Status);
+
+internal sealed record RequirementAdminReviewNeed(string RequirementId, string Priority);

@@ -51,7 +51,7 @@ public sealed class RouteModuleContractsTests
             "scene-route-confirmation",
             "structured-game-type-analysis",
             "prototype-contract",
-            "prototype-skeleton",
+            "prototype-skeleton-guard",
             "workflow-recommendation",
             "ui-wiring-closure",
             "iteration-plan",
@@ -72,6 +72,32 @@ public sealed class RouteModuleContractsTests
             contract.SourceHashFields.Should().NotBeEmpty($"{contract.RouteId} must declare source hash fields");
             contract.AdminReadbackSurfaces.Should().Contain("workflow recommendation readback");
         }
+    }
+
+    [Fact]
+    public void Phase1Contracts_ShouldUseCanonicalSkeletonGuardAndResolveLegacyAlias()
+    {
+        var phase1Routes = new[]
+        {
+            "structured-game-type-analysis",
+            "scene-route-confirmation",
+            "gdd-document-generation",
+            "gdd-requirements",
+            "prototype-contract",
+            "prototype-skeleton-guard"
+        };
+
+        RouteModuleContracts.All.Select(item => item.RouteId).Should().Contain(phase1Routes);
+        RouteModuleContracts.All.Select(item => item.RouteId).Should().NotContain("prototype-skeleton");
+        RouteModuleContracts.Find("prototype-skeleton").Should().BeSameAs(RouteModuleContracts.Find("prototype-skeleton-guard"));
+        RouteModuleContracts.Find("prototype-skeleton-guard")!.SourceHashFields.Should().Contain([
+            "source_contract_hash",
+            "source_scene_route_hash",
+            "source_requirement_map_hash",
+            "source_godot_ui_contract_hash",
+            "source_ui_style_contract_hash",
+            "ui_style_snapshot_hash"
+        ]);
     }
 
     [Fact]

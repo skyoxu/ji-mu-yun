@@ -9,7 +9,8 @@ public sealed record GameDesignQuestionAnswer(
 public sealed record GameDesignSceneRouteDraftRequest(
     string? Message,
     IReadOnlyList<GameDesignQuestionAnswer>? Answers = null,
-    string? Model = null);
+    string? Model = null,
+    GameDesignSceneRouteDocument? SceneRoute = null);
 
 public sealed record GameDesignSceneRouteScene(
     string Id,

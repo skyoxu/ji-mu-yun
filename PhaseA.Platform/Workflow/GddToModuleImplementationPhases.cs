@@ -90,7 +90,7 @@ public static class GddToModuleImplementationPhases
                 "gdd-document-generation",
                 "gdd-requirements",
                 "prototype-contract",
-                "prototype-skeleton",
+                "prototype-skeleton-guard",
                 "preview-package",
                 "ui-wiring-closure"
             ],
@@ -119,7 +119,7 @@ public static class GddToModuleImplementationPhases
                 "gdd-document-generation",
                 "gdd-requirements",
                 "prototype-contract",
-                "prototype-skeleton"
+                "prototype-skeleton-guard"
             ],
             "Requirement map, scene route, contract freshness, skeleton guard, and source hash tests pass."),
         new(
@@ -166,7 +166,7 @@ public static class GddToModuleImplementationPhases
                 "gdd-document-generation",
                 "scene-route-confirmation",
                 "prototype-contract",
-                "prototype-skeleton",
+                "prototype-skeleton-guard",
                 "workflow-recommendation",
                 "iteration-plan",
                 "execute-next-goal",

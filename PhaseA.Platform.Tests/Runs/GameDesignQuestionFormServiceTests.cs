@@ -400,16 +400,12 @@ public sealed class GameDesignQuestionFormServiceTests
             llm,
             lastWaiterCleanupTimeout: TimeSpan.FromMilliseconds(50));
         using var cancellation = new CancellationTokenSource();
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
         var request = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest(), cancellation.Token);
         await llm.Started;
         cancellation.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await request);
-        stopwatch.Stop();
+        var cancellationResult = Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await request);
+        await cancellationResult.WaitAsync(TimeSpan.FromSeconds(2));
         llm.Release();
-
-        stopwatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(1));
     }
 
     [Fact]

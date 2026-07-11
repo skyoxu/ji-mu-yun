@@ -2,7 +2,7 @@
   "schemaVersion": "route-module-contracts.v1",
   "contractSetId": "phasea-gdd-to-module-route-contracts",
   "contractSetVersion": "1",
-  "contractSetHash": "bbc0fb2f71f99cf54e9ee70e64516c731e1413fe70c10574ff362e787581475d",
+  "contractSetHash": "6095b0c560836f49ff1aede05327c9a78f84805b1274ea4eaef6d737cb7b7750",
   "recoverySourceOrderRef": "hosted-route-recovery-order.v1",
   "contracts": [
     {
@@ -214,7 +214,7 @@
       ]
     },
     {
-      "routeId": "prototype-skeleton",
+      "routeId": "prototype-skeleton-guard",
       "owner": "Runs/PrototypeWorkflowService",
       "canonicalRouteStatePath": "meta/routes/prototype-skeleton/latest.json",
       "mirrorRouteStatePath": "meta/routes/prototype/latest.json",
@@ -237,7 +237,10 @@
       "sourceHashFields": [
         "source_contract_hash",
         "source_scene_route_hash",
-        "source_requirement_map_hash"
+        "source_requirement_map_hash",
+        "source_godot_ui_contract_hash",
+        "source_ui_style_contract_hash",
+        "ui_style_snapshot_hash"
       ],
       "statusDimension": "prototype_skeleton_source",
       "exposureClass": "user_visible",

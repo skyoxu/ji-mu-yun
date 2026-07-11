@@ -1582,6 +1582,44 @@ public sealed class PhaseAMetadataStore
         return entries;
     }
 
+    public async Task<IReadOnlyList<ProjectAdminReviewQueueEntry>> ListProjectAdminReviewQueueForProjectAsync(
+        string accountId,
+        string projectId,
+        string status = "open",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                   source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+            FROM project_admin_review_queue
+            WHERE account_id = $account_id
+              AND project_id = $project_id
+              AND ($status = '' OR status = $status)
+            ORDER BY created_utc DESC, id DESC
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$status", status);
+        command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+        var entries = new List<ProjectAdminReviewQueueEntry>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            entries.Add(ReadAdminReviewQueueEntry(reader));
+        }
+
+        return entries;
+    }
+
     public async Task<ProjectAdminReviewDecisionResult> DecideProjectAdminReviewQueueEntryAsync(
         string entryId,
         string actorAccountId,

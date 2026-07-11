@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
@@ -42,6 +43,16 @@ public sealed class GameDesignRequirementMapService
         GameDesignRequirementMapRequest request,
         CancellationToken cancellationToken = default)
     {
+        await using var lease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+        return await CreateCoreAsync(accountId, projectId, request, cancellationToken);
+    }
+
+    private async Task<GameDesignRequirementMapResult> CreateCoreAsync(
+        string accountId,
+        string projectId,
+        GameDesignRequirementMapRequest request,
+        CancellationToken cancellationToken)
+    {
         var project = await GetProjectAsync(accountId, projectId, cancellationToken);
         if (project is null)
         {
@@ -51,7 +62,14 @@ public sealed class GameDesignRequirementMapService
         var validation = ValidateSources(project);
         if (validation is not null)
         {
+            await RecordDiagnosticsAsync(project, validation.BlockingIssues, cancellationToken);
             return validation;
+        }
+
+        var existing = ReadLatest(project);
+        if (!request.Refresh && existing is not null && IsCurrent(project, existing))
+        {
+            return existing with { OperationStatus = "returned_existing" };
         }
 
         var gddPath = Resolve(project.RepoPath, GddRelativePath);
@@ -63,7 +81,15 @@ public sealed class GameDesignRequirementMapService
         var sourceGddHash = Sha256(NormalizeText(gddText));
         var sceneHash = ReadString(sceneDoc.RootElement, "confirmed_scene_route_hash");
         var contractSnapshotHash = ReadString(sceneDoc.RootElement, "source_contract_snapshot_hash");
-        var requirements = BuildDeterministicRequirements(gddText, sceneDoc.RootElement);
+        var deterministicRequirements = BuildDeterministicRequirements(gddText, sceneDoc.RootElement);
+        var generation = await BuildRequirementsAsync(
+            project,
+            request,
+            gddText,
+            sceneDoc.RootElement,
+            deterministicRequirements,
+            cancellationToken);
+        var requirements = generation.Requirements;
         if (requirements.Count == 0)
         {
             requirements.Add(new GameDesignRequirementRow(
@@ -96,7 +122,7 @@ public sealed class GameDesignRequirementMapService
             requirements.Count(item => item.Status == "missing_module"),
             requirements.Count(item => item.Status == "explicitly_deferred"),
             requirements.Count(item => item.Status == "conflict"));
-        var status = requirements.Any(item => item.Priority is "P0" or "P1" && item.Status is "missing_scene" or "missing_module" or "needs_review" or "conflict")
+        var status = requirements.Any(item => item.Priority is "P0" or "P1" && item.Status is "missing_scene" or "missing_module" or "needs_review" or "conflict" or "explicitly_deferred")
             ? "needs_review"
             : "ready";
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -145,7 +171,7 @@ public sealed class GameDesignRequirementMapService
                     ["project-contract-snapshot"] = result.SourceContractSnapshotHash
                 },
                 forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
-                prompt_evidence_refs = Array.Empty<object>(),
+                prompt_evidence_refs = generation.PromptEvidenceRefs,
                 checked_utc = now
             },
             evidence_refs = new[] { new { kind = "sidecar", path = RequirementMapRelativePath } },
@@ -161,7 +187,36 @@ public sealed class GameDesignRequirementMapService
             requirements = requirements.Select(ToSidecarRequirement).ToArray()
         };
         await WriteJsonAsync(project, RequirementMapRelativePath, output, cancellationToken);
-        return result with { OperationStatus = request.Refresh ? "created_run" : "returned_existing" };
+        await RecordAdminReviewQueueAsync(project, requirements, cancellationToken);
+        await RecordDiagnosticsAsync(project, result.BlockingIssues, cancellationToken);
+        var persistedHash = Sha256(NormalizeText(File.ReadAllText(Resolve(project.RepoPath, RequirementMapRelativePath), Encoding.UTF8)));
+        return result with
+        {
+            SourceRequirementMapHash = persistedHash,
+            OperationStatus = "created_run"
+        };
+    }
+
+    private static bool IsCurrent(ProjectSnapshot project, GameDesignRequirementMapResult existing)
+    {
+        var gddPath = Resolve(project.RepoPath, GddRelativePath);
+        var scenePath = Resolve(project.RepoPath, SceneRouteRelativePath);
+        if (!File.Exists(gddPath) || !File.Exists(scenePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var scene = JsonDocument.Parse(File.ReadAllText(scenePath, Encoding.UTF8));
+            return string.Equals(existing.SourceGddHash, Sha256(NormalizeText(File.ReadAllText(gddPath, Encoding.UTF8))), StringComparison.Ordinal) &&
+                   string.Equals(existing.SourceSceneRouteHash, ReadString(scene.RootElement, "confirmed_scene_route_hash"), StringComparison.Ordinal) &&
+                   existing.Status is "ready" or "needs_review";
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private GameDesignRequirementMapResult? ReadLatest(ProjectSnapshot project)
@@ -302,6 +357,73 @@ public sealed class GameDesignRequirementMapService
             : null;
     }
 
+    private async Task RecordDiagnosticsAsync(
+        ProjectSnapshot project,
+        IReadOnlyList<ProjectWorkflowBlockingIssue> issues,
+        CancellationToken cancellationToken)
+    {
+        foreach (var issue in issues.Where(item => item.Severity is "P0" or "P1" or "P2"))
+        {
+            var existing = await _metadataStore.ListProjectDiagnosticSpoolForAdminAsync(
+                new ProjectDiagnosticSpoolQuery(
+                    "unresolved",
+                    project.AccountId,
+                    project.ProjectId,
+                    "gdd-requirements",
+                    issue.DomainCode,
+                    issue.Severity,
+                    1),
+                cancellationToken);
+            if (existing.Count > 0)
+            {
+                continue;
+            }
+
+            var evidenceJson = JsonSerializer.Serialize(issue.EvidenceRefs, JsonOptions());
+            await _metadataStore.RecordProjectDiagnosticSpoolEntryAsync(
+                new ProjectDiagnosticSpoolCommand(
+                    project.AccountId,
+                    project.ProjectId,
+                    "gdd-requirements",
+                    issue.DomainCode,
+                    issue.Severity,
+                    issue.Summary,
+                    evidenceJson,
+                    issue.EvidenceRefs.FirstOrDefault()?.Path ?? RequirementMapRelativePath,
+                    ProjectNameSnapshot: project.Name,
+                    SourceRefsJson: evidenceJson,
+                    RetentionClass: "unresolved_blocker",
+                    RemediationHintId: issue.DomainCode),
+                cancellationToken);
+        }
+    }
+
+    private async Task RecordAdminReviewQueueAsync(
+        ProjectSnapshot project,
+        IReadOnlyList<GameDesignRequirementRow> requirements,
+        CancellationToken cancellationToken)
+    {
+        foreach (var requirement in requirements.Where(item =>
+                     item.Priority is "P0" or "P1" &&
+                     item.Status is "conflict" or "explicitly_deferred"))
+        {
+            var evidenceJson = JsonSerializer.Serialize(
+                new[] { new ProjectRouteStateEvidenceRef("sidecar", RequirementMapRelativePath) },
+                JsonOptions());
+            await _metadataStore.UpsertProjectAdminReviewQueueEntryAsync(
+                new ProjectAdminReviewQueueCommand(
+                    project.AccountId,
+                    project.ProjectId,
+                    "gdd-requirements",
+                    requirement.RequirementId,
+                    requirement.Priority,
+                    $"Requirement {requirement.RequirementId} requires review for status {requirement.Status}.",
+                    RequirementMapRelativePath,
+                    evidenceJson),
+                cancellationToken);
+        }
+    }
+
     private static List<GameDesignRequirementRow> BuildDeterministicRequirements(string gddText, JsonElement sceneRoot)
     {
         var scenes = ReadArray(sceneRoot, "scenes")
@@ -353,10 +475,267 @@ public sealed class GameDesignRequirementMapService
         return rows;
     }
 
+    private async Task<RequirementGenerationResult> BuildRequirementsAsync(
+        ProjectSnapshot project,
+        GameDesignRequirementMapRequest request,
+        string gddText,
+        JsonElement sceneRoot,
+        IReadOnlyList<GameDesignRequirementRow> deterministicRequirements,
+        CancellationToken cancellationToken)
+    {
+        if (_llmRouteEngine is null)
+        {
+            return FallbackRequirements(deterministicRequirements, "llm_unavailable", []);
+        }
+
+        var completion = await _llmRouteEngine.CompleteAsync(
+            new LlmRouteRequest(
+                project.RepoPath,
+                "gdd-requirement-map",
+                PrototypeModelPolicy.Normalize(request.Model),
+                BuildStructuredRequirementPrompt(gddText, sceneRoot, deterministicRequirements),
+                new CodexChatClientOptions(ReasoningEffort: "low"),
+                project.AccountId,
+                RequireJsonObject: true),
+            cancellationToken);
+        var promptEvidence = new object[] { new { kind = "log", path = "logs/phase-a-chat/", purpose = "gdd-requirement-map" } };
+        if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
+        {
+            return FallbackRequirements(deterministicRequirements, completion.FailureCode ?? "llm_failed", promptEvidence);
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(completion.JsonObjectText);
+            if (!document.RootElement.TryGetProperty("requirements", out var requirementsElement) ||
+                requirementsElement.ValueKind != JsonValueKind.Array)
+            {
+                return FallbackRequirements(deterministicRequirements, "llm_requirements_missing", promptEvidence);
+            }
+
+            var requirementElements = requirementsElement.EnumerateArray().ToArray();
+            var declaredIds = requirementElements
+                .Where(item => item.ValueKind == JsonValueKind.Object)
+                .Select(item => ReadString(item, "requirement_id"))
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToArray();
+            if (declaredIds.Distinct(StringComparer.Ordinal).Count() != declaredIds.Length)
+            {
+                return FallbackRequirements(deterministicRequirements, "duplicate_requirement_id", promptEvidence);
+            }
+
+            var parsed = requirementElements.Select(ReadStructuredRequirement).ToArray();
+            if (parsed.Any(item => item is null || !IsStructuredRequirementSemanticallyComplete(item)))
+            {
+                return FallbackRequirements(deterministicRequirements, "llm_requirement_invalid", promptEvidence);
+            }
+
+            var rows = parsed.Select(item => item!).ToArray();
+            var requiredFloorIds = deterministicRequirements
+                .Where(item => item.Priority is "P0" or "P1")
+                .Select(item => item.RequirementId)
+                .ToHashSet(StringComparer.Ordinal);
+            var returnedIds = rows.Select(item => item.RequirementId).ToHashSet(StringComparer.Ordinal);
+            if (rows.Length < deterministicRequirements.Count || !requiredFloorIds.IsSubsetOf(returnedIds))
+            {
+                return FallbackRequirements(deterministicRequirements, "llm_requirement_coverage_incomplete", promptEvidence);
+            }
+
+            var floorById = deterministicRequirements.ToDictionary(item => item.RequirementId, StringComparer.Ordinal);
+            var mergedRows = rows.Select(item => floorById.TryGetValue(item.RequirementId, out var floor)
+                ? item with
+                {
+                    SourceSection = floor.SourceSection,
+                    NormalizedSourceSummary = floor.NormalizedSourceSummary,
+                    SourceLanguage = floor.SourceLanguage,
+                    SourceExcerptPolicy = floor.SourceExcerptPolicy,
+                    NormalizedRequirement = floor.NormalizedRequirement,
+                    Priority = floor.Priority,
+                    AcceptanceMarkers = floor.AcceptanceMarkers.Concat(item.AcceptanceMarkers).Distinct(StringComparer.Ordinal).ToArray()
+                }
+                : item).ToList();
+            return new RequirementGenerationResult(mergedRows, promptEvidence);
+        }
+        catch (JsonException)
+        {
+            return FallbackRequirements(deterministicRequirements, "llm_json_parse_failed", promptEvidence);
+        }
+    }
+
+    private static string BuildStructuredRequirementPrompt(
+        string gddText,
+        JsonElement sceneRoot,
+        IReadOnlyList<GameDesignRequirementRow> deterministicRequirements)
+    {
+        var floorRows = deterministicRequirements.Select(item => new
+        {
+            item.RequirementId,
+            item.NormalizedRequirement,
+            item.Priority,
+            item.Kind,
+            item.MappedSceneIds,
+            item.MappedRequiredModuleIds
+        });
+        return $$"""
+        Produce one JSON object for the Phase A GDD requirement map.
+        Use only the frozen GDD text, confirmed scene-route JSON, and deterministic floor rows below.
+        Do not use mutable game-type guide excerpts or invent runtime technology.
+
+        GDD:
+        {{gddText}}
+
+        Confirmed scene route:
+        {{sceneRoot.GetRawText()}}
+
+        Deterministic floor rows:
+        {{JsonSerializer.Serialize(floorRows, JsonOptions())}}
+
+        Return:
+        {
+          "requirements": [
+            {
+              "requirement_id": "REQ-001",
+              "normalized_requirement": "English requirement",
+              "priority": "P0|P1|P2",
+              "kind": "mechanic|scene|ui|input|camera|animation|rendering|procedural|geometry|typed_state",
+              "mapped_scene_ids": ["scene_id"],
+              "mapped_required_module_ids": ["module_id"],
+              "status": "mapped|missing_scene|missing_module|needs_review|conflict|explicitly_deferred",
+              "capability_domain_ids": ["stable_capability_id"],
+              "godot_ui_update_ownership": {
+                "construction_owner": "owner",
+                "update_mode": "signal_driven|polling|immutable",
+                "state_owner": "owner",
+                "cleanup_policy": "policy",
+                "stable_item_identity": "identity"
+              },
+              "godot_third_person_camera_profile": {
+                "rig_ref": "repo-owned rig/profile",
+                "target_owner": "owner",
+                "input_owner": "owner",
+                "collision_owner": "owner",
+                "validation_method": "method"
+              },
+              "acceptance_markers": ["observable acceptance"]
+            }
+          ]
+        }
+        Keep every deterministic P0/P1 floor row. Preserve its requirement_id, normalized_requirement, and priority; enrich only mapping and capability evidence. Requirement IDs must be unique and stable.
+        """;
+    }
+
+    private static GameDesignRequirementRow? ReadStructuredRequirement(JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var id = ReadString(root, "requirement_id");
+        var requirement = ReadString(root, "normalized_requirement");
+        var priority = ReadString(root, "priority");
+        var kind = ReadString(root, "kind");
+        var status = ReadString(root, "status");
+        if (!Regex.IsMatch(id, "^REQ-[0-9]{3}$", RegexOptions.CultureInvariant) ||
+            string.IsNullOrWhiteSpace(requirement) ||
+            priority is not ("P0" or "P1" or "P2") ||
+            kind is not ("mechanic" or "scene" or "ui" or "input" or "camera" or "animation" or "rendering" or "procedural" or "geometry" or "typed_state") ||
+            status is not ("mapped" or "missing_scene" or "missing_module" or "needs_review" or "conflict" or "explicitly_deferred"))
+        {
+            return null;
+        }
+
+        var ownership = root.TryGetProperty("godot_ui_update_ownership", out var ownershipElement) && ownershipElement.ValueKind == JsonValueKind.Object
+            ? new GodotUiUpdateOwnership(
+                ReadString(ownershipElement, "construction_owner"),
+                ReadString(ownershipElement, "update_mode"),
+                ReadString(ownershipElement, "state_owner"),
+                ReadString(ownershipElement, "cleanup_policy"),
+                ReadString(ownershipElement, "stable_item_identity"))
+            : null;
+        var camera = root.TryGetProperty("godot_third_person_camera_profile", out var cameraElement) && cameraElement.ValueKind == JsonValueKind.Object
+            ? new GodotThirdPersonCameraProfile(
+                ReadString(cameraElement, "rig_ref"),
+                ReadString(cameraElement, "target_owner"),
+                ReadString(cameraElement, "input_owner"),
+                ReadString(cameraElement, "collision_owner"),
+                ReadString(cameraElement, "validation_method"))
+            : null;
+        return new GameDesignRequirementRow(
+            id,
+            "GDD",
+            requirement,
+            "en",
+            "normalized_english_summary",
+            requirement,
+            priority,
+            kind,
+            ReadStringArray(root, "mapped_scene_ids"),
+            ReadStringArray(root, "mapped_required_module_ids"),
+            [],
+            status,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            [],
+            ReadStringArray(root, "acceptance_markers"),
+            ReadStringArray(root, "capability_domain_ids"),
+            ownership,
+            camera);
+    }
+
+    private static bool IsStructuredRequirementSemanticallyComplete(GameDesignRequirementRow? item)
+    {
+        if (item is null)
+        {
+            return false;
+        }
+
+        if (item.CapabilityDomainIds.Any(id =>
+                !GodotUiCapabilityContract.IsKnownCapabilityDomain(id) &&
+                !GodotUiStyleCatalog.Capabilities.Any(capability => string.Equals(capability.CapabilityId, id, StringComparison.Ordinal))))
+        {
+            return false;
+        }
+
+        if (item.Kind == "ui" && item.CapabilityDomainIds.Count == 0)
+        {
+            return false;
+        }
+
+        var thirdPerson = item.NormalizedRequirement.Contains("third-person", StringComparison.OrdinalIgnoreCase) ||
+                          item.NormalizedRequirement.Contains("third person", StringComparison.OrdinalIgnoreCase);
+        return !thirdPerson || item.GodotThirdPersonCameraProfile is
+        {
+            RigRef.Length: > 0,
+            TargetOwner.Length: > 0,
+            InputOwner.Length: > 0,
+            CollisionOwner.Length: > 0,
+            ValidationMethod.Length: > 0
+        };
+    }
+
+    private static RequirementGenerationResult FallbackRequirements(
+        IReadOnlyList<GameDesignRequirementRow> deterministicRequirements,
+        string reason,
+        IReadOnlyList<object> promptEvidenceRefs)
+    {
+        var marker = $"structured_llm_fallback:{reason}";
+        var rows = deterministicRequirements.Select(item => item with
+        {
+            Status = item.Priority is "P0" or "P1" ? "needs_review" : item.Status,
+            AcceptanceMarkers = item.AcceptanceMarkers.Concat([marker]).Distinct(StringComparer.Ordinal).ToArray()
+        }).ToList();
+        return new RequirementGenerationResult(rows, promptEvidenceRefs);
+    }
+
     private static string InferKind(string text)
     {
         var lower = text.ToLowerInvariant();
-        if (lower.Contains("ui") || lower.Contains("hud") || lower.Contains("menu") || lower.Contains("button") || lower.Contains("feedback") || lower.Contains("camera"))
+        if (ContainsAsciiToken(lower, "ui") || lower.Contains("hud") || lower.Contains("menu") || lower.Contains("button") || lower.Contains("feedback") || lower.Contains("camera"))
         {
             return "ui";
         }
@@ -377,8 +756,13 @@ public sealed class GameDesignRequirementMapService
                lower.Contains("require") ||
                lower.Contains("player") ||
                lower.Contains("scene") ||
-               lower.Contains("ui") ||
+               ContainsAsciiToken(lower, "ui") ||
                lower.Contains("feedback");
+    }
+
+    private static bool ContainsAsciiToken(string text, string token)
+    {
+        return Regex.IsMatch(text, $@"(?<![a-z0-9]){Regex.Escape(token)}(?![a-z0-9])", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
     }
 
     private static string NormalizeSummary(string text)
@@ -390,7 +774,7 @@ public sealed class GameDesignRequirementMapService
     private static IReadOnlyList<ProjectWorkflowBlockingIssue> BuildBlockingIssues(IReadOnlyList<GameDesignRequirementRow> requirements)
     {
         return requirements
-            .Where(item => item.Priority is "P0" or "P1" && item.Status is "missing_scene" or "missing_module" or "needs_review" or "conflict")
+            .Where(item => item.Priority is "P0" or "P1" && item.Status is "missing_scene" or "missing_module" or "needs_review" or "conflict" or "explicitly_deferred")
             .Select(item => new ProjectWorkflowBlockingIssue(
                 $"gdd-requirements:{item.RequirementId}:requirement_gap",
                 "requirement_map_invalid",
@@ -423,7 +807,24 @@ public sealed class GameDesignRequirementMapService
             decision_utc = item.DecisionUtc,
             decision_reason = item.DecisionReason,
             affected_requirement_ids = item.AffectedRequirementIds,
-            acceptance_markers = item.AcceptanceMarkers
+            acceptance_markers = item.AcceptanceMarkers,
+            capability_domain_ids = item.CapabilityDomainIds,
+            godot_ui_update_ownership = item.GodotUiUpdateOwnership is null ? null : new
+            {
+                construction_owner = item.GodotUiUpdateOwnership.ConstructionOwner,
+                update_mode = item.GodotUiUpdateOwnership.UpdateMode,
+                state_owner = item.GodotUiUpdateOwnership.StateOwner,
+                cleanup_policy = item.GodotUiUpdateOwnership.CleanupPolicy,
+                stable_item_identity = item.GodotUiUpdateOwnership.StableItemIdentity
+            },
+            godot_third_person_camera_profile = item.GodotThirdPersonCameraProfile is null ? null : new
+            {
+                rig_ref = item.GodotThirdPersonCameraProfile.RigRef,
+                target_owner = item.GodotThirdPersonCameraProfile.TargetOwner,
+                input_owner = item.GodotThirdPersonCameraProfile.InputOwner,
+                collision_owner = item.GodotThirdPersonCameraProfile.CollisionOwner,
+                validation_method = item.GodotThirdPersonCameraProfile.ValidationMethod
+            }
         };
     }
 
@@ -449,7 +850,34 @@ public sealed class GameDesignRequirementMapService
             ReadString(root, "decision_utc"),
             ReadString(root, "decision_reason"),
             ReadStringArray(root, "affected_requirement_ids"),
-            ReadStringArray(root, "acceptance_markers"));
+            ReadStringArray(root, "acceptance_markers"),
+            ReadStringArray(root, "capability_domain_ids"),
+            ReadGodotUiUpdateOwnership(root),
+            ReadGodotThirdPersonCameraProfile(root));
+    }
+
+    private static GodotUiUpdateOwnership? ReadGodotUiUpdateOwnership(JsonElement root)
+    {
+        return root.TryGetProperty("godot_ui_update_ownership", out var value) && value.ValueKind == JsonValueKind.Object
+            ? new GodotUiUpdateOwnership(
+                ReadString(value, "construction_owner"),
+                ReadString(value, "update_mode"),
+                ReadString(value, "state_owner"),
+                ReadString(value, "cleanup_policy"),
+                ReadString(value, "stable_item_identity"))
+            : null;
+    }
+
+    private static GodotThirdPersonCameraProfile? ReadGodotThirdPersonCameraProfile(JsonElement root)
+    {
+        return root.TryGetProperty("godot_third_person_camera_profile", out var value) && value.ValueKind == JsonValueKind.Object
+            ? new GodotThirdPersonCameraProfile(
+                ReadString(value, "rig_ref"),
+                ReadString(value, "target_owner"),
+                ReadString(value, "input_owner"),
+                ReadString(value, "collision_owner"),
+                ReadString(value, "validation_method"))
+            : null;
     }
 
     private static GameDesignRequirementMapResult Blocked(string projectId, string domainCode, string summary, string path)
@@ -588,4 +1016,28 @@ public sealed record GameDesignRequirementRow(
     string DecisionUtc,
     string DecisionReason,
     IReadOnlyList<string> AffectedRequirementIds,
-    IReadOnlyList<string> AcceptanceMarkers);
+    IReadOnlyList<string> AcceptanceMarkers,
+    IReadOnlyList<string>? CapabilityDomainIds = null,
+    GodotUiUpdateOwnership? GodotUiUpdateOwnership = null,
+    GodotThirdPersonCameraProfile? GodotThirdPersonCameraProfile = null)
+{
+    public IReadOnlyList<string> CapabilityDomainIds { get; init; } = CapabilityDomainIds ?? [];
+}
+
+public sealed record GodotUiUpdateOwnership(
+    string ConstructionOwner,
+    string UpdateMode,
+    string StateOwner,
+    string CleanupPolicy,
+    string StableItemIdentity);
+
+public sealed record GodotThirdPersonCameraProfile(
+    string RigRef,
+    string TargetOwner,
+    string InputOwner,
+    string CollisionOwner,
+    string ValidationMethod);
+
+internal sealed record RequirementGenerationResult(
+    List<GameDesignRequirementRow> Requirements,
+    IReadOnlyList<object> PromptEvidenceRefs);

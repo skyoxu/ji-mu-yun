@@ -4044,6 +4044,65 @@ public sealed class BrowserUiRendererTests
     }
 
     [Fact]
+    public void Program_Phase1SceneAndGddEndpointsUsePersistedHashStateInsteadOfPlaceholders()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var confirmIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/scene-route/confirm\"", StringComparison.Ordinal);
+        var requirementMapIndex = source.IndexOf("app.MapPost(\"/api/projects/{projectId}/gdd/requirements-map\"", StringComparison.Ordinal);
+        confirmIndex.Should().BeGreaterThanOrEqualTo(0);
+        requirementMapIndex.Should().BeGreaterThan(confirmIndex);
+        var endpointSource = source[confirmIndex..requirementMapIndex];
+        endpointSource.Should().Contain("phase1State.ConfirmSceneRouteAsync");
+        endpointSource.Should().Contain("phase1State.RecordGeneratedGddAsync");
+        endpointSource.Should().Contain("phase1State.GetSceneRouteAsync");
+        endpointSource.Should().Contain("phase1State.GetGddDocumentStateAsync");
+        endpointSource.Should().NotContain("confirmedSceneRouteHash = \"\"");
+        endpointSource.Should().NotContain("generatedGddHash = \"\"");
+        endpointSource.Should().NotContain("sceneRouteRecordedGeneratedGddHash = \"\"");
+    }
+
+    [Fact]
+    public void Program_Phase1EndpointsApplyServerSideNoStorePolicy()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+        var routeTokens = new[]
+        {
+            "app.MapPost(\"/api/projects/{projectId}/gdd/scene-route/confirm\"",
+            "app.MapGet(\"/api/projects/{projectId}/gdd/scene-route/latest\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd/document/generate\"",
+            "app.MapGet(\"/api/projects/{projectId}/gdd/document/status\"",
+            "app.MapPost(\"/api/projects/{projectId}/gdd/requirements-map\"",
+            "app.MapGet(\"/api/projects/{projectId}/gdd/requirements-map/latest\"",
+            "app.MapPost(\"/api/projects/{projectId}/prototype-contract/freeze\"",
+            "app.MapGet(\"/api/projects/{projectId}/prototype-contract/status\""
+        };
+
+        foreach (var routeToken in routeTokens)
+        {
+            var routeIndex = source.IndexOf(routeToken, StringComparison.Ordinal);
+            routeIndex.Should().BeGreaterThanOrEqualTo(0, routeToken);
+            var nextRouteIndex = source.IndexOf("\n});", routeIndex, StringComparison.Ordinal);
+            nextRouteIndex.Should().BeGreaterThan(routeIndex, routeToken);
+            source[routeIndex..nextRouteIndex].Should().Contain("ApplyNoStore(context);", routeToken);
+        }
+    }
+
+    [Fact]
     public void Program_GddEndpointReturnsConflictBeforeAppendingAlreadyExistsToChatHistory()
     {
         var source = File.ReadAllText(Path.GetFullPath(Path.Combine(

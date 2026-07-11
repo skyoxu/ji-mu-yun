@@ -39,7 +39,7 @@ public sealed class GddToModuleImplementationPhasesTests
             "gdd-document-generation",
             "gdd-requirements",
             "prototype-contract",
-            "prototype-skeleton",
+            "prototype-skeleton-guard",
             "workflow-recommendation",
             "iteration-plan",
             "execute-next-goal",
