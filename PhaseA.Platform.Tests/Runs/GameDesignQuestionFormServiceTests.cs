@@ -357,6 +357,62 @@ public sealed class GameDesignQuestionFormServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_ShouldStartReplacement_WhenSameCacheKeyIsCancelled()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
+        var service = new GameDesignQuestionFormService(store, options, llm);
+        using var cancellation = new CancellationTokenSource();
+
+        var first = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest(), cancellation.Token);
+        await WaitUntilAsync(() => llm.CallCount == 1);
+        cancellation.Cancel();
+        var second = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest());
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
+        var result = await second;
+
+        result.Should().NotBeNull();
+        result!.Status.Should().Be("ready");
+        llm.CallCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldBoundLastWaiterCleanup_WhenLlmIgnoresCancellation()
+    {
+        using var workspace = new TempWorkspace();
+        using var database = TempSqliteDatabase.Create();
+        var options = Options(workspace.Root, Directory.GetCurrentDirectory());
+        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var account = await store.CreateUserAccountAsync("account-one", 10);
+        var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
+        var llm = new BlockingLlmRouteEngine(ValidSchemaJson());
+        var service = new GameDesignQuestionFormService(
+            store,
+            options,
+            llm,
+            lastWaiterCleanupTimeout: TimeSpan.FromMilliseconds(50));
+        using var cancellation = new CancellationTokenSource();
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        var request = service.CreateAsync(account.AccountId, projectId, new GameDesignQuestionFormRequest(), cancellation.Token);
+        await llm.Started;
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await request);
+        stopwatch.Stop();
+        llm.Release();
+
+        stopwatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
     public void BuildFallbackFields_ShouldUseProjectNameSignals_WhenExplicitGameTypeIsMissing()
     {
         var project = new ProjectSnapshot(
@@ -485,14 +541,16 @@ public sealed class GameDesignQuestionFormServiceTests
         private readonly bool _succeeded;
         private readonly string? _failureCode;
         private readonly TimeSpan _completionDelay;
+        private readonly bool _ignoreCancellation;
         private int _callCount;
 
         public FakeLlmRouteEngine(
             string json,
             bool succeeded = true,
             string? failureCode = null,
-            TimeSpan completionDelay = default)
-            : this(new[] { json }, succeeded, failureCode, completionDelay)
+            TimeSpan completionDelay = default,
+            bool ignoreCancellation = false)
+            : this(new[] { json }, succeeded, failureCode, completionDelay, ignoreCancellation)
         {
         }
 
@@ -500,12 +558,14 @@ public sealed class GameDesignQuestionFormServiceTests
             IEnumerable<string> jsonResponses,
             bool succeeded = true,
             string? failureCode = null,
-            TimeSpan completionDelay = default)
+            TimeSpan completionDelay = default,
+            bool ignoreCancellation = false)
         {
             _jsonResponses = new Queue<string>(jsonResponses);
             _succeeded = succeeded;
             _failureCode = failureCode;
             _completionDelay = completionDelay;
+            _ignoreCancellation = ignoreCancellation;
         }
 
         public LlmRouteRequest? LastRequest { get; private set; }
@@ -517,7 +577,7 @@ public sealed class GameDesignQuestionFormServiceTests
             Interlocked.Increment(ref _callCount);
             if (_completionDelay > TimeSpan.Zero)
             {
-                await Task.Delay(_completionDelay, cancellationToken);
+                await Task.Delay(_completionDelay, _ignoreCancellation ? CancellationToken.None : cancellationToken);
             }
 
             var json = _jsonResponses.Count > 1
@@ -532,6 +592,40 @@ public sealed class GameDesignQuestionFormServiceTests
                 _failureCode,
                 null,
                 _succeeded ? 0 : 1,
+                "",
+                "",
+                null,
+                1,
+                request.Prompt.Length,
+                Encoding.UTF8.GetByteCount(request.Prompt),
+                1);
+        }
+    }
+
+    private sealed class BlockingLlmRouteEngine(string json) : ILlmRouteEngine
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task Started => _started.Task;
+
+        public void Release()
+        {
+            _release.TrySetResult();
+        }
+
+        public async Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            _started.TrySetResult();
+            await _release.Task;
+            return new LlmRouteResult(
+                true,
+                json,
+                json,
+                request.Model,
+                null,
+                null,
+                0,
                 "",
                 "",
                 null,

@@ -14,8 +14,10 @@ public sealed class GddToModuleSplitAddedRequirementsTests
         GddToModuleSplitAddedRequirements.LedgerColumns.Should().BeEquivalentTo([
             "split_added_id",
             "Requirement",
-            "Primary owner doc",
-            "Acceptance reference"
+            "owner_id",
+            "First required phase",
+            "Primary owner docs",
+            "acceptance_ids"
         ]);
         GddToModuleSplitAddedRequirements.CoverageStatuses.Should().BeEquivalentTo([
             "implemented",
@@ -23,6 +25,7 @@ public sealed class GddToModuleSplitAddedRequirementsTests
             "explicitly_deferred"
         ]);
         GddToModuleSplitAddedRequirements.RequiredCoverageFields.Should().Contain([
+            "acceptance_ids",
             "phase_exit_review_ref",
             "expiry_or_recheck_trigger",
             "defer_reason"
@@ -34,7 +37,7 @@ public sealed class GddToModuleSplitAddedRequirementsTests
     {
         var rows = Rows();
 
-        rows.Should().HaveCount(16);
+        rows.Should().HaveCount(18);
         rows.Select(row => row.SplitAddedId).Should().OnlyHaveUniqueItems();
         rows.Select(row => row.SplitAddedId).Should().Contain([
             "split_added_workflow_action_import_gdd_form",
@@ -43,8 +46,10 @@ public sealed class GddToModuleSplitAddedRequirementsTests
             "split_added_godot_third_person_camera_profile"
         ]);
         rows.Should().OnlyContain(row =>
+            row.OwnerId.StartsWith("OWNER-", StringComparison.Ordinal) &&
+            !string.IsNullOrWhiteSpace(row.FirstRequiredPhase) &&
             row.PrimaryOwnerDocs.Count > 0 &&
-            !string.IsNullOrWhiteSpace(row.AcceptanceReference));
+            row.AcceptanceIds.Count > 0);
     }
 
     [Fact]
@@ -52,8 +57,8 @@ public sealed class GddToModuleSplitAddedRequirementsTests
     {
         var rows = new[]
         {
-            new SplitAddedRequirementRow("bad_id", "", [], "", GddToModuleSplitAddedRequirements.LedgerColumns.Count),
-            new SplitAddedRequirementRow("bad_id", "Duplicate", ["02a-route-state-artifacts.md"], "Evidence.", GddToModuleSplitAddedRequirements.LedgerColumns.Count)
+            new SplitAddedRequirementRow("bad_id", "", "", "", [], [], GddToModuleSplitAddedRequirements.LedgerColumns.Count),
+            new SplitAddedRequirementRow("bad_id", "Duplicate", "bad-owner", "Phase 0A", ["02a-route-state-artifacts.md", "02a-route-state-artifacts.md"], ["AC-DUP", "AC-DUP"], GddToModuleSplitAddedRequirements.LedgerColumns.Count)
         };
 
         var issues = GddToModuleSplitAddedRequirements.ValidateLedgerRows(rows);
@@ -61,8 +66,13 @@ public sealed class GddToModuleSplitAddedRequirementsTests
         issues.Should().Contain(issue => issue.Reason == "invalid_split_added_id");
         issues.Should().Contain(issue => issue.Reason == "duplicate_split_added_id");
         issues.Should().Contain(issue => issue.Reason == "missing_requirement");
+        issues.Should().Contain(issue => issue.Reason == "missing_owner_id");
+        issues.Should().Contain(issue => issue.Reason == "invalid_owner_id");
+        issues.Should().Contain(issue => issue.Reason == "missing_first_required_phase");
         issues.Should().Contain(issue => issue.Reason == "missing_primary_owner_doc");
-        issues.Should().Contain(issue => issue.Reason == "missing_acceptance_reference");
+        issues.Should().Contain(issue => issue.Reason == "missing_acceptance_id");
+        issues.Should().Contain(issue => issue.Reason == "duplicate_primary_owner_doc");
+        issues.Should().Contain(issue => issue.Reason == "duplicate_acceptance_id");
     }
 
     [Fact]
@@ -72,12 +82,104 @@ public sealed class GddToModuleSplitAddedRequirementsTests
     }
 
     [Fact]
+    public void AcceptanceRegistry_ShouldMatchEveryLedgerOwnerAndAcceptanceId()
+    {
+        var registry = GddToModuleSplitAddedRequirements.ParseAcceptanceRegistry(
+            ReadRepoFile(GddToModuleSplitAddedRequirements.AcceptanceRegistryPath));
+
+        registry.Owners.Should().ContainKey("OWNER-PHASEA-WORKFLOW");
+        registry.AcceptanceRefs.Should().ContainKey("AC-IMPORT-GDD-DESCRIPTOR");
+        registry.ExpectedRequirements.Should().HaveCount(18);
+        GddToModuleSplitAddedRequirements.ValidateAcceptanceRegistry(Rows(), registry).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AcceptanceRegistryValidator_ShouldRejectUnknownOwnersAndMismatchedAcceptanceIds()
+    {
+        var row = new SplitAddedRequirementRow(
+            "split_added_example",
+            "Example",
+            "OWNER-UNKNOWN",
+            "Phase 0A",
+            ["02a-route-state-artifacts.md"],
+            ["AC-MISSING"],
+            GddToModuleSplitAddedRequirements.LedgerColumns.Count);
+        var registry = GddToModuleSplitAddedRequirements.ParseAcceptanceRegistry(
+            ReadRepoFile(GddToModuleSplitAddedRequirements.AcceptanceRegistryPath));
+
+        var issues = GddToModuleSplitAddedRequirements.ValidateAcceptanceRegistry([row], registry);
+
+        issues.Should().Contain(issue => issue.Reason == "unknown_owner_id");
+        issues.Should().Contain(issue => issue.Reason == "missing_expected_requirement");
+        issues.Should().Contain(issue => issue.Reason == "unknown_acceptance_id");
+        issues.Should().Contain(issue => issue.Reason == "orphan_expected_requirement");
+    }
+
+    [Fact]
+    public void AcceptanceRegistryParser_ShouldFailClosedWithStableReasons()
+    {
+        var malformed = GddToModuleSplitAddedRequirements.ParseAcceptanceRegistry("{");
+        var incomplete = GddToModuleSplitAddedRequirements.ParseAcceptanceRegistry("{}");
+
+        malformed.ParseIssues.Should().Contain(issue => issue.Reason == "invalid_registry_json");
+        incomplete.ParseIssues.Should().Contain(issue => issue.Reason == "missing_registry_schema_version");
+        incomplete.ParseIssues.Should().Contain(issue => issue.Reason == "missing_registry_path_base");
+        incomplete.ParseIssues.Should().Contain(issue => issue.Reason == "missing_registry_owners");
+        incomplete.ParseIssues.Should().Contain(issue => issue.Reason == "missing_registry_acceptance_refs");
+        incomplete.ParseIssues.Should().Contain(issue => issue.Reason == "missing_registry_expected_requirements");
+    }
+
+    [Fact]
+    public void AcceptanceRegistryValidator_ShouldRejectDuplicatesEmptyFieldsAndOrphans()
+    {
+        var registry = GddToModuleSplitAddedRequirements.ParseAcceptanceRegistry(
+            """
+            {
+              "schema_version": "wrong",
+              "path_base": "wrong",
+              "owners": {
+                "OWNER-EXAMPLE": ["owner.md", "owner.md"],
+                "OWNER-UNUSED": ["unused.md"]
+              },
+              "acceptance_refs": {
+                "AC-EXAMPLE": {"owner_id":"OWNER-EXAMPLE","file":"","section":"","match_text":""},
+                "AC-ORPHAN": {"owner_id":"OWNER-EXAMPLE","file":"owner.md","section":"Acceptance","match_text":"must pass"}
+              },
+              "expected_split_added_requirements": {
+                "split_added_example": {"owner_id":"OWNER-EXAMPLE","acceptance_ids":["AC-EXAMPLE","AC-EXAMPLE"]}
+              }
+            }
+            """);
+        var row = new SplitAddedRequirementRow(
+            "split_added_example",
+            "Example",
+            "OWNER-EXAMPLE",
+            "Phase 0A",
+            ["owner.md"],
+            ["AC-EXAMPLE"],
+            GddToModuleSplitAddedRequirements.LedgerColumns.Count);
+
+        var issues = GddToModuleSplitAddedRequirements.ValidateAcceptanceRegistry([row], registry);
+
+        issues.Should().Contain(issue => issue.Reason == "invalid_registry_schema_version");
+        issues.Should().Contain(issue => issue.Reason == "invalid_registry_path_base");
+        issues.Should().Contain(issue => issue.Reason == "duplicate_registry_owner_doc");
+        issues.Should().Contain(issue => issue.Reason == "missing_acceptance_ref_file");
+        issues.Should().Contain(issue => issue.Reason == "missing_acceptance_ref_section");
+        issues.Should().Contain(issue => issue.Reason == "missing_acceptance_ref_match_text");
+        issues.Should().Contain(issue => issue.Reason == "duplicate_expected_acceptance_id");
+        issues.Should().Contain(issue => issue.Reason == "orphan_owner_id");
+        issues.Should().Contain(issue => issue.Reason == "orphan_acceptance_id");
+    }
+
+    [Fact]
     public void CoverageValidator_ShouldRequireEveryLedgerRowAndOwnerDocEvidence()
     {
         var rows = Rows();
         var coverage = rows.Select(row => new SplitAddedRequirementCoverageRow(
             row.SplitAddedId,
             "implemented",
+            row.AcceptanceIds,
             row.PrimaryOwnerDocs,
             ["PhaseA.Platform.Tests/Workflow/GddToModuleSplitAddedRequirementsTests.cs"],
             "logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-1-exit-review-example.json",
@@ -97,6 +199,7 @@ public sealed class GddToModuleSplitAddedRequirementsTests
             row.SplitAddedId == "split_added_full_target_capability_schedule" ? "explicitly_deferred" : "done",
             [],
             [],
+            [],
             "",
             "",
             "",
@@ -107,6 +210,7 @@ public sealed class GddToModuleSplitAddedRequirementsTests
         issues.Should().Contain(issue => issue.SplitAddedId == rows[0].SplitAddedId && issue.Reason == "missing_coverage_row");
         issues.Should().Contain(issue => issue.Reason == "invalid_coverage_status");
         issues.Should().Contain(issue => issue.Reason == "coverage_missing_primary_owner_doc_ref");
+        issues.Should().Contain(issue => issue.Reason == "coverage_acceptance_ids_mismatch");
         issues.Should().Contain(issue => issue.Reason == "coverage_missing_acceptance_or_phase_evidence");
         issues.Should().Contain(issue => issue.Reason == "deferred_or_not_applicable_missing_owner_recheck_or_reason");
     }
@@ -120,6 +224,7 @@ public sealed class GddToModuleSplitAddedRequirementsTests
         root.GetProperty("schema_version").GetString().Should().Be("gdd-to-module-split-added-requirements.v1");
         root.GetProperty("ledger_id").GetString().Should().Be(GddToModuleSplitAddedRequirements.LedgerId);
         root.GetProperty("execution_plan_ledger_path").GetString().Should().Be(GddToModuleSplitAddedRequirements.ExecutionPlanLedgerPath);
+        root.GetProperty("acceptance_registry_path").GetString().Should().Be(GddToModuleSplitAddedRequirements.AcceptanceRegistryPath);
         root.GetProperty("coverage_statuses").EnumerateArray().Select(item => item.GetString())
             .Should()
             .BeEquivalentTo(GddToModuleSplitAddedRequirements.CoverageStatuses);

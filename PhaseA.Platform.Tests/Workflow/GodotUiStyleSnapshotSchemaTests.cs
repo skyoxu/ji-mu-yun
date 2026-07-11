@@ -156,6 +156,17 @@ public sealed class GodotUiStyleSnapshotSchemaTests
         {
             limitation.TryGetProperty(field, out _).Should().BeTrue($"{field} is required for deterministic substitute acceptance");
         }
+
+        foreach (var field in GodotUiStyleSnapshotSchema.VisualEvidenceRequiredFields)
+        {
+            visualEvidence.TryGetProperty(field, out _).Should().BeTrue($"{field} is required for visual evidence readback");
+        }
+
+        var validation = document.RootElement.GetProperty("visual_validation_refs").EnumerateArray().First();
+        foreach (var field in GodotUiStyleSnapshotSchema.VisualValidationRequiredFields)
+        {
+            validation.TryGetProperty(field, out _).Should().BeTrue($"{field} is required for visual validation evidence");
+        }
     }
 
     [Fact]

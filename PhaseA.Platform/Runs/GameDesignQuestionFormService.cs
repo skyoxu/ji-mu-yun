@@ -17,12 +17,14 @@ public sealed class GameDesignQuestionFormService
     private static readonly TimeSpan AgentSchemaCacheTtl = TimeSpan.FromHours(24);
     private static readonly TimeSpan FallbackSchemaCacheTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan DefaultSchemaGenerationTimeout = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan DefaultLastWaiterCleanupTimeout = TimeSpan.FromSeconds(2);
 
     private readonly PhaseAMetadataStore _metadataStore;
     private readonly PhaseAPlatformOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
     private readonly TimeSpan _schemaGenerationTimeout;
+    private readonly TimeSpan _lastWaiterCleanupTimeout;
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, CachedQuestionFormSchema> _schemaCache = new(StringComparer.Ordinal);
     private readonly Dictionary<string, InFlightQuestionFormSchema> _inFlightSchemas = new(StringComparer.Ordinal);
@@ -33,29 +35,57 @@ public sealed class GameDesignQuestionFormService
 
     private sealed class InFlightQuestionFormSchema
     {
+        private readonly object _waiterLock = new();
         private int _waiterCount;
+        private bool _acceptingWaiters = true;
+        private Task<GameDesignQuestionFormResult>? _task;
 
-        public InFlightQuestionFormSchema(Task<GameDesignQuestionFormResult> task, CancellationTokenSource? cancellation)
+        public InFlightQuestionFormSchema(CancellationTokenSource? cancellation)
         {
-            Task = task;
             Cancellation = cancellation;
         }
 
-        public Task<GameDesignQuestionFormResult> Task { get; }
+        public Task<GameDesignQuestionFormResult> Task => _task ?? throw new InvalidOperationException("In-flight question form schema has not started.");
 
         private CancellationTokenSource? Cancellation { get; }
 
-        public InFlightQuestionFormWaiter AddWaiter()
+        public void Start(Task<GameDesignQuestionFormResult> task)
         {
-            Interlocked.Increment(ref _waiterCount);
-            return new InFlightQuestionFormWaiter(this);
+            if (Interlocked.CompareExchange(ref _task, task, null) is not null)
+            {
+                throw new InvalidOperationException("In-flight question form schema already started.");
+            }
         }
 
-        private void ReleaseWaiter()
+        public bool TryAddWaiter(out InFlightQuestionFormWaiter? waiter)
         {
-            if (Interlocked.Decrement(ref _waiterCount) == 0 && !Task.IsCompleted)
+            lock (_waiterLock)
             {
-                Cancellation?.Cancel();
+                if (!_acceptingWaiters)
+                {
+                    waiter = null;
+                    return false;
+                }
+
+                _waiterCount++;
+                waiter = new InFlightQuestionFormWaiter(this);
+                return true;
+            }
+        }
+
+        private Task<GameDesignQuestionFormResult>? ReleaseWaiter()
+        {
+            lock (_waiterLock)
+            {
+                _waiterCount--;
+                if (_waiterCount == 0 && !Task.IsCompleted)
+                {
+                    _acceptingWaiters = false;
+                    Cancellation?.Cancel();
+                    return Task;
+                }
+
+                return null;
             }
         }
 
@@ -79,7 +109,13 @@ public sealed class GameDesignQuestionFormService
 
             public void Dispose()
             {
-                Interlocked.Exchange(ref _schema, null)?.ReleaseWaiter();
+                DisposeAndGetCancellationCleanupTask();
+            }
+
+            public Task<GameDesignQuestionFormResult>? DisposeAndGetCancellationCleanupTask()
+            {
+                var schema = Interlocked.Exchange(ref _schema, null);
+                return schema?.ReleaseWaiter();
             }
         }
     }
@@ -89,13 +125,15 @@ public sealed class GameDesignQuestionFormService
         PhaseAPlatformOptions options,
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
-        TimeSpan? schemaGenerationTimeout = null)
+        TimeSpan? schemaGenerationTimeout = null,
+        TimeSpan? lastWaiterCleanupTimeout = null)
     {
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine;
         _concurrencyLimiter = concurrencyLimiter ?? new QuestionFormConcurrencyLimiter();
         _schemaGenerationTimeout = schemaGenerationTimeout ?? DefaultSchemaGenerationTimeout;
+        _lastWaiterCleanupTimeout = lastWaiterCleanupTimeout ?? DefaultLastWaiterCleanupTimeout;
     }
 
     public async Task<GameDesignQuestionFormResult?> CreateAsync(
@@ -129,9 +167,27 @@ public sealed class GameDesignQuestionFormService
 
         cancellationToken.ThrowIfCancellationRequested();
         var schemaWaiter = GetOrStartSchemaWaiter(cacheKey, project, model, accountId);
+        var schemaTask = schemaWaiter.Task;
         try
         {
-            return await schemaWaiter.Task.WaitAsync(cancellationToken);
+            return await schemaTask.WaitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            var cleanupTask = schemaWaiter.DisposeAndGetCancellationCleanupTask();
+            if (cleanupTask is not null)
+            {
+                try
+                {
+                    await cleanupTask.WaitAsync(_lastWaiterCleanupTimeout);
+                }
+                catch (Exception exception) when (exception is OperationCanceledException or TimeoutException)
+                {
+                    // Preserve caller cancellation after bounded cleanup; the in-flight task still owns the lease.
+                }
+            }
+
+            throw;
         }
         finally
         {
@@ -149,22 +205,42 @@ public sealed class GameDesignQuestionFormService
         {
             if (TryReadCacheLocked(cacheKey, DateTimeOffset.UtcNow, out var cached))
             {
-                return new InFlightQuestionFormSchema(
-                    Task.FromResult(cached!),
-                    null).AddWaiter();
+                var completed = new InFlightQuestionFormSchema(null);
+                completed.Start(Task.FromResult(cached!));
+                completed.TryAddWaiter(out var completedWaiter);
+                return completedWaiter!;
             }
 
             if (_inFlightSchemas.TryGetValue(cacheKey, out var existing))
             {
-                return existing.AddWaiter();
+                if (existing.TryAddWaiter(out var existingWaiter))
+                {
+                    return existingWaiter!;
+                }
+
+                var replacement = StartSchema(cacheKey, project, model, accountId, existing.Task);
+                replacement.TryAddWaiter(out var replacementWaiter);
+                return replacementWaiter!;
             }
 
-            var cancellation = new CancellationTokenSource();
-            var task = CreateAndCacheSchemaAsync(cacheKey, project, model, accountId, cancellation.Token);
-            var schema = new InFlightQuestionFormSchema(task, cancellation);
-            _inFlightSchemas[cacheKey] = schema;
-            return schema.AddWaiter();
+            var schema = StartSchema(cacheKey, project, model, accountId, null);
+            schema.TryAddWaiter(out var waiter);
+            return waiter!;
         }
+    }
+
+    private InFlightQuestionFormSchema StartSchema(
+        string cacheKey,
+        ProjectSnapshot project,
+        string model,
+        string accountId,
+        Task<GameDesignQuestionFormResult>? predecessor)
+    {
+        var cancellation = new CancellationTokenSource();
+        var schema = new InFlightQuestionFormSchema(cancellation);
+        _inFlightSchemas[cacheKey] = schema;
+        schema.Start(CreateAndCacheSchemaAsync(cacheKey, project, model, accountId, schema, predecessor, cancellation.Token));
+        return schema;
     }
 
     private async Task<GameDesignQuestionFormResult> CreateAndCacheSchemaAsync(
@@ -172,17 +248,34 @@ public sealed class GameDesignQuestionFormService
         ProjectSnapshot project,
         string model,
         string accountId,
+        InFlightQuestionFormSchema schema,
+        Task<GameDesignQuestionFormResult>? predecessor,
         CancellationToken cancellationToken)
     {
         try
         {
+            if (predecessor is not null)
+            {
+                try
+                {
+                    await predecessor;
+                }
+                catch (Exception)
+                {
+                    // A replacement request waits for the cancelled predecessor to release its limiter lease.
+                }
+            }
+
             return await CreateAndCacheSchemaCoreAsync(cacheKey, project, model, accountId, cancellationToken);
         }
         finally
         {
             lock (_cacheLock)
             {
-                _inFlightSchemas.Remove(cacheKey);
+                if (_inFlightSchemas.TryGetValue(cacheKey, out var current) && ReferenceEquals(current, schema))
+                {
+                    _inFlightSchemas.Remove(cacheKey);
+                }
             }
         }
     }

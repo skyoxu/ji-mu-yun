@@ -16,6 +16,11 @@
     "97-split-added-requirements-ledger.md",
     "04d-godot-engine-semantics-and-reference-examples.md"
   ],
+  "allowed_split_added_source_refs": [
+    "schemas/gdd-to-module-capability-inventory.v1.json",
+    "schemas/split-added-acceptance-registry.v1.json"
+  ],
+  "allowed_split_added_source_range": "1378-2178",
   "json_fixture_counted_as_source_coverage": [
     "schemas/godot-ui-style-contract.v1.example.json"
   ]

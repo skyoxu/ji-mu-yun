@@ -436,39 +436,25 @@ public sealed class ArtifactReadbackServiceTests
         var user = await store.CreateUserAccountAsync("metrics-prune-user", 1);
         var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Prune Game");
 
-        for (var index = 0; index < 505; index++)
+        await SeedRunDurationMetricsAsync(
+            database.ConnectionString,
+            user.AccountId,
+            user.Username,
+            projectId,
+            "Metrics Prune Game",
+            505);
+
+        foreach (var runType in new[] { "prototype-iteration-goal", "prototype-chat", "project-asset-generation" })
         {
-            var runId = await store.CreateRunAsync(projectId, null, "prototype-iteration-goal");
+            var runId = await store.CreateRunAsync(projectId, null, runType);
             await CompleteRunWithTimingAsync(
                 database.ConnectionString,
                 store,
                 runId,
-                $"2026-06-01T00:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-01T01:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-01T02:{index / 60:00}:{index % 60:00}.0000000Z",
-                index + 1);
-        }
-
-        for (var index = 0; index < 505; index++)
-        {
-            var chatRunId = await store.CreateRunAsync(projectId, null, "prototype-chat");
-            await CompleteRunWithTimingAsync(
-                database.ConnectionString,
-                store,
-                chatRunId,
-                $"2026-06-02T00:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-02T01:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-02T02:{index / 60:00}:{index % 60:00}.0000000Z",
-                null);
-            var assetRunId = await store.CreateRunAsync(projectId, null, "project-asset-generation");
-            await CompleteRunWithTimingAsync(
-                database.ConnectionString,
-                store,
-                assetRunId,
-                $"2026-06-03T00:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-03T01:{index / 60:00}:{index % 60:00}.0000000Z",
-                $"2026-06-03T02:{index / 60:00}:{index % 60:00}.0000000Z",
-                null);
+                "2026-06-04T00:00:00.0000000Z",
+                "2026-06-04T00:00:01.0000000Z",
+                "2026-06-04T00:00:02.0000000Z",
+                runType == "prototype-iteration-goal" ? 1 : null);
         }
 
         var service = new ArtifactReadbackService(store, options);
@@ -2454,6 +2440,77 @@ public sealed class ArtifactReadbackServiceTests
         fixCommand.Parameters.AddWithValue("$id", runId);
         fixCommand.Parameters.AddWithValue("$finished_utc", finishedUtc);
         await fixCommand.ExecuteNonQueryAsync();
+    }
+
+    private static async Task SeedRunDurationMetricsAsync(
+        string connectionString,
+        string accountId,
+        string username,
+        string projectId,
+        string projectName,
+        int count)
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            WITH RECURSIVE sequence(value) AS (
+                SELECT 0
+                UNION ALL
+                SELECT value + 1 FROM sequence WHERE value + 1 < $count
+            ),
+            buckets(bucket, run_type, day_offset) AS (
+                VALUES
+                    ('workflow', 'prototype-iteration-goal', 0),
+                    ('chat', 'prototype-chat', 1),
+                    ('asset', 'project-asset-generation', 2)
+            )
+            INSERT INTO run_duration_metrics (
+                id,
+                bucket,
+                account_id,
+                username,
+                project_id,
+                project_name,
+                game_name,
+                run_id,
+                run_type,
+                status,
+                created_utc,
+                started_utc,
+                finished_utc,
+                queue_position_at_start,
+                queue_seconds,
+                runtime_seconds,
+                exit_code)
+            SELECT
+                lower(hex(randomblob(16))),
+                bucket,
+                $account_id,
+                $username,
+                $project_id,
+                $project_name,
+                $project_name,
+                bucket || '-' || printf('%04d', value),
+                run_type,
+                'succeeded',
+                strftime('%Y-%m-%dT%H:%M:%fZ', '2026-06-01T00:00:00Z', '+' || day_offset || ' days', '+' || value || ' seconds'),
+                strftime('%Y-%m-%dT%H:%M:%fZ', '2026-06-01T00:00:01Z', '+' || day_offset || ' days', '+' || value || ' seconds'),
+                strftime('%Y-%m-%dT%H:%M:%fZ', '2026-06-01T00:00:02Z', '+' || day_offset || ' days', '+' || value || ' seconds'),
+                CASE WHEN bucket = 'workflow' THEN value + 1 ELSE NULL END,
+                1.0,
+                1.0,
+                0
+            FROM sequence
+            CROSS JOIN buckets;
+            """;
+        command.Parameters.AddWithValue("$count", count);
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$username", username);
+        command.Parameters.AddWithValue("$project_id", projectId);
+        command.Parameters.AddWithValue("$project_name", projectName);
+        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)

@@ -12,9 +12,15 @@ public sealed class GddToModuleOriginalSplitAuditTests
     {
         GddToModuleOriginalSplitAudit.AuditHash.Should().NotBeNullOrWhiteSpace();
         GddToModuleOriginalSplitAudit.OriginalSourceLineCount.Should().Be(2739);
+        GddToModuleOriginalSplitAudit.RequiredInventoryEntries.Should().HaveCount(29);
         GddToModuleOriginalSplitAudit.RequiredInventoryEntries.Should().Contain([
             "00-index.md",
             "schemas/godot-ui-style-contract.v1.example.json",
+            "schemas/godot-ui-style-contract.v1.profile.json",
+            "schemas/godot-ui-style-contract.v1.field-map.json",
+            "schemas/gdd-to-module-capability-inventory.v1.json",
+            "schemas/split-added-acceptance-registry.v1.json",
+            "schemas/workflow-action-contracts.v1.json",
             "96-global-review-standard.md",
             "97-split-added-requirements-ledger.md",
             "98-original-to-split-audit.md",
@@ -77,6 +83,15 @@ public sealed class GddToModuleOriginalSplitAuditTests
 
         issues.Should().Contain(issue => issue.Reason == "missing_inventory_entry" && issue.Detail == "99-source-coverage.md");
         issues.Should().Contain(issue => issue.Reason == "duplicate_inventory_entry" && issue.Detail == "00-index.md");
+    }
+
+    [Fact]
+    public void InventoryValidator_ShouldRejectUnexpectedEntries()
+    {
+        var issues = GddToModuleOriginalSplitAudit.ValidateInventory(
+            GddToModuleOriginalSplitAudit.RequiredInventoryEntries.Concat(["schemas/unexpected.json"]));
+
+        issues.Should().Contain(issue => issue.Reason == "unexpected_inventory_entry" && issue.Detail == "schemas/unexpected.json");
     }
 
     [Fact]

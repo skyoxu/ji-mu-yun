@@ -2,6 +2,7 @@ using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
 using Xunit;
@@ -25,6 +26,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence("RPG").ToJson());
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
         var writer = new PrototypeRouteStateWriter();
         writer.WriteProjectReadme(project!);
@@ -507,6 +509,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Empty Guide Guard", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence("RPG").ToJson());
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
         var writer = new PrototypeRouteStateWriter();
         var guidePath = Path.Combine(project!.RepoPath, PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath.Replace('/', Path.DirectorySeparatorChar));
@@ -936,6 +939,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
+        await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence(gameTypeSource).ToJson());
         if (prototypeSucceeded)
         {
             var runId = await store.CreateRunAsync(created.ProjectId!, null, "prototype-7day-playable");
@@ -953,6 +957,19 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "goal 1 needs fix");
         return created.ProjectId!;
+    }
+
+    private static ProjectGameTypeMatchEvidence MatchEvidence(string gameTypeSource)
+    {
+        var isRpg = gameTypeSource.Contains("rpg", StringComparison.OrdinalIgnoreCase);
+        return ProjectGameTypeMatchEvidence.Empty(isRpg ? "matched_by_test" : "test_no_match") with
+        {
+            Status = isRpg ? "matched" : "no_match",
+            EvidenceSource = "test",
+            NormalizedGenreTags = isRpg ? ["rpg", "role-playing", "jrpg"] : [],
+            MatchedGameTypeId = isRpg ? "rpg" : "",
+            MatchedGuidePath = isRpg ? "docs/game-type-guides/rpg.md" : ""
+        };
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? godotBin = null)

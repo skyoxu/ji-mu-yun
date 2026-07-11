@@ -29,6 +29,11 @@ public static partial class GddToModuleOriginalSplitAudit
         "05-godot-ui-capability-contract.md",
         "06a-ui-style-migration-overview-and-catalog.md",
         "06b-ui-style-snapshot-schema.md",
+        "schemas/godot-ui-style-contract.v1.profile.json",
+        "schemas/godot-ui-style-contract.v1.field-map.json",
+        "schemas/gdd-to-module-capability-inventory.v1.json",
+        "schemas/split-added-acceptance-registry.v1.json",
+        "schemas/workflow-action-contracts.v1.json",
         "schemas/godot-ui-style-contract.v1.example.json",
         "06c-style-aware-ui-closure.md",
         "06d-ui-style-schema-acceptance.md",
@@ -175,6 +180,11 @@ public static partial class GddToModuleOriginalSplitAudit
         foreach (var duplicate in inventoryEntries.GroupBy(item => item, StringComparer.Ordinal).Where(group => group.Count() > 1))
         {
             issues.Add(Issue("duplicate_inventory_entry", duplicate.Key));
+        }
+
+        foreach (var unexpected in entries.Where(item => !RequiredInventoryEntries.Contains(item, StringComparer.Ordinal)))
+        {
+            issues.Add(Issue("unexpected_inventory_entry", unexpected));
         }
 
         return issues;

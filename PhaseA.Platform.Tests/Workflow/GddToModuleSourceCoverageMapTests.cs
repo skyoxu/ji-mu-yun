@@ -16,6 +16,10 @@ public sealed class GddToModuleSourceCoverageMapTests
             "97-split-added-requirements-ledger.md",
             "04d-godot-engine-semantics-and-reference-examples.md"
         ]);
+        GddToModuleSourceCoverageMap.AllowedSplitAddedSourceRefs.Should().BeEquivalentTo([
+            "schemas/gdd-to-module-capability-inventory.v1.json",
+            "schemas/split-added-acceptance-registry.v1.json"
+        ]);
     }
 
     [Fact]
@@ -44,6 +48,41 @@ public sealed class GddToModuleSourceCoverageMapTests
     }
 
     [Fact]
+    public void CoverageMap_ShouldRejectUndeclaredAdditionalSourceRefs()
+    {
+        var coverageRows = new[]
+        {
+            new SourceCoverageMapRow(1, 10, ["01-overview-workflow.md", "schemas/unknown.json"], "Covered")
+        };
+        var auditRows = new[]
+        {
+            new SourceRangeCoverageRow(1, 10, ["01-overview-workflow.md"], "Covered")
+        };
+
+        GddToModuleSourceCoverageMap.MatchesOriginalSplitAudit(coverageRows, auditRows).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CoverageMap_ShouldRejectDuplicateOrMisplacedSplitAddedRefs()
+    {
+        var duplicateCoverage = new[]
+        {
+            new SourceCoverageMapRow(1378, 2178, ["06b-ui-style-snapshot-schema.md", "06b-ui-style-snapshot-schema.md"], "Covered")
+        };
+        var misplacedCoverage = new[]
+        {
+            new SourceCoverageMapRow(1, 99, ["01-overview-workflow.md", "schemas/gdd-to-module-capability-inventory.v1.json"], "Covered")
+        };
+
+        GddToModuleSourceCoverageMap.MatchesOriginalSplitAudit(
+            duplicateCoverage,
+            [new SourceRangeCoverageRow(1378, 2178, ["06b-ui-style-snapshot-schema.md"], "Covered")]).Should().BeFalse();
+        GddToModuleSourceCoverageMap.MatchesOriginalSplitAudit(
+            misplacedCoverage,
+            [new SourceRangeCoverageRow(1, 99, ["01-overview-workflow.md"], "Covered")]).Should().BeFalse();
+    }
+
+    [Fact]
     public void CoverageMap_ShouldStateAssertionAndSplitAddedBoundary()
     {
         var markdown = ReadRepoFile(GddToModuleSourceCoverageMap.ExecutionPlanCoveragePath);
@@ -65,6 +104,9 @@ public sealed class GddToModuleSourceCoverageMapTests
         root.GetProperty("split_added_boundary_refs").EnumerateArray().Select(item => item.GetString())
             .Should()
             .BeEquivalentTo(GddToModuleSourceCoverageMap.RequiredSplitAddedBoundaryRefs);
+        root.GetProperty("allowed_split_added_source_refs").EnumerateArray().Select(item => item.GetString())
+            .Should()
+            .BeEquivalentTo(GddToModuleSourceCoverageMap.AllowedSplitAddedSourceRefs);
     }
 
     [Fact]

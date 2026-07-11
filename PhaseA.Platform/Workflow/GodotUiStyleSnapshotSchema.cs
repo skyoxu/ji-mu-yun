@@ -193,6 +193,17 @@ public static class GodotUiStyleSnapshotSchema
         "cannot_substitute_for"
     ];
 
+    public static readonly IReadOnlyList<string> VisualEvidenceRequiredFields =
+    [
+        "readback_path_policy"
+    ];
+
+    public static readonly IReadOnlyList<string> VisualValidationRequiredFields =
+    [
+        "evidence_refs",
+        "validation_status"
+    ];
+
     public static string SchemaProfileHash => Sha256(string.Join("\n",
         [
             SchemaId,
@@ -215,7 +226,9 @@ public static class GodotUiStyleSnapshotSchema
             string.Join("|", CustomStyleRequiredFields),
             string.Join("|", PublicAliasApprovalRequiredFields),
             string.Join("|", ThemeResourceRequiredFields),
-            string.Join("|", DeterministicSubstituteRequiredFields)
+            string.Join("|", DeterministicSubstituteRequiredFields),
+            string.Join("|", VisualEvidenceRequiredFields),
+            string.Join("|", VisualValidationRequiredFields)
         ]));
 
     private static string Sha256(string value)

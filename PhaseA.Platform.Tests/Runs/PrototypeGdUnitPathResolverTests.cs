@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using Xunit;
 
@@ -111,7 +112,15 @@ public sealed class PrototypeGdUnitPathResolverTests
             repoPath,
             repoPath,
             repoPath,
-            Path.Combine(repoPath, "meta"));
+            Path.Combine(repoPath, "meta"),
+            (ProjectGameTypeMatchEvidence.Empty("matched_by_test") with
+            {
+                Status = "matched",
+                EvidenceSource = "test",
+                NormalizedGenreTags = ["rpg", "role-playing", "jrpg"],
+                MatchedGameTypeId = "rpg",
+                MatchedGuidePath = "docs/game-type-guides/rpg.md"
+            }).ToJson());
     }
 
     private sealed class RecordingHostedProcessRunner : IHostedProcessRunner

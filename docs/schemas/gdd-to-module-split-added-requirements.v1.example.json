@@ -3,11 +3,14 @@
   "ledger_id": "phase-a-gdd-to-module-split-added-requirements",
   "ledger_version": "v1",
   "execution_plan_ledger_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md",
+  "acceptance_registry_path": "execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/split-added-acceptance-registry.v1.json",
   "ledger_columns": [
     "split_added_id",
     "Requirement",
-    "Primary owner doc",
-    "Acceptance reference"
+    "owner_id",
+    "First required phase",
+    "Primary owner docs",
+    "acceptance_ids"
   ],
   "coverage_statuses": [
     "implemented",
@@ -18,6 +21,9 @@
     {
       "split_added_id": "split_added_full_target_capability_schedule",
       "coverage_status": "implemented",
+      "acceptance_ids": [
+        "AC-FULL-TARGET-SCHEDULE"
+      ],
       "owner_doc_refs": [
         "10-recommended-first-slice.md",
         "03-testing-observability-admin.md"
@@ -33,6 +39,9 @@
     {
       "split_added_id": "split_added_godot_third_person_camera_profile",
       "coverage_status": "explicitly_deferred",
+      "acceptance_ids": [
+        "AC-THIRD-PERSON-CAMERA"
+      ],
       "owner_doc_refs": [
         "04d-godot-engine-semantics-and-reference-examples.md",
         "05-godot-ui-capability-contract.md",

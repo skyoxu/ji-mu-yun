@@ -11,7 +11,7 @@ The source ledger is:
 
 `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/97-split-added-requirements-ledger.md`
 
-The machine-readable owner is `PhaseA.Platform/Workflow/GddToModuleSplitAddedRequirements.cs`. The coverage evidence schema/example is `docs/schemas/gdd-to-module-split-added-requirements.v1.example.json`.
+The machine-readable owner is `PhaseA.Platform/Workflow/GddToModuleSplitAddedRequirements.cs`. The stable owner and acceptance registry is `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/split-added-acceptance-registry.v1.json`. The coverage evidence schema/example is `docs/schemas/gdd-to-module-split-added-requirements.v1.example.json`.
 
 ## Ledger Contract
 
@@ -19,10 +19,12 @@ Every row has:
 
 - `split_added_id`
 - `Requirement`
-- `Primary owner doc`
-- `Acceptance reference`
+- `owner_id`
+- `First required phase`
+- `Primary owner docs`
+- `acceptance_ids`
 
-The `split_added_id` must be stable and unique. Primary owner docs must identify the split file or durable workflow/standard that owns implementation. Acceptance references must name the tests, validators, phase evidence, or review evidence that close the requirement.
+The `split_added_id` must be stable and unique. The owner ID and acceptance IDs must resolve through the stable registry. Primary owner docs identify the split files or durable workflow/standards that own implementation. Duplicate owner docs or acceptance IDs are invalid. Missing, malformed, mismatched, duplicate, or orphan registry entries must fail closed with stable validation reasons.
 
 ## Phase Review Coverage
 
@@ -32,7 +34,7 @@ Phase exit evidence fails if it implements an affected area without classifying 
 - `not_applicable`
 - `explicitly_deferred`
 
-Coverage rows require owner doc refs, acceptance evidence refs, phase exit review ref, owner, expiry or recheck trigger, and defer reason when not applicable or explicitly deferred.
+Coverage rows require the exact ledger acceptance ID set, owner doc refs, acceptance evidence refs, phase exit review ref, owner, expiry or recheck trigger, and defer reason when not applicable or explicitly deferred. A non-empty generic evidence string does not substitute for the acceptance ID set.
 
 ## Boundary
 

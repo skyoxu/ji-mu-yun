@@ -19,6 +19,15 @@ public static partial class GddToModuleSourceCoverageMap
         "04d-godot-engine-semantics-and-reference-examples.md"
     ];
 
+    public static readonly IReadOnlyList<string> AllowedSplitAddedSourceRefs =
+    [
+        "schemas/gdd-to-module-capability-inventory.v1.json",
+        "schemas/split-added-acceptance-registry.v1.json"
+    ];
+
+    public const int AllowedSplitAddedSourceRangeStart = 1378;
+    public const int AllowedSplitAddedSourceRangeEnd = 2178;
+
     public static readonly string CoverageHash = ComputeHash();
 
     public static IReadOnlyList<SourceCoverageMapRow> ParseCoverageRows(string markdown)
@@ -75,7 +84,8 @@ public static partial class GddToModuleSourceCoverageMap
     {
         return markdown.Contains("cover source lines 1-2739", StringComparison.Ordinal) &&
                markdown.Contains("no intentional omissions", StringComparison.Ordinal) &&
-               markdown.Contains("machine-readable JSON fixture", StringComparison.Ordinal);
+               markdown.Contains("machine-contract bundle", StringComparison.Ordinal) &&
+               markdown.Contains("example fixture proves the complete field shape remains parseable", StringComparison.Ordinal);
     }
 
     public static bool HasSplitAddedBoundary(string markdown)
@@ -95,9 +105,15 @@ public static partial class GddToModuleSourceCoverageMap
         {
             var coverage = coverageRows[index];
             var audit = auditRows[index];
+            var additionalRefs = coverage.SplitDocuments.Except(audit.SplitOutputs, StringComparer.Ordinal).ToArray();
             if (coverage.StartLine != audit.StartLine ||
                 coverage.EndLine != audit.EndLine ||
-                !coverage.SplitDocuments.SequenceEqual(audit.SplitOutputs, StringComparer.Ordinal))
+                HasDuplicates(coverage.SplitDocuments) ||
+                HasDuplicates(audit.SplitOutputs) ||
+                !IsOrderedSubset(audit.SplitOutputs, coverage.SplitDocuments) ||
+                additionalRefs.Any(item => !AllowedSplitAddedSourceRefs.Contains(item, StringComparer.Ordinal)) ||
+                (additionalRefs.Length > 0 &&
+                 (coverage.StartLine != AllowedSplitAddedSourceRangeStart || coverage.EndLine != AllowedSplitAddedSourceRangeEnd)))
             {
                 return false;
             }
@@ -106,10 +122,34 @@ public static partial class GddToModuleSourceCoverageMap
         return true;
     }
 
+    private static bool IsOrderedSubset(IReadOnlyList<string> expected, IReadOnlyList<string> actual)
+    {
+        var expectedIndex = 0;
+        foreach (var item in actual)
+        {
+            if (expectedIndex < expected.Count &&
+                string.Equals(expected[expectedIndex], item, StringComparison.Ordinal))
+            {
+                expectedIndex++;
+            }
+        }
+
+        return expectedIndex == expected.Count;
+    }
+
+    private static bool HasDuplicates(IEnumerable<string> values)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        return values.Any(value => !seen.Add(value));
+    }
+
     private static string ComputeHash()
     {
         var source = string.Join("\n",
-            RequiredSplitAddedBoundaryRefs.Append(OriginalSourceLineCount.ToString()));
+            RequiredSplitAddedBoundaryRefs
+                .Concat(AllowedSplitAddedSourceRefs)
+                .Append($"{AllowedSplitAddedSourceRangeStart}-{AllowedSplitAddedSourceRangeEnd}")
+                .Append(OriginalSourceLineCount.ToString()));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source))).ToLowerInvariant();
     }
 

@@ -3,6 +3,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
 using System.Text.Json;
@@ -592,7 +593,21 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
+        await store.UpdateProjectGameTypeMatchAsync(result.ProjectId!, MatchEvidence(gameTypeSource).ToJson());
         return result.ProjectId!;
+    }
+
+    private static ProjectGameTypeMatchEvidence MatchEvidence(string gameTypeSource)
+    {
+        var isRpg = gameTypeSource.Contains("rpg", StringComparison.OrdinalIgnoreCase);
+        return ProjectGameTypeMatchEvidence.Empty(isRpg ? "matched_by_test" : "test_no_match") with
+        {
+            Status = isRpg ? "matched" : "no_match",
+            EvidenceSource = "test",
+            NormalizedGenreTags = isRpg ? ["rpg", "role-playing", "jrpg"] : [],
+            MatchedGameTypeId = isRpg ? "rpg" : "",
+            MatchedGuidePath = isRpg ? "docs/game-type-guides/rpg.md" : ""
+        };
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)

@@ -3,6 +3,7 @@ using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
+using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
@@ -334,7 +335,8 @@ public sealed record DemoPrototypeState;
             workspaceRoot.Path,
             repoPath,
             Path.Combine(repoPath, "runtime"),
-            Path.Combine(repoPath, "meta"));
+            Path.Combine(repoPath, "meta"),
+            RpgMatchEvidence().ToJson());
         var goal = new ProjectIterationGoalSnapshot(
             "goal-id",
             "session-id",
@@ -2532,7 +2534,8 @@ public sealed class SurvivorsLikePrototypeLoopTests
             workspaceRoot.Path,
             repoPath,
             Path.Combine(repoPath, "runtime"),
-            Path.Combine(repoPath, "meta"));
+            Path.Combine(repoPath, "meta"),
+            SurvivorsLikeMatchEvidence().ToJson());
         var goal = new ProjectIterationGoalSnapshot(
             "goal-id",
             "session-id",
@@ -3004,7 +3007,32 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
+        await store.UpdateProjectGameTypeMatchAsync(result.ProjectId!, RpgMatchEvidence().ToJson());
         return result.ProjectId!;
+    }
+
+    private static ProjectGameTypeMatchEvidence RpgMatchEvidence()
+    {
+        return ProjectGameTypeMatchEvidence.Empty("matched_by_test") with
+        {
+            Status = "matched",
+            EvidenceSource = "test",
+            NormalizedGenreTags = ["rpg", "role-playing", "jrpg"],
+            MatchedGameTypeId = "rpg",
+            MatchedGuidePath = "docs/game-type-guides/rpg.md"
+        };
+    }
+
+    private static ProjectGameTypeMatchEvidence SurvivorsLikeMatchEvidence()
+    {
+        return ProjectGameTypeMatchEvidence.Empty("matched_by_test") with
+        {
+            Status = "matched",
+            EvidenceSource = "test",
+            NormalizedGenreTags = ["survivorslike", "vampire-survivors", "bullet-heaven", "arena-survival"],
+            MatchedGameTypeId = "survivorslike",
+            MatchedGuidePath = "docs/game-type-guides/survivorslike.md"
+        };
     }
 
     private static PrototypeWorkflowRequest ContractRequest()
