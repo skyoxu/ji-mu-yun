@@ -86,16 +86,6 @@ public sealed class ProjectRouteStateArtifactService
             });
         }
 
-        if (allowed.All(action => action.ActionId != recommended))
-        {
-            var descriptorAction = BuildActionDescriptor(recommended, descriptor.DescriptorHash, project.ProjectId);
-            allowed.Insert(0, descriptorAction with
-            {
-                PhaseEligibility = "active",
-                BlockingIssueRefs = blockingIssues.Select(issue => issue.IssueId).ToArray()
-            });
-        }
-
         return new ProjectWorkflowRecommendation(
             "project-workflow-recommendation.v1",
             descriptor,
@@ -604,7 +594,10 @@ public sealed class ProjectRouteStateArtifactService
     private static string Severity(string issueId)
     {
         if (issueId.Contains("prototype-contract", StringComparison.Ordinal) ||
-            issueId.Contains("source_boundary", StringComparison.Ordinal))
+            issueId.Contains("source_boundary", StringComparison.Ordinal) ||
+            issueId.Contains("recovery_source_order", StringComparison.Ordinal) ||
+            issueId.Contains("source_hashes", StringComparison.Ordinal) ||
+            issueId.Contains("prompt_evidence", StringComparison.Ordinal))
         {
             return "P0";
         }
@@ -757,11 +750,15 @@ public sealed class ProjectRouteStateArtifactService
             return status is "stale" ? "stale" : "fresh";
         }
 
-        private static IEnumerable<string> ValidateCommon(string relativePath, JsonElement root)
+        private IEnumerable<string> ValidateCommon(string relativePath, JsonElement root)
         {
             var statusDimension = ReadString(root, "status_dimension");
             var status = ReadArtifactStatus(root);
-            if (!string.IsNullOrWhiteSpace(statusDimension))
+            if (string.IsNullOrWhiteSpace(statusDimension) && root.TryGetProperty("schema_version", out _))
+            {
+                yield return $"{relativePath}:status_dimension_missing";
+            }
+            else if (!string.IsNullOrWhiteSpace(statusDimension))
             {
                 var allowed = ReadArray(root, "status_allowed_values")
                     .Where(item => item.ValueKind == JsonValueKind.String)
@@ -793,27 +790,57 @@ public sealed class ProjectRouteStateArtifactService
                 }
             }
 
-            if (root.TryGetProperty("source_boundary_enforced", out var enforced) &&
-                enforced.ValueKind == JsonValueKind.False &&
-                !root.TryGetProperty("source_boundary_not_applicable", out _))
+            var promptProducingRoute = IsPromptProducingRoute(relativePath, root);
+            if (!root.TryGetProperty("source_boundary_enforced", out var enforced) ||
+                enforced.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
             {
-                yield return $"{relativePath}:source_boundary_not_applicable_missing";
+                yield return $"{relativePath}:source_boundary_enforced_invalid";
             }
-
-            if (root.TryGetProperty("source_boundary_enforced", out enforced) &&
-                enforced.ValueKind == JsonValueKind.True)
+            else if (enforced.ValueKind == JsonValueKind.False)
+            {
+                if (promptProducingRoute)
+                {
+                    yield return $"{relativePath}:source_boundary_enforcement_required";
+                }
+                else if (!HasValidNotApplicableBoundary(root))
+                {
+                    yield return $"{relativePath}:source_boundary_not_applicable_invalid";
+                }
+            }
+            else
             {
                 if (!root.TryGetProperty("source_boundary", out var boundary) ||
+                    boundary.ValueKind != JsonValueKind.Object ||
                     !boundary.TryGetProperty("authority_sources", out _) ||
-                    !boundary.TryGetProperty("forbidden_source_patterns", out _))
+                    ReadStringArray(boundary, "authority_sources").Count == 0 ||
+                    !boundary.TryGetProperty("forbidden_source_patterns", out _) ||
+                    ReadStringArray(boundary, "forbidden_source_patterns").Count == 0)
                 {
                     yield return $"{relativePath}:source_boundary_incomplete";
                 }
 
                 if (boundary.ValueKind == JsonValueKind.Object &&
-                    ReadString(boundary, "recovery_source_order_ref") is not "" and not "hosted-route-recovery-order.v1")
+                    !string.Equals(ReadString(boundary, "recovery_source_order_ref"), HostedRouteRecoveryContract.ContractId, StringComparison.Ordinal))
                 {
                     yield return $"{relativePath}:recovery_source_order_ref_invalid";
+                }
+
+                if (boundary.ValueKind == JsonValueKind.Object && !HasCanonicalRecoverySourceOrder(boundary))
+                {
+                    yield return $"{relativePath}:recovery_source_order_invalid";
+                }
+
+                if (boundary.ValueKind == JsonValueKind.Object && !HasCompleteSourceHashes(boundary))
+                {
+                    yield return $"{relativePath}:source_hashes_missing";
+                }
+
+                if (boundary.ValueKind == JsonValueKind.Object && promptProducingRoute)
+                {
+                    foreach (var issue in ValidatePromptEvidence(relativePath, boundary))
+                    {
+                        yield return issue;
+                    }
                 }
             }
 
@@ -838,6 +865,282 @@ public sealed class ProjectRouteStateArtifactService
             {
                 yield return item;
             }
+        }
+
+        private static bool HasCompleteSourceHashes(JsonElement boundary)
+        {
+            if (!boundary.TryGetProperty("source_hashes", out var hashes) || hashes.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var properties = hashes.EnumerateObject().ToArray();
+            return properties.Length > 0 && properties.All(property =>
+                property.Value.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(property.Value.GetString()));
+        }
+
+        private static bool HasCanonicalRecoverySourceOrder(JsonElement boundary)
+        {
+            return ReadStringArray(boundary, "recovery_source_order")
+                .SequenceEqual(HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal);
+        }
+
+        private static bool IsPromptProducingRoute(string relativePath, JsonElement root)
+        {
+            var route = ReadString(root, "route");
+            return route is "gdd-requirements" or "gdd-document-generation" or "iteration-plan" or "execute-next-goal" or "needs-fix" or "repair" ||
+                   relativePath.Contains("/gdd-requirements/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/gdd-document/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/iteration-plan/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/execute-next-goal/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/needs-fix/", StringComparison.OrdinalIgnoreCase) ||
+                   relativePath.Contains("/repair/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool HasValidNotApplicableBoundary(JsonElement root)
+        {
+            if (!root.TryGetProperty("source_boundary_not_applicable", out var exemption) ||
+                exemption.ValueKind != JsonValueKind.Object ||
+                ReadString(exemption, "reason") is not ("readback_only" or "deterministic_state_transition" or "static_browser_projection") ||
+                !DateTimeOffset.TryParse(ReadString(exemption, "checked_utc"), out _) ||
+                !string.Equals(ReadString(exemption, "decision_by"), "system", StringComparison.Ordinal) ||
+                !exemption.TryGetProperty("evidence_refs", out var evidenceRefs) ||
+                evidenceRefs.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            return evidenceRefs.EnumerateArray().All(item =>
+                item.ValueKind == JsonValueKind.Object &&
+                !string.IsNullOrWhiteSpace(ReadString(item, "kind")) &&
+                (!string.IsNullOrWhiteSpace(ReadString(item, "path")) ||
+                 !string.IsNullOrWhiteSpace(ReadString(item, "artifact_id"))));
+        }
+
+        private IEnumerable<string> ValidatePromptEvidence(string relativePath, JsonElement boundary)
+        {
+            var refs = ReadArray(boundary, "prompt_evidence_refs")
+                .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? "" : ReadString(item, "path"))
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToArray();
+            if (refs.Length == 0)
+            {
+                yield return $"{relativePath}:prompt_evidence_refs_missing";
+                yield break;
+            }
+
+            var evidenceDocuments = new List<JsonDocument>();
+            var rawPromptPersisted = false;
+            foreach (var evidenceRef in refs)
+            {
+                var fullPath = Resolve(evidenceRef);
+                if (fullPath is null || (!File.Exists(fullPath) && !Directory.Exists(fullPath)))
+                {
+                    yield return $"{relativePath}:prompt_evidence_missing";
+                    continue;
+                }
+
+                var readFailed = false;
+                try
+                {
+                    if (File.Exists(fullPath))
+                    {
+                        TryAddEvidenceDocument(evidenceDocuments, File.ReadAllText(fullPath, Encoding.UTF8), ref rawPromptPersisted);
+                    }
+                    else
+                    {
+                        foreach (var file in Directory.EnumerateFiles(fullPath).OrderBy(path => path, StringComparer.Ordinal).TakeLast(20))
+                        {
+                            if (HasReparsePointBetween(Path.GetFullPath(Project.RepoPath), Path.GetFullPath(file)))
+                            {
+                                readFailed = true;
+                                continue;
+                            }
+                            TryAddEvidenceDocument(evidenceDocuments, File.ReadAllText(file, Encoding.UTF8), ref rawPromptPersisted);
+                        }
+                    }
+                }
+                catch (IOException)
+                {
+                    readFailed = true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    readFailed = true;
+                }
+
+                if (readFailed)
+                {
+                    yield return $"{relativePath}:prompt_evidence_read_failed";
+                }
+            }
+
+            try
+            {
+                if (rawPromptPersisted)
+                {
+                    yield return $"{relativePath}:raw_prompt_persisted_forbidden";
+                }
+                if (!evidenceDocuments.Any(document => EvidenceProvesBoundary(document.RootElement, boundary)))
+                {
+                    yield return $"{relativePath}:prompt_evidence_invalid";
+                }
+                else if (!SourceHashesMatchAuthority(boundary))
+                {
+                    yield return $"{relativePath}:source_hashes_authority_mismatch";
+                }
+            }
+            finally
+            {
+                foreach (var document in evidenceDocuments)
+                {
+                    document.Dispose();
+                }
+            }
+        }
+
+        private static void TryAddEvidenceDocument(ICollection<JsonDocument> documents, string text, ref bool rawPromptPersisted)
+        {
+            try
+            {
+                var document = JsonDocument.Parse(text);
+                if (document.RootElement.TryGetProperty("raw_prompt_persisted", out var rawPrompt) && rawPrompt.ValueKind == JsonValueKind.True)
+                {
+                    rawPromptPersisted = true;
+                }
+                documents.Add(document);
+            }
+            catch (JsonException)
+            {
+            }
+        }
+
+        private static bool EvidenceProvesBoundary(JsonElement evidenceRoot, JsonElement expectedBoundary)
+        {
+            var evidence = evidenceRoot.TryGetProperty("source_boundary", out var nested) && nested.ValueKind == JsonValueKind.Object
+                ? nested
+                : evidenceRoot;
+            if (!string.Equals(
+                    ReadString(evidence, "recovery_source_order_ref"),
+                    HostedRouteRecoveryContract.ContractId,
+                    StringComparison.Ordinal) ||
+                !HasCanonicalRecoverySourceOrder(evidence) ||
+                !evidence.TryGetProperty("source_hashes", out var evidenceHashes) ||
+                evidenceHashes.ValueKind != JsonValueKind.Object ||
+                !expectedBoundary.TryGetProperty("source_hashes", out var expectedHashes) ||
+                expectedHashes.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            foreach (var expected in expectedHashes.EnumerateObject())
+            {
+                if (!evidenceHashes.TryGetProperty(expected.Name, out var actual) ||
+                    actual.ValueKind != JsonValueKind.String ||
+                    expected.Value.ValueKind != JsonValueKind.String ||
+                    !string.Equals(actual.GetString(), expected.Value.GetString(), StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool SourceHashesMatchAuthority(JsonElement boundary)
+        {
+            if (!boundary.TryGetProperty("source_hashes", out var hashes) || hashes.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            foreach (var property in hashes.EnumerateObject())
+            {
+                if (property.Value.ValueKind != JsonValueKind.String ||
+                    string.IsNullOrWhiteSpace(property.Value.GetString()) ||
+                    !TryResolveAuthorityHashes(property.Name, out var actualHashes) ||
+                    !actualHashes.Contains(property.Value.GetString()!, StringComparer.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool TryResolveAuthorityHashes(string sourceKey, out IReadOnlyList<string> hashes)
+        {
+            hashes = [];
+            var normalizedKey = sourceKey.Replace('\\', '/');
+            if (string.Equals(normalizedKey, "project-contract-snapshot", StringComparison.Ordinal))
+            {
+                return TryReadJsonField("meta/routes/scene-route/latest.json", "source_contract_snapshot_hash", out hashes);
+            }
+
+            if (string.Equals(normalizedKey, "meta/routes/scene-route/latest.json", StringComparison.Ordinal))
+            {
+                return TryReadJsonField(normalizedKey, "confirmed_scene_route_hash", out hashes);
+            }
+
+            if (string.Equals(normalizedKey, "structured-game-type-metadata", StringComparison.Ordinal))
+            {
+                hashes = HashCandidates(Project.GameTypeMatchJson ?? "");
+                return hashes.Count > 0;
+            }
+
+            var fullPath = Resolve(normalizedKey);
+            if (fullPath is null || !File.Exists(fullPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                hashes = HashCandidates(File.ReadAllText(fullPath, Encoding.UTF8));
+                return hashes.Count > 0;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
+        private bool TryReadJsonField(string relativePath, string fieldName, out IReadOnlyList<string> values)
+        {
+            values = [];
+            var fullPath = Resolve(relativePath);
+            if (fullPath is null || !File.Exists(fullPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(fullPath, Encoding.UTF8));
+                var value = ReadString(document.RootElement, fieldName);
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    return false;
+                }
+
+                values = [value];
+                return true;
+            }
+            catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
+        private static IReadOnlyList<string> HashCandidates(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return [];
+            }
+
+            return [Sha256(text), Sha256(NormalizeText(text))];
         }
 
         private string? Resolve(string relativePath)
@@ -865,9 +1168,40 @@ public sealed class ProjectRouteStateArtifactService
             var rootFullPath = Path.GetFullPath(root);
             var fullPath = Path.GetFullPath(Path.Combine(rootFullPath, relativePath));
             var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            return fullPath.StartsWith(rootFullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, comparison)
-                ? fullPath
-                : null;
+            if (!fullPath.StartsWith(rootFullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar, comparison))
+            {
+                return null;
+            }
+
+            return HasReparsePointBetween(rootFullPath, fullPath) ? null : fullPath;
+        }
+
+        internal static bool HasReparsePointBetween(string rootFullPath, string candidateFullPath)
+        {
+            var relative = Path.GetRelativePath(rootFullPath, candidateFullPath);
+            var current = rootFullPath;
+            foreach (var segment in relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+            {
+                current = Path.Combine(current, segment);
+                if (!File.Exists(current) && !Directory.Exists(current))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                    {
+                        return true;
+                    }
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string NormalizeText(string text)

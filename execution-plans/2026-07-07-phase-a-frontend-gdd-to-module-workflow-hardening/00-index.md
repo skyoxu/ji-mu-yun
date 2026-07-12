@@ -92,6 +92,10 @@ Acceptance criteria:
     - Records the explicit source-to-split comparison, heading coverage, split output inventory, and normalization notes.
 22. [Source Coverage Map](99-source-coverage.md)
     - Proves the original monolithic plan is covered by the split documents and records intentional normalization notes.
+23. [Implementation Acceptance Matrix](100-implementation-acceptance-matrix.md)
+    - Tracks Phase 0A, 0B, and Phase 1-6 implementation status by stable acceptance check rather than by document.
+    - Machine-readable authority: [schemas/implementation-acceptance-matrix.v1.json](schemas/implementation-acceptance-matrix.v1.json).
+    - Regenerate and validate with `py -3 scripts/python/build_gdd_to_module_acceptance_matrix.py`.
 
 ## Structural Refactor Principles
 

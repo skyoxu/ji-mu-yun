@@ -10,23 +10,23 @@ public static class RouteActionDescriptors
 
     public static readonly IReadOnlyList<RouteActionDescriptor> All =
     [
-        new("create_gdd", "user_visible", "active", "/api/projects/{projectId}/gdd", "createGddDocument", "workflow.create_gdd", "run", "/api/projects/{projectId}/gdd", "1"),
-        new("complete_gdd", "user_visible", "active", "/api/projects/{projectId}/gdd/outline", "createGddDocument", "workflow.complete_gdd", "readback", "/gdd-outline?projectId={projectId}", "1"),
-        new("import_gdd_form", "user_visible", "active", "", "openGddQuestionFormModal", "workflow.import_gdd_form", "non_action", "", "1"),
-        new("analyze_game_type", "admin_visible", "active", "", "currentProjectPanel", "workflow.analyze_game_type", "readback", "", "1"),
-        new("confirm_scene_route", "user_visible", "active", "/api/projects/{projectId}/gdd/scene-route", "gddQuestionForm", "workflow.confirm_scene_route", "run", "", "1"),
-        new("generate_gdd_document", "user_visible", "active", "/api/projects/{projectId}/gdd", "createGddDocument", "workflow.generate_gdd_document", "run", "/api/projects/{projectId}/gdd", "1"),
-        new("generate_requirement_map", "user_visible", "active", "", "workflowRouteReadback", "workflow.generate_requirement_map", "readback", "", "1"),
-        new("freeze_contract", "user_visible", "active", "", "workflowRouteReadback", "workflow.freeze_contract", "readback", "", "1"),
-        new("refresh_contract", "user_visible", "active", "", "workflowRouteReadback", "workflow.refresh_contract", "readback", "", "1"),
-        new("inspect_first", "user_visible", "active", "", "workflowRouteReadback", "workflow.inspect_first", "non_action", "", "1"),
-        new("delete_project", "user_visible", "active", "/api/projects/{projectId}", "deleteProject", "workflow.delete_project", "project", "", "1"),
-        new("create_prototype", "user_visible", "not_active", "/api/projects/{projectId}/prototype-7day-playable/from-gdd", "prototypeWorkflowPanel", "workflow.create_prototype", "run", "", "2"),
-        new("create_iteration_plan", "user_visible", "active", "/api/projects/{projectId}/iteration-plan", "v2IterationPanel", "workflow.create_iteration_plan", "run", "/api/projects/{projectId}/iteration-plan/latest", "2"),
-        new("execute_next_goal", "user_visible", "not_active", "/api/projects/{projectId}/iteration-plan/execute-next", "v2IterationPanel", "workflow.execute_next_goal", "run", "", "2"),
-        new("run_needs_fix", "user_visible", "not_active", "/api/projects/{projectId}/prototype-feedback-iterations", "v2RepairPanel", "workflow.run_needs_fix", "run", "", "2"),
-        new("run_ui_closure", "user_visible", "not_active", "/api/projects/{projectId}/ui-optimization", "v2UiOptimizationPanel", "workflow.run_ui_closure", "run", "", "2"),
-        new("preview_package", "user_visible", "not_active", "/api/projects/{projectId}/packages", "v2DownloadsFramePanel", "workflow.preview_package", "readback", "", "2")
+        Action("create_gdd", "user_visible", "active", "/api/projects/{projectId}/gdd", "createGddDocument", "workflow.create_gdd", "run", "/api/projects/{projectId}/gdd", "1"),
+        Action("complete_gdd", "user_visible", "active", "/api/projects/{projectId}/gdd/outline", "createGddDocument", "workflow.complete_gdd", "readback", "/gdd-outline?projectId={projectId}", "1"),
+        Action("import_gdd_form", "user_visible", "active", "", "openGddQuestionFormModal", "workflow.import_gdd_form", "non_action", "", "1"),
+        Action("analyze_game_type", "admin_visible", "active", "", "currentProjectPanel", "workflow.analyze_game_type", "readback", "", "1"),
+        Action("confirm_scene_route", "user_visible", "active", "/api/projects/{projectId}/gdd/scene-route", "gddQuestionForm", "workflow.confirm_scene_route", "run", "", "1"),
+        Action("generate_gdd_document", "user_visible", "active", "/api/projects/{projectId}/gdd", "createGddDocument", "workflow.generate_gdd_document", "run", "/api/projects/{projectId}/gdd", "1"),
+        Action("generate_requirement_map", "user_visible", "active", "", "workflowRouteReadback", "workflow.generate_requirement_map", "readback", "", "1"),
+        Action("freeze_contract", "user_visible", "active", "", "workflowRouteReadback", "workflow.freeze_contract", "readback", "", "1"),
+        Action("refresh_contract", "user_visible", "active", "", "workflowRouteReadback", "workflow.refresh_contract", "readback", "", "1"),
+        Action("inspect_first", "user_visible", "active", "", "workflowRouteReadback", "workflow.inspect_first", "non_action", "", "1"),
+        Action("delete_project", "user_visible", "active", "/api/projects/{projectId}", "deleteProject", "workflow.delete_project", "project", "", "1"),
+        Action("create_prototype", "user_visible", "not_active", "/api/projects/{projectId}/prototype-7day-playable/from-gdd", "prototypeWorkflowPanel", "workflow.create_prototype", "run", "", "2"),
+        Action("create_iteration_plan", "user_visible", "active", "/api/projects/{projectId}/iteration-plan", "v2IterationPanel", "workflow.create_iteration_plan", "run", "/api/projects/{projectId}/iteration-plan/latest", "2"),
+        Action("execute_next_goal", "user_visible", "not_active", "/api/projects/{projectId}/iteration-plan/execute-next", "v2IterationPanel", "workflow.execute_next_goal", "run", "", "2"),
+        Action("run_needs_fix", "user_visible", "not_active", "/api/projects/{projectId}/prototype-feedback-iterations", "v2RepairPanel", "workflow.run_needs_fix", "run", "", "2"),
+        Action("run_ui_closure", "user_visible", "not_active", "/api/projects/{projectId}/ui-optimization", "v2UiOptimizationPanel", "workflow.run_ui_closure", "run", "", "2"),
+        Action("preview_package", "user_visible", "not_active", "/api/projects/{projectId}/packages", "v2DownloadsFramePanel", "workflow.preview_package", "readback", "", "2")
     ];
 
     public static readonly IReadOnlyList<string> CanonicalActionIds = All.Select(action => action.ActionId).ToArray();
@@ -59,12 +59,15 @@ public static class RouteActionDescriptors
             action.DisplayLabelKey,
             action.OperationScope,
             action.ReadbackUrlTemplate,
-            action.RequiredPhase))));
+            action.RequiredPhase,
+            action.AccountBoundary,
+            action.AuthBoundary,
+            action.DuplicateRunPolicy))));
 
     public static RouteActionDescriptor Get(string actionId)
     {
         return All.FirstOrDefault(action => string.Equals(action.ActionId, actionId, StringComparison.Ordinal)) ??
-               new RouteActionDescriptor(actionId, "internal", "blocked", "", "", $"workflow.{actionId}", "non_action", "", "unknown");
+               Action(actionId, "internal", "blocked", "", "", $"workflow.{actionId}", "non_action", "", "unknown");
     }
 
     public static bool IsPhase1Action(string actionId)
@@ -87,6 +90,39 @@ public static class RouteActionDescriptors
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
+
+    private static RouteActionDescriptor Action(
+        string actionId,
+        string exposureClass,
+        string defaultPhaseEligibility,
+        string apiRouteTemplate,
+        string browserActionId,
+        string displayLabelKey,
+        string operationScope,
+        string readbackUrlTemplate,
+        string requiredPhase)
+    {
+        var adminOnly = string.Equals(exposureClass, "admin_visible", StringComparison.Ordinal);
+        var duplicateRunPolicy = operationScope switch
+        {
+            "run" => "request_identity_or_active_run_reuse",
+            "project" => "idempotent_project_mutation",
+            _ => "read_only_or_non_action"
+        };
+        return new RouteActionDescriptor(
+            actionId,
+            exposureClass,
+            defaultPhaseEligibility,
+            apiRouteTemplate,
+            browserActionId,
+            displayLabelKey,
+            operationScope,
+            readbackUrlTemplate,
+            requiredPhase,
+            adminOnly ? "admin_cross_account_redacted" : "account_project_ownership",
+            adminOnly ? "admin_only" : "authenticated_account_member",
+            duplicateRunPolicy);
+    }
 }
 
 public sealed record RouteActionDescriptor(
@@ -98,4 +134,7 @@ public sealed record RouteActionDescriptor(
     string DisplayLabelKey,
     string OperationScope,
     string ReadbackUrlTemplate,
-    string RequiredPhase);
+    string RequiredPhase,
+    string AccountBoundary,
+    string AuthBoundary,
+    string DuplicateRunPolicy);

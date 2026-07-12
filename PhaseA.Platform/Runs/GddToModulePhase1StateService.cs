@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Prototypes;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
 
@@ -11,6 +12,7 @@ public sealed class GddToModulePhase1StateService
 {
     private const string SceneRouteRelativePath = "meta/routes/scene-route/latest.json";
     private const string GddDocumentRelativePath = "meta/routes/gdd-document/latest.json";
+    private const string GddDocumentPromptEvidenceRelativePath = "meta/routes/gdd-document/prompt-evidence.json";
     private const string GddRelativePath = "docs/gdd/GDD.md";
     private const string GddFormRelativePath = "meta/routes/gdd-question-form/latest.json";
     private readonly PhaseAMetadataStore _metadataStore;
@@ -101,7 +103,8 @@ public sealed class GddToModulePhase1StateService
             source_boundary_enforced = true,
             source_boundary = new
             {
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[] { "structured game-type metadata", GddFormRelativePath, "submitted confirmed scene route" },
                 source_hashes = new Dictionary<string, string>
                 {
@@ -189,6 +192,40 @@ public sealed class GddToModulePhase1StateService
         var generatedHash = Sha256(await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken));
         var sceneHash = sceneRoot["confirmed_scene_route_hash"]!.GetValue<string>();
         var now = DateTimeOffset.UtcNow.ToString("O");
+        var sourceHashes = new Dictionary<string, string>
+        {
+            [SceneRouteRelativePath] = sceneHash,
+            [GddRelativePath] = generatedHash
+        };
+        var promptArtifactRefs = runId.Length == 0
+            ? Array.Empty<string>()
+            : (await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken))
+                .Where(artifact => string.Equals(artifact.ArtifactType, "game-design-gdd-prompt", StringComparison.Ordinal))
+                .Select(artifact => artifact.RelativePath)
+                .ToArray();
+        var promptManifestHashes = promptArtifactRefs
+            .Select(relativePath => Resolve(project.RepoPath, relativePath))
+            .Where(File.Exists)
+            .Select(path => Sha256(File.ReadAllText(path, Encoding.UTF8)))
+            .ToArray();
+        await WriteJsonAsync(project, GddDocumentPromptEvidenceRelativePath, new
+        {
+            schema_version = "gdd-document-prompt-evidence.v1",
+            route = "gdd-document-generation",
+            run_id = runId,
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = sourceHashes,
+            prompt_manifest = new
+            {
+                prompt_count = promptManifestHashes.Length,
+                prompt_hashes = promptManifestHashes,
+                retention = "internal_recovery_only",
+                browser_readable = false
+            },
+            raw_prompt_persisted = false,
+            checked_utc = now
+        }, cancellationToken);
         sceneRoot["source_generated_gdd_hash"] = generatedHash;
         sceneRoot["updated_utc"] = now;
         object BuildDocumentPayload(string status, string operationStatus) => new
@@ -208,15 +245,12 @@ public sealed class GddToModulePhase1StateService
             source_boundary_enforced = true,
             source_boundary = new
             {
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[] { SceneRouteRelativePath, GddRelativePath },
-                source_hashes = new Dictionary<string, string>
-                {
-                    [SceneRouteRelativePath] = sceneHash,
-                    [GddRelativePath] = generatedHash
-                },
+                source_hashes = sourceHashes,
                 forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
-                prompt_evidence_refs = runId.Length == 0 ? Array.Empty<object>() : new object[] { new { kind = "log", path = $"run:{runId}" } },
+                prompt_evidence_refs = new[] { GddDocumentPromptEvidenceRelativePath },
                 checked_utc = now
             },
             evidence_refs = new object[]

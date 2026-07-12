@@ -4,7 +4,17 @@
 
 Prevent missing books, broken links, authority duplication, uncovered requirements and top-level re-expansion.
 
-## Required Validator
+## Plan-Readiness Review
+
+Before implementation, the repository-local deterministic validator checks document/schema/fixture consistency only:
+
+```powershell
+py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py
+```
+
+It reads the top-level plan, every split Markdown file and every `schemas/**/*.json`; checks UTF-8, Markdown links, JSON parseability, the supported local Draft 2020-12 keyword subset, declared valid/invalid fixtures, PBR sequence/owner/phase/acceptance URI, structural 99 owner/phase coverage, bidirectional finding coverage, independent explicit closure declarations, generated finding closure status, declared/hash-bound original 19-family semantic coverage, terminology and documentation synchronization. Its PASS means the plan is ready to implement. It cannot verify cryptographic signatures, prove external approval/custody, issue Permit/attestation, validate protected evidence, select ActiveRegistry or satisfy BH-HANDOFF.
+
+## Protected BH-HANDOFF Validator
 
 BH-HANDOFF must run a deterministic validator whose executable/workflow, bootstrap rules and mutation fixtures were frozen and signed before the handoff-only task existed. The task cannot add or modify it. Entry:
 
@@ -27,7 +37,7 @@ It validates:
 - every original-plan section maps in `98-original-to-split-audit.md`
 - `99-source-coverage.md` covers every owner book and post-split ledger entry
 - no orphan/superseded book is still linked as authority
-- every normalized pre-fourth and accepted fourth/fifth/sixth/seventh-review finding appears exactly once in its coverage table and maps to one or more appropriate `PBR-*` entries with owner book and phase assignment
+- every normalized pre-fourth and accepted fourth/fifth/sixth/seventh/eighth-review finding appears exactly once in its coverage table and maps to one or more appropriate `PBR-*` entries with owner book, phase and stable acceptance URI
 - BootstrapHandoffContract schema/canonicalization/signature/verifier/lock/launcher-inventory/registry/custody/allowlist hashes match the externally signed frozen values
 - UpstreamHandoffManifest contains the exact final upstream commit, zero-unresolved-finding Phase 0A/0B/1-6/global-review closure and the existing upstream fixture/standards/compatibility refs promised by that plan
 - HandoffSourceMap classifies every field as `upstream_committed`, `upstream_exit_evidence` or `downstream_derived`; derived frontend/API/persistence snapshots retain source hashes and cannot claim upstream authority
@@ -38,9 +48,9 @@ It validates:
 - no downstream surface/action/status/route/readback/diagnostic/UI/schema/standards owner duplicates an upstream handoff owner
 - every React derived surface/API observation, Work Policy action, route evidence ref, persistence observation and standards section resolves to the same handoff ID/hash
 - downstream-owned standards changes form a valid DownstreamStandardsDeltaManifest chain without changing upstream-owned section hashes
-- fifth/sixth/seventh-review finding coverage is complete
+- fifth/sixth/seventh/eighth-review finding coverage is complete and the generated plan-only closure registry has no `plan_open` row
 - superseded PBR rows resolve through the explicit Requirement Status Registry; prose alone cannot change active status
-- top-level recovery uses active handoff finalCommit and contains no authoritative static Git Head
+- top-level recovery uses ActiveRegistry to select the immutable Manifest, reads `finalCommit` from that Manifest and contains no authoritative static Git Head or registry-owned commit
 
 The validator runs at BH-HANDOFF, on every later change to the top-level plan/split directory, and at every phase exit. Its mutation suite deliberately changes the validator/rule digest, modifies plan/spec during handoff, weakens the external lock, omits a launcher, removes a source-map row, converts a derived snapshot into upstream authority, creates two active registry rows, injects a partial state-event/registry transaction, breaks event ancestry, leaves a P0/P1/P2 finding unresolved, changes one UpstreamCompletionSnapshot capture, adds a non-allowlisted path, rebinds an invalidated task, bypasses either Platform or Hosted BH-SF1 go/no-go, breaks PBR status/supersession or introduces top-level phase aliases; every mutation must fail with a stable rule ID.
 
@@ -48,6 +58,7 @@ The validator runs at BH-HANDOFF, on every later change to the top-level plan/sp
 
 | Requirement family | Owner book |
 | --- | --- |
+| Top-level recovery/metadata | top-level |
 | Threat model/Gates | 01 |
 | Permit/attestation/verifier/Authority | 02 |
 | Profiles/Preflight/network/tool containment | 03 |
@@ -74,7 +85,15 @@ The validator runs at BH-HANDOFF, on every later change to the top-level plan/sp
 
 ## Review Method
 
-1. Verify BH-HANDOFF and run validator.
+Plan-readiness mode:
+
+1. Run the repository-local Whole-directory validator.
+2. Review any new P0/P1/P2 finding, add it to 97 and to the independent explicit closure-evidence fixture before claiming PASS, regenerate the derived closure registry and rerun. A PBR mapping alone leaves the finding `plan_open`.
+3. Confirm AGENTS/README describe only current behavior and phase-bound future updates.
+
+Protected phase-exit mode:
+
+1. Verify BH-HANDOFF and run the protected validator.
 2. Verify owner-book and cross-plan authority uniqueness.
 3. Review P0/P1/P2 findings against actual implementation, not plan prose.
 4. Check protected trust-boundary changes with external verifier evidence.
@@ -85,6 +104,7 @@ The validator runs at BH-HANDOFF, on every later change to the top-level plan/sp
 ## Acceptance
 
 - Validator fails on a deliberately removed book, broken link, duplicate owner or missing ledger coverage.
+- Plan-readiness validator passes all Markdown/JSON Schema/fixture/PBR/finding/acceptance/original-family checks with zero `plan_open` findings; schema mutations plus owner/phase/open-finding mutations fail with stable local rule IDs, and this does not claim code completion.
 - Validator is operational at BH-HANDOFF before BH-SF0A task creation and every later phase-exit evidence records its result/version and handoff hash.
 - Top-level plan cannot silently receive detailed normative sections without validator failure/review.
 - Global review has zero unresolved P0/P1; P2 requires owner/expiry/recheck.

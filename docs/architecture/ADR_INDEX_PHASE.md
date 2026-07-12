@@ -5,12 +5,12 @@ This index tracks Phase service ADRs for the hosted Phase A/B platform and Phase
 ## Accepted
 
 - ADR-0032: Phase Service Hosted Shell Over Repository Workflow Kernel - `docs/adr/ADR-0032-phase-service-hosted-shell.md`
-- ADR-0033: SQLite Metadata And Local Disk Workspaces For Phase A/B - `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`
+- ADR-0033: SQLite Metadata And Local Disk Workspaces For Phase A/B (includes versioned admin-review queue/history) - `docs/adr/ADR-0033-phase-metadata-sqlite-local-disk.md`
 - ADR-0034: Account-Scoped Token Auth For Phase B Prototype Hardening - `docs/adr/ADR-0034-phase-account-scoped-token-auth.md`
 - ADR-0035: Controlled Runner And Workspace-Bound Execution - `docs/adr/ADR-0035-phase-controlled-runner-workspace-execution.md`
 - ADR-0036: Prototype Route Recovery Authority And Machine-Closed Acceptance - `docs/adr/ADR-0036-phase-prototype-route-recovery-authority.md`
 - ADR-0037: Shared LLM And Codex Execution Entrypoints - `docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md`
-- ADR-0038: Evidence Sidecars And Account-Scoped Readback - `docs/adr/ADR-0038-phase-evidence-sidecars-readback.md`
+- ADR-0038: Evidence Sidecars And Account-Scoped Readback (includes source-boundary manifests, hash verification, and raw-prompt exclusion) - `docs/adr/ADR-0038-phase-evidence-sidecars-readback.md`
 - ADR-0039: Phase Runtime, Caddy, And Recovery Order - `docs/adr/ADR-0039-phase-runtime-caddy-recovery.md`
 
 ## Proposed

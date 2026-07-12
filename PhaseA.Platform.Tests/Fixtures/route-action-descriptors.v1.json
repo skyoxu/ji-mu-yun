@@ -2,7 +2,7 @@
   "schemaVersion": "route-action-descriptors.v1",
   "descriptorId": "phasea-workflow-actions",
   "descriptorVersion": "1",
-  "descriptorHash": "3d04e9c06d9939855cd468b618949a3ba1278540a615d612f197d514dd47e0ca",
+  "descriptorHash": "bee0a1f2ffa51dde0c98998989b347a25102f6bad0eb1537ecd34b57b56a8b8a",
   "disabledDomainCodes": [
     "route_contract_not_active",
     "phase_gate_blocked",
@@ -22,7 +22,10 @@
       "displayLabelKey": "workflow.create_gdd",
       "operationScope": "run",
       "readbackUrlTemplate": "/api/projects/{projectId}/gdd",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "complete_gdd",
@@ -33,7 +36,10 @@
       "displayLabelKey": "workflow.complete_gdd",
       "operationScope": "readback",
       "readbackUrlTemplate": "/gdd-outline?projectId={projectId}",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "import_gdd_form",
@@ -44,7 +50,10 @@
       "displayLabelKey": "workflow.import_gdd_form",
       "operationScope": "non_action",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "analyze_game_type",
@@ -55,7 +64,10 @@
       "displayLabelKey": "workflow.analyze_game_type",
       "operationScope": "readback",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "admin_cross_account_redacted",
+      "authBoundary": "admin_only",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "confirm_scene_route",
@@ -66,7 +78,10 @@
       "displayLabelKey": "workflow.confirm_scene_route",
       "operationScope": "run",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "generate_gdd_document",
@@ -77,7 +92,10 @@
       "displayLabelKey": "workflow.generate_gdd_document",
       "operationScope": "run",
       "readbackUrlTemplate": "/api/projects/{projectId}/gdd",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "generate_requirement_map",
@@ -88,7 +106,10 @@
       "displayLabelKey": "workflow.generate_requirement_map",
       "operationScope": "readback",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "freeze_contract",
@@ -99,7 +120,10 @@
       "displayLabelKey": "workflow.freeze_contract",
       "operationScope": "readback",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "refresh_contract",
@@ -110,7 +134,10 @@
       "displayLabelKey": "workflow.refresh_contract",
       "operationScope": "readback",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "inspect_first",
@@ -121,7 +148,10 @@
       "displayLabelKey": "workflow.inspect_first",
       "operationScope": "non_action",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     },
     {
       "actionId": "delete_project",
@@ -132,7 +162,10 @@
       "displayLabelKey": "workflow.delete_project",
       "operationScope": "project",
       "readbackUrlTemplate": "",
-      "requiredPhase": "1"
+      "requiredPhase": "1",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "idempotent_project_mutation"
     },
     {
       "actionId": "create_prototype",
@@ -143,7 +176,10 @@
       "displayLabelKey": "workflow.create_prototype",
       "operationScope": "run",
       "readbackUrlTemplate": "",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "create_iteration_plan",
@@ -154,7 +190,10 @@
       "displayLabelKey": "workflow.create_iteration_plan",
       "operationScope": "run",
       "readbackUrlTemplate": "/api/projects/{projectId}/iteration-plan/latest",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "execute_next_goal",
@@ -165,7 +204,10 @@
       "displayLabelKey": "workflow.execute_next_goal",
       "operationScope": "run",
       "readbackUrlTemplate": "",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "run_needs_fix",
@@ -176,7 +218,10 @@
       "displayLabelKey": "workflow.run_needs_fix",
       "operationScope": "run",
       "readbackUrlTemplate": "",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "run_ui_closure",
@@ -187,7 +232,10 @@
       "displayLabelKey": "workflow.run_ui_closure",
       "operationScope": "run",
       "readbackUrlTemplate": "",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "request_identity_or_active_run_reuse"
     },
     {
       "actionId": "preview_package",
@@ -198,7 +246,10 @@
       "displayLabelKey": "workflow.preview_package",
       "operationScope": "readback",
       "readbackUrlTemplate": "",
-      "requiredPhase": "2"
+      "requiredPhase": "2",
+      "accountBoundary": "account_project_ownership",
+      "authBoundary": "authenticated_account_member",
+      "duplicateRunPolicy": "read_only_or_non_action"
     }
   ]
 }

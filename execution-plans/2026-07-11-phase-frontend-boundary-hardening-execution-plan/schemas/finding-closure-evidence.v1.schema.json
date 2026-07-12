@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/finding-closure-evidence.v1.schema.json",
+  "title": "Plan Finding Closure Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scope", "reviewClosures"],
+  "properties": {
+    "schemaVersion": {"const": "finding-closure-evidence.v1"},
+    "scope": {"const": "plan-readiness-only"},
+    "reviewClosures": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reviewId", "findingIds", "status", "closureRefs"],
+        "properties": {
+          "reviewId": {"type": "string", "minLength": 1},
+          "findingIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "status": {"enum": ["plan_closed", "superseded"]},
+          "closureRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^phase-boundary://reviews/[a-z0-9-]+/plan-closure$"}}
+        }
+      }
+    }
+  }
+}

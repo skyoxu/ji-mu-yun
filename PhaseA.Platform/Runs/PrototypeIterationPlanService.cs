@@ -222,7 +222,8 @@ public sealed class PrototypeIterationPlanService
                 schema_version = "iteration-plan-prompt-evidence.v1",
                 route = "iteration-plan",
                 source_boundary_enforced = true,
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 source_hashes = sourceHashes,
                 authority_sources = new[]
                 {
@@ -505,9 +506,10 @@ public sealed class PrototypeIterationPlanService
             game_type_profile = routeProfile,
             source_boundary = new
             {
-                contract_id = "hosted-route-recovery-order.v1",
+                contract_id = HostedRouteRecoveryContract.ContractId,
                 enforced = true,
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[]
                 {
                     "game-type-route-profile",
@@ -531,7 +533,7 @@ public sealed class PrototypeIterationPlanService
                 source_hashes = sourceHashes
             },
             source_boundary_enforced = true,
-            recovery_source_order_ref = "hosted-route-recovery-order.v1",
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
             project_execution_guide_present = !string.IsNullOrWhiteSpace(projectExecutionGuide),
             project_execution_guide_path = PrototypeRouteStateWriter.ProjectExecutionGuideRelativePath,
             prototype_contract = prototypeContract.RelativePath,
@@ -3770,11 +3772,11 @@ public sealed class PrototypeIterationPlanService
             project.AccountId,
             project.ProjectId,
             "",
-            500,
+            0,
             cancellationToken);
         var unresolvedAdmin = adminRows.FirstOrDefault(row =>
             row.Severity is "P0" or "P1" &&
-            !string.Equals(row.Status, "approved", StringComparison.Ordinal));
+            ProjectAdminReviewQueuePolicy.IsBlocking(row));
         if (unresolvedAdmin is not null)
         {
             return new IterationPlanLiveGovernanceResult(
@@ -3788,7 +3790,7 @@ public sealed class PrototypeIterationPlanService
         }
 
         var approved = adminRows
-            .Where(row => row.Severity is "P0" or "P1" && string.Equals(row.Status, "approved", StringComparison.Ordinal))
+            .Where(row => row.Severity is "P0" or "P1" && ProjectAdminReviewQueuePolicy.IsCleared(row))
             .Where(row => !string.IsNullOrWhiteSpace(row.RequirementId))
             .GroupBy(row => row.RequirementId, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(

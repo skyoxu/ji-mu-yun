@@ -1,0 +1,1335 @@
+{
+  "schemaVersion": "finding-closure-registry.v1",
+  "scope": "plan-readiness-only",
+  "generatedFrom": "97-post-split-requirements-ledger.md",
+  "closureEvidenceSource": "finding-closure-evidence.v1.json",
+  "findings": [
+    {
+      "findingId": "F4-P0-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-017"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-017/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P0-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-018",
+        "PBR-037"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-018/acceptance",
+        "phase-boundary://requirements/PBR-037/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P0-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-020"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-020/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P0-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-021"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-021/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P0-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-019"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-019/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-022"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-022/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-023"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-023/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-039"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-039/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-024"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-024/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-025"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-025/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-026"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-026/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-027"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-027/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-08",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-028"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-028/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-09",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-029"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-029/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-10",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-030"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-030/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-11",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-031",
+        "PBR-038"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-031/acceptance",
+        "phase-boundary://requirements/PBR-038/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-12",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-032"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-032/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P1-13",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-033"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-033/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P2-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-034"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-034/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P2-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-035"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-035/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P2-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-036"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-036/acceptance"
+      ]
+    },
+    {
+      "findingId": "F4-P2-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-016"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fourth/plan-closure",
+        "phase-boundary://requirements/PBR-016/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040",
+        "PBR-043",
+        "PBR-044"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance",
+        "phase-boundary://requirements/PBR-043/acceptance",
+        "phase-boundary://requirements/PBR-044/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040",
+        "PBR-043",
+        "PBR-049"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance",
+        "phase-boundary://requirements/PBR-043/acceptance",
+        "phase-boundary://requirements/PBR-049/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-041"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-041/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-049"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-049/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-050",
+        "PBR-059"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-050/acceptance",
+        "phase-boundary://requirements/PBR-059/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P0-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-051"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-051/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-043"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-043/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-044"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-044/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-045"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-045/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-046"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-046/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040",
+        "PBR-058"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance",
+        "phase-boundary://requirements/PBR-058/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-042"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-042/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-047"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-047/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-08",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-048"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-048/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-09",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-052"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-052/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-10",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-053"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-053/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-11",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-054"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-054/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-12",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-055"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-055/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P1-13",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-056"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-056/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P2-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040",
+        "PBR-041"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance",
+        "phase-boundary://requirements/PBR-041/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P2-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-040"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-040/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P2-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-016"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-016/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P2-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-058"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-058/acceptance"
+      ]
+    },
+    {
+      "findingId": "F5-P2-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-057"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/fifth/plan-closure",
+        "phase-boundary://requirements/PBR-057/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-060"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-060/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-061"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-061/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-062"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-062/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-063"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-063/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-064"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-064/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-065"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-065/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-066"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-066/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-08",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-067"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-067/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-09",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-068"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-068/acceptance"
+      ]
+    },
+    {
+      "findingId": "F6-10",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-069"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/sixth/plan-closure",
+        "phase-boundary://requirements/PBR-069/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-070"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-070/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-071"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-071/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-072"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-072/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-073"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-073/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-074"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-074/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P0-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-075"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-075/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-076"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-076/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-077"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-077/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-078"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-078/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-079"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-079/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-080"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-080/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-081"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-081/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P1-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-082"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-082/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P2-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-083"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-083/acceptance"
+      ]
+    },
+    {
+      "findingId": "F7-P2-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-084"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/seventh/plan-closure",
+        "phase-boundary://requirements/PBR-084/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P0-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-085"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-085/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P0-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-086"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-086/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-087"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-087/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-088"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-088/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-089"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-089/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-090"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-090/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-091"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-091/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-092"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-092/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-093"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-093/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-08",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-094"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-094/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-09",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-095"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-095/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-10",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-096"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-096/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-11",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-097"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-097/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P1-12",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-098"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-098/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P2-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-099"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-099/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P2-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-100"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-100/acceptance"
+      ]
+    },
+    {
+      "findingId": "F8-P2-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-101"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/eighth/plan-closure",
+        "phase-boundary://requirements/PBR-101/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P0-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-102"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-102/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P0-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-103"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-103/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P0-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-104"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-104/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P0-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-105"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-105/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-106"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-106/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-107"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-107/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-108"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-108/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-04",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-109"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-109/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-05",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-110"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-110/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-06",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-111"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-111/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-07",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-112"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-112/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P1-08",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-113"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-113/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P2-01",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-114"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-114/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P2-02",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-115"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-115/acceptance"
+      ]
+    },
+    {
+      "findingId": "F9-P2-03",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-116"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/ninth-f9/plan-closure",
+        "phase-boundary://requirements/PBR-116/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-001",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-001"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-001/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-002",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-002"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-002/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-003",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-003"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-003/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-004",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-004"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-004/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-005",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-005"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-005/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-006",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-006"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-006/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-007",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-007"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-007/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-008",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-008"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-008/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-009",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-009"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-009/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-010",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-010"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-010/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-011",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-011"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-011/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-012",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-012"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-012/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-013",
+      "status": "superseded",
+      "pbrIds": [
+        "PBR-013"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-033/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-014",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-014"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-014/acceptance"
+      ]
+    },
+    {
+      "findingId": "PF-015",
+      "status": "plan_closed",
+      "pbrIds": [
+        "PBR-015"
+      ],
+      "closureRefs": [
+        "phase-boundary://reviews/pre-fourth/plan-closure",
+        "phase-boundary://requirements/PBR-015/acceptance"
+      ]
+    }
+  ]
+}

@@ -28,6 +28,19 @@ Status: Primary split implementation plan for Phase platform trust, React migrat
 12. [Original-To-Split Audit](98-original-to-split-audit.md)
 13. [Source Coverage](99-source-coverage.md)
 
+## Machine Contracts And Plan Validation
+
+- `schemas/bootstrap-handoff-contract.v1.schema.json`
+- `schemas/upstream-handoff-manifest.v1.schema.json`
+- `schemas/upstream-handoff-state-event.v1.schema.json`
+- `schemas/upstream-handoff-active-registry.v1.schema.json`
+- `schemas/upstream-completion-snapshot.v1.schema.json`
+- `schemas/handoff-source-map.v1.schema.json`
+- `schemas/downstream-observation-snapshots.v1.schema.json`
+- `schemas/finding-closure-registry.v1.schema.json` and generated `schemas/finding-closure-registry.v1.json`
+- `schemas/original-requirement-family-registry.v1.schema.json` and fixture
+- Plan-readiness command: `py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py`
+
 ## Change Rules
 
 - Every normative change names one owning book.
@@ -35,6 +48,7 @@ Status: Primary split implementation plan for Phase platform trust, React migrat
 - Security trust decisions require ADR and second reviewer.
 - React business behavior consumes upstream fixtures plus a handoff-bound downstream API observation snapshot; it does not require upstream to add OpenAPI/surface registries and never becomes a workflow authority.
 - Each implementation task records book/section refs, owner, approver, Gate, Permit, tests, evidence, rollback, and expiry for any exception.
-- Each downstream implementation task also records the same UpstreamHandoffManifest ID/hash; absence or drift blocks start.
+- Each downstream implementation task records the same UpstreamHandoffManifest ID/hash, handoffEpoch, selected StateEvent hash and UpstreamHandoffActiveRegistry rowVersion; absence or drift blocks start/heartbeat/apply/Postflight.
 - The split/cross-plan overlap validator, its mutation fixtures and bootstrap rule digest are frozen before the handoff-only task; that task may run them but cannot modify them. They run on every later plan change and phase exit.
 - A split validator must fail on missing books, broken links, duplicate authority, top-level normative drift, or uncovered post-split requirements.
+- AGENTS.md receives truthful transitional routing before implementation; AGENTS/README and durable standards are updated in the same phase change when behavior actually lands.

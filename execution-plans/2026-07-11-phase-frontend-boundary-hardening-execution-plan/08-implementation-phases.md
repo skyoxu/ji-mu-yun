@@ -9,7 +9,7 @@ Deliver:
 - verify the pre-frozen BootstrapHandoffContract, pinned validator/rules and externally enforced lock before the handoff-only task writes evidence
 - generate signed UpstreamHandoffManifest, HandoffSourceMap, downstream-derived frontend/API/persistence snapshots, initial StateEvent and atomically selected ActiveRegistry entry
 - generate two matching signed UpstreamCompletionSnapshot captures around manifest construction/signing
-- classify every accepted upstream deferral as downstream-consumed, preserved or excluded with owner/Gate
+- classify every upstream-permitted capability/compatibility deferral as downstream-consumed, preserved or excluded with owner/Gate; unresolved findings are never deferrals
 - prove upstream-owned dirty path count is zero and no downstream implementation task already exists; only the allowlisted handoff-only validator/evidence task may exist
 
 Exit:
@@ -202,10 +202,10 @@ Entry: BH-RP1 signed exit plus unchanged active handoff and valid DownstreamFron
 
 - HTTPS/session/CSRF prerequisite.
 - trusted proxy, legacy Cookie deletion and bootstrap exchange tests.
-- React shell and one handoff-projected low-risk read-only surface.
+- React shell and one derived-inventory low-risk read-only surface with immutable upstream source refs.
 - Handoff-bound downstream API observation/fixture generation, SBOM/provenance, rollback bundle.
 - exact CSP/CORS/security-header policy, concurrent session lifecycle and isolated npm/release signing.
-- quantitative trial promotion/rollback thresholds and upstream-surface representative observation ledger.
+- quantitative trial promotion/rollback thresholds and derived-surface representative observation ledger.
 
 Exit: selected surface parity/security/trial/rollback evidence passes with no business vocabulary drift.
 
@@ -218,7 +218,7 @@ Entry: BH-REACT1 signed exit and unchanged handoff, downstream frontend inventor
 - Preserve `must_preserve` and unexpired `time_bounded_compatibility` behavior.
 - Default cutover and legacy retirement require per-surface evidence and verified rollback.
 
-Exit: every handoff-mandatory surface reaches its required state; all preservation entries remain satisfied and rollback bundle passes.
+Exit: every mandatory DownstreamFrontendSurfaceInventory row reaches its required state; all preservation entries remain satisfied and rollback bundle passes.
 
 ## Phase BH-ARCH: Endpoint And Dependency Ratchet
 
@@ -259,4 +259,16 @@ One task handles one handoff verification family, one trust contract, one enforc
 
 Every task requires actual owner, approver, Gate, allowed/protected paths, target tests, evidence, rollback, estimated slices and expiry for exceptions.
 
-No implementation phase may use role placeholders as actual accountability. BH-HANDOFF must complete before a downstream task exists. Before any later task moves to active, its ledger row must contain UpstreamHandoffManifest ID/hash, task ID, primary/backup owner, approver, incident contact, rollback owner, dependency task IDs, protected-path authorization reference and expected evidence path. Missing values keep that phase paused.
+No implementation phase may use role placeholders as actual accountability. BH-HANDOFF must complete before a downstream task exists. Before any later task moves to active, its ledger row must contain UpstreamHandoffManifest ID/hash, handoffEpoch, selected StateEvent hash, ActiveRegistry rowVersion, task ID, primary/backup owner, approver, incident contact, rollback owner, dependency task IDs, protected-path authorization reference and expected evidence path. Missing values keep that phase paused.
+
+## Documentation Synchronization Matrix
+
+| Timing | Required documentation change |
+| --- | --- |
+| Before BH-HANDOFF implementation | AGENTS.md keeps the plan paused, routes agents to this plan, preserves current runtime commands and forbids claims that Permit/Preflight/React are already active. |
+| BH-SF2/BH-SF3 change | AGENTS.md, Phase standards and architecture docs update in the same change as canonical launcher/Permit/Mutation enforcement. README AI/LLM protocol changes only after the behavior lands. |
+| BH-RP1 change | README current-state/version sections update in the same change as public/admin version behavior. |
+| BH-REACT1/BH-REACT2 change | README documents internal trial, session/CSRF boundary, default surface, legacy state and rollback only when each behavior is real. |
+| BH-RELEASE change | README and AGENTS current-state, SemVer, bundle/compatibility and durable-document links close with release evidence. |
+
+Every phase exit lists changed or explicitly not-applicable AGENTS/README/standards/ADR paths. Missing documentation classification blocks exit; future behavior is always labeled planned, never current.

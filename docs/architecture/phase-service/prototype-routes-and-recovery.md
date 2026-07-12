@@ -44,6 +44,8 @@ For file-changing hosted game-project routes, consume project-level recovery sou
 
 Missing required recovery sources must fail closed.
 
+The ordered list is represented by the shared `hosted-route-recovery-order.v1` contract. Prompt-producing routes persist structured evidence that repeats the contract ID, the exact ordered list, and the route-local source-hash map; free-text token presence is not accepted as proof.
+
 ## Invariants
 
 - Route state must be source-linked and stale-state aware.

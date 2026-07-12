@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/bootstrap-handoff-contract.v1.schema.json",
+  "title": "BootstrapHandoffContract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "contractId", "createdUtc", "approvers", "canonicalization", "validator", "lock", "registry", "custody", "writeAllowlist", "sourceMapSchemaId", "signatures"],
+  "properties": {
+    "schemaId": {"const": "bootstrap-handoff-contract"},
+    "schemaVersion": {"const": "1"},
+    "contractId": {"type": "string", "minLength": 1},
+    "createdUtc": {"type": "string", "format": "date-time"},
+    "approvers": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "canonicalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encoding", "json", "hash", "pathStyle", "signature"],
+      "properties": {
+        "encoding": {"const": "UTF-8"},
+        "json": {"const": "RFC8785"},
+        "hash": {"const": "SHA-256"},
+        "pathStyle": {"const": "repo-relative-forward-slash-windows-normalized"},
+        "signature": {"const": "Ed25519"}
+      }
+    },
+    "validator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "locator", "digestSha256", "mutationFixtureDigestSha256", "publicKeyFingerprints"],
+      "properties": {
+        "kind": {"enum": ["organization-reusable-workflow", "host-installed-binary"]},
+        "locator": {"type": "string", "minLength": 1},
+        "digestSha256": {"$ref": "#/$defs/sha256"},
+        "mutationFixtureDigestSha256": {"$ref": "#/$defs/sha256"},
+        "publicKeyFingerprints": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "locator", "owner", "fencingToken", "maxLifetimeSeconds", "launcherInventoryHash", "launcherInventoryRefs", "recoveryProcedureRef"],
+      "properties": {
+        "backend": {"enum": ["protected-ci-environment", "offline-host-maintenance"]},
+        "locator": {"type": "string", "minLength": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "fencingToken": {"type": "integer", "minimum": 1},
+        "maxLifetimeSeconds": {"type": "integer", "minimum": 1},
+        "launcherInventoryHash": {"$ref": "#/$defs/sha256"},
+        "launcherInventoryRefs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "recoveryProcedureRef": {"type": "string", "minLength": 1}
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "transactionLocator"],
+      "properties": {
+        "backend": {"type": "string", "minLength": 1},
+        "transactionLocator": {"type": "string", "minLength": 1}
+      }
+    },
+    "custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appendOnlyLocators", "commitmentProvider", "receiptSchemaId"],
+      "properties": {
+        "appendOnlyLocators": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "commitmentProvider": {"type": "string", "minLength": 1},
+        "receiptSchemaId": {"type": "string", "minLength": 1}
+      }
+    },
+    "writeAllowlist": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "sourceMapSchemaId": {"const": "handoff-source-map.v1"},
+    "signatures": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"$ref": "#/$defs/signature"}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signerId", "keyId", "algorithm", "payloadHash", "signature"],
+      "properties": {
+        "signerId": {"type": "string", "minLength": 1},
+        "keyId": {"type": "string", "minLength": 1},
+        "algorithm": {"const": "Ed25519"},
+        "payloadHash": {"$ref": "#/$defs/sha256"},
+        "signature": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

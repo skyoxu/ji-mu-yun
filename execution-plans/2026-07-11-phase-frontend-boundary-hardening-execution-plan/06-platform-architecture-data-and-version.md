@@ -115,9 +115,11 @@ BH-DATA begins from the manifest-bound `DownstreamPersistenceObservationSnapshot
 ```text
 planned -> expanded -> backfilling -> dual_read_write -> verified -> contract_eligible -> contracted
    |          |             |                  |              |             |
-   +----------+-------------+------------------+--------------+-------------+-> failed_retryable -> retry
-                                                                  |
-                                                                  +-> manual_recovery_required
+   +----------+-------------+------------------+--------------+-------------+-> failed_retryable -> retrying
+                                                                                                  |
+                                                                                                  +-> retryTargetState
+                                                                   |
+                                                                   +-> manual_recovery_required
 ```
 
 - Migration ownership, minimum application version, compatibility window, batch/checkpoint key, retry limit and rollback/forward-recovery action are recorded before execution.
@@ -129,6 +131,7 @@ planned -> expanded -> backfilling -> dual_read_write -> verified -> contract_el
 - Verification before `contract_eligible` is a full reconciliation of all migrated rows and domain invariants, not sampling. It compares row counts, nullability/domain invariants, deterministic hashes/aggregates and read results through every supported writer/reader version.
 - Full reconciliation runs against one database snapshot/change watermark. Writers either pause briefly or publish an ordered watermark; verification proves all changes through that watermark are present in both representations before advancing.
 - Every migration state may enter `failed_retryable` or `manual_recovery_required` with checkpoint, fencing token, reason and forward/restore action. Failure injection covers crash before/after DDL, mid-batch backfill, one side of dual-write, service restart, previous-binary write, verification failure, contract failure and retry exhaustion.
+- `failed_retryable` records `retryTargetState` as data naming the exact prior checkpointed state. `retrying` reacquires the migration lease, validates fencing/checkpoint/schema hashes and returns only to the named existing state; `retryTargetState` and the diagram label are not persisted migration enum values, and retry cannot skip forward or restart from an inferred filesystem/DB condition.
 - Contract/drop cannot begin until the previous-bundle window closes, all incompatible writers are drained/fenced, full reconciliation remains green for the accepted observation period, a verified restore point exists and a separately authorized migration task exists.
 - Handoff `must_preserve` or unexpired `time_bounded_compatibility` schema/read behavior cannot enter contract/drop even when technical reconciliation passes.
 

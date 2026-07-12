@@ -2,6 +2,8 @@ using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Workflow;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +13,10 @@ namespace PhaseA.Platform.Data;
 
 public sealed class PhaseAMetadataStore
 {
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> AdminReviewSidecarLocks = new(StringComparer.Ordinal);
+    private static readonly IReadOnlySet<string> AdminReviewSeverities = new HashSet<string>(
+        ["P0", "P1", "P2"],
+        StringComparer.Ordinal);
     private readonly string _connectionString;
     private readonly PhaseAPlatformOptions _options;
 
@@ -346,7 +352,7 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$actor_account_id", actorAccountId);
         command.Parameters.AddWithValue("$action", action.Trim());
         command.Parameters.AddWithValue("$target_account_id", (object?)targetAccountId ?? DBNull.Value);
-        command.Parameters.AddWithValue("$metadata_json", JsonSerializer.Serialize(metadata));
+        command.Parameters.AddWithValue("$metadata_json", SecretRedactionPolicy.RedactForPersistence(JsonSerializer.Serialize(metadata)));
         command.Parameters.AddWithValue("$created_utc", DateTimeOffset.UtcNow.ToString("O"));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -1513,26 +1519,72 @@ public sealed class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.Severity);
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.BlockingReason);
         ArgumentException.ThrowIfNullOrWhiteSpace(entry.SourceArtifactPath);
+        if (!ProjectAdminReviewQueuePolicy.InputStatuses.Contains(entry.Status))
+        {
+            throw new ArgumentOutOfRangeException(nameof(entry), entry.Status, "admin_review_queue_status_invalid");
+        }
+        if (!AdminReviewSeverities.Contains(entry.Severity))
+        {
+            throw new ArgumentOutOfRangeException(nameof(entry), entry.Severity, "admin_review_queue_severity_invalid");
+        }
 
         var id = NewId();
         var now = DateTimeOffset.UtcNow.ToString("O");
+        var safeBlockingReason = SecretRedactionPolicy.RedactForPersistence(entry.BlockingReason);
+        var safeSourceArtifactPath = SecretRedactionPolicy.RedactForPersistence(entry.SourceArtifactPath);
+        var safeEvidenceRefsJson = SecretRedactionPolicy.RedactForPersistence(entry.EvidenceRefsJson);
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var current = await GetProjectAdminReviewQueueEntryByKeyAsync(
+            connection,
+            transaction,
+            entry.ProjectId,
+            entry.RouteId,
+            entry.RequirementId,
+            cancellationToken);
+        if (current is not null &&
+            string.Equals(current.AccountId, entry.AccountId, StringComparison.Ordinal) &&
+            string.Equals(current.Severity, entry.Severity, StringComparison.Ordinal) &&
+            string.Equals(current.BlockingReason, safeBlockingReason, StringComparison.Ordinal) &&
+            string.Equals(current.SourceArtifactPath, safeSourceArtifactPath, StringComparison.Ordinal) &&
+            string.Equals(current.EvidenceRefsJson, safeEvidenceRefsJson, StringComparison.Ordinal))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            await RefreshAdminReviewQueueSidecarAsync(current.ProjectId, cancellationToken);
+            return current;
+        }
+
+        if (current is not null)
+        {
+            await using var supersede = connection.CreateCommand();
+            supersede.Transaction = transaction;
+            supersede.CommandText =
+                """
+                UPDATE project_admin_review_queue
+                SET status = 'superseded',
+                    superseded_by_entry_id = $superseded_by_entry_id,
+                    updated_utc = $updated_utc
+                WHERE id = $id;
+                """;
+            supersede.Parameters.AddWithValue("$id", current.Id);
+            supersede.Parameters.AddWithValue("$superseded_by_entry_id", id);
+            supersede.Parameters.AddWithValue("$updated_utc", now);
+            await supersede.ExecuteNonQueryAsync(cancellationToken);
+        }
+
         await using (var command = connection.CreateCommand())
         {
+            command.Transaction = transaction;
             command.CommandText =
                 """
                 INSERT INTO project_admin_review_queue (
                     id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
-                    source_artifact_path, evidence_refs_json, status, decision_status, created_utc, updated_utc)
+                    source_artifact_path, evidence_refs_json, status, decision_status, created_utc, updated_utc,
+                    supersedes_entry_id)
                 VALUES (
                     $id, $account_id, $project_id, $route_id, $requirement_id, $severity, $blocking_reason,
-                    $source_artifact_path, $evidence_refs_json, $status, 'pending', $created_utc, $updated_utc)
-                ON CONFLICT(project_id, route_id, requirement_id, blocking_reason) DO UPDATE SET
-                    severity = excluded.severity,
-                    source_artifact_path = excluded.source_artifact_path,
-                    evidence_refs_json = excluded.evidence_refs_json,
-                    status = excluded.status,
-                    updated_utc = excluded.updated_utc;
+                    $source_artifact_path, $evidence_refs_json, $status, 'pending', $created_utc, $updated_utc,
+                    $supersedes_entry_id);
                 """;
             command.Parameters.AddWithValue("$id", id);
             command.Parameters.AddWithValue("$account_id", entry.AccountId);
@@ -1540,17 +1592,122 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$route_id", entry.RouteId);
             command.Parameters.AddWithValue("$requirement_id", entry.RequirementId);
             command.Parameters.AddWithValue("$severity", entry.Severity);
-            command.Parameters.AddWithValue("$blocking_reason", entry.BlockingReason);
-            command.Parameters.AddWithValue("$source_artifact_path", entry.SourceArtifactPath);
-            command.Parameters.AddWithValue("$evidence_refs_json", entry.EvidenceRefsJson);
+            command.Parameters.AddWithValue("$blocking_reason", safeBlockingReason);
+            command.Parameters.AddWithValue("$source_artifact_path", safeSourceArtifactPath);
+            command.Parameters.AddWithValue("$evidence_refs_json", safeEvidenceRefsJson);
             command.Parameters.AddWithValue("$status", entry.Status);
             command.Parameters.AddWithValue("$created_utc", now);
             command.Parameters.AddWithValue("$updated_utc", now);
+            command.Parameters.AddWithValue("$supersedes_entry_id", (object?)current?.Id ?? DBNull.Value);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
+        await transaction.CommitAsync(cancellationToken);
 
-        var existing = await GetProjectAdminReviewQueueEntryAsync(entry.ProjectId, entry.RouteId, entry.RequirementId, entry.BlockingReason, cancellationToken);
-        return existing ?? throw new InvalidOperationException("admin_review_queue_upsert_failed");
+        var created = await GetProjectAdminReviewQueueEntryByIdAsync(id, cancellationToken) ??
+            throw new InvalidOperationException("admin_review_queue_upsert_failed");
+        await RefreshAdminReviewQueueSidecarAsync(created.ProjectId, cancellationToken);
+        return created;
+    }
+
+    public async Task ReconcileProjectAdminReviewQueueAsync(
+        string accountId,
+        string projectId,
+        string routeId,
+        IReadOnlySet<string> activeRequirementIds,
+        string sourceArtifactPath,
+        string evidenceRefsJson,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(routeId);
+        ArgumentNullException.ThrowIfNull(activeRequirementIds);
+        var safeSourceArtifactPath = SecretRedactionPolicy.RedactForPersistence(sourceArtifactPath);
+        var safeEvidenceRefsJson = SecretRedactionPolicy.RedactForPersistence(evidenceRefsJson);
+        var now = DateTimeOffset.UtcNow.ToString("O");
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var currentEntries = new List<ProjectAdminReviewQueueEntry>();
+        await using (var select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText =
+                """
+                SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                       source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
+                       decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc,
+                       supersedes_entry_id, superseded_by_entry_id
+                FROM project_admin_review_queue
+                WHERE account_id = $account_id
+                  AND project_id = $project_id
+                  AND route_id = $route_id
+                  AND status <> 'superseded';
+                """;
+            select.Parameters.AddWithValue("$account_id", accountId);
+            select.Parameters.AddWithValue("$project_id", projectId);
+            select.Parameters.AddWithValue("$route_id", routeId);
+            await using var reader = await select.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                currentEntries.Add(ReadAdminReviewQueueEntry(reader));
+            }
+        }
+
+        foreach (var current in currentEntries.Where(entry =>
+                     !activeRequirementIds.Contains(entry.RequirementId) &&
+                     entry.Status != "resolved"))
+        {
+            var replacementId = NewId();
+            await using (var supersede = connection.CreateCommand())
+            {
+                supersede.Transaction = transaction;
+                supersede.CommandText =
+                    """
+                    UPDATE project_admin_review_queue
+                    SET status = 'superseded',
+                        superseded_by_entry_id = $replacement_id,
+                        updated_utc = $updated_utc
+                    WHERE id = $id;
+                    """;
+                supersede.Parameters.AddWithValue("$replacement_id", replacementId);
+                supersede.Parameters.AddWithValue("$updated_utc", now);
+                supersede.Parameters.AddWithValue("$id", current.Id);
+                await supersede.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await using var insert = connection.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText =
+                """
+                INSERT INTO project_admin_review_queue (
+                    id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
+                    source_artifact_path, evidence_refs_json, status, decision_status, decision_reason,
+                    decision_metadata_json, decision_version, created_utc, updated_utc, supersedes_entry_id)
+                VALUES (
+                    $id, $account_id, $project_id, $route_id, $requirement_id, $severity, $blocking_reason,
+                    $source_artifact_path, $evidence_refs_json, 'resolved', 'pending', $decision_reason,
+                    $decision_metadata_json, 0, $created_utc, $updated_utc, $supersedes_entry_id);
+                """;
+            insert.Parameters.AddWithValue("$id", replacementId);
+            insert.Parameters.AddWithValue("$account_id", current.AccountId);
+            insert.Parameters.AddWithValue("$project_id", current.ProjectId);
+            insert.Parameters.AddWithValue("$route_id", current.RouteId);
+            insert.Parameters.AddWithValue("$requirement_id", current.RequirementId);
+            insert.Parameters.AddWithValue("$severity", current.Severity);
+            insert.Parameters.AddWithValue("$blocking_reason", current.BlockingReason);
+            insert.Parameters.AddWithValue("$source_artifact_path", safeSourceArtifactPath);
+            insert.Parameters.AddWithValue("$evidence_refs_json", safeEvidenceRefsJson);
+            insert.Parameters.AddWithValue("$decision_reason", "Source blocker removed during route reconciliation.");
+            insert.Parameters.AddWithValue("$decision_metadata_json", "{\"resolution\":\"source_blocker_removed\"}");
+            insert.Parameters.AddWithValue("$created_utc", now);
+            insert.Parameters.AddWithValue("$updated_utc", now);
+            insert.Parameters.AddWithValue("$supersedes_entry_id", current.Id);
+            await insert.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        await RefreshAdminReviewQueueSidecarAsync(projectId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ProjectAdminReviewQueueEntry>> ListProjectAdminReviewQueueForAdminAsync(
@@ -1558,20 +1715,42 @@ public sealed class PhaseAMetadataStore
         int limit = 100,
         CancellationToken cancellationToken = default)
     {
+        return await ListProjectAdminReviewQueueForAdminAsync(
+            new ProjectAdminReviewQueueQuery(status, Limit: limit),
+            cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectAdminReviewQueueEntry>> ListProjectAdminReviewQueueForAdminAsync(
+        ProjectAdminReviewQueueQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        var cutoffUtc = query.MinimumAgeMinutes is > 0
+            ? DateTimeOffset.UtcNow.AddMinutes(-query.MinimumAgeMinutes.Value).ToString("O")
+            : "";
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
             SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
                    source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
-                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc,
+                   supersedes_entry_id, superseded_by_entry_id
             FROM project_admin_review_queue
             WHERE ($status = '' OR status = $status)
+              AND ($project_id = '' OR project_id = $project_id)
+              AND ($route_id = '' OR route_id = $route_id)
+              AND ($severity = '' OR severity = $severity)
+              AND ($cutoff_utc = '' OR created_utc <= $cutoff_utc)
             ORDER BY created_utc DESC, id DESC
             LIMIT $limit;
             """;
-        command.Parameters.AddWithValue("$status", status);
-        command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+        command.Parameters.AddWithValue("$status", query.Status ?? "");
+        command.Parameters.AddWithValue("$project_id", query.ProjectId ?? "");
+        command.Parameters.AddWithValue("$route_id", query.RouteId ?? "");
+        command.Parameters.AddWithValue("$severity", query.Severity ?? "");
+        command.Parameters.AddWithValue("$cutoff_utc", cutoffUtc);
+        command.Parameters.AddWithValue("$limit", Math.Clamp(query.Limit, 1, 500));
         var entries = new List<ProjectAdminReviewQueueEntry>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -1598,7 +1777,8 @@ public sealed class PhaseAMetadataStore
             """
             SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
                    source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
-                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc,
+                   supersedes_entry_id, superseded_by_entry_id
             FROM project_admin_review_queue
             WHERE account_id = $account_id
               AND project_id = $project_id
@@ -1609,7 +1789,7 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$account_id", accountId);
         command.Parameters.AddWithValue("$project_id", projectId);
         command.Parameters.AddWithValue("$status", status);
-        command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+        command.Parameters.AddWithValue("$limit", limit <= 0 ? -1 : Math.Clamp(limit, 1, 500));
         var entries = new List<ProjectAdminReviewQueueEntry>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -1623,45 +1803,73 @@ public sealed class PhaseAMetadataStore
     public async Task<ProjectAdminReviewDecisionResult> DecideProjectAdminReviewQueueEntryAsync(
         string entryId,
         string actorAccountId,
-        string decisionStatus,
-        string decisionReason,
-        string decisionMetadataJson,
-        int expectedDecisionVersion,
+        ProjectAdminReviewDecisionRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(entryId);
         ArgumentException.ThrowIfNullOrWhiteSpace(actorAccountId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(decisionStatus);
-        ArgumentException.ThrowIfNullOrWhiteSpace(decisionReason);
-        ArgumentException.ThrowIfNullOrWhiteSpace(decisionMetadataJson);
-
+        ArgumentNullException.ThrowIfNull(request);
+        var decisionStatus = request.DecisionStatus?.Trim() ?? "";
+        var decisionReason = request.DecisionReason?.Trim() ?? "";
+        var safeDecisionReason = SecretRedactionPolicy.RedactForPersistence(decisionReason);
+        if (decisionReason.Length == 0)
+        {
+            return new ProjectAdminReviewDecisionResult("rejected", "admin_review_decision_reason_missing", null);
+        }
+        if (!ProjectAdminReviewQueuePolicy.DecisionStatuses.Contains(decisionStatus))
+        {
+            return new ProjectAdminReviewDecisionResult("rejected", "admin_review_decision_invalid", null);
+        }
+        if (request.ExpectedDecisionVersion < 0)
+        {
+            return new ProjectAdminReviewDecisionResult("rejected", "admin_review_decision_version_invalid", null);
+        }
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        var existing = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var existing = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken, transaction);
         if (existing is null)
         {
             return new ProjectAdminReviewDecisionResult("not_found", "admin_review_entry_not_found", null);
         }
-
-        if (existing.DecisionVersion != expectedDecisionVersion)
+        if (existing.Status == "superseded")
         {
+            return new ProjectAdminReviewDecisionResult("conflict", "admin_review_entry_superseded", existing);
+        }
+
+        var nowValue = DateTimeOffset.UtcNow;
+        var now = nowValue.ToString("O");
+        if (decisionStatus == "deferred" && !HasValidDeferredDecisionMetadata(request, existing.RouteId, nowValue))
+        {
+            return new ProjectAdminReviewDecisionResult("rejected", "admin_review_deferred_metadata_invalid", existing);
+        }
+        if (existing.DecisionVersion != request.ExpectedDecisionVersion)
+        {
+            var retryMetadataJson = BuildAdminReviewDecisionMetadata(
+                request,
+                actorAccountId,
+                safeDecisionReason,
+                existing.DecidedUtc ?? now);
             if (existing.DecisionStatus == decisionStatus &&
                 existing.DecisionActorAccountId == actorAccountId &&
-                existing.DecisionReason == decisionReason &&
-                existing.DecisionMetadataJson == decisionMetadataJson)
+                existing.DecisionReason == safeDecisionReason &&
+                existing.DecisionMetadataJson == retryMetadataJson)
             {
+                await transaction.RollbackAsync(cancellationToken);
+                await RefreshAdminReviewQueueSidecarAsync(existing.ProjectId, cancellationToken);
                 return new ProjectAdminReviewDecisionResult("returned_existing", null, existing);
             }
 
             return new ProjectAdminReviewDecisionResult("conflict", "decision_version_conflict", existing);
         }
 
-        var now = DateTimeOffset.UtcNow.ToString("O");
+        var decisionMetadataJson = BuildAdminReviewDecisionMetadata(request, actorAccountId, safeDecisionReason, now);
         await using (var command = connection.CreateCommand())
         {
+            command.Transaction = transaction;
             command.CommandText =
                 """
                 UPDATE project_admin_review_queue
-                SET status = CASE WHEN $decision_status IN ('approved', 'rejected', 'deferred') THEN $decision_status ELSE status END,
+                SET status = $decision_status,
                     decision_status = $decision_status,
                     decision_actor_account_id = $actor_account_id,
                     decision_reason = $decision_reason,
@@ -1675,20 +1883,48 @@ public sealed class PhaseAMetadataStore
             command.Parameters.AddWithValue("$id", entryId);
             command.Parameters.AddWithValue("$actor_account_id", actorAccountId);
             command.Parameters.AddWithValue("$decision_status", decisionStatus);
-            command.Parameters.AddWithValue("$decision_reason", decisionReason);
+            command.Parameters.AddWithValue("$decision_reason", safeDecisionReason);
             command.Parameters.AddWithValue("$decision_metadata_json", decisionMetadataJson);
-            command.Parameters.AddWithValue("$expected_decision_version", expectedDecisionVersion);
+            command.Parameters.AddWithValue("$expected_decision_version", request.ExpectedDecisionVersion);
             command.Parameters.AddWithValue("$updated_utc", now);
             command.Parameters.AddWithValue("$decided_utc", now);
             var rows = await command.ExecuteNonQueryAsync(cancellationToken);
             if (rows == 0)
             {
-                var current = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+                var current = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken, transaction);
                 return new ProjectAdminReviewDecisionResult("conflict", "decision_version_conflict", current);
             }
         }
 
+        await using (var history = connection.CreateCommand())
+        {
+            history.Transaction = transaction;
+            history.CommandText =
+                """
+                INSERT INTO project_admin_review_decisions (
+                    id, entry_id, decision_version, decision_status, decision_actor_account_id,
+                    decision_reason, decision_metadata_json, created_utc)
+                VALUES (
+                    $id, $entry_id, $decision_version, $decision_status, $decision_actor_account_id,
+                    $decision_reason, $decision_metadata_json, $created_utc);
+                """;
+            history.Parameters.AddWithValue("$id", NewId());
+            history.Parameters.AddWithValue("$entry_id", entryId);
+            history.Parameters.AddWithValue("$decision_version", existing.DecisionVersion + 1);
+            history.Parameters.AddWithValue("$decision_status", decisionStatus);
+            history.Parameters.AddWithValue("$decision_actor_account_id", actorAccountId);
+            history.Parameters.AddWithValue("$decision_reason", safeDecisionReason);
+            history.Parameters.AddWithValue("$decision_metadata_json", decisionMetadataJson);
+            history.Parameters.AddWithValue("$created_utc", now);
+            await history.ExecuteNonQueryAsync(cancellationToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
+
         var updated = await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+        if (updated is not null)
+        {
+            await RefreshAdminReviewQueueSidecarAsync(updated.ProjectId, cancellationToken);
+        }
         return new ProjectAdminReviewDecisionResult("updated", null, updated);
     }
 
@@ -1717,7 +1953,11 @@ public sealed class PhaseAMetadataStore
         {
             SafeSummary = userSafeSummary,
             AdminSummary = adminSummary,
-            RetentionClass = retentionClass
+            RetentionClass = retentionClass,
+            SourceRefsJson = SecretRedactionPolicy.RedactForPersistence(entry.SourceRefsJson),
+            EvidenceRefsJson = SecretRedactionPolicy.RedactForPersistence(entry.EvidenceRefsJson),
+            SourceArtifactPath = SecretRedactionPolicy.RedactForPersistence(entry.SourceArtifactPath),
+            ReplacementEvidenceRefsJson = SecretRedactionPolicy.RedactForPersistence(entry.ReplacementEvidenceRefsJson)
         };
         var spoolRef = "";
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -1752,11 +1992,11 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$spool_ref", spoolRef);
         command.Parameters.AddWithValue("$safe_summary", userSafeSummary);
         command.Parameters.AddWithValue("$user_safe_summary", userSafeSummary);
-        command.Parameters.AddWithValue("$source_refs_json", entry.SourceRefsJson);
-        command.Parameters.AddWithValue("$evidence_refs_json", entry.EvidenceRefsJson);
-        command.Parameters.AddWithValue("$source_artifact_path", entry.SourceArtifactPath);
+        command.Parameters.AddWithValue("$source_refs_json", normalizedEntry.SourceRefsJson);
+        command.Parameters.AddWithValue("$evidence_refs_json", normalizedEntry.EvidenceRefsJson);
+        command.Parameters.AddWithValue("$source_artifact_path", normalizedEntry.SourceArtifactPath);
         command.Parameters.AddWithValue("$cleanup_status", entry.CleanupStatus);
-        command.Parameters.AddWithValue("$replacement_evidence_refs_json", entry.ReplacementEvidenceRefsJson);
+        command.Parameters.AddWithValue("$replacement_evidence_refs_json", normalizedEntry.ReplacementEvidenceRefsJson);
         command.Parameters.AddWithValue("$admin_summary", adminSummary);
         command.Parameters.AddWithValue("$remediation_hint_id", entry.RemediationHintId);
         command.Parameters.AddWithValue("$dedupe_scope_key", entry.DedupeScopeKey);
@@ -4905,31 +5145,32 @@ public sealed class PhaseAMetadataStore
             reader.IsDBNull(offset + 20) ? null : reader.GetString(offset + 20));
     }
 
-    private async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryAsync(
+    private static async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryByKeyAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
         string projectId,
         string routeId,
         string requirementId,
-        string blockingReason,
         CancellationToken cancellationToken)
     {
-        await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
                    source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
-                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc,
+                   supersedes_entry_id, superseded_by_entry_id
             FROM project_admin_review_queue
             WHERE project_id = $project_id
               AND route_id = $route_id
               AND requirement_id = $requirement_id
-              AND blocking_reason = $blocking_reason
+              AND status <> 'superseded'
             LIMIT 1;
             """;
         command.Parameters.AddWithValue("$project_id", projectId);
         command.Parameters.AddWithValue("$route_id", routeId);
         command.Parameters.AddWithValue("$requirement_id", requirementId);
-        command.Parameters.AddWithValue("$blocking_reason", blockingReason);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? ReadAdminReviewQueueEntry(reader) : null;
     }
@@ -4937,14 +5178,17 @@ public sealed class PhaseAMetadataStore
     private static async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryByIdAsync(
         SqliteConnection connection,
         string entryId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SqliteTransaction? transaction = null)
     {
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             SELECT id, account_id, project_id, route_id, requirement_id, severity, blocking_reason,
                    source_artifact_path, evidence_refs_json, status, decision_status, decision_actor_account_id,
-                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc
+                   decision_reason, decision_metadata_json, decision_version, created_utc, updated_utc, decided_utc, project_deleted_utc,
+                   supersedes_entry_id, superseded_by_entry_id
             FROM project_admin_review_queue
             WHERE id = $id
             LIMIT 1;
@@ -4952,6 +5196,76 @@ public sealed class PhaseAMetadataStore
         command.Parameters.AddWithValue("$id", entryId);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? ReadAdminReviewQueueEntry(reader) : null;
+    }
+
+    private async Task<ProjectAdminReviewQueueEntry?> GetProjectAdminReviewQueueEntryByIdAsync(
+        string entryId,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await GetProjectAdminReviewQueueEntryByIdAsync(connection, entryId, cancellationToken);
+    }
+
+    private static bool HasValidDeferredDecisionMetadata(
+        ProjectAdminReviewDecisionRequest request,
+        string routeId,
+        DateTimeOffset now)
+    {
+        return !string.IsNullOrWhiteSpace(request.DeferredOwner) &&
+               !string.IsNullOrWhiteSpace(request.RecheckTrigger) &&
+               DateTimeOffset.TryParse(request.DeferredUntilUtc, out var deferredUntil) &&
+               deferredUntil > now &&
+               request.AffectedRoutes is { Count: > 0 } &&
+               request.AffectedRoutes.All(route => !string.IsNullOrWhiteSpace(route)) &&
+               request.AffectedRoutes.Any(route => string.Equals(route.Trim(), routeId, StringComparison.Ordinal));
+    }
+
+    private static string BuildAdminReviewDecisionMetadata(
+        ProjectAdminReviewDecisionRequest request,
+        string actorAccountId,
+        string decisionReason,
+        string decisionUtc)
+    {
+        var metadata = JsonSerializer.Serialize(new
+        {
+            decision_by = actorAccountId,
+            decision_role = "admin",
+            decision_reason = decisionReason,
+            decision_utc = decisionUtc,
+            decision_evidence_refs = request.DecisionEvidenceRefs?
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item.Trim())
+                .ToArray() ?? [],
+            deferred_owner = request.DeferredOwner?.Trim(),
+            deferred_until_utc = request.DeferredUntilUtc?.Trim(),
+            recheck_trigger = request.RecheckTrigger?.Trim(),
+            affected_routes = request.AffectedRoutes?
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item.Trim())
+                .ToArray() ?? []
+        });
+        return SecretRedactionPolicy.RedactForPersistence(metadata);
+    }
+
+    private async Task RefreshAdminReviewQueueSidecarAsync(string projectId, CancellationToken cancellationToken)
+    {
+        var gate = AdminReviewSidecarLocks.GetOrAdd(projectId, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var project = await GetProjectSnapshotAsync(projectId, cancellationToken);
+            if (project is null)
+            {
+                return;
+            }
+
+            var entries = await ListProjectAdminReviewQueueForProjectAsync(project.AccountId, project.ProjectId, "", 0, cancellationToken);
+            await ProjectAdminReviewQueueSidecarWriter.WriteAsync(project, entries, cancellationToken);
+        }
+        finally
+        {
+            gate.Release();
+        }
     }
 
     private async Task<ProjectDiagnosticSpoolEntry?> GetProjectDiagnosticSpoolEntryByIdAsync(
@@ -4994,9 +5308,23 @@ public sealed class PhaseAMetadataStore
         var unresolvedAdminReviewCount = await ExecuteScalarLongInsideTransactionAsync(
             connection,
             transaction,
-            "SELECT COUNT(*) FROM project_admin_review_queue WHERE project_id = $project_id AND status IN ('open', 'deferred', 'backlog');",
+            """
+            SELECT COUNT(*)
+            FROM project_admin_review_queue
+            WHERE project_id = $project_id
+              AND (
+                    status IN ('open', 'rejected', 'backlog')
+                    OR (status = 'deferred' AND CASE
+                        WHEN json_valid(decision_metadata_json) = 0 THEN 1
+                        WHEN json_extract(decision_metadata_json, '$.deferred_until_utc') IS NULL THEN 1
+                        WHEN julianday(json_extract(decision_metadata_json, '$.deferred_until_utc')) <= julianday($now) THEN 1
+                        ELSE 0
+                    END = 1)
+                  );
+            """,
             cancellationToken,
-            ("$project_id", projectId)) ?? 0;
+            ("$project_id", projectId),
+            ("$now", now)) ?? 0;
         var unresolvedDiagnosticCount = await ExecuteScalarLongInsideTransactionAsync(
             connection,
             transaction,
@@ -5209,7 +5537,9 @@ public sealed class PhaseAMetadataStore
             reader.GetString(15),
             reader.GetString(16),
             reader.IsDBNull(17) ? null : reader.GetString(17),
-            reader.IsDBNull(18) ? null : reader.GetString(18));
+            reader.IsDBNull(18) ? null : reader.GetString(18),
+            reader.IsDBNull(19) ? null : reader.GetString(19),
+            reader.IsDBNull(20) ? null : reader.GetString(20));
     }
 
     private static ProjectDiagnosticSpoolEntry ReadDiagnosticSpoolEntry(SqliteDataReader reader)

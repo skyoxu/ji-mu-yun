@@ -4,6 +4,7 @@ using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 using System.Text;
@@ -118,7 +119,9 @@ public sealed class ArtifactReadbackService
         var items = new List<RunReadbackItem>();
         foreach (var run in recent)
         {
-            var artifacts = await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken);
+            var artifacts = (await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken))
+                .Where(IsBrowserReadableArtifact)
+                .ToArray();
             items.Add(RunReadbackItem.FromSnapshot(run, artifacts));
         }
 
@@ -327,7 +330,7 @@ public sealed class ArtifactReadbackService
                 .Append(Csv(item.Action)).Append(',')
                 .Append(Csv(item.TargetAccountId)).Append(',')
                 .Append(Csv(item.CreatedUtc)).Append(',')
-                .Append(Csv(item.MetadataJson))
+                .Append(Csv(SecretRedactionPolicy.RedactForPersistence(item.MetadataJson)))
                 .AppendLine();
         }
 
@@ -399,7 +402,9 @@ public sealed class ArtifactReadbackService
         var items = new List<RunReadbackItem>();
         foreach (var run in runs)
         {
-            var artifacts = await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken);
+            var artifacts = (await _metadataStore.ListArtifactsForRunAsync(run.RunId, cancellationToken))
+                .Where(IsBrowserReadableArtifact)
+                .ToArray();
             items.Add(RunReadbackItem.FromSnapshot(run, artifacts));
         }
 
@@ -439,15 +444,17 @@ public sealed class ArtifactReadbackService
             : run;
     }
 
-    public Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunAsync(string runId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunAsync(string runId, CancellationToken cancellationToken = default)
     {
-        return _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken);
+        return (await _metadataStore.ListArtifactsForRunAsync(runId, cancellationToken))
+            .Where(IsBrowserReadableArtifact)
+            .ToArray();
     }
 
     public async Task<ArtifactReadResult?> ReadArtifactAsync(string artifactId, CancellationToken cancellationToken = default)
     {
         var artifact = await _metadataStore.GetArtifactAsync(artifactId, cancellationToken);
-        if (artifact is null)
+        if (artifact is null || !IsBrowserReadableArtifact(artifact))
         {
             return null;
         }
@@ -462,7 +469,7 @@ public sealed class ArtifactReadbackService
         CancellationToken cancellationToken = default)
     {
         var artifact = await _metadataStore.GetArtifactAsync(artifactId, cancellationToken);
-        if (artifact is null)
+        if (artifact is null || !IsBrowserReadableArtifact(artifact))
         {
             return null;
         }
@@ -474,6 +481,11 @@ public sealed class ArtifactReadbackService
         }
 
         return ReadArtifact(project.RepoPath, artifact);
+    }
+
+    private static bool IsBrowserReadableArtifact(ArtifactSnapshot artifact)
+    {
+        return !string.Equals(artifact.ArtifactType, "game-design-gdd-prompt", StringComparison.Ordinal);
     }
 
     public ArtifactReadResult? ReadProjectHealth(string relativePath)

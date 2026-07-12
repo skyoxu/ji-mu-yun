@@ -16,6 +16,7 @@ public sealed class GameDesignRequirementMapService
     private const string SceneRouteRelativePath = "meta/routes/scene-route/latest.json";
     private const string GddDocumentRelativePath = "meta/routes/gdd-document/latest.json";
     private const string RequirementMapRelativePath = "meta/routes/gdd-requirements/latest.json";
+    private const string RequirementPromptEvidenceRelativePath = "meta/routes/gdd-requirements/prompt-evidence.json";
     private const string ContractRelativePath = "routes/prototype-contract/latest.json";
     private static readonly Regex RequirementLineRegex = new(@"^\s*(?:[-*]|\d+[\.\)、:：])\s*(?<text>.+)$", RegexOptions.Compiled);
     private readonly PhaseAMetadataStore _metadataStore;
@@ -127,6 +128,24 @@ public sealed class GameDesignRequirementMapService
             ? "needs_review"
             : "ready";
         var now = DateTimeOffset.UtcNow.ToString("O");
+        var sourceHashes = new Dictionary<string, string>
+        {
+            [GddRelativePath] = sourceGddHash,
+            [SceneRouteRelativePath] = sceneHash,
+            ["project-contract-snapshot"] = contractSnapshotHash
+        };
+        await WriteJsonAsync(project, RequirementPromptEvidenceRelativePath, new
+        {
+            schema_version = "gdd-requirements-prompt-evidence.v1",
+            route = "gdd-requirements",
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = sourceHashes,
+            prompt_purpose = "gdd-requirement-map",
+            prompt_transport = "shared-llm-route-engine",
+            raw_prompt_persisted = false,
+            checked_utc = now
+        }, cancellationToken);
         var result = new GameDesignRequirementMapResult(
             project.ProjectId,
             status,
@@ -163,16 +182,12 @@ public sealed class GameDesignRequirementMapService
             source_boundary_enforced = true,
             source_boundary = new
             {
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[] { "docs/gdd/GDD.md", "confirmed scene route", "project contract snapshot" },
-                source_hashes = new Dictionary<string, string>
-                {
-                    [GddRelativePath] = result.SourceGddHash,
-                    [SceneRouteRelativePath] = result.SourceSceneRouteHash,
-                    ["project-contract-snapshot"] = result.SourceContractSnapshotHash
-                },
+                source_hashes = sourceHashes,
                 forbidden_source_patterns = new[] { "docs/game-type-guides/** raw excerpts" },
-                prompt_evidence_refs = generation.PromptEvidenceRefs,
+                prompt_evidence_refs = new[] { RequirementPromptEvidenceRelativePath },
                 checked_utc = now
             },
             evidence_refs = new[] { new { kind = "sidecar", path = RequirementMapRelativePath } },
@@ -188,9 +203,17 @@ public sealed class GameDesignRequirementMapService
             requirements = requirements.Select(ToSidecarRequirement).ToArray()
         };
         await WriteJsonAsync(project, RequirementMapRelativePath, output, cancellationToken);
-        await RecordAdminReviewQueueAsync(project, requirements, cancellationToken);
-        await RecordDiagnosticsAsync(project, result.BlockingIssues, cancellationToken);
         var persistedHash = Sha256(NormalizeText(File.ReadAllText(Resolve(project.RepoPath, RequirementMapRelativePath), Encoding.UTF8)));
+        await RecordAdminReviewQueueAsync(
+            project,
+            requirements,
+            persistedHash,
+            result.SourceGddHash,
+            result.SourceSceneRouteHash,
+            result.SourceContractSnapshotHash,
+            result.SourceGodotUiContractHash,
+            cancellationToken);
+        await RecordDiagnosticsAsync(project, result.BlockingIssues, cancellationToken);
         return result with
         {
             SourceRequirementMapHash = persistedHash,
@@ -402,14 +425,33 @@ public sealed class GameDesignRequirementMapService
     private async Task RecordAdminReviewQueueAsync(
         ProjectSnapshot project,
         IReadOnlyList<GameDesignRequirementRow> requirements,
+        string sourceRequirementMapHash,
+        string sourceGddHash,
+        string sourceSceneRouteHash,
+        string sourceContractSnapshotHash,
+        string sourceGodotUiContractHash,
         CancellationToken cancellationToken)
     {
-        foreach (var requirement in requirements.Where(item =>
-                     item.Priority is "P0" or "P1" &&
-                     item.Status is "conflict" or "explicitly_deferred"))
+        var activeRequirements = requirements.Where(item =>
+                item.Priority is "P0" or "P1" &&
+                item.Status is "conflict" or "explicitly_deferred")
+            .ToArray();
+        foreach (var requirement in activeRequirements)
         {
             var evidenceJson = JsonSerializer.Serialize(
-                new[] { new ProjectRouteStateEvidenceRef("sidecar", RequirementMapRelativePath) },
+                new[]
+                {
+                    new
+                    {
+                        kind = "sidecar",
+                        path = RequirementMapRelativePath,
+                        source_requirement_map_hash = sourceRequirementMapHash,
+                        source_gdd_hash = sourceGddHash,
+                        source_scene_route_hash = sourceSceneRouteHash,
+                        source_contract_snapshot_hash = sourceContractSnapshotHash,
+                        source_godot_ui_contract_hash = sourceGodotUiContractHash
+                    }
+                },
                 JsonOptions());
             await _metadataStore.UpsertProjectAdminReviewQueueEntryAsync(
                 new ProjectAdminReviewQueueCommand(
@@ -423,6 +465,31 @@ public sealed class GameDesignRequirementMapService
                     evidenceJson),
                 cancellationToken);
         }
+
+        var reconciliationEvidence = JsonSerializer.Serialize(
+            new[]
+            {
+                new
+                {
+                    kind = "sidecar",
+                    path = RequirementMapRelativePath,
+                    source_requirement_map_hash = sourceRequirementMapHash,
+                    source_gdd_hash = sourceGddHash,
+                    source_scene_route_hash = sourceSceneRouteHash,
+                    source_contract_snapshot_hash = sourceContractSnapshotHash,
+                    source_godot_ui_contract_hash = sourceGodotUiContractHash,
+                    summary = "Current requirement map no longer contains the prior blocker."
+                }
+            },
+            JsonOptions());
+        await _metadataStore.ReconcileProjectAdminReviewQueueAsync(
+            project.AccountId,
+            project.ProjectId,
+            "gdd-requirements",
+            activeRequirements.Select(requirement => requirement.RequirementId).ToHashSet(StringComparer.Ordinal),
+            RequirementMapRelativePath,
+            reconciliationEvidence,
+            cancellationToken);
     }
 
     private static List<GameDesignRequirementRow> BuildDeterministicRequirements(string gddText, JsonElement sceneRoot)

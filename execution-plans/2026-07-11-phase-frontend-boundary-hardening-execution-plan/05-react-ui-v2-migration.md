@@ -2,7 +2,7 @@
 
 ## Security Gate Before Public Trial
 
-No React implementation or legacy freeze starts before BH-HANDOFF and BH-SF0A through BH-SF4 complete. After those Gates, `/ui-v2` may run on localhost or approved internal test scope while security migration is incomplete. Public trial is blocked until:
+No React implementation or legacy freeze starts before BH-RP1 has exited through the exact chain BH-HANDOFF -> BH-SF0A -> BH-SF0B -> BH-SF0C -> BH-SF1 -> BH-SF2 -> BH-SF3 -> BH-SF4 -> BH-PILOT -> BH-RP1. After that entry Gate, `/ui-v2` may run on localhost or approved internal test scope while security migration is incomplete. Public trial is blocked until:
 
 - HTTPS public smoke passes without HTTP fallback.
 - React session no longer persists raw bearer token in JavaScript-readable Cookie, localStorage, sessionStorage, URL, or build configuration.
@@ -135,7 +135,7 @@ Referrer-Policy: no-referrer
 
 Machine ledger fields:
 
-- upstreamHandoffId/hash, upstream surfaceId/owner/authority document, legacy route/renderer, React route/component
+- upstreamHandoffId/hash/epoch, StateEvent hash, ActiveRegistry rowVersion, derived surfaceId, upstream source refs/owner/authority document, legacy route/renderer, React route/component
 - downstream API observation/frontend inventory version/hash, upstream fixture/E2E refs and compatibility classification
 - state: not_started/shell_ready/parity_ready/trial/default/legacy_retired
 - trial cohort, cutover evidence, rollback bundle
@@ -144,7 +144,7 @@ The required surface set is generated from `DownstreamFrontendSurfaceInventory`,
 
 ### Trial Promotion And Rollback Gate
 
-Each surface records a minimum 7-day observation window and at least 100 representative sessions before promotion. The representative matrix is derived from upstream surface/E2E IDs and must cover normal/admin roles as applicable, success/failure/unauthorized/stale/readback paths, long-running operation recovery, current supported browsers and desktop/mobile classifications declared by product support. Low traffic may extend the trial but cannot waive the session floor or substitute an unquantified decision log. Promotion requires:
+Each surface records a minimum 7-day observation window and at least 100 representative sessions before promotion. The representative matrix is derived from DownstreamFrontendSurfaceInventory rows and their upstream E2E/source refs and must cover normal/admin roles as applicable, success/failure/unauthorized/stale/readback paths, long-running operation recovery, current supported browsers and desktop/mobile classifications declared by product support. Low traffic may extend the trial but cannot waive the session floor or substitute an unquantified decision log. Promotion requires:
 
 - server error rate <= 0.5% and no regression greater than 0.2 percentage points versus legacy
 - unexpected authentication/session failure <= 0.2%

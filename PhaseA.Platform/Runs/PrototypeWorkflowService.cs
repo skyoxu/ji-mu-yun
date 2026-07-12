@@ -6,6 +6,7 @@ using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace PhaseA.Platform.Runs;
@@ -3261,10 +3262,11 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
             route = "prototype-skeleton",
             status,
             source_boundary_enforced = true,
-            recovery_source_order_ref = "hosted-route-recovery-order.v1",
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
             source_boundary = new
             {
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[]
                 {
                     "game-type-route-profile",
@@ -3283,6 +3285,11 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
                     source_godot_ui_contract_hash = contractStatus.SourceGodotUiContractHash,
                     source_ui_style_contract_hash = contractStatus.SourceUiStyleContractHash,
                     ui_style_snapshot_hash = contractStatus.UiStyleSnapshotHash
+                },
+                forbidden_source_patterns = new[]
+                {
+                    "docs/game-type-guides/** raw excerpts",
+                    "assistant summary as acceptance authority"
                 }
             },
             freshness = newChainGuard.NewChainActive && newChainGuard.Allowed && string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase)

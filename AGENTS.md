@@ -27,6 +27,12 @@ This AGENTS.md prioritizes Phase A/B platform service work before broader templa
 - Godot UI style standards live in `docs/standards/godot-ui-style-contract.md`; read them before changing style catalog selection, style snapshots, component coverage, drift taxonomy, or style-not-applicable exemptions.
 - Godot diagnostics and quality-gate standards live in `docs/standards/godot-diagnostics-quality-gates.md`; read them before changing diagnostic spool, failure families, preview/package readiness, interaction-region evidence, lifecycle cleanup, admin triage, or deleted-project diagnostic retention.
 
+## Planned Frontend Boundary Hardening
+- `execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md` is a `paused` downstream plan. It starts only after `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/` is fully complete and the protected BH-HANDOFF succeeds.
+- Until that handoff, do not treat `/ui-v2`, Permit/Preflight, new browser session paths, Change Origin Gate, legacy freeze, or Phase platform SemVer as current repository capabilities. Current runtime commands and contracts in this file and `README.md` remain authoritative.
+- Plan-readiness can be checked with `py -3 execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan/tools/validate_whole_directory.py`. A PASS means only that the plan is internally implementable; it cannot replace the repository-external protected BH-HANDOFF verifier and does not prove code completion.
+- Update this routing file in the same change that makes a planned rule operational: BH-SF2 for Platform/Hosted Codex routing and Preflight, BH-SF3 for mutation/acceptance recovery entrypoints, BH-RP1 for version projection, BH-REACT1/BH-REACT2 for `/ui-v2`, session and legacy-route behavior, and BH-RELEASE for final SemVer/release authority. Never document a future phase as active before its exit evidence exists.
+
 ## Start Here
 
 1. For Phase service work, read `Phase Service Scope`, `Phase Service Change Contract`, `Phase Runtime Recovery Order`, `docs/standards/_index.md`, and `docs/standards/phase-service.md` before editing.

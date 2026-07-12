@@ -35,6 +35,8 @@ Out of scope:
 - Account-scoped readback must hide other accounts' artifacts, packages, assets, runs, and projects.
 - Evidence must carry enough context to diagnose producer, project, account, run, route, status, and path ownership.
 - Failure evidence is preserved; new evidence is added as sidecars.
+- Admin-review decisions preserve actor, role, reason, UTC, evidence refs, version, and deferred owner/expiry/recheck/route scope where applicable. Regenerated queue evidence links superseding records instead of rewriting the prior decision.
+- Persistence and export paths apply the same secret and host-path redaction boundary; redaction is not deferred to the browser caller.
 
 ## Change Rules
 

@@ -17,6 +17,24 @@
 - 98 split audit
 - 99 source coverage
 
+## Required Machine Artifacts
+
+- `schemas/bootstrap-handoff-contract.v1.schema.json`
+- `schemas/upstream-handoff-manifest.v1.schema.json`
+- `schemas/upstream-handoff-state-event.v1.schema.json`
+- `schemas/upstream-handoff-active-registry.v1.schema.json`
+- `schemas/upstream-completion-snapshot.v1.schema.json`
+- `schemas/handoff-source-map.v1.schema.json`
+- `schemas/downstream-observation-snapshots.v1.schema.json`
+- `schemas/finding-closure-registry.v1.schema.json`
+- `schemas/finding-closure-evidence.v1.schema.json`
+- `schemas/original-requirement-family-registry.v1.schema.json`
+- `schemas/original-requirement-family-registry.v1.json`
+- generated `schemas/finding-closure-registry.v1.json`
+- explicit `schemas/finding-closure-evidence.v1.json`
+- `schemas/schema-validation-fixtures.v1.json`
+- `tools/validate_whole_directory.py`
+
 ## Coverage Dimensions
 
 | Dimension | Covered by |
@@ -35,12 +53,16 @@
 | Mechanical plan validation | 96 |
 | New requirement preservation | 97 |
 | Historical source mapping | 98 |
+| Machine-readable handoff and review contracts | schemas/** |
+| Historical finding closure and freshness | 97, generated finding closure registry, 96 validator |
+| AGENTS/README truthfulness and phase-bound synchronization | 08, AGENTS.md, README.md |
+| Original 19-family semantic coverage | original-family registry, 98, 99 |
 
 ## Assertions
 
 - Every `PBR-*` entry is owned and represented in this coverage map.
 - No required book is missing or unlinked.
-- Top-level recovery metadata remains valid and uses UpstreamHandoffActiveRegistry `finalCommit`; no static Git Head is authoritative.
+- Top-level recovery metadata remains valid: UpstreamHandoffActiveRegistry selects one immutable Manifest and recovery reads that Manifest's `finalCommit`; no static Git Head or registry-owned commit is authoritative.
 - Upstream GDD-to-module business semantics are referenced, not copied.
 - Durable implemented rules are moved out of execution plans into standards/ADR/workflow.
 
@@ -74,9 +96,52 @@
 | 96 / BH-HANDOFF overlap validator, handoff-only task and frozen self-modification guard | PBR-033, PBR-042, PBR-061, PBR-070; PBR-013 is historical and resolves through the status registry |
 | 97 / BH-HANDOFF machine-readable PBR supersession | PBR-083 |
 | top-level / BH-HANDOFF exact formal Gates and ActiveRegistry recovery baseline | PBR-079, PBR-080 |
+| 96 / BH-HANDOFF local plan-readiness versus protected verifier boundary and top-level authority owner | PBR-085, PBR-091 |
+| 01 / BH-HANDOFF actual schemas, qualified source paths and constrained deferrals | PBR-086, PBR-095, PBR-097 |
+| 01 / BH-SF0B complete handoff binding tuple | PBR-092 |
+| 97 / BH-HANDOFF generated finding closure, bidirectional mapping, stable acceptance and derived terminology | PBR-087, PBR-088, PBR-089, PBR-094 |
+| 98 / BH-HANDOFF canonical original semantic-family coverage | PBR-090 |
+| 08 / BH-HANDOFF phase-bound AGENTS/README synchronization | PBR-098 |
+| 05 / BH-REACT1 predecessor gate and derived surface vocabulary | PBR-093, PBR-099 |
+| 09 / BH-SF1 consistent containment stop condition | PBR-096 |
+| 06 / BH-DATA checkpointed retry return | PBR-100 |
+| 09 / BH-SF0A machine-object glossary completeness | PBR-101 |
+| 01 / BH-HANDOFF strict commit/hash, signature, dual-snapshot, qualified source-map path and schema identity contracts | PBR-102, PBR-103, PBR-104, PBR-105, PBR-112 |
+| 96 / BH-HANDOFF Draft 2020-12 schema and fixture validation | PBR-106 |
+| 99 / BH-HANDOFF structural owner/phase coverage and ActiveRegistry-to-Manifest recovery relation | PBR-107, PBR-111 |
+| 97 / BH-HANDOFF explicit finding closure evidence independent of PBR mapping | PBR-108 |
+| 01 / BH-HANDOFF strict downstream observation, deferral and source-map N-A contracts | PBR-109, PBR-110, PBR-115 |
+| 98 / BH-HANDOFF approved original semantic provenance and machine-readable acceptance | PBR-113, PBR-116 |
+| 06 / BH-DATA retryTargetState vocabulary without a persisted placeholder state | PBR-114 |
 
 The split validator parses this table and requires every ledger ID exactly once, except an explicitly superseded historical ID which must resolve through the Requirement Status Registry to one active replacement. Owner and phase must match the ledger row.
 
+## Original Requirement Family Coverage
+
+| Family | Owner books | Acceptance ref |
+| --- | --- | --- |
+| ORIG-01 | top-level, 00, 01 | phase-boundary://original-requirements/ORIG-01/acceptance |
+| ORIG-02 | 01 | phase-boundary://original-requirements/ORIG-02/acceptance |
+| ORIG-03 | 01, 08 | phase-boundary://original-requirements/ORIG-03/acceptance |
+| ORIG-04 | 02 | phase-boundary://original-requirements/ORIG-04/acceptance |
+| ORIG-05 | 02 | phase-boundary://original-requirements/ORIG-05/acceptance |
+| ORIG-06 | 03 | phase-boundary://original-requirements/ORIG-06/acceptance |
+| ORIG-07 | 03 | phase-boundary://original-requirements/ORIG-07/acceptance |
+| ORIG-08 | 04 | phase-boundary://original-requirements/ORIG-08/acceptance |
+| ORIG-09 | 04 | phase-boundary://original-requirements/ORIG-09/acceptance |
+| ORIG-10 | 05 | phase-boundary://original-requirements/ORIG-10/acceptance |
+| ORIG-11 | 05 | phase-boundary://original-requirements/ORIG-11/acceptance |
+| ORIG-12 | 05 | phase-boundary://original-requirements/ORIG-12/acceptance |
+| ORIG-13 | 06 | phase-boundary://original-requirements/ORIG-13/acceptance |
+| ORIG-14 | 06 | phase-boundary://original-requirements/ORIG-14/acceptance |
+| ORIG-15 | 06 | phase-boundary://original-requirements/ORIG-15/acceptance |
+| ORIG-16 | 07 | phase-boundary://original-requirements/ORIG-16/acceptance |
+| ORIG-17 | 07 | phase-boundary://original-requirements/ORIG-17/acceptance |
+| ORIG-18 | 08, 96 | phase-boundary://original-requirements/ORIG-18/acceptance |
+| ORIG-19 | 09 | phase-boundary://original-requirements/ORIG-19/acceptance |
+
+This table mirrors the canonical registry. It is semantic-family coverage, not a claim that the unavailable pre-split bytes or prose order were preserved.
+
 ## Completion
 
-Coverage is complete only when the deterministic split validator passes and no global review finding identifies an unmapped requirement.
+Coverage is complete only when the deterministic plan-readiness validator passes, the generated finding closure registry has no open plan finding, all 116 PBR requirements and all 19 approved original semantic families are mapped, and no global review finding identifies an unmapped requirement. This result means the plan is implementable; it does not mean implementation is complete and does not satisfy protected BH-HANDOFF validation.

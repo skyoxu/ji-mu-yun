@@ -1,0 +1,5 @@
+{
+  "schema_version": "gdd-to-module-implementation-acceptance-evidence-index.v1",
+  "description": "Explicit check-ID evidence authority. A matrix row may transition only from an entry in this append-only reviewed ledger.",
+  "entries": []
+}

@@ -205,6 +205,11 @@ app.Use(async (context, next) =>
 
 app.Use(async (context, next) =>
 {
+    if (context.Request.Path.StartsWithSegments("/api/admin"))
+    {
+        ApplyNoStore(context);
+    }
+
     if (context.Request.Path == "/healthz" ||
         context.Request.Path == "/favicon.ico" ||
         context.Request.Path == "/" ||
@@ -395,6 +400,7 @@ app.MapGet("/api/admin/llm-usage", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -412,6 +418,7 @@ app.MapGet("/api/admin/llm-usage/aggregate", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -432,6 +439,7 @@ app.MapGet("/api/admin/llm-usage.csv", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -452,6 +460,7 @@ app.MapGet("/api/admin/llm-runs", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -468,6 +477,7 @@ app.MapGet("/api/admin/run-metrics", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -482,6 +492,7 @@ app.MapGet("/api/admin/game-type-match-failures", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -496,6 +507,7 @@ app.MapGet("/api/admin/game-type-match-records", async (
     [FromServices] ArtifactReadbackService readback,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -505,7 +517,11 @@ app.MapGet("/api/admin/game-type-match-records", async (
 });
 
 app.MapGet("/api/admin/project-admin-review-queue", async (
+    string? projectId,
+    string? routeId,
+    string? severity,
     string? status,
+    int? minimumAgeMinutes,
     int? limit,
     HttpContext context,
     [FromServices] PhaseAMetadataStore metadataStore,
@@ -517,7 +533,74 @@ app.MapGet("/api/admin/project-admin-review-queue", async (
         return AdminForbidden();
     }
 
-    return Results.Ok(await metadataStore.ListProjectAdminReviewQueueForAdminAsync(status ?? "open", limit ?? 100, cancellationToken));
+    var normalizedStatus = status?.Trim() ?? "open";
+    var normalizedSeverity = severity?.Trim() ?? "";
+    if ((normalizedStatus.Length > 0 && !ProjectAdminReviewQueuePolicy.PersistedStatuses.Contains(normalizedStatus)) ||
+        (normalizedSeverity.Length > 0 && normalizedSeverity is not ("P0" or "P1" or "P2")) ||
+        minimumAgeMinutes is < 0 ||
+        limit is < 1 or > 500)
+    {
+        return Results.BadRequest(new
+        {
+            code = "validation_failed",
+            message = "Admin review queue filters are invalid.",
+            details = new { operation = "list_project_admin_review_queue" },
+            requestId = context.TraceIdentifier
+        });
+    }
+
+    return Results.Ok(await metadataStore.ListProjectAdminReviewQueueForAdminAsync(
+        new ProjectAdminReviewQueueQuery(
+            normalizedStatus,
+            projectId,
+            routeId,
+            normalizedSeverity,
+            minimumAgeMinutes,
+            limit ?? 100),
+        cancellationToken));
+});
+
+app.MapPost("/api/admin/project-admin-review-queue/{entryId}/decision", async (
+    string entryId,
+    ProjectAdminReviewDecisionRequest request,
+    HttpContext context,
+    [FromServices] PhaseAMetadataStore metadataStore,
+    CancellationToken cancellationToken) =>
+{
+    ApplyNoStore(context);
+    if (!CurrentIdentity(context).IsAdmin)
+    {
+        return AdminForbidden();
+    }
+
+    var result = await metadataStore.DecideProjectAdminReviewQueueEntryAsync(
+        entryId,
+        CurrentAccountId(context),
+        request,
+        cancellationToken);
+    return result.Status switch
+    {
+        "updated" or "returned_existing" => Results.Ok(result.Entry),
+        "not_found" => Results.NotFound(new
+        {
+            code = result.FailureCode,
+            message = "Admin review queue entry not found.",
+            requestId = context.TraceIdentifier
+        }),
+        "conflict" => Results.Conflict(new
+        {
+            code = result.FailureCode,
+            message = "Admin review queue decision version conflict.",
+            current = result.Entry,
+            requestId = context.TraceIdentifier
+        }),
+        _ => Results.BadRequest(new
+        {
+            code = result.FailureCode ?? "validation_failed",
+            message = "Admin review queue decision is invalid.",
+            requestId = context.TraceIdentifier
+        })
+    };
 });
 
 app.MapGet("/api/admin/project-diagnostic-spool", async (
@@ -632,6 +715,7 @@ app.MapPost("/api/admin/projects/{projectId}/game-type-contract-snapshot/refresh
     [FromServices] ProjectGameTypeMatchBackfillService gameTypeMatchBackfill,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1701,6 +1785,7 @@ app.MapGet("/api/admin/llm-binding", async (
     [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1725,6 +1810,7 @@ app.MapPost("/api/admin/llm-binding", async (
     [FromServices] LlmBindingService llmBinding,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1749,6 +1835,7 @@ app.MapGet("/api/admin/aicodemirror-keys", async (
     [FromServices] AiCodeMirrorKeyPoolService keyPool,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1760,6 +1847,7 @@ app.MapGet("/api/admin/aicodemirror-keys", async (
 app.MapGet("/api/admin/aicodemirror-keys/template.csv", (
     HttpContext context) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1775,6 +1863,7 @@ app.MapPost("/api/admin/aicodemirror-keys", async (
     [FromServices] AiCodeMirrorKeyPoolService keyPool,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1790,6 +1879,7 @@ app.MapPost("/api/admin/aicodemirror-keys/import-csv", async (
     [FromServices] AiCodeMirrorKeyPoolService keyPool,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1807,6 +1897,7 @@ app.MapPost("/api/admin/aicodemirror-keys/assign", async (
     [FromServices] AiCodeMirrorKeyPoolService keyPool,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1823,6 +1914,7 @@ app.MapPost("/api/admin/users", async (
     [FromServices] PhaseAPlatformOptions platformOptions,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1874,6 +1966,7 @@ app.MapPost("/api/admin/users/{accountId}/limits", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1913,6 +2006,7 @@ app.MapGet("/api/admin/users", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1928,6 +2022,7 @@ app.MapPost("/api/admin/users/{accountId}/status", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1957,6 +2052,7 @@ app.MapPost("/api/admin/users/{accountId}/rotate-token", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -1989,6 +2085,7 @@ app.MapGet("/api/admin/account-audit", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();
@@ -2011,6 +2108,7 @@ app.MapGet("/api/admin/account-audit.csv", async (
     [FromServices] PhaseAMetadataStore store,
     CancellationToken cancellationToken) =>
 {
+    ApplyNoStore(context);
     if (!CurrentIdentity(context).IsAdmin)
     {
         return AdminForbidden();

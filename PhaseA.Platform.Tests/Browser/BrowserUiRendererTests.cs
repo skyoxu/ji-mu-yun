@@ -4045,6 +4045,63 @@ public sealed class BrowserUiRendererTests
         source.Should().Contain("ListProjectDeleteTombstonesForAdminAsync");
     }
 
+    [Fact]
+    public void Program_AdminPrivateReadbackAndQueueDecisionEndpointsAreAdminOnlyNoStoreAndStablyMapped()
+    {
+        var source = File.ReadAllText(Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..",
+            "..",
+            "..",
+            "..",
+            "PhaseA.Platform",
+            "Program.cs")));
+
+        var allAdminRouteMarkers = Regex.Matches(
+                source,
+                "app\\.Map(?:Get|Post|Put|Patch|Delete)\\(\\\"/api/admin/[^\\\"]+\\\"")
+            .Select(match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        allAdminRouteMarkers.Should().NotBeEmpty();
+        foreach (var marker in allAdminRouteMarkers)
+        {
+            AssertEndpointAppliesNoStore(source, marker);
+        }
+
+        foreach (var marker in new[]
+        {
+            "app.MapGet(\"/api/admin/llm-usage.csv\"",
+            "app.MapGet(\"/api/admin/llm-runs\"",
+            "app.MapGet(\"/api/admin/run-metrics\"",
+            "app.MapGet(\"/api/admin/game-type-match-failures\"",
+            "app.MapGet(\"/api/admin/game-type-match-records\"",
+            "app.MapGet(\"/api/admin/account-audit\"",
+            "app.MapGet(\"/api/admin/account-audit.csv\"",
+            "app.MapPost(\"/api/admin/project-admin-review-queue/{entryId}/decision\""
+        })
+        {
+            var endpointSource = ExtractEndpointSource(source, marker);
+            endpointSource.Should().Contain("ApplyNoStore(context);");
+            endpointSource.Should().Contain("!CurrentIdentity(context).IsAdmin");
+            endpointSource.Should().Contain("AdminForbidden()");
+        }
+
+        var queueGet = ExtractEndpointSource(source, "app.MapGet(\"/api/admin/project-admin-review-queue\"");
+        queueGet.Should().Contain("ProjectAdminReviewQueueQuery");
+        queueGet.Should().Contain("minimumAgeMinutes");
+        queueGet.Should().Contain("projectId");
+        queueGet.Should().Contain("routeId");
+        queueGet.Should().Contain("severity");
+
+        var decision = ExtractEndpointSource(source, "app.MapPost(\"/api/admin/project-admin-review-queue/{entryId}/decision\"");
+        decision.Should().Contain("ProjectAdminReviewDecisionRequest");
+        decision.Should().Contain("Results.NotFound");
+        decision.Should().Contain("Results.Conflict");
+        decision.Should().Contain("Results.BadRequest");
+        decision.Should().Contain("context.TraceIdentifier");
+    }
+
     private static void AssertEndpointAppliesNoStore(string source, string routeMarker)
     {
         ExtractEndpointSource(source, routeMarker).Should().Contain("ApplyNoStore(context);");

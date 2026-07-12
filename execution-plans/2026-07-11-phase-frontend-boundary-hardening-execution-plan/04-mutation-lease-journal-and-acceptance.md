@@ -43,7 +43,7 @@ Cancellation, Permit revoke, process exit, and service restart must reconcile le
 
 During long Acceptance and Postflight, heartbeat continues. Users and other runners receive stable mutation-locked/read-only behavior. Lease release is forbidden while Acceptance, rollback, source/host manifest calculation, trusted evidence write or Postflight signing is pending.
 
-Heartbeat cannot be renewed by Codex or an untrusted child process. Trusted orchestration transfers heartbeat ownership from Acceptance supervisor to Postflight supervisor through one compare-and-swap transition. Every heartbeat revalidates handoffEpoch, deferral state and restoreEpoch. Loss of either supervisor, epoch drift, Job Object identity mismatch, expired execution deadline or unavailable protected lease store moves the run to reconciliation; it never silently releases or extends the lease.
+Heartbeat cannot be renewed by Codex or an untrusted child process. Trusted orchestration transfers heartbeat ownership from Acceptance supervisor to Postflight supervisor through one compare-and-swap transition. Every heartbeat revalidates manifest ID/hash, handoffEpoch, selected StateEvent hash, ActiveRegistry rowVersion, capability/compatibility deferral state and restoreEpoch. Loss of either supervisor, registry tuple drift, Job Object identity mismatch, expired execution deadline or unavailable protected lease store moves the run to reconciliation; it never silently releases or extends the lease.
 
 ## Separate State Machines
 

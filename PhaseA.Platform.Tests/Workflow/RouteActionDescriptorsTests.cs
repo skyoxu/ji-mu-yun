@@ -49,7 +49,37 @@ public sealed class RouteActionDescriptorsTests
             fixture.GetProperty("operationScope").GetString().Should().Be(runtime.OperationScope);
             fixture.GetProperty("readbackUrlTemplate").GetString().Should().Be(runtime.ReadbackUrlTemplate);
             fixture.GetProperty("requiredPhase").GetString().Should().Be(runtime.RequiredPhase);
+            fixture.GetProperty("accountBoundary").GetString().Should().Be(runtime.AccountBoundary);
+            fixture.GetProperty("authBoundary").GetString().Should().Be(runtime.AuthBoundary);
+            fixture.GetProperty("duplicateRunPolicy").GetString().Should().Be(runtime.DuplicateRunPolicy);
         }
+    }
+
+    [Fact]
+    public void Descriptors_ShouldDeclareAccountAuthAndDuplicateRunContracts()
+    {
+        RouteActionDescriptors.All.Should().OnlyContain(action =>
+            !string.IsNullOrWhiteSpace(action.AccountBoundary) &&
+            !string.IsNullOrWhiteSpace(action.AuthBoundary) &&
+            !string.IsNullOrWhiteSpace(action.DuplicateRunPolicy));
+        RouteActionDescriptors.Get("analyze_game_type").AuthBoundary.Should().Be("admin_only");
+    }
+
+    [Fact]
+    public void Recommendation_ShouldNotReactivateInactiveRecommendedAction()
+    {
+        using var fixture = RouteStateFixture.Create();
+        var artifacts = fixture.Service.Read(fixture.Project);
+
+        var recommendation = fixture.Service.BuildRecommendation(
+            fixture.Project,
+            artifacts,
+            new ProjectWorkflowNextAction("create-prototype", "Create", "Create", "Create", "create-prototype", true));
+
+        recommendation.AllowedActions.Should().NotContain(action => action.ActionId == "create_prototype");
+        recommendation.ForbiddenActions.Should().Contain(action =>
+            action.ActionId == "create_prototype" &&
+            action.DisabledDomainCode == "route_contract_not_active");
     }
 
     [Fact]

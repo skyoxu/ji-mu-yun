@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/downstream-observation-snapshots.v1.schema.json",
+  "title": "Downstream Observation Snapshots v1",
+  "oneOf": [
+    {"$ref": "#/$defs/frontend"},
+    {"$ref": "#/$defs/api"},
+    {"$ref": "#/$defs/persistence"}
+  ],
+  "$defs": {
+    "gitCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourcePath", "sourceHash", "sourceJsonPointer"],
+      "properties": {
+        "sourcePath": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\:])[A-Za-z0-9._-]+(?:/[A-Za-z0-9._ -]+)+$"},
+        "sourceHash": {"$ref": "#/$defs/sha256"},
+        "sourceJsonPointer": {"type": ["string", "null"]}
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivedSurfaceId", "authorityOwner", "sourceRefs"],
+      "properties": {
+        "derivedSurfaceId": {"type": "string", "pattern": "^derived-surface:[a-z0-9][a-z0-9._-]*$"},
+        "authorityOwner": {"const": "downstream_technical_observation"},
+        "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivedOperationId", "method", "path", "authorityOwner", "sourceRefs"],
+      "properties": {
+        "derivedOperationId": {"type": "string", "pattern": "^derived-operation:[a-z0-9][a-z0-9._-]*$"},
+        "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]},
+        "path": {"type": "string", "pattern": "^/"},
+        "authorityOwner": {"const": "downstream_technical_observation"},
+        "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}
+      }
+    },
+    "schemaObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivedObjectId", "objectType", "name", "authorityOwner", "sourceRefs"],
+      "properties": {
+        "derivedObjectId": {"type": "string", "pattern": "^derived-schema-object:[a-z0-9][a-z0-9._-]*$"},
+        "objectType": {"enum": ["table", "index", "view", "trigger", "migration_marker"]},
+        "name": {"type": "string", "minLength": 1},
+        "authorityOwner": {"const": "downstream_technical_observation"},
+        "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaId", "schemaVersion", "handoffId", "finalCommit", "authorityOwner", "sourceRefs", "contentHash", "surfaces"],
+      "properties": {
+        "schemaId": {"const": "downstream-frontend-surface-inventory"}, "schemaVersion": {"const": "1"}, "handoffId": {"type": "string", "minLength": 1}, "finalCommit": {"$ref": "#/$defs/gitCommit"}, "authorityOwner": {"const": "downstream_technical_observation"}, "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}, "contentHash": {"$ref": "#/$defs/sha256"}, "surfaces": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/surface"}}
+      }
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaId", "schemaVersion", "handoffId", "finalCommit", "authorityOwner", "sourceRefs", "contentHash", "operations"],
+      "properties": {
+        "schemaId": {"const": "downstream-api-observation-snapshot"}, "schemaVersion": {"const": "1"}, "handoffId": {"type": "string", "minLength": 1}, "finalCommit": {"$ref": "#/$defs/gitCommit"}, "authorityOwner": {"const": "downstream_technical_observation"}, "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}, "contentHash": {"$ref": "#/$defs/sha256"}, "operations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/operation"}}
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaId", "schemaVersion", "handoffId", "finalCommit", "authorityOwner", "sourceRefs", "contentHash", "schemaObjects", "pendingUpstreamMigrationCount"],
+      "properties": {
+        "schemaId": {"const": "downstream-persistence-observation-snapshot"}, "schemaVersion": {"const": "1"}, "handoffId": {"type": "string", "minLength": 1}, "finalCommit": {"$ref": "#/$defs/gitCommit"}, "authorityOwner": {"const": "downstream_technical_observation"}, "sourceRefs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/sourceRef"}}, "contentHash": {"$ref": "#/$defs/sha256"}, "schemaObjects": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/schemaObject"}}, "pendingUpstreamMigrationCount": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

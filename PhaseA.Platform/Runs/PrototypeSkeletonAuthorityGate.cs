@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Runs;
 
@@ -14,7 +15,7 @@ internal sealed record PrototypeSkeletonAuthorityGateResult(
 internal static class PrototypeSkeletonAuthorityGate
 {
     public const string CanonicalPath = "meta/routes/prototype-skeleton/latest.json";
-    private const string RecoverySourceOrderRef = "hosted-route-recovery-order.v1";
+    private const string RecoverySourceOrderRef = HostedRouteRecoveryContract.ContractId;
     private static readonly string[] RequiredAuthoritySources =
     [
         "game-type-route-profile",
@@ -90,6 +91,7 @@ internal static class PrototypeSkeletonAuthorityGate
             !root.TryGetProperty("source_boundary", out var boundary) ||
             boundary.ValueKind != JsonValueKind.Object ||
             !string.Equals(ReadString(boundary, "recovery_source_order_ref"), RecoverySourceOrderRef, StringComparison.Ordinal) ||
+            !HasCanonicalRecoverySourceOrder(boundary) ||
             !HasRequiredAuthoritySources(boundary) ||
             !boundary.TryGetProperty("source_hashes", out var sourceHashes) ||
             sourceHashes.ValueKind != JsonValueKind.Object)
@@ -112,6 +114,15 @@ internal static class PrototypeSkeletonAuthorityGate
             .Select(static item => item.ValueKind == JsonValueKind.String ? item.GetString()?.Trim() ?? "" : "")
             .ToArray();
         return actualSources.SequenceEqual(RequiredAuthoritySources, StringComparer.Ordinal);
+    }
+
+    private static bool HasCanonicalRecoverySourceOrder(JsonElement boundary)
+    {
+        return boundary.TryGetProperty("recovery_source_order", out var order) &&
+               order.ValueKind == JsonValueKind.Array &&
+               order.EnumerateArray()
+                   .Select(static item => item.ValueKind == JsonValueKind.String ? item.GetString()?.Trim() ?? "" : "")
+                   .SequenceEqual(HostedRouteRecoveryContract.SourceOrder, StringComparer.Ordinal);
     }
 
     private static bool HasEvidenceRefs(JsonElement root)

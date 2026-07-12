@@ -58,13 +58,64 @@ public sealed class LlmRouteEngineTests
         }
     }
 
+    [Fact]
+    public async Task CompleteAsync_ConcurrentFailuresUseUniqueEvidenceNamesAndRedactPersistedOutputs()
+    {
+        var client = new FakeCodexClient(
+            "not json Authorization: Bearer abc.def.ghi C:\\host\\private\\output.json",
+            "OPENAI_API_KEY=sk-abcdefghijklmnop C:\\host\\private\\stdout.txt",
+            "PHASEA_ADMIN_TOKEN=topsecret C:\\host\\private\\stderr.txt");
+        var engine = new LlmRouteEngine(client);
+        var workspace = Path.Combine(Path.GetTempPath(), $"phase-a-llm-route-{Guid.NewGuid():N}");
+
+        try
+        {
+            var tasks = Enumerable.Range(0, 8)
+                .Select(_ => engine.CompleteAsync(new LlmRouteRequest(
+                    workspace,
+                    "concurrent-redaction-test",
+                    "gpt-5.4",
+                    "Return JSON.",
+                    RequireJsonObject: true)))
+                .ToArray();
+
+            var results = await Task.WhenAll(tasks);
+            results.Should().OnlyContain(result => !result.Succeeded && result.FailureCode == "llm_json_parse_failed");
+            var evidenceDir = Path.Combine(workspace, "logs", "phase-a-chat");
+            var failures = Directory.EnumerateFiles(evidenceDir, "*.failure.json").ToArray();
+            var outputs = Directory.EnumerateFiles(evidenceDir, "*.output.txt").ToArray();
+            failures.Should().HaveCount(8);
+            failures.Select(Path.GetFileName).Distinct(StringComparer.Ordinal).Should().HaveCount(8);
+            outputs.Should().HaveCount(8);
+            foreach (var path in Directory.EnumerateFiles(evidenceDir, "*.txt"))
+            {
+                var persisted = File.ReadAllText(path);
+                persisted.Should().NotContain("abc.def.ghi");
+                persisted.Should().NotContain("sk-abcdefghijklmnop");
+                persisted.Should().NotContain("topsecret");
+                persisted.Should().NotContain("C:\\host\\private");
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(workspace))
+            {
+                Directory.Delete(workspace, recursive: true);
+            }
+        }
+    }
+
     private sealed class FakeCodexClient : ICodexChatClient
     {
         private readonly string _reply;
+        private readonly string _stdout;
+        private readonly string _stderr;
 
-        public FakeCodexClient(string reply)
+        public FakeCodexClient(string reply, string stdout = "", string stderr = "")
         {
             _reply = reply;
+            _stdout = stdout;
+            _stderr = stderr;
         }
 
         public Task<CodexChatClientResult> CompleteAsync(
@@ -75,7 +126,7 @@ public sealed class LlmRouteEngineTests
             string? billingApiKeyName = null,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, "", ""));
+            return Task.FromResult(new CodexChatClientResult(true, _reply, null, 0, _stdout, _stderr));
         }
     }
 }

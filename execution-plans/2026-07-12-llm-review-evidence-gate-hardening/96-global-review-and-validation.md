@@ -1,0 +1,131 @@
+# Whole-directory Review 与验证标准
+
+## 1. Review Authority
+
+审查必须完整读取：本目录所有 Markdown、`schemas/**`、本文件、97、98、99，以及 `AGENTS.md` 中与 review、Phase shared LLM/Codex 和文档维护有关的规则。两个既有重构目录只用于验证依赖/不重复边界，不成为本计划业务要求来源。
+
+## 2. Mechanical Checks
+
+必须执行：
+
+- Markdown 本地链接存在；
+- JSON 与 JSON Schema 可解析；
+- fixture suite 必须声明 `validationMode=schema+gateway`；每个实例分别记录 schema validity 与 composite gateway validity，二者不同时必须显式声明 `expectedSchemaValid`；
+- finding line range、severity/status、可信 review policy 派生、unverified disposition 和 result layer-set gateway invariants 通过反例 fixture；
+- 路径、字段、状态、severity、phase、动作名跨文档一致；
+- 97 每条 RFG 有明确 owner 和 acceptance ref；
+- 98/99 覆盖全部批准来源要求；
+- historical finding ledger 没有 Open P0–P2；
+- 未修改或复制两个上游重构目录的业务范围。
+
+## 3. Finding 输出门禁
+
+每条 P0–P2 必须包括：
+
+- 稳定 finding ID：`RFG-REV-<round>-P<severity>-<nn>`；
+- 精确文件、行号和原文；
+- `input/trigger → required state → bad outcome`；
+- 已读 authority/consumer/validator 或 caller/callee/test；
+- 现有防护为什么未拦住；
+- severity rationale；
+- proposed owner 和 acceptance ref。
+
+缺任一项时不得记录。零 finding 是合法结果。纯建议、格式和未来优化不进入 ledger。
+
+## 4. Review 生命周期
+
+1. 完整读取和机械检查；
+2. candidate discovery；
+3. fact gate；
+4. fingerprint dedup；
+5. P0/P1 独立核验；
+6. 修复全部 confirmed P0–P2；
+7. 只对变化证据复审；
+8. ledger 无 Open 且机械检查通过时 PASS。
+
+## 5. Historical Finding Ledger
+
+| Finding ID | Severity | Status | Evidence | Closure |
+| --- | --- | --- | --- | --- |
+| RFG-REV-1-P1-01 | P1 | Closed | Source refs: pre-fix `tools/validate_whole_directory.py:87` 使用 `re.findall(..., coverage)`；初次运行时 `RFG-001` 与 `RFG-021` 因说明文字被计为重复。触发为执行 validator，状态为覆盖正文含范围说明，结果为有效计划无法取得 PASS；已读取 97/99，旧防护缺口是对整个文档计数。 | validator 现仅解析 `## 3. Requirement Coverage` 表区；本地命令 PASS。Owner: plan validator；acceptance: `review-gate://RFG-021/plan-review-result`。 |
+| RFG-REV-1-P1-02 | P1 | Closed | Source refs: pre-fix `schemas/review-finding.v1.schema.json:7-26` 全局要求完整证明，`02-finding-contract-and-severity.md:36-42` 又把 rejected 当 finding 状态。触发为缺字段候选进入 gateway，状态为只能使用 finding schema，结果为 rejection 无法记录或被迫伪造证明；现有防护没有独立 rejection shape。 | 新增 `review-rejection.v1.schema.json` 和 valid fixture。Owner: review contract；acceptance: `review-gate://RFG-007/gateway-validation-tests`。 |
+| RFG-REV-1-P1-03 | P1 | Closed | Source refs: pre-fix `tools/validate_whole_directory.py:165-199` 只比较 fixture ID/expectedValid 布尔值，没有执行 schema。触发为 schema 与 fixture 漂移，状态为 JSON 均可解析，结果为错误合同仍返回 PASS；现有防护只检查声明意图。 | validator 现执行本计划所用 Draft 2020-12 关键字子集并逐例比对 expectedValid；P0/P1/P2 缺证明 fixtures 已加入。Owner: plan validator；acceptance: `review-gate://RFG-003/proof-triplet-tests`。 |
+| RFG-REV-1-P1-04 | P1 | Closed | Source refs: pre-fix `02-finding-contract-and-severity.md:36-42` 原文为 `candidate -> rejected \| confirmed \| advisory \| refuted \| unverified`，但 `schemas/review-finding.v1.schema.json:52` 没有 rejected。触发为实现 disposition，结果为 consumer 无法决定合同；现有链接未声明两条状态流。 | 02 现拆分 accepted finding 状态机与 rejection record。Owner: review contract；acceptance: `review-gate://RFG-007/gateway-validation-tests`。 |
+| RFG-REV-1-P1-05 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:32` 要求 rejected fingerprint 依赖 evidence hash，但 `schemas/review-rejection.v1.schema.json:17-38` 只有 candidate/input hash。触发为抑制 schema-invalid 候选，结果为重复误报无法稳定抑制；candidateHash 不能表达 authority/reason 组合。 | rejection schema 增加 `suppressionFingerprint`；04 明确其计算输入。Owner: gateway；acceptance: `review-gate://RFG-009/disposition-memory-tests`。 |
+| RFG-REV-1-P1-06 | P1 | Closed | Source refs: pre-fix `schemas/review-result.v1.schema.json:35-49` 只约束 clean/failedLayers，允许空 findings 的 blocked 或携带 P1 的 advisory。触发为汇总状态生成，结果为自动 consumer 错误阻断或错误放行；现有 enum 不验证组合语义。 | result schema 增加 blocked/advisory/incomplete 条件与 fixtures；plan validator 支持 `anyOf/contains/minContains`。Owner: review contract；acceptance: `review-gate://RFG-004/incomplete-result-fixture`。 |
+| RFG-REV-1-P1-07 | P1 | Closed | Source refs: pre-fix `schemas/review-finding.v1.schema.json:48` 为 `minimum: 0`。触发为低确信模式匹配候选，状态为泛化文本填满 shape，结果为噪音进入用户结果；现有范围校验只有 0–1。 | 新增 RFG-022，confidence 最低 `0.8`，加入 invalid fixture。Owner: review contract；acceptance: `review-gate://RFG-022/confidence-threshold-test`。 |
+| RFG-REV-1-P1-08 | P1 | Closed | Source refs: pre-fix `01-scope-authority-and-non-goals.md:47` 允许“独立 schema/validator 工作”，`05-bmad-gds-and-codex-integration.md:44` 写“R1 gateway 可用”，与 `00-index.md:31`、`07-implementation-phases.md:30-42` 冲突。触发为 R1 实施或 AGENTS 同步，结果为提前触碰长期 owner 或宣称不存在的 gateway；现有 phase 名称未交叉验证。 | 01 限定为本目录 plan-local artifacts；05 要求 R1 standard 与 R2 gateway 均可用后再更新 AGENTS。Owner: phase coordinator；acceptance: `review-gate://RFG-017/upstream-handoff-evidence`。 |
+| RFG-REV-1-P1-09 | P1 | Closed | Source refs: pre-fix `schemas/review-rejection.v1.schema.json:25-35` reason enum 没有 `low_confidence`。触发为 `confidence < 0.8` 候选，状态为 gateway 必须拒绝，结果为 rejection sidecar 无法表达真实原因；`schema_invalid` 会丢失可度量分类。 | 增加 `low_confidence` reason code；补充 blocked/advisory/incomplete 合法正例。Owner: review contract；acceptance: `review-gate://RFG-022/confidence-threshold-test`。 |
+| RFG-REV-1-P1-10 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:68` 原文为 `Given P2 confirmed advisory`，与 `02-finding-contract-and-severity.md:39-44` 的 P0/P1 confirmed、P2 advisory 冲突。触发为汇总 P2，结果为实现者可能写入 result schema 不接受的 `confirmed`；现有 prose 验收未引用状态枚举。 | 改为 `Given P2 advisory`，并由 semantic validator 禁止旧短语。Owner: gateway；acceptance: `review-gate://RFG-011/lifecycle-tests`。 |
+| RFG-REV-1-P1-11 | P1 | Closed | Source refs: pre-fix `01-scope-authority-and-non-goals.md:51` 只对 R2–R6 检查 handoff，但同文件 47 行禁止 handoff 前把 R1 schema/validator 迁入长期 owner。触发为开始 R1，结果为验收条款允许绕过上游门；现有正文与 Given/When/Then 范围不一致。 | 验收范围改为 R1–R6，并由 semantic validator 固定。Owner: phase coordinator；acceptance: `review-gate://RFG-017/upstream-handoff-evidence`。 |
+| RFG-REV-2-P1-01 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:30` 要求合并 reviewer 来源，但 `schemas/review-finding.v1.schema.json:7-55` 没有 provenance 字段。触发为 Blind/Edge/Acceptance 命中同一缺陷，状态为 dedup 后只剩单条 finding，结果为 consumer 无法追溯或校准各 reviewer；现有 `dimension` 只描述审查维度。 | finding schema 新增必填 `sourceReviewers[]`，三个 adapter 和 fixtures 使用稳定 role 值。Owner: review contract；acceptance: `review-gate://RFG-025/source-reviewer-dedup-test`。 |
+| RFG-REV-2-P1-02 | P1 | Closed | Source refs: `.agents/skills/bmad-code-review/steps/step-02-review.md:14-16` 明确 no-spec 跳过 Acceptance Auditor，但 pre-fix `schemas/review-result.v1.schema.json:7-24` 只有 failedLayers。触发为 no-spec review，结果为 skip 被误判为空成功或失败，从而产生假 clean/incomplete；现有 result contract 无 not-applicable 状态。 | result schema 新增必填 `skippedLayers[]` 和 reason；zero-finding fixture 覆盖 `not_applicable_no_spec`。Owner: review contract；acceptance: `review-gate://RFG-026/skipped-layer-result-test`。 |
+| RFG-REV-2-P1-03 | P1 | Closed | Source refs: `05-bmad-gds-and-codex-integration.md` 的 route handoff 要求版本化，但 pre-fix finding/result/rejection schema 均无 route version。触发为旧 7 月 7 日 run 与 R3 新 route 并存，结果为 sidecar、fingerprint 或 metrics 可能混用，无法证明“不干扰当前审查”；现有 authorityRevision 只标识内容 authority。 | result/rejection schema 增加必填 `routeVersion`，04/05/06 固定 namespace 与切换测试。Owner: review route maintainer；acceptance: `review-gate://RFG-027/route-version-isolation-test`。 |
+| RFG-REV-2-P1-04 | P1 | Closed | Source refs: pre-fix finding `sourceReviewers[]` 使用 `edge_case_hunter`，但 `schemas/review-result.v1.schema.json` fixture 使用 `edge-case`，`review-rejection.v1` fixture 使用 `blind`。触发为关联失败层、rejection 和 merged finding，结果为 consumer 无法按 reviewer identity join；现有各 schema 独立使用自由字符串。 | 三份 schema 统一稳定 reviewer role enum，fixtures 和 semantic validator 验证完全相同 vocabulary。Owner: review contract；acceptance: `review-gate://RFG-028/reviewer-role-vocabulary-test`。 |
+| RFG-REV-3-P1-01 | P1 | Closed | Source refs: pre-fix `96-global-review-and-validation.md:52` 的 inline code 含未转义 pipe 字符。触发为 Markdown 表格 consumer 读取 ledger，状态为该行被拆成额外列，结果为 finding evidence/closure 无法可靠解析；旧 validator 只搜索整行子串。 | 转义 inline-code pipes；validator 强制五列结构。Owner: plan validator；acceptance: `review-gate://RFG-021/plan-review-result`。 |
+| RFG-REV-3-P1-02 | P1 | Closed | Source refs: pre-fix `review-result.v1.schema.json:7-82` 没有 required/completed layer，`zero-findings-clean` fixture 也不证明 reviewer 完成。触发为所有 reviewer skipped，状态为 failed/findings 为空，结果为未经审查的 clean；旧 skippedLayers 只记录跳过。 | result schema 增加 required/completed layers；gateway/validator 强制 layer-set 完备互斥；新增 all-skipped invalid fixture。Owner: review contract；acceptance: `review-gate://RFG-026/skipped-layer-result-test`。 |
+| RFG-REV-3-P1-03 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:17,32,34` 和 `review-finding.v1.schema.json:7-27` 未把 routeVersion 绑定 candidate/finding/fingerprint。触发为旧/新 route 产生相同候选，结果为跨 route 抑制或错误消费；result/rejection routeVersion 不能保护 candidate sidecar。 | finding schema、fixtures、evidence fingerprint 与 suppression fingerprint 全部绑定 routeVersion。Owner: review gateway；acceptance: `review-gate://RFG-027/route-version-isolation-test`。 |
+| RFG-REV-3-P1-04 | P1 | Closed | Source refs: pre-fix `review-finding.v1.schema.json:49-50` 只要求行号大于等于 1。触发为 startLine 20/endLine 10，结果为不可操作 finding 通过；旧 gateway prose 没有反例 fixture。 | gateway semantic validator 强制 endLine 大于等于 startLine；新增 reversed-line-range fixture。Owner: review contract；acceptance: `review-gate://RFG-007/gateway-validation-tests`。 |
+| RFG-REV-3-P1-05 | P1 | Closed | Source refs: pre-fix `review-finding.v1.schema.json:62,68` 独立定义 severity/status。触发为 P1 advisory 或 P2 unverified，结果为 blocker 错误放行或 P2 进入 verifier；旧 result schema 只部分限制用户结果。 | finding schema 增加 severity/status 条件，semantic validator 与两个 invalid fixtures 复核。Owner: review contract；acceptance: `review-gate://RFG-007/gateway-validation-tests`。 |
+| RFG-REV-3-P1-06 | P1 | Closed | Source refs: pre-fix `validate_whole_directory.py:74-89` 只校验 RFG ID 和 99 次数，未解析 97 owner/phase/acceptance/status 或 98 来源。触发为清空 owner/acceptance 或删除来源映射，结果为不可实施计划仍 PASS；旧 prose 检查没有机器 consumer。 | validator 结构化解析 97/98/99，校验 ID 顺序/唯一性、owner/phase、acceptance URI、status 与 owner/phase 双向一致。Owner: plan validator；acceptance: `review-gate://RFG-021/plan-review-result`。 |
+| RFG-REV-3-P1-07 | P1 | Closed | Source refs: pre-fix `validate_whole_directory.py:270-276` 硬编码 15 条并只接受 Closed，与 `96-global-review-and-validation.md:65` 允许 Refuted 冲突。触发为新增或 Refuted finding，结果为合法 review 无法 PASS 或被迫误标 Closed。 | 移除固定数量；结构化验证稳定 ID、severity、Open、Closed 与 Refuted counterevidence。Owner: plan validator；acceptance: `review-gate://RFG-021/plan-review-result`。 |
+| RFG-REV-3-P1-08 | P1 | Closed | Source refs: pre-fix `05-bmad-gds-and-codex-integration.md:60-63` 与 `07-implementation-phases.md:81-87` 分别要求 R2 后和 R6 更新 AGENTS，且未满足 `docs/standards/_index.md:33` 的 R1 README/索引同步。触发为 R1/R2/R3/R4 能力落地，结果为文档提前宣称或 operational route 仍指向旧规则。 | 05/07 改为 R1 导航、R2 AGENTS gateway、R3 AGENTS 三层 route、R4 README public behavior、R6 最终状态的同批同步合同。Owner: phase/docs coordinator；acceptance: `review-gate://RFG-020/documentation-sync-check`。 |
+| RFG-REV-4-P1-01 | P1 | Closed | Source refs: pre-fix `96-global-review-and-validation.md:13-14` 把 JSON Schema validity 与 gateway invariant 分列，但 `review-validation-fixtures.v1.json:379-427` 的 all-skipped 与 reversed-range 仅由 semantic validator 判 invalid。触发为生产级 Draft 2020-12 validator 单独执行，状态为两个实例 schema-valid，结果为 expectedValid 与声明冲突；旧 fixture 没有 validation stage。 | fixture suite 现固定 `validationMode=schema+gateway`；schema-valid 但 composite-invalid 的案例必须声明 `expectedSchemaValid=true`，validator 分别核对两个阶段。Owner: plan validator；acceptance: `review-gate://RFG-007/gateway-validation-tests`。 |
+| RFG-REV-4-P1-02 | P1 | Closed | Source refs: pre-fix `review-result.v1.schema.json:11,25-28` 接受 producer 自报 requiredLayers，`04-gateway-dedup-verification-and-memory.md:28` 仅校验集合内部一致。触发为 producer 只声明 manual reviewer，状态为 required/completed 相同且三层 reviewer skipped，结果为未经既定 route 审查仍 clean；旧合同没有可信 policy authority。 | result 必填 `reviewProfile`/`policyRevision`；gateway/validator 要求其匹配 execution context 已分配 policy，再从可信 registry 派生 requiredLayers；producer-narrowing 与 trusted-profile-substitution 反例均 fail closed。Owner: review policy/gateway；acceptance: `review-gate://RFG-026/skipped-layer-result-test`。 |
+| RFG-REV-4-P1-03 | P1 | Closed | Source refs: pre-fix `04-gateway-dedup-verification-and-memory.md:44-45` 区分阻断与人工暂停，但 `review-result.v1.schema.json:137-167` 允许同一 P1 unverified 同时形成 blocked 或 incomplete。触发为相同 verifier 结果由不同 producer 汇总，结果为 consumer 得到相反处置；旧合同没有机器分类。 | finding 新增 gateway-owned `unverifiedClass`/`unverifiedDisposition`；schema、semantic validator 与组合 fixtures 强制 security/data_loss 仅 blocking、other 仅 manual_pause，并拒绝 manual_pause 混入含 confirmed blocker 的 blocked result。Owner: review result contract；acceptance: `review-gate://RFG-010/verifier-scope-tests`。 |
+| RFG-REV-4-P1-04 | P1 | Closed | Source refs: pre-fix `review-validation-fixtures.v1.json:61-87` 的 missing-consumer 案例同时使用 `confidence=0.5`。触发为 consumer required 约束被误删，状态为低 confidence 仍存在，结果为 fixture 继续 invalid 并产生假绿；旧 validator 不检查预期失败原因。 | missing-consumer fixture 现使用合法 confidence，并声明 `expectedErrorContains=missing required consumer`；validator 强制目标错误出现。Owner: document adapter fixture owner；acceptance: `review-gate://RFG-006/document-adapter-fixtures`。 |
+
+允许空表。`Closed` 必须包含修复 owner 和验收引用；`Refuted` 必须包含反证；`Open` P0–P2 阻止 plan-ready PASS。
+
+## 6. Review Result Contract
+
+最终报告必须说明：scope、authority set、完整读取状态、机械检查结果、finding 数量、Open ledger 数量、跳过项和 residual risk。PASS 只表示计划可实施，不表示任何运行时代码完成。
+
+## 7. Round 1 Review Result（2026-07-12）
+
+- Scope：本目录 13 个 Markdown、`schemas/**` 4 个 JSON、plan-local validator，以及 `AGENTS.md` 中相关规则。
+- Authority set：用户批准要求、ECC pinned-source 研究、`AGENTS.md`；两个既有重构目录仅用于依赖和不重复检查。
+- Complete-read：PASS；全部目标文件已完整读取。
+- Mechanical checks：PASS；本地链接、JSON 解析、Draft 2020-12 声明、fixture 实例、RFG owner/phase/coverage 和 semantic closure checks 均通过。
+- Findings：P0 `0`，P1 `11`（全部 Closed），P2 `0`，Open `0`。
+- Verification：plan-local deterministic validator 对 schema/fixture、状态组合、confidence、rejection suppression、phase gate 和 ledger closure 做独立复核。
+- Skipped：未运行外部完整 JSON Schema metaschema validator；本地 validator 覆盖本目录实际使用的关键字子集，R1 必须使用长期 owner 选定的生产级 Draft 2020-12 validator 再验证。
+- Residual risk：两个上游重构尚未提供本计划所需 handoff evidence，因此 R1–R6 不得启动。
+- Result：PASS / Plan-ready。该结论不表示代码、gateway、BMAD/GDS override 或前台 Codex 集成已经完成。
+
+## 8. Round 2 Review Result（2026-07-12）
+
+- Change scope：将 Blind Hunter、Edge Case Hunter、Acceptance Auditor 纳入 handoff 后的新 review route，同时保持当前 7 月 7 日 in-flight review 和历史 finding 不变。
+- Complete-read：PASS；重新读取全部变更分册、97/98/99、四份 schema、fixtures 和 validator，并核对当前 BMAD/GDS 三层 reviewer 调用约定。
+- Mechanical checks：PASS；链接、JSON、fixture、RFG-001 至 RFG-028 owner/phase/coverage 和 semantic checks 均通过。
+- Findings：P0 `0`，P1 `4`（RFG-REV-2-P1-01 至 04，全部 Closed），P2 `0`，Open `0`。
+- Verification：plan-local validator 确认 `sourceReviewers[]`、`skippedLayers[]`、`routeVersion`、三角色枚举和新增 RFG 覆盖；合法/非法 result fixtures 均符合预期。
+- Isolation result：当前 7 月 7 日 route 不改、不重跑、不重分类；R3 仅在上游 handoff 后对新 review run 启用三个 candidate adapter。
+- Result：PASS / Plan-ready。该结论仍不表示运行时代码或 route 切换已经完成。
+
+## 9. Round 3 Review Result（2026-07-12）
+
+- Scope：完整读取本目录 13 个 Markdown、`schemas/**` 4 个 JSON、plan-local validator，并核对 AGENTS/README/standards-index 同步权威。
+- Mechanical checks：PASS；Markdown links、JSON、schema/fixture、gateway semantic fixtures、96 ledger、97 owner/phase/acceptance、98 source mapping、99 owner/phase coverage 全部通过。
+- Findings：P0 `0`，P1 `8`（RFG-REV-3-P1-01 至 08，全部 Closed），P2 `0`，Open `0`。
+- Counterexample closure：all-reviewers-skipped clean、candidate missing routeVersion、reversed line range、P1 advisory、P2 unverified、blank owner/acceptance 与 missing source mapping 均被新 validator 拒绝。
+- Documentation timing：本轮不修改 AGENTS/README；R1/R2/R3/R4/R6 的同批同步点已冻结，当前 7 月 7 日 in-flight review 不受影响。
+- Skipped：未运行外部完整 JSON Schema metaschema validator；R1 必须使用长期 owner 选定的生产级 Draft 2020-12 validator 再验证。
+- Result：PASS / Plan-ready。该结论只表示计划可以实施，不表示代码、gateway、adapter、route 切换或前台能力完成。
+
+## 10. Round 4 Review Result（2026-07-12）
+
+- Scope：完整读取本目录 13 个 Markdown、`schemas/**` 4 个 JSON、plan-local validator，并按 ECC 四问与 P0–P2 三联证明复核。
+- Mechanical checks：PASS；Markdown links、JSON 解析、schema/composite 分阶段 fixture、96 ledger、97 owner/phase/acceptance、98 source mapping、99 owner/phase coverage 全部通过。
+- Findings：P0 `0`，P1 `4`（RFG-REV-4-P1-01 至 04，全部 Closed），P2 `0`，Open `0`。
+- Counterexample closure：schema-valid/gateway-invalid fixture 被显式区分；producer-narrowed requiredLayers 和 trusted-profile substitution 被拒绝；security/data-loss 不能 manual-pause，manual-pause 不能混入 blocked；missing-consumer fixture 只因目标约束失败。
+- Requirement closure：新增 RFG-029 至 RFG-032，均具有唯一 owner、phase、acceptance ref，并在 98/99 恰好覆盖一次。
+- Documentation timing：仍不提前修改 AGENTS/README；按 R1/R2/R3/R4/R6 的能力 operational 同批同步合同执行。
+- Skipped：未运行外部完整 JSON Schema metaschema validator；R1 仍须使用长期 owner 选定的生产级 Draft 2020-12 validator 复核。
+- Result：PASS / Plan-ready。该结论只表示计划可以实施，不表示代码、gateway、adapter、route 切换或前台能力完成。
+
+## 验收标准
+
+- Given 零合格 finding 且机械检查全部通过，When生成结果，Then允许 clean PASS。
+- Given任一 Open P0–P2，When生成结果，Then不得 plan-ready PASS。
+- Given只有“可更完善”的建议，When无法证明 consumer bad outcome，Then不写入 ledger。

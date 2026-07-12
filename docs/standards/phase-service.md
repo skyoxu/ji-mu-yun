@@ -74,6 +74,15 @@ Action routes are allowed only when the backend starts a command, workflow, tick
 - Project-scoped routes must resolve the current account before reading or mutating projects, runs, artifacts, packages, assets, chats, workflow state, route state, or LLM state.
 - Admin summary routes may aggregate across accounts, but raw cross-account item readback needs an explicit security decision.
 
+### Admin Review Queue API
+
+- Cross-project queue readback is admin-only at `GET /api/admin/project-admin-review-queue` and supports bounded filters for `projectId`, `routeId`, `severity`, `status`, `minimumAgeMinutes`, and `limit`.
+- Admin decisions use `POST /api/admin/project-admin-review-queue/{entryId}/decision` with `approved|deferred|rejected|backlog|resolved`, a required reason, and an expected decision version.
+- Same-payload retries are idempotent. A different payload against a stale version returns `409 conflict`; a missing entry returns `404`; invalid status, version, reason, or deferred metadata returns `400`.
+- `deferred` requires `deferredOwner`, a parseable `deferredUntilUtc`, `recheckTrigger`, and at least one non-empty `affectedRoutes` value.
+- `open|rejected|backlog` remain blocking. `approved|deferred|resolved` clear the current blocker. `superseded` is immutable historical state and never participates as a live blocker.
+- Regeneration with changed source evidence appends a new queue row and links `supersedesEntryId` / `supersededByEntryId`; it must not overwrite the previous row or its decision history.
+
 ### Response Shape
 
 - JSON property names use the existing .NET/ASP.NET Core camelCase output convention.
@@ -108,6 +117,8 @@ Action routes are allowed only when the backend starts a command, workflow, tick
 - If upgrade/reuse coverage is genuinely impossible, record the reason, risk, and substitute evidence in the PR, decision log, or task evidence before marking the change done.
 - Changes that affect account scoping require authorized and unauthorized readback tests.
 - Changes that introduce cached summaries must identify the authoritative source that can regenerate or verify the cache.
+- `project_admin_review_queue` is the cross-project query owner for review blockers. `project_admin_review_decisions` is its append-only decision history and must receive the queue update and new decision version in the same SQLite transaction.
+- Project-local `meta/routes/admin-review-queue/latest.json` is a regenerable sidecar for project recovery/readback; it is not the cross-project query authority and must preserve supersession links.
 
 ## Error Handling
 
@@ -182,6 +193,13 @@ Structured evidence and audit records should include the fields needed for recov
 - Runner-created evidence must carry `run_id` or `runId` and preserve request/correlation identifiers when the run was started from an API request. Non-HTTP producers must still carry a source run, route, or artifact identifier.
 - Sidecars that summarize another producer should keep the source run, route, or artifact identifier instead of inventing a detached ID.
 
+### Source-Boundary Evidence
+
+- Enforced route-state boundaries use the shared `hosted-route-recovery-order.v1` contract and preserve its ordered seven-source recovery sequence from `AGENTS.md`.
+- Prompt-producing route evidence must be structured JSON and prove the exact recovery contract ID, ordered recovery sources, and every source-hash key/value recorded by the route state. Merely mentioning a hash or contract token in free text is not proof.
+- Prompt evidence refs must resolve inside the hosted project boundary. Missing, unreadable, unparseable, reordered, or hash-mismatched evidence fails closed as a P0 source-boundary blocker.
+- Non-prompt routes use the explicit `source_boundary_not_applicable` shape when enforcement does not apply; omission is not an implicit exemption.
+
 ### Redaction
 
 - Do not log bearer tokens, admin token material, user token material, token hashes, provider keys, raw secret environment values, raw command environments, or raw prompts in browser-readable evidence.
@@ -202,6 +220,7 @@ Structured evidence and audit records should include the fields needed for recov
 - Download tickets, preview tickets, package links, and browser-readable artifact URLs must have explicit expiry or revocation semantics before being exposed beyond local trusted use.
 - Local trusted use means loopback-only operator diagnostics on `127.0.0.1` or equivalent host-local tooling. Public Caddy access, account-user browsers, and shared operator browsers are not local trusted use.
 - Browser/API responses that expose private account data, token issuance, ticket issuance, or admin audit export data must default to `Cache-Control: no-store` unless the route explicitly defines safe public/static/read-only cache behavior.
+- All `/api/admin/**` responses use `Cache-Control: no-store`, including readback, exports, key management, user/token operations, queue decisions, and maintenance mutations.
 
 ## Testing And Smoke Evidence
 

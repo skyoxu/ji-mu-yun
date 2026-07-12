@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Diagnostics;
+using PhaseA.Platform.Workflow;
 
 namespace PhaseA.Platform.Llm;
 
@@ -199,7 +200,7 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
             var dir = Path.Combine(request.WorkspaceRoot, "logs", "phase-a-chat");
             Directory.CreateDirectory(dir);
             var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss-fff");
-            var prefix = Path.Combine(dir, $"{stamp}-{SanitizeFileSegment(purpose)}");
+            var prefix = Path.Combine(dir, $"{stamp}-{SanitizeFileSegment(purpose)}-{Guid.NewGuid():N}");
             var promptUtf8Bytes = Encoding.UTF8.GetByteCount(request.Prompt);
             var metadata = JsonSerializer.Serialize(new
             {
@@ -220,15 +221,16 @@ public sealed class LlmRouteEngine : ILlmRouteEngine
                 stderrLength = completion.Stderr?.Length ?? 0
             }, new JsonSerializerOptions { WriteIndented = true });
 
-            File.WriteAllText($"{prefix}.metrics.json", metadata, Encoding.UTF8);
+            var safeMetadata = SecretRedactionPolicy.RedactForPersistence(metadata);
+            File.WriteAllText($"{prefix}.metrics.json", safeMetadata, Encoding.UTF8);
             if (!string.IsNullOrWhiteSpace(failureCode))
             {
-                File.WriteAllText($"{prefix}.failure.json", metadata, Encoding.UTF8);
-                File.WriteAllText($"{prefix}.stdout.txt", completion.Stdout ?? "", Encoding.UTF8);
-                File.WriteAllText($"{prefix}.stderr.txt", completion.Stderr ?? "", Encoding.UTF8);
+                File.WriteAllText($"{prefix}.failure.json", safeMetadata, Encoding.UTF8);
+                File.WriteAllText($"{prefix}.stdout.txt", SecretRedactionPolicy.RedactForPersistence(completion.Stdout ?? ""), Encoding.UTF8);
+                File.WriteAllText($"{prefix}.stderr.txt", SecretRedactionPolicy.RedactForPersistence(completion.Stderr ?? ""), Encoding.UTF8);
                 if (!string.IsNullOrWhiteSpace(completion.AssistantMessage))
                 {
-                    File.WriteAllText($"{prefix}.output.txt", completion.AssistantMessage, Encoding.UTF8);
+                    File.WriteAllText($"{prefix}.output.txt", SecretRedactionPolicy.RedactForPersistence(completion.AssistantMessage), Encoding.UTF8);
                 }
             }
         }

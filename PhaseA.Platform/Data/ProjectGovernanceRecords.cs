@@ -30,7 +30,27 @@ public sealed record ProjectAdminReviewQueueEntry(
     string CreatedUtc,
     string UpdatedUtc,
     string? DecidedUtc,
-    string? ProjectDeletedUtc);
+    string? ProjectDeletedUtc,
+    string? SupersedesEntryId,
+    string? SupersededByEntryId);
+
+public sealed record ProjectAdminReviewQueueQuery(
+    string Status = "open",
+    string? ProjectId = null,
+    string? RouteId = null,
+    string? Severity = null,
+    int? MinimumAgeMinutes = null,
+    int Limit = 100);
+
+public sealed record ProjectAdminReviewDecisionRequest(
+    string DecisionStatus,
+    string DecisionReason,
+    int ExpectedDecisionVersion,
+    IReadOnlyList<string>? DecisionEvidenceRefs = null,
+    string? DeferredOwner = null,
+    string? DeferredUntilUtc = null,
+    string? RecheckTrigger = null,
+    IReadOnlyList<string>? AffectedRoutes = null);
 
 public sealed record ProjectAdminReviewDecisionResult(
     string Status,

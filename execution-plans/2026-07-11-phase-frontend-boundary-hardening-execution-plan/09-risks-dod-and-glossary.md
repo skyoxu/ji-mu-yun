@@ -50,7 +50,7 @@
 9. Signing service is process/identity separated; Codex, Phase Web, repository tests and CI cannot read the key or invoke an unrestricted signing oracle.
 10. Protected completion uses independent rerun or trusted Test/Acceptance Attestation; report-file hashes alone never pass.
 11. Platform SourceChangeManifest, Hosted SnapshotChangeManifest and HostEffectiveManifest tests prove source/snapshot/effective-content binding.
-12. Platform isolated-workspace apply plus Hosted controller/tool/Acceptance boundaries pass actual-host tests; Hosted failure blocks/corrects course before BH-SF2.
+12. Platform isolated-workspace apply plus Hosted controller/tool/Acceptance boundaries pass actual-host tests; Platform or Hosted failure blocks/corrects course before BH-SF2.
 13. Every Phase service actor uses equal-assurance Preflight/Postflight after handoff.
 14. Permit, fenced Mutation and Acceptance states are complete, independent and recoverable; conflict projects remain recovery-blocked.
 15. Lease remains held through Acceptance, trusted Postflight persistence and rollback; Acceptance failure defaults to rollback without overwriting newer work.
@@ -68,7 +68,12 @@
 | Term | Meaning | Creator | Trust | Persistence |
 | --- | --- | --- | --- | --- |
 | Policy Kernel | Common machine rules for Codex jobs | Platform security/runtime | Trusted after version/hash validation | Source + fixture |
+| BootstrapHandoffContract | Pre-task signed bootstrap schema/verifier/lock/registry/custody contract | Two external approvers | Trusted after protected signature and digest validation | Two custody copies + local readback |
 | UpstreamHandoffManifest | Immutable downstream input binding completed upstream code/contracts/evidence/schema/standards/compatibility | BH-HANDOFF reviewers | Trusted after signature/hash/closure validation | Protected immutable evidence |
+| UpstreamHandoffStateEvent | Append-only active/superseded/revoked transition for one handoff | Protected handoff authority | Trusted after signature and event-chain validation | Protected event chain |
+| UpstreamHandoffActiveRegistry | CAS selector for the current handoff/epoch/event; not evidence itself | Protected registry service | Trusted only with matching signed event | Protected transactional store |
+| HandoffSourceMap | Field-level mapping from manifest output to committed/evidence/derived source | BH-HANDOFF collector | Trusted after source/hash/transform validation | Handoff bundle |
+| Downstream Observation Snapshot | Frontend/API/persistence technical observation that cannot own business semantics | Protected handoff collector | Trusted only as downstream-derived evidence | Handoff bundle |
 | Profile | Actor-specific Policy specialization | Platform governance | Trusted configuration | Source + fixture |
 | Preflight | Deterministic checks before authority | Host/platform | Trusted result | Evidence/store |
 | Work Declaration | Codex statement of intended work | Codex | Untrusted claim | Evidence only |

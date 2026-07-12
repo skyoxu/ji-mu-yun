@@ -74,7 +74,7 @@ This is the first and non-bypassable Gate. After upstream declares completion, e
 
 Before the handoff-only task exists, two named approvers outside that task sign a versioned `BootstrapHandoffContract`. This is a downstream planning/security artifact, not an upstream business deliverable. It freezes:
 
-- schema IDs/versions for UpstreamHandoffManifest, UpstreamHandoffStateEvent, UpstreamHandoffActiveRegistry, UpstreamCompletionSnapshot and HandoffSourceMap
+- schema IDs/versions from this plan's `schemas/bootstrap-handoff-contract.v1.schema.json`, `upstream-handoff-manifest.v1.schema.json`, `upstream-handoff-state-event.v1.schema.json`, `upstream-handoff-active-registry.v1.schema.json`, `upstream-completion-snapshot.v1.schema.json`, `handoff-source-map.v1.schema.json` and `downstream-observation-snapshots.v1.schema.json`
 - UTF-8 RFC 8785 canonical JSON, SHA-256 content hashing, forward-slash repository-relative paths, explicit Windows case/alias normalization and Ed25519 signatures over `schemaId + schemaVersion + canonicalPayloadHash + signerKeyId`
 - pinned validator executable/workflow digest, mutation-fixture digest, bootstrap public-key fingerprints and allowed signature backend
 - one selected external lock backend: protected CI/environment concurrency plus branch protection, or an offline host-maintenance lock that disables non-handoff launch identities and applies verified write denial outside the handoff allowlist
@@ -108,7 +108,7 @@ logs/phase-a-innernet/reviews/platform-boundary-hardening/upstream-handoff/<hand
 Required fields/hashes:
 
 - identity: handoffId, monotonic handoffEpoch, upstream plan ID, final commit/branch, createdUtc, upstream/downstream approvers, BootstrapHandoffContract hash and signature/evidence refs; lifecycle status is not stored in this immutable object
-- phase closure: Phase 0A/0B/1/2/3/4/5/6 exit evidence refs/hashes, global review ref/hash, unresolved-finding count and accepted-deferral rows
+- phase closure: Phase 0A/0B/1/2/3/4/5/6 exit evidence refs/hashes, global review ref/hash, unresolved-finding count and upstream-permitted capability/compatibility deferral rows
 - actions/status/routes: exact existing upstream `workflow-action-contracts.v1.json`, route module/status/path-policy fixtures and existing recovery/readback/acceptance refs/hashes
 - frontend/API: existing upstream browser/E2E/compatibility refs plus `DownstreamFrontendSurfaceInventory` and `DownstreamApiObservationSnapshot` hashes marked `downstream_derived`
 - UI/diagnostics: capability inventory, UI style profile/field map, diagnostic taxonomy/quality-gate and closure-ledger hashes
@@ -133,13 +133,13 @@ Minimum source-map bindings are fixed rather than discovered ad hoc:
 | Manifest family | Required source |
 | --- | --- |
 | Phase closure | `logs/phase-a-innernet/reviews/gdd-to-module-hardening/phase-<n>-exit-review-<run_id>.json` refs selected by the upstream implementation summary; `latest` files are pointers only |
-| Global/ledger closure | upstream final implementation summary refs, `96-global-review-standard.md`, `97-split-added-requirements-ledger.md`, `99-source-coverage.md` and their immutable review/closure evidence refs |
-| Action/route/status | upstream `schemas/workflow-action-contracts.v1.json`; `PhaseA.Platform.Tests/Fixtures/route-action-descriptors.v1.json`, `route-module-contracts.v1.json`, `route-status-vocabulary.v1.json`; matching finalCommit runtime owners |
-| UI capability/style | upstream `schemas/gdd-to-module-capability-inventory.v1.json`, `godot-ui-style-contract.v1.profile.json`, `godot-ui-style-contract.v1.field-map.json`, `split-added-acceptance-registry.v1.json` and referenced durable standards |
+| Global/ledger closure | upstream final implementation summary refs; `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/96-global-review-standard.md`, `97-split-added-requirements-ledger.md`, `99-source-coverage.md`; immutable review/closure evidence refs |
+| Action/route/status | `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/workflow-action-contracts.v1.json`; `PhaseA.Platform.Tests/Fixtures/route-action-descriptors.v1.json`, `route-module-contracts.v1.json`, `route-status-vocabulary.v1.json`; matching finalCommit runtime owners |
+| UI capability/style | `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/gdd-to-module-capability-inventory.v1.json`, `godot-ui-style-contract.v1.profile.json`, `godot-ui-style-contract.v1.field-map.json`, `split-added-acceptance-registry.v1.json`; referenced durable standards |
 | Diagnostics/closure | upstream Phase 6 exit refs, diagnostic standards and full-target closure-ledger refs selected by that exit evidence |
 | Frontend/API observation | finalCommit `PhaseA.Platform/Browser/**`, `Program.cs`/endpoint/DTO/auth/error owners and relevant `PhaseA.Platform.Tests/**`; output is downstream-derived |
 | Persistence observation | finalCommit metadata-store/migration owners plus protected metadata DB backup/schema inspection; output is downstream-derived and never mutates live DB |
-| Compatibility | upstream `02c-frontend-migration-compatibility.md`, Phase 6 exit refs and finalCommit characterization tests; downstream adds only technical preservation indexing |
+| Compatibility | `execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/02c-frontend-migration-compatibility.md`, Phase 6 exit refs and finalCommit characterization tests; downstream adds only technical preservation indexing |
 
 `DownstreamFrontendSurfaceInventory` observes existing browser routes/renderers/E2E cases. `DownstreamApiObservationSnapshot` observes frozen handlers/DTOs/auth/error behavior and may generate OpenAPI for React tooling. `DownstreamPersistenceObservationSnapshot` observes schema objects, migration markers and table/index usage from a protected copy/backup. Each contains source hashes and `authorityOwner=downstream_technical_observation`; none may claim upstream business ownership. If a required observation cannot be generated deterministically, BH-HANDOFF fails and records a downstream blocker; it does not reopen the upstream plan.
 
@@ -151,7 +151,7 @@ Minimum source-map bindings are fixed rather than discovered ad hoc:
 - Activation first durably acknowledges both custody copies and the external commitment, then one protected transaction persists the initial state event and CAS-updates the registry. Concurrent activation, duplicate epoch or partial transaction fails; pre-transaction evidence remains orphaned/non-active.
 - Revocation durably acknowledges both event custody copies/commitment, then persists the event and registry CAS in the same protected transaction. Replacement activation atomically persists the old-handoff `superseded` event, new-handoff `active` event, monotonic new epoch and registry CAS after all new bundle custody acknowledgements. A failed transaction leaves the previous registry/event authoritative; immutable manifests are never edited and no gap or dual-active state is allowed.
 
-Every task start, Permit issue/heartbeat, trusted apply and Postflight revalidates the active handoffEpoch, final commit ancestry, upstream-owned path manifest and deferral expiry/recheck triggers. Legitimate downstream commits may advance HEAD outside upstream-owned paths without changing the immutable handoff. Any upstream-owned hotfix/path drift, expired deferral or new upstream task supersedes the handoff, blocks new work and revokes/reconciles bound Permits and leases until a new signed handoff is approved.
+Every task start, Permit issue/heartbeat, trusted apply and Postflight revalidates the selected manifest ID/hash, handoffEpoch, StateEvent hash, ActiveRegistry rowVersion, final commit ancestry, upstream-owned path manifest and capability/compatibility deferral expiry/recheck triggers. Legitimate downstream commits may advance HEAD outside upstream-owned paths without changing the immutable handoff. Any upstream-owned hotfix/path drift, expired deferral or new upstream task supersedes the handoff, blocks new work and revokes/reconciles bound Permits and leases until a new signed handoff is approved.
 
 Supersession never directly rebinds an in-flight task. Unapplied isolated-workspace changes become `handoff_invalidated` and require a fresh task/Permit plus full revalidation. Applied but unfinalized changes enter rollback or named manual recovery. Test/Postflight evidence from the old epoch remains historical-only and cannot satisfy the new handoff. Allowed dispositions are `abandoned`, `rolled_back`, `manual_recovery_required` or `restart_required`; there is no `rebind` transition.
 

@@ -36,6 +36,157 @@ public sealed class ProjectRouteStateArtifactServiceTests
     }
 
     [Fact]
+    public void Read_WhenPromptRouteHasCompleteBoundaryAndSavedEvidence_DoesNotReportBoundaryIssues()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD\n\n- Stable requirement.";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.json", $$"""
+        {
+          "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+          "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+          "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" }
+        }
+        """);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", $$"""
+        {
+          "schema_version": "gdd-requirements.v1",
+          "route": "gdd-requirements",
+          "status": "ready",
+          "source_boundary_enforced": true,
+          "source_boundary": {
+            "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "authority_sources": ["docs/gdd/GDD.md"],
+            "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" },
+            "forbidden_source_patterns": ["docs/game-type-guides/** raw excerpts"],
+            "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
+          },
+          "requirements": []
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.Contains("source_boundary", StringComparison.Ordinal) ||
+            issue.IssueId.Contains("recovery_source_order", StringComparison.Ordinal) ||
+            issue.IssueId.Contains("source_hashes", StringComparison.Ordinal) ||
+            issue.IssueId.Contains("prompt_evidence", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidenceRepeatsAHashThatDoesNotMatchAuthority_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("docs/gdd/GDD.md", "# Actual GDD");
+        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.json", """
+        {
+          "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+          "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+          "source_hashes": { "docs/gdd/GDD.md": "self-declared-but-wrong" }
+        }
+        """);
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", """
+        {
+          "route": "gdd-requirements",
+          "status": "ready",
+          "source_boundary_enforced": true,
+          "source_boundary": {
+            "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "authority_sources": ["docs/gdd/GDD.md"],
+            "source_hashes": { "docs/gdd/GDD.md": "self-declared-but-wrong" },
+            "forbidden_source_patterns": ["raw guide"],
+            "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
+          }
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_hashes_authority_mismatch" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidencePathIsAFileSymlinkOutsideProject_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var gddHash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        var outside = Path.Combine(Path.GetTempPath(), "phasea-prompt-evidence-outside-" + Guid.NewGuid().ToString("N") + ".json");
+        File.WriteAllText(outside, System.Text.Json.JsonSerializer.Serialize(new
+        {
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash }
+        }));
+        try
+        {
+            var link = Path.Combine(fixture.Project.RepoPath, "meta", "routes", "gdd-requirements", "prompt-evidence.json");
+            Directory.CreateDirectory(Path.GetDirectoryName(link)!);
+            File.CreateSymbolicLink(link, outside);
+            fixture.WriteJson("meta/routes/gdd-requirements/latest.json", $$"""
+            {
+              "route": "gdd-requirements",
+              "status": "ready",
+              "source_boundary_enforced": true,
+              "source_boundary": {
+                "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+                "recovery_source_order": {{System.Text.Json.JsonSerializer.Serialize(HostedRouteRecoveryContract.SourceOrder)}},
+                "authority_sources": ["docs/gdd/GDD.md"],
+                "source_hashes": { "docs/gdd/GDD.md": "{{gddHash}}" },
+                "forbidden_source_patterns": ["raw guide"],
+                "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
+              }
+            }
+            """);
+
+            var readback = fixture.Service.Read(fixture.Project);
+
+            readback.BlockingIssues.Should().Contain(issue =>
+                issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_missing" &&
+                issue.Severity == "P0");
+        }
+        finally
+        {
+            File.Delete(outside);
+        }
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidenceDoesNotProveRecoveryOrderAndHashes_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteText("meta/routes/gdd-requirements/prompt-evidence.json", "{ \"purpose\": \"gdd-requirements\" }");
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", """
+        {
+          "route": "gdd-requirements",
+          "status": "ready",
+          "source_boundary_enforced": true,
+          "source_boundary": {
+            "recovery_source_order_ref": "hosted-route-recovery-order.v1",
+            "recovery_source_order": ["parsed game-type route profile", "meta/project-execution-guide.md", "routes/prototype-contract/latest.json", "current route latest state", "current goal/step/session state when applicable", "repair ledger and failing acceptance/Godot diagnostic evidence when applicable", "latest live platform acceptance blocker"],
+            "authority_sources": ["docs/gdd/GDD.md"],
+            "source_hashes": { "docs/gdd/GDD.md": "gdd-hash" },
+            "forbidden_source_patterns": ["raw guide"],
+            "prompt_evidence_refs": ["meta/routes/gdd-requirements/prompt-evidence.json"]
+          }
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
     public void Read_WhenNonPromptRouteDisablesBoundaryWithoutReason_Blocks()
     {
         using var fixture = RouteStateFixture.Create();
@@ -51,7 +202,78 @@ public sealed class ProjectRouteStateArtifactServiceTests
         var readback = fixture.Service.Read(fixture.Project);
 
         readback.BlockingIssues.Should().Contain(issue =>
-            issue.IssueId == "meta/routes/ui-wiring/latest.json:source_boundary_not_applicable_missing");
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:source_boundary_not_applicable_invalid");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(", \"source_boundary_enforced\": null")]
+    [InlineData(", \"source_boundary_enforced\": \"true\"")]
+    public void Read_WhenPromptRouteBoundaryFlagIsMissingNullOrWrongType_Blocks(string boundaryFlag)
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", $$"""
+        {
+          "route": "gdd-requirements",
+          "status": "ready"{{boundaryFlag}}
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_boundary_enforced_invalid" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenPromptRouteDeclaresNotApplicableBoundary_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", """
+        {
+          "route": "gdd-requirements",
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "readback_only",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:source_boundary_enforcement_required" &&
+            issue.Severity == "P0");
+    }
+
+    [Fact]
+    public void Read_WhenNonPromptRouteHasStructuredNotApplicableBoundary_AllowsExemption()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          },
+          "ui_surface_matrix": []
+        }
+        """);
+
+        var readback = fixture.Service.Read(fixture.Project);
+
+        readback.BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.Contains("source_boundary", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -71,6 +293,62 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:status_outside_declared_subset");
+    }
+
+    [Fact]
+    public void Read_WhenVersionedSidecarOmitsStatusDimension_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        fixture.WriteJson("meta/routes/ui-wiring/latest.json", """
+        {
+          "schema_version": "ui-wiring-closure.v1",
+          "status": "ready",
+          "source_boundary_enforced": false,
+          "source_boundary_not_applicable": {
+            "reason": "static_browser_projection",
+            "checked_utc": "2026-07-12T00:00:00Z",
+            "decision_by": "system",
+            "evidence_refs": []
+          }
+        }
+        """);
+
+        fixture.Service.Read(fixture.Project).BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/ui-wiring/latest.json:status_dimension_missing");
+    }
+
+    [Fact]
+    public void Read_WhenPromptEvidenceDeclaresRawPromptPersistence_Blocks()
+    {
+        using var fixture = RouteStateFixture.Create();
+        const string gdd = "# GDD";
+        var hash = RouteStateFixture.Hash(gdd);
+        fixture.WriteText("docs/gdd/GDD.md", gdd);
+        fixture.WriteJson("meta/routes/gdd-requirements/prompt-evidence.json", System.Text.Json.JsonSerializer.Serialize(new
+        {
+            recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+            recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+            source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = hash },
+            raw_prompt_persisted = true
+        }));
+        fixture.WriteJson("meta/routes/gdd-requirements/latest.json", System.Text.Json.JsonSerializer.Serialize(new
+        {
+            route = "gdd-requirements",
+            status = "ready",
+            source_boundary_enforced = true,
+            source_boundary = new
+            {
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
+                authority_sources = new[] { "docs/gdd/GDD.md" },
+                source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = hash },
+                forbidden_source_patterns = new[] { "raw guide" },
+                prompt_evidence_refs = new[] { "meta/routes/gdd-requirements/prompt-evidence.json" }
+            }
+        }));
+
+        fixture.Service.Read(fixture.Project).BlockingIssues.Should().Contain(issue =>
+            issue.IssueId == "meta/routes/gdd-requirements/latest.json:raw_prompt_persisted_forbidden");
     }
 
     [Fact]
@@ -543,6 +821,12 @@ public sealed class ProjectRouteStateArtifactServiceTests
             var path = Path.Combine(Project.RepoPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, text.Replace("\r\n", "\n"));
+        }
+
+        public static string Hash(string text)
+        {
+            var normalized = text.Replace("\r\n", "\n").Trim();
+            return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
         }
 
         public void Dispose()

@@ -12,6 +12,7 @@ using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
 using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Workflow;
 using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
@@ -69,6 +70,10 @@ public sealed class GddToModuleBackendContractServiceTests
         documentState.RootElement.GetProperty("generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
         var sceneState = fixture.ReadJson("meta/routes/scene-route/latest.json");
         sceneState.RootElement.GetProperty("source_generated_gdd_hash").GetString().Should().Be(result.GeneratedGddHash);
+        File.Exists(fixture.PathForTest("meta/routes/gdd-document/prompt-evidence.json")).Should().BeTrue();
+        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync());
+        routeReadback.BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.StartsWith("meta/routes/gdd-document/latest.json:prompt_evidence", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -166,7 +171,41 @@ public sealed class GddToModuleBackendContractServiceTests
             .Should().NotEqual([0xEF, 0xBB, 0xBF]);
         sidecar.RootElement.GetProperty("schema_version").GetString().Should().Be("gdd-requirements.v1");
         sidecar.RootElement.GetProperty("source_boundary_enforced").GetBoolean().Should().BeTrue();
+        sidecar.RootElement.GetProperty("source_boundary").GetProperty("recovery_source_order").GetArrayLength().Should().Be(7);
+        File.Exists(fixture.PathForTest("meta/routes/gdd-requirements/prompt-evidence.json")).Should().BeTrue();
+        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync());
+        routeReadback.BlockingIssues.Should().NotContain(issue =>
+            issue.IssueId.StartsWith("meta/routes/gdd-requirements/latest.json:prompt_evidence", StringComparison.Ordinal));
         sidecar.RootElement.GetProperty("requirements")[0].GetProperty("requirement_id").GetString().Should().Be("REQ-001");
+    }
+
+    [Fact]
+    public async Task RequirementMap_CreateAsync_ReconcilesRemovedAdminReviewBlockerWithoutErasingHistory()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        fixture.SeedConfirmedSceneRouteAndGdd();
+        var obsolete = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "gdd-requirements",
+            "REQ-OBSOLETE",
+            "P1",
+            "Requirement REQ-OBSOLETE requires review for status conflict.",
+            "meta/routes/gdd-requirements/latest.json",
+            "[]"));
+
+        await new GameDesignRequirementMapService(fixture.Store)
+            .CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
+
+        var rows = await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "",
+            0);
+        rows.Should().Contain(row =>
+            row.Id == obsolete.Id && row.Status == "superseded" && !string.IsNullOrWhiteSpace(row.SupersededByEntryId));
+        rows.Should().Contain(row =>
+            row.RequirementId == "REQ-OBSOLETE" && row.Status == "resolved" && row.SupersedesEntryId == obsolete.Id);
     }
 
     [Fact]
@@ -378,9 +417,62 @@ public sealed class GddToModuleBackendContractServiceTests
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
 
         requirementMap.Status.Should().Be("needs_review");
-        queue.Should().Contain(item => item.RequirementId == "REQ-001" && item.RouteId == "gdd-requirements");
+        var queued = queue.Should().ContainSingle(item => item.RequirementId == "REQ-001" && item.RouteId == "gdd-requirements").Subject;
+        using (var evidence = JsonDocument.Parse(queued.EvidenceRefsJson))
+        {
+            var hashSet = evidence.RootElement[0];
+            hashSet.GetProperty("source_requirement_map_hash").GetString().Should().Be(requirementMap.SourceRequirementMapHash);
+            hashSet.GetProperty("source_gdd_hash").GetString().Should().Be(requirementMap.SourceGddHash);
+            hashSet.GetProperty("source_scene_route_hash").GetString().Should().Be(requirementMap.SourceSceneRouteHash);
+            hashSet.GetProperty("source_contract_snapshot_hash").GetString().Should().Be(requirementMap.SourceContractSnapshotHash);
+            hashSet.GetProperty("source_godot_ui_contract_hash").GetString().Should().Be(requirementMap.SourceGodotUiContractHash);
+        }
         contract.Status.Should().Be("blocked");
         contract.BlockingIssues.Should().Contain(issue => issue.DomainCode == "admin_review_blocked");
+    }
+
+    [Fact]
+    public async Task RequirementMap_CreateAsync_SourceHashChangeSupersedesPriorHumanDecisionEvenWhenRowsStayStable()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        const string firstGdd = """
+        # Demo RPG
+
+        - Player must move on the field map and trigger one visible encounter.
+        - HUD feedback must show HP, reward, and return-to-map state.
+        """;
+        const string secondGdd = """
+        # Demo RPG
+
+
+        - Player must move on the field map and trigger one visible encounter.
+        - HUD feedback must show HP, reward, and return-to-map state.
+        """;
+        fixture.SeedConfirmedSceneRouteAndGdd(firstGdd);
+        var service = new GameDesignRequirementMapService(fixture.Store, new FixedRequirementMapLlmEngine("""
+        {
+          "requirements": [
+            { "requirement_id": "REQ-001", "normalized_requirement": "Player must move on the field map and trigger one visible encounter.", "priority": "P0", "kind": "scene", "mapped_scene_ids": ["field_map"], "mapped_required_module_ids": ["field_map"], "status": "conflict" },
+            { "requirement_id": "REQ-002", "normalized_requirement": "HUD feedback must show HP, reward, and return-to-map state.", "priority": "P1", "kind": "ui", "mapped_scene_ids": ["field_map"], "mapped_required_module_ids": ["combat_hud"], "status": "mapped", "capability_domain_ids": ["ui_component_system"] }
+          ]
+        }
+        """));
+
+        var firstMap = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
+        var firstEntry = (await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(fixture.AccountId, fixture.ProjectId, "open")).Single();
+        (await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
+            firstEntry.Id,
+            fixture.AccountId,
+            new ProjectAdminReviewDecisionRequest("approved", "approved first hash set", 0))).Status.Should().Be("updated");
+
+        fixture.SeedConfirmedSceneRouteAndGdd(secondGdd);
+        var secondMap = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest(Refresh: true));
+        var rows = await fixture.Store.ListProjectAdminReviewQueueForProjectAsync(fixture.AccountId, fixture.ProjectId, "", 0);
+
+        secondMap.Requirements.Select(item => item.RequirementId).Should().Equal(firstMap.Requirements.Select(item => item.RequirementId));
+        secondMap.SourceGddHash.Should().NotBe(firstMap.SourceGddHash);
+        rows.Should().Contain(item => item.Id == firstEntry.Id && item.Status == "superseded");
+        rows.Should().ContainSingle(item => item.Id != firstEntry.Id && item.Status == "open");
     }
 
     [Fact]
@@ -565,6 +657,102 @@ public sealed class GddToModuleBackendContractServiceTests
         result.BlockingIssues.Should().NotContain(issue => issue.IssueId.Contains("admin-review:", StringComparison.Ordinal));
         var diagnostics = await fixture.Store.ListProjectDiagnosticSpoolForAccountAsync(fixture.AccountId, fixture.ProjectId);
         diagnostics.Should().Contain(item => item.RouteId == "prototype-contract" && item.FailureFamily == "admin_review_blocked");
+    }
+
+    [Fact]
+    public async Task ContractFreeze_FreezeAsync_DoesNotMissBlockerAfterFiveHundredRows()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        for (var index = 0; index < 500; index++)
+        {
+            await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+                fixture.AccountId, fixture.ProjectId, "gdd-requirements", $"REQ-P2-{index:000}", "P2",
+                "non-gating review", "meta/routes/gdd-requirements/latest.json", "[]"));
+        }
+        await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-BEYOND-500", "P1",
+            "must remain visible to the gate", "meta/routes/gdd-requirements/latest.json", "[]"));
+
+        var result = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+
+        result.Status.Should().Be("blocked");
+        result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "admin_review_blocked");
+    }
+
+    [Theory]
+    [InlineData("approved", false)]
+    [InlineData("deferred", false)]
+    [InlineData("resolved", false)]
+    [InlineData("rejected", true)]
+    [InlineData("backlog", true)]
+    public async Task ContractFreeze_FreezeAsync_UsesBoundedAdminReviewBlockingPolicy(string decisionStatus, bool shouldBlock)
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var entry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId,
+            fixture.ProjectId,
+            "gdd-requirements",
+            "REQ-POLICY",
+            "P1",
+            "Review policy probe.",
+            "meta/routes/gdd-requirements/latest.json",
+            "[]"));
+        var request = decisionStatus == "deferred"
+            ? new ProjectAdminReviewDecisionRequest(
+                decisionStatus,
+                "deferred with a bounded recheck",
+                0,
+                DeferredOwner: "phase-platform",
+                DeferredUntilUtc: "2099-01-01T00:00:00Z",
+                RecheckTrigger: "requirement map refreshed",
+                AffectedRoutes: ["gdd-requirements", "prototype-contract"])
+            : new ProjectAdminReviewDecisionRequest(decisionStatus, "policy decision", 0);
+        (await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(entry.Id, fixture.AccountId, request))
+            .Status.Should().Be("updated");
+
+        var result = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+
+        if (shouldBlock)
+        {
+            result.Status.Should().Be("blocked");
+            result.BlockingIssues.Should().Contain(issue => issue.DomainCode == "admin_review_blocked");
+        }
+        else
+        {
+            result.Status.Should().Be("fresh");
+            result.BlockingIssues.Should().NotContain(issue => issue.DomainCode == "admin_review_blocked");
+        }
+    }
+
+    [Fact]
+    public async Task ContractFreeze_FreezeAsync_IgnoresSupersededBlockingHistory()
+    {
+        using var fixture = await BackendContractFixture.CreateAsync();
+        await fixture.SeedRequirementMapAsync();
+        var oldEntry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-HISTORY", "P1", "Historical blocker.",
+            "meta/routes/gdd-requirements/latest.json", "[\"old\"]"));
+        await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
+            oldEntry.Id,
+            fixture.AccountId,
+            new ProjectAdminReviewDecisionRequest("rejected", "old evidence rejected", 0));
+        var currentEntry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
+            fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-HISTORY", "P1", "Historical blocker.",
+            "meta/routes/gdd-requirements/latest.json", "[\"new\"]"));
+        await fixture.Store.DecideProjectAdminReviewQueueEntryAsync(
+            currentEntry.Id,
+            fixture.AccountId,
+            new ProjectAdminReviewDecisionRequest("approved", "new evidence accepted", 0));
+
+        var result = await new PrototypeContractFreezeService(fixture.Store)
+            .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+
+        result.Status.Should().Be("fresh");
+        result.BlockingIssues.Should().NotContain(issue => issue.DomainCode == "admin_review_blocked");
     }
 
     [Fact]
@@ -1906,6 +2094,7 @@ public sealed class GddToModuleBackendContractServiceTests
                 source_boundary = new
                 {
                     recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                    recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                     authority_sources = new[]
                     {
                         "game-type-route-profile",
@@ -1924,6 +2113,11 @@ public sealed class GddToModuleBackendContractServiceTests
                         source_godot_ui_contract_hash = contract.SourceGodotUiContractHash,
                         source_ui_style_contract_hash = contract.SourceUiStyleContractHash,
                         ui_style_snapshot_hash = contract.UiStyleSnapshotHash
+                    },
+                    forbidden_source_patterns = new[]
+                    {
+                        "docs/game-type-guides/** raw excerpts",
+                        "assistant summary as acceptance authority"
                     }
                 },
                 freshness = "fresh",

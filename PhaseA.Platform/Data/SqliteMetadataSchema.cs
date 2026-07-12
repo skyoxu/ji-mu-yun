@@ -245,6 +245,59 @@ public static class SqliteMetadataSchema
             "route_state_json",
             "ALTER TABLE project_iteration_sessions ADD COLUMN route_state_json TEXT NULL;",
             cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_admin_review_queue",
+            "supersedes_entry_id",
+            "ALTER TABLE project_admin_review_queue ADD COLUMN supersedes_entry_id TEXT NULL;",
+            cancellationToken);
+        await AddColumnIfMissingAsync(
+            connection,
+            transaction,
+            "project_admin_review_queue",
+            "superseded_by_entry_id",
+            "ALTER TABLE project_admin_review_queue ADD COLUMN superseded_by_entry_id TEXT NULL;",
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            "DROP INDEX IF EXISTS ix_project_admin_review_queue_project_route_requirement_reason;",
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            WITH ranked AS (
+                SELECT id,
+                       FIRST_VALUE(id) OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY updated_utc DESC, id DESC
+                       ) AS winner_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY project_id, route_id, requirement_id
+                           ORDER BY updated_utc DESC, id DESC
+                       ) AS row_number
+                FROM project_admin_review_queue
+                WHERE status <> 'superseded'
+            )
+            UPDATE project_admin_review_queue
+            SET status = 'superseded',
+                superseded_by_entry_id = (
+                    SELECT winner_id FROM ranked WHERE ranked.id = project_admin_review_queue.id
+                )
+            WHERE id IN (SELECT id FROM ranked WHERE row_number > 1);
+            """,
+            transaction,
+            cancellationToken);
+        await ExecuteAsync(
+            connection,
+            """
+            CREATE UNIQUE INDEX ix_project_admin_review_queue_project_route_requirement_reason
+            ON project_admin_review_queue(project_id, route_id, requirement_id)
+            WHERE status <> 'superseded';
+            """,
+            transaction,
+            cancellationToken);
         await ExecuteAsync(
             connection,
             """
@@ -1129,7 +1182,23 @@ public static class SqliteMetadataSchema
             created_utc TEXT NOT NULL,
             updated_utc TEXT NOT NULL,
             decided_utc TEXT NULL,
-            project_deleted_utc TEXT NULL
+            project_deleted_utc TEXT NULL,
+            supersedes_entry_id TEXT NULL,
+            superseded_by_entry_id TEXT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS project_admin_review_decisions (
+            id TEXT PRIMARY KEY,
+            entry_id TEXT NOT NULL,
+            decision_version INTEGER NOT NULL,
+            decision_status TEXT NOT NULL,
+            decision_actor_account_id TEXT NOT NULL,
+            decision_reason TEXT NOT NULL,
+            decision_metadata_json TEXT NOT NULL,
+            created_utc TEXT NOT NULL,
+            FOREIGN KEY (entry_id) REFERENCES project_admin_review_queue(id) ON DELETE CASCADE,
+            UNIQUE (entry_id, decision_version)
         );
         """,
         """
@@ -1215,7 +1284,8 @@ public static class SqliteMetadataSchema
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_ui_states_account_project ON project_ui_states(account_id, project_id);",
         "CREATE INDEX IF NOT EXISTS ix_project_admin_review_queue_status_created ON project_admin_review_queue(status, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_status ON project_admin_review_queue(project_id, status);",
-        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_route_requirement_reason ON project_admin_review_queue(project_id, route_id, requirement_id, blocking_reason);",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_admin_review_queue_project_route_requirement_reason ON project_admin_review_queue(project_id, route_id, requirement_id) WHERE status <> 'superseded';",
+        "CREATE INDEX IF NOT EXISTS ix_project_admin_review_decisions_entry_version ON project_admin_review_decisions(entry_id, decision_version DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_triage_created ON project_diagnostic_spool(triage_status, created_utc DESC);",
         "CREATE INDEX IF NOT EXISTS ix_project_diagnostic_spool_project_triage ON project_diagnostic_spool(project_id, triage_status);",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_project_diagnostic_spool_diagnostic_id ON project_diagnostic_spool(diagnostic_id);",

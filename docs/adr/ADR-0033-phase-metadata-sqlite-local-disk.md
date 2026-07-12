@@ -17,6 +17,9 @@ Use SQLite for Phase A/B control-plane metadata and local disk for hosted worksp
 - Hosted project workspaces stay under `logs/phase-a-innernet/workspaces/**`.
 - Runtime evidence stays under `logs/phase-a-innernet/**`.
 - Schema changes are additive by default and must preserve existing data.
+- Cross-project admin review blockers are authoritative in `project_admin_review_queue`; human decisions are versioned in the append-only `project_admin_review_decisions` table in the same SQLite transaction.
+- Regenerated blockers append and supersede prior rows by stable project/route/requirement identity. They never overwrite prior decisions or history.
+- Project-local admin-review sidecars are regenerable projections of SQLite state, not a second query authority.
 - Local disk remains the storage backend until Phase C storage abstraction is explicitly designed.
 
 
@@ -42,6 +45,7 @@ Revisit this ADR before introducing any of the following:
 - Direct live DB mutation is high risk and requires explicit approval.
 - Scale-out and remote restore are deferred to Phase C.
 - Future storage abstraction must preserve account, workspace, artifact, and recovery semantics.
+- Any future metadata backend must preserve optimistic decision versions, append-only decision history, supersession links, and time-aware deferred-blocker semantics.
 
 ## References
 

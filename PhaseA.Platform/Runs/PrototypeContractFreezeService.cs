@@ -50,11 +50,11 @@ public sealed class PrototypeContractFreezeService
         }
 
         var source = ReadSourceHashes(project);
-        var adminReviewItems = (await _metadataStore.ListProjectAdminReviewQueueForProjectAsync(accountId, projectId, "", 500, cancellationToken))
-            .Where(item => item.Severity is "P0" or "P1")
+        var adminReviewItems = (await _metadataStore.ListProjectAdminReviewQueueForProjectAsync(accountId, projectId, "", 0, cancellationToken))
+            .Where(item => item.Severity is "P0" or "P1" && item.Status != "superseded")
             .ToArray();
         var unresolvedAdminItems = adminReviewItems
-            .Where(item => !string.Equals(item.Status, "approved", StringComparison.Ordinal))
+            .Where(item => ProjectAdminReviewQueuePolicy.IsBlocking(item))
             .ToArray();
         var adminReviewNeeds = ReadRequirementAdminReviewNeeds(project);
         var missingApprovalNeeds = adminReviewNeeds
@@ -63,7 +63,7 @@ public sealed class PrototypeContractFreezeService
                 var matching = adminReviewItems.Where(item =>
                     string.Equals(item.RouteId, "gdd-requirements", StringComparison.Ordinal) &&
                     string.Equals(item.RequirementId, need.RequirementId, StringComparison.Ordinal)).ToArray();
-                return matching.Length == 0 || matching.Any(item => !string.Equals(item.Status, "approved", StringComparison.Ordinal));
+                return matching.Length == 0 || matching.Any(item => ProjectAdminReviewQueuePolicy.IsBlocking(item));
             })
             .ToArray();
         if (unresolvedAdminItems.Length > 0 || missingApprovalNeeds.Length > 0)
@@ -126,7 +126,8 @@ public sealed class PrototypeContractFreezeService
             ["source_boundary_enforced"] = true,
             ["source_boundary"] = new
             {
-                recovery_source_order_ref = "hosted-route-recovery-order.v1",
+                recovery_source_order_ref = HostedRouteRecoveryContract.ContractId,
+                recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
                 authority_sources = new[] { "docs/gdd/GDD.md", "confirmed scene route", "meta/routes/gdd-requirements/latest.json", "project contract snapshot" },
                 source_hashes = new Dictionary<string, string>
                 {

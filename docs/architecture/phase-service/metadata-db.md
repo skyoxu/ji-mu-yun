@@ -29,6 +29,7 @@ Out of scope:
 - `summary_json`-style fields are caches or readback summaries, not the original authority when route state or evidence exists elsewhere.
 - `runs` rows represent command executions; runners are processes, not durable business entities.
 - LLM usage is copied into platform metadata for audit/readback, but external billing systems remain their own source of truth.
+- `project_admin_review_queue` owns live cross-project blocker queries. Regeneration appends and supersedes rows rather than overwriting them; `project_admin_review_decisions` preserves each committed human decision version in the same transaction as the current-row update.
 
 ## Invariants
 
@@ -36,6 +37,7 @@ Out of scope:
 - Path strings read from metadata must still be validated against workspace roots before filesystem access.
 - Deleting projects must respect active-run policies and cascade behavior.
 - Manual DB edits must not be used to hide failures, skip migrations, or rewrite audit history.
+- Superseded admin-review rows and append-only decision rows remain available for audit; only active `open|rejected|backlog` rows are live blockers.
 
 ## Change Rules
 

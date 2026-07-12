@@ -27,6 +27,12 @@
 - Phase B 账号隔离 / 运营审计切片已完成（当前 prototype-hardening scope）：已具备账号级访问、管理员创建用户、禁用/启用用户、轮换 token、应用层项目隔离、LLM 绑定、LLM 用量统计、管理员审计、CSV 导出和 Phase B smoke 验证。
 - 仍未视为路线图中的完整 Phase B / 生产多租户隔离：独立 Windows runner 账户、项目级 NTFS ACL、完整身份系统、用户删除、浏览器 E2E 和更强 runner 隔离仍属于后续 Phase C 或预生产安全加固范围。
 
+### 前台边界加固计划状态
+
+[`2026-07-11 Phase 前台边界加固计划`](execution-plans/2026-07-11-phase-frontend-boundary-hardening-execution-plan.md) 当前为 `paused`，严格等待 [`2026-07-07 GDD-to-module 重构`](execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/00-index.md) 全部完成并通过受保护的 BH-HANDOFF 后再实施。当前仓库尚未启用 `/ui-v2`、Permit/Preflight、Change Origin Gate、新 browser session path、legacy freeze 或正式 Phase 平台 SemVer；本 README 中现有启动命令、浏览器入口和运行时合同仍是当前事实。
+
+该计划目录的本地校验器只检查 Markdown、schema、finding 和覆盖关系是否足以开始实施，不代表代码已经完成，也不能替代仓库外受保护的 BH-HANDOFF verifier。后续文档必须与代码按阶段同批更新：BH-SF2 同步 AI/Codex/Preflight 协议，BH-SF3 同步 mutation/acceptance 恢复入口，BH-RP1 同步版本投影，BH-REACT1/BH-REACT2 同步 `/ui-v2`、session 与 legacy route 状态，BH-RELEASE 同步 SemVer、发布和最终当前阶段结论。
+
 最新阶段状态来源：当前完成状态以 `docs/workflows/phase-b-account-isolation.md` 的 `Latest Completion Pass` 为准；`docs/workflows/cloud-platform-evolution-plan.cn.md` 是路线图，不代表所有目标都已落地。
 `docs/workflows/phase-b-agf-godogen-absorption.md` 记录 Phase B 对 AGF/GodoGen 能力吸收的阶段范围和后续边界。
 

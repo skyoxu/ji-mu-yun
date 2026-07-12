@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/upstream-handoff-active-registry.v1.schema.json",
+  "title": "UpstreamHandoffActiveRegistry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "handoffId", "handoffEpoch", "manifestHash", "stateEventHash", "rowVersion", "updatedUtc"],
+  "properties": {
+    "schemaId": {"const": "upstream-handoff-active-registry"},
+    "schemaVersion": {"const": "1"},
+    "handoffId": {"type": "string", "minLength": 1},
+    "handoffEpoch": {"type": "integer", "minimum": 1},
+    "manifestHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "stateEventHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "rowVersion": {"type": "integer", "minimum": 1},
+    "updatedUtc": {"type": "string", "format": "date-time"}
+  }
+}

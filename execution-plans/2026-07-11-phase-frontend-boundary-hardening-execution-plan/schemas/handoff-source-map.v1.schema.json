@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/handoff-source-map.v1.schema.json",
+  "title": "HandoffSourceMap v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "handoffId", "finalCommit", "rows"],
+  "properties": {
+    "schemaId": {"const": "handoff-source-map.v1"},
+    "schemaVersion": {"const": "1"},
+    "handoffId": {"type": "string", "minLength": 1},
+    "finalCommit": {"$ref": "#/$defs/gitCommit"},
+    "rows": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"oneOf": [{"$ref": "#/$defs/applicableRow"}, {"$ref": "#/$defs/notApplicableRow"}]}}
+  },
+  "$defs": {
+    "gitCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceClass": {"enum": ["upstream_committed", "upstream_exit_evidence", "downstream_derived"]},
+    "sourcePath": {"type": "string", "pattern": "^(execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/|PhaseA\\.Platform/|PhaseA\\.Platform\\.Tests/|docs/(standards|architecture|workflows)/|logs/phase-a-innernet/(reviews/gdd-to-module-hardening|handoff-backups)/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\:]+$"},
+    "applicableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fieldPointer", "sourceClass", "sourcePath", "sourceJsonPointer", "sourceHash", "transformId", "outputHash", "authorityOwner", "notApplicableReason"],
+      "properties": {
+        "fieldPointer": {"type": "string", "pattern": "^/"},
+        "sourceClass": {"$ref": "#/$defs/sourceClass"},
+        "sourcePath": {"$ref": "#/$defs/sourcePath"},
+        "sourceJsonPointer": {"type": ["string", "null"]},
+        "sourceHash": {"$ref": "#/$defs/sha256"},
+        "transformId": {"type": ["string", "null"]},
+        "outputHash": {"$ref": "#/$defs/sha256"},
+        "authorityOwner": {"type": "string", "minLength": 1},
+        "notApplicableReason": {"const": null}
+      }
+    },
+    "notApplicableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fieldPointer", "sourceClass", "sourcePath", "sourceJsonPointer", "sourceHash", "transformId", "outputHash", "authorityOwner", "notApplicableReason"],
+      "properties": {
+        "fieldPointer": {"type": "string", "pattern": "^/"},
+        "sourceClass": {"const": "downstream_derived"},
+        "sourcePath": {"const": null},
+        "sourceJsonPointer": {"const": null},
+        "sourceHash": {"const": null},
+        "transformId": {"const": null},
+        "outputHash": {"const": null},
+        "authorityOwner": {"type": "string", "minLength": 1},
+        "notApplicableReason": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

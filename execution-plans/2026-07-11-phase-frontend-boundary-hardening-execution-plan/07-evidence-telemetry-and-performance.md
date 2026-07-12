@@ -43,12 +43,13 @@ logs/phase-a-innernet/reviews/platform-boundary-hardening/
   architecture/
   release/
   phase-exit/
+  upstream-handoff/
 ```
 
 - Run-id/timestamp files are immutable history.
 - `*-latest.json` is a pointer/readback copy only and cannot overwrite run-id evidence.
 - Evidence refs include kind, account/project/task/route/run/permit/journal IDs as applicable, build/policy/schema versions and redacted relative path.
-- Every downstream record includes UpstreamHandoffManifest ID/hash and, when route/business evidence is involved, the upstream evidence schema/record ID/hash rather than copying its payload or taxonomy.
+- Every downstream record includes UpstreamHandoffManifest ID/hash, handoffEpoch, selected StateEvent hash and ActiveRegistry rowVersion and, when route/business evidence is involved, the upstream evidence schema/record ID/hash rather than copying its payload or taxonomy.
 - Normal users never receive host paths or cross-account evidence refs.
 - Permit, Test/Acceptance Attestation, Postflight, journal and phase-exit evidence are written by protected service identities to a store/path not writable by Codex, generated project code, repository tests or ordinary browser handlers.
 - Each immutable record includes monotonic scope sequence, content hash, previous-record hash or signed manifest reference, writer identity, schema version and creation time. Append uses compare-and-swap on one protected chain head per scope; concurrent writers retry and cannot create accepted forks. A `latest` pointer cannot change or invalidate immutable history.

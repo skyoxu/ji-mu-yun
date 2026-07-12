@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/finding-closure-registry.v1.schema.json",
+  "title": "Plan Finding Closure Registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scope", "generatedFrom", "closureEvidenceSource", "findings"],
+  "properties": {
+    "schemaVersion": {"const": "finding-closure-registry.v1"},
+    "scope": {"const": "plan-readiness-only"},
+    "generatedFrom": {"const": "97-post-split-requirements-ledger.md"},
+    "closureEvidenceSource": {"const": "finding-closure-evidence.v1.json"},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "status", "pbrIds", "closureRefs"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "status": {"enum": ["plan_open", "plan_closed", "superseded"]},
+          "pbrIds": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^PBR-[0-9]{3}$"}},
+          "closureRefs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

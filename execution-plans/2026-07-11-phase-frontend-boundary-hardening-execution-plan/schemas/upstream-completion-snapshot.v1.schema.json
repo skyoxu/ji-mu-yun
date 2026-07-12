@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ji-mu-yun.invalid/schemas/upstream-completion-snapshot.v1.schema.json",
+  "title": "UpstreamCompletionSnapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "snapshotSchemaHash", "pathAllowlistHash", "handoffLockId", "lockFencingToken", "captureSequence", "finalCommit", "startCommit", "endCommit", "gitStatusHash", "upstreamDirtyPaths", "activeTaskIds", "activeRunIds", "activeLeaseIds", "activeProcessIds", "claimedPathInventoryHash", "capturedUtc", "signature"],
+  "properties": {
+    "schemaId": {"const": "upstream-completion-snapshot"},
+    "schemaVersion": {"const": "1"},
+    "snapshotSchemaHash": {"$ref": "#/$defs/sha256"},
+    "pathAllowlistHash": {"$ref": "#/$defs/sha256"},
+    "handoffLockId": {"type": "string", "minLength": 1},
+    "lockFencingToken": {"type": "integer", "minimum": 1},
+    "captureSequence": {"enum": ["before_manifest", "before_signature"]},
+    "finalCommit": {"$ref": "#/$defs/gitCommit"},
+    "startCommit": {"$ref": "#/$defs/gitCommit"},
+    "endCommit": {"$ref": "#/$defs/gitCommit"},
+    "gitStatusHash": {"$ref": "#/$defs/sha256"},
+    "upstreamDirtyPaths": {"type": "array", "maxItems": 0},
+    "activeTaskIds": {"type": "array", "maxItems": 0},
+    "activeRunIds": {"type": "array", "maxItems": 0},
+    "activeLeaseIds": {"type": "array", "maxItems": 0},
+    "activeProcessIds": {"type": "array", "maxItems": 0},
+    "claimedPathInventoryHash": {"$ref": "#/$defs/sha256"},
+    "capturedUtc": {"type": "string", "format": "date-time"},
+    "signature": {"$ref": "#/$defs/signature"}
+  },
+  "$defs": {
+    "gitCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signerId", "keyId", "algorithm", "payloadHash", "signature"],
+      "properties": {
+        "signerId": {"type": "string", "minLength": 1},
+        "keyId": {"type": "string", "minLength": 1},
+        "algorithm": {"const": "Ed25519"},
+        "payloadHash": {"$ref": "#/$defs/sha256"},
+        "signature": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

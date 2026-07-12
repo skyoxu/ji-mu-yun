@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "schema-validation-fixtures.v1",
+  "validCases": [
+    {
+      "id": "manifest-valid",
+      "schema": "upstream-handoff-manifest.v1.schema.json",
+      "instance": {
+        "schemaId": "upstream-handoff-manifest", "schemaVersion": "1", "handoffId": "handoff-1", "handoffEpoch": 1, "upstreamPlanId": "phase-a-frontend-gdd-to-module-workflow-hardening", "finalCommit": "1111111111111111111111111111111111111111", "branch": "main", "createdUtc": "2026-07-12T00:00:00Z", "bootstrapContractHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "phaseClosure": {"phaseExitRefs": ["phase-0a", "phase-0b", "phase-1", "phase-2", "phase-3", "phase-4", "phase-5", "phase-6"], "globalReviewRef": "review", "unresolvedFindingCount": 0, "capabilityDeferrals": [{"deferralId": "DEF-001", "capabilityId": "optional-capability", "disposition": "preserved", "owner": "upstream-owner", "expiresUtc": "2026-08-12T00:00:00Z", "recheckRef": "recheck", "evidenceRefs": ["evidence"], "reason": "Approved compatibility deferral."}]},
+        "sourceMapHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "completionSnapshots": {"beforeManifestHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "beforeSignatureHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "schemaHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "pathAllowlistHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}, "bundleHashes": {"bundle": "abababababababababababababababababababababababababababababababab"}, "approvers": ["signer-a", "signer-b"], "signatures": [{"signerId": "signer-a", "keyId": "key-a", "algorithm": "Ed25519", "payloadHash": "1212121212121212121212121212121212121212121212121212121212121212", "signature": "sig-a"}, {"signerId": "signer-b", "keyId": "key-b", "algorithm": "Ed25519", "payloadHash": "1212121212121212121212121212121212121212121212121212121212121212", "signature": "sig-b"}]
+      }
+    },
+    {
+      "id": "snapshot-valid", "schema": "upstream-completion-snapshot.v1.schema.json",
+      "instance": {"schemaId": "upstream-completion-snapshot", "schemaVersion": "1", "snapshotSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "pathAllowlistHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "handoffLockId": "lock-1", "lockFencingToken": 1, "captureSequence": "before_manifest", "finalCommit": "1111111111111111111111111111111111111111", "startCommit": "1111111111111111111111111111111111111111", "endCommit": "1111111111111111111111111111111111111111", "gitStatusHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "upstreamDirtyPaths": [], "activeTaskIds": [], "activeRunIds": [], "activeLeaseIds": [], "activeProcessIds": [], "claimedPathInventoryHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "capturedUtc": "2026-07-12T00:00:00Z", "signature": {"signerId": "signer-a", "keyId": "key-a", "algorithm": "Ed25519", "payloadHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "signature": "sig-a"}}
+    },
+    {
+      "id": "source-map-valid", "schema": "handoff-source-map.v1.schema.json",
+      "instance": {"schemaId": "handoff-source-map.v1", "schemaVersion": "1", "handoffId": "handoff-1", "finalCommit": "1111111111111111111111111111111111111111", "rows": [{"fieldPointer": "/standards", "sourceClass": "upstream_committed", "sourcePath": "docs/standards/phase-service.md", "sourceJsonPointer": null, "sourceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "transformId": null, "outputHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "authorityOwner": "upstream", "notApplicableReason": null}, {"fieldPointer": "/optional", "sourceClass": "downstream_derived", "sourcePath": null, "sourceJsonPointer": null, "sourceHash": null, "transformId": null, "outputHash": null, "authorityOwner": "downstream", "notApplicableReason": "No upstream source exists."}]}
+    },
+    {
+      "id": "observation-valid", "schema": "downstream-observation-snapshots.v1.schema.json",
+      "instance": {"schemaId": "downstream-frontend-surface-inventory", "schemaVersion": "1", "handoffId": "handoff-1", "finalCommit": "1111111111111111111111111111111111111111", "authorityOwner": "downstream_technical_observation", "sourceRefs": [{"sourcePath": "PhaseA.Platform/Program.cs", "sourceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "sourceJsonPointer": null}], "contentHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "surfaces": [{"derivedSurfaceId": "derived-surface:home", "authorityOwner": "downstream_technical_observation", "sourceRefs": [{"sourcePath": "PhaseA.Platform/Program.cs", "sourceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "sourceJsonPointer": null}]}]}
+    },
+    {
+      "id": "bootstrap-valid", "schema": "bootstrap-handoff-contract.v1.schema.json",
+      "instance": {"schemaId": "bootstrap-handoff-contract", "schemaVersion": "1", "contractId": "contract-1", "createdUtc": "2026-07-12T00:00:00Z", "approvers": ["signer-a", "signer-b"], "canonicalization": {"encoding": "UTF-8", "json": "RFC8785", "hash": "SHA-256", "pathStyle": "repo-relative-forward-slash-windows-normalized", "signature": "Ed25519"}, "validator": {"kind": "host-installed-binary", "locator": "protected/verifier", "digestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "mutationFixtureDigestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "publicKeyFingerprints": ["key-a", "key-b"]}, "lock": {"backend": "offline-host-maintenance", "locator": "protected/lock", "owner": "security", "fencingToken": 1, "maxLifetimeSeconds": 300, "launcherInventoryHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "launcherInventoryRefs": ["inventory"], "recoveryProcedureRef": "recovery"}, "registry": {"backend": "protected-store", "transactionLocator": "registry"}, "custody": {"appendOnlyLocators": ["custody-a", "custody-b"], "commitmentProvider": "timestamp", "receiptSchemaId": "receipt-v1"}, "writeAllowlist": ["logs/phase-a-innernet/reviews/platform-boundary-hardening/upstream-handoff/"], "sourceMapSchemaId": "handoff-source-map.v1", "signatures": [{"signerId": "signer-a", "keyId": "key-a", "algorithm": "Ed25519", "payloadHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "signature": "sig-a"}, {"signerId": "signer-b", "keyId": "key-b", "algorithm": "Ed25519", "payloadHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "signature": "sig-b"}]}
+    },
+    {
+      "id": "state-event-valid", "schema": "upstream-handoff-state-event.v1.schema.json",
+      "instance": {"schemaId": "upstream-handoff-state-event", "schemaVersion": "1", "eventId": "event-1", "handoffId": "handoff-1", "handoffEpoch": 1, "state": "active", "previousEventHash": null, "reasonCode": "initial_activation", "triggerEvidenceRefs": ["evidence"], "createdUtc": "2026-07-12T00:00:00Z", "approvers": ["signer-a", "signer-b"], "signatures": [{"signerId": "signer-a", "keyId": "key-a", "algorithm": "Ed25519", "payloadHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "signature": "sig-a"}, {"signerId": "signer-b", "keyId": "key-b", "algorithm": "Ed25519", "payloadHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "signature": "sig-b"}]}
+    },
+    {
+      "id": "active-registry-valid", "schema": "upstream-handoff-active-registry.v1.schema.json",
+      "instance": {"schemaId": "upstream-handoff-active-registry", "schemaVersion": "1", "handoffId": "handoff-1", "handoffEpoch": 1, "manifestHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "stateEventHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "rowVersion": 1, "updatedUtc": "2026-07-12T00:00:00Z"}
+    }
+  ],
+  "invalidCases": [
+    {"id": "bad-sha256", "ruleId": "WD027", "expectedErrorContains": "$/bootstrapContractHash: pattern mismatch", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/bootstrapContractHash", "value": "1111111111111111111111111111111111111111"}},
+    {"id": "empty-signature", "ruleId": "WD027", "expectedErrorContains": "$/signatures/0: missing required property signerId", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/signatures/0", "value": {}}},
+    {"id": "duplicate-signer", "ruleId": "WD028", "expectedErrorContains": "duplicate signerId", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/signatures/1/signerId", "value": "signer-a"}},
+    {"id": "missing-second-snapshot", "ruleId": "WD027", "expectedErrorContains": "$/completionSnapshots: missing required property beforeSignatureHash", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/completionSnapshots/beforeSignatureHash", "delete": true}},
+    {"id": "illegal-source-path", "ruleId": "WD027", "expectedErrorContains": "$/rows/0/sourcePath: pattern mismatch", "schema": "handoff-source-map.v1.schema.json", "baseCase": "source-map-valid", "mutation": {"pointer": "/rows/0/sourcePath", "value": "unqualified/file.md"}},
+    {"id": "observation-business-authority-field", "ruleId": "WD027", "expectedErrorContains": "$/surfaces/0: additional property routeStatus", "schema": "downstream-observation-snapshots.v1.schema.json", "baseCase": "observation-valid", "mutation": {"pointer": "/surfaces/0/routeStatus", "value": "completed"}},
+    {"id": "deferral-finding-alias", "ruleId": "WD028", "expectedErrorContains": "capability deferral aliases a review finding", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/phaseClosure/capabilityDeferrals/0/capabilityId", "value": "F9-P1-05"}},
+    {"id": "bootstrap-single-signature", "ruleId": "WD027", "expectedErrorContains": "$/signatures: fewer than minItems", "schema": "bootstrap-handoff-contract.v1.schema.json", "baseCase": "bootstrap-valid", "mutation": {"pointer": "/signatures/1", "delete": true}},
+    {"id": "state-event-duplicate-signer", "ruleId": "WD028", "expectedErrorContains": "duplicate signerId", "schema": "upstream-handoff-state-event.v1.schema.json", "baseCase": "state-event-valid", "mutation": {"pointer": "/signatures/1/signerId", "value": "signer-a"}},
+    {"id": "active-registry-final-commit", "ruleId": "WD027", "expectedErrorContains": "$: additional property finalCommit", "schema": "upstream-handoff-active-registry.v1.schema.json", "baseCase": "active-registry-valid", "mutation": {"pointer": "/finalCommit", "value": "1111111111111111111111111111111111111111"}},
+    {"id": "observation-path-traversal", "ruleId": "WD027", "expectedErrorContains": "$/sourceRefs/0/sourcePath: pattern mismatch", "schema": "downstream-observation-snapshots.v1.schema.json", "baseCase": "observation-valid", "mutation": {"pointer": "/sourceRefs/0/sourcePath", "value": "PhaseA.Platform/../secrets.txt"}},
+    {"id": "deferral-evidence-finding-alias", "ruleId": "WD028", "expectedErrorContains": "capability deferral aliases a review finding", "schema": "upstream-handoff-manifest.v1.schema.json", "baseCase": "manifest-valid", "mutation": {"pointer": "/phaseClosure/capabilityDeferrals/0/evidenceRefs/0", "value": "F9-P1-05"}},
+    {"id": "source-map-duplicate-field", "ruleId": "WD028", "expectedErrorContains": "duplicate source-map fieldPointer", "schema": "handoff-source-map.v1.schema.json", "baseCase": "source-map-valid", "mutation": {"pointer": "/rows/1/fieldPointer", "value": "/standards"}},
+    {"id": "source-map-na-upstream-class", "ruleId": "WD027", "expectedErrorContains": "$/rows/1/sourceClass: const mismatch", "schema": "handoff-source-map.v1.schema.json", "baseCase": "source-map-valid", "mutation": {"pointer": "/rows/1/sourceClass", "value": "upstream_committed"}},
+    {"id": "source-map-ads-path", "ruleId": "WD027", "expectedErrorContains": "$/rows/0/sourcePath: pattern mismatch", "schema": "handoff-source-map.v1.schema.json", "baseCase": "source-map-valid", "mutation": {"pointer": "/rows/0/sourcePath", "value": "docs/standards/phase-service.md:secret"}}
+  ],
+  "planMutations": [
+    {"id": "coverage-owner-mismatch", "ruleId": "WD029"},
+    {"id": "coverage-phase-mismatch", "ruleId": "WD029"},
+    {"id": "coverage-conflicting-phase-suffix", "ruleId": "WD029"},
+    {"id": "finding-without-closure-evidence", "ruleId": "WD030"},
+    {"id": "closure-review-mismatch", "ruleId": "WD030"},
+    {"id": "active-finding-superseded", "ruleId": "WD030"},
+    {"id": "schema-unsupported-keyword", "ruleId": "WD025"},
+    {"id": "schema-ref-sibling", "ruleId": "WD025"}
+  ]
+}
